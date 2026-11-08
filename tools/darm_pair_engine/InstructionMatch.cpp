@@ -1,3 +1,4 @@
+#include "llvm/IR/Operator.h"
 #include "InstructionMatch.h"
 #include "llvm/IR/IntrinsicInst.h"
 #include "llvm/IR/Module.h"
@@ -18,6 +19,47 @@ static bool matchIntrinsicCalls(Intrinsic::ID ID, const CallInst *CI1,
   if (ID1 != ID2)
     return false;
 
+  // Narrow whitelist for the suite pair engine. Read-only samples use the
+  // pair engine's write-free, exclusive scope. RegionMelder selects differing
+  // ordinary operands and guards unmatched calls with their original paths.
+  auto *F = CI1->getCalledFunction();
+  const bool Pure = ID == Intrinsic::floor || ID == Intrinsic::copysign ||
+                    F->getName().startswith("llvm.amdgcn.rcp.");
+  const bool Sample = F->getName().startswith("llvm.amdgcn.image.sample.lz.3d.");
+  if (Pure || Sample) {
+    if (CI1->getAttributes() != CI2->getAttributes() ||
+        CI1->getCallingConv() != CI2->getCallingConv() ||
+        CI1->getNumArgOperands() != CI2->getNumArgOperands() ||
+        CI1->getType() != CI2->getType() ||
+        CI1->getNumOperandBundles() || CI2->getNumOperandBundles() ||
+        CI1->isMustTailCall() || CI2->isMustTailCall() ||
+        CI1->isConvergent() || CI2->isConvergent())
+      return false;
+    const auto A = CI1->getFastMathFlags(), B = CI2->getFastMathFlags();
+    if (A.allowReassoc() != B.allowReassoc() || A.noNaNs() != B.noNaNs() ||
+        A.noInfs() != B.noInfs() || A.noSignedZeros() != B.noSignedZeros() ||
+        A.allowReciprocal() != B.allowReciprocal() ||
+        A.allowContract() != B.allowContract() || A.approxFunc() != B.approxFunc())
+      return false;
+    SmallVector<std::pair<unsigned, MDNode *>, 4> LeftMetadata, RightMetadata;
+    CI1->getAllMetadata(LeftMetadata);
+    CI2->getAllMetadata(RightMetadata);
+    if (LeftMetadata != RightMetadata)
+      return false;
+    if (Pure && (!CI1->doesNotAccessMemory() || !CI2->doesNotAccessMemory()))
+      return false;
+    if (Sample && (!CI1->onlyReadsMemory() || !CI2->onlyReadsMemory()))
+      return false;
+    for (unsigned N = 0; N < CI1->getNumArgOperands(); ++N) {
+      if (CI1->getArgOperand(N)->getType() != CI2->getArgOperand(N)->getType())
+        return false;
+      // Intrinsic immediates cannot be replaced with a select.
+      if (F->hasParamAttribute(N, Attribute::ImmArg) &&
+          CI1->getArgOperand(N) != CI2->getArgOperand(N))
+        return false;
+    }
+    return true;
+  }
   switch (ID) {
   default:
     break;
