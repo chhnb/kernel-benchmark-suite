@@ -5,6 +5,7 @@
 #include "llvm/IR/Verifier.h"
 #include "llvm/IR/IRBuilder.h"
 #include "llvm/Analysis/ValueTracking.h"
+#include "llvm/Analysis/InstructionSimplify.h"
 #include "llvm/IR/IntrinsicInst.h"
 #include "llvm/IR/LegacyPassManager.h"
 #include "llvm/Transforms/IPO/PassManagerBuilder.h"
@@ -187,8 +188,68 @@ static bool foldProvenBranch(Function &f) {
     ConstantFoldTerminator(&b,true);return true;
   }return false;
 }
+// Candidate-only cleanup. Never move instructions, rewrite terminators or
+// visit unchanged neighboring computations. RAUW of a permitted value may
+// update its users, but those users are not added to the optimization scope.
+struct LocalSnapshot {
+  WeakVH instruction;
+  BasicBlock *parent;
+  std::vector<Value*> operands;
+  std::vector<std::pair<Value*,BasicBlock*>> phiEdges;
+};
+static std::vector<LocalSnapshot> snapshotLocal(Function &f) {
+  std::vector<LocalSnapshot> out;
+  for(auto &b:f)for(auto &i:b){LocalSnapshot s{WeakVH(&i),&b,{}};
+    for(auto &op:i.operands())s.operands.push_back(op.get());
+    if(auto*p=dyn_cast<PHINode>(&i))for(unsigned n=0;n<p->getNumIncomingValues();++n)s.phiEdges.emplace_back(p->getIncomingValue(n),p->getIncomingBlock(n));
+    out.push_back(std::move(s));}
+  return out;
+}
+static std::set<Instruction*> changedLocal(Function &f,const std::vector<LocalSnapshot>&before) {
+  std::set<Instruction*> unchanged;
+  for(auto &s:before)if(auto *i=dyn_cast_or_null<Instruction>((Value*)s.instruction)){
+    bool same=i->getParent()==s.parent&&i->getNumOperands()==s.operands.size();
+    if(same){
+      if(auto*p=dyn_cast<PHINode>(i)){
+        for(unsigned n=0;n<p->getNumIncomingValues();++n)
+          same&=std::find(s.phiEdges.begin(),s.phiEdges.end(),std::make_pair(p->getIncomingValue(n),p->getIncomingBlock(n)))!=s.phiEdges.end();
+      }else for(unsigned n=0;n<s.operands.size();++n)same&=i->getOperand(n)==s.operands[n];
+    }
+    if(same)unchanged.insert(i);
+  }
+  std::set<Instruction*> changed;
+  for(auto &b:f)for(auto &i:b)if(!i.isTerminator()&&!unchanged.count(&i))changed.insert(&i);
+  return changed;
+}
+static unsigned cleanupScoped(Function &f,const std::set<Instruction*>&scope) {
+  struct Protected {WeakVH inst;BasicBlock *parent;unsigned opcode;std::vector<WeakTrackingVH> operands;};
+  std::vector<Protected> protectedInsts;std::vector<WeakVH> work;
+  for(auto &b:f)for(auto &i:b){
+    if(scope.count(&i)){work.push_back(WeakVH(&i));continue;}
+    Protected p{WeakVH(&i),&b,i.getOpcode(),{}};for(auto &op:i.operands())p.operands.emplace_back(op.get());protectedInsts.push_back(std::move(p));
+  }
+  auto check=[&](){for(auto &p:protectedInsts){auto*i=dyn_cast_or_null<Instruction>((Value*)p.inst);
+    if(!i||i->getParent()!=p.parent||i->getOpcode()!=p.opcode||i->getNumOperands()!=p.operands.size())throw std::runtime_error("scoped_cleanup_changed_protected_instruction");
+    for(unsigned n=0;n<p.operands.size();++n)if(i->getOperand(n)!=(Value*)p.operands[n])throw std::runtime_error("scoped_cleanup_changed_protected_operand");
+  }};
+  SimplifyQuery query(f.getParent()->getDataLayout());
+  unsigned rounds=0;
+  for(;rounds<32;++rounds){bool changed=false;
+    for(auto &handle:work){auto*i=dyn_cast_or_null<Instruction>((Value*)handle);if(!i)continue;
+      if(auto*v=SimplifyInstruction(i,query)){if(v!=i){i->replaceAllUsesWith(v);if(isInstructionTriviallyDead(i)){i->eraseFromParent();changed=true;continue;}}}
+      if(isInstructionTriviallyDead(i)){i->eraseFromParent();changed=true;continue;}
+      // Common expressions only among allowed, earlier instructions in this BB.
+      if(i->isTerminator()||isa<PHINode>(i)||i->mayReadOrWriteMemory()||i->mayHaveSideEffects())continue;
+      if(auto*c=dyn_cast<CallBase>(i))if(c->isConvergent())continue;
+      for(auto &prior:*i->getParent()){if(&prior==i)break;
+        if(scope.count(&prior)&&prior.isIdenticalTo(i)){i->replaceAllUsesWith(&prior);i->eraseFromParent();changed=true;break;}}
+    }
+    check();if(!changed)return rounds+1;
+  }
+  throw std::runtime_error("scoped_cleanup_did_not_converge");
+}
 unsigned cleanup(Module &m,const std::string &function,unsigned level,CleanupMode mode) {
-  if(mode==CleanupMode::None)return 0;
+  if(mode==CleanupMode::None||mode==CleanupMode::ScopedLocal)return 0;
   canonicalPhiOrder(m,function);
   if(mode==CleanupMode::O3){normalize(m,level);return 0;}
   auto*f=m.getFunction(function);if(!f)throw std::runtime_error("cleanup function missing");
@@ -487,6 +548,7 @@ Trial tryPair(const Module&parent,const Candidate&c,unsigned version,unsigned le
     if(!expanded->getUniqueSuccessor())return reject("replication_requires_unique_successor");
   }
   std::map<std::string,std::string> others;for(auto&g:*t.raw)if(&g!=f)others[g.getName().str()]=text(g);
+  auto localBefore=mode==CleanupMode::ScopedLocal?snapshotLocal(*f):std::vector<LocalSnapshot>{};
   auto mt=Clock::now();RegionMelder melder(ma,true);if(t.logicalState)melder.onValueMapping=[&](const ValueToValueMapTy &m){t.logicalState->transfer(m);};if(useLocal){
     if(l.region||r.region)return reject("local_requires_basic_blocks");
     std::string why;
@@ -497,6 +559,7 @@ Trial tryPair(const Module&parent,const Candidate&c,unsigned version,unsigned le
   for(auto&g:*t.raw)if(&g!=f)if(!others.count(g.getName().str())||others.at(g.getName().str())!=text(g))return reject("other_function_changed");
   ft=Clock::now();t.afterRaw=features(*f);t.featuresMs+=millis(ft);if(t.afterRaw.loops>t.before.loops)return reject("new_raw_loop");
   auto blockLabel=[](const Value *V){std::string S;raw_string_ostream O(S);V->printAsOperand(O,false);O.flush();return S;};
+  auto rawLocalScope=mode==CleanupMode::ScopedLocal?changedLocal(*f,localBefore):std::set<Instruction*>{};
   ValueToValueMapTy CloneMap;
   auto nt=Clock::now();t.normalized=CloneModule(*t.raw,CloneMap);
   if(t.logicalState)t.logicalState=t.logicalState->clone(CloneMap);
@@ -508,9 +571,11 @@ Trial tryPair(const Module&parent,const Candidate&c,unsigned version,unsigned le
     if(Raw){P.rawBlock=blockLabel(Raw);auto It=CloneMap.find(Raw);if(It!=CloneMap.end())Cleaned=It->second;}
     t.blockProvenance.push_back(std::move(P));CleanedBlocks.push_back(WeakVH(Cleaned));
   }
+  std::set<Instruction*> cleanLocalScope;
+  for(auto*i:rawLocalScope)if(auto *mapped=dyn_cast_or_null<Instruction>(CloneMap.lookup(i)))cleanLocalScope.insert(mapped);
   // Do not retain CloneMap's tracking handles while cleanup mutates the clone.
   CloneMap.clear();
-  t.cleanupIterations=cleanup(*t.normalized,c.function,level,mode);canonicalPhiOrder(*t.normalized,c.function);t.normalizeMs=millis(nt);
+  t.cleanupIterations=mode==CleanupMode::ScopedLocal?cleanupScoped(*t.normalized->getFunction(c.function),cleanLocalScope):cleanup(*t.normalized,c.function,level,mode);canonicalPhiOrder(*t.normalized,c.function);t.normalizeMs=millis(nt);
   for(size_t I=0;I<CleanedBlocks.size();++I)if(Value *V=CleanedBlocks[I])
     t.blockProvenance[I].cleanedBlock=blockLabel(V);
   if(verifyModule(*t.normalized,&errs()))return reject("normalized_verifier_failed");
@@ -527,6 +592,7 @@ RoundContext makeRound(const Module&parent,const std::string&function,unsigned v
   if(mode==CleanupMode::StructuralCFG)r.cleanup+=";dominating-edge-boolean-guard-fold-v1";
   if(mode==CleanupMode::DarmCFGEarlyCSE)r.cleanup+="-earlycse-memoryssa0";
   if(mode==CleanupMode::PostOptFixedPoint)r.cleanup="phi-edge-function-order-v1;earlycse-memoryssa0-instcombine-simplifycfg-default-dce-earlycse-pure-scalar-phi-triangle-v1-fixedpoint-sha1-cap32";
+  if(mode==CleanupMode::ScopedLocal)r.cleanup="changed-instructions-only;simplify-local-cse-dce;no-cfg-motion;protected-outside-audit;control-noop";
   if(mode==CleanupMode::None)r.cleanup="none;no_external_cleanup";
   if(mode==CleanupMode::DarmCFGScalarFixedPoint)r.cleanup+="-earlycse-instcombine-fixedpoint-sha1-cap32";
   auto*f=parent.getFunction(function);if(!f||f->isDeclaration())throw std::runtime_error("round function missing");

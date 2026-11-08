@@ -11,7 +11,7 @@
 #include <vector>
 namespace fusion {
 class LogicalRegionState;
-enum class CleanupMode { None, O3, DarmCFG, DarmCFGEarlyCSE, DarmCFGScalarFixedPoint, PostOptFixedPoint, StructuralCFG };
+enum class CleanupMode { None, O3, DarmCFG, DarmCFGEarlyCSE, DarmCFGScalarFixedPoint, PostOptFixedPoint, StructuralCFG, ScopedLocal };
 struct Candidate {
   std::string function, split, left, right;
   unsigned version = 0;
