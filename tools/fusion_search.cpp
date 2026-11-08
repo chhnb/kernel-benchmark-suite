@@ -382,6 +382,19 @@ std::vector<Candidate> enumerateAdjacent(Function&f,unsigned version) {
   return state->filter(f,enumerate(f,version));
 }
 Trial tryPair(const Module&parent,const Candidate&c,unsigned version,unsigned level,CleanupMode mode,const LogicalRegionState *logical) {
+  // Each path starts from the immutable parent. A failed local trial must
+  // never feed its possibly modified clone into the DARM fallback.
+  if(c.hybrid){
+    if(logical)throw std::runtime_error("hybrid requires general CFG enumeration");
+    Candidate localCandidate=c;localCandidate.hybrid=false;localCandidate.localCopysign=true;localCandidate.localUnion=true;
+    auto local=tryPair(parent,localCandidate,version,level,mode,nullptr);
+    if(local.valid){local.candidate=c;local.mergePath="local-compute";return local;}
+    std::string why=local.reason;double localMs=local.totalMs;
+    Candidate fallback=c;fallback.hybrid=false;fallback.localCopysign=false;fallback.localUnion=false;
+    auto result=tryPair(parent,fallback,version,level,mode,nullptr);
+    result.candidate=c;result.mergePath="darm-fallback";result.localRejectReason=why;result.totalMs+=localMs;
+    return result;
+  }
   auto started=Clock::now();Trial t;t.candidate=c;t.cleanupMode=mode;auto reject=[&](const char*reason){t.reason=reason;t.totalMs=millis(started);return std::move(t);};
   if(c.version!=version)return reject("stale_candidate_version");
   ValueToValueMapTy parentMap;
@@ -504,7 +517,7 @@ Result greedy(const Module&input,const std::string&function,const Options&o,cons
     if(candidates.size()>o.maxTrials-result.trials){result.stop="trial_budget_before_complete_round";return result;}
     const auto round=makeRound(*result.module,function,version,o.optLevel,o.cleanupMode);if(observer)observer->round(round);
     Trial best;ScoreResult bestResult;double bestScore=o.threshold;bool anyScored=false;
-    for(auto&candidate:candidates){candidate.localCopysign=o.localCopysign;candidate.localUnion=o.localUnion;auto t=tryPair(*result.module,candidate,version,o.optLevel,o.cleanupMode,logical.get());++result.trials;
+    for(auto&candidate:candidates){candidate.localCopysign=o.localCopysign;candidate.localUnion=o.localUnion;candidate.hybrid=o.hybrid;auto t=tryPair(*result.module,candidate,version,o.optLevel,o.cleanupMode,logical.get());++result.trials;
       auto score=evaluateTrial(*result.module,t,round,scorer);bool accept=eligible(t,score,o);anyScored|=score.status==ScoreStatus::Scored;
       if(observer)observer->trial(t,round,score,accept);
       if(accept&&score.total>bestScore){bestScore=score.total;bestResult=std::move(score);best=std::move(t);}

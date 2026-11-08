@@ -18,6 +18,7 @@ struct Candidate {
   std::string logicalDecision, logicalLeft, logicalRight;
   bool localCopysign=false;
   bool localUnion=false;
+  bool hybrid=false;
   std::string key() const { return function+":"+split+":"+left+":"+right; }
 };
 struct OperationKey {
@@ -91,6 +92,7 @@ struct Trial {
   bool originalProfitable=false;
   unsigned cleanupIterations=0;
   std::string reason;
+  std::string mergePath, localRejectReason;
   double mergeMs=0, normalizeMs=0, featuresMs=0, totalMs=0, scoreMs=0;
 };
 struct ScoreInput {
@@ -119,6 +121,7 @@ struct Options {
   bool adjacentOnly=false;
   bool localCopysign=false;
   bool localUnion=false;
+  bool hybrid=false;
 };
 struct Observer {
   virtual ~Observer() = default;
