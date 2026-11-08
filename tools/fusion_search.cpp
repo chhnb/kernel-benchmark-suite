@@ -10,6 +10,7 @@
 #include "llvm/IR/LegacyPassManager.h"
 #include "llvm/Transforms/IPO/PassManagerBuilder.h"
 #include "llvm/Transforms/Utils/Cloning.h"
+#include "llvm/Transforms/Utils/BasicBlockUtils.h"
 #include "llvm/Support/SHA1.h"
 #include "llvm/Config/llvm-config.h"
 #include "llvm/IR/Operator.h"
@@ -161,9 +162,10 @@ static bool foldEmptyPhiTriangle(Function &f) {
 }
 // Fold only branch predicates proven by dominating edges. No instruction is
 // speculated, and arbitrary arithmetic, memory and call predicates are opaque.
-static bool foldProvenBranch(Function &f) {
+static bool foldProvenBranch(Function &f, const std::set<BasicBlock*> *allowed=nullptr) {
   DominatorTree dt(f);
   for(auto &b:f){
+    if(allowed&&!allowed->count(&b))continue;
     auto *br=dyn_cast<BranchInst>(b.getTerminator());if(!br||!br->isConditional())continue;
     std::map<Value*,bool> facts;
     std::function<void(Value*,bool,unsigned)> add=[&](Value *v,bool truth,unsigned depth){
@@ -185,7 +187,7 @@ static bool foldProvenBranch(Function &f) {
     }
     auto it=facts.find(br->getCondition());if(it==facts.end())continue;
     br->setCondition(ConstantInt::get(Type::getInt1Ty(f.getContext()),it->second));
-    ConstantFoldTerminator(&b,true);return true;
+    ConstantFoldTerminator(&b,allowed==nullptr);return true;
   }return false;
 }
 // Candidate-only cleanup. Never move instructions, rewrite terminators or
@@ -248,8 +250,82 @@ static unsigned cleanupScoped(Function &f,const std::set<Instruction*>&scope) {
   }
   throw std::runtime_error("scoped_cleanup_did_not_converge");
 }
+// CFG edits are restricted to blocks created by this trial. Boundary
+// predecessor terminators and successor PHIs are the only additional edit
+// sites. No generic SimplifyCFG, speculation, or recursive DCE.
+static unsigned cleanupScopedCFG(Function &f, const std::set<Instruction*> &local,
+                                  const std::set<BasicBlock*> &created) {
+  std::set<Instruction*> permitted=local;
+  std::vector<WeakVH> blocks, work;
+  for(auto &b:f)if(created.count(&b)){
+    blocks.emplace_back(&b);
+    for(auto &i:b)permitted.insert(&i);
+    for(auto *p:predecessors(&b))permitted.insert(p->getTerminator());
+    for(auto *s:successors(&b))for(auto &phi:s->phis())permitted.insert(&phi);
+  }
+  struct Protected {WeakVH inst;BasicBlock *parent;unsigned opcode;std::vector<WeakTrackingVH> operands;};
+  std::vector<Protected> outside;
+  for(auto &b:f)for(auto &i:b){
+    if(permitted.count(&i)){work.emplace_back(&i);continue;}
+    Protected p{WeakVH(&i),&b,i.getOpcode(),{}};
+    for(auto &op:i.operands())p.operands.emplace_back(op.get());
+    outside.push_back(std::move(p));
+  }
+  auto audit=[&](){for(auto &p:outside){auto *i=dyn_cast_or_null<Instruction>((Value*)p.inst);
+    if(!i||i->getParent()!=p.parent||i->getOpcode()!=p.opcode||i->getNumOperands()!=p.operands.size())throw std::runtime_error("scoped_cfg_changed_outside_instruction");
+    for(unsigned n=0;n<p.operands.size();++n)if(i->getOperand(n)!=(Value*)p.operands[n])throw std::runtime_error("scoped_cfg_changed_outside_operand");
+  }};
+  for(unsigned round=1;round<=32;++round){
+    auto before=moduleHash(*f.getParent());
+    std::set<Instruction*> scalar;
+    for(auto &h:work)if(auto *i=dyn_cast_or_null<Instruction>((Value*)h))if(!i->isTerminator())scalar.insert(i);
+    cleanupScoped(f,scalar);
+    std::set<BasicBlock*> live;
+    for(auto &h:blocks)if(auto *b=dyn_cast_or_null<BasicBlock>((Value*)h))live.insert(b);
+    // Fold only conditions implied by dominating edges, within new blocks.
+    foldProvenBranch(f,&live);
+    for(auto &h:blocks){auto *head=dyn_cast_or_null<BasicBlock>((Value*)h);if(!head)continue;
+      auto *br=dyn_cast<BranchInst>(head->getTerminator());if(!br||!br->isConditional())continue;
+      auto *a=br->getSuccessor(0),*b=br->getSuccessor(1);
+      if(a==b||!live.count(a)||!live.count(b)||a->size()!=1||b->size()!=1||
+         a->getSinglePredecessor()!=head||b->getSinglePredecessor()!=head)continue;
+      auto *join=a->getSingleSuccessor();if(!join||join!=b->getSingleSuccessor()||join==head)continue;
+      bool safe=true;for(auto &phi:join->phis())safe&=permitted.count(&phi)&&phi.getBasicBlockIndex(a)>=0&&phi.getBasicBlockIndex(b)>=0;
+      if(!safe)continue;
+      IRBuilder<> builder(br);
+      for(auto &phi:join->phis()){
+        auto *v=builder.CreateSelect(br->getCondition(),phi.getIncomingValueForBlock(a),phi.getIncomingValueForBlock(b),"scoped.exit.select");
+        if(auto *i=dyn_cast<Instruction>(v))if(i->getParent()==head){work.emplace_back(i);permitted.insert(i);}
+        phi.removeIncomingValue(a,false);phi.removeIncomingValue(b,false);phi.addIncoming(v,head);
+      }
+      BranchInst::Create(join,br);br->eraseFromParent();
+      a->eraseFromParent();b->eraseFromParent();break;
+    }
+    // Bypass only newly-created branch-only blocks. LLVM's utility handles
+    // PHI edge compatibility, including multiple edges from one predecessor.
+    for(auto &h:blocks){auto *b=dyn_cast_or_null<BasicBlock>((Value*)h);if(!b||b==&f.getEntryBlock()||b->size()!=1)continue;
+      auto *br=dyn_cast<BranchInst>(b->getTerminator());if(!br||!br->isUnconditional()||br->getSuccessor(0)==b)continue;
+      bool safe=true;
+      for(auto *p:predecessors(b))safe&=created.count(p)||permitted.count(p->getTerminator());
+      for(auto &phi:br->getSuccessor(0)->phis())safe&=permitted.count(&phi);
+      if(safe&&TryToSimplifyUncondBranchFromEmptyBlock(b))break;
+    }
+    // Join a newly-created block to its sole unconditional predecessor.
+    // This only removes a straight-line boundary; no conditional is crossed.
+    for(auto &h:blocks){auto *b=dyn_cast_or_null<BasicBlock>((Value*)h);if(!b)continue;
+      auto *pred=b->getSinglePredecessor();if(!pred||pred==b)continue;
+      auto *br=dyn_cast<BranchInst>(pred->getTerminator());if(!br||!br->isUnconditional())continue;
+      if(!created.count(pred)&&!permitted.count(br))continue;
+      if(MergeBlockIntoPredecessor(b))break;
+    }
+    audit();if(verifyFunction(f,&errs()))throw std::runtime_error("scoped_cfg_invalid_ir");
+    if(moduleHash(*f.getParent())==before)return round;
+  }
+  throw std::runtime_error("scoped_cfg_did_not_converge");
+}
+
 unsigned cleanup(Module &m,const std::string &function,unsigned level,CleanupMode mode) {
-  if(mode==CleanupMode::None||mode==CleanupMode::ScopedLocal)return 0;
+  if(mode==CleanupMode::None||mode==CleanupMode::ScopedLocal||mode==CleanupMode::ScopedCFG)return 0;
   canonicalPhiOrder(m,function);
   if(mode==CleanupMode::O3){normalize(m,level);return 0;}
   auto*f=m.getFunction(function);if(!f)throw std::runtime_error("cleanup function missing");
@@ -548,7 +624,9 @@ Trial tryPair(const Module&parent,const Candidate&c,unsigned version,unsigned le
     if(!expanded->getUniqueSuccessor())return reject("replication_requires_unique_successor");
   }
   std::map<std::string,std::string> others;for(auto&g:*t.raw)if(&g!=f)others[g.getName().str()]=text(g);
-  auto localBefore=mode==CleanupMode::ScopedLocal?snapshotLocal(*f):std::vector<LocalSnapshot>{};
+  bool scoped=mode==CleanupMode::ScopedLocal||mode==CleanupMode::ScopedCFG;
+  auto localBefore=scoped?snapshotLocal(*f):std::vector<LocalSnapshot>{};
+  std::vector<WeakVH> priorBlocks; if(mode==CleanupMode::ScopedCFG)for(auto &b:*f)priorBlocks.emplace_back(&b);
   auto mt=Clock::now();RegionMelder melder(ma,true);if(t.logicalState)melder.onValueMapping=[&](const ValueToValueMapTy &m){t.logicalState->transfer(m);};if(useLocal){
     if(l.region||r.region)return reject("local_requires_basic_blocks");
     std::string why;
@@ -559,7 +637,9 @@ Trial tryPair(const Module&parent,const Candidate&c,unsigned version,unsigned le
   for(auto&g:*t.raw)if(&g!=f)if(!others.count(g.getName().str())||others.at(g.getName().str())!=text(g))return reject("other_function_changed");
   ft=Clock::now();t.afterRaw=features(*f);t.featuresMs+=millis(ft);if(t.afterRaw.loops>t.before.loops)return reject("new_raw_loop");
   auto blockLabel=[](const Value *V){std::string S;raw_string_ostream O(S);V->printAsOperand(O,false);O.flush();return S;};
-  auto rawLocalScope=mode==CleanupMode::ScopedLocal?changedLocal(*f,localBefore):std::set<Instruction*>{};
+  auto rawLocalScope=scoped?changedLocal(*f,localBefore):std::set<Instruction*>{};
+  std::set<BasicBlock*> oldBlocks,rawCreated;
+  if(mode==CleanupMode::ScopedCFG){for(auto &h:priorBlocks)if(auto *b=dyn_cast_or_null<BasicBlock>((Value*)h))oldBlocks.insert(b);for(auto &b:*f)if(!oldBlocks.count(&b))rawCreated.insert(&b);}
   ValueToValueMapTy CloneMap;
   auto nt=Clock::now();t.normalized=CloneModule(*t.raw,CloneMap);
   if(t.logicalState)t.logicalState=t.logicalState->clone(CloneMap);
@@ -573,9 +653,11 @@ Trial tryPair(const Module&parent,const Candidate&c,unsigned version,unsigned le
   }
   std::set<Instruction*> cleanLocalScope;
   for(auto*i:rawLocalScope)if(auto *mapped=dyn_cast_or_null<Instruction>(CloneMap.lookup(i)))cleanLocalScope.insert(mapped);
+  std::set<BasicBlock*> cleanCreated;
+  for(auto *b:rawCreated)if(auto *mapped=dyn_cast_or_null<BasicBlock>(CloneMap.lookup(b)))cleanCreated.insert(mapped);
   // Do not retain CloneMap's tracking handles while cleanup mutates the clone.
   CloneMap.clear();
-  t.cleanupIterations=mode==CleanupMode::ScopedLocal?cleanupScoped(*t.normalized->getFunction(c.function),cleanLocalScope):cleanup(*t.normalized,c.function,level,mode);canonicalPhiOrder(*t.normalized,c.function);t.normalizeMs=millis(nt);
+  t.cleanupIterations=mode==CleanupMode::ScopedCFG?cleanupScopedCFG(*t.normalized->getFunction(c.function),cleanLocalScope,cleanCreated):mode==CleanupMode::ScopedLocal?cleanupScoped(*t.normalized->getFunction(c.function),cleanLocalScope):cleanup(*t.normalized,c.function,level,mode);canonicalPhiOrder(*t.normalized,c.function);t.normalizeMs=millis(nt);
   for(size_t I=0;I<CleanedBlocks.size();++I)if(Value *V=CleanedBlocks[I])
     t.blockProvenance[I].cleanedBlock=blockLabel(V);
   if(verifyModule(*t.normalized,&errs()))return reject("normalized_verifier_failed");
@@ -593,6 +675,7 @@ RoundContext makeRound(const Module&parent,const std::string&function,unsigned v
   if(mode==CleanupMode::DarmCFGEarlyCSE)r.cleanup+="-earlycse-memoryssa0";
   if(mode==CleanupMode::PostOptFixedPoint)r.cleanup="phi-edge-function-order-v1;earlycse-memoryssa0-instcombine-simplifycfg-default-dce-earlycse-pure-scalar-phi-triangle-v1-fixedpoint-sha1-cap32";
   if(mode==CleanupMode::ScopedLocal)r.cleanup="changed-instructions-only;simplify-local-cse-dce;no-cfg-motion;protected-outside-audit;control-noop";
+  if(mode==CleanupMode::ScopedCFG)r.cleanup="trial-created-blocks-only;empty-block-bypass-empty-diamond-proven-branch;boundary-terminators-and-phis;outside-audit;control-no-created-blocks-noop";
   if(mode==CleanupMode::None)r.cleanup="none;no_external_cleanup";
   if(mode==CleanupMode::DarmCFGScalarFixedPoint)r.cleanup+="-earlycse-instcombine-fixedpoint-sha1-cap32";
   auto*f=parent.getFunction(function);if(!f||f->isDeclaration())throw std::runtime_error("round function missing");
