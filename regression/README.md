@@ -1,0 +1,69 @@
+# GPU 回归基准
+
+当前快照：`regression/golden/20261109-gfx906-v1/`，约 1.4 GB，不压缩、独立复制、文件只读。不要将该目录作为临时实验数据清理。
+
+| case | 冻结配置 | 历史耗时 |
+|---|---|---:|
+| vllm | 真实 Qwen 64K 六层；32 处量化树，每处 7 次融合；LLVM24 相邻贪心，靠左破同分，cleanup none | 13.056489 ms |
+| tigre | head64、50 projections；scoped-local 自动贪心，Y+Z 再 X+(Y,Z)，单处采样 | 3.088162 ms |
+
+这些是同一 gfx906 上当前 suite 的已测优胜配置，不是跨设备全局最优，也不是 vLLM 端到端推理性能。vLLM 与平衡树等完整融合配置非常接近，冻结贪心版本不表示显著胜过这些近似同速方案。
+
+## 回归一个新二进制
+
+```sh
+cd /home/chh/kernel-benchmark-suite
+python3 tools/run_golden_regression.py vllm \
+  --candidate /absolute/path/new-vllm.hsaco \
+  --out regression/runs/UNIQUE-vllm
+
+python3 tools/run_golden_regression.py tigre \
+  --candidate /absolute/path/new-tigre.hsaco \
+  --out regression/runs/UNIQUE-tigre
+```
+
+必须使用新输出目录。省略 `--candidate` 只做冻结版本的自检，不表示测试了当前源码。
+
+运行入口先校验全部 800 个归档文件的 SHA-256，然后使用冻结的 C++ runner、输入和完整参考输出，分别验证 reference/candidate，按三组轮换顺序进行 GPU event 计时（每组 3 次预热、15 次测量）。继续使用现有 GPU 准入和队列锁；只允许在确认尚未执行的准入拒绝后有限重试，执行失败不重跑。
+
+汇总为六层/六批各自三组中位数的中位数之和。默认新版本比同批冻结版本慢超过 2% 则回归失败，阈值可显式用 `--max-slowdown-pct` 设置并记录。小幅差异不是统计显著性的证明。历史耗时仅供环境漂移参考，不能替代同批对照。
+
+只检查归档完整性：
+
+```sh
+python3 tools/run_golden_regression.py vllm --verify-only \
+  --out regression/runs/UNIQUE-integrity
+```
+
+结果位于输出目录的 `summary.json`，详细计划、验证回执和原始计时样本一并保留。不会自动修改或升级 golden。
+
+## 快照内容与依赖
+
+- vllm/inputs：六层完整 BF16 K/V、slots、初始输出与正确性参考输出；另保留模型/输入生成来源说明。
+- tigre/inputs：head64 phantom 和六批 CPU recurrence 参考输出。
+- artifacts：基线 IR、优胜 IR、最终优化 IR、GPU 二进制、未融合对照及资源记录。
+- historical：选中配置的完整历史验证、计时样本、汇总和构建命令记录。
+- runner：冻结的 C++ 可执行文件。
+- source/compiler：融合器、评分器和 runner 源码快照，搜索可执行文件；来源和文件哈希在 manifest.json。
+
+完整工具链、ROCm 驱动、LLVM24 动态库及共享机器准入服务仍依赖 musa 环境，没有复制操作系统或全部工具链。已冻结二进制的运行不依赖原实验目录中的输入、runner 或 golden 二进制。
+
+大文件留在本机归档，Git 跟踪 manifest、catalog、运行工具和文档。SHA 清单在 manifest.json；修改文件不会静默通过回归。重新冻结必须建立新快照目录并人工核对，不覆盖旧快照。
+
+## 当前代码生成回归
+
+本轮另外重新执行了 vLLM 全部 224 次融合，以及 TIGRE 最佳 scoped-local 配置，结果分别保存在：
+
+- experiments/vllm-regression-20261109-v1/code-regression.json
+- experiments/tigre-regression-20261109-v1/code-regression.json
+
+两项当前构建的 GPU 二进制均与冻结优胜版本逐字节一致；vLLM 选树和评分记录一致。IR 去掉输入路径的 ModuleID 注释后相同。可选 scoped-cfg 没有替代 vLLM 当前的 none 配置，也没有替代 TIGRE 的优胜 scoped-local 配置。
+
+## 2026-11-09 回归结果
+
+| case | 冻结版同批 ms | 当前版 ms | 变慢比例 | 结果 |
+|---|---:|---:|---:|---|
+| vLLM | 13.052810 | 13.053451 | 0.0049% | 正确性与性能通过 |
+| TIGRE | 3.087841 | 3.088644 | 0.0260% | 正确性与性能通过 |
+
+运行生成的 `.bin` 输出已按用户要求丢弃；正确性回执、CSV 样本与摘要保留。输入和正确性参考输出不属于此次清理范围。

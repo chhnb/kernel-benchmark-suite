@@ -1,0 +1,15 @@
+{
+  "schema": "regression-catalog-v1",
+  "active_snapshot": "golden/20261109-gfx906-v1",
+  "cases": [
+    "vllm",
+    "tigre"
+  ],
+  "default_slowdown_limit_pct": 2,
+  "automatic_reference_update": false,
+  "input_scope": {
+    "vllm": "real Qwen3.5 64K six layers; software HIP cache_eval",
+    "tigre": "full Siddon head64 phantom 50 projections"
+  },
+  "hardware": "gfx906"
+}

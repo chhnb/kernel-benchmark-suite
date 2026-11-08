@@ -1,0 +1,86 @@
+{
+  "scope": "generated run output .bin only; frozen inputs and oracles untouched",
+  "files": [
+    {
+      "path": "/home/chh/kernel-benchmark-suite/regression/runs/20261109-tigre-current-v1/candidate-batch-2/output/0/params.bin",
+      "bytes": 2592
+    },
+    {
+      "path": "/home/chh/kernel-benchmark-suite/regression/runs/20261109-tigre-current-v1/candidate-batch-0/output/0/params.bin",
+      "bytes": 2592
+    },
+    {
+      "path": "/home/chh/kernel-benchmark-suite/regression/runs/20261109-tigre-current-v1/reference-batch-1/output/0/params.bin",
+      "bytes": 2592
+    },
+    {
+      "path": "/home/chh/kernel-benchmark-suite/regression/runs/20261109-tigre-current-v1/reference-validation/output/0/baseline-5.bin",
+      "bytes": 590336
+    },
+    {
+      "path": "/home/chh/kernel-benchmark-suite/regression/runs/20261109-tigre-current-v1/reference-validation/output/0/baseline-3.bin",
+      "bytes": 590336
+    },
+    {
+      "path": "/home/chh/kernel-benchmark-suite/regression/runs/20261109-tigre-current-v1/reference-validation/output/0/baseline-0.bin",
+      "bytes": 590336
+    },
+    {
+      "path": "/home/chh/kernel-benchmark-suite/regression/runs/20261109-tigre-current-v1/reference-validation/output/0/baseline-4.bin",
+      "bytes": 590336
+    },
+    {
+      "path": "/home/chh/kernel-benchmark-suite/regression/runs/20261109-tigre-current-v1/reference-validation/output/0/baseline-1.bin",
+      "bytes": 590336
+    },
+    {
+      "path": "/home/chh/kernel-benchmark-suite/regression/runs/20261109-tigre-current-v1/reference-validation/output/0/params.bin",
+      "bytes": 2592
+    },
+    {
+      "path": "/home/chh/kernel-benchmark-suite/regression/runs/20261109-tigre-current-v1/reference-validation/output/0/baseline-2.bin",
+      "bytes": 590336
+    },
+    {
+      "path": "/home/chh/kernel-benchmark-suite/regression/runs/20261109-tigre-current-v1/candidate-validation/output/0/baseline-5.bin",
+      "bytes": 590336
+    },
+    {
+      "path": "/home/chh/kernel-benchmark-suite/regression/runs/20261109-tigre-current-v1/candidate-validation/output/0/baseline-3.bin",
+      "bytes": 590336
+    },
+    {
+      "path": "/home/chh/kernel-benchmark-suite/regression/runs/20261109-tigre-current-v1/candidate-validation/output/0/baseline-0.bin",
+      "bytes": 590336
+    },
+    {
+      "path": "/home/chh/kernel-benchmark-suite/regression/runs/20261109-tigre-current-v1/candidate-validation/output/0/baseline-4.bin",
+      "bytes": 590336
+    },
+    {
+      "path": "/home/chh/kernel-benchmark-suite/regression/runs/20261109-tigre-current-v1/candidate-validation/output/0/baseline-1.bin",
+      "bytes": 590336
+    },
+    {
+      "path": "/home/chh/kernel-benchmark-suite/regression/runs/20261109-tigre-current-v1/candidate-validation/output/0/params.bin",
+      "bytes": 2592
+    },
+    {
+      "path": "/home/chh/kernel-benchmark-suite/regression/runs/20261109-tigre-current-v1/candidate-validation/output/0/baseline-2.bin",
+      "bytes": 590336
+    },
+    {
+      "path": "/home/chh/kernel-benchmark-suite/regression/runs/20261109-tigre-current-v1/reference-batch-0/output/0/params.bin",
+      "bytes": 2592
+    },
+    {
+      "path": "/home/chh/kernel-benchmark-suite/regression/runs/20261109-tigre-current-v1/reference-batch-2/output/0/params.bin",
+      "bytes": 2592
+    },
+    {
+      "path": "/home/chh/kernel-benchmark-suite/regression/runs/20261109-tigre-current-v1/candidate-batch-1/output/0/params.bin",
+      "bytes": 2592
+    }
+  ],
+  "bytes": 7104768
+}

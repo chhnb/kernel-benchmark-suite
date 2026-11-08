@@ -1,0 +1,54 @@
+{
+  "vllm": {
+    "correctness_passed": true,
+    "performance_passed": true,
+    "sum_medians_ms": {
+      "reference": 13.052809815,
+      "candidate": 13.053451170999999
+    },
+    "candidate_slowdown_pct": 0.004913547420737352,
+    "threshold_pct": 2.0,
+    "batch_sums_ms": {
+      "reference": [
+        13.051529786,
+        13.056652099999999,
+        13.052330566000002
+      ],
+      "candidate": [
+        13.051691895000001,
+        13.058411865,
+        13.052329345
+      ]
+    },
+    "historical_reference_ms": 13.056489256999999,
+    "reference_vs_history_pct": -0.028180944567668398,
+    "comparison": "same-run frozen reference; historical timing is informational",
+    "candidate_matches_reference_binary": true
+  },
+  "tigre": {
+    "correctness_passed": true,
+    "performance_passed": true,
+    "sum_medians_ms": {
+      "reference": 3.087841,
+      "candidate": 3.0886439999999995
+    },
+    "candidate_slowdown_pct": 0.026005225009950728,
+    "threshold_pct": 2.0,
+    "batch_sums_ms": {
+      "reference": [
+        3.089762,
+        3.0768009999999992,
+        3.085441
+      ],
+      "candidate": [
+        3.085922,
+        3.0873649999999997,
+        3.084804
+      ]
+    },
+    "historical_reference_ms": 3.088162,
+    "reference_vs_history_pct": -0.010394532411184265,
+    "comparison": "same-run frozen reference; historical timing is informational",
+    "candidate_matches_reference_binary": true
+  }
+}
