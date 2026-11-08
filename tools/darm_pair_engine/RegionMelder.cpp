@@ -768,7 +768,102 @@ Instruction *RegionMelder::cloneInstruction(Instruction *OrigI,
 
 void RegionMelder::runUnpredicationPass() {
 
-  for (auto &Range : SplitRanges) {
+  for (unsigned RangeIndex = 0; RangeIndex < SplitRanges.size(); ++RangeIndex) {
+    auto &Range = SplitRanges[RangeIndex];
+    // Consecutive unmatched runs on opposite paths form one diamond, not two
+    // serial guard diamonds. Do this before introducing undef-carrier PHIs.
+    if (RangeIndex + 1 < SplitRanges.size()) {
+      auto &Other = SplitRanges[RangeIndex + 1];
+      bool Adjacent = Range.splitToTrue() != Other.splitToTrue() &&
+                      Range.getStart()->getParent() == Other.getStart()->getParent() &&
+                      Range.getEnd()->getNextNode() == Other.getStart();
+      if (Adjacent) {
+        SmallPtrSet<Instruction *, 16> First, Second;
+        for (auto *I = Range.getStart();; I = I->getNextNode()) {
+          First.insert(I);
+          if (I == Range.getEnd()) break;
+        }
+        for (auto *I = Other.getStart();; I = I->getNextNode()) {
+          Second.insert(I);
+          if (I == Other.getEnd()) break;
+        }
+        // Selecting two mutually exclusive arms must not introduce a use of a
+        // value produced only by the other arm. Fall back to the old path.
+        for (auto *I : First)
+          for (auto &Op : I->operands())
+            if (auto *Def = dyn_cast<Instruction>(Op.get()))
+              Adjacent &= !Second.count(Def);
+        for (auto *I : Second)
+          for (auto &Op : I->operands())
+            if (auto *Def = dyn_cast<Instruction>(Op.get()))
+              Adjacent &= !First.count(Def);
+      }
+      if (Adjacent) {
+        auto *Head = Range.getStart()->getParent();
+        auto *First = SplitBlock(Head, Range.getStart(), nullptr, nullptr,
+                                 nullptr, "predication.first");
+        auto *Second = SplitBlock(First, Other.getStart(), nullptr, nullptr,
+                                  nullptr, "predication.second");
+        auto *Tail = SplitBlock(Second, Other.getEnd()->getNextNode(), nullptr,
+                                nullptr, nullptr, "predication.join");
+        auto *TrueArm = Range.splitToTrue() ? First : Second;
+        auto *FalseArm = Range.splitToTrue() ? Second : First;
+        auto *Condition = MA.getDivergentCondition();
+        Head->getTerminator()->eraseFromParent();
+        BranchInst::Create(TrueArm, FalseArm, Condition, Head);
+        cast<BranchInst>(First->getTerminator())->setSuccessor(0, Tail);
+
+        SmallVector<PHINode *, 16> Carriers;
+        SmallPtrSet<SelectInst *, 16> Selects;
+        for (auto *Arm : {First, Second}) {
+          auto *Opposite = Arm == First ? Second : First;
+          for (auto &I : *Arm) {
+            SmallVector<Instruction *, 8> OutsideUsers;
+            for (auto *U : I.users())
+              if (auto *User = dyn_cast<Instruction>(U))
+                if (User->getParent() != Arm) OutsideUsers.push_back(User);
+            if (OutsideUsers.empty()) continue;
+            auto *Phi = PHINode::Create(I.getType(), 2, "guard.value",
+                                        Tail->getFirstNonPHI());
+            Phi->addIncoming(&I, Arm);
+            Phi->addIncoming(UndefValue::get(I.getType()), Opposite);
+            Carriers.push_back(Phi);
+            for (auto *User : OutsideUsers) {
+              User->replaceUsesOfWith(&I, Phi);
+              if (auto *Select = dyn_cast<SelectInst>(User))
+                if (Select->getParent() == Tail && Select->getCondition() == Condition)
+                  Selects.insert(Select);
+            }
+          }
+        }
+        // A selection of arm-local results is directly represented by a PHI.
+        // Only touch selectors fed by the carrier PHIs created above.
+        auto incoming = [&](Value *V, BasicBlock *Arm) -> Value * {
+          if (auto *Phi = dyn_cast<PHINode>(V))
+            if (Phi->getParent() == Tail) return Phi->getIncomingValueForBlock(Arm);
+          if (isa<Constant>(V) || isa<Argument>(V)) return V;
+          return nullptr;
+        };
+        // Use instruction order, rather than pointer-set order, for stable IR.
+        for (auto It = Tail->begin(); It != Tail->end();) {
+          auto *Select = dyn_cast<SelectInst>(&*It++);
+          if (!Select || !Selects.count(Select)) continue;
+          auto *TrueValue = incoming(Select->getTrueValue(), TrueArm);
+          auto *FalseValue = incoming(Select->getFalseValue(), FalseArm);
+          if (!TrueValue || !FalseValue) continue;
+          auto *Phi = PHINode::Create(Select->getType(), 2, "guard.result",
+                                      Tail->getFirstNonPHI());
+          Phi->addIncoming(TrueValue, TrueArm);
+          Phi->addIncoming(FalseValue, FalseArm);
+          Select->replaceAllUsesWith(Phi);
+          Select->eraseFromParent();
+        }
+        for (auto *Phi : Carriers)
+          if (Phi->use_empty()) Phi->eraseFromParent();
+        ++RangeIndex;
+        continue;
+      }
+    }
     BasicBlock *BB = Range.getStart()->getParent();
     BasicBlock *SplitBb = SplitBlock(BB, Range.getStart(), nullptr, nullptr,
                                      nullptr, "predication.split");
