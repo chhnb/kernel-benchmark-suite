@@ -88,7 +88,7 @@ int main(int argc,char**argv) {
   try {
     std::string input,function,output,debug,split,left,right,replayParentHash,profileBundle,policy="llvm24";Options options;PostOptConfig config;bool controlOnly=false,catalogOnly=false;std::string ttiWorker="/home/chh/kernel-benchmark-suite/tools/run-llvm24-tti";
     for(int i=1;i<argc;++i){std::string k=argv[i];
-      if(k=="--help"){outs()<<"fusion-search --ir FILE --function NAME --out FILE [--control-only 0|1] [--catalog-only 0|1 (requires debug-dir)] [--replay-parent-hash SHA1 (explicit snapshot pair only)] [--adjacent-only 0|1] [--local-copysign 0|1 (requires adjacent-only 1, cleanup none)] [--scorer llvm24|legacy|v1|v2|v5] [--tti-worker EXECUTABLE] [--profile-bundle FILE (experimental v5 only)] [--work-absolute 0] [--work-relative 0] [--pressure-weight 0] [--dependency-features 0|1] [--static-alloca-cost POSITIVE_INT (disabled by default)] [--rounds 8] [--trials 256] [--threshold 0] [--opt-level 3] [--debug-dir DIR] [--require-parent-gain 1] [--cleanup none|postopt-fp|darm-cfg-scalar-fp|darm-cfg-earlycse|darm-cfg|o3]\nExplicit pair: add --split B# --left B#/R# --right B#/R#. IDs refer to the input state (O3-normalized only in o3 mode). Default cleanup: darm-cfg-earlycse. Final codegen O3 is separate.\n";return 0;}
+      if(k=="--help"){outs()<<"fusion-search --ir FILE --function NAME --out FILE [--control-only 0|1] [--catalog-only 0|1 (requires debug-dir)] [--replay-parent-hash SHA1 (explicit snapshot pair only)] [--adjacent-only 0|1] [--local-union 0|1] [--local-copysign 0|1 (requires adjacent-only 1, cleanup none)] [--scorer llvm24|legacy|v1|v2|v5] [--tti-worker EXECUTABLE] [--profile-bundle FILE (experimental v5 only)] [--work-absolute 0] [--work-relative 0] [--pressure-weight 0] [--dependency-features 0|1] [--static-alloca-cost POSITIVE_INT (disabled by default)] [--rounds 8] [--trials 256] [--threshold 0] [--opt-level 3] [--debug-dir DIR] [--require-parent-gain 1] [--cleanup none|postopt-fp|darm-cfg-scalar-fp|darm-cfg-earlycse|darm-cfg|o3]\nExplicit pair: add --split B# --left B#/R# --right B#/R#. IDs refer to the input state (O3-normalized only in o3 mode). Default cleanup: darm-cfg-earlycse. Final codegen O3 is separate.\n";return 0;}
       if(i+1==argc)throw std::runtime_error("missing option value");std::string v=argv[++i];
       if(k=="--control-only"){if(v!="0"&&v!="1")throw std::runtime_error("control-only must be 0 or 1");controlOnly=v=="1";}
       else if(k=="--catalog-only"){if(v!="0"&&v!="1")throw std::runtime_error("catalog-only must be 0 or 1");catalogOnly=v=="1";}
@@ -101,6 +101,7 @@ int main(int argc,char**argv) {
       else if(k=="--profile-bundle")profileBundle=v;
       else if(k=="--replay-parent-hash")replayParentHash=v;
       else if(k=="--ir")input=v;else if(k=="--function")function=v;else if(k=="--out")output=v;
+      else if(k=="--local-union"){if(v!="0"&&v!="1")throw std::runtime_error("local-union must be 0 or 1");options.localUnion=v=="1";}
       else if(k=="--local-copysign"){if(v!="0"&&v!="1")throw std::runtime_error("local-copysign must be 0 or 1");options.localCopysign=v=="1";}
       else if(k=="--cleanup"){if(v=="none")options.cleanupMode=CleanupMode::None;else if(v=="postopt-fp")options.cleanupMode=CleanupMode::PostOptFixedPoint;else if(v=="darm-cfg-scalar-fp")options.cleanupMode=CleanupMode::DarmCFGScalarFixedPoint;else if(v=="darm-cfg-earlycse")options.cleanupMode=CleanupMode::DarmCFGEarlyCSE;else if(v=="darm-cfg")options.cleanupMode=CleanupMode::DarmCFG;else if(v=="o3")options.cleanupMode=CleanupMode::O3;else throw std::runtime_error("cleanup must be none, postopt-fp, darm-cfg-scalar-fp, darm-cfg-earlycse, darm-cfg or o3");}
       else if(k=="--debug-dir")debug=v;else if(k=="--split")split=v;else if(k=="--left")left=v;else if(k=="--right")right=v;
@@ -130,6 +131,7 @@ int main(int argc,char**argv) {
       // The authenticated serialized origin is distinct from the parsed parent:
       // LLVM can reorder predecessor comments/use lists when reading legacy text.
     }
+    if(options.localUnion&&!options.localCopysign)throw std::runtime_error("local-union requires local-copysign 1");
     if(options.localCopysign&&(!options.adjacentOnly||options.cleanupMode!=CleanupMode::None))throw std::runtime_error("local-copysign requires adjacent-only 1 and cleanup none");
     if(verifyModule(*module,&errs()))return 2;
     auto*f=module->getFunction(function);if(!f||f->isDeclaration())throw std::runtime_error("function missing");
@@ -177,7 +179,7 @@ int main(int argc,char**argv) {
     if(policy=="v1")config.pressureWeight=0;
     if(observer)jsonFile(debug+"/run.json",json::Object{
       {"schema","postopt-scoring-run-v1"},{"adjacent_only",options.adjacentOnly},{"mode",pair?"explicit_pair":"greedy"},
-      {"local_copysign",options.localCopysign},{"policy",policy},{"profile_bundle",profileBundle},{"profile_bundle_sha1",toHex(SHA1::hash(ArrayRef<uint8_t>(reinterpret_cast<const uint8_t*>(config.profileBundleText.data()),config.profileBundleText.size())),true)},{"function",function},{"initial_parent_hash",moduleHash(*module)},{"replay_parent_hash",replayParentHash},
+      {"local_union",options.localUnion},{"local_copysign",options.localCopysign},{"policy",policy},{"profile_bundle",profileBundle},{"profile_bundle_sha1",toHex(SHA1::hash(ArrayRef<uint8_t>(reinterpret_cast<const uint8_t*>(config.profileBundleText.data()),config.profileBundleText.size())),true)},{"function",function},{"initial_parent_hash",moduleHash(*module)},{"replay_parent_hash",replayParentHash},
       {"work_absolute",config.absoluteThreshold},{"work_relative",config.relativeThreshold},
       {"dependency_features",config.dependencyFeatures},{"pressure_weight",config.pressureWeight},{"static_alloca_cost",int64_t(config.staticAllocaCost)},{"threshold",options.threshold},
       {"require_parent_gain",options.requireParentGain},{"opt_level",int64_t(options.optLevel)},
@@ -185,7 +187,7 @@ int main(int argc,char**argv) {
     PostOptScorer postScorer(config);
     const Scorer&scorer=policy=="llvm24"?static_cast<const Scorer&>(llvm24Scorer):policy=="legacy"?static_cast<const Scorer&>(legacyScorer):static_cast<const Scorer&>(postScorer);
     if(pair){Candidate c{function,split,left,right,0};std::shared_ptr<LogicalRegionState> logical;if(options.adjacentOnly){logical=LogicalRegionState::initialize(*module->getFunction(function));if(observer)observer->logical(0,logical->json());auto adjacent=logical->filter(*module->getFunction(function),enumerate(*module->getFunction(function),0));bool found=false;for(auto &a:adjacent)if(a.key()==c.key()){found=true;c=a;}if(!found)throw std::runtime_error("explicit_pair_not_adjacent");}const auto round=makeRound(*module,function,0,options.optLevel,options.cleanupMode);if(observer)observer->round(round);
-      c.localCopysign=options.localCopysign;auto t=tryPair(*module,c,0,options.optLevel,options.cleanupMode,logical.get());auto score=evaluateTrial(*module,t,round,scorer);
+      c.localCopysign=options.localCopysign;c.localUnion=options.localUnion;auto t=tryPair(*module,c,0,options.optLevel,options.cleanupMode,logical.get());auto score=evaluateTrial(*module,t,round,scorer);
       if(observer)observer->trial(t,round,score,eligible(t,score,options));
       if(!t.valid){errs()<<"rejected: "<<t.reason<<"\n";return 4;}
       if(score.status!=ScoreStatus::Scored)errs()<<"score unsupported; exporting legal trial: "<<score.reason<<"\n";

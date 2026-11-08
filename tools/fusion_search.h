@@ -17,6 +17,7 @@ struct Candidate {
   unsigned version = 0;
   std::string logicalDecision, logicalLeft, logicalRight;
   bool localCopysign=false;
+  bool localUnion=false;
   std::string key() const { return function+":"+split+":"+left+":"+right; }
 };
 struct OperationKey {
@@ -117,6 +118,7 @@ struct Options {
   bool requireParentGain=true;
   bool adjacentOnly=false;
   bool localCopysign=false;
+  bool localUnion=false;
 };
 struct Observer {
   virtual ~Observer() = default;

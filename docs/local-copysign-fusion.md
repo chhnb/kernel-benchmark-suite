@@ -8,6 +8,8 @@
 
 当前搜索程序实际编译 suite 内 `tools/darm_pair_engine` 的修改版副本，并链接 LLVM12。suite 原先没有 Git；本次为 tools/tests 和顶层构建说明建立源码现状快照，再单独提交本功能。未配置 suite remote，未推送。提交身份使用客户端已有的 Git 身份，仅在 suite 仓库中配置。
 
+更新：另有可选 `--local-union 1` 路线，支持入口条件并集和同前驱 diamond；详见 `local-union-fusion.md`。以下保留原 PHI 模式的说明与数据。
+
 ## 新模式
 
 ```text
