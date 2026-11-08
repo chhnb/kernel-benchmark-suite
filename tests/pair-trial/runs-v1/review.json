@@ -1,0 +1,16 @@
+{
+  "passed": true,
+  "records": [
+    {
+      "kind": "blocks",
+      "passed": true,
+      "comparisons": 804
+    },
+    {
+      "kind": "regions",
+      "passed": true,
+      "comparisons": 804
+    }
+  ],
+  "negative_overlap_rejected": true
+}

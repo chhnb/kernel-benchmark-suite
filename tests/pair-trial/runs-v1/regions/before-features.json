@@ -1,0 +1,447 @@
+{
+  "blocks": [
+    {
+      "darm_static_cost": 9,
+      "instructions": [
+        {
+          "darm_static_cost": 3,
+          "llvm": "  %c = icmp ne i32 %side, 0",
+          "may_read": false,
+          "may_write": false,
+          "name": "%c",
+          "opcode": "icmp",
+          "operands": [
+            "%side",
+            "0"
+          ],
+          "side_effects": false,
+          "type": "i1",
+          "users": [
+            "<badref>"
+          ]
+        },
+        {
+          "darm_static_cost": 3,
+          "llvm": "  %d = icmp ne i32 %inner, 0",
+          "may_read": false,
+          "may_write": false,
+          "name": "%d",
+          "opcode": "icmp",
+          "operands": [
+            "%inner",
+            "0"
+          ],
+          "side_effects": false,
+          "type": "i1",
+          "users": [
+            "<badref>",
+            "<badref>"
+          ]
+        },
+        {
+          "darm_static_cost": 3,
+          "llvm": "  br i1 %c, label %left, label %right",
+          "may_read": false,
+          "may_write": false,
+          "name": "<badref>",
+          "opcode": "br",
+          "operands": [
+            "%c",
+            "%right",
+            "%left"
+          ],
+          "side_effects": false,
+          "type": "void",
+          "users": []
+        }
+      ],
+      "name": "%entry",
+      "predecessors": [],
+      "successors": [
+        "%left",
+        "%right"
+      ]
+    },
+    {
+      "darm_static_cost": 3,
+      "instructions": [
+        {
+          "darm_static_cost": 3,
+          "llvm": "  br i1 %d, label %l0, label %l1",
+          "may_read": false,
+          "may_write": false,
+          "name": "<badref>",
+          "opcode": "br",
+          "operands": [
+            "%d",
+            "%l1",
+            "%l0"
+          ],
+          "side_effects": false,
+          "type": "void",
+          "users": []
+        }
+      ],
+      "name": "%left",
+      "predecessors": [
+        "%entry"
+      ],
+      "successors": [
+        "%l0",
+        "%l1"
+      ]
+    },
+    {
+      "darm_static_cost": 8,
+      "instructions": [
+        {
+          "darm_static_cost": 5,
+          "llvm": "  %a = add i32 %x, 7",
+          "may_read": false,
+          "may_write": false,
+          "name": "%a",
+          "opcode": "add",
+          "operands": [
+            "%x",
+            "7"
+          ],
+          "side_effects": false,
+          "type": "i32",
+          "users": [
+            "%lv"
+          ]
+        },
+        {
+          "darm_static_cost": 3,
+          "llvm": "  br label %lj",
+          "may_read": false,
+          "may_write": false,
+          "name": "<badref>",
+          "opcode": "br",
+          "operands": [
+            "%lj"
+          ],
+          "side_effects": false,
+          "type": "void",
+          "users": []
+        }
+      ],
+      "name": "%l0",
+      "predecessors": [
+        "%left"
+      ],
+      "successors": [
+        "%lj"
+      ]
+    },
+    {
+      "darm_static_cost": 13,
+      "instructions": [
+        {
+          "darm_static_cost": 10,
+          "llvm": "  %b = mul i32 %x, 3",
+          "may_read": false,
+          "may_write": false,
+          "name": "%b",
+          "opcode": "mul",
+          "operands": [
+            "%x",
+            "3"
+          ],
+          "side_effects": false,
+          "type": "i32",
+          "users": [
+            "%lv"
+          ]
+        },
+        {
+          "darm_static_cost": 3,
+          "llvm": "  br label %lj",
+          "may_read": false,
+          "may_write": false,
+          "name": "<badref>",
+          "opcode": "br",
+          "operands": [
+            "%lj"
+          ],
+          "side_effects": false,
+          "type": "void",
+          "users": []
+        }
+      ],
+      "name": "%l1",
+      "predecessors": [
+        "%left"
+      ],
+      "successors": [
+        "%lj"
+      ]
+    },
+    {
+      "darm_static_cost": 6,
+      "instructions": [
+        {
+          "darm_static_cost": 3,
+          "llvm": "  %lv = phi i32 [ %a, %l0 ], [ %b, %l1 ]",
+          "may_read": false,
+          "may_write": false,
+          "name": "%lv",
+          "opcode": "phi",
+          "operands": [
+            "%a",
+            "%b"
+          ],
+          "side_effects": false,
+          "type": "i32",
+          "users": [
+            "%z"
+          ]
+        },
+        {
+          "darm_static_cost": 3,
+          "llvm": "  br label %join",
+          "may_read": false,
+          "may_write": false,
+          "name": "<badref>",
+          "opcode": "br",
+          "operands": [
+            "%join"
+          ],
+          "side_effects": false,
+          "type": "void",
+          "users": []
+        }
+      ],
+      "name": "%lj",
+      "predecessors": [
+        "%l1",
+        "%l0"
+      ],
+      "successors": [
+        "%join"
+      ]
+    },
+    {
+      "darm_static_cost": 3,
+      "instructions": [
+        {
+          "darm_static_cost": 3,
+          "llvm": "  br i1 %d, label %r0, label %r1",
+          "may_read": false,
+          "may_write": false,
+          "name": "<badref>",
+          "opcode": "br",
+          "operands": [
+            "%d",
+            "%r1",
+            "%r0"
+          ],
+          "side_effects": false,
+          "type": "void",
+          "users": []
+        }
+      ],
+      "name": "%right",
+      "predecessors": [
+        "%entry"
+      ],
+      "successors": [
+        "%r0",
+        "%r1"
+      ]
+    },
+    {
+      "darm_static_cost": 6,
+      "instructions": [
+        {
+          "darm_static_cost": 3,
+          "llvm": "  %u = sub i32 %x, 5",
+          "may_read": false,
+          "may_write": false,
+          "name": "%u",
+          "opcode": "sub",
+          "operands": [
+            "%x",
+            "5"
+          ],
+          "side_effects": false,
+          "type": "i32",
+          "users": [
+            "%rv"
+          ]
+        },
+        {
+          "darm_static_cost": 3,
+          "llvm": "  br label %rj",
+          "may_read": false,
+          "may_write": false,
+          "name": "<badref>",
+          "opcode": "br",
+          "operands": [
+            "%rj"
+          ],
+          "side_effects": false,
+          "type": "void",
+          "users": []
+        }
+      ],
+      "name": "%r0",
+      "predecessors": [
+        "%right"
+      ],
+      "successors": [
+        "%rj"
+      ]
+    },
+    {
+      "darm_static_cost": 13,
+      "instructions": [
+        {
+          "darm_static_cost": 10,
+          "llvm": "  %v = mul i32 %x, 2",
+          "may_read": false,
+          "may_write": false,
+          "name": "%v",
+          "opcode": "mul",
+          "operands": [
+            "%x",
+            "2"
+          ],
+          "side_effects": false,
+          "type": "i32",
+          "users": [
+            "%rv"
+          ]
+        },
+        {
+          "darm_static_cost": 3,
+          "llvm": "  br label %rj",
+          "may_read": false,
+          "may_write": false,
+          "name": "<badref>",
+          "opcode": "br",
+          "operands": [
+            "%rj"
+          ],
+          "side_effects": false,
+          "type": "void",
+          "users": []
+        }
+      ],
+      "name": "%r1",
+      "predecessors": [
+        "%right"
+      ],
+      "successors": [
+        "%rj"
+      ]
+    },
+    {
+      "darm_static_cost": 6,
+      "instructions": [
+        {
+          "darm_static_cost": 3,
+          "llvm": "  %rv = phi i32 [ %u, %r0 ], [ %v, %r1 ]",
+          "may_read": false,
+          "may_write": false,
+          "name": "%rv",
+          "opcode": "phi",
+          "operands": [
+            "%u",
+            "%v"
+          ],
+          "side_effects": false,
+          "type": "i32",
+          "users": [
+            "%z"
+          ]
+        },
+        {
+          "darm_static_cost": 3,
+          "llvm": "  br label %join",
+          "may_read": false,
+          "may_write": false,
+          "name": "<badref>",
+          "opcode": "br",
+          "operands": [
+            "%join"
+          ],
+          "side_effects": false,
+          "type": "void",
+          "users": []
+        }
+      ],
+      "name": "%rj",
+      "predecessors": [
+        "%r1",
+        "%r0"
+      ],
+      "successors": [
+        "%join"
+      ]
+    },
+    {
+      "darm_static_cost": 6,
+      "instructions": [
+        {
+          "darm_static_cost": 3,
+          "llvm": "  %z = phi i32 [ %lv, %lj ], [ %rv, %rj ]",
+          "may_read": false,
+          "may_write": false,
+          "name": "%z",
+          "opcode": "phi",
+          "operands": [
+            "%lv",
+            "%rv"
+          ],
+          "side_effects": false,
+          "type": "i32",
+          "users": [
+            "<badref>"
+          ]
+        },
+        {
+          "darm_static_cost": 3,
+          "llvm": "  ret i32 %z",
+          "may_read": false,
+          "may_write": false,
+          "name": "<badref>",
+          "opcode": "ret",
+          "operands": [
+            "%z"
+          ],
+          "side_effects": false,
+          "type": "void",
+          "users": []
+        }
+      ],
+      "name": "%join",
+      "predecessors": [
+        "%rj",
+        "%lj"
+      ],
+      "successors": []
+    }
+  ],
+  "function": "choose",
+  "opcode_histogram": {
+    "add": 1,
+    "br": 9,
+    "icmp": 2,
+    "mul": 2,
+    "phi": 3,
+    "ret": 1,
+    "sub": 1
+  },
+  "summary": {
+    "blocks": 10,
+    "calls": 0,
+    "conditional_branches": 3,
+    "darm_static_cost": 73,
+    "instructions": 19,
+    "loads": 0,
+    "phis": 3,
+    "selects": 0,
+    "stores": 0
+  }
+}

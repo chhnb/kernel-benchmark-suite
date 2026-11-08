@@ -1,0 +1,1399 @@
+{
+  "functions": [
+    {
+      "blocks": [
+        {
+          "id": "B0",
+          "immediate_postdominator": "B5",
+          "instruction_count": 2,
+          "loop_depth": 0,
+          "name": "%entry",
+          "predecessors": [],
+          "selects": [],
+          "successors": [
+            "B2",
+            "B1"
+          ],
+          "terminator": "  br i1 %c0, label %a0, label %test1"
+        },
+        {
+          "id": "B1",
+          "immediate_postdominator": "B5",
+          "instruction_count": 2,
+          "loop_depth": 0,
+          "name": "%test1",
+          "predecessors": [
+            "B0"
+          ],
+          "selects": [],
+          "successors": [
+            "B3",
+            "B4"
+          ],
+          "terminator": "  br i1 %c1, label %a1, label %a2"
+        },
+        {
+          "id": "B2",
+          "immediate_postdominator": "B5",
+          "instruction_count": 1,
+          "loop_depth": 0,
+          "name": "%a0",
+          "predecessors": [
+            "B0"
+          ],
+          "selects": [],
+          "successors": [
+            "B5"
+          ],
+          "terminator": "  br label %join1"
+        },
+        {
+          "id": "B3",
+          "immediate_postdominator": "B5",
+          "instruction_count": 1,
+          "loop_depth": 0,
+          "name": "%a1",
+          "predecessors": [
+            "B1"
+          ],
+          "selects": [],
+          "successors": [
+            "B5"
+          ],
+          "terminator": "  br label %join1"
+        },
+        {
+          "id": "B4",
+          "immediate_postdominator": "B5",
+          "instruction_count": 1,
+          "loop_depth": 0,
+          "name": "%a2",
+          "predecessors": [
+            "B1"
+          ],
+          "selects": [],
+          "successors": [
+            "B5"
+          ],
+          "terminator": "  br label %join1"
+        },
+        {
+          "id": "B5",
+          "immediate_postdominator": "B10",
+          "instruction_count": 3,
+          "loop_depth": 0,
+          "name": "%join1",
+          "predecessors": [
+            "B4",
+            "B3",
+            "B2"
+          ],
+          "selects": [],
+          "successors": [
+            "B7",
+            "B6"
+          ],
+          "terminator": "  br i1 %d0, label %b0, label %test2"
+        },
+        {
+          "id": "B6",
+          "immediate_postdominator": "B10",
+          "instruction_count": 2,
+          "loop_depth": 0,
+          "name": "%test2",
+          "predecessors": [
+            "B5"
+          ],
+          "selects": [],
+          "successors": [
+            "B8",
+            "B9"
+          ],
+          "terminator": "  br i1 %d1, label %b1, label %b2"
+        },
+        {
+          "id": "B7",
+          "immediate_postdominator": "B10",
+          "instruction_count": 1,
+          "loop_depth": 0,
+          "name": "%b0",
+          "predecessors": [
+            "B5"
+          ],
+          "selects": [],
+          "successors": [
+            "B10"
+          ],
+          "terminator": "  br label %join2"
+        },
+        {
+          "id": "B8",
+          "immediate_postdominator": "B10",
+          "instruction_count": 1,
+          "loop_depth": 0,
+          "name": "%b1",
+          "predecessors": [
+            "B6"
+          ],
+          "selects": [],
+          "successors": [
+            "B10"
+          ],
+          "terminator": "  br label %join2"
+        },
+        {
+          "id": "B9",
+          "immediate_postdominator": "B10",
+          "instruction_count": 1,
+          "loop_depth": 0,
+          "name": "%b2",
+          "predecessors": [
+            "B6"
+          ],
+          "selects": [],
+          "successors": [
+            "B10"
+          ],
+          "terminator": "  br label %join2"
+        },
+        {
+          "id": "B10",
+          "immediate_postdominator": "B14",
+          "instruction_count": 2,
+          "loop_depth": 0,
+          "name": "%join2",
+          "predecessors": [
+            "B9",
+            "B8",
+            "B7"
+          ],
+          "selects": [],
+          "successors": [
+            "B11",
+            "B12",
+            "B13"
+          ],
+          "terminator": "  switch i32 %x, label %sd [\n    i32 0, label %s0\n    i32 1, label %s1\n  ]"
+        },
+        {
+          "id": "B11",
+          "immediate_postdominator": "B14",
+          "instruction_count": 1,
+          "loop_depth": 0,
+          "name": "%sd",
+          "predecessors": [
+            "B10"
+          ],
+          "selects": [],
+          "successors": [
+            "B14"
+          ],
+          "terminator": "  br label %loop"
+        },
+        {
+          "id": "B12",
+          "immediate_postdominator": "B14",
+          "instruction_count": 1,
+          "loop_depth": 0,
+          "name": "%s0",
+          "predecessors": [
+            "B10"
+          ],
+          "selects": [],
+          "successors": [
+            "B14"
+          ],
+          "terminator": "  br label %loop"
+        },
+        {
+          "id": "B13",
+          "immediate_postdominator": "B14",
+          "instruction_count": 1,
+          "loop_depth": 0,
+          "name": "%s1",
+          "predecessors": [
+            "B10"
+          ],
+          "selects": [],
+          "successors": [
+            "B14"
+          ],
+          "terminator": "  br label %loop"
+        },
+        {
+          "id": "B14",
+          "immediate_postdominator": "B15",
+          "instruction_count": 4,
+          "loop_depth": 1,
+          "name": "%loop",
+          "predecessors": [
+            "B14",
+            "B13",
+            "B12",
+            "B11"
+          ],
+          "selects": [],
+          "successors": [
+            "B14",
+            "B15"
+          ],
+          "terminator": "  br i1 %more, label %loop, label %exit"
+        },
+        {
+          "id": "B15",
+          "immediate_postdominator": "<virtual-exit>",
+          "instruction_count": 2,
+          "loop_depth": 0,
+          "name": "%exit",
+          "predecessors": [
+            "B14"
+          ],
+          "selects": [
+            "  %result = select i1 %c0, i32 %a, i32 %b"
+          ],
+          "successors": [],
+          "terminator": "  ret i32 %result"
+        }
+      ],
+      "callees": [],
+      "choices": [
+        {
+          "arms": [
+            {
+              "blocks_until_join": [
+                "B2"
+              ],
+              "edge": "true",
+              "entry": "B2"
+            },
+            {
+              "blocks_until_join": [
+                "B1",
+                "B3",
+                "B4"
+              ],
+              "edge": "false",
+              "entry": "B1"
+            }
+          ],
+          "condition": "  %c0 = icmp slt i32 %x, 0",
+          "cyclic_or_backedge": false,
+          "join": "B5",
+          "kind": "conditional_branch",
+          "loop_depth": 0,
+          "shared_arm_blocks": false,
+          "split": "B0"
+        },
+        {
+          "arms": [
+            {
+              "blocks_until_join": [
+                "B3"
+              ],
+              "edge": "true",
+              "entry": "B3"
+            },
+            {
+              "blocks_until_join": [
+                "B4"
+              ],
+              "edge": "false",
+              "entry": "B4"
+            }
+          ],
+          "condition": "  %c1 = icmp slt i32 %x, 10",
+          "cyclic_or_backedge": false,
+          "join": "B5",
+          "kind": "conditional_branch",
+          "loop_depth": 0,
+          "shared_arm_blocks": false,
+          "split": "B1"
+        },
+        {
+          "arms": [
+            {
+              "blocks_until_join": [
+                "B7"
+              ],
+              "edge": "true",
+              "entry": "B7"
+            },
+            {
+              "blocks_until_join": [
+                "B6",
+                "B8",
+                "B9"
+              ],
+              "edge": "false",
+              "entry": "B6"
+            }
+          ],
+          "condition": "  %d0 = icmp slt i32 %y, 0",
+          "cyclic_or_backedge": false,
+          "join": "B10",
+          "kind": "conditional_branch",
+          "loop_depth": 0,
+          "shared_arm_blocks": false,
+          "split": "B5"
+        },
+        {
+          "arms": [
+            {
+              "blocks_until_join": [
+                "B8"
+              ],
+              "edge": "true",
+              "entry": "B8"
+            },
+            {
+              "blocks_until_join": [
+                "B9"
+              ],
+              "edge": "false",
+              "entry": "B9"
+            }
+          ],
+          "condition": "  %d1 = icmp slt i32 %y, 10",
+          "cyclic_or_backedge": false,
+          "join": "B10",
+          "kind": "conditional_branch",
+          "loop_depth": 0,
+          "shared_arm_blocks": false,
+          "split": "B6"
+        },
+        {
+          "arms": [
+            {
+              "blocks_until_join": [
+                "B11"
+              ],
+              "edge": "default",
+              "entry": "B11"
+            },
+            {
+              "blocks_until_join": [
+                "B12"
+              ],
+              "edge": "0",
+              "entry": "B12"
+            },
+            {
+              "blocks_until_join": [
+                "B13"
+              ],
+              "edge": "1",
+              "entry": "B13"
+            }
+          ],
+          "condition": "%x",
+          "cyclic_or_backedge": false,
+          "join": "B14",
+          "kind": "switch",
+          "loop_depth": 0,
+          "shared_arm_blocks": false,
+          "split": "B10"
+        },
+        {
+          "arms": [
+            {
+              "blocks_until_join": [
+                "B14"
+              ],
+              "edge": "true",
+              "entry": "B14"
+            },
+            {
+              "blocks_until_join": [],
+              "edge": "false",
+              "entry": "B15"
+            }
+          ],
+          "condition": "  %more = icmp slt i32 %inc, 4",
+          "cyclic_or_backedge": true,
+          "join": "B15",
+          "kind": "conditional_branch",
+          "loop_depth": 1,
+          "shared_arm_blocks": false,
+          "split": "B14"
+        }
+      ],
+      "groups": [
+        {
+          "arms": [
+            {
+              "blocks_until_join": [
+                "B2"
+              ],
+              "edge": "true",
+              "entry": "B2",
+              "test": "B0"
+            },
+            {
+              "blocks_until_join": [
+                "B3"
+              ],
+              "edge": "true",
+              "entry": "B3",
+              "test": "B1"
+            },
+            {
+              "blocks_until_join": [
+                "B4"
+              ],
+              "edge": "false",
+              "entry": "B4",
+              "test": "B1"
+            }
+          ],
+          "head": "B0",
+          "id": "G0",
+          "join": "B5",
+          "kind": "direct_first_match_cascade",
+          "source_equivalence": "not inferred without source/debug evidence",
+          "tests": [
+            "B0",
+            "B1"
+          ]
+        },
+        {
+          "arms": [
+            {
+              "blocks_until_join": [
+                "B7"
+              ],
+              "edge": "true",
+              "entry": "B7",
+              "test": "B5"
+            },
+            {
+              "blocks_until_join": [
+                "B8"
+              ],
+              "edge": "true",
+              "entry": "B8",
+              "test": "B6"
+            },
+            {
+              "blocks_until_join": [
+                "B9"
+              ],
+              "edge": "false",
+              "entry": "B9",
+              "test": "B6"
+            }
+          ],
+          "head": "B5",
+          "id": "G1",
+          "join": "B10",
+          "kind": "direct_first_match_cascade",
+          "source_equivalence": "not inferred without source/debug evidence",
+          "tests": [
+            "B5",
+            "B6"
+          ]
+        }
+      ],
+      "kernel": false,
+      "name": "multiple_choices",
+      "regions": [
+        {
+          "blocks": [
+            "B0",
+            "B1",
+            "B2",
+            "B3",
+            "B4",
+            "B5",
+            "B6",
+            "B7",
+            "B8",
+            "B9",
+            "B10",
+            "B11",
+            "B12",
+            "B13",
+            "B14",
+            "B15"
+          ],
+          "depth": 0,
+          "entry": "B0",
+          "exit": "<virtual-exit>",
+          "id": "R0",
+          "parent": ""
+        },
+        {
+          "blocks": [
+            "B0",
+            "B1",
+            "B2",
+            "B3",
+            "B4"
+          ],
+          "depth": 1,
+          "entry": "B0",
+          "exit": "B5",
+          "id": "R1",
+          "parent": "R0"
+        },
+        {
+          "blocks": [
+            "B1",
+            "B3",
+            "B4"
+          ],
+          "depth": 2,
+          "entry": "B1",
+          "exit": "B5",
+          "id": "R2",
+          "parent": "R1"
+        },
+        {
+          "blocks": [
+            "B5",
+            "B6",
+            "B7",
+            "B8",
+            "B9"
+          ],
+          "depth": 1,
+          "entry": "B5",
+          "exit": "B10",
+          "id": "R3",
+          "parent": "R0"
+        },
+        {
+          "blocks": [
+            "B6",
+            "B8",
+            "B9"
+          ],
+          "depth": 2,
+          "entry": "B6",
+          "exit": "B10",
+          "id": "R4",
+          "parent": "R3"
+        },
+        {
+          "blocks": [
+            "B10",
+            "B11",
+            "B12",
+            "B13"
+          ],
+          "depth": 1,
+          "entry": "B10",
+          "exit": "B14",
+          "id": "R5",
+          "parent": "R0"
+        },
+        {
+          "blocks": [
+            "B14"
+          ],
+          "depth": 1,
+          "entry": "B14",
+          "exit": "B15",
+          "id": "R6",
+          "parent": "R0"
+        }
+      ],
+      "summary": {
+        "backedges": 1,
+        "blocks": 16,
+        "canonical_regions_including_root": 7,
+        "conditional_branches": 5,
+        "loops": 1,
+        "multiway_cascades": 2,
+        "selects": 1,
+        "switches": 1
+      }
+    },
+    {
+      "blocks": [
+        {
+          "id": "B0",
+          "immediate_postdominator": "B10",
+          "instruction_count": 1,
+          "loop_depth": 0,
+          "name": "%entry",
+          "predecessors": [],
+          "selects": [],
+          "successors": [
+            "B1",
+            "B5"
+          ],
+          "terminator": "  br i1 %c, label %left, label %right"
+        },
+        {
+          "id": "B1",
+          "immediate_postdominator": "B4",
+          "instruction_count": 1,
+          "loop_depth": 0,
+          "name": "%left",
+          "predecessors": [
+            "B0"
+          ],
+          "selects": [],
+          "successors": [
+            "B2",
+            "B3"
+          ],
+          "terminator": "  switch i32 %x, label %l0 [\n    i32 1, label %l1\n  ]"
+        },
+        {
+          "id": "B2",
+          "immediate_postdominator": "B4",
+          "instruction_count": 1,
+          "loop_depth": 0,
+          "name": "%l0",
+          "predecessors": [
+            "B1"
+          ],
+          "selects": [],
+          "successors": [
+            "B4"
+          ],
+          "terminator": "  br label %lj"
+        },
+        {
+          "id": "B3",
+          "immediate_postdominator": "B4",
+          "instruction_count": 1,
+          "loop_depth": 0,
+          "name": "%l1",
+          "predecessors": [
+            "B1"
+          ],
+          "selects": [],
+          "successors": [
+            "B4"
+          ],
+          "terminator": "  br label %lj"
+        },
+        {
+          "id": "B4",
+          "immediate_postdominator": "B10",
+          "instruction_count": 2,
+          "loop_depth": 0,
+          "name": "%lj",
+          "predecessors": [
+            "B3",
+            "B2"
+          ],
+          "selects": [],
+          "successors": [
+            "B10"
+          ],
+          "terminator": "  br label %end"
+        },
+        {
+          "id": "B5",
+          "immediate_postdominator": "B9",
+          "instruction_count": 1,
+          "loop_depth": 0,
+          "name": "%right",
+          "predecessors": [
+            "B0"
+          ],
+          "selects": [],
+          "successors": [
+            "B6",
+            "B7",
+            "B8"
+          ],
+          "terminator": "  switch i32 %x, label %r0 [\n    i32 1, label %r1\n    i32 2, label %r2\n  ]"
+        },
+        {
+          "id": "B6",
+          "immediate_postdominator": "B9",
+          "instruction_count": 1,
+          "loop_depth": 0,
+          "name": "%r0",
+          "predecessors": [
+            "B5"
+          ],
+          "selects": [],
+          "successors": [
+            "B9"
+          ],
+          "terminator": "  br label %rj"
+        },
+        {
+          "id": "B7",
+          "immediate_postdominator": "B9",
+          "instruction_count": 1,
+          "loop_depth": 0,
+          "name": "%r1",
+          "predecessors": [
+            "B5"
+          ],
+          "selects": [],
+          "successors": [
+            "B9"
+          ],
+          "terminator": "  br label %rj"
+        },
+        {
+          "id": "B8",
+          "immediate_postdominator": "B9",
+          "instruction_count": 1,
+          "loop_depth": 0,
+          "name": "%r2",
+          "predecessors": [
+            "B5"
+          ],
+          "selects": [],
+          "successors": [
+            "B9"
+          ],
+          "terminator": "  br label %rj"
+        },
+        {
+          "id": "B9",
+          "immediate_postdominator": "B10",
+          "instruction_count": 2,
+          "loop_depth": 0,
+          "name": "%rj",
+          "predecessors": [
+            "B8",
+            "B7",
+            "B6"
+          ],
+          "selects": [],
+          "successors": [
+            "B10"
+          ],
+          "terminator": "  br label %end"
+        },
+        {
+          "id": "B10",
+          "immediate_postdominator": "<virtual-exit>",
+          "instruction_count": 2,
+          "loop_depth": 0,
+          "name": "%end",
+          "predecessors": [
+            "B9",
+            "B4"
+          ],
+          "selects": [],
+          "successors": [],
+          "terminator": "  ret i32 %v"
+        }
+      ],
+      "callees": [],
+      "choices": [
+        {
+          "arms": [
+            {
+              "blocks_until_join": [
+                "B1",
+                "B2",
+                "B3",
+                "B4"
+              ],
+              "edge": "true",
+              "entry": "B1"
+            },
+            {
+              "blocks_until_join": [
+                "B5",
+                "B6",
+                "B7",
+                "B8",
+                "B9"
+              ],
+              "edge": "false",
+              "entry": "B5"
+            }
+          ],
+          "condition": "%c",
+          "cyclic_or_backedge": false,
+          "join": "B10",
+          "kind": "conditional_branch",
+          "loop_depth": 0,
+          "shared_arm_blocks": false,
+          "split": "B0"
+        },
+        {
+          "arms": [
+            {
+              "blocks_until_join": [
+                "B2"
+              ],
+              "edge": "default",
+              "entry": "B2"
+            },
+            {
+              "blocks_until_join": [
+                "B3"
+              ],
+              "edge": "1",
+              "entry": "B3"
+            }
+          ],
+          "condition": "%x",
+          "cyclic_or_backedge": false,
+          "join": "B4",
+          "kind": "switch",
+          "loop_depth": 0,
+          "shared_arm_blocks": false,
+          "split": "B1"
+        },
+        {
+          "arms": [
+            {
+              "blocks_until_join": [
+                "B6"
+              ],
+              "edge": "default",
+              "entry": "B6"
+            },
+            {
+              "blocks_until_join": [
+                "B7"
+              ],
+              "edge": "1",
+              "entry": "B7"
+            },
+            {
+              "blocks_until_join": [
+                "B8"
+              ],
+              "edge": "2",
+              "entry": "B8"
+            }
+          ],
+          "condition": "%x",
+          "cyclic_or_backedge": false,
+          "join": "B9",
+          "kind": "switch",
+          "loop_depth": 0,
+          "shared_arm_blocks": false,
+          "split": "B5"
+        }
+      ],
+      "groups": [],
+      "kernel": false,
+      "name": "different_region_shapes",
+      "regions": [
+        {
+          "blocks": [
+            "B0",
+            "B1",
+            "B2",
+            "B3",
+            "B4",
+            "B5",
+            "B6",
+            "B7",
+            "B8",
+            "B9",
+            "B10"
+          ],
+          "depth": 0,
+          "entry": "B0",
+          "exit": "<virtual-exit>",
+          "id": "R0",
+          "parent": ""
+        },
+        {
+          "blocks": [
+            "B0",
+            "B1",
+            "B2",
+            "B3",
+            "B4",
+            "B5",
+            "B6",
+            "B7",
+            "B8",
+            "B9"
+          ],
+          "depth": 1,
+          "entry": "B0",
+          "exit": "B10",
+          "id": "R1",
+          "parent": "R0"
+        },
+        {
+          "blocks": [
+            "B1",
+            "B2",
+            "B3"
+          ],
+          "depth": 2,
+          "entry": "B1",
+          "exit": "B4",
+          "id": "R2",
+          "parent": "R1"
+        },
+        {
+          "blocks": [
+            "B5",
+            "B6",
+            "B7",
+            "B8"
+          ],
+          "depth": 2,
+          "entry": "B5",
+          "exit": "B9",
+          "id": "R3",
+          "parent": "R1"
+        }
+      ],
+      "summary": {
+        "backedges": 0,
+        "blocks": 11,
+        "canonical_regions_including_root": 4,
+        "conditional_branches": 1,
+        "loops": 0,
+        "multiway_cascades": 0,
+        "selects": 0,
+        "switches": 2
+      }
+    },
+    {
+      "blocks": [
+        {
+          "id": "B0",
+          "immediate_postdominator": "B3",
+          "instruction_count": 1,
+          "loop_depth": 0,
+          "name": "%entry",
+          "predecessors": [],
+          "selects": [],
+          "successors": [
+            "B1",
+            "B2"
+          ],
+          "terminator": "  br i1 %c, label %loop, label %plain"
+        },
+        {
+          "id": "B1",
+          "immediate_postdominator": "B3",
+          "instruction_count": 1,
+          "loop_depth": 1,
+          "name": "%loop",
+          "predecessors": [
+            "B1",
+            "B0"
+          ],
+          "selects": [],
+          "successors": [
+            "B1",
+            "B3"
+          ],
+          "terminator": "  br i1 %again, label %loop, label %join"
+        },
+        {
+          "id": "B2",
+          "immediate_postdominator": "B3",
+          "instruction_count": 1,
+          "loop_depth": 0,
+          "name": "%plain",
+          "predecessors": [
+            "B0"
+          ],
+          "selects": [],
+          "successors": [
+            "B3"
+          ],
+          "terminator": "  br label %join"
+        },
+        {
+          "id": "B3",
+          "immediate_postdominator": "<virtual-exit>",
+          "instruction_count": 1,
+          "loop_depth": 0,
+          "name": "%join",
+          "predecessors": [
+            "B2",
+            "B1"
+          ],
+          "selects": [],
+          "successors": [],
+          "terminator": "  ret i32 0"
+        }
+      ],
+      "callees": [],
+      "choices": [
+        {
+          "arms": [
+            {
+              "blocks_until_join": [
+                "B1"
+              ],
+              "edge": "true",
+              "entry": "B1"
+            },
+            {
+              "blocks_until_join": [
+                "B2"
+              ],
+              "edge": "false",
+              "entry": "B2"
+            }
+          ],
+          "condition": "%c",
+          "cyclic_or_backedge": false,
+          "join": "B3",
+          "kind": "conditional_branch",
+          "loop_depth": 0,
+          "shared_arm_blocks": false,
+          "split": "B0"
+        },
+        {
+          "arms": [
+            {
+              "blocks_until_join": [
+                "B1"
+              ],
+              "edge": "true",
+              "entry": "B1"
+            },
+            {
+              "blocks_until_join": [],
+              "edge": "false",
+              "entry": "B3"
+            }
+          ],
+          "condition": "%again",
+          "cyclic_or_backedge": true,
+          "join": "B3",
+          "kind": "conditional_branch",
+          "loop_depth": 1,
+          "shared_arm_blocks": false,
+          "split": "B1"
+        }
+      ],
+      "groups": [
+        {
+          "arms": [
+            {
+              "blocks_until_join": [
+                "B2"
+              ],
+              "edge": "false",
+              "entry": "B2",
+              "test": "B0"
+            },
+            {
+              "blocks_until_join": [
+                "B1"
+              ],
+              "edge": "true",
+              "entry": "B1",
+              "test": "B1"
+            },
+            {
+              "blocks_until_join": [],
+              "edge": "false",
+              "entry": "B3",
+              "test": "B1"
+            }
+          ],
+          "head": "B0",
+          "id": "G0",
+          "join": "B3",
+          "kind": "direct_first_match_cascade",
+          "source_equivalence": "not inferred without source/debug evidence",
+          "tests": [
+            "B0",
+            "B1"
+          ]
+        }
+      ],
+      "kernel": false,
+      "name": "loop_vs_plain",
+      "regions": [
+        {
+          "blocks": [
+            "B0",
+            "B1",
+            "B2",
+            "B3"
+          ],
+          "depth": 0,
+          "entry": "B0",
+          "exit": "<virtual-exit>",
+          "id": "R0",
+          "parent": ""
+        },
+        {
+          "blocks": [
+            "B0",
+            "B1",
+            "B2"
+          ],
+          "depth": 1,
+          "entry": "B0",
+          "exit": "B3",
+          "id": "R1",
+          "parent": "R0"
+        },
+        {
+          "blocks": [
+            "B1"
+          ],
+          "depth": 2,
+          "entry": "B1",
+          "exit": "B3",
+          "id": "R2",
+          "parent": "R1"
+        }
+      ],
+      "summary": {
+        "backedges": 1,
+        "blocks": 4,
+        "canonical_regions_including_root": 3,
+        "conditional_branches": 2,
+        "loops": 1,
+        "multiway_cascades": 1,
+        "selects": 0,
+        "switches": 0
+      }
+    },
+    {
+      "blocks": [
+        {
+          "id": "B0",
+          "immediate_postdominator": "B6",
+          "instruction_count": 1,
+          "loop_depth": 0,
+          "name": "%entry",
+          "predecessors": [],
+          "selects": [],
+          "successors": [
+            "B1",
+            "B2"
+          ],
+          "terminator": "  br i1 %c, label %left, label %right"
+        },
+        {
+          "id": "B1",
+          "immediate_postdominator": "B6",
+          "instruction_count": 1,
+          "loop_depth": 0,
+          "name": "%left",
+          "predecessors": [
+            "B0"
+          ],
+          "selects": [],
+          "successors": [
+            "B3",
+            "B4"
+          ],
+          "terminator": "  br i1 %a, label %shared, label %lonly"
+        },
+        {
+          "id": "B2",
+          "immediate_postdominator": "B6",
+          "instruction_count": 1,
+          "loop_depth": 0,
+          "name": "%right",
+          "predecessors": [
+            "B0"
+          ],
+          "selects": [],
+          "successors": [
+            "B3",
+            "B5"
+          ],
+          "terminator": "  br i1 %b, label %shared, label %ronly"
+        },
+        {
+          "id": "B3",
+          "immediate_postdominator": "B6",
+          "instruction_count": 1,
+          "loop_depth": 0,
+          "name": "%shared",
+          "predecessors": [
+            "B2",
+            "B1"
+          ],
+          "selects": [],
+          "successors": [
+            "B6"
+          ],
+          "terminator": "  br label %end"
+        },
+        {
+          "id": "B4",
+          "immediate_postdominator": "B6",
+          "instruction_count": 1,
+          "loop_depth": 0,
+          "name": "%lonly",
+          "predecessors": [
+            "B1"
+          ],
+          "selects": [],
+          "successors": [
+            "B6"
+          ],
+          "terminator": "  br label %end"
+        },
+        {
+          "id": "B5",
+          "immediate_postdominator": "B6",
+          "instruction_count": 1,
+          "loop_depth": 0,
+          "name": "%ronly",
+          "predecessors": [
+            "B2"
+          ],
+          "selects": [],
+          "successors": [
+            "B6"
+          ],
+          "terminator": "  br label %end"
+        },
+        {
+          "id": "B6",
+          "immediate_postdominator": "<virtual-exit>",
+          "instruction_count": 1,
+          "loop_depth": 0,
+          "name": "%end",
+          "predecessors": [
+            "B5",
+            "B4",
+            "B3"
+          ],
+          "selects": [],
+          "successors": [],
+          "terminator": "  ret i32 0"
+        }
+      ],
+      "callees": [],
+      "choices": [
+        {
+          "arms": [
+            {
+              "blocks_until_join": [
+                "B1",
+                "B3",
+                "B4"
+              ],
+              "edge": "true",
+              "entry": "B1"
+            },
+            {
+              "blocks_until_join": [
+                "B2",
+                "B3",
+                "B5"
+              ],
+              "edge": "false",
+              "entry": "B2"
+            }
+          ],
+          "condition": "%c",
+          "cyclic_or_backedge": false,
+          "join": "B6",
+          "kind": "conditional_branch",
+          "loop_depth": 0,
+          "shared_arm_blocks": true,
+          "split": "B0"
+        },
+        {
+          "arms": [
+            {
+              "blocks_until_join": [
+                "B3"
+              ],
+              "edge": "true",
+              "entry": "B3"
+            },
+            {
+              "blocks_until_join": [
+                "B4"
+              ],
+              "edge": "false",
+              "entry": "B4"
+            }
+          ],
+          "condition": "%a",
+          "cyclic_or_backedge": false,
+          "join": "B6",
+          "kind": "conditional_branch",
+          "loop_depth": 0,
+          "shared_arm_blocks": false,
+          "split": "B1"
+        },
+        {
+          "arms": [
+            {
+              "blocks_until_join": [
+                "B3"
+              ],
+              "edge": "true",
+              "entry": "B3"
+            },
+            {
+              "blocks_until_join": [
+                "B5"
+              ],
+              "edge": "false",
+              "entry": "B5"
+            }
+          ],
+          "condition": "%b",
+          "cyclic_or_backedge": false,
+          "join": "B6",
+          "kind": "conditional_branch",
+          "loop_depth": 0,
+          "shared_arm_blocks": false,
+          "split": "B2"
+        }
+      ],
+      "groups": [],
+      "kernel": false,
+      "name": "shared_tail",
+      "regions": [
+        {
+          "blocks": [
+            "B0",
+            "B1",
+            "B2",
+            "B3",
+            "B4",
+            "B5",
+            "B6"
+          ],
+          "depth": 0,
+          "entry": "B0",
+          "exit": "<virtual-exit>",
+          "id": "R0",
+          "parent": ""
+        },
+        {
+          "blocks": [
+            "B0",
+            "B1",
+            "B2",
+            "B3",
+            "B4",
+            "B5"
+          ],
+          "depth": 1,
+          "entry": "B0",
+          "exit": "B6",
+          "id": "R1",
+          "parent": "R0"
+        }
+      ],
+      "summary": {
+        "backedges": 0,
+        "blocks": 7,
+        "canonical_regions_including_root": 2,
+        "conditional_branches": 3,
+        "loops": 0,
+        "multiway_cascades": 0,
+        "selects": 0,
+        "switches": 0
+      }
+    }
+  ],
+  "input": "/home/chh/kernel-benchmark-suite/tests/similarity/shapes.ll",
+  "schema": "llvm12-region-inventory-v1",
+  "scope": "Read-only LLVM12 analysis. Canonical RegionInfo tree; all branch/switch choices; selects separate. Cascades are conservative structural groups, not semantic source branches. No fusion legality or profitability implied."
+}

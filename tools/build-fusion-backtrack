@@ -1,0 +1,7 @@
+#!/bin/bash
+set -euo pipefail
+s=/home/chh/kernel-benchmark-suite
+cfg=/home/chh/darm-artifacts-repro/build/bin/llvm-config
+read -ra flags <<< "$($cfg --cxxflags)"
+read -ra libs <<< "$($cfg --ldflags --libs core irreader asmparser analysis transformutils scalaropts ipo instcombine vectorize amdgpu x86 nvptx --system-libs | tr '\n' ' ')"
+g++ "${flags[@]}" -std=c++17 -fexceptions -O2 -I"$s/tools" "$s/tools/fusion_backtrack.cpp" "$s"/build/fusion-search/*.o "${libs[@]}" -o "$s/build/fusion-search/fusion-backtrack"

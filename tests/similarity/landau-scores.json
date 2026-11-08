@@ -1,0 +1,1761 @@
+{
+  "functions": [
+    {
+      "name": "evaluate",
+      "pairs": [
+        {
+          "at_least_0_2": null,
+          "context": "B3:true/false",
+          "exclusive_between_sides": true,
+          "fusion_legality": "not_checked",
+          "id": "P0",
+          "left": {
+            "blocks": [
+              "B4",
+              "B5",
+              "B6",
+              "B7",
+              "B8",
+              "B9",
+              "B10",
+              "B11",
+              "B12",
+              "B13",
+              "B14",
+              "B15",
+              "B16",
+              "B17",
+              "B18",
+              "B19",
+              "B20"
+            ],
+            "entry": "B4",
+            "entry_name": "%if.then.i.i.i",
+            "exit": "B45",
+            "id": "R5",
+            "kind": "canonical_region"
+          },
+          "left_entry_postdominates_side_start": true,
+          "performance_benefit": "not_measured",
+          "relation": "same_split_frontiers",
+          "right": {
+            "blocks": [
+              "B21",
+              "B22",
+              "B23",
+              "B24",
+              "B25",
+              "B26",
+              "B27",
+              "B28",
+              "B29",
+              "B30",
+              "B31",
+              "B32",
+              "B33",
+              "B34",
+              "B35",
+              "B36",
+              "B37",
+              "B38",
+              "B39",
+              "B40",
+              "B41",
+              "B42",
+              "B43",
+              "B44"
+            ],
+            "entry": "B21",
+            "entry_name": "%cond.false7.i.i.i",
+            "exit": "B45",
+            "id": "R13",
+            "kind": "canonical_region"
+          },
+          "right_entry_postdominates_side_start": true,
+          "similarity": null,
+          "split": "B3",
+          "status": "region_structure_mismatch",
+          "structural_note": "No side-entry postdominance obstruction found; fusion legality still unchecked"
+        },
+        {
+          "at_least_0_2": null,
+          "context": "B4:true/false",
+          "exclusive_between_sides": true,
+          "fusion_legality": "not_checked",
+          "id": "P1",
+          "left": {
+            "blocks": [
+              "B6",
+              "B7",
+              "B8",
+              "B9",
+              "B10",
+              "B11",
+              "B12",
+              "B13",
+              "B14",
+              "B15",
+              "B16",
+              "B17",
+              "B18",
+              "B19",
+              "B20"
+            ],
+            "entry": "B6",
+            "entry_name": "%if.else.i.i.i.i",
+            "exit": "B45",
+            "id": "R6",
+            "kind": "canonical_region"
+          },
+          "left_entry_postdominates_side_start": true,
+          "performance_benefit": "not_measured",
+          "relation": "same_split_frontiers",
+          "right": {
+            "blocks": [
+              "B5"
+            ],
+            "entry": "B5",
+            "entry_name": "%if.then.i.i.i.i",
+            "exit": "B45",
+            "id": "B5",
+            "kind": "basic_block"
+          },
+          "right_entry_postdominates_side_start": true,
+          "similarity": null,
+          "split": "B4",
+          "status": "mixed_region_block_requires_mapping",
+          "structural_note": "No side-entry postdominance obstruction found; fusion legality still unchecked"
+        },
+        {
+          "at_least_0_2": null,
+          "context": "B6:true/false",
+          "exclusive_between_sides": true,
+          "fusion_legality": "not_checked",
+          "id": "P2",
+          "left": {
+            "blocks": [
+              "B8",
+              "B9",
+              "B10",
+              "B11",
+              "B12",
+              "B13",
+              "B14",
+              "B15",
+              "B16",
+              "B17",
+              "B18",
+              "B19",
+              "B20"
+            ],
+            "entry": "B8",
+            "entry_name": "%if.else9.i.i.i.i",
+            "exit": "B45",
+            "id": "R7",
+            "kind": "canonical_region"
+          },
+          "left_entry_postdominates_side_start": true,
+          "performance_benefit": "not_measured",
+          "relation": "same_split_frontiers",
+          "right": {
+            "blocks": [
+              "B7"
+            ],
+            "entry": "B7",
+            "entry_name": "%if.then3.i.i.i.i",
+            "exit": "B45",
+            "id": "B7",
+            "kind": "basic_block"
+          },
+          "right_entry_postdominates_side_start": true,
+          "similarity": null,
+          "split": "B6",
+          "status": "mixed_region_block_requires_mapping",
+          "structural_note": "No side-entry postdominance obstruction found; fusion legality still unchecked"
+        },
+        {
+          "at_least_0_2": null,
+          "context": "B8:true/false",
+          "exclusive_between_sides": true,
+          "fusion_legality": "not_checked",
+          "id": "P3",
+          "left": {
+            "blocks": [
+              "B10",
+              "B11",
+              "B12",
+              "B13",
+              "B14",
+              "B15",
+              "B16",
+              "B17",
+              "B18",
+              "B19",
+              "B20"
+            ],
+            "entry": "B10",
+            "entry_name": "%if.else17.i.i.i.i",
+            "exit": "B45",
+            "id": "R8",
+            "kind": "canonical_region"
+          },
+          "left_entry_postdominates_side_start": true,
+          "performance_benefit": "not_measured",
+          "relation": "same_split_frontiers",
+          "right": {
+            "blocks": [
+              "B9"
+            ],
+            "entry": "B9",
+            "entry_name": "%if.then11.i.i.i.i",
+            "exit": "B45",
+            "id": "B9",
+            "kind": "basic_block"
+          },
+          "right_entry_postdominates_side_start": true,
+          "similarity": null,
+          "split": "B8",
+          "status": "mixed_region_block_requires_mapping",
+          "structural_note": "No side-entry postdominance obstruction found; fusion legality still unchecked"
+        },
+        {
+          "at_least_0_2": null,
+          "context": "B10:true/false",
+          "exclusive_between_sides": true,
+          "fusion_legality": "not_checked",
+          "id": "P4",
+          "left": {
+            "blocks": [
+              "B11"
+            ],
+            "entry": "B11",
+            "entry_name": "%if.then20.i.i.i.i",
+            "exit": "B45",
+            "id": "B11",
+            "kind": "basic_block"
+          },
+          "left_entry_postdominates_side_start": true,
+          "performance_benefit": "not_measured",
+          "relation": "same_split_frontiers",
+          "right": {
+            "blocks": [
+              "B12",
+              "B13",
+              "B14",
+              "B15",
+              "B16",
+              "B17",
+              "B18",
+              "B19",
+              "B20"
+            ],
+            "entry": "B12",
+            "entry_name": "%if.else27.i.i.i.i",
+            "exit": "B45",
+            "id": "R9",
+            "kind": "canonical_region"
+          },
+          "right_entry_postdominates_side_start": true,
+          "similarity": null,
+          "split": "B10",
+          "status": "mixed_region_block_requires_mapping",
+          "structural_note": "No side-entry postdominance obstruction found; fusion legality still unchecked"
+        },
+        {
+          "at_least_0_2": null,
+          "context": "B12:true/false",
+          "exclusive_between_sides": true,
+          "fusion_legality": "not_checked",
+          "id": "P5",
+          "left": {
+            "blocks": [
+              "B13"
+            ],
+            "entry": "B13",
+            "entry_name": "%if.then30.i.i.i.i",
+            "exit": "B45",
+            "id": "B13",
+            "kind": "basic_block"
+          },
+          "left_entry_postdominates_side_start": true,
+          "performance_benefit": "not_measured",
+          "relation": "same_split_frontiers",
+          "right": {
+            "blocks": [
+              "B14",
+              "B15",
+              "B16",
+              "B17",
+              "B18",
+              "B19",
+              "B20"
+            ],
+            "entry": "B14",
+            "entry_name": "%if.else39.i.i.i.i",
+            "exit": "B45",
+            "id": "R10",
+            "kind": "canonical_region"
+          },
+          "right_entry_postdominates_side_start": true,
+          "similarity": null,
+          "split": "B12",
+          "status": "mixed_region_block_requires_mapping",
+          "structural_note": "No side-entry postdominance obstruction found; fusion legality still unchecked"
+        },
+        {
+          "at_least_0_2": null,
+          "context": "B14:true/false",
+          "exclusive_between_sides": true,
+          "fusion_legality": "not_checked",
+          "id": "P6",
+          "left": {
+            "blocks": [
+              "B15"
+            ],
+            "entry": "B15",
+            "entry_name": "%if.then42.i.i.i.i",
+            "exit": "B45",
+            "id": "B15",
+            "kind": "basic_block"
+          },
+          "left_entry_postdominates_side_start": true,
+          "performance_benefit": "not_measured",
+          "relation": "same_split_frontiers",
+          "right": {
+            "blocks": [
+              "B16",
+              "B17",
+              "B18",
+              "B19",
+              "B20"
+            ],
+            "entry": "B16",
+            "entry_name": "%if.else51.i.i.i.i",
+            "exit": "B45",
+            "id": "R11",
+            "kind": "canonical_region"
+          },
+          "right_entry_postdominates_side_start": true,
+          "similarity": null,
+          "split": "B14",
+          "status": "mixed_region_block_requires_mapping",
+          "structural_note": "No side-entry postdominance obstruction found; fusion legality still unchecked"
+        },
+        {
+          "at_least_0_2": null,
+          "context": "B16:true/false",
+          "exclusive_between_sides": true,
+          "fusion_legality": "not_checked",
+          "id": "P7",
+          "left": {
+            "blocks": [
+              "B17"
+            ],
+            "entry": "B17",
+            "entry_name": "%if.then54.i.i.i.i",
+            "exit": "B45",
+            "id": "B17",
+            "kind": "basic_block"
+          },
+          "left_entry_postdominates_side_start": true,
+          "performance_benefit": "not_measured",
+          "relation": "same_split_frontiers",
+          "right": {
+            "blocks": [
+              "B18",
+              "B19",
+              "B20"
+            ],
+            "entry": "B18",
+            "entry_name": "%if.else63.i.i.i.i",
+            "exit": "B45",
+            "id": "R12",
+            "kind": "canonical_region"
+          },
+          "right_entry_postdominates_side_start": true,
+          "similarity": null,
+          "split": "B16",
+          "status": "mixed_region_block_requires_mapping",
+          "structural_note": "No side-entry postdominance obstruction found; fusion legality still unchecked"
+        },
+        {
+          "at_least_0_2": false,
+          "block_mapping": [
+            {
+              "left": "B19",
+              "right": "B20"
+            }
+          ],
+          "context": "B18:true/false",
+          "exclusive_between_sides": true,
+          "fusion_legality": "not_checked",
+          "id": "P8",
+          "left": {
+            "blocks": [
+              "B19"
+            ],
+            "entry": "B19",
+            "entry_name": "%if.then66.i.i.i.i",
+            "exit": "B45",
+            "id": "B19",
+            "kind": "basic_block"
+          },
+          "left_entry_postdominates_side_start": true,
+          "performance_benefit": "not_measured",
+          "relation": "same_split_frontiers",
+          "right": {
+            "blocks": [
+              "B20"
+            ],
+            "entry": "B20",
+            "entry_name": "%if.else75.i.i.i.i",
+            "exit": "B45",
+            "id": "B20",
+            "kind": "basic_block"
+          },
+          "right_entry_postdominates_side_start": true,
+          "similarity": 0.041666666666666664,
+          "split": "B18",
+          "status": "scored_block",
+          "structural_note": "No side-entry postdominance obstruction found; fusion legality still unchecked"
+        },
+        {
+          "at_least_0_2": null,
+          "context": "B21:true/false",
+          "exclusive_between_sides": true,
+          "fusion_legality": "not_checked",
+          "id": "P9",
+          "left": {
+            "blocks": [
+              "B23",
+              "B24",
+              "B25",
+              "B26",
+              "B27",
+              "B28",
+              "B29",
+              "B30",
+              "B31",
+              "B32",
+              "B33",
+              "B34",
+              "B35",
+              "B36",
+              "B37",
+              "B38",
+              "B39",
+              "B40",
+              "B41",
+              "B42",
+              "B43",
+              "B44"
+            ],
+            "entry": "B23",
+            "entry_name": "%if.else.i23.i.i.i",
+            "exit": "B45",
+            "id": "R14",
+            "kind": "canonical_region"
+          },
+          "left_entry_postdominates_side_start": true,
+          "performance_benefit": "not_measured",
+          "relation": "same_split_frontiers",
+          "right": {
+            "blocks": [
+              "B22"
+            ],
+            "entry": "B22",
+            "entry_name": "%if.then.i21.i.i.i",
+            "exit": "B45",
+            "id": "B22",
+            "kind": "basic_block"
+          },
+          "right_entry_postdominates_side_start": true,
+          "similarity": null,
+          "split": "B21",
+          "status": "mixed_region_block_requires_mapping",
+          "structural_note": "No side-entry postdominance obstruction found; fusion legality still unchecked"
+        },
+        {
+          "at_least_0_2": null,
+          "context": "B23:true/false",
+          "exclusive_between_sides": true,
+          "fusion_legality": "not_checked",
+          "id": "P10",
+          "left": {
+            "blocks": [
+              "B25",
+              "B26",
+              "B27",
+              "B28",
+              "B29",
+              "B30",
+              "B31",
+              "B32",
+              "B33",
+              "B34",
+              "B35",
+              "B36",
+              "B37",
+              "B38",
+              "B39",
+              "B40",
+              "B41",
+              "B42",
+              "B43",
+              "B44"
+            ],
+            "entry": "B25",
+            "entry_name": "%if.else9.i29.i.i.i",
+            "exit": "B45",
+            "id": "R15",
+            "kind": "canonical_region"
+          },
+          "left_entry_postdominates_side_start": true,
+          "performance_benefit": "not_measured",
+          "relation": "same_split_frontiers",
+          "right": {
+            "blocks": [
+              "B24"
+            ],
+            "entry": "B24",
+            "entry_name": "%if.then3.i27.i.i.i",
+            "exit": "B45",
+            "id": "B24",
+            "kind": "basic_block"
+          },
+          "right_entry_postdominates_side_start": true,
+          "similarity": null,
+          "split": "B23",
+          "status": "mixed_region_block_requires_mapping",
+          "structural_note": "No side-entry postdominance obstruction found; fusion legality still unchecked"
+        },
+        {
+          "at_least_0_2": null,
+          "context": "B25:true/false",
+          "exclusive_between_sides": true,
+          "fusion_legality": "not_checked",
+          "id": "P11",
+          "left": {
+            "blocks": [
+              "B27",
+              "B28",
+              "B29",
+              "B30",
+              "B31",
+              "B32",
+              "B33",
+              "B34",
+              "B35",
+              "B36",
+              "B37",
+              "B38",
+              "B39",
+              "B40",
+              "B41",
+              "B42",
+              "B43",
+              "B44"
+            ],
+            "entry": "B27",
+            "entry_name": "%if.else17.i35.i.i.i",
+            "exit": "B45",
+            "id": "R16",
+            "kind": "canonical_region"
+          },
+          "left_entry_postdominates_side_start": true,
+          "performance_benefit": "not_measured",
+          "relation": "same_split_frontiers",
+          "right": {
+            "blocks": [
+              "B26"
+            ],
+            "entry": "B26",
+            "entry_name": "%if.then11.i33.i.i.i",
+            "exit": "B45",
+            "id": "B26",
+            "kind": "basic_block"
+          },
+          "right_entry_postdominates_side_start": true,
+          "similarity": null,
+          "split": "B25",
+          "status": "mixed_region_block_requires_mapping",
+          "structural_note": "No side-entry postdominance obstruction found; fusion legality still unchecked"
+        },
+        {
+          "at_least_0_2": null,
+          "context": "B27:true/false",
+          "exclusive_between_sides": true,
+          "fusion_legality": "not_checked",
+          "id": "P12",
+          "left": {
+            "blocks": [
+              "B28"
+            ],
+            "entry": "B28",
+            "entry_name": "%if.then20.i39.i.i.i",
+            "exit": "B45",
+            "id": "B28",
+            "kind": "basic_block"
+          },
+          "left_entry_postdominates_side_start": true,
+          "performance_benefit": "not_measured",
+          "relation": "same_split_frontiers",
+          "right": {
+            "blocks": [
+              "B29",
+              "B30",
+              "B31",
+              "B32",
+              "B33",
+              "B34",
+              "B35",
+              "B36",
+              "B37",
+              "B38",
+              "B39",
+              "B40",
+              "B41",
+              "B42",
+              "B43",
+              "B44"
+            ],
+            "entry": "B29",
+            "entry_name": "%if.else27.i41.i.i.i",
+            "exit": "B45",
+            "id": "R17",
+            "kind": "canonical_region"
+          },
+          "right_entry_postdominates_side_start": true,
+          "similarity": null,
+          "split": "B27",
+          "status": "mixed_region_block_requires_mapping",
+          "structural_note": "No side-entry postdominance obstruction found; fusion legality still unchecked"
+        },
+        {
+          "at_least_0_2": null,
+          "context": "B29:true/false",
+          "exclusive_between_sides": true,
+          "fusion_legality": "not_checked",
+          "id": "P13",
+          "left": {
+            "blocks": [
+              "B30"
+            ],
+            "entry": "B30",
+            "entry_name": "%if.then30.i44.i.i.i",
+            "exit": "B45",
+            "id": "B30",
+            "kind": "basic_block"
+          },
+          "left_entry_postdominates_side_start": true,
+          "performance_benefit": "not_measured",
+          "relation": "same_split_frontiers",
+          "right": {
+            "blocks": [
+              "B31",
+              "B32",
+              "B33",
+              "B34",
+              "B35",
+              "B36",
+              "B37",
+              "B38",
+              "B39",
+              "B40",
+              "B41",
+              "B42",
+              "B43",
+              "B44"
+            ],
+            "entry": "B31",
+            "entry_name": "%if.else38.i.i.i.i",
+            "exit": "B45",
+            "id": "R18",
+            "kind": "canonical_region"
+          },
+          "right_entry_postdominates_side_start": true,
+          "similarity": null,
+          "split": "B29",
+          "status": "mixed_region_block_requires_mapping",
+          "structural_note": "No side-entry postdominance obstruction found; fusion legality still unchecked"
+        },
+        {
+          "at_least_0_2": null,
+          "context": "B31:true/false",
+          "exclusive_between_sides": true,
+          "fusion_legality": "not_checked",
+          "id": "P14",
+          "left": {
+            "blocks": [
+              "B32"
+            ],
+            "entry": "B32",
+            "entry_name": "%if.then41.i.i.i.i",
+            "exit": "B45",
+            "id": "B32",
+            "kind": "basic_block"
+          },
+          "left_entry_postdominates_side_start": true,
+          "performance_benefit": "not_measured",
+          "relation": "same_split_frontiers",
+          "right": {
+            "blocks": [
+              "B33",
+              "B34",
+              "B35",
+              "B36",
+              "B37",
+              "B38",
+              "B39",
+              "B40",
+              "B41",
+              "B42",
+              "B43",
+              "B44"
+            ],
+            "entry": "B33",
+            "entry_name": "%if.else49.i.i.i.i",
+            "exit": "B45",
+            "id": "R19",
+            "kind": "canonical_region"
+          },
+          "right_entry_postdominates_side_start": true,
+          "similarity": null,
+          "split": "B31",
+          "status": "mixed_region_block_requires_mapping",
+          "structural_note": "No side-entry postdominance obstruction found; fusion legality still unchecked"
+        },
+        {
+          "at_least_0_2": null,
+          "context": "B33:true/false",
+          "exclusive_between_sides": true,
+          "fusion_legality": "not_checked",
+          "id": "P15",
+          "left": {
+            "blocks": [
+              "B34"
+            ],
+            "entry": "B34",
+            "entry_name": "%if.then52.i.i.i.i",
+            "exit": "B45",
+            "id": "B34",
+            "kind": "basic_block"
+          },
+          "left_entry_postdominates_side_start": true,
+          "performance_benefit": "not_measured",
+          "relation": "same_split_frontiers",
+          "right": {
+            "blocks": [
+              "B35",
+              "B36",
+              "B37",
+              "B38",
+              "B39",
+              "B40",
+              "B41",
+              "B42",
+              "B43",
+              "B44"
+            ],
+            "entry": "B35",
+            "entry_name": "%if.else60.i.i.i.i",
+            "exit": "B45",
+            "id": "R20",
+            "kind": "canonical_region"
+          },
+          "right_entry_postdominates_side_start": true,
+          "similarity": null,
+          "split": "B33",
+          "status": "mixed_region_block_requires_mapping",
+          "structural_note": "No side-entry postdominance obstruction found; fusion legality still unchecked"
+        },
+        {
+          "at_least_0_2": null,
+          "context": "B35:true/false",
+          "exclusive_between_sides": true,
+          "fusion_legality": "not_checked",
+          "id": "P16",
+          "left": {
+            "blocks": [
+              "B36"
+            ],
+            "entry": "B36",
+            "entry_name": "%if.then63.i.i.i.i",
+            "exit": "B45",
+            "id": "B36",
+            "kind": "basic_block"
+          },
+          "left_entry_postdominates_side_start": true,
+          "performance_benefit": "not_measured",
+          "relation": "same_split_frontiers",
+          "right": {
+            "blocks": [
+              "B37",
+              "B38",
+              "B39",
+              "B40",
+              "B41",
+              "B42",
+              "B43",
+              "B44"
+            ],
+            "entry": "B37",
+            "entry_name": "%if.else71.i.i.i.i",
+            "exit": "B45",
+            "id": "R21",
+            "kind": "canonical_region"
+          },
+          "right_entry_postdominates_side_start": true,
+          "similarity": null,
+          "split": "B35",
+          "status": "mixed_region_block_requires_mapping",
+          "structural_note": "No side-entry postdominance obstruction found; fusion legality still unchecked"
+        },
+        {
+          "at_least_0_2": null,
+          "context": "B37:true/false",
+          "exclusive_between_sides": true,
+          "fusion_legality": "not_checked",
+          "id": "P17",
+          "left": {
+            "blocks": [
+              "B38"
+            ],
+            "entry": "B38",
+            "entry_name": "%if.then74.i.i.i.i",
+            "exit": "B45",
+            "id": "B38",
+            "kind": "basic_block"
+          },
+          "left_entry_postdominates_side_start": true,
+          "performance_benefit": "not_measured",
+          "relation": "same_split_frontiers",
+          "right": {
+            "blocks": [
+              "B39",
+              "B40",
+              "B41",
+              "B42",
+              "B43",
+              "B44"
+            ],
+            "entry": "B39",
+            "entry_name": "%if.else82.i.i.i.i",
+            "exit": "B45",
+            "id": "R22",
+            "kind": "canonical_region"
+          },
+          "right_entry_postdominates_side_start": true,
+          "similarity": null,
+          "split": "B37",
+          "status": "mixed_region_block_requires_mapping",
+          "structural_note": "No side-entry postdominance obstruction found; fusion legality still unchecked"
+        },
+        {
+          "at_least_0_2": null,
+          "context": "B39:true/false",
+          "exclusive_between_sides": true,
+          "fusion_legality": "not_checked",
+          "id": "P18",
+          "left": {
+            "blocks": [
+              "B40"
+            ],
+            "entry": "B40",
+            "entry_name": "%if.then85.i.i.i.i",
+            "exit": "B45",
+            "id": "B40",
+            "kind": "basic_block"
+          },
+          "left_entry_postdominates_side_start": true,
+          "performance_benefit": "not_measured",
+          "relation": "same_split_frontiers",
+          "right": {
+            "blocks": [
+              "B41",
+              "B42",
+              "B43",
+              "B44"
+            ],
+            "entry": "B41",
+            "entry_name": "%if.else93.i.i.i.i",
+            "exit": "B45",
+            "id": "R23",
+            "kind": "canonical_region"
+          },
+          "right_entry_postdominates_side_start": true,
+          "similarity": null,
+          "split": "B39",
+          "status": "mixed_region_block_requires_mapping",
+          "structural_note": "No side-entry postdominance obstruction found; fusion legality still unchecked"
+        },
+        {
+          "at_least_0_2": null,
+          "context": "B41:true/false",
+          "exclusive_between_sides": true,
+          "fusion_legality": "not_checked",
+          "id": "P19",
+          "left": {
+            "blocks": [
+              "B42"
+            ],
+            "entry": "B42",
+            "entry_name": "%if.then96.i.i.i.i",
+            "exit": "B45",
+            "id": "B42",
+            "kind": "basic_block"
+          },
+          "left_entry_postdominates_side_start": true,
+          "performance_benefit": "not_measured",
+          "relation": "same_split_frontiers",
+          "right": {
+            "blocks": [
+              "B43",
+              "B44"
+            ],
+            "entry": "B43",
+            "entry_name": "%if.else104.i.i.i.i",
+            "exit": "B45",
+            "id": "R24",
+            "kind": "canonical_region"
+          },
+          "right_entry_postdominates_side_start": true,
+          "similarity": null,
+          "split": "B41",
+          "status": "mixed_region_block_requires_mapping",
+          "structural_note": "No side-entry postdominance obstruction found; fusion legality still unchecked"
+        },
+        {
+          "at_least_0_2": true,
+          "block_mapping": [
+            {
+              "left": "B5",
+              "right": "B7"
+            }
+          ],
+          "context": "G1:0/1",
+          "exclusive_between_sides": true,
+          "fusion_legality": "not_checked",
+          "id": "P20",
+          "left": {
+            "blocks": [
+              "B5"
+            ],
+            "entry": "B5",
+            "entry_name": "%if.then.i.i.i.i",
+            "exit": "B45",
+            "id": "B5",
+            "kind": "basic_block"
+          },
+          "left_entry_postdominates_side_start": true,
+          "performance_benefit": "not_measured",
+          "relation": "adjacent_cascade_arms",
+          "right": {
+            "blocks": [
+              "B7"
+            ],
+            "entry": "B7",
+            "entry_name": "%if.then3.i.i.i.i",
+            "exit": "B45",
+            "id": "B7",
+            "kind": "basic_block"
+          },
+          "right_entry_postdominates_side_start": true,
+          "similarity": 0.4853932584269663,
+          "split": "B4",
+          "status": "scored_block",
+          "structural_note": "Logical neighbor arms, not necessarily immediate sibling successors; restructuring/replication may be needed"
+        },
+        {
+          "at_least_0_2": true,
+          "block_mapping": [
+            {
+              "left": "B7",
+              "right": "B9"
+            }
+          ],
+          "context": "G1:1/2",
+          "exclusive_between_sides": true,
+          "fusion_legality": "not_checked",
+          "id": "P21",
+          "left": {
+            "blocks": [
+              "B7"
+            ],
+            "entry": "B7",
+            "entry_name": "%if.then3.i.i.i.i",
+            "exit": "B45",
+            "id": "B7",
+            "kind": "basic_block"
+          },
+          "left_entry_postdominates_side_start": true,
+          "performance_benefit": "not_measured",
+          "relation": "adjacent_cascade_arms",
+          "right": {
+            "blocks": [
+              "B9"
+            ],
+            "entry": "B9",
+            "entry_name": "%if.then11.i.i.i.i",
+            "exit": "B45",
+            "id": "B9",
+            "kind": "basic_block"
+          },
+          "right_entry_postdominates_side_start": true,
+          "similarity": 0.4853932584269663,
+          "split": "B4",
+          "status": "scored_block",
+          "structural_note": "Logical neighbor arms, not necessarily immediate sibling successors; restructuring/replication may be needed"
+        },
+        {
+          "at_least_0_2": true,
+          "block_mapping": [
+            {
+              "left": "B9",
+              "right": "B11"
+            }
+          ],
+          "context": "G1:2/3",
+          "exclusive_between_sides": true,
+          "fusion_legality": "not_checked",
+          "id": "P22",
+          "left": {
+            "blocks": [
+              "B9"
+            ],
+            "entry": "B9",
+            "entry_name": "%if.then11.i.i.i.i",
+            "exit": "B45",
+            "id": "B9",
+            "kind": "basic_block"
+          },
+          "left_entry_postdominates_side_start": true,
+          "performance_benefit": "not_measured",
+          "relation": "adjacent_cascade_arms",
+          "right": {
+            "blocks": [
+              "B11"
+            ],
+            "entry": "B11",
+            "entry_name": "%if.then20.i.i.i.i",
+            "exit": "B45",
+            "id": "B11",
+            "kind": "basic_block"
+          },
+          "right_entry_postdominates_side_start": true,
+          "similarity": 0.2513721185510428,
+          "split": "B4",
+          "status": "scored_block",
+          "structural_note": "Logical neighbor arms, not necessarily immediate sibling successors; restructuring/replication may be needed"
+        },
+        {
+          "at_least_0_2": true,
+          "block_mapping": [
+            {
+              "left": "B11",
+              "right": "B13"
+            }
+          ],
+          "context": "G1:3/4",
+          "exclusive_between_sides": true,
+          "fusion_legality": "not_checked",
+          "id": "P23",
+          "left": {
+            "blocks": [
+              "B11"
+            ],
+            "entry": "B11",
+            "entry_name": "%if.then20.i.i.i.i",
+            "exit": "B45",
+            "id": "B11",
+            "kind": "basic_block"
+          },
+          "left_entry_postdominates_side_start": true,
+          "performance_benefit": "not_measured",
+          "relation": "adjacent_cascade_arms",
+          "right": {
+            "blocks": [
+              "B13"
+            ],
+            "entry": "B13",
+            "entry_name": "%if.then30.i.i.i.i",
+            "exit": "B45",
+            "id": "B13",
+            "kind": "basic_block"
+          },
+          "right_entry_postdominates_side_start": true,
+          "similarity": 0.4745998608211552,
+          "split": "B4",
+          "status": "scored_block",
+          "structural_note": "Logical neighbor arms, not necessarily immediate sibling successors; restructuring/replication may be needed"
+        },
+        {
+          "at_least_0_2": true,
+          "block_mapping": [
+            {
+              "left": "B13",
+              "right": "B15"
+            }
+          ],
+          "context": "G1:4/5",
+          "exclusive_between_sides": true,
+          "fusion_legality": "not_checked",
+          "id": "P24",
+          "left": {
+            "blocks": [
+              "B13"
+            ],
+            "entry": "B13",
+            "entry_name": "%if.then30.i.i.i.i",
+            "exit": "B45",
+            "id": "B13",
+            "kind": "basic_block"
+          },
+          "left_entry_postdominates_side_start": true,
+          "performance_benefit": "not_measured",
+          "relation": "adjacent_cascade_arms",
+          "right": {
+            "blocks": [
+              "B15"
+            ],
+            "entry": "B15",
+            "entry_name": "%if.then42.i.i.i.i",
+            "exit": "B45",
+            "id": "B15",
+            "kind": "basic_block"
+          },
+          "right_entry_postdominates_side_start": true,
+          "similarity": 0.5,
+          "split": "B4",
+          "status": "scored_block",
+          "structural_note": "Logical neighbor arms, not necessarily immediate sibling successors; restructuring/replication may be needed"
+        },
+        {
+          "at_least_0_2": true,
+          "block_mapping": [
+            {
+              "left": "B15",
+              "right": "B17"
+            }
+          ],
+          "context": "G1:5/6",
+          "exclusive_between_sides": true,
+          "fusion_legality": "not_checked",
+          "id": "P25",
+          "left": {
+            "blocks": [
+              "B15"
+            ],
+            "entry": "B15",
+            "entry_name": "%if.then42.i.i.i.i",
+            "exit": "B45",
+            "id": "B15",
+            "kind": "basic_block"
+          },
+          "left_entry_postdominates_side_start": true,
+          "performance_benefit": "not_measured",
+          "relation": "adjacent_cascade_arms",
+          "right": {
+            "blocks": [
+              "B17"
+            ],
+            "entry": "B17",
+            "entry_name": "%if.then54.i.i.i.i",
+            "exit": "B45",
+            "id": "B17",
+            "kind": "basic_block"
+          },
+          "right_entry_postdominates_side_start": true,
+          "similarity": 0.49246889325474785,
+          "split": "B4",
+          "status": "scored_block",
+          "structural_note": "Logical neighbor arms, not necessarily immediate sibling successors; restructuring/replication may be needed"
+        },
+        {
+          "at_least_0_2": true,
+          "block_mapping": [
+            {
+              "left": "B17",
+              "right": "B19"
+            }
+          ],
+          "context": "G1:6/7",
+          "exclusive_between_sides": true,
+          "fusion_legality": "not_checked",
+          "id": "P26",
+          "left": {
+            "blocks": [
+              "B17"
+            ],
+            "entry": "B17",
+            "entry_name": "%if.then54.i.i.i.i",
+            "exit": "B45",
+            "id": "B17",
+            "kind": "basic_block"
+          },
+          "left_entry_postdominates_side_start": true,
+          "performance_benefit": "not_measured",
+          "relation": "adjacent_cascade_arms",
+          "right": {
+            "blocks": [
+              "B19"
+            ],
+            "entry": "B19",
+            "entry_name": "%if.then66.i.i.i.i",
+            "exit": "B45",
+            "id": "B19",
+            "kind": "basic_block"
+          },
+          "right_entry_postdominates_side_start": true,
+          "similarity": 0.495754408883083,
+          "split": "B4",
+          "status": "scored_block",
+          "structural_note": "Logical neighbor arms, not necessarily immediate sibling successors; restructuring/replication may be needed"
+        },
+        {
+          "at_least_0_2": false,
+          "block_mapping": [
+            {
+              "left": "B19",
+              "right": "B20"
+            }
+          ],
+          "context": "G1:7/8",
+          "exclusive_between_sides": true,
+          "fusion_legality": "not_checked",
+          "id": "P27",
+          "left": {
+            "blocks": [
+              "B19"
+            ],
+            "entry": "B19",
+            "entry_name": "%if.then66.i.i.i.i",
+            "exit": "B45",
+            "id": "B19",
+            "kind": "basic_block"
+          },
+          "left_entry_postdominates_side_start": true,
+          "performance_benefit": "not_measured",
+          "relation": "adjacent_cascade_arms",
+          "right": {
+            "blocks": [
+              "B20"
+            ],
+            "entry": "B20",
+            "entry_name": "%if.else75.i.i.i.i",
+            "exit": "B45",
+            "id": "B20",
+            "kind": "basic_block"
+          },
+          "right_entry_postdominates_side_start": true,
+          "similarity": 0.041666666666666664,
+          "split": "B4",
+          "status": "scored_block",
+          "structural_note": "Logical neighbor arms, not necessarily immediate sibling successors; restructuring/replication may be needed"
+        },
+        {
+          "at_least_0_2": true,
+          "block_mapping": [
+            {
+              "left": "B22",
+              "right": "B24"
+            }
+          ],
+          "context": "G2:0/1",
+          "exclusive_between_sides": true,
+          "fusion_legality": "not_checked",
+          "id": "P28",
+          "left": {
+            "blocks": [
+              "B22"
+            ],
+            "entry": "B22",
+            "entry_name": "%if.then.i21.i.i.i",
+            "exit": "B45",
+            "id": "B22",
+            "kind": "basic_block"
+          },
+          "left_entry_postdominates_side_start": true,
+          "performance_benefit": "not_measured",
+          "relation": "adjacent_cascade_arms",
+          "right": {
+            "blocks": [
+              "B24"
+            ],
+            "entry": "B24",
+            "entry_name": "%if.then3.i27.i.i.i",
+            "exit": "B45",
+            "id": "B24",
+            "kind": "basic_block"
+          },
+          "right_entry_postdominates_side_start": true,
+          "similarity": 0.4898989898989899,
+          "split": "B21",
+          "status": "scored_block",
+          "structural_note": "Logical neighbor arms, not necessarily immediate sibling successors; restructuring/replication may be needed"
+        },
+        {
+          "at_least_0_2": true,
+          "block_mapping": [
+            {
+              "left": "B24",
+              "right": "B26"
+            }
+          ],
+          "context": "G2:1/2",
+          "exclusive_between_sides": true,
+          "fusion_legality": "not_checked",
+          "id": "P29",
+          "left": {
+            "blocks": [
+              "B24"
+            ],
+            "entry": "B24",
+            "entry_name": "%if.then3.i27.i.i.i",
+            "exit": "B45",
+            "id": "B24",
+            "kind": "basic_block"
+          },
+          "left_entry_postdominates_side_start": true,
+          "performance_benefit": "not_measured",
+          "relation": "adjacent_cascade_arms",
+          "right": {
+            "blocks": [
+              "B26"
+            ],
+            "entry": "B26",
+            "entry_name": "%if.then11.i33.i.i.i",
+            "exit": "B45",
+            "id": "B26",
+            "kind": "basic_block"
+          },
+          "right_entry_postdominates_side_start": true,
+          "similarity": 0.4649532710280374,
+          "split": "B21",
+          "status": "scored_block",
+          "structural_note": "Logical neighbor arms, not necessarily immediate sibling successors; restructuring/replication may be needed"
+        },
+        {
+          "at_least_0_2": true,
+          "block_mapping": [
+            {
+              "left": "B26",
+              "right": "B28"
+            }
+          ],
+          "context": "G2:2/3",
+          "exclusive_between_sides": true,
+          "fusion_legality": "not_checked",
+          "id": "P30",
+          "left": {
+            "blocks": [
+              "B26"
+            ],
+            "entry": "B26",
+            "entry_name": "%if.then11.i33.i.i.i",
+            "exit": "B45",
+            "id": "B26",
+            "kind": "basic_block"
+          },
+          "left_entry_postdominates_side_start": true,
+          "performance_benefit": "not_measured",
+          "relation": "adjacent_cascade_arms",
+          "right": {
+            "blocks": [
+              "B28"
+            ],
+            "entry": "B28",
+            "entry_name": "%if.then20.i39.i.i.i",
+            "exit": "B45",
+            "id": "B28",
+            "kind": "basic_block"
+          },
+          "right_entry_postdominates_side_start": true,
+          "similarity": 0.25904977375565613,
+          "split": "B21",
+          "status": "scored_block",
+          "structural_note": "Logical neighbor arms, not necessarily immediate sibling successors; restructuring/replication may be needed"
+        },
+        {
+          "at_least_0_2": true,
+          "block_mapping": [
+            {
+              "left": "B28",
+              "right": "B30"
+            }
+          ],
+          "context": "G2:3/4",
+          "exclusive_between_sides": true,
+          "fusion_legality": "not_checked",
+          "id": "P31",
+          "left": {
+            "blocks": [
+              "B28"
+            ],
+            "entry": "B28",
+            "entry_name": "%if.then20.i39.i.i.i",
+            "exit": "B45",
+            "id": "B28",
+            "kind": "basic_block"
+          },
+          "left_entry_postdominates_side_start": true,
+          "performance_benefit": "not_measured",
+          "relation": "adjacent_cascade_arms",
+          "right": {
+            "blocks": [
+              "B30"
+            ],
+            "entry": "B30",
+            "entry_name": "%if.then30.i44.i.i.i",
+            "exit": "B45",
+            "id": "B30",
+            "kind": "basic_block"
+          },
+          "right_entry_postdominates_side_start": true,
+          "similarity": 0.4833948339483395,
+          "split": "B21",
+          "status": "scored_block",
+          "structural_note": "Logical neighbor arms, not necessarily immediate sibling successors; restructuring/replication may be needed"
+        },
+        {
+          "at_least_0_2": true,
+          "block_mapping": [
+            {
+              "left": "B30",
+              "right": "B32"
+            }
+          ],
+          "context": "G2:4/5",
+          "exclusive_between_sides": true,
+          "fusion_legality": "not_checked",
+          "id": "P32",
+          "left": {
+            "blocks": [
+              "B30"
+            ],
+            "entry": "B30",
+            "entry_name": "%if.then30.i44.i.i.i",
+            "exit": "B45",
+            "id": "B30",
+            "kind": "basic_block"
+          },
+          "left_entry_postdominates_side_start": true,
+          "performance_benefit": "not_measured",
+          "relation": "adjacent_cascade_arms",
+          "right": {
+            "blocks": [
+              "B32"
+            ],
+            "entry": "B32",
+            "entry_name": "%if.then41.i.i.i.i",
+            "exit": "B45",
+            "id": "B32",
+            "kind": "basic_block"
+          },
+          "right_entry_postdominates_side_start": true,
+          "similarity": 0.5,
+          "split": "B21",
+          "status": "scored_block",
+          "structural_note": "Logical neighbor arms, not necessarily immediate sibling successors; restructuring/replication may be needed"
+        },
+        {
+          "at_least_0_2": true,
+          "block_mapping": [
+            {
+              "left": "B32",
+              "right": "B34"
+            }
+          ],
+          "context": "G2:5/6",
+          "exclusive_between_sides": true,
+          "fusion_legality": "not_checked",
+          "id": "P33",
+          "left": {
+            "blocks": [
+              "B32"
+            ],
+            "entry": "B32",
+            "entry_name": "%if.then41.i.i.i.i",
+            "exit": "B45",
+            "id": "B32",
+            "kind": "basic_block"
+          },
+          "left_entry_postdominates_side_start": true,
+          "performance_benefit": "not_measured",
+          "relation": "adjacent_cascade_arms",
+          "right": {
+            "blocks": [
+              "B34"
+            ],
+            "entry": "B34",
+            "entry_name": "%if.then52.i.i.i.i",
+            "exit": "B45",
+            "id": "B34",
+            "kind": "basic_block"
+          },
+          "right_entry_postdominates_side_start": true,
+          "similarity": 0.5,
+          "split": "B21",
+          "status": "scored_block",
+          "structural_note": "Logical neighbor arms, not necessarily immediate sibling successors; restructuring/replication may be needed"
+        },
+        {
+          "at_least_0_2": true,
+          "block_mapping": [
+            {
+              "left": "B34",
+              "right": "B36"
+            }
+          ],
+          "context": "G2:6/7",
+          "exclusive_between_sides": true,
+          "fusion_legality": "not_checked",
+          "id": "P34",
+          "left": {
+            "blocks": [
+              "B34"
+            ],
+            "entry": "B34",
+            "entry_name": "%if.then52.i.i.i.i",
+            "exit": "B45",
+            "id": "B34",
+            "kind": "basic_block"
+          },
+          "left_entry_postdominates_side_start": true,
+          "performance_benefit": "not_measured",
+          "relation": "adjacent_cascade_arms",
+          "right": {
+            "blocks": [
+              "B36"
+            ],
+            "entry": "B36",
+            "entry_name": "%if.then63.i.i.i.i",
+            "exit": "B45",
+            "id": "B36",
+            "kind": "basic_block"
+          },
+          "right_entry_postdominates_side_start": true,
+          "similarity": 0.5,
+          "split": "B21",
+          "status": "scored_block",
+          "structural_note": "Logical neighbor arms, not necessarily immediate sibling successors; restructuring/replication may be needed"
+        },
+        {
+          "at_least_0_2": true,
+          "block_mapping": [
+            {
+              "left": "B36",
+              "right": "B38"
+            }
+          ],
+          "context": "G2:7/8",
+          "exclusive_between_sides": true,
+          "fusion_legality": "not_checked",
+          "id": "P35",
+          "left": {
+            "blocks": [
+              "B36"
+            ],
+            "entry": "B36",
+            "entry_name": "%if.then63.i.i.i.i",
+            "exit": "B45",
+            "id": "B36",
+            "kind": "basic_block"
+          },
+          "left_entry_postdominates_side_start": true,
+          "performance_benefit": "not_measured",
+          "relation": "adjacent_cascade_arms",
+          "right": {
+            "blocks": [
+              "B38"
+            ],
+            "entry": "B38",
+            "entry_name": "%if.then74.i.i.i.i",
+            "exit": "B45",
+            "id": "B38",
+            "kind": "basic_block"
+          },
+          "right_entry_postdominates_side_start": true,
+          "similarity": 0.5,
+          "split": "B21",
+          "status": "scored_block",
+          "structural_note": "Logical neighbor arms, not necessarily immediate sibling successors; restructuring/replication may be needed"
+        },
+        {
+          "at_least_0_2": true,
+          "block_mapping": [
+            {
+              "left": "B38",
+              "right": "B40"
+            }
+          ],
+          "context": "G2:8/9",
+          "exclusive_between_sides": true,
+          "fusion_legality": "not_checked",
+          "id": "P36",
+          "left": {
+            "blocks": [
+              "B38"
+            ],
+            "entry": "B38",
+            "entry_name": "%if.then74.i.i.i.i",
+            "exit": "B45",
+            "id": "B38",
+            "kind": "basic_block"
+          },
+          "left_entry_postdominates_side_start": true,
+          "performance_benefit": "not_measured",
+          "relation": "adjacent_cascade_arms",
+          "right": {
+            "blocks": [
+              "B40"
+            ],
+            "entry": "B40",
+            "entry_name": "%if.then85.i.i.i.i",
+            "exit": "B45",
+            "id": "B40",
+            "kind": "basic_block"
+          },
+          "right_entry_postdominates_side_start": true,
+          "similarity": 0.5,
+          "split": "B21",
+          "status": "scored_block",
+          "structural_note": "Logical neighbor arms, not necessarily immediate sibling successors; restructuring/replication may be needed"
+        },
+        {
+          "at_least_0_2": true,
+          "block_mapping": [
+            {
+              "left": "B40",
+              "right": "B42"
+            }
+          ],
+          "context": "G2:9/10",
+          "exclusive_between_sides": true,
+          "fusion_legality": "not_checked",
+          "id": "P37",
+          "left": {
+            "blocks": [
+              "B40"
+            ],
+            "entry": "B40",
+            "entry_name": "%if.then85.i.i.i.i",
+            "exit": "B45",
+            "id": "B40",
+            "kind": "basic_block"
+          },
+          "left_entry_postdominates_side_start": true,
+          "performance_benefit": "not_measured",
+          "relation": "adjacent_cascade_arms",
+          "right": {
+            "blocks": [
+              "B42"
+            ],
+            "entry": "B42",
+            "entry_name": "%if.then96.i.i.i.i",
+            "exit": "B45",
+            "id": "B42",
+            "kind": "basic_block"
+          },
+          "right_entry_postdominates_side_start": true,
+          "similarity": 0.5,
+          "split": "B21",
+          "status": "scored_block",
+          "structural_note": "Logical neighbor arms, not necessarily immediate sibling successors; restructuring/replication may be needed"
+        },
+        {
+          "at_least_0_2": true,
+          "block_mapping": [
+            {
+              "left": "B42",
+              "right": "B44"
+            }
+          ],
+          "context": "G2:10/11",
+          "exclusive_between_sides": true,
+          "fusion_legality": "not_checked",
+          "id": "P38",
+          "left": {
+            "blocks": [
+              "B42"
+            ],
+            "entry": "B42",
+            "entry_name": "%if.then96.i.i.i.i",
+            "exit": "B45",
+            "id": "B42",
+            "kind": "basic_block"
+          },
+          "left_entry_postdominates_side_start": true,
+          "performance_benefit": "not_measured",
+          "relation": "adjacent_cascade_arms",
+          "right": {
+            "blocks": [
+              "B44"
+            ],
+            "entry": "B44",
+            "entry_name": "%if.then107.i.i.i.i",
+            "exit": "B45",
+            "id": "B44",
+            "kind": "basic_block"
+          },
+          "right_entry_postdominates_side_start": true,
+          "similarity": 0.5,
+          "split": "B21",
+          "status": "scored_block",
+          "structural_note": "Logical neighbor arms, not necessarily immediate sibling successors; restructuring/replication may be needed"
+        }
+      ],
+      "skipped_contexts": [
+        {
+          "context": "B0:true/false",
+          "reason": "empty arm before join; no computation region",
+          "relation": "same_split_frontiers"
+        },
+        {
+          "context": "B1:true/false",
+          "reason": "empty arm before join; no computation region",
+          "relation": "same_split_frontiers"
+        },
+        {
+          "context": "B2:true/false",
+          "reason": "empty arm before join; no computation region",
+          "relation": "same_split_frontiers"
+        },
+        {
+          "context": "B43:true/false",
+          "reason": "empty arm before join; no computation region",
+          "relation": "same_split_frontiers"
+        },
+        {
+          "context": "G0:0/1",
+          "reason": "empty arm/PHI-only fallback; no computation region",
+          "relation": "adjacent_cascade_arms"
+        },
+        {
+          "context": "G0:1/2",
+          "reason": "empty arm/PHI-only fallback; no computation region",
+          "relation": "adjacent_cascade_arms"
+        },
+        {
+          "context": "G2:11/12",
+          "reason": "empty arm/PHI-only fallback; no computation region",
+          "relation": "adjacent_cascade_arms"
+        }
+      ],
+      "summary": {
+        "candidate_records": 39,
+        "empty_arm_contexts": 7,
+        "score_at_least_0_2": 18,
+        "scored": 20,
+        "statuses": {
+          "mixed_region_block_requires_mapping": 18,
+          "region_structure_mismatch": 1,
+          "scored_block": 20
+        }
+      }
+    }
+  ],
+  "schema": "llvm12-darm-neighbor-similarity-v1",
+  "scope": "Read-only native DARM opcode-cost scoring; no RegionAnalyzer candidate sorting and no fusion. Enumerates frontier cross-pairs across each split, plus neighboring cascade arms; not all possible region combinations. Repeated physical pairs in different contexts remain explicit.",
+  "score_definition": "sum matched opcode cost minima / sum both costs; PHI savings excluded; original DARM fixed costs; maximum 0.5, not a speedup"
+}

@@ -1,0 +1,7 @@
+#!/bin/bash
+set -euo pipefail
+r=/home/chh/kernel-benchmark-suite
+lc=/home/chh/darm-artifacts-repro/build/bin/llvm-config
+read -r -a flags <<< "$($lc --cxxflags)"
+read -r -a libs <<< "$($lc --ldflags --libs core irreader analysis transformutils --system-libs | tr '\n' ' ')"
+g++ "${flags[@]}" -std=c++17 -fexceptions -O2 "$r/tools/scoped_cleanup_main.cpp" "${libs[@]}" -o "$r/build/llvm24-tti/scoped-cleanup"

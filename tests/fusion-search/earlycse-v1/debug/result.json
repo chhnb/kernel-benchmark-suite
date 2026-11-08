@@ -1,0 +1,9 @@
+{
+  "commits": 2,
+  "output_on_stop": "last_committed_parent_or_initial_normalized_state",
+  "policy": "incremental_control_legacy_darm_v1",
+  "require_parent_gain": true,
+  "semantic_validation": "not_run",
+  "stop": "round_budget",
+  "trials": 3
+}

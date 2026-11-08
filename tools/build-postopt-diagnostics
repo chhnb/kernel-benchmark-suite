@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+set -euo pipefail
+root=$(cd "$(dirname "$0")/.." && pwd)
+lc=${LLVM_CONFIG:-/home/chh/darm-artifacts-repro/build/bin/llvm-config}
+cxx=${CXX:-g++}
+build="$root/build/postopt-diagnostics"
+mkdir -p "$build"
+read -r -a flags <<< "$($lc --cxxflags)"
+read -r -a libs <<< "$($lc --ldflags --libs core irreader asmparser analysis transformutils scalaropts ipo instcombine vectorize amdgpu x86 nvptx --system-libs | tr '\n' ' ')"
+objects=()
+for source in postopt_profile_policy postopt_scorer ir_pressure ir_dependency fusion_search darm_pair_engine/RegionAnalyzer darm_pair_engine/RegionMelder darm_pair_engine/RegionReplicator darm_pair_engine/CFMelderUtils darm_pair_engine/InstructionMatch; do
+  obj="$build/$(basename "$source").o"
+  "$cxx" "${flags[@]}" -std=c++17 -fexceptions -O2 -DFUSION_DETERMINISTIC_REGION_ORDER -I"$root/tools" -I"$root/tools/darm_pair_engine" -c "$root/tools/$source.cpp" -o "$obj"
+  objects+=("$obj")
+done
+"$cxx" "${flags[@]}" -std=c++17 -fexceptions -O2 -I"$root/tools" "$root/tools/postopt_diagnostics_main.cpp" "${objects[@]}" "${libs[@]}" -lcrypto -o "$build/postopt-diagnostics"

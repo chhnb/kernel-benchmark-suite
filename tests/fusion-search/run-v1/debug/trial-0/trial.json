@@ -1,0 +1,64 @@
+{
+  "after": {
+    "blocks": 4,
+    "conditional_branches": 1,
+    "darm_static_cost": 117,
+    "instructions": 16,
+    "loops": 0,
+    "phis": 1,
+    "selects": 2
+  },
+  "after_raw": {
+    "blocks": 13,
+    "conditional_branches": 4,
+    "darm_static_cost": 150,
+    "instructions": 27,
+    "loops": 0,
+    "phis": 4,
+    "selects": 1
+  },
+  "before": {
+    "blocks": 7,
+    "conditional_branches": 2,
+    "darm_static_cost": 143,
+    "instructions": 19,
+    "loops": 0,
+    "phis": 2,
+    "selects": 0
+  },
+  "candidate": "choose:B0:B2:B1",
+  "left": {
+    "blocks": [
+      "%right"
+    ],
+    "entry": "%right",
+    "exit": "%join",
+    "live_ins": [
+      "%x"
+    ],
+    "live_outs": [
+      "%bb"
+    ]
+  },
+  "orientation_swapped": false,
+  "parent_ir": "../state-0.ll",
+  "reason": "verified_ir_only",
+  "replication_required": false,
+  "right": {
+    "blocks": [
+      "%left"
+    ],
+    "entry": "%left",
+    "exit": "%join",
+    "live_ins": [
+      "%x"
+    ],
+    "live_outs": [
+      "%aa"
+    ]
+  },
+  "score": 0.18181818181818182,
+  "semantic_validation": "not_run",
+  "valid": true,
+  "version": 0
+}

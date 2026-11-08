@@ -1,0 +1,6 @@
+INFO   : Melding entry blocks %left , %right
+INFO   : Cloning instructions
+INFO   : Fixing operends
+INFO   : Running post-merge optimizations
+DEBUG  : Converting conditional branch to unconditional
+DEBUG  : Converting conditional branch to unconditional

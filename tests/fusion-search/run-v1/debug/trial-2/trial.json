@@ -1,0 +1,64 @@
+{
+  "after": {
+    "blocks": 1,
+    "conditional_branches": 0,
+    "darm_static_cost": 91,
+    "instructions": 13,
+    "loops": 0,
+    "phis": 0,
+    "selects": 4
+  },
+  "after_raw": {
+    "blocks": 10,
+    "conditional_branches": 3,
+    "darm_static_cost": 124,
+    "instructions": 24,
+    "loops": 0,
+    "phis": 3,
+    "selects": 3
+  },
+  "before": {
+    "blocks": 4,
+    "conditional_branches": 1,
+    "darm_static_cost": 117,
+    "instructions": 16,
+    "loops": 0,
+    "phis": 1,
+    "selects": 2
+  },
+  "candidate": "choose:B0:B2:B1",
+  "left": {
+    "blocks": [
+      "%r2"
+    ],
+    "entry": "%r2",
+    "exit": "%end",
+    "live_ins": [
+      "%v"
+    ],
+    "live_outs": [
+      "%gg"
+    ]
+  },
+  "orientation_swapped": false,
+  "parent_ir": "../state-1.ll",
+  "reason": "verified_ir_only",
+  "replication_required": false,
+  "right": {
+    "blocks": [
+      "%l2"
+    ],
+    "entry": "%l2",
+    "exit": "%end",
+    "live_ins": [
+      "%v"
+    ],
+    "live_outs": [
+      "%ee"
+    ]
+  },
+  "score": 0.22222222222222221,
+  "semantic_validation": "not_run",
+  "valid": true,
+  "version": 1
+}

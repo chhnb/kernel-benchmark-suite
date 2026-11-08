@@ -1,0 +1,19 @@
+{
+  "source": "/home/chh/darm-artifacts-repro/upstream/code/llvm/lib/Transforms/CFMelder",
+  "source_sha256": {
+    "SmithWaterman.h": "abac2fb4149402957191e20d39ed9786cc378fbe6c236ea6fa948a3207258f2c",
+    "InstructionMatch.cpp": "967aa25ba8ae3471415bc922e158fd83e4c670cccb91c3abf3658096cfc99003",
+    "RegionAnalyzer.cpp": "55b96b99e65d88dc35bfbd3564bd6a18d3c912009e94ae4237b49e407489b376",
+    "CFMelderUtils.cpp": "0edafa28b2cbc463d9c8c30a241328e70853745bcda5c5d29f1696e94685e0fd",
+    "RegionMelder.h": "356177ac7591457d7b7007d89ff7e9522b18dcdfc6cce61565e9ee0a68b80bc3",
+    "InstructionMatch.h": "686438826b0cce8376657191cb30ae3202ec0481acda4c0bf61a4b295ebe24e2",
+    "CFMelderUtils.h": "1c951f3f9e5edc5a2f7b4e6a8fc0880a1b7ea33bc29c50f50e7c64036ca68051",
+    "RegionReplicator.h": "df2ceccd5392abd56ec97c72628a6244b6ff30b29d833f930892124d6af18f72",
+    "RegionReplicator.cpp": "0743a32d7ad8b813c7fd8f200cdc8ae70325576ec7e5192e2f2b92a5c09e8d65",
+    "RegionAnalyzer.h": "fb23babc260b327adefc00269d3283ec10b324463e82b4b1757214737c545362",
+    "SeqAlignmentUtils.h": "10b04ff0565198ab6f2a5b88ec16e8e12cf7dabc6e1e1b31fa53e0fadf49b95c",
+    "NeedlemanWunsch.h": "31e20a364e0dfa45be4bd0f8c54d99f45029b513df18369f313c20cabe4386ac",
+    "RegionMelder.cpp": "2bd8ddc0bbfdf38d77f1e8f05b7c2c50da2824640b0b365a434f172b74849d9f"
+  },
+  "changes": "RegionAnalyzer.h adds selectExplicitBlocks and selectExplicitRegions; original candidate selector not called; no upstream files modified"
+}

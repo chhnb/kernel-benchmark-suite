@@ -1,0 +1,7 @@
+{
+  "commits": 2,
+  "policy": "normalized_darm_static_cost_reduction",
+  "semantic_validation": "not_run",
+  "stop": "round_budget",
+  "trials": 3
+}

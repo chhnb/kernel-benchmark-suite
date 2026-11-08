@@ -1,0 +1,39 @@
+{
+  "engine_calls": 1,
+  "engine_left_boundary": {
+    "blocks": [
+      "%left"
+    ],
+    "entry": "%left",
+    "exit": "%join",
+    "live_ins": [
+      "%x"
+    ],
+    "live_outs": [
+      "%a"
+    ]
+  },
+  "engine_left_entry": "%left",
+  "engine_right_boundary": {
+    "blocks": [
+      "%right"
+    ],
+    "entry": "%right",
+    "exit": "%join",
+    "live_ins": [
+      "%x"
+    ],
+    "live_outs": [
+      "%b"
+    ]
+  },
+  "engine_right_entry": "%right",
+  "function": "choose",
+  "orientation_swapped": false,
+  "proof_scope": "structural prechecks only; semantic tests required",
+  "region_pair": false,
+  "replication_required": false,
+  "requested_left": "B1",
+  "requested_right": "B2",
+  "split_name": "%entry"
+}

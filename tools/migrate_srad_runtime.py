@@ -1,0 +1,12 @@
+from pathlib import Path
+import json
+S=Path('/home/chh/kernel-benchmark-suite');P=S/'cases/srad';O=Path('/home/chh/divergence-strategy-search/explorations/srad-nineway-20261104');(P/'recipes').mkdir(exist_ok=True)
+for name in ['source-clang','source-prep','post','llc','link-hsaco']:
+ cmd=json.loads((O/'build-v1/original'/(name+'.json')).read_text())['command'];cmd=[x.replace(str(O/'build-v1/original/source.hip'),'{case}/source/source.hip').replace(str(O/'build-v1/original'),'{out}') for x in cmd];(P/'recipes'/(name+'.json')).write_text(json.dumps(cmd))
+s=(O/'gpu.py').read_text();old="phase=sys.argv[1];D=P/phase;req=json.loads((P/'request.json').read_text());roles=req['roles'];B=16"
+new="phase='correctness' if sys.argv[1]=='validate' else 'screen';D=Path(sys.argv[3]);D.mkdir(exist_ok=False);role_rows=json.loads(Path(sys.argv[2]).read_text());roles=[r['name'] for r in role_rows];binaries={r['name']:r['hsaco'] for r in role_rows};req={'matrix':{'correctness':[[256,'random'],[1024,'random']],'screen':[[256,'random'],[1024,'random']]}};B=16"
+assert old in s;s=s.replace(old,new).replace("str(P/(r+'.hsaco'))","binaries[r]")
+s=s.replace("P/'correctness'/f'ref-{size}-{kind}.npz'","Path(sys.argv[4])/'output'/f'ref-{size}-{kind}.npz'")
+a=s.index("   if phase=='correctness':\n");b=s.index('   row=dict(',a);s=s[:a]+s[b:];(P/'run.py').write_text(s)
+j=json.loads((P/'case.json').read_text());j['profiles']['hip-o3-binary']={'argv':['python3','{case}/build_binary.py','{out}'],'artifact':'kernel.hsaco','kind':'hip-code-object','gpu_execution':False};j['runtime']={'backend':'amd','scope':'Original full srad_cuda_1, final 256/1024 random image fixtures, fixed seed and q0sqr=0.1; full five-output CPU oracle and guards, no historical small/negative matrix','command':['/home/chh/region-fusion-lab/.venv/bin/python','{case}/run.py','{phase}','{roles}','{output}','{validated}'],'roles':[{'name':'natural','hsaco':str(S/'results/srad-baseline-binary-v1/kernel.hsaco'),'symbol':'srad_cuda_1'}]};(P/'case.json').write_text(json.dumps(j,indent=2))
+f=S/'tools/run_case.py';s=f.read_text();s=s.replace("if rt['backend']=='amd':cmd=", "if 'command' in rt:\n cmd=[x.replace('{case}',str(P)).replace('{phase}',a.phase).replace('{roles}',str(D/'roles.json')).replace('{output}',str(D/'output')).replace('{validated}',str(a.validated.resolve()) if a.validated else '') for x in rt['command']]\nelif rt['backend']=='amd':cmd=");f.write_text(s)

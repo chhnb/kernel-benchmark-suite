@@ -1,0 +1,1 @@
+extern "C" int before(int,int,int); extern "C" int after(int,int,int); int main(){for(int x=-100;x<=100;x++)for(int s=0;s<2;s++)for(int t=0;t<2;t++)if(before(x,s,t)!=after(x,s,t))return 1;return 0;}

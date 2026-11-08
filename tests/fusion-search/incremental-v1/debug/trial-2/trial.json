@@ -1,0 +1,423 @@
+{
+  "after": {
+    "blocks": 1,
+    "conditional_branches": 0,
+    "darm_static_cost": 91,
+    "instructions": 13,
+    "loops": 0,
+    "operations": [
+      {
+        "attributes": "result=i32;nuw=0;nsw=1",
+        "callee": "",
+        "category": "integer",
+        "count": 2,
+        "legacy_weight": 5,
+        "opcode": "add",
+        "operand_types": "i32;i32;",
+        "scalable": false,
+        "scalar_bits": 32,
+        "type": "i32",
+        "vector_elements": 1
+      },
+      {
+        "attributes": "result=i1;predicate=32",
+        "callee": "",
+        "category": "integer",
+        "count": 2,
+        "legacy_weight": 3,
+        "opcode": "icmp",
+        "operand_types": "i32;i32;",
+        "scalable": false,
+        "scalar_bits": 32,
+        "type": "i32",
+        "vector_elements": 1
+      },
+      {
+        "attributes": "result=i32;nuw=0;nsw=1",
+        "callee": "",
+        "category": "integer",
+        "count": 2,
+        "legacy_weight": 10,
+        "opcode": "mul",
+        "operand_types": "i32;i32;",
+        "scalable": false,
+        "scalar_bits": 32,
+        "type": "i32",
+        "vector_elements": 1
+      },
+      {
+        "attributes": "result=void",
+        "callee": "",
+        "category": "void",
+        "count": 1,
+        "legacy_weight": 3,
+        "opcode": "ret",
+        "operand_types": "i32;",
+        "scalable": false,
+        "scalar_bits": 0,
+        "type": "void",
+        "vector_elements": 1
+      },
+      {
+        "attributes": "result=i32;exact=0",
+        "callee": "",
+        "category": "integer",
+        "count": 2,
+        "legacy_weight": 20,
+        "opcode": "sdiv",
+        "operand_types": "i32;i32;",
+        "scalable": false,
+        "scalar_bits": 32,
+        "type": "i32",
+        "vector_elements": 1
+      },
+      {
+        "attributes": "result=i32",
+        "callee": "",
+        "category": "integer",
+        "count": 4,
+        "legacy_weight": 3,
+        "opcode": "select",
+        "operand_types": "i1;i32;i32;",
+        "scalable": false,
+        "scalar_bits": 32,
+        "type": "i32",
+        "vector_elements": 1
+      }
+    ],
+    "phis": 0,
+    "selects": 4
+  },
+  "after_raw": {
+    "blocks": 10,
+    "conditional_branches": 3,
+    "darm_static_cost": 124,
+    "instructions": 24,
+    "loops": 0,
+    "operations": [
+      {
+        "attributes": "result=i32;nuw=0;nsw=1",
+        "callee": "",
+        "category": "integer",
+        "count": 2,
+        "legacy_weight": 5,
+        "opcode": "add",
+        "operand_types": "i32;i32;",
+        "scalable": false,
+        "scalar_bits": 32,
+        "type": "i32",
+        "vector_elements": 1
+      },
+      {
+        "attributes": "result=void",
+        "callee": "",
+        "category": "void",
+        "count": 3,
+        "legacy_weight": 3,
+        "opcode": "br",
+        "operand_types": "i1;label;label;",
+        "scalable": false,
+        "scalar_bits": 0,
+        "type": "void",
+        "vector_elements": 1
+      },
+      {
+        "attributes": "result=void",
+        "callee": "",
+        "category": "void",
+        "count": 6,
+        "legacy_weight": 3,
+        "opcode": "br",
+        "operand_types": "label;",
+        "scalable": false,
+        "scalar_bits": 0,
+        "type": "void",
+        "vector_elements": 1
+      },
+      {
+        "attributes": "result=i1;predicate=32",
+        "callee": "",
+        "category": "integer",
+        "count": 2,
+        "legacy_weight": 3,
+        "opcode": "icmp",
+        "operand_types": "i32;i32;",
+        "scalable": false,
+        "scalar_bits": 32,
+        "type": "i32",
+        "vector_elements": 1
+      },
+      {
+        "attributes": "result=i32;nuw=0;nsw=1",
+        "callee": "",
+        "category": "integer",
+        "count": 2,
+        "legacy_weight": 10,
+        "opcode": "mul",
+        "operand_types": "i32;i32;",
+        "scalable": false,
+        "scalar_bits": 32,
+        "type": "i32",
+        "vector_elements": 1
+      },
+      {
+        "attributes": "result=i32",
+        "callee": "",
+        "category": "integer",
+        "count": 3,
+        "legacy_weight": 3,
+        "opcode": "phi",
+        "operand_types": "i32;i32;",
+        "scalable": false,
+        "scalar_bits": 32,
+        "type": "i32",
+        "vector_elements": 1
+      },
+      {
+        "attributes": "result=void",
+        "callee": "",
+        "category": "void",
+        "count": 1,
+        "legacy_weight": 3,
+        "opcode": "ret",
+        "operand_types": "i32;",
+        "scalable": false,
+        "scalar_bits": 0,
+        "type": "void",
+        "vector_elements": 1
+      },
+      {
+        "attributes": "result=i32;exact=0",
+        "callee": "",
+        "category": "integer",
+        "count": 2,
+        "legacy_weight": 20,
+        "opcode": "sdiv",
+        "operand_types": "i32;i32;",
+        "scalable": false,
+        "scalar_bits": 32,
+        "type": "i32",
+        "vector_elements": 1
+      },
+      {
+        "attributes": "result=i32",
+        "callee": "",
+        "category": "integer",
+        "count": 3,
+        "legacy_weight": 3,
+        "opcode": "select",
+        "operand_types": "i1;i32;i32;",
+        "scalable": false,
+        "scalar_bits": 32,
+        "type": "i32",
+        "vector_elements": 1
+      }
+    ],
+    "phis": 3,
+    "selects": 3
+  },
+  "candidate": "choose:B0:B2:B1",
+  "cleaned_hash": "7cc790f37b87a924198467735f6a388253877187",
+  "control_hash": "bbe92b2b089d8ec6a6cd291e326cf79d5cc7225d",
+  "eligible": true,
+  "left": {
+    "blocks": [
+      "%r2"
+    ],
+    "entry": "%r2",
+    "exit": "%end",
+    "live_ins": [
+      "%v"
+    ],
+    "live_outs": [
+      "%gg"
+    ]
+  },
+  "orientation_swapped": false,
+  "parent_hash": "bbe92b2b089d8ec6a6cd291e326cf79d5cc7225d",
+  "parent_ir": "../state-1.ll",
+  "reason": "verified_ir_only",
+  "replication_required": false,
+  "right": {
+    "blocks": [
+      "%l2"
+    ],
+    "entry": "%l2",
+    "exit": "%end",
+    "live_ins": [
+      "%v"
+    ],
+    "live_outs": [
+      "%ee"
+    ]
+  },
+  "round_context": "../round-1.json",
+  "schema": "incremental-score-trial-v1",
+  "score_result": {
+    "cleanup_gain": 0,
+    "contributions": [
+      {
+        "after_count": 2,
+        "attributes": "result=i32;nuw=0;nsw=1",
+        "callee": "",
+        "category": "integer",
+        "control_count": 2,
+        "gain": 0,
+        "legacy_weight": 5,
+        "opcode": "add",
+        "operand_types": "i32;i32;",
+        "scalable": false,
+        "scalar_bits": 32,
+        "type": "i32",
+        "vector_elements": 1
+      },
+      {
+        "after_count": 0,
+        "attributes": "result=void",
+        "callee": "",
+        "category": "void",
+        "control_count": 1,
+        "gain": 3,
+        "legacy_weight": 3,
+        "opcode": "br",
+        "operand_types": "i1;label;label;",
+        "scalable": false,
+        "scalar_bits": 0,
+        "type": "void",
+        "vector_elements": 1
+      },
+      {
+        "after_count": 0,
+        "attributes": "result=void",
+        "callee": "",
+        "category": "void",
+        "control_count": 2,
+        "gain": 6,
+        "legacy_weight": 3,
+        "opcode": "br",
+        "operand_types": "label;",
+        "scalable": false,
+        "scalar_bits": 0,
+        "type": "void",
+        "vector_elements": 1
+      },
+      {
+        "after_count": 2,
+        "attributes": "result=i1;predicate=32",
+        "callee": "",
+        "category": "integer",
+        "control_count": 2,
+        "gain": 0,
+        "legacy_weight": 3,
+        "opcode": "icmp",
+        "operand_types": "i32;i32;",
+        "scalable": false,
+        "scalar_bits": 32,
+        "type": "i32",
+        "vector_elements": 1
+      },
+      {
+        "after_count": 2,
+        "attributes": "result=i32;nuw=0;nsw=1",
+        "callee": "",
+        "category": "integer",
+        "control_count": 2,
+        "gain": 0,
+        "legacy_weight": 10,
+        "opcode": "mul",
+        "operand_types": "i32;i32;",
+        "scalable": false,
+        "scalar_bits": 32,
+        "type": "i32",
+        "vector_elements": 1
+      },
+      {
+        "after_count": 0,
+        "attributes": "result=i32",
+        "callee": "",
+        "category": "integer",
+        "control_count": 1,
+        "gain": 3,
+        "legacy_weight": 3,
+        "opcode": "phi",
+        "operand_types": "i32;i32;",
+        "scalable": false,
+        "scalar_bits": 32,
+        "type": "i32",
+        "vector_elements": 1
+      },
+      {
+        "after_count": 1,
+        "attributes": "result=void",
+        "callee": "",
+        "category": "void",
+        "control_count": 1,
+        "gain": 0,
+        "legacy_weight": 3,
+        "opcode": "ret",
+        "operand_types": "i32;",
+        "scalable": false,
+        "scalar_bits": 0,
+        "type": "void",
+        "vector_elements": 1
+      },
+      {
+        "after_count": 2,
+        "attributes": "result=i32;exact=0",
+        "callee": "",
+        "category": "integer",
+        "control_count": 3,
+        "gain": 20,
+        "legacy_weight": 20,
+        "opcode": "sdiv",
+        "operand_types": "i32;i32;",
+        "scalable": false,
+        "scalar_bits": 32,
+        "type": "i32",
+        "vector_elements": 1
+      },
+      {
+        "after_count": 4,
+        "attributes": "result=i32",
+        "callee": "",
+        "category": "integer",
+        "control_count": 2,
+        "gain": -6,
+        "legacy_weight": 3,
+        "opcode": "select",
+        "operand_types": "i1;i32;i32;",
+        "scalable": false,
+        "scalar_bits": 32,
+        "type": "i32",
+        "vector_elements": 1
+      }
+    ],
+    "coverage": {
+      "dependency": "unavailable",
+      "divergence": "unavailable",
+      "hardware_costs": "uncalibrated",
+      "legacy_counts_complete": true,
+      "liveness": "unavailable",
+      "operand_context_model": "not_modeled; inspect retained IR",
+      "provenance": "unavailable"
+    },
+    "dependency_penalty_applied": 0,
+    "liveness_penalty_applied": 0,
+    "parent_gain": 26,
+    "reason": "legacy_static_proxy_only",
+    "static_gain": 26,
+    "static_score": 0.22222222222222221,
+    "status": "scored",
+    "total": 0.22222222222222221
+  },
+  "semantic_validation": "not_run",
+  "timings_ms": {
+    "features": 0.055472,
+    "merge": 0.068200999999999998,
+    "normalization": 1.8474010000000001,
+    "score_with_analysis": 0.02189,
+    "trial_total": 2.046395
+  },
+  "valid": true,
+  "version": 1
+}

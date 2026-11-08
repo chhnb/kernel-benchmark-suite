@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+set -euo pipefail
+suite_root=$(cd "$(dirname "$0")/.." && pwd)
+llvm_config=${LLVM_CONFIG:-/home/chh/darm-artifacts-repro/build/bin/llvm-config}
+cxx=${CXX:-g++}
+if [[ $($llvm_config --version) != 12.* ]]; then echo 'LLVM12 required' >&2; exit 2; fi
+build_dir="$suite_root/build/fusion-search"
+engine_dir="$suite_root/tools/darm_pair_engine"
+mkdir -p "$build_dir"
+read -r -a compile_flags <<< "$($llvm_config --cxxflags)"
+# llvm-config emits linker flags on multiple lines.
+read -r -a link_flags <<< "$($llvm_config --ldflags --libs core irreader asmparser analysis transformutils scalaropts ipo instcombine vectorize amdgpu x86 nvptx --system-libs | tr '\n' ' ')"
+link_flags+=(-lcrypto)
+objects=()
+for source in "$suite_root/tools/postopt_profile_policy.cpp" "$suite_root/tools/postopt_scorer.cpp" "$suite_root/tools/ir_pressure.cpp" "$suite_root/tools/ir_dependency.cpp" "$suite_root/tools/fusion_search.cpp" "$suite_root/tools/logical_region_state.cpp" "$engine_dir/RegionAnalyzer.cpp" "$engine_dir/RegionMelder.cpp" "$engine_dir/RegionReplicator.cpp" "$engine_dir/CFMelderUtils.cpp" "$engine_dir/InstructionMatch.cpp"; do
+  object="$build_dir/$(basename "${source%.cpp}").o"
+  "$cxx" "${compile_flags[@]}" -std=c++17 -fexceptions -O2 -DFUSION_DETERMINISTIC_REGION_ORDER -I"$engine_dir" -I"$suite_root/tools" -c "$source" -o "$object"
+  objects+=("$object")
+done
+"$cxx" "${compile_flags[@]}" -std=c++17 -fexceptions -O2 -DFUSION_DETERMINISTIC_REGION_ORDER -I"$engine_dir" -I"$suite_root/tools" "$suite_root/tools/fusion_search_main.cpp" "${objects[@]}" "${link_flags[@]}" -o "$build_dir/fusion-search"
+if [[ -f "$suite_root/tests/fusion-search/check.cpp" ]]; then
+  "$cxx" "${compile_flags[@]}" -std=c++17 -fexceptions -O2 -DFUSION_DETERMINISTIC_REGION_ORDER -I"$engine_dir" -I"$suite_root/tools" "$suite_root/tests/fusion-search/check.cpp" "${objects[@]}" "${link_flags[@]}" -o "$build_dir/check"
+fi
+for test_source in "$suite_root/tests/postopt/pressure.cpp" "$suite_root/tests/postopt/scorer.cpp" "$suite_root/tests/postopt/dependency.cpp" "$suite_root/tests/postopt/block_work.cpp"; do
+  test_name=$(basename "${test_source%.cpp}")
+  "$cxx" "${compile_flags[@]}" -std=c++17 -fexceptions -O2 -I"$suite_root/tools" "$test_source" "${objects[@]}" "${link_flags[@]}" -o "$build_dir/check-postopt-$test_name"
+done
+"$cxx" "${compile_flags[@]}" -std=c++17 -fexceptions -O2 -I"$suite_root/tools" "$suite_root/tools/postopt_pressure_main.cpp" "$build_dir/ir_pressure.o" "${link_flags[@]}" -o "$build_dir/postopt-pressure"
+
+"$cxx" "${compile_flags[@]}" -std=c++17 -fexceptions -O2 -I"$suite_root/tools" "$suite_root/tools/postopt_work_main.cpp" "${objects[@]}" "${link_flags[@]}" -o "$build_dir/postopt-work"
+
+"$cxx" "${compile_flags[@]}" -std=c++17 -fexceptions -O2 "$suite_root/tools/postopt_conditions.cpp" "${link_flags[@]}" -o "$build_dir/postopt-conditions"

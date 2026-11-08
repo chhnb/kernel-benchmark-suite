@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+set -euo pipefail
+suite=$(cd "$(dirname "$0")/.." && pwd)
+if [[ ${1:-} != --admitted ]]; then
+ exec python3 /home/chh/region-fusion-lab/work/run-cpu.py "postopt-wave-build-$(date +%s)-$$" bash "$suite/tools/build-postopt-wave" --admitted
+fi
+config=${LLVM_CONFIG:-/home/chh/darm-artifacts-repro/build/bin/llvm-config}
+read -r -a flags <<< "$($config --cxxflags)"
+read -r -a libs <<< "$($config --ldflags --libs core irreader transformutils --system-libs | tr '\n' ' ')"
+mkdir -p "$suite/build/fusion-search"
+g++ "${flags[@]}" -std=c++17 -O2 "$suite/tools/postopt_wave_profile.cpp" "${libs[@]}" -o "$suite/build/fusion-search/postopt-wave-profile"
+g++ "${flags[@]}" -std=c++17 -O2 "$suite/tools/postopt_pair_profile.cpp" "${libs[@]}" -o "$suite/build/fusion-search/postopt-pair-profile"
+cmake --build "$suite/build" --target bench_hip bench_cuda --parallel 1

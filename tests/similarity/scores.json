@@ -1,0 +1,1343 @@
+{
+  "functions": [
+    {
+      "name": "multiple_choices",
+      "pairs": [
+        {
+          "at_least_0_2": null,
+          "context": "B0:true/false",
+          "exclusive_between_sides": true,
+          "fusion_legality": "not_checked",
+          "id": "P0",
+          "left": {
+            "blocks": [
+              "B2"
+            ],
+            "entry": "B2",
+            "entry_name": "%a0",
+            "exit": "B5",
+            "id": "B2",
+            "kind": "basic_block"
+          },
+          "left_entry_postdominates_side_start": true,
+          "performance_benefit": "not_measured",
+          "relation": "same_split_frontiers",
+          "right": {
+            "blocks": [
+              "B1",
+              "B3",
+              "B4"
+            ],
+            "entry": "B1",
+            "entry_name": "%test1",
+            "exit": "B5",
+            "id": "R2",
+            "kind": "canonical_region"
+          },
+          "right_entry_postdominates_side_start": true,
+          "similarity": null,
+          "split": "B0",
+          "status": "mixed_region_block_requires_mapping",
+          "structural_note": "No side-entry postdominance obstruction found; fusion legality still unchecked"
+        },
+        {
+          "at_least_0_2": true,
+          "block_mapping": [
+            {
+              "left": "B3",
+              "right": "B4"
+            }
+          ],
+          "context": "B1:true/false",
+          "exclusive_between_sides": true,
+          "fusion_legality": "not_checked",
+          "id": "P1",
+          "left": {
+            "blocks": [
+              "B3"
+            ],
+            "entry": "B3",
+            "entry_name": "%a1",
+            "exit": "B5",
+            "id": "B3",
+            "kind": "basic_block"
+          },
+          "left_entry_postdominates_side_start": true,
+          "performance_benefit": "not_measured",
+          "relation": "same_split_frontiers",
+          "right": {
+            "blocks": [
+              "B4"
+            ],
+            "entry": "B4",
+            "entry_name": "%a2",
+            "exit": "B5",
+            "id": "B4",
+            "kind": "basic_block"
+          },
+          "right_entry_postdominates_side_start": true,
+          "similarity": 0.5,
+          "split": "B1",
+          "status": "scored_block",
+          "structural_note": "No side-entry postdominance obstruction found; fusion legality still unchecked"
+        },
+        {
+          "at_least_0_2": null,
+          "context": "B5:true/false",
+          "exclusive_between_sides": true,
+          "fusion_legality": "not_checked",
+          "id": "P2",
+          "left": {
+            "blocks": [
+              "B7"
+            ],
+            "entry": "B7",
+            "entry_name": "%b0",
+            "exit": "B10",
+            "id": "B7",
+            "kind": "basic_block"
+          },
+          "left_entry_postdominates_side_start": true,
+          "performance_benefit": "not_measured",
+          "relation": "same_split_frontiers",
+          "right": {
+            "blocks": [
+              "B6",
+              "B8",
+              "B9"
+            ],
+            "entry": "B6",
+            "entry_name": "%test2",
+            "exit": "B10",
+            "id": "R4",
+            "kind": "canonical_region"
+          },
+          "right_entry_postdominates_side_start": true,
+          "similarity": null,
+          "split": "B5",
+          "status": "mixed_region_block_requires_mapping",
+          "structural_note": "No side-entry postdominance obstruction found; fusion legality still unchecked"
+        },
+        {
+          "at_least_0_2": true,
+          "block_mapping": [
+            {
+              "left": "B8",
+              "right": "B9"
+            }
+          ],
+          "context": "B6:true/false",
+          "exclusive_between_sides": true,
+          "fusion_legality": "not_checked",
+          "id": "P3",
+          "left": {
+            "blocks": [
+              "B8"
+            ],
+            "entry": "B8",
+            "entry_name": "%b1",
+            "exit": "B10",
+            "id": "B8",
+            "kind": "basic_block"
+          },
+          "left_entry_postdominates_side_start": true,
+          "performance_benefit": "not_measured",
+          "relation": "same_split_frontiers",
+          "right": {
+            "blocks": [
+              "B9"
+            ],
+            "entry": "B9",
+            "entry_name": "%b2",
+            "exit": "B10",
+            "id": "B9",
+            "kind": "basic_block"
+          },
+          "right_entry_postdominates_side_start": true,
+          "similarity": 0.5,
+          "split": "B6",
+          "status": "scored_block",
+          "structural_note": "No side-entry postdominance obstruction found; fusion legality still unchecked"
+        },
+        {
+          "at_least_0_2": true,
+          "block_mapping": [
+            {
+              "left": "B11",
+              "right": "B12"
+            }
+          ],
+          "context": "B10:default/0",
+          "exclusive_between_sides": true,
+          "fusion_legality": "not_checked",
+          "id": "P4",
+          "left": {
+            "blocks": [
+              "B11"
+            ],
+            "entry": "B11",
+            "entry_name": "%sd",
+            "exit": "B14",
+            "id": "B11",
+            "kind": "basic_block"
+          },
+          "left_entry_postdominates_side_start": true,
+          "performance_benefit": "not_measured",
+          "relation": "same_split_frontiers",
+          "right": {
+            "blocks": [
+              "B12"
+            ],
+            "entry": "B12",
+            "entry_name": "%s0",
+            "exit": "B14",
+            "id": "B12",
+            "kind": "basic_block"
+          },
+          "right_entry_postdominates_side_start": true,
+          "similarity": 0.5,
+          "split": "B10",
+          "status": "scored_block",
+          "structural_note": "No side-entry postdominance obstruction found; fusion legality still unchecked"
+        },
+        {
+          "at_least_0_2": true,
+          "block_mapping": [
+            {
+              "left": "B11",
+              "right": "B13"
+            }
+          ],
+          "context": "B10:default/1",
+          "exclusive_between_sides": true,
+          "fusion_legality": "not_checked",
+          "id": "P5",
+          "left": {
+            "blocks": [
+              "B11"
+            ],
+            "entry": "B11",
+            "entry_name": "%sd",
+            "exit": "B14",
+            "id": "B11",
+            "kind": "basic_block"
+          },
+          "left_entry_postdominates_side_start": true,
+          "performance_benefit": "not_measured",
+          "relation": "same_split_frontiers",
+          "right": {
+            "blocks": [
+              "B13"
+            ],
+            "entry": "B13",
+            "entry_name": "%s1",
+            "exit": "B14",
+            "id": "B13",
+            "kind": "basic_block"
+          },
+          "right_entry_postdominates_side_start": true,
+          "similarity": 0.5,
+          "split": "B10",
+          "status": "scored_block",
+          "structural_note": "No side-entry postdominance obstruction found; fusion legality still unchecked"
+        },
+        {
+          "at_least_0_2": true,
+          "block_mapping": [
+            {
+              "left": "B12",
+              "right": "B13"
+            }
+          ],
+          "context": "B10:0/1",
+          "exclusive_between_sides": true,
+          "fusion_legality": "not_checked",
+          "id": "P6",
+          "left": {
+            "blocks": [
+              "B12"
+            ],
+            "entry": "B12",
+            "entry_name": "%s0",
+            "exit": "B14",
+            "id": "B12",
+            "kind": "basic_block"
+          },
+          "left_entry_postdominates_side_start": true,
+          "performance_benefit": "not_measured",
+          "relation": "same_split_frontiers",
+          "right": {
+            "blocks": [
+              "B13"
+            ],
+            "entry": "B13",
+            "entry_name": "%s1",
+            "exit": "B14",
+            "id": "B13",
+            "kind": "basic_block"
+          },
+          "right_entry_postdominates_side_start": true,
+          "similarity": 0.5,
+          "split": "B10",
+          "status": "scored_block",
+          "structural_note": "No side-entry postdominance obstruction found; fusion legality still unchecked"
+        },
+        {
+          "at_least_0_2": true,
+          "block_mapping": [
+            {
+              "left": "B2",
+              "right": "B3"
+            }
+          ],
+          "context": "G0:0/1",
+          "exclusive_between_sides": true,
+          "fusion_legality": "not_checked",
+          "id": "P7",
+          "left": {
+            "blocks": [
+              "B2"
+            ],
+            "entry": "B2",
+            "entry_name": "%a0",
+            "exit": "B5",
+            "id": "B2",
+            "kind": "basic_block"
+          },
+          "left_entry_postdominates_side_start": true,
+          "performance_benefit": "not_measured",
+          "relation": "adjacent_cascade_arms",
+          "right": {
+            "blocks": [
+              "B3"
+            ],
+            "entry": "B3",
+            "entry_name": "%a1",
+            "exit": "B5",
+            "id": "B3",
+            "kind": "basic_block"
+          },
+          "right_entry_postdominates_side_start": true,
+          "similarity": 0.5,
+          "split": "B0",
+          "status": "scored_block",
+          "structural_note": "Logical neighbor arms, not necessarily immediate sibling successors; restructuring/replication may be needed"
+        },
+        {
+          "at_least_0_2": true,
+          "block_mapping": [
+            {
+              "left": "B3",
+              "right": "B4"
+            }
+          ],
+          "context": "G0:1/2",
+          "exclusive_between_sides": true,
+          "fusion_legality": "not_checked",
+          "id": "P8",
+          "left": {
+            "blocks": [
+              "B3"
+            ],
+            "entry": "B3",
+            "entry_name": "%a1",
+            "exit": "B5",
+            "id": "B3",
+            "kind": "basic_block"
+          },
+          "left_entry_postdominates_side_start": true,
+          "performance_benefit": "not_measured",
+          "relation": "adjacent_cascade_arms",
+          "right": {
+            "blocks": [
+              "B4"
+            ],
+            "entry": "B4",
+            "entry_name": "%a2",
+            "exit": "B5",
+            "id": "B4",
+            "kind": "basic_block"
+          },
+          "right_entry_postdominates_side_start": true,
+          "similarity": 0.5,
+          "split": "B0",
+          "status": "scored_block",
+          "structural_note": "Logical neighbor arms, not necessarily immediate sibling successors; restructuring/replication may be needed"
+        },
+        {
+          "at_least_0_2": true,
+          "block_mapping": [
+            {
+              "left": "B7",
+              "right": "B8"
+            }
+          ],
+          "context": "G1:0/1",
+          "exclusive_between_sides": true,
+          "fusion_legality": "not_checked",
+          "id": "P9",
+          "left": {
+            "blocks": [
+              "B7"
+            ],
+            "entry": "B7",
+            "entry_name": "%b0",
+            "exit": "B10",
+            "id": "B7",
+            "kind": "basic_block"
+          },
+          "left_entry_postdominates_side_start": true,
+          "performance_benefit": "not_measured",
+          "relation": "adjacent_cascade_arms",
+          "right": {
+            "blocks": [
+              "B8"
+            ],
+            "entry": "B8",
+            "entry_name": "%b1",
+            "exit": "B10",
+            "id": "B8",
+            "kind": "basic_block"
+          },
+          "right_entry_postdominates_side_start": true,
+          "similarity": 0.5,
+          "split": "B5",
+          "status": "scored_block",
+          "structural_note": "Logical neighbor arms, not necessarily immediate sibling successors; restructuring/replication may be needed"
+        },
+        {
+          "at_least_0_2": true,
+          "block_mapping": [
+            {
+              "left": "B8",
+              "right": "B9"
+            }
+          ],
+          "context": "G1:1/2",
+          "exclusive_between_sides": true,
+          "fusion_legality": "not_checked",
+          "id": "P10",
+          "left": {
+            "blocks": [
+              "B8"
+            ],
+            "entry": "B8",
+            "entry_name": "%b1",
+            "exit": "B10",
+            "id": "B8",
+            "kind": "basic_block"
+          },
+          "left_entry_postdominates_side_start": true,
+          "performance_benefit": "not_measured",
+          "relation": "adjacent_cascade_arms",
+          "right": {
+            "blocks": [
+              "B9"
+            ],
+            "entry": "B9",
+            "entry_name": "%b2",
+            "exit": "B10",
+            "id": "B9",
+            "kind": "basic_block"
+          },
+          "right_entry_postdominates_side_start": true,
+          "similarity": 0.5,
+          "split": "B5",
+          "status": "scored_block",
+          "structural_note": "Logical neighbor arms, not necessarily immediate sibling successors; restructuring/replication may be needed"
+        }
+      ],
+      "skipped_contexts": [
+        {
+          "context": "B14:true/false",
+          "reason": "empty arm before join; no computation region",
+          "relation": "same_split_frontiers"
+        }
+      ],
+      "summary": {
+        "candidate_records": 11,
+        "empty_arm_contexts": 1,
+        "score_at_least_0_2": 9,
+        "scored": 9,
+        "statuses": {
+          "mixed_region_block_requires_mapping": 2,
+          "scored_block": 9
+        }
+      }
+    },
+    {
+      "name": "different_region_shapes",
+      "pairs": [
+        {
+          "at_least_0_2": null,
+          "context": "B0:true/false",
+          "exclusive_between_sides": true,
+          "fusion_legality": "not_checked",
+          "id": "P0",
+          "left": {
+            "blocks": [
+              "B1",
+              "B2",
+              "B3"
+            ],
+            "entry": "B1",
+            "entry_name": "%left",
+            "exit": "B4",
+            "id": "R2",
+            "kind": "canonical_region"
+          },
+          "left_entry_postdominates_side_start": true,
+          "performance_benefit": "not_measured",
+          "relation": "same_split_frontiers",
+          "right": {
+            "blocks": [
+              "B5",
+              "B6",
+              "B7",
+              "B8"
+            ],
+            "entry": "B5",
+            "entry_name": "%right",
+            "exit": "B9",
+            "id": "R3",
+            "kind": "canonical_region"
+          },
+          "right_entry_postdominates_side_start": true,
+          "similarity": null,
+          "split": "B0",
+          "status": "region_structure_mismatch",
+          "structural_note": "No side-entry postdominance obstruction found; fusion legality still unchecked"
+        },
+        {
+          "at_least_0_2": null,
+          "context": "B0:true/false",
+          "exclusive_between_sides": true,
+          "fusion_legality": "not_checked",
+          "id": "P1",
+          "left": {
+            "blocks": [
+              "B1",
+              "B2",
+              "B3"
+            ],
+            "entry": "B1",
+            "entry_name": "%left",
+            "exit": "B4",
+            "id": "R2",
+            "kind": "canonical_region"
+          },
+          "left_entry_postdominates_side_start": true,
+          "performance_benefit": "not_measured",
+          "relation": "same_split_frontiers",
+          "right": {
+            "blocks": [
+              "B9"
+            ],
+            "entry": "B9",
+            "entry_name": "%rj",
+            "exit": "B10",
+            "id": "B9",
+            "kind": "basic_block"
+          },
+          "right_entry_postdominates_side_start": true,
+          "similarity": null,
+          "split": "B0",
+          "status": "mixed_region_block_requires_mapping",
+          "structural_note": "No side-entry postdominance obstruction found; fusion legality still unchecked"
+        },
+        {
+          "at_least_0_2": null,
+          "context": "B0:true/false",
+          "exclusive_between_sides": true,
+          "fusion_legality": "not_checked",
+          "id": "P2",
+          "left": {
+            "blocks": [
+              "B4"
+            ],
+            "entry": "B4",
+            "entry_name": "%lj",
+            "exit": "B10",
+            "id": "B4",
+            "kind": "basic_block"
+          },
+          "left_entry_postdominates_side_start": true,
+          "performance_benefit": "not_measured",
+          "relation": "same_split_frontiers",
+          "right": {
+            "blocks": [
+              "B5",
+              "B6",
+              "B7",
+              "B8"
+            ],
+            "entry": "B5",
+            "entry_name": "%right",
+            "exit": "B9",
+            "id": "R3",
+            "kind": "canonical_region"
+          },
+          "right_entry_postdominates_side_start": true,
+          "similarity": null,
+          "split": "B0",
+          "status": "mixed_region_block_requires_mapping",
+          "structural_note": "No side-entry postdominance obstruction found; fusion legality still unchecked"
+        },
+        {
+          "at_least_0_2": true,
+          "block_mapping": [
+            {
+              "left": "B4",
+              "right": "B9"
+            }
+          ],
+          "context": "B0:true/false",
+          "exclusive_between_sides": true,
+          "fusion_legality": "not_checked",
+          "id": "P3",
+          "left": {
+            "blocks": [
+              "B4"
+            ],
+            "entry": "B4",
+            "entry_name": "%lj",
+            "exit": "B10",
+            "id": "B4",
+            "kind": "basic_block"
+          },
+          "left_entry_postdominates_side_start": true,
+          "performance_benefit": "not_measured",
+          "relation": "same_split_frontiers",
+          "right": {
+            "blocks": [
+              "B9"
+            ],
+            "entry": "B9",
+            "entry_name": "%rj",
+            "exit": "B10",
+            "id": "B9",
+            "kind": "basic_block"
+          },
+          "right_entry_postdominates_side_start": true,
+          "similarity": 0.25,
+          "split": "B0",
+          "status": "scored_block",
+          "structural_note": "No side-entry postdominance obstruction found; fusion legality still unchecked"
+        },
+        {
+          "at_least_0_2": true,
+          "block_mapping": [
+            {
+              "left": "B2",
+              "right": "B3"
+            }
+          ],
+          "context": "B1:default/1",
+          "exclusive_between_sides": true,
+          "fusion_legality": "not_checked",
+          "id": "P4",
+          "left": {
+            "blocks": [
+              "B2"
+            ],
+            "entry": "B2",
+            "entry_name": "%l0",
+            "exit": "B4",
+            "id": "B2",
+            "kind": "basic_block"
+          },
+          "left_entry_postdominates_side_start": true,
+          "performance_benefit": "not_measured",
+          "relation": "same_split_frontiers",
+          "right": {
+            "blocks": [
+              "B3"
+            ],
+            "entry": "B3",
+            "entry_name": "%l1",
+            "exit": "B4",
+            "id": "B3",
+            "kind": "basic_block"
+          },
+          "right_entry_postdominates_side_start": true,
+          "similarity": 0.5,
+          "split": "B1",
+          "status": "scored_block",
+          "structural_note": "No side-entry postdominance obstruction found; fusion legality still unchecked"
+        },
+        {
+          "at_least_0_2": true,
+          "block_mapping": [
+            {
+              "left": "B6",
+              "right": "B7"
+            }
+          ],
+          "context": "B5:default/1",
+          "exclusive_between_sides": true,
+          "fusion_legality": "not_checked",
+          "id": "P5",
+          "left": {
+            "blocks": [
+              "B6"
+            ],
+            "entry": "B6",
+            "entry_name": "%r0",
+            "exit": "B9",
+            "id": "B6",
+            "kind": "basic_block"
+          },
+          "left_entry_postdominates_side_start": true,
+          "performance_benefit": "not_measured",
+          "relation": "same_split_frontiers",
+          "right": {
+            "blocks": [
+              "B7"
+            ],
+            "entry": "B7",
+            "entry_name": "%r1",
+            "exit": "B9",
+            "id": "B7",
+            "kind": "basic_block"
+          },
+          "right_entry_postdominates_side_start": true,
+          "similarity": 0.5,
+          "split": "B5",
+          "status": "scored_block",
+          "structural_note": "No side-entry postdominance obstruction found; fusion legality still unchecked"
+        },
+        {
+          "at_least_0_2": true,
+          "block_mapping": [
+            {
+              "left": "B6",
+              "right": "B8"
+            }
+          ],
+          "context": "B5:default/2",
+          "exclusive_between_sides": true,
+          "fusion_legality": "not_checked",
+          "id": "P6",
+          "left": {
+            "blocks": [
+              "B6"
+            ],
+            "entry": "B6",
+            "entry_name": "%r0",
+            "exit": "B9",
+            "id": "B6",
+            "kind": "basic_block"
+          },
+          "left_entry_postdominates_side_start": true,
+          "performance_benefit": "not_measured",
+          "relation": "same_split_frontiers",
+          "right": {
+            "blocks": [
+              "B8"
+            ],
+            "entry": "B8",
+            "entry_name": "%r2",
+            "exit": "B9",
+            "id": "B8",
+            "kind": "basic_block"
+          },
+          "right_entry_postdominates_side_start": true,
+          "similarity": 0.5,
+          "split": "B5",
+          "status": "scored_block",
+          "structural_note": "No side-entry postdominance obstruction found; fusion legality still unchecked"
+        },
+        {
+          "at_least_0_2": true,
+          "block_mapping": [
+            {
+              "left": "B7",
+              "right": "B8"
+            }
+          ],
+          "context": "B5:1/2",
+          "exclusive_between_sides": true,
+          "fusion_legality": "not_checked",
+          "id": "P7",
+          "left": {
+            "blocks": [
+              "B7"
+            ],
+            "entry": "B7",
+            "entry_name": "%r1",
+            "exit": "B9",
+            "id": "B7",
+            "kind": "basic_block"
+          },
+          "left_entry_postdominates_side_start": true,
+          "performance_benefit": "not_measured",
+          "relation": "same_split_frontiers",
+          "right": {
+            "blocks": [
+              "B8"
+            ],
+            "entry": "B8",
+            "entry_name": "%r2",
+            "exit": "B9",
+            "id": "B8",
+            "kind": "basic_block"
+          },
+          "right_entry_postdominates_side_start": true,
+          "similarity": 0.5,
+          "split": "B5",
+          "status": "scored_block",
+          "structural_note": "No side-entry postdominance obstruction found; fusion legality still unchecked"
+        }
+      ],
+      "skipped_contexts": [],
+      "summary": {
+        "candidate_records": 8,
+        "empty_arm_contexts": 0,
+        "score_at_least_0_2": 5,
+        "scored": 5,
+        "statuses": {
+          "mixed_region_block_requires_mapping": 2,
+          "region_structure_mismatch": 1,
+          "scored_block": 5
+        }
+      }
+    },
+    {
+      "name": "loop_vs_plain",
+      "pairs": [
+        {
+          "at_least_0_2": null,
+          "context": "B0:true/false",
+          "exclusive_between_sides": true,
+          "fusion_legality": "not_checked",
+          "id": "P0",
+          "left": {
+            "blocks": [
+              "B1"
+            ],
+            "entry": "B1",
+            "entry_name": "%loop",
+            "exit": "B3",
+            "id": "R2",
+            "kind": "canonical_region"
+          },
+          "left_entry_postdominates_side_start": true,
+          "performance_benefit": "not_measured",
+          "relation": "same_split_frontiers",
+          "right": {
+            "blocks": [
+              "B2"
+            ],
+            "entry": "B2",
+            "entry_name": "%plain",
+            "exit": "B3",
+            "id": "B2",
+            "kind": "basic_block"
+          },
+          "right_entry_postdominates_side_start": true,
+          "similarity": null,
+          "split": "B0",
+          "status": "cyclic_context_not_scored",
+          "structural_note": "No side-entry postdominance obstruction found; fusion legality still unchecked"
+        },
+        {
+          "at_least_0_2": null,
+          "context": "G0:0/1",
+          "exclusive_between_sides": true,
+          "fusion_legality": "not_checked",
+          "id": "P1",
+          "left": {
+            "blocks": [
+              "B2"
+            ],
+            "entry": "B2",
+            "entry_name": "%plain",
+            "exit": "B3",
+            "id": "B2",
+            "kind": "basic_block"
+          },
+          "left_entry_postdominates_side_start": true,
+          "performance_benefit": "not_measured",
+          "relation": "adjacent_cascade_arms",
+          "right": {
+            "blocks": [
+              "B1"
+            ],
+            "entry": "B1",
+            "entry_name": "%loop",
+            "exit": "B3",
+            "id": "R2",
+            "kind": "canonical_region"
+          },
+          "right_entry_postdominates_side_start": true,
+          "similarity": null,
+          "split": "B0",
+          "status": "cyclic_context_not_scored",
+          "structural_note": "Logical neighbor arms, not necessarily immediate sibling successors; restructuring/replication may be needed"
+        }
+      ],
+      "skipped_contexts": [
+        {
+          "context": "B1:true/false",
+          "reason": "empty arm before join; no computation region",
+          "relation": "same_split_frontiers"
+        },
+        {
+          "context": "G0:1/2",
+          "reason": "empty arm/PHI-only fallback; no computation region",
+          "relation": "adjacent_cascade_arms"
+        }
+      ],
+      "summary": {
+        "candidate_records": 2,
+        "empty_arm_contexts": 2,
+        "score_at_least_0_2": 0,
+        "scored": 0,
+        "statuses": {
+          "cyclic_context_not_scored": 2
+        }
+      }
+    },
+    {
+      "name": "shared_tail",
+      "pairs": [
+        {
+          "at_least_0_2": true,
+          "block_mapping": [
+            {
+              "left": "B1",
+              "right": "B2"
+            }
+          ],
+          "context": "B0:true/false",
+          "exclusive_between_sides": true,
+          "fusion_legality": "not_checked",
+          "id": "P0",
+          "left": {
+            "blocks": [
+              "B1"
+            ],
+            "entry": "B1",
+            "entry_name": "%left",
+            "exit": "<virtual-exit>",
+            "id": "B1",
+            "kind": "basic_block"
+          },
+          "left_entry_postdominates_side_start": true,
+          "performance_benefit": "not_measured",
+          "relation": "same_split_frontiers",
+          "right": {
+            "blocks": [
+              "B2"
+            ],
+            "entry": "B2",
+            "entry_name": "%right",
+            "exit": "<virtual-exit>",
+            "id": "B2",
+            "kind": "basic_block"
+          },
+          "right_entry_postdominates_side_start": true,
+          "similarity": 0.5,
+          "split": "B0",
+          "status": "scored_block",
+          "structural_note": "No side-entry postdominance obstruction found; fusion legality still unchecked"
+        },
+        {
+          "at_least_0_2": null,
+          "context": "B0:true/false",
+          "exclusive_between_sides": false,
+          "fusion_legality": "not_checked",
+          "id": "P1",
+          "left": {
+            "blocks": [
+              "B1"
+            ],
+            "entry": "B1",
+            "entry_name": "%left",
+            "exit": "<virtual-exit>",
+            "id": "B1",
+            "kind": "basic_block"
+          },
+          "left_entry_postdominates_side_start": true,
+          "performance_benefit": "not_measured",
+          "relation": "same_split_frontiers",
+          "right": {
+            "blocks": [
+              "B3"
+            ],
+            "entry": "B3",
+            "entry_name": "%shared",
+            "exit": "B6",
+            "id": "B3",
+            "kind": "basic_block"
+          },
+          "right_entry_postdominates_side_start": false,
+          "similarity": null,
+          "split": "B0",
+          "status": "nonexclusive_sides",
+          "structural_note": "At least one unit is optional on its side; replication or another legality strategy may be needed"
+        },
+        {
+          "at_least_0_2": true,
+          "block_mapping": [
+            {
+              "left": "B1",
+              "right": "B5"
+            }
+          ],
+          "context": "B0:true/false",
+          "exclusive_between_sides": true,
+          "fusion_legality": "not_checked",
+          "id": "P2",
+          "left": {
+            "blocks": [
+              "B1"
+            ],
+            "entry": "B1",
+            "entry_name": "%left",
+            "exit": "<virtual-exit>",
+            "id": "B1",
+            "kind": "basic_block"
+          },
+          "left_entry_postdominates_side_start": true,
+          "performance_benefit": "not_measured",
+          "relation": "same_split_frontiers",
+          "right": {
+            "blocks": [
+              "B5"
+            ],
+            "entry": "B5",
+            "entry_name": "%ronly",
+            "exit": "B6",
+            "id": "B5",
+            "kind": "basic_block"
+          },
+          "right_entry_postdominates_side_start": false,
+          "similarity": 0.5,
+          "split": "B0",
+          "status": "scored_block",
+          "structural_note": "At least one unit is optional on its side; replication or another legality strategy may be needed"
+        },
+        {
+          "at_least_0_2": null,
+          "context": "B0:true/false",
+          "exclusive_between_sides": false,
+          "fusion_legality": "not_checked",
+          "id": "P3",
+          "left": {
+            "blocks": [
+              "B3"
+            ],
+            "entry": "B3",
+            "entry_name": "%shared",
+            "exit": "B6",
+            "id": "B3",
+            "kind": "basic_block"
+          },
+          "left_entry_postdominates_side_start": false,
+          "performance_benefit": "not_measured",
+          "relation": "same_split_frontiers",
+          "right": {
+            "blocks": [
+              "B2"
+            ],
+            "entry": "B2",
+            "entry_name": "%right",
+            "exit": "<virtual-exit>",
+            "id": "B2",
+            "kind": "basic_block"
+          },
+          "right_entry_postdominates_side_start": true,
+          "similarity": null,
+          "split": "B0",
+          "status": "nonexclusive_sides",
+          "structural_note": "At least one unit is optional on its side; replication or another legality strategy may be needed"
+        },
+        {
+          "at_least_0_2": null,
+          "context": "B0:true/false",
+          "exclusive_between_sides": false,
+          "fusion_legality": "not_checked",
+          "id": "P4",
+          "left": {
+            "blocks": [
+              "B3"
+            ],
+            "entry": "B3",
+            "entry_name": "%shared",
+            "exit": "B6",
+            "id": "B3",
+            "kind": "basic_block"
+          },
+          "left_entry_postdominates_side_start": false,
+          "performance_benefit": "not_measured",
+          "relation": "same_split_frontiers",
+          "right": {
+            "blocks": [
+              "B3"
+            ],
+            "entry": "B3",
+            "entry_name": "%shared",
+            "exit": "B6",
+            "id": "B3",
+            "kind": "basic_block"
+          },
+          "right_entry_postdominates_side_start": false,
+          "similarity": null,
+          "split": "B0",
+          "status": "overlapping_units",
+          "structural_note": "At least one unit is optional on its side; replication or another legality strategy may be needed"
+        },
+        {
+          "at_least_0_2": null,
+          "context": "B0:true/false",
+          "exclusive_between_sides": false,
+          "fusion_legality": "not_checked",
+          "id": "P5",
+          "left": {
+            "blocks": [
+              "B3"
+            ],
+            "entry": "B3",
+            "entry_name": "%shared",
+            "exit": "B6",
+            "id": "B3",
+            "kind": "basic_block"
+          },
+          "left_entry_postdominates_side_start": false,
+          "performance_benefit": "not_measured",
+          "relation": "same_split_frontiers",
+          "right": {
+            "blocks": [
+              "B5"
+            ],
+            "entry": "B5",
+            "entry_name": "%ronly",
+            "exit": "B6",
+            "id": "B5",
+            "kind": "basic_block"
+          },
+          "right_entry_postdominates_side_start": false,
+          "similarity": null,
+          "split": "B0",
+          "status": "nonexclusive_sides",
+          "structural_note": "At least one unit is optional on its side; replication or another legality strategy may be needed"
+        },
+        {
+          "at_least_0_2": true,
+          "block_mapping": [
+            {
+              "left": "B4",
+              "right": "B2"
+            }
+          ],
+          "context": "B0:true/false",
+          "exclusive_between_sides": true,
+          "fusion_legality": "not_checked",
+          "id": "P6",
+          "left": {
+            "blocks": [
+              "B4"
+            ],
+            "entry": "B4",
+            "entry_name": "%lonly",
+            "exit": "B6",
+            "id": "B4",
+            "kind": "basic_block"
+          },
+          "left_entry_postdominates_side_start": false,
+          "performance_benefit": "not_measured",
+          "relation": "same_split_frontiers",
+          "right": {
+            "blocks": [
+              "B2"
+            ],
+            "entry": "B2",
+            "entry_name": "%right",
+            "exit": "<virtual-exit>",
+            "id": "B2",
+            "kind": "basic_block"
+          },
+          "right_entry_postdominates_side_start": true,
+          "similarity": 0.5,
+          "split": "B0",
+          "status": "scored_block",
+          "structural_note": "At least one unit is optional on its side; replication or another legality strategy may be needed"
+        },
+        {
+          "at_least_0_2": null,
+          "context": "B0:true/false",
+          "exclusive_between_sides": false,
+          "fusion_legality": "not_checked",
+          "id": "P7",
+          "left": {
+            "blocks": [
+              "B4"
+            ],
+            "entry": "B4",
+            "entry_name": "%lonly",
+            "exit": "B6",
+            "id": "B4",
+            "kind": "basic_block"
+          },
+          "left_entry_postdominates_side_start": false,
+          "performance_benefit": "not_measured",
+          "relation": "same_split_frontiers",
+          "right": {
+            "blocks": [
+              "B3"
+            ],
+            "entry": "B3",
+            "entry_name": "%shared",
+            "exit": "B6",
+            "id": "B3",
+            "kind": "basic_block"
+          },
+          "right_entry_postdominates_side_start": false,
+          "similarity": null,
+          "split": "B0",
+          "status": "nonexclusive_sides",
+          "structural_note": "At least one unit is optional on its side; replication or another legality strategy may be needed"
+        },
+        {
+          "at_least_0_2": true,
+          "block_mapping": [
+            {
+              "left": "B4",
+              "right": "B5"
+            }
+          ],
+          "context": "B0:true/false",
+          "exclusive_between_sides": true,
+          "fusion_legality": "not_checked",
+          "id": "P8",
+          "left": {
+            "blocks": [
+              "B4"
+            ],
+            "entry": "B4",
+            "entry_name": "%lonly",
+            "exit": "B6",
+            "id": "B4",
+            "kind": "basic_block"
+          },
+          "left_entry_postdominates_side_start": false,
+          "performance_benefit": "not_measured",
+          "relation": "same_split_frontiers",
+          "right": {
+            "blocks": [
+              "B5"
+            ],
+            "entry": "B5",
+            "entry_name": "%ronly",
+            "exit": "B6",
+            "id": "B5",
+            "kind": "basic_block"
+          },
+          "right_entry_postdominates_side_start": false,
+          "similarity": 0.5,
+          "split": "B0",
+          "status": "scored_block",
+          "structural_note": "At least one unit is optional on its side; replication or another legality strategy may be needed"
+        },
+        {
+          "at_least_0_2": true,
+          "block_mapping": [
+            {
+              "left": "B3",
+              "right": "B4"
+            }
+          ],
+          "context": "B1:true/false",
+          "exclusive_between_sides": true,
+          "fusion_legality": "not_checked",
+          "id": "P9",
+          "left": {
+            "blocks": [
+              "B3"
+            ],
+            "entry": "B3",
+            "entry_name": "%shared",
+            "exit": "B6",
+            "id": "B3",
+            "kind": "basic_block"
+          },
+          "left_entry_postdominates_side_start": true,
+          "performance_benefit": "not_measured",
+          "relation": "same_split_frontiers",
+          "right": {
+            "blocks": [
+              "B4"
+            ],
+            "entry": "B4",
+            "entry_name": "%lonly",
+            "exit": "B6",
+            "id": "B4",
+            "kind": "basic_block"
+          },
+          "right_entry_postdominates_side_start": true,
+          "similarity": 0.5,
+          "split": "B1",
+          "status": "scored_block",
+          "structural_note": "No side-entry postdominance obstruction found; fusion legality still unchecked"
+        },
+        {
+          "at_least_0_2": true,
+          "block_mapping": [
+            {
+              "left": "B3",
+              "right": "B5"
+            }
+          ],
+          "context": "B2:true/false",
+          "exclusive_between_sides": true,
+          "fusion_legality": "not_checked",
+          "id": "P10",
+          "left": {
+            "blocks": [
+              "B3"
+            ],
+            "entry": "B3",
+            "entry_name": "%shared",
+            "exit": "B6",
+            "id": "B3",
+            "kind": "basic_block"
+          },
+          "left_entry_postdominates_side_start": true,
+          "performance_benefit": "not_measured",
+          "relation": "same_split_frontiers",
+          "right": {
+            "blocks": [
+              "B5"
+            ],
+            "entry": "B5",
+            "entry_name": "%ronly",
+            "exit": "B6",
+            "id": "B5",
+            "kind": "basic_block"
+          },
+          "right_entry_postdominates_side_start": true,
+          "similarity": 0.5,
+          "split": "B2",
+          "status": "scored_block",
+          "structural_note": "No side-entry postdominance obstruction found; fusion legality still unchecked"
+        }
+      ],
+      "skipped_contexts": [],
+      "summary": {
+        "candidate_records": 11,
+        "empty_arm_contexts": 0,
+        "score_at_least_0_2": 6,
+        "scored": 6,
+        "statuses": {
+          "nonexclusive_sides": 4,
+          "overlapping_units": 1,
+          "scored_block": 6
+        }
+      }
+    }
+  ],
+  "schema": "llvm12-darm-neighbor-similarity-v1",
+  "scope": "Read-only native DARM opcode-cost scoring; no RegionAnalyzer candidate sorting and no fusion. Enumerates frontier cross-pairs across each split, plus neighboring cascade arms; not all possible region combinations. Repeated physical pairs in different contexts remain explicit.",
+  "score_definition": "sum matched opcode cost minima / sum both costs; PHI savings excluded; original DARM fixed costs; maximum 0.5, not a speedup"
+}

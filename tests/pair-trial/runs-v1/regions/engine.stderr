@@ -1,0 +1,11 @@
+INFO   : Melding entry blocks %left , %right
+INFO   : Melding exit blocks %lj , %rj
+DEBUG  : Left exit not safe to merge
+DEBUG  : Right exit not safe to merge
+INFO   : Cloning instructions
+INFO   : Fixing operends
+INFO   : Running post-merge optimizations
+DEBUG  : Erasing phi node
+DEBUG  : Erasing phi node
+DEBUG  : Converting conditional branch to unconditional
+DEBUG  : Converting conditional branch to unconditional

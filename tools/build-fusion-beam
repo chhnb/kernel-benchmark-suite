@@ -1,0 +1,11 @@
+#!/bin/bash
+set -euo pipefail
+s=/home/chh/kernel-benchmark-suite
+cfg=/home/chh/darm-artifacts-repro/build/bin/llvm-config
+read -ra flags <<< "$($cfg --cxxflags)"
+read -ra libs <<< "$($cfg --ldflags --libs core irreader asmparser analysis transformutils scalaropts ipo instcombine vectorize amdgpu x86 nvptx --system-libs | tr '\n' ' ')"
+mkdir -p "$s/build/fusion-beam"
+g++ "${flags[@]}" -std=c++17 -fexceptions -O2 -DFUSION_DETERMINISTIC_REGION_ORDER -I"$s/tools/darm_pair_engine" -I"$s/tools" -c "$s/tools/darm_pair_engine/RegionMelder.cpp" -o "$s/build/fusion-beam/RegionMelder.o"
+objects=("$s/build/fusion-beam/RegionMelder.o")
+for source in fusion_search RegionAnalyzer RegionReplicator CFMelderUtils InstructionMatch; do objects+=("$s/build/fusion-search/$source.o"); done
+g++ "${flags[@]}" -std=c++17 -fexceptions -O2 -I"$s/tools" "$s/tools/fusion_beam.cpp" "$s/tools/beam_search.cpp" "${objects[@]}" "${libs[@]}" -o "$s/build/fusion-search/fusion-beam"

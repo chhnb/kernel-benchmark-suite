@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+set -euo pipefail
+root=$(cd "$(dirname "$0")/.." && pwd)
+lc="$root/toolchains/llvm24-tti/root/usr/lib/llvm-24/bin/llvm-config"
+build="$root/build/llvm24-tti"
+mkdir -p "$build"
+read -r -a flags <<< "$($lc --cxxflags)"
+read -r -a libs <<< "$($lc --ldflags --link-shared --libs core irreader analysis amdgpu nvptx | tr '\n' ' ')"
+g++ "${flags[@]}" -std=c++17 -fexceptions -O2 "$root/tools/llvm24_tti_main.cpp" "${libs[@]}" -o "$build/llvm24-tti"
+lc=/home/chh/darm-artifacts-repro/build/bin/llvm-config
+read -r -a flags <<< "$($lc --cxxflags)"
+read -r -a libs <<< "$($lc --ldflags --libs core irreader asmparser analysis transformutils scalaropts ipo instcombine vectorize amdgpu x86 nvptx --system-libs | tr '\n' ' ')"
+objects=()
+for source in postopt_profile_policy postopt_scorer ir_pressure ir_dependency fusion_search logical_region_state darm_pair_engine/RegionAnalyzer darm_pair_engine/RegionMelder darm_pair_engine/RegionReplicator darm_pair_engine/CFMelderUtils darm_pair_engine/InstructionMatch; do
+  obj="$build/$(basename "$source").o"
+  g++ "${flags[@]}" -std=c++17 -fexceptions -O2 -DFUSION_DETERMINISTIC_REGION_ORDER -I"$root/tools" -I"$root/tools/darm_pair_engine" -c "$root/tools/$source.cpp" -o "$obj"
+  objects+=("$obj")
+done
+g++ "${flags[@]}" -std=c++17 -fexceptions -O2 -DFUSION_DETERMINISTIC_REGION_ORDER -I"$root/tools" -I"$root/tools/darm_pair_engine" "$root/tools/fusion_search_llvm24_main.cpp" "${objects[@]}" "${libs[@]}" -lcrypto -o "$build/fusion-search-llvm24"

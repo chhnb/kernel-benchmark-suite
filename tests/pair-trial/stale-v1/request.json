@@ -1,0 +1,13 @@
+{
+  "function": "evaluate",
+  "split": "B21",
+  "left": "B22",
+  "right": "B24",
+  "parent_state_sha256": "stale-test",
+  "parent_version": 0,
+  "normalization": [
+    "-O3",
+    "-verify"
+  ],
+  "candidate_id": "evaluate:B22+B24@B21"
+}

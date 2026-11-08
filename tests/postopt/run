@@ -1,0 +1,23 @@
+#!/bin/bash
+set -euo pipefail
+suite=$(cd "$(dirname "$0")/../.." && pwd)
+"$suite/build/fusion-search/check-postopt-pressure"
+"$suite/build/fusion-search/check-postopt-scorer"
+python3 "$suite/tests/postopt/test_labels.py"
+python3 "$suite/tests/postopt/test_resources.py"
+python3 "$suite/tests/postopt/test_calibration_data.py"
+python3 "$suite/tests/postopt/test_sampling.py"
+python3 "$suite/tests/postopt/test_pressure_validation.py"
+python3 "$suite/tests/postopt/test_report_provenance.py"
+"$suite/build/fusion-search/check-postopt-dependency"
+python3 "$suite/tests/postopt/test_confirmation.py"
+
+python3 "$suite/tests/postopt/test_wave_profile.py"
+
+python3 "$suite/tests/postopt/test_profile.py"
+
+"$suite/build/fusion-search/check-postopt-block_work"
+
+python3 "$suite/tests/postopt/test_weighted_bounds.py"
+
+python3 "$suite/tests/postopt/check_cleanup.py"

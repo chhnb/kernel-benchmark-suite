@@ -1,0 +1,8 @@
+{
+  "engine_calls": 1,
+  "llvm_verifier_passed": true,
+  "other_functions_unchanged": true,
+  "semantic_equivalence": "not_proved_by_verifier",
+  "status": "transformed_ir_verified",
+  "transformation_applied": true
+}

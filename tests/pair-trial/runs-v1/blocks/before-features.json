@@ -1,0 +1,196 @@
+{
+  "blocks": [
+    {
+      "darm_static_cost": 6,
+      "instructions": [
+        {
+          "darm_static_cost": 3,
+          "llvm": "  %c = icmp ne i32 %side, 0",
+          "may_read": false,
+          "may_write": false,
+          "name": "%c",
+          "opcode": "icmp",
+          "operands": [
+            "%side",
+            "0"
+          ],
+          "side_effects": false,
+          "type": "i1",
+          "users": [
+            "<badref>"
+          ]
+        },
+        {
+          "darm_static_cost": 3,
+          "llvm": "  br i1 %c, label %left, label %right",
+          "may_read": false,
+          "may_write": false,
+          "name": "<badref>",
+          "opcode": "br",
+          "operands": [
+            "%c",
+            "%right",
+            "%left"
+          ],
+          "side_effects": false,
+          "type": "void",
+          "users": []
+        }
+      ],
+      "name": "%entry",
+      "predecessors": [],
+      "successors": [
+        "%left",
+        "%right"
+      ]
+    },
+    {
+      "darm_static_cost": 8,
+      "instructions": [
+        {
+          "darm_static_cost": 5,
+          "llvm": "  %a = add i32 %x, 7",
+          "may_read": false,
+          "may_write": false,
+          "name": "%a",
+          "opcode": "add",
+          "operands": [
+            "%x",
+            "7"
+          ],
+          "side_effects": false,
+          "type": "i32",
+          "users": [
+            "%v"
+          ]
+        },
+        {
+          "darm_static_cost": 3,
+          "llvm": "  br label %join",
+          "may_read": false,
+          "may_write": false,
+          "name": "<badref>",
+          "opcode": "br",
+          "operands": [
+            "%join"
+          ],
+          "side_effects": false,
+          "type": "void",
+          "users": []
+        }
+      ],
+      "name": "%left",
+      "predecessors": [
+        "%entry"
+      ],
+      "successors": [
+        "%join"
+      ]
+    },
+    {
+      "darm_static_cost": 13,
+      "instructions": [
+        {
+          "darm_static_cost": 10,
+          "llvm": "  %b = mul i32 %x, 3",
+          "may_read": false,
+          "may_write": false,
+          "name": "%b",
+          "opcode": "mul",
+          "operands": [
+            "%x",
+            "3"
+          ],
+          "side_effects": false,
+          "type": "i32",
+          "users": [
+            "%v"
+          ]
+        },
+        {
+          "darm_static_cost": 3,
+          "llvm": "  br label %join",
+          "may_read": false,
+          "may_write": false,
+          "name": "<badref>",
+          "opcode": "br",
+          "operands": [
+            "%join"
+          ],
+          "side_effects": false,
+          "type": "void",
+          "users": []
+        }
+      ],
+      "name": "%right",
+      "predecessors": [
+        "%entry"
+      ],
+      "successors": [
+        "%join"
+      ]
+    },
+    {
+      "darm_static_cost": 6,
+      "instructions": [
+        {
+          "darm_static_cost": 3,
+          "llvm": "  %v = phi i32 [ %a, %left ], [ %b, %right ]",
+          "may_read": false,
+          "may_write": false,
+          "name": "%v",
+          "opcode": "phi",
+          "operands": [
+            "%a",
+            "%b"
+          ],
+          "side_effects": false,
+          "type": "i32",
+          "users": [
+            "<badref>"
+          ]
+        },
+        {
+          "darm_static_cost": 3,
+          "llvm": "  ret i32 %v",
+          "may_read": false,
+          "may_write": false,
+          "name": "<badref>",
+          "opcode": "ret",
+          "operands": [
+            "%v"
+          ],
+          "side_effects": false,
+          "type": "void",
+          "users": []
+        }
+      ],
+      "name": "%join",
+      "predecessors": [
+        "%right",
+        "%left"
+      ],
+      "successors": []
+    }
+  ],
+  "function": "choose",
+  "opcode_histogram": {
+    "add": 1,
+    "br": 3,
+    "icmp": 1,
+    "mul": 1,
+    "phi": 1,
+    "ret": 1
+  },
+  "summary": {
+    "blocks": 4,
+    "calls": 0,
+    "conditional_branches": 1,
+    "darm_static_cost": 33,
+    "instructions": 8,
+    "loads": 0,
+    "phis": 1,
+    "selects": 0,
+    "stores": 0
+  }
+}
