@@ -1,0 +1,783 @@
+{
+  "scoped-local": {
+    "result": {
+      "commits": 1,
+      "output_on_stop": "last_committed_parent_or_initial_normalized_state",
+      "policy": "llvm24",
+      "require_parent_gain": true,
+      "semantic_validation": "not_run",
+      "stop": "no_positive_candidate",
+      "trials": 46
+    },
+    "reasons": {
+      "verified_ir_only": 26,
+      "raw_verifier_failed": 2,
+      "region_structure_mismatch": 14,
+      "side_effect_in_trial_scope_not_supported": 4
+    },
+    "commits": [
+      {
+        "candidate": "face_kernel:B51:B53:B52",
+        "version": 1,
+        "parent_version": 0,
+        "committed_hash": "ac935454eaed38ce55253bc1c46ebd0c9d840a1a",
+        "gain": 4
+      }
+    ],
+    "trials": [
+      {
+        "candidate": "face_kernel:B29:B30:B31",
+        "version": 1,
+        "valid": true,
+        "reason": "verified_ir_only",
+        "merge_path": "darm-B2B",
+        "gain": -28
+      },
+      {
+        "candidate": "face_kernel:B33:R12:R19",
+        "version": 1,
+        "valid": false,
+        "reason": "raw_verifier_failed",
+        "merge_path": "darm-R2R",
+        "gain": null
+      },
+      {
+        "candidate": "face_kernel:B47:B51:B49",
+        "version": 1,
+        "valid": true,
+        "reason": "verified_ir_only",
+        "merge_path": "darm-B2R",
+        "gain": -50
+      },
+      {
+        "candidate": "face_kernel:B16:B18:B17",
+        "version": 1,
+        "valid": true,
+        "reason": "verified_ir_only",
+        "merge_path": "darm-B2B",
+        "gain": -16
+      },
+      {
+        "candidate": "face_kernel:B39:R19:R15",
+        "version": 0,
+        "valid": false,
+        "reason": "region_structure_mismatch",
+        "merge_path": "",
+        "gain": null
+      },
+      {
+        "candidate": "face_kernel:B14:B15:B17",
+        "version": 1,
+        "valid": true,
+        "reason": "verified_ir_only",
+        "merge_path": "darm-B2R",
+        "gain": -69
+      },
+      {
+        "candidate": "face_kernel:B24:R9:R11",
+        "version": 1,
+        "valid": false,
+        "reason": "region_structure_mismatch",
+        "merge_path": "",
+        "gain": null
+      },
+      {
+        "candidate": "face_kernel:B47:B52:B49",
+        "version": 1,
+        "valid": true,
+        "reason": "verified_ir_only",
+        "merge_path": "darm-B2R",
+        "gain": -21
+      },
+      {
+        "candidate": "face_kernel:B39:R14:R19",
+        "version": 0,
+        "valid": false,
+        "reason": "region_structure_mismatch",
+        "merge_path": "",
+        "gain": null
+      },
+      {
+        "candidate": "face_kernel:B14:B15:B18",
+        "version": 1,
+        "valid": true,
+        "reason": "verified_ir_only",
+        "merge_path": "darm-B2R",
+        "gain": -54
+      },
+      {
+        "candidate": "face_kernel:B48:B49:B50",
+        "version": 0,
+        "valid": true,
+        "reason": "verified_ir_only",
+        "merge_path": "darm-B2B",
+        "gain": -28
+      },
+      {
+        "candidate": "face_kernel:B28:R11:R20",
+        "version": 1,
+        "valid": false,
+        "reason": "region_structure_mismatch",
+        "merge_path": "",
+        "gain": null
+      },
+      {
+        "candidate": "face_kernel:B51:B53:B52",
+        "version": 0,
+        "valid": true,
+        "reason": "verified_ir_only",
+        "merge_path": "darm-B2B",
+        "gain": 4
+      },
+      {
+        "candidate": "face_kernel:B29:B30:B31",
+        "version": 0,
+        "valid": true,
+        "reason": "verified_ir_only",
+        "merge_path": "darm-B2B",
+        "gain": -28
+      },
+      {
+        "candidate": "face_kernel:B14:B15:B17",
+        "version": 0,
+        "valid": true,
+        "reason": "verified_ir_only",
+        "merge_path": "darm-B2R",
+        "gain": -69
+      },
+      {
+        "candidate": "face_kernel:B33:R12:R13",
+        "version": 0,
+        "valid": false,
+        "reason": "region_structure_mismatch",
+        "merge_path": "",
+        "gain": null
+      },
+      {
+        "candidate": "face_kernel:B40:B41:B42",
+        "version": 1,
+        "valid": true,
+        "reason": "verified_ir_only",
+        "merge_path": "darm-B2B",
+        "gain": -28
+      },
+      {
+        "candidate": "face_kernel:B44:B45:B46",
+        "version": 0,
+        "valid": true,
+        "reason": "verified_ir_only",
+        "merge_path": "darm-B2B",
+        "gain": -28
+      },
+      {
+        "candidate": "face_kernel:B43:R15:R18",
+        "version": 0,
+        "valid": false,
+        "reason": "region_structure_mismatch",
+        "merge_path": "",
+        "gain": null
+      },
+      {
+        "candidate": "face_kernel:B9:B11:B10",
+        "version": 1,
+        "valid": true,
+        "reason": "verified_ir_only",
+        "merge_path": "darm-B2B",
+        "gain": -28
+      },
+      {
+        "candidate": "face_kernel:B7:R3:R4",
+        "version": 0,
+        "valid": false,
+        "reason": "side_effect_in_trial_scope_not_supported",
+        "merge_path": "",
+        "gain": null
+      },
+      {
+        "candidate": "face_kernel:B9:B11:B10",
+        "version": 0,
+        "valid": true,
+        "reason": "verified_ir_only",
+        "merge_path": "darm-B2B",
+        "gain": -28
+      },
+      {
+        "candidate": "face_kernel:B34:B35:B36",
+        "version": 0,
+        "valid": true,
+        "reason": "verified_ir_only",
+        "merge_path": "darm-B2B",
+        "gain": -28
+      },
+      {
+        "candidate": "face_kernel:B33:R12:R13",
+        "version": 1,
+        "valid": false,
+        "reason": "region_structure_mismatch",
+        "merge_path": "",
+        "gain": null
+      },
+      {
+        "candidate": "face_kernel:B33:R12:R19",
+        "version": 0,
+        "valid": false,
+        "reason": "raw_verifier_failed",
+        "merge_path": "darm-R2R",
+        "gain": null
+      },
+      {
+        "candidate": "face_kernel:B25:B26:B27",
+        "version": 0,
+        "valid": true,
+        "reason": "verified_ir_only",
+        "merge_path": "darm-B2B",
+        "gain": -28
+      },
+      {
+        "candidate": "face_kernel:B47:R16:R17",
+        "version": 0,
+        "valid": true,
+        "reason": "verified_ir_only",
+        "merge_path": "darm-R2R",
+        "gain": -274
+      },
+      {
+        "candidate": "face_kernel:B24:R10:R9",
+        "version": 0,
+        "valid": false,
+        "reason": "region_structure_mismatch",
+        "merge_path": "",
+        "gain": null
+      },
+      {
+        "candidate": "face_kernel:B16:B18:B17",
+        "version": 0,
+        "valid": true,
+        "reason": "verified_ir_only",
+        "merge_path": "darm-B2B",
+        "gain": -16
+      },
+      {
+        "candidate": "face_kernel:B24:R9:R11",
+        "version": 0,
+        "valid": false,
+        "reason": "region_structure_mismatch",
+        "merge_path": "",
+        "gain": null
+      },
+      {
+        "candidate": "face_kernel:B44:B45:B46",
+        "version": 1,
+        "valid": true,
+        "reason": "verified_ir_only",
+        "merge_path": "darm-B2B",
+        "gain": -28
+      },
+      {
+        "candidate": "face_kernel:B24:R10:R9",
+        "version": 1,
+        "valid": false,
+        "reason": "region_structure_mismatch",
+        "merge_path": "",
+        "gain": null
+      },
+      {
+        "candidate": "face_kernel:B28:R11:R20",
+        "version": 0,
+        "valid": false,
+        "reason": "region_structure_mismatch",
+        "merge_path": "",
+        "gain": null
+      },
+      {
+        "candidate": "face_kernel:B7:R3:R4",
+        "version": 1,
+        "valid": false,
+        "reason": "side_effect_in_trial_scope_not_supported",
+        "merge_path": "",
+        "gain": null
+      },
+      {
+        "candidate": "face_kernel:B47:R16:R17",
+        "version": 1,
+        "valid": true,
+        "reason": "verified_ir_only",
+        "merge_path": "darm-R2R",
+        "gain": -80
+      },
+      {
+        "candidate": "face_kernel:B39:R19:R15",
+        "version": 1,
+        "valid": false,
+        "reason": "region_structure_mismatch",
+        "merge_path": "",
+        "gain": null
+      },
+      {
+        "candidate": "face_kernel:B34:B35:B36",
+        "version": 1,
+        "valid": true,
+        "reason": "verified_ir_only",
+        "merge_path": "darm-B2B",
+        "gain": -28
+      },
+      {
+        "candidate": "face_kernel:B5:B6:B12",
+        "version": 1,
+        "valid": false,
+        "reason": "side_effect_in_trial_scope_not_supported",
+        "merge_path": "",
+        "gain": null
+      },
+      {
+        "candidate": "face_kernel:B39:R14:R19",
+        "version": 1,
+        "valid": false,
+        "reason": "region_structure_mismatch",
+        "merge_path": "",
+        "gain": null
+      },
+      {
+        "candidate": "face_kernel:B5:B6:B12",
+        "version": 0,
+        "valid": false,
+        "reason": "side_effect_in_trial_scope_not_supported",
+        "merge_path": "",
+        "gain": null
+      },
+      {
+        "candidate": "face_kernel:B25:B26:B27",
+        "version": 1,
+        "valid": true,
+        "reason": "verified_ir_only",
+        "merge_path": "darm-B2B",
+        "gain": -28
+      },
+      {
+        "candidate": "face_kernel:B40:B41:B42",
+        "version": 0,
+        "valid": true,
+        "reason": "verified_ir_only",
+        "merge_path": "darm-B2B",
+        "gain": -28
+      },
+      {
+        "candidate": "face_kernel:B14:B15:B18",
+        "version": 0,
+        "valid": true,
+        "reason": "verified_ir_only",
+        "merge_path": "darm-B2R",
+        "gain": -54
+      },
+      {
+        "candidate": "face_kernel:B43:R15:R18",
+        "version": 1,
+        "valid": false,
+        "reason": "region_structure_mismatch",
+        "merge_path": "",
+        "gain": null
+      },
+      {
+        "candidate": "face_kernel:B55:B56:B57",
+        "version": 1,
+        "valid": true,
+        "reason": "verified_ir_only",
+        "merge_path": "darm-B2B",
+        "gain": -8
+      },
+      {
+        "candidate": "face_kernel:B48:B49:B50",
+        "version": 1,
+        "valid": true,
+        "reason": "verified_ir_only",
+        "merge_path": "darm-B2B",
+        "gain": -28
+      }
+    ]
+  },
+  "scoped-cfg": {
+    "result": {
+      "commits": 1,
+      "output_on_stop": "last_committed_parent_or_initial_normalized_state",
+      "policy": "llvm24",
+      "require_parent_gain": true,
+      "semantic_validation": "not_run",
+      "stop": "no_positive_candidate",
+      "trials": 44
+    },
+    "reasons": {
+      "verified_ir_only": 24,
+      "raw_verifier_failed": 2,
+      "region_structure_mismatch": 14,
+      "side_effect_in_trial_scope_not_supported": 4
+    },
+    "commits": [
+      {
+        "candidate": "face_kernel:B51:B53:B52",
+        "version": 1,
+        "parent_version": 0,
+        "committed_hash": "2dfbda345413879ed5157adbbcdc12742870072b",
+        "gain": 23
+      }
+    ],
+    "trials": [
+      {
+        "candidate": "face_kernel:B29:B30:B31",
+        "version": 1,
+        "valid": true,
+        "reason": "verified_ir_only",
+        "merge_path": "darm-B2B",
+        "gain": -9
+      },
+      {
+        "candidate": "face_kernel:B33:R12:R18",
+        "version": 1,
+        "valid": false,
+        "reason": "raw_verifier_failed",
+        "merge_path": "darm-R2R",
+        "gain": null
+      },
+      {
+        "candidate": "face_kernel:B47:B51:B49",
+        "version": 1,
+        "valid": true,
+        "reason": "verified_ir_only",
+        "merge_path": "darm-B2R",
+        "gain": -124
+      },
+      {
+        "candidate": "face_kernel:B16:B18:B17",
+        "version": 1,
+        "valid": true,
+        "reason": "verified_ir_only",
+        "merge_path": "darm-B2B",
+        "gain": -1
+      },
+      {
+        "candidate": "face_kernel:B39:R19:R15",
+        "version": 0,
+        "valid": false,
+        "reason": "region_structure_mismatch",
+        "merge_path": "",
+        "gain": null
+      },
+      {
+        "candidate": "face_kernel:B14:B15:B17",
+        "version": 1,
+        "valid": true,
+        "reason": "verified_ir_only",
+        "merge_path": "darm-B2R",
+        "gain": -39
+      },
+      {
+        "candidate": "face_kernel:B24:R9:R11",
+        "version": 1,
+        "valid": false,
+        "reason": "region_structure_mismatch",
+        "merge_path": "",
+        "gain": null
+      },
+      {
+        "candidate": "face_kernel:B47:B51:B50",
+        "version": 1,
+        "valid": true,
+        "reason": "verified_ir_only",
+        "merge_path": "darm-B2R",
+        "gain": -337
+      },
+      {
+        "candidate": "face_kernel:B39:R14:R19",
+        "version": 0,
+        "valid": false,
+        "reason": "region_structure_mismatch",
+        "merge_path": "",
+        "gain": null
+      },
+      {
+        "candidate": "face_kernel:B14:B15:B18",
+        "version": 1,
+        "valid": true,
+        "reason": "verified_ir_only",
+        "merge_path": "darm-B2R",
+        "gain": -24
+      },
+      {
+        "candidate": "face_kernel:B48:B49:B50",
+        "version": 0,
+        "valid": true,
+        "reason": "verified_ir_only",
+        "merge_path": "darm-B2B",
+        "gain": -9
+      },
+      {
+        "candidate": "face_kernel:B28:R11:R19",
+        "version": 1,
+        "valid": false,
+        "reason": "region_structure_mismatch",
+        "merge_path": "",
+        "gain": null
+      },
+      {
+        "candidate": "face_kernel:B51:B53:B52",
+        "version": 0,
+        "valid": true,
+        "reason": "verified_ir_only",
+        "merge_path": "darm-B2B",
+        "gain": 23
+      },
+      {
+        "candidate": "face_kernel:B29:B30:B31",
+        "version": 0,
+        "valid": true,
+        "reason": "verified_ir_only",
+        "merge_path": "darm-B2B",
+        "gain": -9
+      },
+      {
+        "candidate": "face_kernel:B14:B15:B17",
+        "version": 0,
+        "valid": true,
+        "reason": "verified_ir_only",
+        "merge_path": "darm-B2R",
+        "gain": -39
+      },
+      {
+        "candidate": "face_kernel:B33:R12:R13",
+        "version": 0,
+        "valid": false,
+        "reason": "region_structure_mismatch",
+        "merge_path": "",
+        "gain": null
+      },
+      {
+        "candidate": "face_kernel:B40:B41:B42",
+        "version": 1,
+        "valid": true,
+        "reason": "verified_ir_only",
+        "merge_path": "darm-B2B",
+        "gain": -9
+      },
+      {
+        "candidate": "face_kernel:B44:B45:B46",
+        "version": 0,
+        "valid": true,
+        "reason": "verified_ir_only",
+        "merge_path": "darm-B2B",
+        "gain": -9
+      },
+      {
+        "candidate": "face_kernel:B43:R15:R18",
+        "version": 0,
+        "valid": false,
+        "reason": "region_structure_mismatch",
+        "merge_path": "",
+        "gain": null
+      },
+      {
+        "candidate": "face_kernel:B7:R3:R4",
+        "version": 0,
+        "valid": false,
+        "reason": "side_effect_in_trial_scope_not_supported",
+        "merge_path": "",
+        "gain": null
+      },
+      {
+        "candidate": "face_kernel:B9:B11:B10",
+        "version": 0,
+        "valid": true,
+        "reason": "verified_ir_only",
+        "merge_path": "darm-B2B",
+        "gain": -13
+      },
+      {
+        "candidate": "face_kernel:B34:B35:B36",
+        "version": 0,
+        "valid": true,
+        "reason": "verified_ir_only",
+        "merge_path": "darm-B2B",
+        "gain": -9
+      },
+      {
+        "candidate": "face_kernel:B33:R12:R13",
+        "version": 1,
+        "valid": false,
+        "reason": "region_structure_mismatch",
+        "merge_path": "",
+        "gain": null
+      },
+      {
+        "candidate": "face_kernel:B33:R12:R19",
+        "version": 0,
+        "valid": false,
+        "reason": "raw_verifier_failed",
+        "merge_path": "darm-R2R",
+        "gain": null
+      },
+      {
+        "candidate": "face_kernel:B25:B26:B27",
+        "version": 0,
+        "valid": true,
+        "reason": "verified_ir_only",
+        "merge_path": "darm-B2B",
+        "gain": -9
+      },
+      {
+        "candidate": "face_kernel:B47:R16:R17",
+        "version": 0,
+        "valid": true,
+        "reason": "verified_ir_only",
+        "merge_path": "darm-R2R",
+        "gain": -259
+      },
+      {
+        "candidate": "face_kernel:B24:R10:R9",
+        "version": 0,
+        "valid": false,
+        "reason": "region_structure_mismatch",
+        "merge_path": "",
+        "gain": null
+      },
+      {
+        "candidate": "face_kernel:B16:B18:B17",
+        "version": 0,
+        "valid": true,
+        "reason": "verified_ir_only",
+        "merge_path": "darm-B2B",
+        "gain": -1
+      },
+      {
+        "candidate": "face_kernel:B24:R9:R11",
+        "version": 0,
+        "valid": false,
+        "reason": "region_structure_mismatch",
+        "merge_path": "",
+        "gain": null
+      },
+      {
+        "candidate": "face_kernel:B44:B45:B46",
+        "version": 1,
+        "valid": true,
+        "reason": "verified_ir_only",
+        "merge_path": "darm-B2B",
+        "gain": -9
+      },
+      {
+        "candidate": "face_kernel:B24:R10:R9",
+        "version": 1,
+        "valid": false,
+        "reason": "region_structure_mismatch",
+        "merge_path": "",
+        "gain": null
+      },
+      {
+        "candidate": "face_kernel:B28:R11:R20",
+        "version": 0,
+        "valid": false,
+        "reason": "region_structure_mismatch",
+        "merge_path": "",
+        "gain": null
+      },
+      {
+        "candidate": "face_kernel:B48:B49:B50",
+        "version": 1,
+        "valid": true,
+        "reason": "verified_ir_only",
+        "merge_path": "darm-B2B",
+        "gain": -9
+      },
+      {
+        "candidate": "face_kernel:B39:R18:R15",
+        "version": 1,
+        "valid": false,
+        "reason": "region_structure_mismatch",
+        "merge_path": "",
+        "gain": null
+      },
+      {
+        "candidate": "face_kernel:B34:B35:B36",
+        "version": 1,
+        "valid": true,
+        "reason": "verified_ir_only",
+        "merge_path": "darm-B2B",
+        "gain": -9
+      },
+      {
+        "candidate": "face_kernel:B9:B11:B10",
+        "version": 1,
+        "valid": true,
+        "reason": "verified_ir_only",
+        "merge_path": "darm-B2B",
+        "gain": -13
+      },
+      {
+        "candidate": "face_kernel:B39:R14:R18",
+        "version": 1,
+        "valid": false,
+        "reason": "region_structure_mismatch",
+        "merge_path": "",
+        "gain": null
+      },
+      {
+        "candidate": "face_kernel:B5:B6:B12",
+        "version": 0,
+        "valid": false,
+        "reason": "side_effect_in_trial_scope_not_supported",
+        "merge_path": "",
+        "gain": null
+      },
+      {
+        "candidate": "face_kernel:B25:B26:B27",
+        "version": 1,
+        "valid": true,
+        "reason": "verified_ir_only",
+        "merge_path": "darm-B2B",
+        "gain": -9
+      },
+      {
+        "candidate": "face_kernel:B40:B41:B42",
+        "version": 0,
+        "valid": true,
+        "reason": "verified_ir_only",
+        "merge_path": "darm-B2B",
+        "gain": -9
+      },
+      {
+        "candidate": "face_kernel:B14:B15:B18",
+        "version": 0,
+        "valid": true,
+        "reason": "verified_ir_only",
+        "merge_path": "darm-B2R",
+        "gain": -24
+      },
+      {
+        "candidate": "face_kernel:B43:R15:R17",
+        "version": 1,
+        "valid": false,
+        "reason": "region_structure_mismatch",
+        "merge_path": "",
+        "gain": null
+      },
+      {
+        "candidate": "face_kernel:B7:R3:R4",
+        "version": 1,
+        "valid": false,
+        "reason": "side_effect_in_trial_scope_not_supported",
+        "merge_path": "",
+        "gain": null
+      },
+      {
+        "candidate": "face_kernel:B5:B6:B12",
+        "version": 1,
+        "valid": false,
+        "reason": "side_effect_in_trial_scope_not_supported",
+        "merge_path": "",
+        "gain": null
+      }
+    ]
+  },
+  "original_darm_failure": {
+    "exit": -6,
+    "status": "failed_preserved_not_a_valid_comparator"
+  },
+  "original_darm_melding_entry_blocks": 0
+}

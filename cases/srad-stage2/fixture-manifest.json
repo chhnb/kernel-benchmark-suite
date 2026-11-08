@@ -1,0 +1,79 @@
+{
+  "schema": "srad-stage2-fixtures-v1",
+  "generator": "make_fixtures.cpp",
+  "source_case": "srad",
+  "sizes": [
+    256,
+    1024
+  ],
+  "lambda": 0.5,
+  "q0sqr": 0.1,
+  "stage1_arrays": "independent CPU oracle outputs from frozen srad fixtures, not measured GPU outputs",
+  "oracle": "global-coordinate clamped south/east C; C*N + C_south*S + C*W + C_east*E; float sum then original double literal update",
+  "files": {
+    "fixtures-cpp/1024/C-ref.bin": {
+      "size": 4194304,
+      "sha256": "373c046e013b522944651a6ff41865d6a81c401275d86314b4dd5554ab26507a"
+    },
+    "fixtures-cpp/1024/E-ref.bin": {
+      "size": 4194304,
+      "sha256": "04e343f4a113b03931ba7e8367329fcd6886521d2381ed5dcaa5ff37d593bc9f"
+    },
+    "fixtures-cpp/1024/J-ref.bin": {
+      "size": 4194304,
+      "sha256": "050dd6af5979f79e3281262ce89a0734cf92622010ce63d7f47654fc4a7a0d26"
+    },
+    "fixtures-cpp/1024/J.bin": {
+      "size": 4194304,
+      "sha256": "2e2c9a62d40f5d8ced93dac31077b2eab4cefc49b7fe8352380f5ec003206e0f"
+    },
+    "fixtures-cpp/1024/N-ref.bin": {
+      "size": 4194304,
+      "sha256": "da3e887806f2377d2a66cf6a38325652c0d4b2af766d29ce50dfec4044a1d4fb"
+    },
+    "fixtures-cpp/1024/S-ref.bin": {
+      "size": 4194304,
+      "sha256": "f91a5ed3d5e7b7c26103ad6d583fe37803968dcd62b5ad7e37e0be67a75fb2c6"
+    },
+    "fixtures-cpp/1024/W-ref.bin": {
+      "size": 4194304,
+      "sha256": "92764adf6a389f38cce90537333efe9c5d9d158cab2cafbc96e220f3acc99544"
+    },
+    "fixtures-cpp/1024/input.txt": {
+      "size": 385,
+      "sha256": "a4bc77f88f423cf62407b3d9c00ec9f1adcb173ff05310aa8131d78bb119ab47"
+    },
+    "fixtures-cpp/256/C-ref.bin": {
+      "size": 262144,
+      "sha256": "2e333a6e1016daabaec8575bf7611b7b4d6fa66b612794feab9670cb1e21317a"
+    },
+    "fixtures-cpp/256/E-ref.bin": {
+      "size": 262144,
+      "sha256": "a557a37faece5dc6e2b3c47395b61ee00cd4e645cf45d2c558ffbbb44101b6a1"
+    },
+    "fixtures-cpp/256/J-ref.bin": {
+      "size": 262144,
+      "sha256": "43273a4257adc1a8e91bc2fd41d1c97777db64387f47625af78b884f161e6604"
+    },
+    "fixtures-cpp/256/J.bin": {
+      "size": 262144,
+      "sha256": "0ae0d51563a67350d683da1f5f4a7a31a8a018dc14b8a3d17d9e0857dd51a996"
+    },
+    "fixtures-cpp/256/N-ref.bin": {
+      "size": 262144,
+      "sha256": "ed38e62736f8c7cc71b82652ea2d5fc77ef5eb0dcddd6474faeffbf7a7a43bc5"
+    },
+    "fixtures-cpp/256/S-ref.bin": {
+      "size": 262144,
+      "sha256": "22df93209d54e8f53aabdd9272899ae88576666550ea413ba23b15f23443ed3b"
+    },
+    "fixtures-cpp/256/W-ref.bin": {
+      "size": 262144,
+      "sha256": "fadcf43d1a9e678a967d1abed288322fddb6a788506dcc9e41e3e9d643681c3e"
+    },
+    "fixtures-cpp/256/input.txt": {
+      "size": 385,
+      "sha256": "ddcfd5fed0715ee81d2fafd0e47926c3757e42f35385334cafa37b3f671381f7"
+    }
+  }
+}

@@ -1,0 +1,98 @@
+{
+  "median_us_by_input_order": {
+    "prepared_baseline": [
+      208.9599915,
+      21.60000038
+    ],
+    "scoped_local": [
+      208.9599915,
+      21.60000038
+    ],
+    "scoped_cfg": [
+      208.9599915,
+      21.60000038
+    ],
+    "original_darm": [
+      252.0,
+      22.07999992
+    ],
+    "forced_0": [
+      165.9199982,
+      21.92000008
+    ]
+  },
+  "batch_medians_us": {
+    "prepared_baseline": [
+      [
+        148.1599884,
+        21.60000038
+      ],
+      [
+        208.9599915,
+        21.43999863
+      ],
+      [
+        253.7600098,
+        21.92000008
+      ]
+    ],
+    "original_darm": [
+      [
+        258.0800171,
+        22.07999992
+      ],
+      [
+        252.0,
+        22.23999977
+      ],
+      [
+        175.6799927,
+        21.92000008
+      ]
+    ],
+    "forced_0": [
+      [
+        165.9199982,
+        22.56000137
+      ],
+      [
+        130.8800049,
+        21.43999863
+      ],
+      [
+        227.1999969,
+        21.92000008
+      ]
+    ]
+  },
+  "aliases_by_identical_binary": {
+    "prepared_baseline": "prepared_baseline",
+    "scoped_local": "prepared_baseline",
+    "scoped_cfg": "prepared_baseline",
+    "original_darm": "original_darm",
+    "forced_0": "forced_0"
+  },
+  "decrease_vs_prepared_pct": {
+    "prepared_baseline": [
+      0.0,
+      0.0
+    ],
+    "scoped_local": [
+      0.0,
+      0.0
+    ],
+    "scoped_cfg": [
+      0.0,
+      0.0
+    ],
+    "original_darm": [
+      -20.597248397188995,
+      -2.2222200534979697
+    ],
+    "forced_0": [
+      20.597241123069242,
+      -1.481480066529528
+    ]
+  },
+  "correctness_passed": true
+}
