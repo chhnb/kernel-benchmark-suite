@@ -1,4 +1,5 @@
 #include "fusion_search.h"
+#include "darm_pair_engine/LocalCopysignFusion.h"
 #include "logical_region_state.h"
 #include "darm_pair_engine/RegionMelder.h"
 #include "llvm/IR/Verifier.h"
@@ -158,6 +159,7 @@ static bool foldEmptyPhiTriangle(Function &f) {
   return false;
 }
 unsigned cleanup(Module &m,const std::string &function,unsigned level,CleanupMode mode) {
+  if(mode==CleanupMode::None)return 0;
   canonicalPhiOrder(m,function);
   if(mode==CleanupMode::O3){normalize(m,level);return 0;}
   auto*f=m.getFunction(function);if(!f)throw std::runtime_error("cleanup function missing");
@@ -410,7 +412,12 @@ Trial tryPair(const Module&parent,const Candidate&c,unsigned version,unsigned le
   auto ft=Clock::now();t.before=features(*f);t.featuresMs+=millis(ft);t.left=boundary(l,*f);t.right=boundary(r,*f);t.replication=ma.requireRegionReplication();
   if(t.replication&&!l.region&&(!l.entry->getUniqueSuccessor()||!r.entry->getUniqueSuccessor()))return reject("replication_requires_unique_successor");
   std::map<std::string,std::string> others;for(auto&g:*t.raw)if(&g!=f)others[g.getName().str()]=text(g);
-  auto mt=Clock::now();RegionMelder melder(ma,true);if(t.logicalState)melder.onValueMapping=[&](const ValueToValueMapTy &m){t.logicalState->transfer(m);};melder.merge(0);canonicalPhiOrder(*t.raw,c.function);t.mergeMs=millis(mt);
+  auto mt=Clock::now();RegionMelder melder(ma,true);if(t.logicalState)melder.onValueMapping=[&](const ValueToValueMapTy &m){t.logicalState->transfer(m);};if(c.localCopysign){
+    if(l.region||r.region)return reject("local_requires_basic_blocks");
+    std::string why;
+    if(!fuseCopysignLeaves(l.entry,r.entry,melder.onValueMapping,why)){t.reason=why;t.totalMs=millis(started);return t;}
+    t.replication=false;
+  }else melder.merge(0);canonicalPhiOrder(*t.raw,c.function);t.mergeMs=millis(mt);
   if(verifyModule(*t.raw,&errs()))return reject("raw_verifier_failed");
   for(auto&g:*t.raw)if(&g!=f)if(!others.count(g.getName().str())||others.at(g.getName().str())!=text(g))return reject("other_function_changed");
   ft=Clock::now();t.afterRaw=features(*f);t.featuresMs+=millis(ft);if(t.afterRaw.loops>t.before.loops)return reject("new_raw_loop");
@@ -444,6 +451,7 @@ RoundContext makeRound(const Module&parent,const std::string&function,unsigned v
   r.cleanup+=";phi-edge-function-order-v1";
   if(mode==CleanupMode::DarmCFGEarlyCSE)r.cleanup+="-earlycse-memoryssa0";
   if(mode==CleanupMode::PostOptFixedPoint)r.cleanup="phi-edge-function-order-v1;earlycse-memoryssa0-instcombine-simplifycfg-default-dce-earlycse-pure-scalar-phi-triangle-v1-fixedpoint-sha1-cap32";
+  if(mode==CleanupMode::None)r.cleanup="none;no_external_cleanup";
   if(mode==CleanupMode::DarmCFGScalarFixedPoint)r.cleanup+="-earlycse-instcombine-fixedpoint-sha1-cap32";
   auto*f=parent.getFunction(function);if(!f||f->isDeclaration())throw std::runtime_error("round function missing");
   r.targetAttributes=attributes(f->getAttributes(),f->arg_size());
@@ -496,7 +504,7 @@ Result greedy(const Module&input,const std::string&function,const Options&o,cons
     if(candidates.size()>o.maxTrials-result.trials){result.stop="trial_budget_before_complete_round";return result;}
     const auto round=makeRound(*result.module,function,version,o.optLevel,o.cleanupMode);if(observer)observer->round(round);
     Trial best;ScoreResult bestResult;double bestScore=o.threshold;bool anyScored=false;
-    for(auto&candidate:candidates){auto t=tryPair(*result.module,candidate,version,o.optLevel,o.cleanupMode,logical.get());++result.trials;
+    for(auto&candidate:candidates){candidate.localCopysign=o.localCopysign;auto t=tryPair(*result.module,candidate,version,o.optLevel,o.cleanupMode,logical.get());++result.trials;
       auto score=evaluateTrial(*result.module,t,round,scorer);bool accept=eligible(t,score,o);anyScored|=score.status==ScoreStatus::Scored;
       if(observer)observer->trial(t,round,score,accept);
       if(accept&&score.total>bestScore){bestScore=score.total;bestResult=std::move(score);best=std::move(t);}

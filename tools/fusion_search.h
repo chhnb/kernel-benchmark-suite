@@ -11,11 +11,12 @@
 #include <vector>
 namespace fusion {
 class LogicalRegionState;
-enum class CleanupMode { O3, DarmCFG, DarmCFGEarlyCSE, DarmCFGScalarFixedPoint, PostOptFixedPoint };
+enum class CleanupMode { None, O3, DarmCFG, DarmCFGEarlyCSE, DarmCFGScalarFixedPoint, PostOptFixedPoint };
 struct Candidate {
   std::string function, split, left, right;
   unsigned version = 0;
   std::string logicalDecision, logicalLeft, logicalRight;
+  bool localCopysign=false;
   std::string key() const { return function+":"+split+":"+left+":"+right; }
 };
 struct OperationKey {
@@ -115,6 +116,7 @@ struct Options {
   double threshold=0;
   bool requireParentGain=true;
   bool adjacentOnly=false;
+  bool localCopysign=false;
 };
 struct Observer {
   virtual ~Observer() = default;
