@@ -25,6 +25,28 @@ j:
 )",diag,ctx);check(bool(fast),"parse fast");auto before=moduleHash(*fast);bool local=false;
  for(auto mode:{CleanupMode::None,CleanupMode::DarmCFG})for(auto c:enumerate(*fast->getFunction("f"),0)){c.hybrid=true;auto t=tryPair(*fast,c,0,3,mode);if(t.valid){check(t.mergePath=="local-compute","local path not preferred");check(!verifyModule(*t.normalized,&errs()),"local verifier");local=true;}}
  check(local,"no local trial");check(moduleHash(*fast)==before,"local parent mutation");
+ auto multi=parseAssemblyString(R"(
+define float @multi(i1 %p, i1 %q, float %x) {
+entry: br i1 %p, label %a, label %b
+a:
+ %u = fmul float %x, 2.0
+ %v = fadd float %x, 3.0
+ br label %j
+b:
+ %w = fmul float %x, 4.0
+ %z = select i1 %q, float %x, float 0.0
+ br label %j
+j:
+ %r = phi float [ %u, %a ], [ %w, %b ]
+ %s = phi float [ %v, %a ], [ %z, %b ]
+ %o = fadd float %r, %s
+ ret float %o
+}
+)",diag,ctx);check(bool(multi),"parse multi-output");
+ auto multiHash=moduleHash(*multi);Candidate mc{"multi","B0","B1","B2",0};mc.hybrid=true;
+ auto mt=tryPair(*multi,mc,0,3,CleanupMode::ScopedCFG);
+ check(mt.valid&&mt.mergePath=="darm-B2B","pure multi-output/select-root pair must use DARM B2B");
+ check(!verifyModule(*mt.normalized,&errs())&&moduleHash(*multi)==multiHash,"multi-output verifier/parent");
  check(argc==2,"TIGRE input required");auto input=parseIRFile(argv[1],diag,ctx);check(bool(input),"parse TIGRE");auto *f=input->getFunction("_Z19kernelPixelDetector8GeometryPfiiP13__hip_texture");check(f,"function missing");auto hash=moduleHash(*input);unsigned regions=0;
  for(auto mode:{CleanupMode::None,CleanupMode::DarmCFG})for(auto c:enumerate(*f,0)){
   if(c.left[0]!='R'||c.right[0]!='R')continue;

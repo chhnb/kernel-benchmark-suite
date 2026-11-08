@@ -613,6 +613,15 @@ Trial tryPair(const Module&parent,const Candidate&c,unsigned version,unsigned le
     };
     useLocal=t.planKind=="B2B"&&l.entry->getSingleSuccessor()==r.entry->getSingleSuccessor()
       &&l.entry->getSingleSuccessor()&&pure(l.entry)&&pure(r.entry);
+    if(useLocal){
+      // Pure does not imply a closed single-result computation (HLLC has
+      // select roots and multiple live-outs). Dispatch those directly to
+      // RegionMelder rather than rejecting them in the local engine.
+      LocalComputation leftLocal,rightLocal;
+      useLocal=describeLocalComputation(l.entry,leftLocal)&&describeLocalComputation(r.entry,rightLocal)
+        &&leftLocal.root->isSameOperationAs(rightLocal.root)
+        &&leftLocal.root->getRawSubclassOptionalData()==rightLocal.root->getRawSubclassOptionalData();
+    }
   }
   t.mergePath=useLocal?"local-compute":"darm-"+t.planKind;
   t.originalSimilarity=ma.explicitSimilarity();t.originalProfitable=ma.isRegionMatchProfitable(0);

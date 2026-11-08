@@ -1,0 +1,419 @@
+{
+  "scoped-local": {
+    "result": {
+      "commits": 0,
+      "output_on_stop": "last_committed_parent_or_initial_normalized_state",
+      "policy": "llvm24",
+      "require_parent_gain": true,
+      "semantic_validation": "not_run",
+      "stop": "no_positive_candidate",
+      "trials": 23
+    },
+    "candidates": [
+      {
+        "trial": "trial-12",
+        "candidate": "_ZN2GC2fv31cuAdvectionMSWEsCartesianKernelEPdS1_S1_S1_S1_PNS_7Vector2ES3_S3_jPNS_15ShortDualHandleEjS1_S1_S3_:B10:B38:B11",
+        "valid": true,
+        "status": "scored",
+        "gain": -20,
+        "merge_path": "darm-R2B"
+      },
+      {
+        "trial": "trial-22",
+        "candidate": "_ZN2GC2fv31cuAdvectionMSWEsCartesianKernelEPdS1_S1_S1_S1_PNS_7Vector2ES3_S3_jPNS_15ShortDualHandleEjS1_S1_S3_:B41:B42:B43",
+        "valid": true,
+        "status": "scored",
+        "gain": -9,
+        "merge_path": "darm-B2B"
+      },
+      {
+        "trial": "trial-11",
+        "candidate": "_ZN2GC2fv31cuAdvectionMSWEsCartesianKernelEPdS1_S1_S1_S1_PNS_7Vector2ES3_S3_jPNS_15ShortDualHandleEjS1_S1_S3_:B10:B37:B11",
+        "valid": true,
+        "status": "scored",
+        "gain": -18,
+        "merge_path": "darm-R2B"
+      },
+      {
+        "trial": "trial-17",
+        "candidate": "_ZN2GC2fv31cuAdvectionMSWEsCartesianKernelEPdS1_S1_S1_S1_PNS_7Vector2ES3_S3_jPNS_15ShortDualHandleEjS1_S1_S3_:B33:B34:B35",
+        "valid": true,
+        "status": "scored",
+        "gain": -10,
+        "merge_path": "darm-B2B"
+      },
+      {
+        "trial": "trial-18",
+        "candidate": "_ZN2GC2fv31cuAdvectionMSWEsCartesianKernelEPdS1_S1_S1_S1_PNS_7Vector2ES3_S3_jPNS_15ShortDualHandleEjS1_S1_S3_:B36:B37:B38",
+        "valid": true,
+        "status": "scored",
+        "gain": -10,
+        "merge_path": "darm-B2B"
+      },
+      {
+        "trial": "trial-7",
+        "candidate": "_ZN2GC2fv31cuAdvectionMSWEsCartesianKernelEPdS1_S1_S1_S1_PNS_7Vector2ES3_S3_jPNS_15ShortDualHandleEjS1_S1_S3_:B10:B30:B11",
+        "valid": true,
+        "status": "scored",
+        "gain": -38,
+        "merge_path": "darm-R2B"
+      },
+      {
+        "trial": "trial-0",
+        "candidate": "_ZN2GC2fv31cuAdvectionMSWEsCartesianKernelEPdS1_S1_S1_S1_PNS_7Vector2ES3_S3_jPNS_15ShortDualHandleEjS1_S1_S3_:B10:B13:B11",
+        "valid": true,
+        "status": "scored",
+        "gain": -12,
+        "merge_path": "darm-R2B"
+      },
+      {
+        "trial": "trial-8",
+        "candidate": "_ZN2GC2fv31cuAdvectionMSWEsCartesianKernelEPdS1_S1_S1_S1_PNS_7Vector2ES3_S3_jPNS_15ShortDualHandleEjS1_S1_S3_:B10:B32:B11",
+        "valid": true,
+        "status": "scored",
+        "gain": -38,
+        "merge_path": "darm-R2B"
+      },
+      {
+        "trial": "trial-15",
+        "candidate": "_ZN2GC2fv31cuAdvectionMSWEsCartesianKernelEPdS1_S1_S1_S1_PNS_7Vector2ES3_S3_jPNS_15ShortDualHandleEjS1_S1_S3_:B10:B43:B11",
+        "valid": true,
+        "status": "scored",
+        "gain": -22,
+        "merge_path": "darm-R2B"
+      },
+      {
+        "trial": "trial-14",
+        "candidate": "_ZN2GC2fv31cuAdvectionMSWEsCartesianKernelEPdS1_S1_S1_S1_PNS_7Vector2ES3_S3_jPNS_15ShortDualHandleEjS1_S1_S3_:B10:B42:B11",
+        "valid": true,
+        "status": "scored",
+        "gain": -14,
+        "merge_path": "darm-R2B"
+      },
+      {
+        "trial": "trial-20",
+        "candidate": "_ZN2GC2fv31cuAdvectionMSWEsCartesianKernelEPdS1_S1_S1_S1_PNS_7Vector2ES3_S3_jPNS_15ShortDualHandleEjS1_S1_S3_:B39:B42:B40",
+        "valid": true,
+        "status": "scored",
+        "gain": -8,
+        "merge_path": "darm-R2B"
+      },
+      {
+        "trial": "trial-21",
+        "candidate": "_ZN2GC2fv31cuAdvectionMSWEsCartesianKernelEPdS1_S1_S1_S1_PNS_7Vector2ES3_S3_jPNS_15ShortDualHandleEjS1_S1_S3_:B39:B43:B40",
+        "valid": true,
+        "status": "scored",
+        "gain": -16,
+        "merge_path": "darm-R2B"
+      },
+      {
+        "trial": "trial-10",
+        "candidate": "_ZN2GC2fv31cuAdvectionMSWEsCartesianKernelEPdS1_S1_S1_S1_PNS_7Vector2ES3_S3_jPNS_15ShortDualHandleEjS1_S1_S3_:B10:B35:B11",
+        "valid": true,
+        "status": "scored",
+        "gain": -19,
+        "merge_path": "darm-R2B"
+      },
+      {
+        "trial": "trial-9",
+        "candidate": "_ZN2GC2fv31cuAdvectionMSWEsCartesianKernelEPdS1_S1_S1_S1_PNS_7Vector2ES3_S3_jPNS_15ShortDualHandleEjS1_S1_S3_:B10:B34:B11",
+        "valid": true,
+        "status": "scored",
+        "gain": -17,
+        "merge_path": "darm-R2B"
+      },
+      {
+        "trial": "trial-5",
+        "candidate": "_ZN2GC2fv31cuAdvectionMSWEsCartesianKernelEPdS1_S1_S1_S1_PNS_7Vector2ES3_S3_jPNS_15ShortDualHandleEjS1_S1_S3_:B10:B24:B11",
+        "valid": true,
+        "status": "scored",
+        "gain": -31,
+        "merge_path": "darm-R2B"
+      },
+      {
+        "trial": "trial-16",
+        "candidate": "_ZN2GC2fv31cuAdvectionMSWEsCartesianKernelEPdS1_S1_S1_S1_PNS_7Vector2ES3_S3_jPNS_15ShortDualHandleEjS1_S1_S3_:B29:B30:B32",
+        "valid": true,
+        "status": "scored",
+        "gain": -33,
+        "merge_path": "darm-B2R"
+      },
+      {
+        "trial": "trial-3",
+        "candidate": "_ZN2GC2fv31cuAdvectionMSWEsCartesianKernelEPdS1_S1_S1_S1_PNS_7Vector2ES3_S3_jPNS_15ShortDualHandleEjS1_S1_S3_:B10:B19:B11",
+        "valid": true,
+        "status": "scored",
+        "gain": -29,
+        "merge_path": "darm-R2B"
+      },
+      {
+        "trial": "trial-2",
+        "candidate": "_ZN2GC2fv31cuAdvectionMSWEsCartesianKernelEPdS1_S1_S1_S1_PNS_7Vector2ES3_S3_jPNS_15ShortDualHandleEjS1_S1_S3_:B10:B17:B11",
+        "valid": true,
+        "status": "scored",
+        "gain": -30,
+        "merge_path": "darm-R2B"
+      },
+      {
+        "trial": "trial-4",
+        "candidate": "_ZN2GC2fv31cuAdvectionMSWEsCartesianKernelEPdS1_S1_S1_S1_PNS_7Vector2ES3_S3_jPNS_15ShortDualHandleEjS1_S1_S3_:B10:B22:B11",
+        "valid": true,
+        "status": "scored",
+        "gain": -35,
+        "merge_path": "darm-R2B"
+      },
+      {
+        "trial": "trial-6",
+        "candidate": "_ZN2GC2fv31cuAdvectionMSWEsCartesianKernelEPdS1_S1_S1_S1_PNS_7Vector2ES3_S3_jPNS_15ShortDualHandleEjS1_S1_S3_:B10:B26:B11",
+        "valid": true,
+        "status": "scored",
+        "gain": -25,
+        "merge_path": "darm-R2B"
+      },
+      {
+        "trial": "trial-19",
+        "candidate": "_ZN2GC2fv31cuAdvectionMSWEsCartesianKernelEPdS1_S1_S1_S1_PNS_7Vector2ES3_S3_jPNS_15ShortDualHandleEjS1_S1_S3_:B39:B40:B42",
+        "valid": true,
+        "status": "scored",
+        "gain": -8,
+        "merge_path": "darm-R2B"
+      },
+      {
+        "trial": "trial-13",
+        "candidate": "_ZN2GC2fv31cuAdvectionMSWEsCartesianKernelEPdS1_S1_S1_S1_PNS_7Vector2ES3_S3_jPNS_15ShortDualHandleEjS1_S1_S3_:B10:B40:B11",
+        "valid": true,
+        "status": "scored",
+        "gain": -14,
+        "merge_path": "darm-R2B"
+      },
+      {
+        "trial": "trial-1",
+        "candidate": "_ZN2GC2fv31cuAdvectionMSWEsCartesianKernelEPdS1_S1_S1_S1_PNS_7Vector2ES3_S3_jPNS_15ShortDualHandleEjS1_S1_S3_:B10:B15:B11",
+        "valid": true,
+        "status": "scored",
+        "gain": -12,
+        "merge_path": "darm-R2B"
+      }
+    ]
+  },
+  "scoped-cfg": {
+    "result": {
+      "commits": 0,
+      "output_on_stop": "last_committed_parent_or_initial_normalized_state",
+      "policy": "llvm24",
+      "require_parent_gain": true,
+      "semantic_validation": "not_run",
+      "stop": "no_positive_candidate",
+      "trials": 23
+    },
+    "candidates": [
+      {
+        "trial": "trial-12",
+        "candidate": "_ZN2GC2fv31cuAdvectionMSWEsCartesianKernelEPdS1_S1_S1_S1_PNS_7Vector2ES3_S3_jPNS_15ShortDualHandleEjS1_S1_S3_:B10:B38:B11",
+        "valid": true,
+        "status": "scored",
+        "gain": -16,
+        "merge_path": "darm-R2B"
+      },
+      {
+        "trial": "trial-22",
+        "candidate": "_ZN2GC2fv31cuAdvectionMSWEsCartesianKernelEPdS1_S1_S1_S1_PNS_7Vector2ES3_S3_jPNS_15ShortDualHandleEjS1_S1_S3_:B41:B42:B43",
+        "valid": true,
+        "status": "scored",
+        "gain": -8,
+        "merge_path": "darm-B2B"
+      },
+      {
+        "trial": "trial-11",
+        "candidate": "_ZN2GC2fv31cuAdvectionMSWEsCartesianKernelEPdS1_S1_S1_S1_PNS_7Vector2ES3_S3_jPNS_15ShortDualHandleEjS1_S1_S3_:B10:B37:B11",
+        "valid": true,
+        "status": "scored",
+        "gain": -14,
+        "merge_path": "darm-R2B"
+      },
+      {
+        "trial": "trial-17",
+        "candidate": "_ZN2GC2fv31cuAdvectionMSWEsCartesianKernelEPdS1_S1_S1_S1_PNS_7Vector2ES3_S3_jPNS_15ShortDualHandleEjS1_S1_S3_:B33:B34:B35",
+        "valid": true,
+        "status": "scored",
+        "gain": -6,
+        "merge_path": "darm-B2B"
+      },
+      {
+        "trial": "trial-18",
+        "candidate": "_ZN2GC2fv31cuAdvectionMSWEsCartesianKernelEPdS1_S1_S1_S1_PNS_7Vector2ES3_S3_jPNS_15ShortDualHandleEjS1_S1_S3_:B36:B37:B38",
+        "valid": true,
+        "status": "scored",
+        "gain": -6,
+        "merge_path": "darm-B2B"
+      },
+      {
+        "trial": "trial-7",
+        "candidate": "_ZN2GC2fv31cuAdvectionMSWEsCartesianKernelEPdS1_S1_S1_S1_PNS_7Vector2ES3_S3_jPNS_15ShortDualHandleEjS1_S1_S3_:B10:B30:B11",
+        "valid": true,
+        "status": "scored",
+        "gain": -27,
+        "merge_path": "darm-R2B"
+      },
+      {
+        "trial": "trial-0",
+        "candidate": "_ZN2GC2fv31cuAdvectionMSWEsCartesianKernelEPdS1_S1_S1_S1_PNS_7Vector2ES3_S3_jPNS_15ShortDualHandleEjS1_S1_S3_:B10:B13:B11",
+        "valid": true,
+        "status": "scored",
+        "gain": -7,
+        "merge_path": "darm-R2B"
+      },
+      {
+        "trial": "trial-8",
+        "candidate": "_ZN2GC2fv31cuAdvectionMSWEsCartesianKernelEPdS1_S1_S1_S1_PNS_7Vector2ES3_S3_jPNS_15ShortDualHandleEjS1_S1_S3_:B10:B32:B11",
+        "valid": true,
+        "status": "scored",
+        "gain": -31,
+        "merge_path": "darm-R2B"
+      },
+      {
+        "trial": "trial-15",
+        "candidate": "_ZN2GC2fv31cuAdvectionMSWEsCartesianKernelEPdS1_S1_S1_S1_PNS_7Vector2ES3_S3_jPNS_15ShortDualHandleEjS1_S1_S3_:B10:B43:B11",
+        "valid": true,
+        "status": "scored",
+        "gain": -19,
+        "merge_path": "darm-R2B"
+      },
+      {
+        "trial": "trial-14",
+        "candidate": "_ZN2GC2fv31cuAdvectionMSWEsCartesianKernelEPdS1_S1_S1_S1_PNS_7Vector2ES3_S3_jPNS_15ShortDualHandleEjS1_S1_S3_:B10:B42:B11",
+        "valid": true,
+        "status": "scored",
+        "gain": -11,
+        "merge_path": "darm-R2B"
+      },
+      {
+        "trial": "trial-20",
+        "candidate": "_ZN2GC2fv31cuAdvectionMSWEsCartesianKernelEPdS1_S1_S1_S1_PNS_7Vector2ES3_S3_jPNS_15ShortDualHandleEjS1_S1_S3_:B39:B42:B40",
+        "valid": true,
+        "status": "scored",
+        "gain": -7,
+        "merge_path": "darm-R2B"
+      },
+      {
+        "trial": "trial-21",
+        "candidate": "_ZN2GC2fv31cuAdvectionMSWEsCartesianKernelEPdS1_S1_S1_S1_PNS_7Vector2ES3_S3_jPNS_15ShortDualHandleEjS1_S1_S3_:B39:B43:B40",
+        "valid": true,
+        "status": "scored",
+        "gain": -15,
+        "merge_path": "darm-R2B"
+      },
+      {
+        "trial": "trial-10",
+        "candidate": "_ZN2GC2fv31cuAdvectionMSWEsCartesianKernelEPdS1_S1_S1_S1_PNS_7Vector2ES3_S3_jPNS_15ShortDualHandleEjS1_S1_S3_:B10:B35:B11",
+        "valid": true,
+        "status": "scored",
+        "gain": -15,
+        "merge_path": "darm-R2B"
+      },
+      {
+        "trial": "trial-9",
+        "candidate": "_ZN2GC2fv31cuAdvectionMSWEsCartesianKernelEPdS1_S1_S1_S1_PNS_7Vector2ES3_S3_jPNS_15ShortDualHandleEjS1_S1_S3_:B10:B34:B11",
+        "valid": true,
+        "status": "scored",
+        "gain": -13,
+        "merge_path": "darm-R2B"
+      },
+      {
+        "trial": "trial-5",
+        "candidate": "_ZN2GC2fv31cuAdvectionMSWEsCartesianKernelEPdS1_S1_S1_S1_PNS_7Vector2ES3_S3_jPNS_15ShortDualHandleEjS1_S1_S3_:B10:B24:B11",
+        "valid": true,
+        "status": "scored",
+        "gain": -27,
+        "merge_path": "darm-R2B"
+      },
+      {
+        "trial": "trial-16",
+        "candidate": "_ZN2GC2fv31cuAdvectionMSWEsCartesianKernelEPdS1_S1_S1_S1_PNS_7Vector2ES3_S3_jPNS_15ShortDualHandleEjS1_S1_S3_:B29:B30:B32",
+        "valid": true,
+        "status": "scored",
+        "gain": -30,
+        "merge_path": "darm-B2R"
+      },
+      {
+        "trial": "trial-3",
+        "candidate": "_ZN2GC2fv31cuAdvectionMSWEsCartesianKernelEPdS1_S1_S1_S1_PNS_7Vector2ES3_S3_jPNS_15ShortDualHandleEjS1_S1_S3_:B10:B19:B11",
+        "valid": true,
+        "status": "scored",
+        "gain": -25,
+        "merge_path": "darm-R2B"
+      },
+      {
+        "trial": "trial-2",
+        "candidate": "_ZN2GC2fv31cuAdvectionMSWEsCartesianKernelEPdS1_S1_S1_S1_PNS_7Vector2ES3_S3_jPNS_15ShortDualHandleEjS1_S1_S3_:B10:B17:B11",
+        "valid": true,
+        "status": "scored",
+        "gain": -26,
+        "merge_path": "darm-R2B"
+      },
+      {
+        "trial": "trial-4",
+        "candidate": "_ZN2GC2fv31cuAdvectionMSWEsCartesianKernelEPdS1_S1_S1_S1_PNS_7Vector2ES3_S3_jPNS_15ShortDualHandleEjS1_S1_S3_:B10:B22:B11",
+        "valid": true,
+        "status": "scored",
+        "gain": -31,
+        "merge_path": "darm-R2B"
+      },
+      {
+        "trial": "trial-6",
+        "candidate": "_ZN2GC2fv31cuAdvectionMSWEsCartesianKernelEPdS1_S1_S1_S1_PNS_7Vector2ES3_S3_jPNS_15ShortDualHandleEjS1_S1_S3_:B10:B26:B11",
+        "valid": true,
+        "status": "scored",
+        "gain": -21,
+        "merge_path": "darm-R2B"
+      },
+      {
+        "trial": "trial-19",
+        "candidate": "_ZN2GC2fv31cuAdvectionMSWEsCartesianKernelEPdS1_S1_S1_S1_PNS_7Vector2ES3_S3_jPNS_15ShortDualHandleEjS1_S1_S3_:B39:B40:B42",
+        "valid": true,
+        "status": "scored",
+        "gain": -7,
+        "merge_path": "darm-R2B"
+      },
+      {
+        "trial": "trial-13",
+        "candidate": "_ZN2GC2fv31cuAdvectionMSWEsCartesianKernelEPdS1_S1_S1_S1_PNS_7Vector2ES3_S3_jPNS_15ShortDualHandleEjS1_S1_S3_:B10:B40:B11",
+        "valid": true,
+        "status": "scored",
+        "gain": -11,
+        "merge_path": "darm-R2B"
+      },
+      {
+        "trial": "trial-1",
+        "candidate": "_ZN2GC2fv31cuAdvectionMSWEsCartesianKernelEPdS1_S1_S1_S1_PNS_7Vector2ES3_S3_jPNS_15ShortDualHandleEjS1_S1_S3_:B10:B15:B11",
+        "valid": true,
+        "status": "scored",
+        "gain": -8,
+        "merge_path": "darm-R2B"
+      }
+    ]
+  },
+  "binary_sha256": {
+    "forced_17.cubin": "796a96736cde5c648e180f20e23ae4be28f6c39c1ef47299ea4eff186b9f914c",
+    "forced_22.cubin": "41247852aa227dc20781ddbb831e7928bf2ff6f7576fc6cbe7d8b0032a29366e",
+    "forced_18.cubin": "12aa13e7a70ce720114fd3f891ae45e29b3bc004ecb44cf2cb5df03eaa85116e",
+    "scoped_local.cubin": "1bb892aafdb297d231b8537eea340aed83b5e25e66889334b7640ff4be40cfd0",
+    "scoped_cfg.cubin": "1bb892aafdb297d231b8537eea340aed83b5e25e66889334b7640ff4be40cfd0",
+    "llvm_baseline.cubin": "1bb892aafdb297d231b8537eea340aed83b5e25e66889334b7640ff4be40cfd0",
+    "original_darm.cubin": "6f54549780283969d747ad859f7295340ddb8051f41da66519a3d11280e105c2"
+  },
+  "gpu_status": "blocked_before_execution_by_competing_compute_process",
+  "tigre_regression": {
+    "search": {
+      "commits": 2,
+      "output_on_stop": "last_committed_parent_or_initial_normalized_state",
+      "policy": "llvm24",
+      "require_parent_gain": true,
+      "semantic_validation": "not_run",
+      "stop": "no_positive_candidate",
+      "trials": 19
+    },
+    "ir_identical_except_module_id_comment": true,
+    "binary_identical": true
+  }
+}
