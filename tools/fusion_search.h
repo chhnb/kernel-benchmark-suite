@@ -11,7 +11,7 @@
 #include <vector>
 namespace fusion {
 class LogicalRegionState;
-enum class CleanupMode { None, O3, DarmCFG, DarmCFGEarlyCSE, DarmCFGScalarFixedPoint, PostOptFixedPoint };
+enum class CleanupMode { None, O3, DarmCFG, DarmCFGEarlyCSE, DarmCFGScalarFixedPoint, PostOptFixedPoint, StructuralCFG };
 struct Candidate {
   std::string function, split, left, right;
   unsigned version = 0;
@@ -93,6 +93,9 @@ struct Trial {
   unsigned cleanupIterations=0;
   std::string reason;
   std::string mergePath, localRejectReason;
+  std::string planKind, matchedLeft, matchedRight;
+  Boundary leftContext, rightContext;
+  bool loopHeaderSplit=false;
   double mergeMs=0, normalizeMs=0, featuresMs=0, totalMs=0, scoreMs=0;
 };
 struct ScoreInput {

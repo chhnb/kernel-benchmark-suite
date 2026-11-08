@@ -158,6 +158,35 @@ static bool foldEmptyPhiTriangle(Function &f) {
   }
   return false;
 }
+// Fold only branch predicates proven by dominating edges. No instruction is
+// speculated, and arbitrary arithmetic, memory and call predicates are opaque.
+static bool foldProvenBranch(Function &f) {
+  DominatorTree dt(f);
+  for(auto &b:f){
+    auto *br=dyn_cast<BranchInst>(b.getTerminator());if(!br||!br->isConditional())continue;
+    std::map<Value*,bool> facts;
+    std::function<void(Value*,bool,unsigned)> add=[&](Value *v,bool truth,unsigned depth){
+      if(depth>16)return;facts[v]=truth;
+      if(auto *sel=dyn_cast<SelectInst>(v)){
+        auto *t=dyn_cast<ConstantInt>(sel->getTrueValue());auto *ff=dyn_cast<ConstantInt>(sel->getFalseValue());
+        if(t&&t->isOne()!=truth){add(sel->getCondition(),false,depth+1);add(sel->getFalseValue(),truth,depth+1);}
+        if(ff&&ff->isOne()!=truth){add(sel->getCondition(),true,depth+1);add(sel->getTrueValue(),truth,depth+1);}
+      }
+    };
+    auto *node=dt.getNode(&b);
+    for(auto *parent=node?node->getIDom():nullptr;parent;parent=parent->getIDom()){
+      auto *pb=dyn_cast<BranchInst>(parent->getBlock()->getTerminator());
+      if(!pb||!pb->isConditional()||pb->getSuccessor(0)==pb->getSuccessor(1))continue;
+      for(unsigned side=0;side<2;++side){
+        BasicBlockEdge edge(parent->getBlock(),pb->getSuccessor(side));
+        if(dt.dominates(edge,&b))add(pb->getCondition(),side==0,0);
+      }
+    }
+    auto it=facts.find(br->getCondition());if(it==facts.end())continue;
+    br->setCondition(ConstantInt::get(Type::getInt1Ty(f.getContext()),it->second));
+    ConstantFoldTerminator(&b,true);return true;
+  }return false;
+}
 unsigned cleanup(Module &m,const std::string &function,unsigned level,CleanupMode mode) {
   if(mode==CleanupMode::None)return 0;
   canonicalPhiOrder(m,function);
@@ -197,6 +226,7 @@ unsigned cleanup(Module &m,const std::string &function,unsigned level,CleanupMod
   bool changed;
   do {
     changed=false;
+    if(mode==CleanupMode::StructuralCFG&&foldProvenBranch(*f)){changed=true;continue;}
     for(auto&b:make_range(f->begin(),f->end())){
       if(simplifyCFG(&b,tti,SimplifyCFGOptions().setSimplifyCondBranch(false).sinkCommonInsts(false).hoistCommonInsts(false))){
         changed=true;break;
@@ -247,12 +277,13 @@ static bool belongs(const Unit&u,const std::set<BasicBlock*>&a,const std::set<Ba
   for(auto*x:u.blocks)if(b.count(x))return false;return true;
 }
 // Only a single-entry, single-exit acyclic scope inside one unchanged loop.
-// Loop headers, nested loops, backedges and exits remain unsupported.
+// The split may be the header: its PHIs and incoming/back edges are outside
+// the transformed scope. Nested loops, backedges and exits inside scope remain unsupported.
 static bool supportedLoopScope(BasicBlock *split,BasicBlock *join,
                                const std::set<BasicBlock*>&scope,LoopInfo &loops) {
   auto *enclosing=loops.getLoopFor(split);
   if(!enclosing){for(auto*b:scope)if(loops.getLoopFor(b))return false;return true;}
-  if(loops.getLoopFor(join)!=enclosing||enclosing->getHeader()==split||
+  if(loops.getLoopFor(join)!=enclosing||
      enclosing->getHeader()==join||scope.count(split)||scope.count(join))return false;
   std::map<BasicBlock*,unsigned> indegree;
   for(auto*b:scope){
@@ -382,19 +413,6 @@ std::vector<Candidate> enumerateAdjacent(Function&f,unsigned version) {
   return state->filter(f,enumerate(f,version));
 }
 Trial tryPair(const Module&parent,const Candidate&c,unsigned version,unsigned level,CleanupMode mode,const LogicalRegionState *logical) {
-  // Each path starts from the immutable parent. A failed local trial must
-  // never feed its possibly modified clone into the DARM fallback.
-  if(c.hybrid){
-    if(logical)throw std::runtime_error("hybrid requires general CFG enumeration");
-    Candidate localCandidate=c;localCandidate.hybrid=false;localCandidate.localCopysign=true;localCandidate.localUnion=true;
-    auto local=tryPair(parent,localCandidate,version,level,mode,nullptr);
-    if(local.valid){local.candidate=c;local.mergePath="local-compute";return local;}
-    std::string why=local.reason;double localMs=local.totalMs;
-    Candidate fallback=c;fallback.hybrid=false;fallback.localCopysign=false;fallback.localUnion=false;
-    auto result=tryPair(parent,fallback,version,level,mode,nullptr);
-    result.candidate=c;result.mergePath="darm-fallback";result.localRejectReason=why;result.totalMs+=localMs;
-    return result;
-  }
   auto started=Clock::now();Trial t;t.candidate=c;t.cleanupMode=mode;auto reject=[&](const char*reason){t.reason=reason;t.totalMs=millis(started);return std::move(t);};
   if(c.version!=version)return reject("stale_candidate_version");
   ValueToValueMapTy parentMap;
@@ -421,14 +439,58 @@ Trial tryPair(const Module&parent,const Candidate&c,unsigned version,unsigned le
     if(mapping.size()!=l.blocks.size()||values.size()!=r.blocks.size()||l.blocks.size()!=r.blocks.size())return reject("non_bijective_region_mapping");
     if(!ma.selectExplicitRegions(l.region,r.region))return reject("region_structure_mismatch");
   }else ma.selectExplicitBlocks(l.entry,r.entry);
+  // Classify from path structure, not the B/R spelling of the matched IDs.
+  // A block inside an optional arm is a B2R/R2B match even when both IDs are B.
+  t.planKind=l.region?"R2R":"B2B";
+  t.matchedLeft=name(l.entry);t.matchedRight=name(r.entry);
+  auto context=[&](const Unit &u,BasicBlock *path)->Boundary {
+    if(u.region||a.pdt.dominates(u.entry,path))return boundary(u,*f);
+    Region *region=a.regions.getRegionFor(u.entry);
+    while(region&&!region->isTopLevelRegion()&&!a.dt.dominates(region->getEntry(),path))region=region->getParent();
+    if(!region||region->isTopLevelRegion())return boundary(u,*f);
+    std::set<BasicBlock*> bs;for(auto *block:region->blocks())bs.insert(block);
+    return boundary({region->getEntry(),region->getExit(),region,bs},*f);
+  };
+  t.leftContext=context(l,br->getSuccessor(0));t.rightContext=context(r,br->getSuccessor(1));
+  if(!l.region){
+    bool leftRequired=a.pdt.dominates(l.entry,br->getSuccessor(0));
+    bool rightRequired=a.pdt.dominates(r.entry,br->getSuccessor(1));
+    if(!rightRequired)t.planKind="B2R";
+    else if(!leftRequired)t.planKind="R2B";
+  }
+  t.loopHeaderSplit=a.loops.isLoopHeader(split);
+  // Structural mode picks an engine before mutation. Use the local engine only
+  // for direct, closed pure B2B computations; all region/replication work goes
+  // to RegionMelder. No failure-driven fallback or second clone is involved.
+  bool useLocal=c.localCopysign;
+  if(c.hybrid){
+    if(logical)return reject("structural_mode_requires_general_cfg_enumeration");
+    auto pure=[](BasicBlock *block){
+      for(auto &i:*block){
+        if(i.mayReadOrWriteMemory()||i.mayHaveSideEffects())return false;
+        if(auto *call=dyn_cast<CallBase>(&i)){
+          auto *callee=call->getCalledFunction();
+          if(!callee||callee->getIntrinsicID()!=Intrinsic::copysign)return false;
+        }
+      }return true;
+    };
+    useLocal=t.planKind=="B2B"&&l.entry->getSingleSuccessor()==r.entry->getSingleSuccessor()
+      &&l.entry->getSingleSuccessor()&&pure(l.entry)&&pure(r.entry);
+  }
+  t.mergePath=useLocal?"local-compute":"darm-"+t.planKind;
   t.originalSimilarity=ma.explicitSimilarity();t.originalProfitable=ma.isRegionMatchProfitable(0);
   auto ft=Clock::now();t.before=features(*f);t.featuresMs+=millis(ft);t.left=boundary(l,*f);t.right=boundary(r,*f);t.replication=ma.requireRegionReplication();
-  if(t.replication&&!l.region&&(!l.entry->getUniqueSuccessor()||!r.entry->getUniqueSuccessor()))return reject("replication_requires_unique_successor");
+  if(t.replication&&!l.region){
+    // Only the expanded block needs one successor. The matched block inside
+    // the opposite region may branch; RegionReplicator copies that topology.
+    auto *expanded=a.pdt.dominates(l.entry,br->getSuccessor(0))?l.entry:r.entry;
+    if(!expanded->getUniqueSuccessor())return reject("replication_requires_unique_successor");
+  }
   std::map<std::string,std::string> others;for(auto&g:*t.raw)if(&g!=f)others[g.getName().str()]=text(g);
-  auto mt=Clock::now();RegionMelder melder(ma,true);if(t.logicalState)melder.onValueMapping=[&](const ValueToValueMapTy &m){t.logicalState->transfer(m);};if(c.localCopysign){
+  auto mt=Clock::now();RegionMelder melder(ma,true);if(t.logicalState)melder.onValueMapping=[&](const ValueToValueMapTy &m){t.logicalState->transfer(m);};if(useLocal){
     if(l.region||r.region)return reject("local_requires_basic_blocks");
     std::string why;
-    if(!fuseLocalComputations(l.entry,r.entry,melder.onValueMapping,why,c.localUnion)){t.reason=why;t.totalMs=millis(started);return t;}
+    if(!fuseLocalComputations(l.entry,r.entry,melder.onValueMapping,why,c.localUnion||c.hybrid)){t.reason=why;t.totalMs=millis(started);return t;}
     t.replication=false;
   }else melder.merge(0);canonicalPhiOrder(*t.raw,c.function);t.mergeMs=millis(mt);
   if(verifyModule(*t.raw,&errs()))return reject("raw_verifier_failed");
@@ -462,6 +524,7 @@ RoundContext makeRound(const Module&parent,const std::string&function,unsigned v
   r.targetTriple=parent.getTargetTriple();r.dataLayout=parent.getDataLayoutStr();r.llvmVersion=LLVM_VERSION_STRING;
   r.cleanup=mode==CleanupMode::O3?"legacy-PassManagerBuilder-O"+std::to_string(level)+"-loopvec1-slpvec1":"darm-simplifycfg-fixedpoint-condbranch0-sink0-hoist0-targettti";
   r.cleanup+=";phi-edge-function-order-v1";
+  if(mode==CleanupMode::StructuralCFG)r.cleanup+=";dominating-edge-boolean-guard-fold-v1";
   if(mode==CleanupMode::DarmCFGEarlyCSE)r.cleanup+="-earlycse-memoryssa0";
   if(mode==CleanupMode::PostOptFixedPoint)r.cleanup="phi-edge-function-order-v1;earlycse-memoryssa0-instcombine-simplifycfg-default-dce-earlycse-pure-scalar-phi-triangle-v1-fixedpoint-sha1-cap32";
   if(mode==CleanupMode::None)r.cleanup="none;no_external_cleanup";
