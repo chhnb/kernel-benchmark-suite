@@ -1,5 +1,7 @@
 # 局部 copysign 融合：路径并集入口
 
+后续更新：union 路线已支持复合组递归融合，参见 `recursive-local-fusion.md`。下文保留本阶段的实现限制和实验记录。
+
 2026-11-08，musa `/home/chh/kernel-benchmark-suite`。
 
 ## 使用方式

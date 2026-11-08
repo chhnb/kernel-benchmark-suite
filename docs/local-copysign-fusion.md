@@ -1,5 +1,7 @@
 # 局部 copysign BB 融合
 
+后续更新：union 路线已支持复合组递归融合，参见 `recursive-local-fusion.md`。下文保留本阶段的实现限制和实验记录。
+
 2026-11-08，项目位于 musa `/home/chh/kernel-benchmark-suite`。
 
 ## 版本关系

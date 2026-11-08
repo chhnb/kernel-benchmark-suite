@@ -47,5 +47,5 @@ for level in [0,3]:
 # fall back to replication. It remains a valid adjacency candidate.
 bad=O/'extra.ll';bad.write_text(s.replace('L1:\n','L1:\n %extra=fadd float %input, 1.0\n'))
 bc=catalog(bad,'extra-catalog');c=next(c for c in bc['candidates'] if c['logical_left']=='D0.L1' and c['logical_right']=='D0.L2')
-q=subprocess.run([str(S),'--ir',str(bad),'--function','f','--out',str(O/'bad-out.ll'),'--scorer','legacy','--adjacent-only','1','--local-copysign','1','--local-union','1','--cleanup','none','--split',c['split'],'--left',c['left'],'--right',c['right']],capture_output=True,text=True);assert q.returncode==4 and 'local_requires_copysign_only_leaves' in q.stderr,q.stderr
+q=subprocess.run([str(S),'--ir',str(bad),'--function','f','--out',str(O/'bad-out.ll'),'--scorer','legacy','--adjacent-only','1','--local-copysign','1','--local-union','1','--cleanup','none','--split',c['split'],'--left',c['left'],'--right',c['right']],capture_output=True,text=True);assert q.returncode==4 and 'local_requires_closed_pure_computation' in q.stderr,q.stderr
 (O/'summary.json').write_text(json.dumps({'verified':True,'copysign_before':8,'copysign_after':7,'output_bit_tests_per_optimization_level':len(values),'host_optimization_levels':[0,3],'pairs_tested':7,'extra_instruction_rejected':True},indent=2));print((O/'summary.json').read_text())

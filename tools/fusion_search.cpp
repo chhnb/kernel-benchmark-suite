@@ -1,5 +1,5 @@
 #include "fusion_search.h"
-#include "darm_pair_engine/LocalCopysignFusion.h"
+#include "darm_pair_engine/LocalComputationFusion.h"
 #include "logical_region_state.h"
 #include "darm_pair_engine/RegionMelder.h"
 #include "llvm/IR/Verifier.h"
@@ -415,7 +415,7 @@ Trial tryPair(const Module&parent,const Candidate&c,unsigned version,unsigned le
   auto mt=Clock::now();RegionMelder melder(ma,true);if(t.logicalState)melder.onValueMapping=[&](const ValueToValueMapTy &m){t.logicalState->transfer(m);};if(c.localCopysign){
     if(l.region||r.region)return reject("local_requires_basic_blocks");
     std::string why;
-    if(!fuseCopysignLeaves(l.entry,r.entry,melder.onValueMapping,why,c.localUnion)){t.reason=why;t.totalMs=millis(started);return t;}
+    if(!fuseLocalComputations(l.entry,r.entry,melder.onValueMapping,why,c.localUnion)){t.reason=why;t.totalMs=millis(started);return t;}
     t.replication=false;
   }else melder.merge(0);canonicalPhiOrder(*t.raw,c.function);t.mergeMs=millis(mt);
   if(verifyModule(*t.raw,&errs()))return reject("raw_verifier_failed");
