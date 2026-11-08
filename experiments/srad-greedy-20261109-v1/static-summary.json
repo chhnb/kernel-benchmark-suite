@@ -1,0 +1,210 @@
+{
+  "scoped-local": {
+    "result": {
+      "commits": 0,
+      "output_on_stop": "last_committed_parent_or_initial_normalized_state",
+      "policy": "llvm24",
+      "require_parent_gain": true,
+      "semantic_validation": "not_run",
+      "stop": "no_positive_candidate",
+      "trials": 13
+    },
+    "trials": [
+      {
+        "candidate": "srad_cuda_1:B4:B5:B7",
+        "valid": false,
+        "reason": "side_effect_in_trial_scope_not_supported",
+        "merge_path": "",
+        "gain": null
+      },
+      {
+        "candidate": "srad_cuda_1:B28:B29:B30",
+        "valid": true,
+        "reason": "verified_ir_only",
+        "merge_path": "darm-B2B",
+        "gain": -30
+      },
+      {
+        "candidate": "srad_cuda_1:B24:B25:B29",
+        "valid": true,
+        "reason": "verified_ir_only",
+        "merge_path": "darm-B2R",
+        "gain": -35
+      },
+      {
+        "candidate": "srad_cuda_1:B13:B14:B16",
+        "valid": false,
+        "reason": "side_effect_in_trial_scope_not_supported",
+        "merge_path": "",
+        "gain": null
+      },
+      {
+        "candidate": "srad_cuda_1:B24:B25:B30",
+        "valid": true,
+        "reason": "verified_ir_only",
+        "merge_path": "darm-B2R",
+        "gain": -51
+      },
+      {
+        "candidate": "srad_cuda_1:B26:B27:B30",
+        "valid": true,
+        "reason": "verified_ir_only",
+        "merge_path": "darm-B2R",
+        "gain": -30
+      },
+      {
+        "candidate": "srad_cuda_1:B26:B27:B29",
+        "valid": true,
+        "reason": "verified_ir_only",
+        "merge_path": "darm-B2R",
+        "gain": -53
+      },
+      {
+        "candidate": "srad_cuda_1:B22:B23:B30",
+        "valid": true,
+        "reason": "verified_ir_only",
+        "merge_path": "darm-B2R",
+        "gain": -48
+      },
+      {
+        "candidate": "srad_cuda_1:B22:B23:B27",
+        "valid": true,
+        "reason": "verified_ir_only",
+        "merge_path": "darm-B2R",
+        "gain": -38
+      },
+      {
+        "candidate": "srad_cuda_1:B22:B23:B25",
+        "valid": true,
+        "reason": "verified_ir_only",
+        "merge_path": "darm-B2R",
+        "gain": -50
+      },
+      {
+        "candidate": "srad_cuda_1:B22:B23:B29",
+        "valid": true,
+        "reason": "verified_ir_only",
+        "merge_path": "darm-B2R",
+        "gain": -54
+      },
+      {
+        "candidate": "srad_cuda_1:B24:B25:B27",
+        "valid": true,
+        "reason": "verified_ir_only",
+        "merge_path": "darm-B2R",
+        "gain": -59
+      },
+      {
+        "candidate": "srad_cuda_1:B17:B18:B29",
+        "valid": true,
+        "reason": "verified_ir_only",
+        "merge_path": "darm-B2R",
+        "gain": -57
+      }
+    ]
+  },
+  "scoped-cfg": {
+    "result": {
+      "commits": 0,
+      "output_on_stop": "last_committed_parent_or_initial_normalized_state",
+      "policy": "llvm24",
+      "require_parent_gain": true,
+      "semantic_validation": "not_run",
+      "stop": "no_positive_candidate",
+      "trials": 13
+    },
+    "trials": [
+      {
+        "candidate": "srad_cuda_1:B4:B5:B7",
+        "valid": false,
+        "reason": "side_effect_in_trial_scope_not_supported",
+        "merge_path": "",
+        "gain": null
+      },
+      {
+        "candidate": "srad_cuda_1:B28:B29:B30",
+        "valid": true,
+        "reason": "verified_ir_only",
+        "merge_path": "darm-B2B",
+        "gain": -11
+      },
+      {
+        "candidate": "srad_cuda_1:B24:B25:B29",
+        "valid": true,
+        "reason": "verified_ir_only",
+        "merge_path": "darm-B2R",
+        "gain": -20
+      },
+      {
+        "candidate": "srad_cuda_1:B13:B14:B16",
+        "valid": false,
+        "reason": "side_effect_in_trial_scope_not_supported",
+        "merge_path": "",
+        "gain": null
+      },
+      {
+        "candidate": "srad_cuda_1:B24:B25:B30",
+        "valid": true,
+        "reason": "verified_ir_only",
+        "merge_path": "darm-B2R",
+        "gain": -36
+      },
+      {
+        "candidate": "srad_cuda_1:B26:B27:B30",
+        "valid": true,
+        "reason": "verified_ir_only",
+        "merge_path": "darm-B2R",
+        "gain": -15
+      },
+      {
+        "candidate": "srad_cuda_1:B26:B27:B29",
+        "valid": true,
+        "reason": "verified_ir_only",
+        "merge_path": "darm-B2R",
+        "gain": -38
+      },
+      {
+        "candidate": "srad_cuda_1:B22:B23:B30",
+        "valid": true,
+        "reason": "verified_ir_only",
+        "merge_path": "darm-B2R",
+        "gain": -33
+      },
+      {
+        "candidate": "srad_cuda_1:B22:B23:B27",
+        "valid": true,
+        "reason": "verified_ir_only",
+        "merge_path": "darm-B2R",
+        "gain": -23
+      },
+      {
+        "candidate": "srad_cuda_1:B22:B23:B25",
+        "valid": true,
+        "reason": "verified_ir_only",
+        "merge_path": "darm-B2R",
+        "gain": -35
+      },
+      {
+        "candidate": "srad_cuda_1:B22:B23:B29",
+        "valid": true,
+        "reason": "verified_ir_only",
+        "merge_path": "darm-B2R",
+        "gain": -39
+      },
+      {
+        "candidate": "srad_cuda_1:B24:B25:B27",
+        "valid": true,
+        "reason": "verified_ir_only",
+        "merge_path": "darm-B2R",
+        "gain": -44
+      },
+      {
+        "candidate": "srad_cuda_1:B17:B18:B29",
+        "valid": true,
+        "reason": "verified_ir_only",
+        "merge_path": "darm-B2R",
+        "gain": -38
+      }
+    ]
+  }
+}
