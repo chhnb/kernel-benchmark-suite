@@ -1,0 +1,129 @@
+{
+  "baseline_binary_identical_to_original_darm_comparison": true,
+  "source_commit": "5d82263",
+  "search": {
+    "last_round": 16,
+    "trial_count": 69,
+    "eligible": 0,
+    "max_gain": -4,
+    "result": {
+      "commits": 16,
+      "output_on_stop": "last_committed_parent_or_initial_normalized_state",
+      "policy": "llvm24",
+      "require_parent_gain": true,
+      "semantic_validation": "not_run",
+      "stop": "no_positive_candidate",
+      "trials": 1337
+    }
+  },
+  "validation_and_performance": {
+    "median_us_by_input_order": {
+      "prepared_baseline": [
+        49.60000229,
+        16.0
+      ],
+      "balanced": [
+        27.68000031,
+        18.55999947
+      ],
+      "greedy": [
+        24.63999939,
+        19.03999901
+      ],
+      "original_darm": [
+        32.9600029,
+        18.39999962
+      ]
+    },
+    "batch_medians_us": {
+      "prepared_baseline": [
+        [
+          49.43999863,
+          16.0
+        ],
+        [
+          49.60000229,
+          16.15999985
+        ],
+        [
+          49.60000229,
+          15.8399992
+        ]
+      ],
+      "balanced": [
+        [
+          27.68000031,
+          18.55999947
+        ],
+        [
+          27.68000031,
+          18.55999947
+        ],
+        [
+          27.84000015,
+          18.55999947
+        ]
+      ],
+      "greedy": [
+        [
+          24.63999939,
+          19.03999901
+        ],
+        [
+          24.63999939,
+          19.03999901
+        ],
+        [
+          24.80000114,
+          19.03999901
+        ]
+      ],
+      "original_darm": [
+        [
+          32.9600029,
+          18.23999977
+        ],
+        [
+          32.9600029,
+          18.39999962
+        ],
+        [
+          32.9600029,
+          18.39999962
+        ]
+      ]
+    },
+    "aliases_by_identical_binary": {
+      "prepared_baseline": "prepared_baseline",
+      "balanced": "balanced",
+      "greedy": "greedy",
+      "original_darm": "original_darm"
+    },
+    "decrease_vs_prepared_pct": {
+      "prepared_baseline": [
+        0.0,
+        0.0
+      ],
+      "balanced": [
+        44.19355033864455,
+        -15.999996687500007
+      ],
+      "greedy": [
+        50.32258416857424,
+        -18.999993812499994
+      ],
+      "original_darm": [
+        33.548384318028226,
+        -14.999997624999995
+      ]
+    },
+    "correctness_passed": true
+  },
+  "sha256": {
+    "greedy.ll": "2f9544035c55dba148617c604053296a52957ec752d10bc768d9c921bb5c0ed9",
+    "steps-final/state-7.ll": "c0a19c5bb705b5a20aac2a350d9565086975e2750a889e67b5b119a608962dbb",
+    "balanced-pair/variant.hsaco": "32eb6be2f67baffd81e238aabed491f28a1b95602cd877036fd6ae8c75b6db1c",
+    "greedy-pair/variant.hsaco": "affe64a238c73c36aa5704f46b50becdd2f8d4902b355536fa83745bea098422",
+    "balanced-pair/baseline.hsaco": "014d5b000ac5b06f711d2252751893141a505713b2f43ef2b55909cb452d1eea"
+  }
+}
