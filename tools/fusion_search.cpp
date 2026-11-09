@@ -10,6 +10,7 @@
 #include "llvm/IR/LegacyPassManager.h"
 #include "llvm/Transforms/IPO/PassManagerBuilder.h"
 #include "llvm/Transforms/Utils/Cloning.h"
+#include "llvm/Transforms/Utils/SSAUpdater.h"
 #include "llvm/Transforms/Utils/BasicBlockUtils.h"
 #include "llvm/Support/SHA1.h"
 #include "llvm/Config/llvm-config.h"
@@ -724,6 +725,153 @@ struct AdjacentLeafEntry {
     second->eraseFromParent();return Gate;
   }
 };
+// Move only mandatory, simple-load dependency cones to a dedicated leaf
+// prefix. Acyclic read-only leaves with speculatable calls cannot change the
+// memory state or prevent the original mandatory loads from executing.
+static unsigned hoistLeafLoads(Unit &u, Function &f, BasicBlock *gate) {
+  Analysis a(f);
+  for(auto *b:u.blocks)for(auto &i:*b){
+    if(i.isTerminator()||isa<PHINode>(i))continue;
+    if(auto *ld=dyn_cast<LoadInst>(&i)){if(!ld->isSimple())return 0;continue;}
+    if(i.mayReadOrWriteMemory()||i.mayHaveSideEffects())return 0;
+    if(auto *call=dyn_cast<CallBase>(&i))
+      if(call->isConvergent()||!isSafeToSpeculativelyExecute(call))return 0;
+  }
+  SmallVector<Instruction*,32> ordered;
+  std::set<Instruction*> selected;
+  std::function<bool(Instruction*,SmallVectorImpl<Instruction*>&,std::set<Instruction*>&)> collect;
+  collect=[&](Instruction *i,SmallVectorImpl<Instruction*>&pending,std::set<Instruction*>&seen){
+    if(selected.count(i)||seen.count(i))return true;
+    if(!u.blocks.count(i->getParent()))return a.dt.dominates(i,gate->getTerminator());
+    if(!a.pdt.dominates(i->getParent(),u.entry)||isa<PHINode>(i)||i->isTerminator())return false;
+    auto *ld=dyn_cast<LoadInst>(i);
+    if(ld ? !ld->isSimple() : (isa<CallBase>(i)||i->mayReadOrWriteMemory()||!isSafeToSpeculativelyExecute(i)))return false;
+    for(auto &op:i->operands())if(auto *d=dyn_cast<Instruction>(op))if(!collect(d,pending,seen))return false;
+    seen.insert(i);pending.push_back(i);return true;
+  };
+  for(auto &b:f)if(u.blocks.count(&b)&&a.pdt.dominates(&b,u.entry))for(auto &i:b)if(isa<LoadInst>(i)){
+    SmallVector<Instruction*,16> pending;std::set<Instruction*> seen;
+    if(collect(&i,pending,seen))for(auto *p:pending)if(selected.insert(p).second)ordered.push_back(p);
+  }
+  if(ordered.empty())return 0;
+  auto *prefix=BasicBlock::Create(f.getContext(),"leaf.load.prefix",&f,u.entry);
+  auto *end=BranchInst::Create(u.entry,prefix);
+  auto *branch=cast<BranchInst>(gate->getTerminator());
+  for(unsigned j=0;j<2;++j)if(branch->getSuccessor(j)==u.entry)branch->setSuccessor(j,prefix);
+  for(auto *i:ordered)i->moveBefore(end);
+  u.blocks.insert(prefix);u.entry=prefix;
+  return ordered.size();
+}
+
+// Two mutually exclusive straight-line blocks can share a DARM diamond even
+// when neither postdominates its enclosing leaf. Keep entry proxies and return
+// stubs: only lanes that originally executed an anchor reach its body. SSAUpdater
+// carries path-specific values across the new join; no optional load is hoisted.
+static bool meldExclusiveBlocks(BasicBlock *left,BasicBlock *right,Value *choose,
+                                bool coalesce,unsigned &groups,std::string &why) {
+  auto &f=*left->getParent();
+  auto *lb=dyn_cast<BranchInst>(left->getTerminator());
+  auto *rb=dyn_cast<BranchInst>(right->getTerminator());
+  if(!lb||!rb||!lb->isUnconditional()||!rb->isUnconditional()||left==right){why="non_straight_anchor";return false;}
+  auto reaches=[](BasicBlock *from,BasicBlock *to){
+    std::set<BasicBlock*> seen;SmallVector<BasicBlock*,16> work{from};
+    while(!work.empty()){auto *b=work.pop_back_val();if(b==to)return true;if(!seen.insert(b).second)continue;
+      for(auto *s:successors(b))work.push_back(s);
+    }return false;
+  };
+  if(reaches(left,right)||reaches(right,left)){why="ordered_or_crossing_anchor";return false;}
+  for(auto *b:{left,right}){
+    if(b->hasAddressTaken()){why="address_taken_anchor";return false;}
+    for(auto &i:*b){
+      if(i.mayHaveSideEffects()||i.mayWriteToMemory()||i.getType()->isTokenTy()){
+        why="side_effect_anchor";return false;
+      }
+      if(auto *ld=dyn_cast<LoadInst>(&i))if(!ld->isSimple()){why="side_effect_anchor";return false;}
+      if(auto *call=dyn_cast<CallBase>(&i))if(call->isConvergent()||call->cannotDuplicate()){
+        why="side_effect_anchor";return false;
+      }
+    }
+  }
+  auto &ctx=f.getContext();auto *lexit=lb->getSuccessor(0),*rexit=rb->getSuccessor(0);
+  auto *lbody=SplitBlock(left,left->getFirstNonPHI());
+  auto *rbody=SplitBlock(right,right->getFirstNonPHI());
+  auto *gate=BasicBlock::Create(ctx,"anchor.union",&f,lbody);
+  auto *join=BasicBlock::Create(ctx,"anchor.return",&f,lexit);
+  auto *ltail=BasicBlock::Create(ctx,"anchor.left.return",&f,lexit);
+  auto *rtail=BasicBlock::Create(ctx,"anchor.right.return",&f,rexit);
+  BranchInst::Create(lexit,ltail);BranchInst::Create(rexit,rtail);
+  for(auto &phi:lexit->phis())phi.replaceIncomingBlockWith(lbody,ltail);
+  for(auto &phi:rexit->phis())phi.replaceIncomingBlockWith(rbody,rtail);
+  cast<BranchInst>(left->getTerminator())->setSuccessor(0,gate);
+  cast<BranchInst>(right->getTerminator())->setSuccessor(0,gate);
+  // Reuse the original leaf selector. It dominates all anchors and preserves
+  // the established divergent predicate rather than reconstructing identity
+  // from a new multi-entry PHI. This also avoids redundant selector PHIs.
+  BranchInst::Create(lbody,rbody,choose,gate);
+  cast<BranchInst>(lbody->getTerminator())->setSuccessor(0,join);
+  cast<BranchInst>(rbody->getTerminator())->setSuccessor(0,join);
+  BranchInst::Create(ltail,rtail,choose,join);
+  DominatorTree dt(f);
+  // Record uses before inserting PHIs; otherwise newly created PHI operands
+  // would be visited twice. Undefined inputs occur only on the opposite path.
+  std::vector<std::pair<Instruction*,SmallVector<Use*,8>>> repair;
+  for(auto &b:f)for(auto &i:b){
+    SmallVector<Use*,8> uses;
+    for(auto &use:i.uses())if(isa<Instruction>(use.getUser())&&!dt.dominates(&i,use))uses.push_back(&use);
+    if(!uses.empty())repair.emplace_back(&i,std::move(uses));
+  }
+  for(auto &item:repair){
+    SSAUpdater updater;updater.Initialize(item.first->getType(),"anchor.live");
+    updater.AddAvailableValue(item.first->getParent(),item.first);
+    for(auto *use:item.second)updater.RewriteUse(*use);
+  }
+  if(verifyFunction(f,&errs())){why="anchor_ssa_verifier_failed";return false;}
+  Analysis a(f);RegionAnalyzer ma(gate,a.dt,a.pdt);ma.selectExplicitBlocks(lbody,rbody);
+  RegionMelder melder(ma,true);melder.CoalesceGaps=coalesce;melder.merge(0);groups+=melder.CoalescedGapGroups;
+  if(verifyFunction(f,&errs())){why="anchor_meld_verifier_failed";return false;}
+  return true;
+}
+
+static bool meldLeafPlan(Module &m,const Candidate &c,Unit l,Unit r,BasicBlock *gate,
+                         unsigned &moved,unsigned &anchors,unsigned &groups,std::vector<std::string> &pairs,std::string &why) {
+  auto &f=*m.getFunction(c.function);
+  for(auto *u:{&l,&r})for(auto *b:u->blocks)for(auto &i:*b)
+    if(auto *call=dyn_cast<CallBase>(&i))if(call->isConvergent()||call->cannotDuplicate()){
+      why="leaf_plan_convergence_sensitive_call";return false;
+    }
+  auto *branch=cast<BranchInst>(gate->getTerminator());
+  Value *choose=branch->getCondition();
+  if(branch->getSuccessor(0)!=l.entry)choose=IRBuilder<>(branch).CreateNot(choose,"leaf.plan.choose");
+  WeakTrackingVH selector(choose);
+  moved=hoistLeafLoads(l,f,gate);
+  moved+=hoistLeafLoads(r,f,gate);
+  if(verifyFunction(f,&errs())){why="leaf_load_motion_verifier_failed";return false;}
+  struct Pair {WeakVH left,right;double score;unsigned order;std::string label;};
+  std::vector<Pair> plan;unsigned order=0;
+  for(auto &lb:f)if(l.blocks.count(&lb)&&lb.getSingleSuccessor())
+    for(auto &rb:f)if(r.blocks.count(&rb)&&rb.getSingleSuccessor()){
+      auto count=[](BasicBlock &b){unsigned n=0;for(auto &i:b)if(!isa<PHINode>(i)&&!i.isTerminator())++n;return n;};
+      unsigned n=std::min(count(lb),count(rb));if(!n)continue;
+      double sim=Utils::computeBBSimilarty(&lb,&rb);if(sim<=0)continue;
+      plan.push_back({WeakVH(&lb),WeakVH(&rb),sim*n,order++,name(&lb)+" + "+name(&rb)});
+    }
+  std::stable_sort(plan.begin(),plan.end(),[](const Pair &a,const Pair &b){return a.score>b.score;});
+  std::set<BasicBlock*> used;
+  // No cleanup between anchors: score and clean the whole composite trial.
+  for(auto &p:plan){
+    auto *lb=dyn_cast_or_null<BasicBlock>((Value*)p.left),*rb=dyn_cast_or_null<BasicBlock>((Value*)p.right);
+    if(!lb||!rb||used.count(lb)||used.count(rb))continue;
+    std::string reason;
+    if(!meldExclusiveBlocks(lb,rb,selector,c.coalesceGaps,groups,reason)){
+      if(reason=="ordered_or_crossing_anchor"||reason=="non_straight_anchor"||reason=="address_taken_anchor"||reason=="side_effect_anchor")continue;
+      why=reason;return false;
+    }
+    used.insert(lb);used.insert(rb);++anchors;pairs.push_back(p.label);
+  }
+  if(!anchors){why="no_compatible_multi_anchor";return false;}
+  return true;
+}
+
 Trial tryPair(const Module&parent,const Candidate&c,unsigned version,unsigned level,CleanupMode mode,const LogicalRegionState *logical) {
   auto started=Clock::now();Trial t;t.candidate=c;t.cleanupMode=mode;auto reject=[&](const char*reason){t.reason=reason;t.totalMs=millis(started);return std::move(t);};
   if(c.version!=version)return reject("stale_candidate_version");
@@ -748,7 +896,38 @@ Trial tryPair(const Module&parent,const Candidate&c,unsigned version,unsigned le
       return reject("complete_leaf_entry_not_normalizable");
     auto leftBoundary=boundary(l,*f),rightBoundary=boundary(r,*f);
     auto before=features(*f);
+    auto localBefore=snapshotLocal(*f);
+    std::vector<WeakVH> priorBlocks;for(auto &b:*f)priorBlocks.emplace_back(&b);
     auto *gate=entry.apply();
+    if(c.completeLeafPlan){
+      t.before=before;t.left=leftBoundary;t.right=rightBoundary;
+      t.leftContext=leftBoundary;t.rightContext=rightBoundary;
+      t.mergePath="darm-complete-leaf/multi-anchor";t.planKind="multi-B2B";
+      auto mt=Clock::now();std::string why;
+      if(!meldLeafPlan(*t.raw,c,l,r,gate,t.movedLeafInstructions,t.leafAnchors,t.coalescedGapGroups,t.leafAnchorPairs,why)){
+        t.reason=why;t.totalMs=millis(started);return t;
+      }
+      canonicalPhiOrder(*t.raw,c.function);t.mergeMs=millis(mt);
+      if(verifyModule(*t.raw,&errs()))return reject("raw_verifier_failed");
+      t.afterRaw=features(*f);if(t.afterRaw.loops>t.before.loops)return reject("new_raw_loop");
+      auto rawScope=changedLocal(*f,localBefore);std::set<BasicBlock*> oldBlocks,created;
+      for(auto &h:priorBlocks)if(auto *b=dyn_cast_or_null<BasicBlock>((Value*)h))oldBlocks.insert(b);
+      for(auto &b:*f)if(!oldBlocks.count(&b))created.insert(&b);
+      ValueToValueMapTy map;auto nt=Clock::now();t.normalized=CloneModule(*t.raw,map);
+      std::set<Instruction*> cleanScope;std::set<BasicBlock*> cleanCreated;
+      for(auto *i:rawScope)if(auto *v=dyn_cast_or_null<Instruction>(map.lookup(i)))cleanScope.insert(v);
+      for(auto *b:created)if(auto *v=dyn_cast_or_null<BasicBlock>(map.lookup(b)))cleanCreated.insert(v);
+      map.clear();
+      t.cleanupIterations=(mode==CleanupMode::ScopedCFG||mode==CleanupMode::ScopedCFGTriangles)?cleanupScopedCFG(*t.normalized->getFunction(c.function),cleanScope,cleanCreated,mode==CleanupMode::ScopedCFGTriangles):mode==CleanupMode::ScopedLocal?cleanupScoped(*t.normalized->getFunction(c.function),cleanScope):cleanup(*t.normalized,c.function,level,mode);
+      canonicalPhiOrder(*t.normalized,c.function);t.normalizeMs=millis(nt);
+      if(verifyModule(*t.normalized,&errs()))return reject("normalized_verifier_failed");
+      t.after=features(*t.normalized->getFunction(c.function));if(t.after.loops>t.before.loops)return reject("new_normalized_loop");
+      for(auto &g:parent)if(g.getName()!=c.function){
+        auto *raw=t.raw->getFunction(g.getName()),*after=t.normalized->getFunction(g.getName());
+        if(!raw||!after||text(g)!=text(*raw)||text(g)!=text(*after))return reject("other_function_changed");
+      }
+      t.valid=true;t.reason="verified_ir_only";t.totalMs=millis(started);return t;
+    }
     if(verifyModule(*t.raw,&errs()))return reject("complete_leaf_gate_verifier_failed");
     Analysis ga(*f);Inventory gi(*f,ga);
     // Use native DARM alignment/replication within this isolated diamond.
@@ -988,7 +1167,7 @@ Result greedy(const Module&input,const std::string&function,const Options&o,cons
     if(candidates.size()>o.maxTrials-result.trials){result.stop="trial_budget_before_complete_round";return result;}
     const auto round=makeRound(*result.module,function,version,o.optLevel,o.cleanupMode);if(observer)observer->round(round);
     Trial best;ScoreResult bestResult;double bestScore=o.threshold;bool anyScored=false;
-    for(auto&candidate:candidates){candidate.localCopysign=o.localCopysign;candidate.localUnion=o.localUnion;candidate.hybrid=o.hybrid;candidate.coalesceGaps=o.coalesceGaps;auto t=tryPair(*result.module,candidate,version,o.optLevel,o.cleanupMode,logical.get());++result.trials;
+    for(auto&candidate:candidates){candidate.localCopysign=o.localCopysign;candidate.localUnion=o.localUnion;candidate.hybrid=o.hybrid;candidate.coalesceGaps=o.coalesceGaps;candidate.completeLeafPlan=o.completeLeafPlan;auto t=tryPair(*result.module,candidate,version,o.optLevel,o.cleanupMode,logical.get());++result.trials;
       auto score=evaluateTrial(*result.module,t,round,scorer);bool accept=eligible(t,score,o);anyScored|=score.status==ScoreStatus::Scored;
       if(observer)observer->trial(t,round,score,accept);
       if(accept&&score.total>bestScore){bestScore=score.total;bestResult=std::move(score);best=std::move(t);}

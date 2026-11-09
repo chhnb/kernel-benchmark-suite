@@ -1,0 +1,208 @@
+{
+  "status": "experimental_opt_in; original_runner_fault_unresolved",
+  "defaults_changed": false,
+  "scoring_weights_changed": false,
+  "full_greedy_search_run": false,
+  "static": {
+    "old": {
+      "valid": true,
+      "eligible": true,
+      "moved_leaf_instructions": 0,
+      "leaf_anchors": 0,
+      "leaf_anchor_pairs": [],
+      "merge_path": "darm-complete-leaf/darm-B2B",
+      "after": {
+        "blocks": 59,
+        "conditional_branches": 32,
+        "darm_static_cost": 9479,
+        "instructions": 796,
+        "loops": 0,
+        "phis": 18,
+        "selects": 42
+      },
+      "tti_cost": 1913,
+      "tti_gain": 2,
+      "opcodes": {
+        "add": 10,
+        "and": 2,
+        "bitcast": 5,
+        "br": 58,
+        "call": 42,
+        "extractvalue": 16,
+        "fadd": 81,
+        "fcmp": 46,
+        "fdiv": 21,
+        "fmul": 212,
+        "fneg": 25,
+        "fsub": 78,
+        "getelementptr": 45,
+        "icmp": 14,
+        "load": 44,
+        "mul": 1,
+        "or": 5,
+        "phi": 18,
+        "ret": 1,
+        "sdiv": 1,
+        "select": 42,
+        "sext": 10,
+        "shl": 8,
+        "srem": 1,
+        "store": 8,
+        "zext": 2
+      }
+    },
+    "multi": {
+      "valid": true,
+      "eligible": true,
+      "moved_leaf_instructions": 22,
+      "leaf_anchors": 4,
+      "leaf_anchor_pairs": [
+        "%if.then7.i198 + %if.then7.i",
+        "%if.then17.i270 + %if.then17.i",
+        "%leaf.load.prefix + %leaf.load.prefix1",
+        "%if.end27.i280 + %if.end27.i"
+      ],
+      "merge_path": "darm-complete-leaf/multi-anchor",
+      "after": {
+        "blocks": 67,
+        "conditional_branches": 36,
+        "darm_static_cost": 8141,
+        "instructions": 764,
+        "loops": 0,
+        "phis": 44,
+        "selects": 39
+      },
+      "tti_cost": 1823,
+      "tti_gain": 92,
+      "opcodes": {
+        "add": 10,
+        "and": 2,
+        "bitcast": 5,
+        "br": 66,
+        "call": 35,
+        "extractvalue": 16,
+        "fadd": 75,
+        "fcmp": 41,
+        "fdiv": 18,
+        "fmul": 196,
+        "fneg": 20,
+        "fsub": 77,
+        "getelementptr": 37,
+        "icmp": 14,
+        "load": 33,
+        "mul": 1,
+        "or": 4,
+        "phi": 44,
+        "ret": 1,
+        "sdiv": 1,
+        "select": 39,
+        "sext": 10,
+        "shl": 8,
+        "srem": 1,
+        "store": 8,
+        "zext": 2
+      }
+    }
+  },
+  "gpu": {
+    "median_us": {
+      "baseline": {
+        "1": 1808.642029762268,
+        "24": 1808.9619874954224
+      },
+      "old": {
+        "1": 1738.402009010315,
+        "24": 1738.7219667434692
+      },
+      "multi": {
+        "1": 1720.8019495010376,
+        "24": 1721.9209671020508
+      }
+    },
+    "batch_medians_us": {
+      "baseline": {
+        "1": [
+          1806.4019680023193,
+          1808.642029762268,
+          1810.562014579773
+        ],
+        "24": [
+          1807.6820373535156,
+          1808.9619874954224,
+          1810.562014579773
+        ]
+      },
+      "old": {
+        "1": [
+          1736.8019819259644,
+          1738.402009010315,
+          1740.8009767532349
+        ],
+        "24": [
+          1737.1220588684082,
+          1738.7219667434692,
+          1739.8409843444824
+        ]
+      },
+      "multi": {
+        "1": [
+          1716.6420221328735,
+          1721.2820053100586,
+          1720.8019495010376
+        ],
+        "24": [
+          1720.6419706344604,
+          1721.9220399856567,
+          1721.9209671020508
+        ]
+      }
+    },
+    "decrease_vs_baseline_pct": {
+      "baseline": {
+        "1": 0.0,
+        "24": 0.0
+      },
+      "old": {
+        "1": 3.8835778222617967,
+        "24": 3.8828909196264028
+      },
+      "multi": {
+        "1": 4.856686885285777,
+        "24": 4.811655579003249
+      }
+    },
+    "full_output_checks_passed": true,
+    "protocol": "one frozen fixture per process; full kernel; event timing; no retry",
+    "binary_sha256": {
+      "baseline": "c89daf13350e9d0cdc703cb0de8c86a23b01dc7ec1d2aca3b84cc74f5e440085",
+      "old": "0066c670f77d14c31081f86251aad86b5267db1358324e8be71261be8b9fa906",
+      "multi": "17fc345e0db29187f08eebf9a23f8dadc12d3bd0c9ddbab937e2e34cd0554bf5"
+    }
+  },
+  "cpu_tests": {
+    "new_fixture_comparisons": 644,
+    "complete_leaf_comparisons": 12006,
+    "scoped_triangle_passed": true,
+    "coalesce_gap_passed": true,
+    "convergent_rejected": true,
+    "parent_immutable_and_other_function_unchanged": true,
+    "cpu_emulated_hypersonic_point_comparisons": 30000
+  },
+  "first_failure": {
+    "path": "/home/chh/kernel-benchmark-suite/experiments/hypersonic-multi-anchor-20261109-v1/measure",
+    "stage": "after step1 18 checks, before step24 first launch",
+    "automatic_retry": false,
+    "root_cause": "unresolved"
+  },
+  "diagnostic_trace": {
+    "path": "/home/chh/kernel-benchmark-suite/experiments/hypersonic-multi-anchor-20261109-v1/gpu-diagnostic/trace",
+    "passed": true,
+    "both_inputs": true,
+    "checks_per_input": 18
+  },
+  "selector_refinement": {
+    "first_static_gain": 89,
+    "current_static_gain": 92,
+    "gpu_binary_identical": true
+  }
+}

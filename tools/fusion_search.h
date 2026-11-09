@@ -20,6 +20,7 @@ struct Candidate {
   bool localUnion=false;
   bool hybrid=false;
   bool coalesceGaps=false;
+  bool completeLeafPlan=false;
   std::string key() const { return function+":"+split+":"+left+":"+right; }
 };
 struct OperationKey {
@@ -93,6 +94,8 @@ struct Trial {
   bool originalProfitable=false;
   unsigned cleanupIterations=0;
   unsigned coalescedGapGroups=0;
+  unsigned movedLeafInstructions=0, leafAnchors=0;
+  std::vector<std::string> leafAnchorPairs;
   std::string reason;
   std::string mergePath, localRejectReason;
   std::string planKind, matchedLeft, matchedRight;
@@ -128,6 +131,7 @@ struct Options {
   bool localUnion=false;
   bool hybrid=false;
   bool coalesceGaps=false;
+  bool completeLeafPlan=false;
 };
 struct Observer {
   virtual ~Observer() = default;
