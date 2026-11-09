@@ -1,0 +1,4 @@
+step	left_group	right_group	candidate	gain	before_cost	after_cost
+1	L4	L5	evaluate:B96:B97:B99	-239	6402	6641
+2	L6	L7	evaluate:B98:B99:B101	-239	6641	6880
+3	L4,L5	L6,L7	evaluate:B96:G96:G98	-347	6880	7227

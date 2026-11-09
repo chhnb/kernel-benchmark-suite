@@ -394,12 +394,32 @@ unsigned cleanup(Module &m,const std::string &function,unsigned level,CleanupMod
 }
 struct Unit {BasicBlock*entry;BasicBlock*exit;Region*region;std::set<BasicBlock*>blocks;};
 struct Inventory {
+  std::vector<std::unique_ptr<Region>> logicalRegions;
   std::map<std::string,BasicBlock*> blocks;
   std::map<BasicBlock*,std::string> ids;
   std::map<std::string,Unit> units;
   Inventory(Function&f,Analysis&a) {
     unsigned n=0;for(auto&b:f){auto id="B"+std::to_string(n++);blocks[id]=&b;ids[&b]=id;units[id]={&b,b.getSingleSuccessor(),nullptr,{&b}};}
     n=0;std::function<void(Region*)> visit=[&](Region*r){std::set<BasicBlock*>bs;for(auto*b:r->blocks())bs.insert(b);units["R"+std::to_string(n++)]={r->getEntry(),r->getExit(),r,bs};for(auto&c:*r)visit(c.get());};visit(a.regions.getTopLevelRegion());
+    // A logical fusion arm includes its non-canonical trailing computation,
+    // not merely the canonical RegionInfo prefix ending at an internal join.
+    for(auto &b:f){
+      auto *br=dyn_cast<BranchInst>(b.getTerminator());
+      if(!br||!br->isConditional()||!br->getMetadata("fusion.logical.arm"))continue;
+      auto *pn=a.pdt.getNode(&b);
+      if(!pn||!pn->getIDom()||!pn->getIDom()->getBlock()||a.loops.getLoopFor(&b))continue;
+      auto *entry=br->getSuccessor(0),*exit=pn->getIDom()->getBlock();
+      if(entry==exit||entry->getSinglePredecessor()!=&b)continue;
+      std::set<BasicBlock*> bs;std::vector<BasicBlock*> todo{entry};bool safe=true;
+      while(!todo.empty()){
+        auto *bb=todo.back();todo.pop_back();if(bb==exit||!bs.insert(bb).second)continue;
+        if(!a.dt.dominates(entry,bb)||a.loops.getLoopFor(bb)){safe=false;break;}
+        for(auto *succ:successors(bb))todo.push_back(succ);
+      }
+      if(!safe||bs.size()<2)continue;
+      auto reg=std::make_unique<Region>(entry,exit,&a.regions,&a.dt,a.regions.getTopLevelRegion());
+      units["G"+ids.at(&b).substr(1)]={entry,exit,reg.get(),bs};logicalRegions.push_back(std::move(reg));
+    }
   }
 };
 static std::set<BasicBlock*> reachable(BasicBlock*start,BasicBlock*join) {
@@ -549,6 +569,62 @@ std::vector<Candidate> enumerateAdjacent(Function&f,unsigned version) {
   auto state=LogicalRegionState::initialize(f);state->version=version;
   return state->filter(f,enumerate(f,version));
 }
+// Adjacent logical leaves need not be opposite immediate branch successors.
+// Normalize just their entry chain into a diamond; never clone the remaining
+// else-if suffix. Validation is separate from mutation for rejected trials.
+struct AdjacentLeafEntry {
+  BasicBlock *first=nullptr,*second=nullptr,*left=nullptr,*right=nullptr,*tail=nullptr;
+  BranchInst *a=nullptr,*b=nullptr;
+  bool hitA=false,hitB=false;
+  bool prepare(BasicBlock *L,BasicBlock *R,DominatorTree &DT,LoopInfo &LI,bool regions=false) {
+    auto *P=L->getSinglePredecessor(),*Q=R->getSinglePredecessor();
+    if(!P||!Q||P==Q)return false;
+    if(P->getSinglePredecessor()==Q){std::swap(L,R);std::swap(P,Q);}
+    auto *A=dyn_cast<BranchInst>(P->getTerminator()),*B=dyn_cast<BranchInst>(Q->getTerminator());
+    if(!A||!B||!A->isConditional()||!B->isConditional()||Q->getSinglePredecessor()!=P)return false;
+    if(LI.getLoopFor(P)||LI.getLoopFor(Q)||Q->hasAddressTaken())return false;
+    bool HA=A->getSuccessor(0)==L,HB=B->getSuccessor(0)==R;
+    if(A->getSuccessor(HA?0:1)!=L||A->getSuccessor(HA?1:0)!=Q||B->getSuccessor(HB?0:1)!=R)return false;
+    auto *Tail=B->getSuccessor(HB?1:0);
+    if(Tail==P||Tail==Q||Tail==L||Tail==R)return false;
+    auto *LB=dyn_cast<BranchInst>(L->getTerminator()),*RB=dyn_cast<BranchInst>(R->getTerminator());
+    if(!regions&&(!LB||!RB||!LB->isUnconditional()||!RB->isUnconditional()||LB->getSuccessor(0)!=RB->getSuccessor(0)))return false;
+    if(!L->phis().empty()||!R->phis().empty()||L->hasAddressTaken()||R->hasAddressTaken())return false;
+    // Only speculate safe, memory-free entry expressions. Operands must
+    // already dominate P or be earlier instructions of this same entry.
+    for(auto &I:*Q){if(I.isTerminator())continue;
+      if(isa<PHINode>(I)||isa<CallBase>(I)||I.mayReadOrWriteMemory()||I.mayHaveSideEffects()||!isSafeToSpeculativelyExecute(&I))return false;
+      for(auto &O:I.operands())if(auto *D=dyn_cast<Instruction>(O)){
+        if(D->getParent()==Q){if(!D->comesBefore(&I))return false;}
+        else if(!DT.dominates(D,A))return false;
+      }
+    }
+    if(auto *C=dyn_cast<Instruction>(B->getCondition()))if(C->getParent()!=Q&&!DT.dominates(C,A))return false;
+    first=P;second=Q;left=L;right=R;tail=Tail;a=A;b=B;hitA=HA;hitB=HB;return true;
+  }
+  BasicBlock *apply() {
+    auto *Gate=BasicBlock::Create(first->getContext(),"leaf.union",first->getParent(),left);
+    IRBuilder<> Build(a);
+    // select, rather than or, masks poison on the originally untaken second
+    // test. Its value was not observed when the first leaf was selected.
+    auto *Choose=hitA?a->getCondition():Build.CreateNot(a->getCondition(),"leaf.choose");
+    for(auto I=second->begin();!I->isTerminator();){auto *Move=&*I++;Move->moveBefore(a);}
+    auto *Other=hitB?b->getCondition():Build.CreateNot(b->getCondition(),"leaf.other");
+    auto *Enter=Build.CreateSelect(Choose,Build.getTrue(),Other,"leaf.enter");
+    BranchInst::Create(left,right,Choose,Gate);
+    for(auto &Phi:tail->phis())Phi.replaceIncomingBlockWith(second,first);
+    auto *UnionBranch=BranchInst::Create(Gate,tail,Enter,a);
+    SmallVector<Metadata*,8> Members;
+    for(auto pair:{std::make_pair(a,left),std::make_pair(b,right)}){
+      auto *Old=pair.first->getSuccessor(0)==pair.second?pair.first->getMetadata("fusion.logical.arm"):nullptr;
+      if(Old)for(auto &M:Old->operands())Members.push_back(M.get());
+      else Members.push_back(MDString::get(first->getContext(),pair.second->hasName()?pair.second->getName().str():name(pair.second)));
+    }
+    UnionBranch->setMetadata("fusion.logical.arm",MDNode::get(first->getContext(),Members));
+    a->eraseFromParent();
+    second->eraseFromParent();return Gate;
+  }
+};
 Trial tryPair(const Module&parent,const Candidate&c,unsigned version,unsigned level,CleanupMode mode,const LogicalRegionState *logical) {
   auto started=Clock::now();Trial t;t.candidate=c;t.cleanupMode=mode;auto reject=[&](const char*reason){t.reason=reason;t.totalMs=millis(started);return std::move(t);};
   if(c.version!=version)return reject("stale_candidate_version");
@@ -623,7 +699,9 @@ Trial tryPair(const Module&parent,const Candidate&c,unsigned version,unsigned le
         &&leftLocal.root->getRawSubclassOptionalData()==rightLocal.root->getRawSubclassOptionalData();
     }
   }
-  t.mergePath=useLocal?"local-compute":"darm-"+t.planKind;
+  AdjacentLeafEntry leafEntry;
+  bool directLeaves=c.hybrid&&!useLocal&&bool(l.region)==bool(r.region)&&l.exit&&l.exit==r.exit&&leafEntry.prepare(l.entry,r.entry,a.dt,a.loops,bool(l.region));
+  t.mergePath=directLeaves?(l.region?"darm-adjacent-R2R":"darm-adjacent-B2B"):useLocal?"local-compute":"darm-"+t.planKind;
   t.originalSimilarity=ma.explicitSimilarity();t.originalProfitable=ma.isRegionMatchProfitable(0);
   auto ft=Clock::now();t.before=features(*f);t.featuresMs+=millis(ft);t.left=boundary(l,*f);t.right=boundary(r,*f);t.replication=ma.requireRegionReplication();
   if(t.replication&&!l.region){
@@ -636,7 +714,34 @@ Trial tryPair(const Module&parent,const Candidate&c,unsigned version,unsigned le
   bool scoped=mode==CleanupMode::ScopedLocal||mode==CleanupMode::ScopedCFG;
   auto localBefore=scoped?snapshotLocal(*f):std::vector<LocalSnapshot>{};
   std::vector<WeakVH> priorBlocks; if(mode==CleanupMode::ScopedCFG)for(auto &b:*f)priorBlocks.emplace_back(&b);
-  auto mt=Clock::now();RegionMelder melder(ma,true);if(t.logicalState)melder.onValueMapping=[&](const ValueToValueMapTy &m){t.logicalState->transfer(m);};if(useLocal){
+  auto mt=Clock::now();
+  std::unique_ptr<Analysis> leafAnalysis;
+  std::unique_ptr<RegionAnalyzer> leafAnalyzer;
+  std::unique_ptr<Region> leftLogicalRegion,rightLogicalRegion;
+  if(directLeaves){
+    auto *gate=leafEntry.apply();
+    BasicBlock *leftExit=l.exit,*rightExit=r.exit;
+    if(l.region){
+      auto separateExit=[&](const std::set<BasicBlock*> &blocks,const char *suffix){
+        SmallVector<BasicBlock*,16> preds;
+        for(auto *pred:predecessors(l.exit))if(blocks.count(pred))preds.push_back(pred);
+        return SplitBlockPredecessors(l.exit,preds,suffix);
+      };
+      bool sameOrder=leafEntry.left==l.entry;
+      leftExit=separateExit(sameOrder?l.blocks:r.blocks,".leaf.left.exit");
+      rightExit=separateExit(sameOrder?r.blocks:l.blocks,".leaf.right.exit");
+    }
+    leafAnalysis=std::make_unique<Analysis>(*f);
+    leafAnalyzer=std::make_unique<RegionAnalyzer>(gate,leafAnalysis->dt,leafAnalysis->pdt);
+    if(l.region){
+      leftLogicalRegion=std::make_unique<Region>(leafEntry.left,leftExit,&leafAnalysis->regions,&leafAnalysis->dt,leafAnalysis->regions.getTopLevelRegion());
+      rightLogicalRegion=std::make_unique<Region>(leafEntry.right,rightExit,&leafAnalysis->regions,&leafAnalysis->dt,leafAnalysis->regions.getTopLevelRegion());
+      if(!leafAnalyzer->selectExplicitRegions(leftLogicalRegion.get(),rightLogicalRegion.get()))return reject("adjacent_region_reconstruction_failed");
+    }else leafAnalyzer->selectExplicitBlocks(leafEntry.left,leafEntry.right);
+    t.planKind=l.region?"R2R":"B2B";t.replication=false;
+    t.leftContext=t.left;t.rightContext=t.right;
+  }
+  RegionMelder melder(directLeaves?*leafAnalyzer:ma,true);if(t.logicalState)melder.onValueMapping=[&](const ValueToValueMapTy &m){t.logicalState->transfer(m);};if(useLocal){
     if(l.region||r.region)return reject("local_requires_basic_blocks");
     std::string why;
     if(!fuseLocalComputations(l.entry,r.entry,melder.onValueMapping,why,c.localUnion||c.hybrid)){t.reason=why;t.totalMs=millis(started);return t;}
