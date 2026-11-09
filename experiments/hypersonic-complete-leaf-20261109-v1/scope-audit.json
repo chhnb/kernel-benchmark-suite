@@ -1,0 +1,7 @@
+{
+  "scope": "L3 instruction text, normalize local unnamed SSA and TBAA metadata indices only",
+  "roles": {
+    "L0-L1": true,
+    "L1-L2": true
+  }
+}

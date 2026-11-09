@@ -1,0 +1,521 @@
+[
+  {
+    "role": "baseline",
+    "command": [
+      "/home/chh/kernel-benchmark-suite/bench",
+      "hypersonic",
+      "validate",
+      "--kernel",
+      "/home/chh/kernel-benchmark-suite/experiments/hypersonic-complete-leaf-20261109-v1/L0-L1-pair/baseline.hsaco",
+      "--out",
+      "/home/chh/kernel-benchmark-suite/experiments/hypersonic-complete-leaf-20261109-v1/validation/baseline",
+      "--warmup",
+      "3",
+      "--repeat",
+      "15"
+    ],
+    "binary_sha256": "c89daf13350e9d0cdc703cb0de8c86a23b01dc7ec1d2aca3b84cc74f5e440085",
+    "exit": 0,
+    "passed": true,
+    "input_snapshot": {
+      "/home/chh/kernel-benchmark-suite/cases/hypersonic/input/hypersonic-1/cfg.bin": [
+        96,
+        1793802985627067800
+      ],
+      "/home/chh/kernel-benchmark-suite/cases/hypersonic/input/hypersonic-1/checks.jsonl": [
+        2250,
+        1793803003755587570
+      ],
+      "/home/chh/kernel-benchmark-suite/cases/hypersonic/input/hypersonic-1/input0.bin": [
+        67108864,
+        1793802985691069637
+      ],
+      "/home/chh/kernel-benchmark-suite/cases/hypersonic/input/hypersonic-1/input1.bin": [
+        67108864,
+        1793802986779100839
+      ],
+      "/home/chh/kernel-benchmark-suite/cases/hypersonic/input/hypersonic-1/input10.bin": [
+        67108864,
+        1793802986779100839
+      ],
+      "/home/chh/kernel-benchmark-suite/cases/hypersonic/input/hypersonic-1/input11.bin": [
+        67108864,
+        1793802986399089941
+      ],
+      "/home/chh/kernel-benchmark-suite/cases/hypersonic/input/hypersonic-1/input12.bin": [
+        67108864,
+        1793802986031079387
+      ],
+      "/home/chh/kernel-benchmark-suite/cases/hypersonic/input/hypersonic-1/input2.bin": [
+        67108864,
+        1793802986399089941
+      ],
+      "/home/chh/kernel-benchmark-suite/cases/hypersonic/input/hypersonic-1/input3.bin": [
+        67108864,
+        1793802986031079387
+      ],
+      "/home/chh/kernel-benchmark-suite/cases/hypersonic/input/hypersonic-1/input4.bin": [
+        8388608,
+        1793802986107081567
+      ],
+      "/home/chh/kernel-benchmark-suite/cases/hypersonic/input/hypersonic-1/input5.bin": [
+        67108864,
+        1793802985691069637
+      ],
+      "/home/chh/kernel-benchmark-suite/cases/hypersonic/input/hypersonic-1/input6.bin": [
+        67108864,
+        1793802986779100839
+      ],
+      "/home/chh/kernel-benchmark-suite/cases/hypersonic/input/hypersonic-1/input7.bin": [
+        67108864,
+        1793802986399089941
+      ],
+      "/home/chh/kernel-benchmark-suite/cases/hypersonic/input/hypersonic-1/input8.bin": [
+        67108864,
+        1793802986031079387
+      ],
+      "/home/chh/kernel-benchmark-suite/cases/hypersonic/input/hypersonic-1/input9.bin": [
+        67108864,
+        1793802985691069637
+      ],
+      "/home/chh/kernel-benchmark-suite/cases/hypersonic/input/hypersonic-1/reference0.bin": [
+        67117056,
+        1793802987175112196
+      ],
+      "/home/chh/kernel-benchmark-suite/cases/hypersonic/input/hypersonic-1/reference1.bin": [
+        67117056,
+        1793802987303115867
+      ],
+      "/home/chh/kernel-benchmark-suite/cases/hypersonic/input/hypersonic-1/reference2.bin": [
+        67117056,
+        1793802987431119537
+      ],
+      "/home/chh/kernel-benchmark-suite/cases/hypersonic/input/hypersonic-1/reference3.bin": [
+        67117056,
+        1793802987559123208
+      ],
+      "/home/chh/kernel-benchmark-suite/cases/hypersonic/input/hypersonic-24/cfg.bin": [
+        96,
+        1793803004267602245
+      ],
+      "/home/chh/kernel-benchmark-suite/cases/hypersonic/input/hypersonic-24/checks.jsonl": [
+        2271,
+        1793803020504067542
+      ],
+      "/home/chh/kernel-benchmark-suite/cases/hypersonic/input/hypersonic-24/input0.bin": [
+        67108864,
+        1793803004303603275
+      ],
+      "/home/chh/kernel-benchmark-suite/cases/hypersonic/input/hypersonic-24/input1.bin": [
+        67108864,
+        1793803004411606373
+      ],
+      "/home/chh/kernel-benchmark-suite/cases/hypersonic/input/hypersonic-24/input10.bin": [
+        67108864,
+        1793803005379634121
+      ],
+      "/home/chh/kernel-benchmark-suite/cases/hypersonic/input/hypersonic-24/input11.bin": [
+        67108864,
+        1793803005487637216
+      ],
+      "/home/chh/kernel-benchmark-suite/cases/hypersonic/input/hypersonic-24/input12.bin": [
+        67108864,
+        1793803005611640771
+      ],
+      "/home/chh/kernel-benchmark-suite/cases/hypersonic/input/hypersonic-24/input2.bin": [
+        67108864,
+        1793803004519609468
+      ],
+      "/home/chh/kernel-benchmark-suite/cases/hypersonic/input/hypersonic-24/input3.bin": [
+        67108864,
+        1793803004663613597
+      ],
+      "/home/chh/kernel-benchmark-suite/cases/hypersonic/input/hypersonic-24/input4.bin": [
+        8388608,
+        1793802986107081567
+      ],
+      "/home/chh/kernel-benchmark-suite/cases/hypersonic/input/hypersonic-24/input5.bin": [
+        67108864,
+        1793803004799617493
+      ],
+      "/home/chh/kernel-benchmark-suite/cases/hypersonic/input/hypersonic-24/input6.bin": [
+        67108864,
+        1793803004935621393
+      ],
+      "/home/chh/kernel-benchmark-suite/cases/hypersonic/input/hypersonic-24/input7.bin": [
+        67108864,
+        1793803005043624488
+      ],
+      "/home/chh/kernel-benchmark-suite/cases/hypersonic/input/hypersonic-24/input8.bin": [
+        67108864,
+        1793803005155627700
+      ],
+      "/home/chh/kernel-benchmark-suite/cases/hypersonic/input/hypersonic-24/input9.bin": [
+        67108864,
+        1793803005267630908
+      ],
+      "/home/chh/kernel-benchmark-suite/cases/hypersonic/input/hypersonic-24/reference0.bin": [
+        67117056,
+        1793803005779645584
+      ],
+      "/home/chh/kernel-benchmark-suite/cases/hypersonic/input/hypersonic-24/reference1.bin": [
+        67117056,
+        1793803005907649255
+      ],
+      "/home/chh/kernel-benchmark-suite/cases/hypersonic/input/hypersonic-24/reference2.bin": [
+        67117056,
+        1793803006035652924
+      ],
+      "/home/chh/kernel-benchmark-suite/cases/hypersonic/input/hypersonic-24/reference3.bin": [
+        67117056,
+        1793803006163656591
+      ]
+    }
+  },
+  {
+    "role": "L0-L1",
+    "command": [
+      "/home/chh/kernel-benchmark-suite/bench",
+      "hypersonic",
+      "validate",
+      "--kernel",
+      "/home/chh/kernel-benchmark-suite/experiments/hypersonic-complete-leaf-20261109-v1/L0-L1-pair/variant.hsaco",
+      "--out",
+      "/home/chh/kernel-benchmark-suite/experiments/hypersonic-complete-leaf-20261109-v1/validation/L0-L1",
+      "--warmup",
+      "3",
+      "--repeat",
+      "15"
+    ],
+    "binary_sha256": "5b1b2ed049658bddabf1c476386d81a7c67ca71361cf5fed4f7ff93f2ef558f4",
+    "exit": 0,
+    "passed": true,
+    "input_snapshot": {
+      "/home/chh/kernel-benchmark-suite/cases/hypersonic/input/hypersonic-1/cfg.bin": [
+        96,
+        1793802985627067800
+      ],
+      "/home/chh/kernel-benchmark-suite/cases/hypersonic/input/hypersonic-1/checks.jsonl": [
+        2250,
+        1793803003755587570
+      ],
+      "/home/chh/kernel-benchmark-suite/cases/hypersonic/input/hypersonic-1/input0.bin": [
+        67108864,
+        1793802985691069637
+      ],
+      "/home/chh/kernel-benchmark-suite/cases/hypersonic/input/hypersonic-1/input1.bin": [
+        67108864,
+        1793802986779100839
+      ],
+      "/home/chh/kernel-benchmark-suite/cases/hypersonic/input/hypersonic-1/input10.bin": [
+        67108864,
+        1793802986779100839
+      ],
+      "/home/chh/kernel-benchmark-suite/cases/hypersonic/input/hypersonic-1/input11.bin": [
+        67108864,
+        1793802986399089941
+      ],
+      "/home/chh/kernel-benchmark-suite/cases/hypersonic/input/hypersonic-1/input12.bin": [
+        67108864,
+        1793802986031079387
+      ],
+      "/home/chh/kernel-benchmark-suite/cases/hypersonic/input/hypersonic-1/input2.bin": [
+        67108864,
+        1793802986399089941
+      ],
+      "/home/chh/kernel-benchmark-suite/cases/hypersonic/input/hypersonic-1/input3.bin": [
+        67108864,
+        1793802986031079387
+      ],
+      "/home/chh/kernel-benchmark-suite/cases/hypersonic/input/hypersonic-1/input4.bin": [
+        8388608,
+        1793802986107081567
+      ],
+      "/home/chh/kernel-benchmark-suite/cases/hypersonic/input/hypersonic-1/input5.bin": [
+        67108864,
+        1793802985691069637
+      ],
+      "/home/chh/kernel-benchmark-suite/cases/hypersonic/input/hypersonic-1/input6.bin": [
+        67108864,
+        1793802986779100839
+      ],
+      "/home/chh/kernel-benchmark-suite/cases/hypersonic/input/hypersonic-1/input7.bin": [
+        67108864,
+        1793802986399089941
+      ],
+      "/home/chh/kernel-benchmark-suite/cases/hypersonic/input/hypersonic-1/input8.bin": [
+        67108864,
+        1793802986031079387
+      ],
+      "/home/chh/kernel-benchmark-suite/cases/hypersonic/input/hypersonic-1/input9.bin": [
+        67108864,
+        1793802985691069637
+      ],
+      "/home/chh/kernel-benchmark-suite/cases/hypersonic/input/hypersonic-1/reference0.bin": [
+        67117056,
+        1793802987175112196
+      ],
+      "/home/chh/kernel-benchmark-suite/cases/hypersonic/input/hypersonic-1/reference1.bin": [
+        67117056,
+        1793802987303115867
+      ],
+      "/home/chh/kernel-benchmark-suite/cases/hypersonic/input/hypersonic-1/reference2.bin": [
+        67117056,
+        1793802987431119537
+      ],
+      "/home/chh/kernel-benchmark-suite/cases/hypersonic/input/hypersonic-1/reference3.bin": [
+        67117056,
+        1793802987559123208
+      ],
+      "/home/chh/kernel-benchmark-suite/cases/hypersonic/input/hypersonic-24/cfg.bin": [
+        96,
+        1793803004267602245
+      ],
+      "/home/chh/kernel-benchmark-suite/cases/hypersonic/input/hypersonic-24/checks.jsonl": [
+        2271,
+        1793803020504067542
+      ],
+      "/home/chh/kernel-benchmark-suite/cases/hypersonic/input/hypersonic-24/input0.bin": [
+        67108864,
+        1793803004303603275
+      ],
+      "/home/chh/kernel-benchmark-suite/cases/hypersonic/input/hypersonic-24/input1.bin": [
+        67108864,
+        1793803004411606373
+      ],
+      "/home/chh/kernel-benchmark-suite/cases/hypersonic/input/hypersonic-24/input10.bin": [
+        67108864,
+        1793803005379634121
+      ],
+      "/home/chh/kernel-benchmark-suite/cases/hypersonic/input/hypersonic-24/input11.bin": [
+        67108864,
+        1793803005487637216
+      ],
+      "/home/chh/kernel-benchmark-suite/cases/hypersonic/input/hypersonic-24/input12.bin": [
+        67108864,
+        1793803005611640771
+      ],
+      "/home/chh/kernel-benchmark-suite/cases/hypersonic/input/hypersonic-24/input2.bin": [
+        67108864,
+        1793803004519609468
+      ],
+      "/home/chh/kernel-benchmark-suite/cases/hypersonic/input/hypersonic-24/input3.bin": [
+        67108864,
+        1793803004663613597
+      ],
+      "/home/chh/kernel-benchmark-suite/cases/hypersonic/input/hypersonic-24/input4.bin": [
+        8388608,
+        1793802986107081567
+      ],
+      "/home/chh/kernel-benchmark-suite/cases/hypersonic/input/hypersonic-24/input5.bin": [
+        67108864,
+        1793803004799617493
+      ],
+      "/home/chh/kernel-benchmark-suite/cases/hypersonic/input/hypersonic-24/input6.bin": [
+        67108864,
+        1793803004935621393
+      ],
+      "/home/chh/kernel-benchmark-suite/cases/hypersonic/input/hypersonic-24/input7.bin": [
+        67108864,
+        1793803005043624488
+      ],
+      "/home/chh/kernel-benchmark-suite/cases/hypersonic/input/hypersonic-24/input8.bin": [
+        67108864,
+        1793803005155627700
+      ],
+      "/home/chh/kernel-benchmark-suite/cases/hypersonic/input/hypersonic-24/input9.bin": [
+        67108864,
+        1793803005267630908
+      ],
+      "/home/chh/kernel-benchmark-suite/cases/hypersonic/input/hypersonic-24/reference0.bin": [
+        67117056,
+        1793803005779645584
+      ],
+      "/home/chh/kernel-benchmark-suite/cases/hypersonic/input/hypersonic-24/reference1.bin": [
+        67117056,
+        1793803005907649255
+      ],
+      "/home/chh/kernel-benchmark-suite/cases/hypersonic/input/hypersonic-24/reference2.bin": [
+        67117056,
+        1793803006035652924
+      ],
+      "/home/chh/kernel-benchmark-suite/cases/hypersonic/input/hypersonic-24/reference3.bin": [
+        67117056,
+        1793803006163656591
+      ]
+    }
+  },
+  {
+    "role": "L1-L2",
+    "command": [
+      "/home/chh/kernel-benchmark-suite/bench",
+      "hypersonic",
+      "validate",
+      "--kernel",
+      "/home/chh/kernel-benchmark-suite/experiments/hypersonic-complete-leaf-20261109-v1/L1-L2-pair/variant.hsaco",
+      "--out",
+      "/home/chh/kernel-benchmark-suite/experiments/hypersonic-complete-leaf-20261109-v1/validation/L1-L2",
+      "--warmup",
+      "3",
+      "--repeat",
+      "15"
+    ],
+    "binary_sha256": "4f33759fab4747c6b1bc023bf4b00eb83e976eead6e80cd5926393fdc7ee3c82",
+    "exit": 0,
+    "passed": true,
+    "input_snapshot": {
+      "/home/chh/kernel-benchmark-suite/cases/hypersonic/input/hypersonic-1/cfg.bin": [
+        96,
+        1793802985627067800
+      ],
+      "/home/chh/kernel-benchmark-suite/cases/hypersonic/input/hypersonic-1/checks.jsonl": [
+        2250,
+        1793803003755587570
+      ],
+      "/home/chh/kernel-benchmark-suite/cases/hypersonic/input/hypersonic-1/input0.bin": [
+        67108864,
+        1793802985691069637
+      ],
+      "/home/chh/kernel-benchmark-suite/cases/hypersonic/input/hypersonic-1/input1.bin": [
+        67108864,
+        1793802986779100839
+      ],
+      "/home/chh/kernel-benchmark-suite/cases/hypersonic/input/hypersonic-1/input10.bin": [
+        67108864,
+        1793802986779100839
+      ],
+      "/home/chh/kernel-benchmark-suite/cases/hypersonic/input/hypersonic-1/input11.bin": [
+        67108864,
+        1793802986399089941
+      ],
+      "/home/chh/kernel-benchmark-suite/cases/hypersonic/input/hypersonic-1/input12.bin": [
+        67108864,
+        1793802986031079387
+      ],
+      "/home/chh/kernel-benchmark-suite/cases/hypersonic/input/hypersonic-1/input2.bin": [
+        67108864,
+        1793802986399089941
+      ],
+      "/home/chh/kernel-benchmark-suite/cases/hypersonic/input/hypersonic-1/input3.bin": [
+        67108864,
+        1793802986031079387
+      ],
+      "/home/chh/kernel-benchmark-suite/cases/hypersonic/input/hypersonic-1/input4.bin": [
+        8388608,
+        1793802986107081567
+      ],
+      "/home/chh/kernel-benchmark-suite/cases/hypersonic/input/hypersonic-1/input5.bin": [
+        67108864,
+        1793802985691069637
+      ],
+      "/home/chh/kernel-benchmark-suite/cases/hypersonic/input/hypersonic-1/input6.bin": [
+        67108864,
+        1793802986779100839
+      ],
+      "/home/chh/kernel-benchmark-suite/cases/hypersonic/input/hypersonic-1/input7.bin": [
+        67108864,
+        1793802986399089941
+      ],
+      "/home/chh/kernel-benchmark-suite/cases/hypersonic/input/hypersonic-1/input8.bin": [
+        67108864,
+        1793802986031079387
+      ],
+      "/home/chh/kernel-benchmark-suite/cases/hypersonic/input/hypersonic-1/input9.bin": [
+        67108864,
+        1793802985691069637
+      ],
+      "/home/chh/kernel-benchmark-suite/cases/hypersonic/input/hypersonic-1/reference0.bin": [
+        67117056,
+        1793802987175112196
+      ],
+      "/home/chh/kernel-benchmark-suite/cases/hypersonic/input/hypersonic-1/reference1.bin": [
+        67117056,
+        1793802987303115867
+      ],
+      "/home/chh/kernel-benchmark-suite/cases/hypersonic/input/hypersonic-1/reference2.bin": [
+        67117056,
+        1793802987431119537
+      ],
+      "/home/chh/kernel-benchmark-suite/cases/hypersonic/input/hypersonic-1/reference3.bin": [
+        67117056,
+        1793802987559123208
+      ],
+      "/home/chh/kernel-benchmark-suite/cases/hypersonic/input/hypersonic-24/cfg.bin": [
+        96,
+        1793803004267602245
+      ],
+      "/home/chh/kernel-benchmark-suite/cases/hypersonic/input/hypersonic-24/checks.jsonl": [
+        2271,
+        1793803020504067542
+      ],
+      "/home/chh/kernel-benchmark-suite/cases/hypersonic/input/hypersonic-24/input0.bin": [
+        67108864,
+        1793803004303603275
+      ],
+      "/home/chh/kernel-benchmark-suite/cases/hypersonic/input/hypersonic-24/input1.bin": [
+        67108864,
+        1793803004411606373
+      ],
+      "/home/chh/kernel-benchmark-suite/cases/hypersonic/input/hypersonic-24/input10.bin": [
+        67108864,
+        1793803005379634121
+      ],
+      "/home/chh/kernel-benchmark-suite/cases/hypersonic/input/hypersonic-24/input11.bin": [
+        67108864,
+        1793803005487637216
+      ],
+      "/home/chh/kernel-benchmark-suite/cases/hypersonic/input/hypersonic-24/input12.bin": [
+        67108864,
+        1793803005611640771
+      ],
+      "/home/chh/kernel-benchmark-suite/cases/hypersonic/input/hypersonic-24/input2.bin": [
+        67108864,
+        1793803004519609468
+      ],
+      "/home/chh/kernel-benchmark-suite/cases/hypersonic/input/hypersonic-24/input3.bin": [
+        67108864,
+        1793803004663613597
+      ],
+      "/home/chh/kernel-benchmark-suite/cases/hypersonic/input/hypersonic-24/input4.bin": [
+        8388608,
+        1793802986107081567
+      ],
+      "/home/chh/kernel-benchmark-suite/cases/hypersonic/input/hypersonic-24/input5.bin": [
+        67108864,
+        1793803004799617493
+      ],
+      "/home/chh/kernel-benchmark-suite/cases/hypersonic/input/hypersonic-24/input6.bin": [
+        67108864,
+        1793803004935621393
+      ],
+      "/home/chh/kernel-benchmark-suite/cases/hypersonic/input/hypersonic-24/input7.bin": [
+        67108864,
+        1793803005043624488
+      ],
+      "/home/chh/kernel-benchmark-suite/cases/hypersonic/input/hypersonic-24/input8.bin": [
+        67108864,
+        1793803005155627700
+      ],
+      "/home/chh/kernel-benchmark-suite/cases/hypersonic/input/hypersonic-24/input9.bin": [
+        67108864,
+        1793803005267630908
+      ],
+      "/home/chh/kernel-benchmark-suite/cases/hypersonic/input/hypersonic-24/reference0.bin": [
+        67117056,
+        1793803005779645584
+      ],
+      "/home/chh/kernel-benchmark-suite/cases/hypersonic/input/hypersonic-24/reference1.bin": [
+        67117056,
+        1793803005907649255
+      ],
+      "/home/chh/kernel-benchmark-suite/cases/hypersonic/input/hypersonic-24/reference2.bin": [
+        67117056,
+        1793803006035652924
+      ],
+      "/home/chh/kernel-benchmark-suite/cases/hypersonic/input/hypersonic-24/reference3.bin": [
+        67117056,
+        1793803006163656591
+      ]
+    }
+  }
+]

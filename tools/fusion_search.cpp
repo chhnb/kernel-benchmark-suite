@@ -395,6 +395,7 @@ unsigned cleanup(Module &m,const std::string &function,unsigned level,CleanupMod
 struct Unit {BasicBlock*entry;BasicBlock*exit;Region*region;std::set<BasicBlock*>blocks;};
 struct Inventory {
   std::vector<std::unique_ptr<Region>> logicalRegions;
+  std::vector<std::tuple<std::string,std::string,std::string>> leafPairs;
   std::map<std::string,BasicBlock*> blocks;
   std::map<BasicBlock*,std::string> ids;
   std::map<std::string,Unit> units;
@@ -420,6 +421,44 @@ struct Inventory {
       auto reg=std::make_unique<Region>(entry,exit,&a.regions,&a.dt,a.regions.getTopLevelRegion());
       units["G"+ids.at(&b).substr(1)]={entry,exit,reg.get(),bs};logicalRegions.push_back(std::move(reg));
     }
+    // Complete adjacent SESE arms, even when another arm returns early.
+    // The common exit is derived from the selected entries, not the whole
+    // classifier's postdominator. E<entry>_<exit> includes trailing blocks.
+    auto makeLeaf=[&](BasicBlock *entry,BasicBlock *exit)->std::string {
+      if(!entry||!exit||entry==exit||!a.pdt.dominates(exit,entry))return {};
+      std::set<BasicBlock*> bs;std::vector<BasicBlock*> todo{entry};
+      while(!todo.empty()){
+        auto *bb=todo.back();todo.pop_back();if(bb==exit||!bs.insert(bb).second)continue;
+        if(!a.dt.dominates(entry,bb)||a.loops.getLoopFor(bb)||bb->hasAddressTaken())return {};
+        auto *br=dyn_cast<BranchInst>(bb->getTerminator());if(!br)return {};
+        for(auto &i:*bb)if(i.mayHaveSideEffects()||i.mayWriteToMemory())return {};
+        for(auto *succ:successors(bb))todo.push_back(succ);
+      }
+      for(auto *bb:bs)if(bb!=entry)for(auto *pred:predecessors(bb))if(!bs.count(pred))return {};
+      auto id="E"+ids.at(entry).substr(1)+"_"+ids.at(exit).substr(1);
+      if(!units.count(id)){
+        Region *reg=nullptr;
+        if(bs.size()>1){auto r=std::make_unique<Region>(entry,exit,&a.regions,&a.dt,a.regions.getTopLevelRegion());reg=r.get();logicalRegions.push_back(std::move(r));}
+        units[id]={entry,exit,reg,bs};
+      }
+      return id;
+    };
+    for(auto &p:f){auto *pb=dyn_cast<BranchInst>(p.getTerminator());if(!pb||!pb->isConditional())continue;
+      for(unsigned side=0;side<2;++side){
+        auto *q=pb->getSuccessor(1-side),*l=pb->getSuccessor(side);
+        auto *qb=dyn_cast<BranchInst>(q->getTerminator());
+        if(!qb||!qb->isConditional()||q->getSinglePredecessor()!=&p||l->getSinglePredecessor()!=&p)continue;
+        for(auto *r:successors(q)){
+          if(r==l||r->getSinglePredecessor()!=q)continue;
+          auto *exit=a.pdt.findNearestCommonDominator(l,r);
+          auto li=makeLeaf(l,exit),ri=makeLeaf(r,exit);
+          if(li.empty()||ri.empty()||(units.at(li).blocks.size()==1&&units.at(ri).blocks.size()==1))continue;
+          bool overlap=false;for(auto *bb:units.at(li).blocks)overlap|=units.at(ri).blocks.count(bb);
+          if(!overlap)leafPairs.emplace_back(ids.at(&p),li,ri);
+        }
+      }
+    }
+
   }
 };
 static std::set<BasicBlock*> reachable(BasicBlock*start,BasicBlock*join) {
@@ -471,7 +510,7 @@ std::vector<Candidate> enumerate(Function&f,unsigned version) {
   Analysis a(f); Inventory inv(f,a);std::vector<Candidate> result;
   auto frontier=[&](const std::set<BasicBlock*>&side,const std::set<BasicBlock*>&opposite){
     std::vector<std::string> rs,out;std::set<BasicBlock*>covered;
-    for(auto&kv:inv.units)if(kv.second.region&&kv.second.exit&&belongs(kv.second,side,opposite))rs.push_back(kv.first);
+    for(auto&kv:inv.units)if(kv.first[0]!='E'&&kv.second.region&&kv.second.exit&&belongs(kv.second,side,opposite))rs.push_back(kv.first);
     for(auto&id:rs){bool nested=false;auto&u=inv.units.at(id);for(auto&other:rs){auto&v=inv.units.at(other);if(u.blocks.size()<v.blocks.size()&&subset(u.blocks,v.blocks)){nested=true;break;}}if(!nested){out.push_back(id);covered.insert(u.blocks.begin(),u.blocks.end());}}
     for(auto&b:f)if(side.count(&b)&&!opposite.count(&b)&&!covered.count(&b))out.push_back(inv.ids.at(&b));return out;
   };
@@ -521,7 +560,7 @@ std::vector<Candidate> enumerate(Function&f,unsigned version) {
     darm.computeRegionMatch();
     auto unitId=[&](BasicBlock*entry,BasicBlock*exit)->std::string {
       if(!exit)return inv.ids.at(entry);
-      for(auto&kv:inv.units)if(kv.second.region && kv.second.entry==entry && kv.second.exit==exit)return kv.first;
+      for(auto&kv:inv.units)if(kv.first[0]!='E' && kv.second.region && kv.second.entry==entry && kv.second.exit==exit)return kv.first;
       return {};
     };
     for(unsigned i=0;i<darm.regionMatchSize();++i) {
@@ -559,6 +598,7 @@ std::vector<Candidate> enumerate(Function&f,unsigned version) {
     for(auto&li:frontier(ls,rs))for(auto&ri:frontier(rs,ls))
       if(bool(inv.units.at(li).region)==bool(inv.units.at(ri).region))result.push_back({f.getName().str(),inv.ids.at(&b),li,ri,version});
   }
+  for(auto &pair:inv.leafPairs)result.push_back({f.getName().str(),std::get<0>(pair),std::get<1>(pair),std::get<2>(pair),version});
   std::sort(result.begin(),result.end(),[](const Candidate&a,const Candidate&b){return a.key()<b.key();});
   result.erase(std::unique(result.begin(),result.end(),[](const Candidate&a,const Candidate&b){return a.key()==b.key();}),result.end());return result;
 }
@@ -635,8 +675,52 @@ Trial tryPair(const Module&parent,const Candidate&c,unsigned version,unsigned le
   Analysis a(*f);Inventory inv(*f,a);
   if(!inv.blocks.count(c.split)||!inv.units.count(c.left)||!inv.units.count(c.right))return reject("unknown_block_or_region_id");
   auto*split=inv.blocks.at(c.split);auto*br=dyn_cast<BranchInst>(split->getTerminator());auto*node=a.pdt.getNode(split);
-  if(!br||!br->isConditional()||!node||!node->getIDom()||!node->getIDom()->getBlock()||!Utils::isValidMergeLocation(*split,a.pdt))return reject("unsupported_split_location");
+  bool completeLeaf=!c.left.empty()&&c.left[0]=='E'&&!c.right.empty()&&c.right[0]=='E';
+  if(!br||!br->isConditional())return reject("unsupported_split_location");
+  if(!completeLeaf&&(!node||!node->getIDom()||!node->getIDom()->getBlock()||!Utils::isValidMergeLocation(*split,a.pdt)))return reject("unsupported_split_location");
   Unit l=inv.units.at(c.left),r=inv.units.at(c.right);
+  if(completeLeaf){
+    if(logical)return reject("complete_leaf_requires_structural_enumeration");
+    if(!c.hybrid)return reject("complete_leaf_requires_structural_mode");
+    if(!l.exit||l.exit!=r.exit)return reject("complete_leaf_exit_mismatch");
+    for(auto *bb:l.blocks)if(r.blocks.count(bb))return reject("overlapping_pair");
+    AdjacentLeafEntry entry;
+    if(!entry.prepare(l.entry,r.entry,a.dt,a.loops,true)||entry.first!=split)
+      return reject("complete_leaf_entry_not_normalizable");
+    auto leftBoundary=boundary(l,*f),rightBoundary=boundary(r,*f);
+    auto before=features(*f);
+    auto *gate=entry.apply();
+    if(verifyModule(*t.raw,&errs()))return reject("complete_leaf_gate_verifier_failed");
+    Analysis ga(*f);Inventory gi(*f,ga);
+    // Use native DARM alignment/replication within this isolated diamond.
+    // Different outer shapes do not require a fictitious region bijection:
+    // align a block pair, with at least one mandatory block. Unmatched CFG
+    // stays guarded; the opposite single block can be replicated by DARM.
+    BasicBlock *bl=nullptr,*brMatch=nullptr;double best=-1;
+    const auto &leftBlocks=entry.left==l.entry?l.blocks:r.blocks;
+    const auto &rightBlocks=entry.left==l.entry?r.blocks:l.blocks;
+    for(auto &lb:*f)if(leftBlocks.count(&lb))for(auto &rb:*f)if(rightBlocks.count(&rb)){
+      bool lr=ga.pdt.dominates(&lb,entry.left),rr=ga.pdt.dominates(&rb,entry.right);
+      if(!lr&&!rr)continue;
+      // RegionReplicator cannot move an expanded block's predecessor PHIs
+      // into the opposite topology. Keep such joins as retained context.
+      if((!lr&&!rb.phis().empty())||(!rr&&!lb.phis().empty()))continue;
+      if((!lr&&!rb.getUniqueSuccessor())||(!rr&&!lb.getUniqueSuccessor()))continue;
+      double sim=Utils::computeBBSimilarty(&lb,&rb);
+      if(sim>best){best=sim;bl=&lb;brMatch=&rb;}
+    }
+    if(!bl||!brMatch||best<=0)return reject("complete_leaf_no_native_block_match");
+    Candidate inner{c.function,gi.ids.at(gate),gi.ids.at(bl),gi.ids.at(brMatch),version};
+    // Native RegionMelder handles conditional terminators and optional blocks.
+    // Disable local dispatch: this is a complete-region scoped trial.
+    auto out=tryPair(*t.raw,inner,version,level,mode,nullptr);
+    out.candidate=c;out.before=before;
+    out.left=leftBoundary;out.right=rightBoundary;
+    out.leftContext=leftBoundary;out.rightContext=rightBoundary;
+    out.mergePath="darm-complete-leaf/"+out.mergePath;
+    out.totalMs=millis(started);
+    return out;
+  }
   if(bool(l.region)!=bool(r.region))return reject("mixed_granularity_not_supported");
   for(auto*b:l.blocks)if(r.blocks.count(b))return reject("overlapping_pair");
   auto*join=node->getIDom()->getBlock();auto ls=reachable(br->getSuccessor(0),join),rs=reachable(br->getSuccessor(1),join);
