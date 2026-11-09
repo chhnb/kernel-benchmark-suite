@@ -1,0 +1,50 @@
+{
+  "ablation_result": {
+    "commits": 8,
+    "output_on_stop": "last_committed_parent_or_initial_normalized_state",
+    "policy": "llvm24",
+    "require_parent_gain": true,
+    "semantic_validation": "not_run",
+    "stop": "no_positive_candidate",
+    "trials": 661
+  },
+  "old_sha256": "affe64a238c73c36aa5704f46b50becdd2f8d4902b355536fa83745bea098422",
+  "current_sha256": "22f56e97be8d5c4068aa264500ad00a6ceebc372c5088198a1ed47d47813c082",
+  "no_E_sha256": "affe64a238c73c36aa5704f46b50becdd2f8d4902b355536fa83745bea098422",
+  "no_E_matches_frozen": true,
+  "state_8_equal_except_module_id": true,
+  "commits": [
+    {
+      "candidate": "evaluate:B90:B91:B93",
+      "gain": 7
+    },
+    {
+      "candidate": "evaluate:B12:B13:B14",
+      "gain": 2
+    },
+    {
+      "candidate": "evaluate:B22:B23:B24",
+      "gain": 2
+    },
+    {
+      "candidate": "evaluate:B32:B33:B34",
+      "gain": 2
+    },
+    {
+      "candidate": "evaluate:B42:B43:B44",
+      "gain": 2
+    },
+    {
+      "candidate": "evaluate:B52:B53:B54",
+      "gain": 2
+    },
+    {
+      "candidate": "evaluate:B61:B62:B63",
+      "gain": 2
+    },
+    {
+      "candidate": "evaluate:B67:B68:B69",
+      "gain": 2
+    }
+  ]
+}

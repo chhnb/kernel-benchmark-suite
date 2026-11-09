@@ -148,3 +148,6 @@ C++ 随机输入生成器两次相同种子生成结果逐字节一致；64-toke
 该结果说明仍有显著收益，但不能判为“没有退化”。2%门槛正常拦截了当前版本，**不更新冻结 reference**。本轮没有为了通过测试而调整融合算法或放宽门槛；尚未定位具体是哪项匹配/清理变更改变了最终代码，需要后续做固定融合计划和源码提交间的对比。不能仅凭16次融合数量相同就认为IR相同，也不能现在归因于TTI权重。
 
 证据：`regression/runs/20261110-mapairy-generated/summary.json`，`regression/runs/20261110-current-generated/mapairy-search/result.json` 和 `code-regression.json`。冻结 reference 保存于新的无输入小快照，其SHA未改变。
+
+
+后续定位已完成：新增完整SESE候选改变第9次选择；仅排除此类候选、保留当前其余实现，即恢复与冻结版本逐字节一致的二进制。详见 `mapairy-regression-cause-20261110.md`，替代前述“尚未定位”的当时状态。
