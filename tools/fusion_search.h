@@ -19,6 +19,7 @@ struct Candidate {
   bool localCopysign=false;
   bool localUnion=false;
   bool hybrid=false;
+  bool coalesceGaps=false;
   std::string key() const { return function+":"+split+":"+left+":"+right; }
 };
 struct OperationKey {
@@ -91,6 +92,7 @@ struct Trial {
   double originalSimilarity=0;
   bool originalProfitable=false;
   unsigned cleanupIterations=0;
+  unsigned coalescedGapGroups=0;
   std::string reason;
   std::string mergePath, localRejectReason;
   std::string planKind, matchedLeft, matchedRight;
@@ -125,6 +127,7 @@ struct Options {
   bool localCopysign=false;
   bool localUnion=false;
   bool hybrid=false;
+  bool coalesceGaps=false;
 };
 struct Observer {
   virtual ~Observer() = default;

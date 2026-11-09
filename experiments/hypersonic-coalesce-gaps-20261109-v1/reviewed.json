@@ -1,0 +1,158 @@
+{
+  "static": [
+    {
+      "tag": "L0-L1-off",
+      "groups": 0,
+      "gain": -201,
+      "raw": {
+        "blocks": 99,
+        "instructions": 878,
+        "conditional_branches": 44,
+        "phis": 58,
+        "selects": 44
+      },
+      "cleaned": {
+        "blocks": 92,
+        "instructions": 867,
+        "conditional_branches": 43,
+        "phis": 54,
+        "selects": 44
+      }
+    },
+    {
+      "tag": "L0-L1-on",
+      "groups": 1,
+      "gain": -37,
+      "raw": {
+        "blocks": 70,
+        "instructions": 831,
+        "conditional_branches": 34,
+        "phis": 40,
+        "selects": 44
+      },
+      "cleaned": {
+        "blocks": 63,
+        "instructions": 820,
+        "conditional_branches": 33,
+        "phis": 36,
+        "selects": 44
+      }
+    },
+    {
+      "tag": "L1-L2-off",
+      "groups": 0,
+      "gain": -11,
+      "raw": {
+        "blocks": 63,
+        "instructions": 802,
+        "conditional_branches": 33,
+        "phis": 20,
+        "selects": 42
+      },
+      "cleaned": {
+        "blocks": 61,
+        "instructions": 800,
+        "conditional_branches": 33,
+        "phis": 20,
+        "selects": 42
+      }
+    },
+    {
+      "tag": "L1-L2-on",
+      "groups": 0,
+      "gain": -11,
+      "raw": {
+        "blocks": 63,
+        "instructions": 802,
+        "conditional_branches": 33,
+        "phis": 20,
+        "selects": 42
+      },
+      "cleaned": {
+        "blocks": 61,
+        "instructions": 800,
+        "conditional_branches": 33,
+        "phis": 20,
+        "selects": 42
+      }
+    }
+  ],
+  "GPU": {
+    "median_us_by_input_order": {
+      "prepared_baseline": [
+        1813.920021057129,
+        1813.2799863815308
+      ],
+      "gap_off": [
+        1785.599946975708,
+        1790.560007095337
+      ],
+      "gap_on": [
+        1785.599946975708,
+        1790.560007095337
+      ]
+    },
+    "batch_medians_us": {
+      "prepared_baseline": [
+        [
+          1809.759020805359,
+          1810.5590343475342
+        ],
+        [
+          1813.920021057129,
+          1815.0399923324585
+        ],
+        [
+          1815.8400058746338,
+          1813.2799863815308
+        ]
+      ],
+      "gap_off": [
+        [
+          1783.5190296173096,
+          1797.9190349578857
+        ],
+        [
+          1785.599946975708,
+          1790.560007095337
+        ],
+        [
+          1791.8399572372437,
+          1789.2800569534302
+        ]
+      ]
+    },
+    "aliases_by_identical_binary": {
+      "prepared_baseline": "prepared_baseline",
+      "gap_off": "gap_off",
+      "gap_on": "gap_off"
+    },
+    "decrease_vs_prepared_pct": {
+      "prepared_baseline": [
+        0.0,
+        0.0
+      ],
+      "gap_off": [
+        1.5612636584118156,
+        1.2529768958368326
+      ],
+      "gap_on": [
+        1.5612636584118156,
+        1.2529768958368326
+      ]
+    },
+    "correctness_passed": true
+  },
+  "codegen_regression": {
+    "off_baseline_matches_previous": true,
+    "off_variant_matches_previous": true,
+    "L1_L2_on_off_raw_identical": true
+  },
+  "hashes": {
+    "experiments/hypersonic-coalesce-gaps-20261109-v1/L0-L1-off-pair/variant.hsaco": "5b1b2ed049658bddabf1c476386d81a7c67ca71361cf5fed4f7ff93f2ef558f4",
+    "experiments/hypersonic-coalesce-gaps-20261109-v1/L0-L1-off-pair/variant-final.ll": "bd583328480ec43f29411b128361bf6062186f1445b3ce7efe8b9b34f3f188e6",
+    "experiments/hypersonic-coalesce-gaps-20261109-v1/L0-L1-on-pair/variant.hsaco": "5b1b2ed049658bddabf1c476386d81a7c67ca71361cf5fed4f7ff93f2ef558f4",
+    "experiments/hypersonic-coalesce-gaps-20261109-v1/L0-L1-on-pair/variant-final.ll": "b85ee8f238c24e10e450f541b5778849ac737a8f51795852aeb4df98a65e2a39"
+  },
+  "default_enabled": false
+}

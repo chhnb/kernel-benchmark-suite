@@ -713,6 +713,7 @@ Trial tryPair(const Module&parent,const Candidate&c,unsigned version,unsigned le
     Candidate inner{c.function,gi.ids.at(gate),gi.ids.at(bl),gi.ids.at(brMatch),version};
     // Native RegionMelder handles conditional terminators and optional blocks.
     // Disable local dispatch: this is a complete-region scoped trial.
+    inner.coalesceGaps=c.coalesceGaps;
     auto out=tryPair(*t.raw,inner,version,level,mode,nullptr);
     out.candidate=c;out.before=before;
     out.left=leftBoundary;out.right=rightBoundary;
@@ -825,12 +826,12 @@ Trial tryPair(const Module&parent,const Candidate&c,unsigned version,unsigned le
     t.planKind=l.region?"R2R":"B2B";t.replication=false;
     t.leftContext=t.left;t.rightContext=t.right;
   }
-  RegionMelder melder(directLeaves?*leafAnalyzer:ma,true);if(t.logicalState)melder.onValueMapping=[&](const ValueToValueMapTy &m){t.logicalState->transfer(m);};if(useLocal){
+  RegionMelder melder(directLeaves?*leafAnalyzer:ma,true);melder.CoalesceGaps=c.coalesceGaps;if(t.logicalState)melder.onValueMapping=[&](const ValueToValueMapTy &m){t.logicalState->transfer(m);};if(useLocal){
     if(l.region||r.region)return reject("local_requires_basic_blocks");
     std::string why;
     if(!fuseLocalComputations(l.entry,r.entry,melder.onValueMapping,why,c.localUnion||c.hybrid)){t.reason=why;t.totalMs=millis(started);return t;}
     t.replication=false;
-  }else melder.merge(0);canonicalPhiOrder(*t.raw,c.function);t.mergeMs=millis(mt);
+  }else melder.merge(0);t.coalescedGapGroups=melder.CoalescedGapGroups;canonicalPhiOrder(*t.raw,c.function);t.mergeMs=millis(mt);
   if(verifyModule(*t.raw,&errs()))return reject("raw_verifier_failed");
   for(auto&g:*t.raw)if(&g!=f)if(!others.count(g.getName().str())||others.at(g.getName().str())!=text(g))return reject("other_function_changed");
   ft=Clock::now();t.afterRaw=features(*f);t.featuresMs+=millis(ft);if(t.afterRaw.loops>t.before.loops)return reject("new_raw_loop");
@@ -927,7 +928,7 @@ Result greedy(const Module&input,const std::string&function,const Options&o,cons
     if(candidates.size()>o.maxTrials-result.trials){result.stop="trial_budget_before_complete_round";return result;}
     const auto round=makeRound(*result.module,function,version,o.optLevel,o.cleanupMode);if(observer)observer->round(round);
     Trial best;ScoreResult bestResult;double bestScore=o.threshold;bool anyScored=false;
-    for(auto&candidate:candidates){candidate.localCopysign=o.localCopysign;candidate.localUnion=o.localUnion;candidate.hybrid=o.hybrid;auto t=tryPair(*result.module,candidate,version,o.optLevel,o.cleanupMode,logical.get());++result.trials;
+    for(auto&candidate:candidates){candidate.localCopysign=o.localCopysign;candidate.localUnion=o.localUnion;candidate.hybrid=o.hybrid;candidate.coalesceGaps=o.coalesceGaps;auto t=tryPair(*result.module,candidate,version,o.optLevel,o.cleanupMode,logical.get());++result.trials;
       auto score=evaluateTrial(*result.module,t,round,scorer);bool accept=eligible(t,score,o);anyScored|=score.status==ScoreStatus::Scored;
       if(observer)observer->trial(t,round,score,accept);
       if(accept&&score.total>bestScore){bestScore=score.total;bestResult=std::move(score);best=std::move(t);}

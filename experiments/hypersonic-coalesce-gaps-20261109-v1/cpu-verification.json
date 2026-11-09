@@ -1,0 +1,18 @@
+{
+  "coalesce-gaps-test-20261109-v1": {
+    "exit": 0,
+    "seconds": 4.1759045124053955
+  },
+  "coalesce-gaps-positive-fixture-20261109-v1": {
+    "exit": 0,
+    "seconds": 3.9740259647369385
+  },
+  "coalesce-gaps-intrinsic-regress-20261109-v1": {
+    "exit": 0,
+    "seconds": 3.9217052459716797
+  },
+  "coalesce-gaps-existing-regress-20261109-v1": {
+    "exit": 0,
+    "seconds": 7.985176086425781
+  }
+}

@@ -766,7 +766,72 @@ Instruction *RegionMelder::cloneInstruction(Instruction *OrigI,
   return NewI;
 }
 
+// Reorder only adjacent unmatched instructions, never a shared instruction.
+// Each side keeps its original instruction/memory order and remains guarded.
+// Cross-side SSA dependencies, calls, volatile/atomic accesses and barriers
+// stop grouping. This is scheduling within one block, not speculation.
+void RegionMelder::coalesceGapRanges() {
+  DenseMap<Instruction *, bool> Side;
+  for (auto &Range : SplitRanges)
+    for (auto *I = Range.getStart();; I = I->getNextNode()) {
+      Side[I] = Range.splitToTrue();
+      if (I == Range.getEnd()) break;
+    }
+  auto movable = [](Instruction *I) {
+    if (I->isTerminator() || isa<PHINode>(I) || I->isEHPad() ||
+        isa<CallBase>(I) || isa<FenceInst>(I)) return false;
+    if (auto *L = dyn_cast<LoadInst>(I)) return L->isSimple();
+    if (auto *S = dyn_cast<StoreInst>(I)) return S->isSimple();
+    return !I->mayReadOrWriteMemory() && !I->mayHaveSideEffects();
+  };
+  for (auto &BB : *MA.getParentFunction()) {
+    SmallVector<Instruction *, 64> Instructions;
+    for (auto &I : BB) Instructions.push_back(&I);
+    for (unsigned Begin = 0; Begin < Instructions.size();) {
+      if (!Side.count(Instructions[Begin]) || !movable(Instructions[Begin])) {
+        ++Begin; continue;
+      }
+      unsigned End = Begin;
+      while (End < Instructions.size() && Side.count(Instructions[End]) &&
+             movable(Instructions[End])) ++End;
+      SmallPtrSet<Instruction *, 32> Group;
+      unsigned Runs = 0;
+      bool Prev = !Side.lookup(Instructions[Begin]);
+      for (unsigned N = Begin; N < End; ++N) {
+        Group.insert(Instructions[N]);
+        bool Dir = Side.lookup(Instructions[N]);
+        if (Dir != Prev) ++Runs;
+        Prev = Dir;
+      }
+      bool Legal = Runs > 2;
+      for (unsigned N = Begin; N < End && Legal; ++N)
+        for (auto &Op : Instructions[N]->operands())
+          if (auto *Def = dyn_cast<Instruction>(Op.get()))
+            if (Group.count(Def) && Side.lookup(Def) != Side.lookup(Instructions[N]))
+              Legal = false;
+      if (Legal) {
+        auto *Anchor = Instructions[End - 1]->getNextNode();
+        bool First = Side.lookup(Instructions[Begin]);
+        for (bool Dir : {First, !First})
+          for (unsigned N = Begin; N < End; ++N)
+            if (Side.lookup(Instructions[N]) == Dir)
+              Instructions[N]->moveBefore(Anchor);
+        ++CoalescedGapGroups;
+      }
+      Begin = End;
+    }
+  }
+  // Rebuild in instruction order so the existing complementary-gap handler
+  // sees one left run and one right run, and introduces only one diamond.
+  SplitRanges.clear();
+  for (auto &BB : *MA.getParentFunction())
+    for (auto &I : BB)
+      if (Side.count(&I)) updateSplitRangeMap(Side.lookup(&I), &I);
+}
+
 void RegionMelder::runUnpredicationPass() {
+  if (CoalesceGaps) coalesceGapRanges();
+
 
   for (unsigned RangeIndex = 0; RangeIndex < SplitRanges.size(); ++RangeIndex) {
     auto &Range = SplitRanges[RangeIndex];

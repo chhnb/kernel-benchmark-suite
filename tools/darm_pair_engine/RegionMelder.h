@@ -141,6 +141,7 @@ private:
   bool isExitBlockSafeToMerge(BasicBlock *Exit, BasicBlock *Entry);
   void updateMapping(BasicBlock *NewBb, BasicBlock *OldBb, bool IsLeft);
 
+  void coalesceGapRanges();
   void runUnpredicationPass();
   void updateSplitRangeMap(bool Direction, Instruction *I);
 
@@ -154,6 +155,8 @@ public:
     if(RecordOrigins){unsigned I=0;for(auto &BB:*MA.getParentFunction())
       SourceBlocks.push_back({WeakVH(&BB),"B"+std::to_string(I++)});}
   }
+  bool CoalesceGaps=false;
+  unsigned CoalescedGapGroups=0;
   std::function<void(const ValueToValueMapTy&)> onValueMapping;
   const std::vector<BlockOrigin>& blockOrigins() const { return BlockOrigins; }
   // meld I'th region pair
