@@ -1,0 +1,7 @@
+{
+  "exit": -6,
+  "status": "failed_preserved_not_a_valid_comparator",
+  "reused_historical_evidence": true,
+  "source": "/home/chh/kernel-benchmark-suite/experiments/hypersonic-greedy-20261109-v1/original-darm-failure.json",
+  "rerun_this_experiment": false
+}

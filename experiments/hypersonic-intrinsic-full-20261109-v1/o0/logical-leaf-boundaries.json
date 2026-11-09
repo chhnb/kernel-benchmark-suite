@@ -1,0 +1,90 @@
+[
+  {
+    "leaf": 0,
+    "entry": "B8",
+    "exit": "B74",
+    "block_count": 1,
+    "outside_incoming_edges": [
+      [
+        "B7",
+        "B8"
+      ]
+    ],
+    "outside_outgoing_edges": [
+      [
+        "B8",
+        "B74"
+      ]
+    ],
+    "single_entry": true,
+    "single_exit_destination": true
+  },
+  {
+    "leaf": 1,
+    "entry": "B10",
+    "exit": "B74",
+    "block_count": 31,
+    "outside_incoming_edges": [
+      [
+        "B9",
+        "B10"
+      ],
+      [
+        "B72",
+        "B73"
+      ]
+    ],
+    "outside_outgoing_edges": [
+      [
+        "B73",
+        "B74"
+      ]
+    ],
+    "single_entry": false,
+    "single_exit_destination": true
+  },
+  {
+    "leaf": 2,
+    "entry": "B41",
+    "exit": "B74",
+    "block_count": 32,
+    "outside_incoming_edges": [
+      [
+        "B40",
+        "B41"
+      ],
+      [
+        "B39",
+        "B73"
+      ]
+    ],
+    "outside_outgoing_edges": [
+      [
+        "B73",
+        "B74"
+      ]
+    ],
+    "single_entry": false,
+    "single_exit_destination": true
+  },
+  {
+    "leaf": 3,
+    "entry": "B71",
+    "exit": "B466",
+    "block_count": 1,
+    "outside_incoming_edges": [
+      [
+        "B40",
+        "B71"
+      ]
+    ],
+    "outside_outgoing_edges": [
+      [
+        "B71",
+        "B466"
+      ]
+    ],
+    "single_entry": true,
+    "single_exit_destination": true
+  }
+]

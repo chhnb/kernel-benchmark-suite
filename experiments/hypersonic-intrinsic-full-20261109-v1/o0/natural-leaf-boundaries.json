@@ -1,0 +1,54 @@
+[
+  {
+    "leaf": 0,
+    "entry": "B8",
+    "natural_exit": "B74",
+    "block_count": 1,
+    "external_incoming_edges": [
+      [
+        "B7",
+        "B8"
+      ]
+    ],
+    "single_entry": true
+  },
+  {
+    "leaf": 1,
+    "entry": "B10",
+    "natural_exit": "B73",
+    "block_count": 30,
+    "external_incoming_edges": [
+      [
+        "B9",
+        "B10"
+      ]
+    ],
+    "single_entry": true
+  },
+  {
+    "leaf": 2,
+    "entry": "B41",
+    "natural_exit": "B72",
+    "block_count": 30,
+    "external_incoming_edges": [
+      [
+        "B40",
+        "B41"
+      ]
+    ],
+    "single_entry": true
+  },
+  {
+    "leaf": 3,
+    "entry": "B71",
+    "natural_exit": "B466",
+    "block_count": 1,
+    "external_incoming_edges": [
+      [
+        "B40",
+        "B71"
+      ]
+    ],
+    "single_entry": true
+  }
+]

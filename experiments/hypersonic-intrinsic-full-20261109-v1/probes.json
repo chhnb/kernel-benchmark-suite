@@ -1,0 +1,578 @@
+[
+  {
+    "tag": "leaf0_vs_leaf1_inner_region",
+    "command": [
+      "/home/chh/kernel-benchmark-suite/build/llvm24-tti/fusion-search-llvm24",
+      "--ir",
+      "/home/chh/kernel-benchmark-suite/results/hypersonic-hip-llvm12-ir-v1/start.ll",
+      "--function",
+      "face_kernel",
+      "--structural",
+      "1",
+      "--adjacent-only",
+      "0",
+      "--cleanup",
+      "scoped-cfg",
+      "--scorer",
+      "llvm24",
+      "--split",
+      "B5",
+      "--left",
+      "B6",
+      "--right",
+      "R3",
+      "--debug-dir",
+      "/home/chh/kernel-benchmark-suite/experiments/hypersonic-intrinsic-full-20261109-v1/leaf0_vs_leaf1_inner_region",
+      "--out",
+      "/home/chh/kernel-benchmark-suite/experiments/hypersonic-intrinsic-full-20261109-v1/leaf0_vs_leaf1_inner_region.ll"
+    ],
+    "exit": 4,
+    "trials": [
+      {
+        "after": {
+          "blocks": 0,
+          "conditional_branches": 0,
+          "darm_static_cost": 0,
+          "instructions": 0,
+          "loops": 0,
+          "operations": [],
+          "phis": 0,
+          "selects": 0
+        },
+        "after_raw": {
+          "blocks": 0,
+          "conditional_branches": 0,
+          "darm_static_cost": 0,
+          "instructions": 0,
+          "loops": 0,
+          "operations": [],
+          "phis": 0,
+          "selects": 0
+        },
+        "alignment_order": "function_order_v1",
+        "candidate": "face_kernel:B5:B6:R3",
+        "cleaned_hash": "",
+        "cleanup_iterations": 0,
+        "control_hash": "5a42f1f0fd4aef6e150d46324c9aed0d7a4d61ba",
+        "decision": "reject",
+        "eligible": false,
+        "fusion_plan": {
+          "kind": "",
+          "left_context": {
+            "blocks": [],
+            "entry": "",
+            "exit": "",
+            "live_ins": [],
+            "live_outs": []
+          },
+          "matched_left": "",
+          "matched_right": "",
+          "replication_required": false,
+          "right_context": {
+            "blocks": [],
+            "entry": "",
+            "exit": "",
+            "live_ins": [],
+            "live_outs": []
+          },
+          "split_is_loop_header": false
+        },
+        "left": {
+          "blocks": [],
+          "entry": "",
+          "exit": "",
+          "live_ins": [],
+          "live_outs": []
+        },
+        "local_reject_reason": "",
+        "logical_decision": "",
+        "logical_left": "",
+        "logical_right": "",
+        "merge_path": "",
+        "orientation_swapped": false,
+        "original_darm_profitable": false,
+        "original_darm_similarity": 0,
+        "parent_hash": "b4f254a7055ca584cae23e44e04a7898fc85b91f",
+        "parent_ir": "../state-0.ll",
+        "reason": "mixed_granularity_not_supported",
+        "replication_required": false,
+        "right": {
+          "blocks": [],
+          "entry": "",
+          "exit": "",
+          "live_ins": [],
+          "live_outs": []
+        },
+        "round_context": "../round-0.json",
+        "schema": "incremental-score-trial-v1",
+        "score_result": {
+          "cleanup_gain": null,
+          "contributions": [],
+          "coverage": {
+            "dependency": "unavailable",
+            "divergence": "unavailable",
+            "hardware_costs": "uncalibrated",
+            "legacy_counts_complete": false,
+            "liveness": "unavailable",
+            "operand_context_model": "not_modeled; inspect retained IR",
+            "provenance": "unavailable"
+          },
+          "dependency_delta": null,
+          "dependency_penalty_applied": null,
+          "liveness_penalty_applied": null,
+          "metrics": {},
+          "parent_gain": null,
+          "pressure_delta_slots32": null,
+          "reason": "trial_rejected",
+          "static_gain": null,
+          "static_score": null,
+          "status": "not_evaluable",
+          "total": null,
+          "work_delta": null
+        },
+        "semantic_validation": "not_run",
+        "timings_ms": {
+          "features": 0,
+          "merge": 0,
+          "normalization": 0,
+          "score_with_analysis": 0,
+          "trial_total": 0.817053
+        },
+        "valid": false,
+        "version": 0
+      }
+    ]
+  },
+  {
+    "tag": "leaf2_vs_leaf3",
+    "command": [
+      "/home/chh/kernel-benchmark-suite/build/llvm24-tti/fusion-search-llvm24",
+      "--ir",
+      "/home/chh/kernel-benchmark-suite/results/hypersonic-hip-llvm12-ir-v1/start.ll",
+      "--function",
+      "face_kernel",
+      "--structural",
+      "1",
+      "--adjacent-only",
+      "0",
+      "--cleanup",
+      "scoped-cfg",
+      "--scorer",
+      "llvm24",
+      "--split",
+      "B13",
+      "--left",
+      "R4",
+      "--right",
+      "B19",
+      "--debug-dir",
+      "/home/chh/kernel-benchmark-suite/experiments/hypersonic-intrinsic-full-20261109-v1/leaf2_vs_leaf3",
+      "--out",
+      "/home/chh/kernel-benchmark-suite/experiments/hypersonic-intrinsic-full-20261109-v1/leaf2_vs_leaf3.ll"
+    ],
+    "exit": 4,
+    "trials": [
+      {
+        "after": {
+          "blocks": 0,
+          "conditional_branches": 0,
+          "darm_static_cost": 0,
+          "instructions": 0,
+          "loops": 0,
+          "operations": [],
+          "phis": 0,
+          "selects": 0
+        },
+        "after_raw": {
+          "blocks": 0,
+          "conditional_branches": 0,
+          "darm_static_cost": 0,
+          "instructions": 0,
+          "loops": 0,
+          "operations": [],
+          "phis": 0,
+          "selects": 0
+        },
+        "alignment_order": "function_order_v1",
+        "candidate": "face_kernel:B13:R4:B19",
+        "cleaned_hash": "",
+        "cleanup_iterations": 0,
+        "control_hash": "5a42f1f0fd4aef6e150d46324c9aed0d7a4d61ba",
+        "decision": "reject",
+        "eligible": false,
+        "fusion_plan": {
+          "kind": "",
+          "left_context": {
+            "blocks": [],
+            "entry": "",
+            "exit": "",
+            "live_ins": [],
+            "live_outs": []
+          },
+          "matched_left": "",
+          "matched_right": "",
+          "replication_required": false,
+          "right_context": {
+            "blocks": [],
+            "entry": "",
+            "exit": "",
+            "live_ins": [],
+            "live_outs": []
+          },
+          "split_is_loop_header": false
+        },
+        "left": {
+          "blocks": [],
+          "entry": "",
+          "exit": "",
+          "live_ins": [],
+          "live_outs": []
+        },
+        "local_reject_reason": "",
+        "logical_decision": "",
+        "logical_left": "",
+        "logical_right": "",
+        "merge_path": "",
+        "orientation_swapped": false,
+        "original_darm_profitable": false,
+        "original_darm_similarity": 0,
+        "parent_hash": "b4f254a7055ca584cae23e44e04a7898fc85b91f",
+        "parent_ir": "../state-0.ll",
+        "reason": "mixed_granularity_not_supported",
+        "replication_required": false,
+        "right": {
+          "blocks": [],
+          "entry": "",
+          "exit": "",
+          "live_ins": [],
+          "live_outs": []
+        },
+        "round_context": "../round-0.json",
+        "schema": "incremental-score-trial-v1",
+        "score_result": {
+          "cleanup_gain": null,
+          "contributions": [],
+          "coverage": {
+            "dependency": "unavailable",
+            "divergence": "unavailable",
+            "hardware_costs": "uncalibrated",
+            "legacy_counts_complete": false,
+            "liveness": "unavailable",
+            "operand_context_model": "not_modeled; inspect retained IR",
+            "provenance": "unavailable"
+          },
+          "dependency_delta": null,
+          "dependency_penalty_applied": null,
+          "liveness_penalty_applied": null,
+          "metrics": {},
+          "parent_gain": null,
+          "pressure_delta_slots32": null,
+          "reason": "trial_rejected",
+          "static_gain": null,
+          "static_score": null,
+          "status": "not_evaluable",
+          "total": null,
+          "work_delta": null
+        },
+        "semantic_validation": "not_run",
+        "timings_ms": {
+          "features": 0,
+          "merge": 0,
+          "normalization": 0,
+          "score_with_analysis": 0,
+          "trial_total": 0.786233
+        },
+        "valid": false,
+        "version": 0
+      }
+    ]
+  },
+  {
+    "tag": "leaf0_vs_leaf1_tail",
+    "command": [
+      "/home/chh/kernel-benchmark-suite/build/llvm24-tti/fusion-search-llvm24",
+      "--ir",
+      "/home/chh/kernel-benchmark-suite/results/hypersonic-hip-llvm12-ir-v1/start.ll",
+      "--function",
+      "face_kernel",
+      "--structural",
+      "1",
+      "--adjacent-only",
+      "0",
+      "--cleanup",
+      "scoped-cfg",
+      "--scorer",
+      "llvm24",
+      "--split",
+      "B5",
+      "--left",
+      "B6",
+      "--right",
+      "B12",
+      "--debug-dir",
+      "/home/chh/kernel-benchmark-suite/experiments/hypersonic-intrinsic-full-20261109-v1/leaf0_vs_leaf1_tail",
+      "--out",
+      "/home/chh/kernel-benchmark-suite/experiments/hypersonic-intrinsic-full-20261109-v1/leaf0_vs_leaf1_tail.ll"
+    ],
+    "exit": 4,
+    "trials": [
+      {
+        "after": {
+          "blocks": 0,
+          "conditional_branches": 0,
+          "darm_static_cost": 0,
+          "instructions": 0,
+          "loops": 0,
+          "operations": [],
+          "phis": 0,
+          "selects": 0
+        },
+        "after_raw": {
+          "blocks": 0,
+          "conditional_branches": 0,
+          "darm_static_cost": 0,
+          "instructions": 0,
+          "loops": 0,
+          "operations": [],
+          "phis": 0,
+          "selects": 0
+        },
+        "alignment_order": "function_order_v1",
+        "candidate": "face_kernel:B5:B6:B12",
+        "cleaned_hash": "",
+        "cleanup_iterations": 0,
+        "control_hash": "5a42f1f0fd4aef6e150d46324c9aed0d7a4d61ba",
+        "decision": "reject",
+        "eligible": false,
+        "fusion_plan": {
+          "kind": "",
+          "left_context": {
+            "blocks": [],
+            "entry": "",
+            "exit": "",
+            "live_ins": [],
+            "live_outs": []
+          },
+          "matched_left": "",
+          "matched_right": "",
+          "replication_required": false,
+          "right_context": {
+            "blocks": [],
+            "entry": "",
+            "exit": "",
+            "live_ins": [],
+            "live_outs": []
+          },
+          "split_is_loop_header": false
+        },
+        "left": {
+          "blocks": [],
+          "entry": "",
+          "exit": "",
+          "live_ins": [],
+          "live_outs": []
+        },
+        "local_reject_reason": "",
+        "logical_decision": "",
+        "logical_left": "",
+        "logical_right": "",
+        "merge_path": "",
+        "orientation_swapped": false,
+        "original_darm_profitable": false,
+        "original_darm_similarity": 0,
+        "parent_hash": "b4f254a7055ca584cae23e44e04a7898fc85b91f",
+        "parent_ir": "../state-0.ll",
+        "reason": "side_effect_in_trial_scope_not_supported",
+        "replication_required": false,
+        "right": {
+          "blocks": [],
+          "entry": "",
+          "exit": "",
+          "live_ins": [],
+          "live_outs": []
+        },
+        "round_context": "../round-0.json",
+        "schema": "incremental-score-trial-v1",
+        "score_result": {
+          "cleanup_gain": null,
+          "contributions": [],
+          "coverage": {
+            "dependency": "unavailable",
+            "divergence": "unavailable",
+            "hardware_costs": "uncalibrated",
+            "legacy_counts_complete": false,
+            "liveness": "unavailable",
+            "operand_context_model": "not_modeled; inspect retained IR",
+            "provenance": "unavailable"
+          },
+          "dependency_delta": null,
+          "dependency_penalty_applied": null,
+          "liveness_penalty_applied": null,
+          "metrics": {},
+          "parent_gain": null,
+          "pressure_delta_slots32": null,
+          "reason": "trial_rejected",
+          "static_gain": null,
+          "static_score": null,
+          "status": "not_evaluable",
+          "total": null,
+          "work_delta": null
+        },
+        "semantic_validation": "not_run",
+        "timings_ms": {
+          "features": 0,
+          "merge": 0,
+          "normalization": 0,
+          "score_with_analysis": 0,
+          "trial_total": 0.787372
+        },
+        "valid": false,
+        "version": 0
+      }
+    ]
+  },
+  {
+    "tag": "two_boundary_regions",
+    "command": [
+      "/home/chh/kernel-benchmark-suite/build/llvm24-tti/fusion-search-llvm24",
+      "--ir",
+      "/home/chh/kernel-benchmark-suite/results/hypersonic-hip-llvm12-ir-v1/start.ll",
+      "--function",
+      "face_kernel",
+      "--structural",
+      "1",
+      "--adjacent-only",
+      "0",
+      "--cleanup",
+      "scoped-cfg",
+      "--scorer",
+      "llvm24",
+      "--split",
+      "B7",
+      "--left",
+      "R3",
+      "--right",
+      "R4",
+      "--debug-dir",
+      "/home/chh/kernel-benchmark-suite/experiments/hypersonic-intrinsic-full-20261109-v1/two_boundary_regions",
+      "--out",
+      "/home/chh/kernel-benchmark-suite/experiments/hypersonic-intrinsic-full-20261109-v1/two_boundary_regions.ll"
+    ],
+    "exit": 4,
+    "trials": [
+      {
+        "after": {
+          "blocks": 0,
+          "conditional_branches": 0,
+          "darm_static_cost": 0,
+          "instructions": 0,
+          "loops": 0,
+          "operations": [],
+          "phis": 0,
+          "selects": 0
+        },
+        "after_raw": {
+          "blocks": 0,
+          "conditional_branches": 0,
+          "darm_static_cost": 0,
+          "instructions": 0,
+          "loops": 0,
+          "operations": [],
+          "phis": 0,
+          "selects": 0
+        },
+        "alignment_order": "function_order_v1",
+        "candidate": "face_kernel:B7:R3:R4",
+        "cleaned_hash": "",
+        "cleanup_iterations": 0,
+        "control_hash": "5a42f1f0fd4aef6e150d46324c9aed0d7a4d61ba",
+        "decision": "reject",
+        "eligible": false,
+        "fusion_plan": {
+          "kind": "",
+          "left_context": {
+            "blocks": [],
+            "entry": "",
+            "exit": "",
+            "live_ins": [],
+            "live_outs": []
+          },
+          "matched_left": "",
+          "matched_right": "",
+          "replication_required": false,
+          "right_context": {
+            "blocks": [],
+            "entry": "",
+            "exit": "",
+            "live_ins": [],
+            "live_outs": []
+          },
+          "split_is_loop_header": false
+        },
+        "left": {
+          "blocks": [],
+          "entry": "",
+          "exit": "",
+          "live_ins": [],
+          "live_outs": []
+        },
+        "local_reject_reason": "",
+        "logical_decision": "",
+        "logical_left": "",
+        "logical_right": "",
+        "merge_path": "",
+        "orientation_swapped": false,
+        "original_darm_profitable": false,
+        "original_darm_similarity": 0,
+        "parent_hash": "b4f254a7055ca584cae23e44e04a7898fc85b91f",
+        "parent_ir": "../state-0.ll",
+        "reason": "side_effect_in_trial_scope_not_supported",
+        "replication_required": false,
+        "right": {
+          "blocks": [],
+          "entry": "",
+          "exit": "",
+          "live_ins": [],
+          "live_outs": []
+        },
+        "round_context": "../round-0.json",
+        "schema": "incremental-score-trial-v1",
+        "score_result": {
+          "cleanup_gain": null,
+          "contributions": [],
+          "coverage": {
+            "dependency": "unavailable",
+            "divergence": "unavailable",
+            "hardware_costs": "uncalibrated",
+            "legacy_counts_complete": false,
+            "liveness": "unavailable",
+            "operand_context_model": "not_modeled; inspect retained IR",
+            "provenance": "unavailable"
+          },
+          "dependency_delta": null,
+          "dependency_penalty_applied": null,
+          "liveness_penalty_applied": null,
+          "metrics": {},
+          "parent_gain": null,
+          "pressure_delta_slots32": null,
+          "reason": "trial_rejected",
+          "static_gain": null,
+          "static_score": null,
+          "status": "not_evaluable",
+          "total": null,
+          "work_delta": null
+        },
+        "semantic_validation": "not_run",
+        "timings_ms": {
+          "features": 0,
+          "merge": 0,
+          "normalization": 0,
+          "score_with_analysis": 0,
+          "trial_total": 0.796592
+        },
+        "valid": false,
+        "version": 0
+      }
+    ]
+  }
+]

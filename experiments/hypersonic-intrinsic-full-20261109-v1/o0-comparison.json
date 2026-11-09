@@ -1,0 +1,74 @@
+{
+  "O2": {
+    "summary": {
+      "backedges": 0,
+      "blocks": 56,
+      "canonical_regions_including_root": 21,
+      "conditional_branches": 31,
+      "loops": 0,
+      "multiway_cascades": 5,
+      "selects": 31,
+      "switches": 0
+    },
+    "counts": {
+      "alloca": 0,
+      "load": 47,
+      "store": 8,
+      "call": 34
+    }
+  },
+  "o0": {
+    "summary": {
+      "backedges": 0,
+      "blocks": 467,
+      "canonical_regions_including_root": 162,
+      "conditional_branches": 170,
+      "loops": 0,
+      "multiway_cascades": 13,
+      "selects": 0,
+      "switches": 0
+    },
+    "counts": {
+      "alloca": 1392,
+      "load": 3068,
+      "store": 2372,
+      "call": 192
+    }
+  },
+  "mem2reg": {
+    "summary": {
+      "backedges": 0,
+      "blocks": 467,
+      "canonical_regions_including_root": 162,
+      "conditional_branches": 170,
+      "loops": 0,
+      "multiway_cascades": 13,
+      "selects": 0,
+      "switches": 0
+    },
+    "counts": {
+      "alloca": 1216,
+      "load": 3068,
+      "store": 2372,
+      "call": 192
+    }
+  },
+  "sroa": {
+    "summary": {
+      "backedges": 0,
+      "blocks": 467,
+      "canonical_regions_including_root": 162,
+      "conditional_branches": 170,
+      "loops": 0,
+      "multiway_cascades": 13,
+      "selects": 0,
+      "switches": 0
+    },
+    "counts": {
+      "alloca": 0,
+      "load": 96,
+      "store": 8,
+      "call": 27
+    }
+  }
+}

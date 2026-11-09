@@ -1,0 +1,28 @@
+{
+  "scoped-local": {
+    "result": {
+      "commits": 1,
+      "output_on_stop": "last_committed_parent_or_initial_normalized_state",
+      "policy": "llvm24",
+      "require_parent_gain": true,
+      "semantic_validation": "not_run",
+      "stop": "no_positive_candidate",
+      "trials": 46
+    },
+    "binary_sha256": "bf8ff7cf9ae6c033cfa416c514178cf1bcb45c9efb7431a5fa44233f9aa8c40c",
+    "identical_to_previous_binary": true
+  },
+  "scoped-cfg": {
+    "result": {
+      "commits": 1,
+      "output_on_stop": "last_committed_parent_or_initial_normalized_state",
+      "policy": "llvm24",
+      "require_parent_gain": true,
+      "semantic_validation": "not_run",
+      "stop": "no_positive_candidate",
+      "trials": 44
+    },
+    "binary_sha256": "bf8ff7cf9ae6c033cfa416c514178cf1bcb45c9efb7431a5fa44233f9aa8c40c",
+    "identical_to_previous_binary": true
+  }
+}
