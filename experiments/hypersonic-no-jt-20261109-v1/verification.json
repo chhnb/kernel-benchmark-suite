@@ -1,0 +1,8 @@
+{
+  "pair_pass_lists_identical_except_JT": true,
+  "removed_per_level": 2,
+  "binary_identical_after_common_final_O3": true,
+  "binary_sha256": "b1f6616bd8062a5eb418c0258e38af644f18c1886c4bd8f7bd61eb93193a831e",
+  "gpu_full_output_passed": true,
+  "source_sha256": "afdea87737ff4d54dba36131bf8f679c77735e0b30e6726c0bf0707396c78021"
+}

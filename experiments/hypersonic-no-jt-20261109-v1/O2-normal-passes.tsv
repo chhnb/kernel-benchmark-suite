@@ -1,0 +1,91 @@
+KEEP	Target Transform Information
+KEEP	Force set function attributes
+KEEP	Type-Based Alias Analysis
+KEEP	Scoped NoAlias Alias Analysis
+KEEP	Infer set function attributes
+KEEP	AMDGPU Address space based Alias Analysis
+KEEP	External Alias Analysis
+KEEP	Unify multiple OpenCL metadata due to linking
+KEEP	AMDGPU Printf lowering
+KEEP	Late propagate attributes from kernels to functions
+KEEP	AMDGPU Inline All Functions
+KEEP	Interprocedural Sparse Conditional Constant Propagation
+KEEP	Called Value Propagation
+KEEP	Global Variable Optimizer
+KEEP	Promote Memory to Register
+KEEP	Dead Argument Elimination
+KEEP	Combine redundant instructions
+KEEP	Simplify the CFG
+KEEP	Globals Alias Analysis
+KEEP	Remove unused exception handling info
+KEEP	Function Integration/Inlining
+KEEP	OpenMP specific optimizations
+KEEP	Deduce function attributes
+KEEP	Lower intrinsics
+KEEP	Infer address spaces
+KEEP	AMDGPU Kernel Attributes
+KEEP	AMDGPU Promote Alloca to vector
+KEEP	SROA
+KEEP	Early CSE w/ MemorySSA
+KEEP	Speculatively execute instructions if target has divergent branches
+KEEP	Jump Threading
+KEEP	Value Propagation
+KEEP	Simplify the CFG
+KEEP	Combine redundant instructions
+KEEP	Conditionally eliminate dead library calls
+KEEP	PGOMemOPSize
+KEEP	Tail Call Elimination
+KEEP	Simplify the CFG
+KEEP	Reassociate expressions
+KEEP	Rotate Loops
+KEEP	Loop Invariant Code Motion
+KEEP	Unswitch loops
+KEEP	Simplify the CFG
+KEEP	Combine redundant instructions
+KEEP	Induction Variable Simplification
+KEEP	Recognize loop idioms
+KEEP	Delete dead loops
+KEEP	Unroll loops
+KEEP	MergedLoadStoreMotion
+KEEP	Global Value Numbering
+KEEP	MemCpy Optimization
+KEEP	Sparse Conditional Constant Propagation
+KEEP	Bit-Tracking Dead Code Elimination
+KEEP	Combine redundant instructions
+KEEP	Jump Threading
+KEEP	Value Propagation
+KEEP	Dead Store Elimination
+KEEP	Loop Invariant Code Motion
+KEEP	Aggressive Dead Code Elimination
+KEEP	Simplify the CFG
+KEEP	Combine redundant instructions
+KEEP	A No-Op Barrier Pass
+KEEP	Eliminate Available Externally Globals
+KEEP	Deduce function attributes in RPO
+KEEP	Global Variable Optimizer
+KEEP	Dead Global Elimination
+KEEP	Globals Alias Analysis
+KEEP	Float to int
+KEEP	Lower constant intrinsics
+KEEP	Rotate Loops
+KEEP	Loop Distribution
+KEEP	Loop Vectorization
+KEEP	Loop Load Elimination
+KEEP	Combine redundant instructions
+KEEP	Simplify the CFG
+KEEP	SLP Vectorizer
+KEEP	Optimize scalar/vector ops
+KEEP	Combine redundant instructions
+KEEP	Unroll loops
+KEEP	Combine redundant instructions
+KEEP	Loop Invariant Code Motion
+KEEP	Warn about non-applied transformations
+KEEP	Alignment from assumptions
+KEEP	Strip Unused Function Prototypes
+KEEP	Dead Global Elimination
+KEEP	Merge Duplicate Global Constants
+KEEP	Call Graph Profile
+KEEP	Loop Sink
+KEEP	Remove redundant instructions
+KEEP	Hoist/decompose integer division and remainder
+KEEP	Simplify the CFG

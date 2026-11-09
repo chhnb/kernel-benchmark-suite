@@ -1,0 +1,106 @@
+{
+  "O2-normal": {
+    "summary": {
+      "backedges": 0,
+      "blocks": 56,
+      "canonical_regions_including_root": 21,
+      "conditional_branches": 31,
+      "loops": 0,
+      "multiway_cascades": 5,
+      "selects": 33,
+      "switches": 0
+    },
+    "entry": null,
+    "exit": "B20"
+  },
+  "O2-no-jt": {
+    "summary": {
+      "backedges": 0,
+      "blocks": 59,
+      "canonical_regions_including_root": 25,
+      "conditional_branches": 31,
+      "loops": 0,
+      "multiway_cascades": 5,
+      "selects": 36,
+      "switches": 0
+    },
+    "entry": "B8",
+    "exit": "B23",
+    "L1_blocks": 6,
+    "L1_instructions": 104,
+    "external_entries": [
+      [
+        "B7",
+        "B8"
+      ]
+    ],
+    "external_exits": [
+      [
+        "B13",
+        "B23"
+      ]
+    ],
+    "single_entry": true,
+    "single_exit_destination": true,
+    "body": [
+      "B8",
+      "B9",
+      "B10",
+      "B11",
+      "B12",
+      "B13"
+    ]
+  },
+  "O3-normal": {
+    "summary": {
+      "backedges": 0,
+      "blocks": 56,
+      "canonical_regions_including_root": 21,
+      "conditional_branches": 31,
+      "loops": 0,
+      "multiway_cascades": 5,
+      "selects": 33,
+      "switches": 0
+    },
+    "entry": null,
+    "exit": "B20"
+  },
+  "O3-no-jt": {
+    "summary": {
+      "backedges": 0,
+      "blocks": 59,
+      "canonical_regions_including_root": 25,
+      "conditional_branches": 31,
+      "loops": 0,
+      "multiway_cascades": 5,
+      "selects": 36,
+      "switches": 0
+    },
+    "entry": "B8",
+    "exit": "B23",
+    "L1_blocks": 6,
+    "L1_instructions": 104,
+    "external_entries": [
+      [
+        "B7",
+        "B8"
+      ]
+    ],
+    "external_exits": [
+      [
+        "B13",
+        "B23"
+      ]
+    ],
+    "single_entry": true,
+    "single_exit_destination": true,
+    "body": [
+      "B8",
+      "B9",
+      "B10",
+      "B11",
+      "B12",
+      "B13"
+    ]
+  }
+}

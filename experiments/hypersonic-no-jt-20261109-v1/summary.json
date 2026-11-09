@@ -1,0 +1,43 @@
+{
+  "median_us_by_input_order": {
+    "prepared_baseline": [
+      1816.9610500335693,
+      1816.6409730911255
+    ],
+    "no_jt": [
+      1816.9610500335693,
+      1816.6409730911255
+    ]
+  },
+  "batch_medians_us": {
+    "prepared_baseline": [
+      [
+        1816.6409730911255,
+        1818.081021308899
+      ],
+      [
+        1816.9610500335693,
+        1816.3210153579712
+      ],
+      [
+        1817.760944366455,
+        1816.6409730911255
+      ]
+    ]
+  },
+  "aliases_by_identical_binary": {
+    "prepared_baseline": "prepared_baseline",
+    "no_jt": "prepared_baseline"
+  },
+  "decrease_vs_prepared_pct": {
+    "prepared_baseline": [
+      0.0,
+      0.0
+    ],
+    "no_jt": [
+      0.0,
+      0.0
+    ]
+  },
+  "correctness_passed": true
+}
