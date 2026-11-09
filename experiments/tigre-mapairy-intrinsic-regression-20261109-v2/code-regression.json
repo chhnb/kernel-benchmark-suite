@@ -1,0 +1,13 @@
+{
+  "search": {
+    "commits": 2,
+    "output_on_stop": "last_committed_parent_or_initial_normalized_state",
+    "policy": "llvm24",
+    "require_parent_gain": true,
+    "semantic_validation": "not_run",
+    "stop": "no_positive_candidate",
+    "trials": 19
+  },
+  "ir_identical_except_module_id_comment": true,
+  "binary_identical": true
+}

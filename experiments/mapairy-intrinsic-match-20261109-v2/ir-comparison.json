@@ -1,0 +1,276 @@
+{
+  "previous": {
+    "0": {
+      "sha256": "130d89d31e175129c35386aa68f040556a3addb5c0615a26948b75ee7963dce2",
+      "counts": {
+        "conditional_br": 70,
+        "unconditional_br": 44,
+        "phi": 32,
+        "select": 65
+      },
+      "calls": {
+        "llvm.amdgcn.workgroup.id.x": 1,
+        "llvm.amdgcn.dispatch.ptr": 1,
+        "llvm.amdgcn.workitem.id.x": 1,
+        "llvm.amdgcn.frexp.exp.i32.f64": 21,
+        "llvm.fabs.f64": 29,
+        "llvm.amdgcn.ldexp.f64": 59,
+        "llvm.amdgcn.frexp.mant.f64": 19,
+        "llvm.amdgcn.rcp.f64": 13,
+        "llvm.fma.f64": 247,
+        "llvm.fma.v2f64": 13,
+        "llvm.amdgcn.class.f64": 6
+      }
+    },
+    "1": {
+      "sha256": "cdbb6610ed9f2dd4c74e915315e9d7ce3c9a2f59843674c3d5ca209cc4c34d7d",
+      "counts": {
+        "conditional_br": 96,
+        "unconditional_br": 97,
+        "phi": 91,
+        "select": 77
+      },
+      "calls": {
+        "llvm.amdgcn.workgroup.id.x": 1,
+        "llvm.amdgcn.dispatch.ptr": 1,
+        "llvm.amdgcn.workitem.id.x": 1,
+        "llvm.amdgcn.frexp.exp.i32.f64": 21,
+        "llvm.fabs.f64": 29,
+        "llvm.amdgcn.ldexp.f64": 59,
+        "llvm.amdgcn.frexp.mant.f64": 19,
+        "llvm.amdgcn.rcp.f64": 12,
+        "llvm.fma.f64": 247,
+        "llvm.fma.v2f64": 13,
+        "llvm.amdgcn.class.f64": 6
+      }
+    },
+    "2": {
+      "sha256": "62ed8e27db8f74ca1e5dbfe8dfb436f7c4d7d5d1d2a51cccd02bf737aad0604c",
+      "counts": {
+        "conditional_br": 122,
+        "unconditional_br": 150,
+        "phi": 150,
+        "select": 89
+      },
+      "calls": {
+        "llvm.amdgcn.workgroup.id.x": 1,
+        "llvm.amdgcn.dispatch.ptr": 1,
+        "llvm.amdgcn.workitem.id.x": 1,
+        "llvm.amdgcn.frexp.exp.i32.f64": 21,
+        "llvm.fabs.f64": 29,
+        "llvm.amdgcn.ldexp.f64": 59,
+        "llvm.amdgcn.frexp.mant.f64": 19,
+        "llvm.amdgcn.rcp.f64": 11,
+        "llvm.fma.f64": 247,
+        "llvm.fma.v2f64": 13,
+        "llvm.amdgcn.class.f64": 6
+      }
+    },
+    "3": {
+      "sha256": "165e2d1895baa579853da0fc7112ca2a62190fb6bf8012c8669ce20a87574af3",
+      "counts": {
+        "conditional_br": 148,
+        "unconditional_br": 203,
+        "phi": 258,
+        "select": 158
+      },
+      "calls": {
+        "llvm.amdgcn.workgroup.id.x": 1,
+        "llvm.amdgcn.dispatch.ptr": 1,
+        "llvm.amdgcn.workitem.id.x": 1,
+        "llvm.amdgcn.frexp.exp.i32.f64": 21,
+        "llvm.fabs.f64": 29,
+        "llvm.amdgcn.ldexp.f64": 59,
+        "llvm.amdgcn.frexp.mant.f64": 19,
+        "llvm.amdgcn.rcp.f64": 10,
+        "llvm.fma.f64": 247,
+        "llvm.fma.v2f64": 13,
+        "llvm.amdgcn.class.f64": 6
+      }
+    }
+  },
+  "amdgpu_only": {
+    "0": {
+      "sha256": "130d89d31e175129c35386aa68f040556a3addb5c0615a26948b75ee7963dce2",
+      "counts": {
+        "conditional_br": 70,
+        "unconditional_br": 44,
+        "phi": 32,
+        "select": 65
+      },
+      "calls": {
+        "llvm.amdgcn.workgroup.id.x": 1,
+        "llvm.amdgcn.dispatch.ptr": 1,
+        "llvm.amdgcn.workitem.id.x": 1,
+        "llvm.amdgcn.frexp.exp.i32.f64": 21,
+        "llvm.fabs.f64": 29,
+        "llvm.amdgcn.ldexp.f64": 59,
+        "llvm.amdgcn.frexp.mant.f64": 19,
+        "llvm.amdgcn.rcp.f64": 13,
+        "llvm.fma.f64": 247,
+        "llvm.fma.v2f64": 13,
+        "llvm.amdgcn.class.f64": 6
+      }
+    },
+    "1": {
+      "sha256": "131fd53fe6cee7862834da2c7999e264c76e0494b234ee50da36cc192f634dea",
+      "counts": {
+        "conditional_br": 90,
+        "unconditional_br": 85,
+        "phi": 72,
+        "select": 78
+      },
+      "calls": {
+        "llvm.amdgcn.workgroup.id.x": 1,
+        "llvm.amdgcn.dispatch.ptr": 1,
+        "llvm.amdgcn.workitem.id.x": 1,
+        "llvm.amdgcn.frexp.exp.i32.f64": 20,
+        "llvm.fabs.f64": 29,
+        "llvm.amdgcn.ldexp.f64": 55,
+        "llvm.amdgcn.frexp.mant.f64": 18,
+        "llvm.amdgcn.rcp.f64": 12,
+        "llvm.fma.f64": 247,
+        "llvm.fma.v2f64": 13,
+        "llvm.amdgcn.class.f64": 6
+      }
+    },
+    "2": {
+      "sha256": "5878ab3b39abdef6ef08fad0410c9a7e3f36b8d08eda651e56ba9f2340c0db18",
+      "counts": {
+        "conditional_br": 110,
+        "unconditional_br": 126,
+        "phi": 112,
+        "select": 91
+      },
+      "calls": {
+        "llvm.amdgcn.workgroup.id.x": 1,
+        "llvm.amdgcn.dispatch.ptr": 1,
+        "llvm.amdgcn.workitem.id.x": 1,
+        "llvm.amdgcn.frexp.exp.i32.f64": 19,
+        "llvm.fabs.f64": 29,
+        "llvm.amdgcn.ldexp.f64": 51,
+        "llvm.amdgcn.frexp.mant.f64": 17,
+        "llvm.amdgcn.rcp.f64": 11,
+        "llvm.fma.f64": 247,
+        "llvm.fma.v2f64": 13,
+        "llvm.amdgcn.class.f64": 6
+      }
+    },
+    "3": {
+      "sha256": "144e238d2ceead8551981ed11d7130c121a6f6f6437a1fdace9ccfa44782c238",
+      "counts": {
+        "conditional_br": 130,
+        "unconditional_br": 167,
+        "phi": 196,
+        "select": 140
+      },
+      "calls": {
+        "llvm.amdgcn.workgroup.id.x": 1,
+        "llvm.amdgcn.dispatch.ptr": 1,
+        "llvm.amdgcn.workitem.id.x": 1,
+        "llvm.amdgcn.frexp.exp.i32.f64": 18,
+        "llvm.fabs.f64": 29,
+        "llvm.amdgcn.ldexp.f64": 47,
+        "llvm.amdgcn.frexp.mant.f64": 16,
+        "llvm.amdgcn.rcp.f64": 10,
+        "llvm.fma.f64": 247,
+        "llvm.fma.v2f64": 13,
+        "llvm.amdgcn.class.f64": 6
+      }
+    }
+  },
+  "fixed": {
+    "0": {
+      "sha256": "130d89d31e175129c35386aa68f040556a3addb5c0615a26948b75ee7963dce2",
+      "counts": {
+        "conditional_br": 70,
+        "unconditional_br": 44,
+        "phi": 32,
+        "select": 65
+      },
+      "calls": {
+        "llvm.amdgcn.workgroup.id.x": 1,
+        "llvm.amdgcn.dispatch.ptr": 1,
+        "llvm.amdgcn.workitem.id.x": 1,
+        "llvm.amdgcn.frexp.exp.i32.f64": 21,
+        "llvm.fabs.f64": 29,
+        "llvm.amdgcn.ldexp.f64": 59,
+        "llvm.amdgcn.frexp.mant.f64": 19,
+        "llvm.amdgcn.rcp.f64": 13,
+        "llvm.fma.f64": 247,
+        "llvm.fma.v2f64": 13,
+        "llvm.amdgcn.class.f64": 6
+      }
+    },
+    "1": {
+      "sha256": "d14f951f1ed3ff0a82ff2eb39be2d782f776817fd0308fcee39665a89ca6c447",
+      "counts": {
+        "conditional_br": 69,
+        "unconditional_br": 43,
+        "phi": 32,
+        "select": 78
+      },
+      "calls": {
+        "llvm.amdgcn.workgroup.id.x": 1,
+        "llvm.amdgcn.dispatch.ptr": 1,
+        "llvm.amdgcn.workitem.id.x": 1,
+        "llvm.amdgcn.frexp.exp.i32.f64": 20,
+        "llvm.fabs.f64": 28,
+        "llvm.amdgcn.ldexp.f64": 55,
+        "llvm.amdgcn.frexp.mant.f64": 18,
+        "llvm.amdgcn.rcp.f64": 12,
+        "llvm.fma.f64": 228,
+        "llvm.fma.v2f64": 12,
+        "llvm.amdgcn.class.f64": 6
+      }
+    },
+    "2": {
+      "sha256": "8e7ad83adc7d3d135163bdf925b2a9c3b91eb4b544885990a243b257812187bc",
+      "counts": {
+        "conditional_br": 68,
+        "unconditional_br": 42,
+        "phi": 32,
+        "select": 91
+      },
+      "calls": {
+        "llvm.amdgcn.workgroup.id.x": 1,
+        "llvm.amdgcn.dispatch.ptr": 1,
+        "llvm.amdgcn.workitem.id.x": 1,
+        "llvm.amdgcn.frexp.exp.i32.f64": 19,
+        "llvm.fabs.f64": 27,
+        "llvm.amdgcn.ldexp.f64": 51,
+        "llvm.amdgcn.frexp.mant.f64": 17,
+        "llvm.amdgcn.rcp.f64": 11,
+        "llvm.fma.f64": 209,
+        "llvm.fma.v2f64": 11,
+        "llvm.amdgcn.class.f64": 6
+      }
+    },
+    "3": {
+      "sha256": "6f011f2324017a0009f93f7156e56efea373cea73308af439045fe03077ffddb",
+      "counts": {
+        "conditional_br": 67,
+        "unconditional_br": 41,
+        "phi": 32,
+        "select": 105
+      },
+      "calls": {
+        "llvm.amdgcn.workgroup.id.x": 1,
+        "llvm.amdgcn.dispatch.ptr": 1,
+        "llvm.amdgcn.workitem.id.x": 1,
+        "llvm.amdgcn.frexp.exp.i32.f64": 18,
+        "llvm.fabs.f64": 26,
+        "llvm.amdgcn.ldexp.f64": 47,
+        "llvm.amdgcn.frexp.mant.f64": 16,
+        "llvm.amdgcn.rcp.f64": 10,
+        "llvm.fma.f64": 190,
+        "llvm.fma.v2f64": 10,
+        "llvm.amdgcn.class.f64": 6
+      }
+    }
+  },
+  "source_sha256": {
+    "tools/darm_pair_engine/InstructionMatch.cpp": "74689c6da693c9dd93c2ea988d4cf9f32584e38a7d76775967f80adfa49fefa8",
+    "tests/postopt/intrinsic_matching.cpp": "748a7f6eb2aa43642fb0eb6314fe8d80cffa517a109c2c5fbd30a57ab819bc02"
+  }
+}

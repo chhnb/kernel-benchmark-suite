@@ -1,0 +1,9 @@
+{
+  "commits": 224,
+  "stop": "all_32_completed",
+  "final_ir_identical": false,
+  "binary_identical": true,
+  "search_summary_identical": true,
+  "code_commit": "08453aabceb0feb39a67d593815393d47075acc8",
+  "ir_identical_except_module_id_comment": true
+}

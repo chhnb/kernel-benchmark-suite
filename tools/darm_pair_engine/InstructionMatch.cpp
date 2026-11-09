@@ -1,6 +1,7 @@
 #include "llvm/IR/Operator.h"
 #include "InstructionMatch.h"
 #include "llvm/IR/IntrinsicInst.h"
+#include "llvm/IR/IntrinsicsAMDGPU.h"
 #include "llvm/IR/Module.h"
 
 // code is taken from : https://github.com/rcorcs/llvm-project/tree/func-merge
@@ -24,7 +25,11 @@ static bool matchIntrinsicCalls(Intrinsic::ID ID, const CallInst *CI1,
   // ordinary operands and guards unmatched calls with their original paths.
   auto *F = CI1->getCalledFunction();
   const bool Pure = ID == Intrinsic::floor || ID == Intrinsic::copysign ||
-                    F->getName().startswith("llvm.amdgcn.rcp.");
+                    ID == Intrinsic::fma || ID == Intrinsic::fabs ||
+                    F->getName().startswith("llvm.amdgcn.rcp.") ||
+                    ID == Intrinsic::amdgcn_ldexp ||
+                    ID == Intrinsic::amdgcn_frexp_mant ||
+                    ID == Intrinsic::amdgcn_frexp_exp;
   const bool Sample = F->getName().startswith("llvm.amdgcn.image.sample.lz.3d.");
   if (Pure || Sample) {
     if (CI1->getAttributes() != CI2->getAttributes() ||
@@ -35,7 +40,9 @@ static bool matchIntrinsicCalls(Intrinsic::ID ID, const CallInst *CI1,
         CI1->isMustTailCall() || CI2->isMustTailCall() ||
         CI1->isConvergent() || CI2->isConvergent())
       return false;
-    const auto A = CI1->getFastMathFlags(), B = CI2->getFastMathFlags();
+    // frexp.exp returns an integer and cannot carry fast-math flags.
+    const auto A = isa<FPMathOperator>(CI1) ? CI1->getFastMathFlags() : FastMathFlags();
+    const auto B = isa<FPMathOperator>(CI2) ? CI2->getFastMathFlags() : FastMathFlags();
     if (A.allowReassoc() != B.allowReassoc() || A.noNaNs() != B.noNaNs() ||
         A.noInfs() != B.noInfs() || A.noSignedZeros() != B.noSignedZeros() ||
         A.allowReciprocal() != B.allowReciprocal() ||
