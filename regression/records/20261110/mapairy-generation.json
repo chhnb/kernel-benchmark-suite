@@ -1,0 +1,32 @@
+{
+  "schema": "generated-fixtures-v1",
+  "case": "mapairy",
+  "source_sha256": "6a7288ed37a9bcaeb3934de2db561307fc353ef3e2d9b6880cc370e4d10b0fba",
+  "compile": [
+    "g++",
+    "-std=c++17",
+    "-O2",
+    "-ffp-contract=off",
+    "-fno-fast-math",
+    "/home/chh/kernel-benchmark-suite/regression/generators/generated_fixtures.cpp",
+    "-o",
+    "/home/chh/kernel-benchmark-suite/regression/runs/20261110-mapairy-generated/generated/generate",
+    "-DMAPAIRY",
+    "-DBOOST_MATH_STANDALONE",
+    "-I/home/chh/kernel-benchmark-suite/cases/boost-mapairy/source/boost-math/include"
+  ],
+  "generator": "splitmix64-shuffled-12-anchors-v1",
+  "rows": [
+    {
+      "count": 65539,
+      "seed": 2026110301,
+      "spec": "/home/chh/kernel-benchmark-suite/regression/runs/20261110-mapairy-generated/generated/65539/input.txt",
+      "files": {
+        "input.bin": "0018705f2b9c28db1fcc20f4fd6356db8e2ae19972c910029e8978b4baa51125",
+        "input.txt": "48df34fd7c04ececc3d0514491bb267a1b5c43fcc097896ce67f79d5f0ae4157",
+        "output-init.bin": "29030f2cf2b457628ba0d7d2afd24a6666bea024198f23f84e650aa5ce14b9e3",
+        "reference.bin": "584c3a9a5e9d1b20cfb3552b021eb528d8dab34ebc4a091a5599bc09a1c0ec26"
+      }
+    }
+  ]
+}

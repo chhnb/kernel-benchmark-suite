@@ -1,15 +1,24 @@
 {
-  "schema": "regression-catalog-v1",
-  "active_snapshot": "golden/20261109-gfx906-v1",
-  "cases": [
-    "vllm",
-    "tigre"
-  ],
+  "schema": "regression-catalog-v2",
   "default_slowdown_limit_pct": 2,
   "automatic_reference_update": false,
-  "input_scope": {
-    "vllm": "real Qwen3.5 64K six layers; software HIP cache_eval",
-    "tigre": "full Siddon head64 phantom 50 projections"
+  "hardware": "gfx906",
+  "cases": {
+    "vllm": {
+      "snapshot": "golden/20261110-generated-gfx906-v1",
+      "runner": "tools/run_generated_regression.py",
+      "input": "generated synthetic BF16 64K/128K"
+    },
+    "mapairy": {
+      "snapshot": "golden/20261110-generated-gfx906-v1",
+      "runner": "tools/run_generated_regression.py",
+      "input": "generated interval-mixture only"
+    },
+    "tigre": {
+      "snapshot": "golden/20261109-gfx906-v1",
+      "runner": "tools/run_golden_regression.py",
+      "input": "head64 phantom 50 projections"
+    }
   },
-  "hardware": "gfx906"
+  "generated_input_policy": "temporary; delete after success; never git"
 }

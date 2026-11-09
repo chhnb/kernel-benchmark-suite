@@ -1,0 +1,15 @@
+{
+  "vllm": {
+    "candidate": "/home/chh/kernel-benchmark-suite/regression/runs/20261110-current-generated/vllm-pair/variant.hsaco",
+    "candidate_sha256": "adc38fb80b4460edd9c442c08e5bc23ecd66c0186a6128a36f79df4bd0a362a9",
+    "reference_sha256": "adc38fb80b4460edd9c442c08e5bc23ecd66c0186a6128a36f79df4bd0a362a9",
+    "binary_identical": true
+  },
+  "mapairy": {
+    "candidate": "/home/chh/kernel-benchmark-suite/regression/runs/20261110-current-generated/mapairy-pair/variant.hsaco",
+    "candidate_sha256": "22f56e97be8d5c4068aa264500ad00a6ceebc372c5088198a1ed47d47813c082",
+    "reference_sha256": "affe64a238c73c36aa5704f46b50becdd2f8d4902b355536fa83745bea098422",
+    "binary_identical": false
+  },
+  "code_commit": "09ad779e45674b42a148b4d54cf23ba62840b61e"
+}

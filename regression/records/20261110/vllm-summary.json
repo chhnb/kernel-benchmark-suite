@@ -1,0 +1,71 @@
+{
+  "case": "vllm",
+  "correctness_passed": true,
+  "performance_passed": true,
+  "counts": [
+    65536,
+    131072
+  ],
+  "median_us": {
+    "baseline": [
+      2896.800049,
+      5748.158691
+    ],
+    "reference": [
+      2144.47998,
+      4183.999023
+    ],
+    "candidate": [
+      2144.47998,
+      4183.999023
+    ]
+  },
+  "batch_medians_us": {
+    "baseline": [
+      [
+        2895.359131,
+        5747.358887
+      ],
+      [
+        2896.800049,
+        5748.158691
+      ],
+      [
+        2898.080078,
+        5748.159668
+      ]
+    ],
+    "reference": [
+      [
+        2109.440186,
+        4183.999023
+      ],
+      [
+        2144.47998,
+        4184.959961
+      ],
+      [
+        2149.120117,
+        4181.919922
+      ]
+    ]
+  },
+  "candidate_slowdown_vs_reference_pct": [
+    0.0,
+    0.0
+  ],
+  "candidate_decrease_vs_baseline_pct": [
+    25.970728261334685,
+    27.211490706563712
+  ],
+  "threshold_pct": 2,
+  "aliases_by_identical_binary": {
+    "baseline": "baseline",
+    "reference": "reference",
+    "candidate": "reference"
+  },
+  "candidate_is_same_binary_as_reference": true,
+  "source_commit": "09ad779e45674b42a148b4d54cf23ba62840b61e",
+  "dataset": "generated synthetic; not historical Qwen / original Map-Airy shuffle",
+  "generation_receipt": "generation.json"
+}

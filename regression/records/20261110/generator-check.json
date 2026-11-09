@@ -1,0 +1,9 @@
+{
+  "passed": true,
+  "deterministic_two_runs": true,
+  "tokens": 64,
+  "exact_reference_buffers": 4,
+  "oracle": "independent established NumPy oracle",
+  "oracle_sha256": "47de94f10ff4af49e71bfabd6f7a6d581d11f28d34205823a952b6dd8437823a",
+  "generator_sha256": "6a7288ed37a9bcaeb3934de2db561307fc353ef3e2d9b6880cc370e4d10b0fba"
+}

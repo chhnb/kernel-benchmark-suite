@@ -1,0 +1,87 @@
+{
+  "date": "2026-11-10",
+  "implementation_commit": "09ad779",
+  "cases": [
+    {
+      "case": "vllm",
+      "status": "positive",
+      "scope": "generated random BF16 64K/128K; not Qwen",
+      "historical_evidence": "experiments/qwen64k-all32-greedy-20261108-v1",
+      "latest_regression": {
+        "passed": true,
+        "input": "generated random 64K/128K",
+        "baseline_reduction_pct": [
+          25.970728,
+          27.211491
+        ],
+        "candidate_same_binary_as_reference": true,
+        "evidence": "regression/runs/20261110-vllm-generated-v2/summary.json"
+      }
+    },
+    {
+      "case": "mapairy",
+      "status": "positive_mixed_only",
+      "scope": "mixed lower-tail synthetic; coherent input is slower",
+      "historical_evidence": "experiments/mapairy-full-convergence-20261109-v1",
+      "latest_regression": {
+        "passed": false,
+        "correctness_passed": true,
+        "slowdown_pct": 5.194808,
+        "candidate_us": 25.92000008,
+        "reference_us": 24.63999939,
+        "baseline_us": 49.43999863,
+        "reference_updated": false,
+        "evidence": "regression/runs/20261110-mapairy-generated/summary.json"
+      }
+    },
+    {
+      "case": "tigre",
+      "status": "positive",
+      "scope": "head64 / 50 projections",
+      "historical_evidence": "experiments/tigre-intrinsic-match-20261109-v1"
+    },
+    {
+      "case": "hypersonic",
+      "status": "experimental",
+      "scope": "fixed L1+L2; unresolved original runner fault; not full greedy",
+      "historical_evidence": "experiments/hypersonic-multi-anchor-20261109-v1"
+    },
+    {
+      "case": "srad-stage1",
+      "status": "no_op",
+      "scope": "0 commits; same baseline binary",
+      "historical_evidence": "experiments/srad-greedy-20261109-v1"
+    },
+    {
+      "case": "srad-stage2",
+      "status": "no_op",
+      "scope": "0 commits; no stable positive measured fusion",
+      "historical_evidence": "experiments/srad-stage2-greedy-20261109-v2"
+    },
+    {
+      "case": "hipims-hllc",
+      "status": "gpu_pending",
+      "scope": "all valid candidates negative; GPU admission denied",
+      "historical_evidence": "experiments/hipims-hllc-greedy-20261109-v3"
+    },
+    {
+      "case": "cholla-hlld",
+      "status": "structural_coverage",
+      "scope": "candidate side-effect restriction; no current GPU gain",
+      "historical_evidence": "docs/llvm24-focus-nine-status.md"
+    },
+    {
+      "case": "reentry",
+      "status": "structural_coverage",
+      "scope": "large IR; unsupported candidate structure; no current GPU gain",
+      "historical_evidence": "docs/llvm24-focus-nine-status.md"
+    }
+  ],
+  "excluded_current_focus": [
+    "landau",
+    "cudaflow",
+    "saspoint5",
+    "sw2d",
+    "hipims-george"
+  ]
+}

@@ -1,0 +1,50 @@
+{
+  "schema": "generated-gpu-regression-v1",
+  "device": "gfx906",
+  "generator_source": "regression/generators/generated_fixtures.cpp",
+  "generator_sha256": "6a7288ed37a9bcaeb3934de2db561307fc353ef3e2d9b6880cc370e4d10b0fba",
+  "input_storage": "generated_per_run_then_deleted_on_success; no inputs in this snapshot or Git",
+  "cases": {
+    "vllm": {
+      "reference": "vllm/reference.hsaco",
+      "baseline": "vllm/baseline.hsaco",
+      "counts": [
+        65536,
+        131072
+      ],
+      "seeds": [
+        2026111001,
+        2026111002
+      ],
+      "scope": "synthetic finite BF16; 8 heads x 128; shuffled/skipped slots; full software HIP cache_eval; not real Qwen data"
+    },
+    "mapairy": {
+      "reference": "mapairy/reference.hsaco",
+      "baseline": "mapairy/baseline.hsaco",
+      "counts": [
+        65539
+      ],
+      "seeds": [
+        2026110301
+      ],
+      "scope": "12 lower-tail anchors, shuffled interval-mixture; new deterministic order, not historical input bytes",
+      "boost_commit": "4a6ce7851dc3e54ca7a6e3db3181e86e39d6d9ce"
+    }
+  },
+  "sha256": {
+    "runner/bench_hip": "00a524a1d73091ea16633bda3e2575cf1c9d3ce47a41427964371764183aafc4",
+    "vllm/reference.hsaco": "adc38fb80b4460edd9c442c08e5bc23ecd66c0186a6128a36f79df4bd0a362a9",
+    "vllm/baseline.hsaco": "ecef393bba00232932f706472a65e7699d9f0d29ca1177438557e33608bc0c6f",
+    "mapairy/reference.hsaco": "affe64a238c73c36aa5704f46b50becdd2f8d4902b355536fa83745bea098422",
+    "mapairy/baseline.hsaco": "014d5b000ac5b06f711d2252751893141a505713b2f43ef2b55909cb452d1eea"
+  },
+  "provenance": {
+    "runner/bench_hip": "/home/chh/kernel-benchmark-suite/build/bin/bench_hip",
+    "vllm/reference.hsaco": "/home/chh/kernel-benchmark-suite/regression/golden/20261109-gfx906-v1/vllm/artifacts/winner.hsaco",
+    "vllm/baseline.hsaco": "/home/chh/kernel-benchmark-suite/regression/golden/20261109-gfx906-v1/vllm/artifacts/unmerged.hsaco",
+    "mapairy/reference.hsaco": "/home/chh/kernel-benchmark-suite/experiments/mapairy-full-convergence-20261109-v1/greedy-pair/variant.hsaco",
+    "mapairy/baseline.hsaco": "/home/chh/kernel-benchmark-suite/experiments/mapairy-full-convergence-20261109-v1/greedy-pair/baseline.hsaco"
+  },
+  "threshold_pct": 2,
+  "automatic_reference_update": false
+}
