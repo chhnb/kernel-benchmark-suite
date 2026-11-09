@@ -250,11 +250,66 @@ static unsigned cleanupScoped(Function &f,const std::set<Instruction*>&scope) {
   }
   throw std::runtime_error("scoped_cleanup_did_not_converge");
 }
+// Fold only short integer compare/select/cast triangles introduced by the
+// trial. No loads, calls, division, floating-point operations or original
+// body blocks are speculated. This is an opt-in structural cleanup experiment,
+// not a target-cost policy.
+static bool foldScopedScalarTriangle(Function &f,
+    const std::set<BasicBlock*> &created, std::set<Instruction*> &permitted,
+    std::vector<WeakVH> &work) {
+  for (auto &head : f) {
+    if (!created.count(&head)) continue;
+    auto *br=dyn_cast<BranchInst>(head.getTerminator());
+    if (!br || !br->isConditional()) continue;
+    for (unsigned side=0;side<2;++side) {
+      auto *body=br->getSuccessor(side), *join=br->getSuccessor(1-side);
+      if (body==join || body==&head || join==&head ||
+          !created.count(body) || !created.count(join) || body->hasAddressTaken() ||
+          body->getSinglePredecessor()!=&head || body->getSingleSuccessor()!=join)
+        continue;
+      unsigned count=0;bool safe=true;
+      for (auto &i:*body) {
+        if (i.isTerminator()) continue;
+        ++count;
+        bool kind=isa<ICmpInst>(i)||isa<SelectInst>(i)||
+                  isa<TruncInst>(i)||isa<ZExtInst>(i)||isa<SExtInst>(i);
+        safe &= kind && i.getType()->isIntegerTy() &&
+                i.getType()->getIntegerBitWidth()<=64 &&
+                !i.mayReadOrWriteMemory() && isSafeToSpeculativelyExecute(&i) &&
+                permitted.count(&i);
+      }
+      if (!safe || !count || count>5) continue;
+      for (auto &phi:join->phis())
+        safe &= permitted.count(&phi) && phi.getBasicBlockIndex(&head)>=0 &&
+                phi.getBasicBlockIndex(body)>=0;
+      if (!safe) continue;
+      while(body->size()>1) body->front().moveBefore(br);
+      IRBuilder<> builder(br);
+      for (auto &phi:join->phis()) {
+        auto *direct=phi.getIncomingValueForBlock(&head);
+        auto *via=phi.getIncomingValueForBlock(body);
+        auto *v=builder.CreateSelect(br->getCondition(),side==0?via:direct,
+                                    side==0?direct:via,"scoped.triangle.select");
+        if(auto *i=dyn_cast<Instruction>(v))if(i->getParent()==&head){
+          permitted.insert(i);work.emplace_back(i);
+        }
+        phi.removeIncomingValue(body,false);
+        phi.setIncomingValue(phi.getBasicBlockIndex(&head),v);
+      }
+      auto *jump=BranchInst::Create(join,br);
+      permitted.insert(jump);work.emplace_back(jump);
+      br->eraseFromParent();body->eraseFromParent();
+      return true;
+    }
+  }
+  return false;
+}
 // CFG edits are restricted to blocks created by this trial. Boundary
 // predecessor terminators and successor PHIs are the only additional edit
-// sites. No generic SimplifyCFG, speculation, or recursive DCE.
+// sites. No generic SimplifyCFG or recursive DCE. The opt-in triangle
+// mode only speculates the bounded integer operations checked above.
 static unsigned cleanupScopedCFG(Function &f, const std::set<Instruction*> &local,
-                                  const std::set<BasicBlock*> &created) {
+                                  const std::set<BasicBlock*> &created, bool scalarTriangles=false) {
   std::set<Instruction*> permitted=local;
   std::vector<WeakVH> blocks, work;
   for(auto &b:f)if(created.count(&b)){
@@ -282,6 +337,10 @@ static unsigned cleanupScopedCFG(Function &f, const std::set<Instruction*> &loca
     cleanupScoped(f,scalar);
     std::set<BasicBlock*> live;
     for(auto &h:blocks)if(auto *b=dyn_cast_or_null<BasicBlock>((Value*)h))live.insert(b);
+    if(scalarTriangles && foldScopedScalarTriangle(f,live,permitted,work)){
+      audit();if(verifyFunction(f,&errs()))throw std::runtime_error("scoped_triangle_invalid_ir");
+      continue;
+    }
     // Fold only conditions implied by dominating edges, within new blocks.
     foldProvenBranch(f,&live);
     for(auto &h:blocks){auto *head=dyn_cast_or_null<BasicBlock>((Value*)h);if(!head)continue;
@@ -325,7 +384,7 @@ static unsigned cleanupScopedCFG(Function &f, const std::set<Instruction*> &loca
 }
 
 unsigned cleanup(Module &m,const std::string &function,unsigned level,CleanupMode mode) {
-  if(mode==CleanupMode::None||mode==CleanupMode::ScopedLocal||mode==CleanupMode::ScopedCFG)return 0;
+  if(mode==CleanupMode::None||mode==CleanupMode::ScopedLocal||mode==CleanupMode::ScopedCFG||mode==CleanupMode::ScopedCFGTriangles)return 0;
   canonicalPhiOrder(m,function);
   if(mode==CleanupMode::O3){normalize(m,level);return 0;}
   auto*f=m.getFunction(function);if(!f)throw std::runtime_error("cleanup function missing");
@@ -796,9 +855,9 @@ Trial tryPair(const Module&parent,const Candidate&c,unsigned version,unsigned le
     if(!expanded->getUniqueSuccessor())return reject("replication_requires_unique_successor");
   }
   std::map<std::string,std::string> others;for(auto&g:*t.raw)if(&g!=f)others[g.getName().str()]=text(g);
-  bool scoped=mode==CleanupMode::ScopedLocal||mode==CleanupMode::ScopedCFG;
+  bool scoped=mode==CleanupMode::ScopedLocal||mode==CleanupMode::ScopedCFG||mode==CleanupMode::ScopedCFGTriangles;
   auto localBefore=scoped?snapshotLocal(*f):std::vector<LocalSnapshot>{};
-  std::vector<WeakVH> priorBlocks; if(mode==CleanupMode::ScopedCFG)for(auto &b:*f)priorBlocks.emplace_back(&b);
+  std::vector<WeakVH> priorBlocks; if(mode==CleanupMode::ScopedCFG||mode==CleanupMode::ScopedCFGTriangles)for(auto &b:*f)priorBlocks.emplace_back(&b);
   auto mt=Clock::now();
   std::unique_ptr<Analysis> leafAnalysis;
   std::unique_ptr<RegionAnalyzer> leafAnalyzer;
@@ -838,7 +897,7 @@ Trial tryPair(const Module&parent,const Candidate&c,unsigned version,unsigned le
   auto blockLabel=[](const Value *V){std::string S;raw_string_ostream O(S);V->printAsOperand(O,false);O.flush();return S;};
   auto rawLocalScope=scoped?changedLocal(*f,localBefore):std::set<Instruction*>{};
   std::set<BasicBlock*> oldBlocks,rawCreated;
-  if(mode==CleanupMode::ScopedCFG){for(auto &h:priorBlocks)if(auto *b=dyn_cast_or_null<BasicBlock>((Value*)h))oldBlocks.insert(b);for(auto &b:*f)if(!oldBlocks.count(&b))rawCreated.insert(&b);}
+  if(mode==CleanupMode::ScopedCFG||mode==CleanupMode::ScopedCFGTriangles){for(auto &h:priorBlocks)if(auto *b=dyn_cast_or_null<BasicBlock>((Value*)h))oldBlocks.insert(b);for(auto &b:*f)if(!oldBlocks.count(&b))rawCreated.insert(&b);}
   ValueToValueMapTy CloneMap;
   auto nt=Clock::now();t.normalized=CloneModule(*t.raw,CloneMap);
   if(t.logicalState)t.logicalState=t.logicalState->clone(CloneMap);
@@ -856,7 +915,7 @@ Trial tryPair(const Module&parent,const Candidate&c,unsigned version,unsigned le
   for(auto *b:rawCreated)if(auto *mapped=dyn_cast_or_null<BasicBlock>(CloneMap.lookup(b)))cleanCreated.insert(mapped);
   // Do not retain CloneMap's tracking handles while cleanup mutates the clone.
   CloneMap.clear();
-  t.cleanupIterations=mode==CleanupMode::ScopedCFG?cleanupScopedCFG(*t.normalized->getFunction(c.function),cleanLocalScope,cleanCreated):mode==CleanupMode::ScopedLocal?cleanupScoped(*t.normalized->getFunction(c.function),cleanLocalScope):cleanup(*t.normalized,c.function,level,mode);canonicalPhiOrder(*t.normalized,c.function);t.normalizeMs=millis(nt);
+  t.cleanupIterations=(mode==CleanupMode::ScopedCFG||mode==CleanupMode::ScopedCFGTriangles)?cleanupScopedCFG(*t.normalized->getFunction(c.function),cleanLocalScope,cleanCreated,mode==CleanupMode::ScopedCFGTriangles):mode==CleanupMode::ScopedLocal?cleanupScoped(*t.normalized->getFunction(c.function),cleanLocalScope):cleanup(*t.normalized,c.function,level,mode);canonicalPhiOrder(*t.normalized,c.function);t.normalizeMs=millis(nt);
   for(size_t I=0;I<CleanedBlocks.size();++I)if(Value *V=CleanedBlocks[I])
     t.blockProvenance[I].cleanedBlock=blockLabel(V);
   if(verifyModule(*t.normalized,&errs()))return reject("normalized_verifier_failed");
@@ -874,7 +933,8 @@ RoundContext makeRound(const Module&parent,const std::string&function,unsigned v
   if(mode==CleanupMode::DarmCFGEarlyCSE)r.cleanup+="-earlycse-memoryssa0";
   if(mode==CleanupMode::PostOptFixedPoint)r.cleanup="phi-edge-function-order-v1;earlycse-memoryssa0-instcombine-simplifycfg-default-dce-earlycse-pure-scalar-phi-triangle-v1-fixedpoint-sha1-cap32";
   if(mode==CleanupMode::ScopedLocal)r.cleanup="changed-instructions-only;simplify-local-cse-dce;no-cfg-motion;protected-outside-audit;control-noop";
-  if(mode==CleanupMode::ScopedCFG)r.cleanup="trial-created-blocks-only;empty-block-bypass-empty-diamond-proven-branch;boundary-terminators-and-phis;outside-audit;control-no-created-blocks-noop";
+  if(mode==CleanupMode::ScopedCFG||mode==CleanupMode::ScopedCFGTriangles)r.cleanup="trial-created-blocks-only;empty-block-bypass-empty-diamond-proven-branch;boundary-terminators-and-phis;outside-audit;control-no-created-blocks-noop";
+  if(mode==CleanupMode::ScopedCFGTriangles)r.cleanup+=";short-safe-integer-triangle-max5";
   if(mode==CleanupMode::None)r.cleanup="none;no_external_cleanup";
   if(mode==CleanupMode::DarmCFGScalarFixedPoint)r.cleanup+="-earlycse-instcombine-fixedpoint-sha1-cap32";
   auto*f=parent.getFunction(function);if(!f||f->isDeclaration())throw std::runtime_error("round function missing");

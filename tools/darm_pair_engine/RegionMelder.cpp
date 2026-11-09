@@ -390,7 +390,7 @@ void RegionMelder::setOperendsForBr(BranchInst *LeftBr, BranchInst *RightBr,
 
   // update the value maps
   MergedValuesToLeftValues[NewBi] = LeftBr;
-  MergedValuesToLeftValues[NewBi] = RightBr;
+  MergedValuesToRightValues[NewBi] = RightBr;
   OrigToMergedValues[LeftBr] = NewBi;
   OrigToMergedValues[RightBr] = NewBi;
 
