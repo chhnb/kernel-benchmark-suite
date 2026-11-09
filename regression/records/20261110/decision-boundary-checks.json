@@ -1,0 +1,53 @@
+{
+  "vllm": {
+    "candidate": "/home/chh/kernel-benchmark-suite/regression/runs/20261110-decision-boundary/current/vllm-pair/variant.hsaco",
+    "candidate_sha256": "adc38fb80b4460edd9c442c08e5bc23ecd66c0186a6128a36f79df4bd0a362a9",
+    "reference_sha256": "adc38fb80b4460edd9c442c08e5bc23ecd66c0186a6128a36f79df4bd0a362a9",
+    "binary_identical": true
+  },
+  "mapairy": {
+    "candidate": "/home/chh/kernel-benchmark-suite/regression/runs/20261110-decision-boundary/current/mapairy-pair/variant.hsaco",
+    "candidate_sha256": "affe64a238c73c36aa5704f46b50becdd2f8d4902b355536fa83745bea098422",
+    "reference_sha256": "affe64a238c73c36aa5704f46b50becdd2f8d4902b355536fa83745bea098422",
+    "binary_identical": true
+  },
+  "code_commit": "e6f05018ce28e42491c8df8ba41ab372e5b8c59e",
+  "source_state": "working-tree implementation; parent commit in code_commit; exact source hashes below",
+  "source_sha256": {
+    "tools/fusion_search.cpp": "597c7f74449ef797eb52326c2c133b91ec5d26d73dec12fd6d040eb79ace6b35",
+    "tools/fusion_search.h": "f8115f2db6e9a39270ff09d9104978e701ee0f54b0fcd8809c6beae37325071a",
+    "tools/fusion_search_llvm24_main.cpp": "64998c57f30a9a48967fd11837215a6b7f642adb3e42335a02fc7a4c30681ab8",
+    "tools/logical_region_state.cpp": "e0af32bcbb8df35df747f3b751c4e8465d620650e73e0bdc6c2620d60aa39b5f",
+    "tests/postopt/complete-leaf/check.cpp": "3fd43597b8cb426b788057e9f2153ed7a57a6433e0a248060843b848a8888b32"
+  },
+  "mapairy_search": {
+    "commits": 16,
+    "output_on_stop": "last_committed_parent_or_initial_normalized_state",
+    "policy": "llvm24",
+    "require_parent_gain": true,
+    "semantic_validation": "not_run",
+    "stop": "no_positive_candidate",
+    "trials": 1370
+  },
+  "hypersonic": {
+    "old": {
+      "valid": true,
+      "gain": 2,
+      "anchors": 0,
+      "moved": 0,
+      "cross_decision_leaves": true
+    },
+    "multi": {
+      "valid": true,
+      "gain": 92,
+      "anchors": 4,
+      "moved": 22,
+      "cross_decision_leaves": true
+    },
+    "multi_matches_prior_outer_selector_ir_excluding_module_id": true
+  },
+  "tests": {
+    "complete_leaf_cpp_and_cpu_runtime": "passed",
+    "log": "/home/chh/region-fusion-lab/work/decision-boundary-regress-20261110-v1/output.log"
+  }
+}

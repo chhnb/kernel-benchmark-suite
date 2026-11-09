@@ -79,6 +79,28 @@ int main(int argc,char **argv){try{
   check(found,"candidate missing");
  }
 
+ // The same CFG on a different discriminator is a distinct/unknown decision.
+ // Opt-in exposes the capability, but explicit pairs cannot bypass the default.
+ auto crossed=named("crossed");
+ auto at=crossed.find("%q = icmp eq i32 %which, 1");
+ check(at!=std::string::npos,"crossed fixture");
+ crossed.replace(at,std::string("%q = icmp eq i32 %which, 1").size(),"%q = icmp eq i32 %x, 1");
+ auto cm=parseAssemblyString(crossed,diag,ctx);check(bool(cm),"crossed parse");
+ auto *cf=cm->getFunction("crossed");
+ bool opted=false;
+ for(auto c:enumerate(*cf,0,true)){
+  if(c.left!="E1_12"||c.right!="E3_12")continue;
+  for(auto allowed:enumerate(*cf,0))check(allowed.key()!=c.key(),"cross decision leaked into default");
+  auto hash=moduleHash(*cm);c.hybrid=true;
+  auto rejected=tryPair(*cm,c,0,3,CleanupMode::ScopedCFG);
+  check(!rejected.valid&&rejected.reason=="complete_leaf_cross_or_unknown_decision_requires_opt_in","explicit bypass");
+  check(moduleHash(*cm)==hash,"crossed parent changed");
+  c.crossDecisionLeaves=true;
+  auto accepted=tryPair(*cm,c,0,3,CleanupMode::ScopedCFG);
+  check(accepted.valid&&!verifyModule(*accepted.normalized,&errs()),"opt-in capability lost");opted=true;
+ }
+ check(opted,"cross decision opt-in missing");
+
  // A second decision containing a potentially trapping operation must not
  // be hoisted onto the first leaf; reject on the unmodified parent.
  auto unsafe=named("unsafe");

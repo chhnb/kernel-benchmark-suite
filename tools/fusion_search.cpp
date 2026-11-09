@@ -453,9 +453,21 @@ unsigned cleanup(Module &m,const std::string &function,unsigned level,CleanupMod
   return 0;
 }
 struct Unit {BasicBlock*entry;BasicBlock*exit;Region*region;std::set<BasicBlock*>blocks;};
+// Conservative IR decision identity: comparisons against constants must use
+// the identical SSA discriminator. Do not equate x with 1-x or infer source
+// ownership for compound/unknown predicates. Those require explicit opt-in.
+static Value *decisionDiscriminator(BasicBlock *b) {
+  auto *br=dyn_cast<BranchInst>(b->getTerminator());
+  auto *cmp=br&&br->isConditional()?dyn_cast<CmpInst>(br->getCondition()):nullptr;
+  if(!cmp)return nullptr;
+  auto *a=cmp->getOperand(0),*c=cmp->getOperand(1);
+  if(isa<Constant>(a)==isa<Constant>(c))return nullptr;
+  return isa<Constant>(a)?c:a;
+}
 struct Inventory {
   std::vector<std::unique_ptr<Region>> logicalRegions;
   std::vector<std::tuple<std::string,std::string,std::string>> leafPairs;
+  std::set<std::tuple<std::string,std::string,std::string>> sameDecisionLeafPairs;
   std::map<std::string,BasicBlock*> blocks;
   std::map<BasicBlock*,std::string> ids;
   std::map<std::string,Unit> units;
@@ -514,7 +526,12 @@ struct Inventory {
           auto li=makeLeaf(l,exit),ri=makeLeaf(r,exit);
           if(li.empty()||ri.empty()||(units.at(li).blocks.size()==1&&units.at(ri).blocks.size()==1))continue;
           bool overlap=false;for(auto *bb:units.at(li).blocks)overlap|=units.at(ri).blocks.count(bb);
-          if(!overlap)leafPairs.emplace_back(ids.at(&p),li,ri);
+          if(!overlap){
+            auto pair=std::make_tuple(ids.at(&p),li,ri);leafPairs.push_back(pair);
+            auto *discriminator=decisionDiscriminator(&p);
+            if(discriminator && discriminator==decisionDiscriminator(q))
+              sameDecisionLeafPairs.insert(pair);
+          }
         }
       }
     }
@@ -566,7 +583,7 @@ static Boundary boundary(const Unit&u,Function&f) {
     for(auto*x:i.users())if(auto*use=dyn_cast<Instruction>(x))if(!u.blocks.count(use->getParent()))outs.insert(name(&i));
   }}v.liveIns.assign(ins.begin(),ins.end());v.liveOuts.assign(outs.begin(),outs.end());return v;
 }
-std::vector<Candidate> enumerate(Function&f,unsigned version) {
+std::vector<Candidate> enumerate(Function&f,unsigned version,bool crossDecisionLeaves) {
   Analysis a(f); Inventory inv(f,a);std::vector<Candidate> result;
   auto frontier=[&](const std::set<BasicBlock*>&side,const std::set<BasicBlock*>&opposite){
     std::vector<std::string> rs,out;std::set<BasicBlock*>covered;
@@ -658,7 +675,7 @@ std::vector<Candidate> enumerate(Function&f,unsigned version) {
     for(auto&li:frontier(ls,rs))for(auto&ri:frontier(rs,ls))
       if(bool(inv.units.at(li).region)==bool(inv.units.at(ri).region))result.push_back({f.getName().str(),inv.ids.at(&b),li,ri,version});
   }
-  for(auto &pair:inv.leafPairs)result.push_back({f.getName().str(),std::get<0>(pair),std::get<1>(pair),std::get<2>(pair),version});
+  for(auto &pair:inv.leafPairs)if(crossDecisionLeaves||inv.sameDecisionLeafPairs.count(pair))result.push_back({f.getName().str(),std::get<0>(pair),std::get<1>(pair),std::get<2>(pair),version});
   std::sort(result.begin(),result.end(),[](const Candidate&a,const Candidate&b){return a.key()<b.key();});
   result.erase(std::unique(result.begin(),result.end(),[](const Candidate&a,const Candidate&b){return a.key()==b.key();}),result.end());return result;
 }
@@ -887,6 +904,11 @@ Trial tryPair(const Module&parent,const Candidate&c,unsigned version,unsigned le
   if(!completeLeaf&&(!node||!node->getIDom()||!node->getIDom()->getBlock()||!Utils::isValidMergeLocation(*split,a.pdt)))return reject("unsupported_split_location");
   Unit l=inv.units.at(c.left),r=inv.units.at(c.right);
   if(completeLeaf){
+    auto key=std::make_tuple(c.split,c.left,c.right);
+    auto reverse=std::make_tuple(c.split,c.right,c.left);
+    if(!c.crossDecisionLeaves && !inv.sameDecisionLeafPairs.count(key) &&
+       !inv.sameDecisionLeafPairs.count(reverse))
+      return reject("complete_leaf_cross_or_unknown_decision_requires_opt_in");
     if(logical)return reject("complete_leaf_requires_structural_enumeration");
     if(!c.hybrid)return reject("complete_leaf_requires_structural_mode");
     if(!l.exit||l.exit!=r.exit)return reject("complete_leaf_exit_mismatch");
@@ -1163,11 +1185,11 @@ Result greedy(const Module&input,const std::string&function,const Options&o,cons
   std::set<std::string> committedStates{moduleHash(*result.module)};
   for(unsigned version=0;version<o.maxRounds;++version){
     auto*f=result.module->getFunction(function);if(!f||f->isDeclaration())throw std::runtime_error("function missing");
-    auto candidates=enumerate(*f,version);if(logical)candidates=logical->filter(*f,candidates);if(candidates.empty()){result.stop="no_supported_candidates";return result;}
+    auto candidates=enumerate(*f,version,o.crossDecisionLeaves);if(logical)candidates=logical->filter(*f,candidates);if(candidates.empty()){result.stop="no_supported_candidates";return result;}
     if(candidates.size()>o.maxTrials-result.trials){result.stop="trial_budget_before_complete_round";return result;}
     const auto round=makeRound(*result.module,function,version,o.optLevel,o.cleanupMode);if(observer)observer->round(round);
     Trial best;ScoreResult bestResult;double bestScore=o.threshold;bool anyScored=false;
-    for(auto&candidate:candidates){candidate.localCopysign=o.localCopysign;candidate.localUnion=o.localUnion;candidate.hybrid=o.hybrid;candidate.coalesceGaps=o.coalesceGaps;candidate.completeLeafPlan=o.completeLeafPlan;auto t=tryPair(*result.module,candidate,version,o.optLevel,o.cleanupMode,logical.get());++result.trials;
+    for(auto&candidate:candidates){candidate.localCopysign=o.localCopysign;candidate.localUnion=o.localUnion;candidate.hybrid=o.hybrid;candidate.coalesceGaps=o.coalesceGaps;candidate.completeLeafPlan=o.completeLeafPlan;candidate.crossDecisionLeaves=o.crossDecisionLeaves;auto t=tryPair(*result.module,candidate,version,o.optLevel,o.cleanupMode,logical.get());++result.trials;
       auto score=evaluateTrial(*result.module,t,round,scorer);bool accept=eligible(t,score,o);anyScored|=score.status==ScoreStatus::Scored;
       if(observer)observer->trial(t,round,score,accept);
       if(accept&&score.total>bestScore){bestScore=score.total;bestResult=std::move(score);best=std::move(t);}

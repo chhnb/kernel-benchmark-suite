@@ -24,6 +24,16 @@
       "scope": "mixed lower-tail synthetic; coherent input is slower",
       "historical_evidence": "experiments/mapairy-full-convergence-20261109-v1",
       "latest_regression": {
+        "passed": true,
+        "correctness_passed": true,
+        "candidate_same_binary_as_reference": true,
+        "candidate_us": 24.63999939,
+        "baseline_us": 49.44099808,
+        "baseline_reduction_pct": 50.16281963,
+        "reference_updated": false,
+        "evidence": "regression/records/20261110/mapairy-boundary-fixed-summary.json"
+      },
+      "prior_regression": {
         "passed": false,
         "correctness_passed": true,
         "slowdown_pct": 5.194808,

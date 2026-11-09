@@ -21,6 +21,7 @@ struct Candidate {
   bool hybrid=false;
   bool coalesceGaps=false;
   bool completeLeafPlan=false;
+  bool crossDecisionLeaves=false;
   std::string key() const { return function+":"+split+":"+left+":"+right; }
 };
 struct OperationKey {
@@ -132,6 +133,7 @@ struct Options {
   bool hybrid=false;
   bool coalesceGaps=false;
   bool completeLeafPlan=false;
+  bool crossDecisionLeaves=false;
 };
 struct Observer {
   virtual ~Observer() = default;
@@ -155,7 +157,8 @@ ScoreResult evaluateTrial(const llvm::Module &, Trial &, const RoundContext &, c
 bool eligible(const Trial &, const ScoreResult &, const Options &);
 void normalize(llvm::Module &, unsigned optLevel);
 unsigned cleanup(llvm::Module &, const std::string &function, unsigned level, CleanupMode);
-std::vector<Candidate> enumerate(llvm::Function &, unsigned version);
+// Complete E-leaves require same-SSA constant predicates unless explicitly enabled.
+std::vector<Candidate> enumerate(llvm::Function &, unsigned version, bool crossDecisionLeaves=false);
 std::vector<Candidate> enumerateAdjacent(llvm::Function &, unsigned version);
 Trial tryPair(const llvm::Module &, const Candidate &, unsigned currentVersion,
               unsigned optLevel, CleanupMode mode=CleanupMode::O3, const LogicalRegionState *logical=nullptr);

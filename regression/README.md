@@ -38,3 +38,7 @@ python3 experiments/saspoint5-cuda-v1/run_cpu.py UNIQUE_LABEL python3 /home/chh/
 TIGRE 沿用 `tools/run_golden_regression.py tigre --candidate /absolute/current-tigre.hsaco --out /absolute/new-tigre-run` 与现有冻结 head64/50 projections 基准。
 
 旧 Qwen 真数据快照保留为历史归档，不作为 vLLM 日常回归输入，也未加入 Git。旧入口的 `vllm` 模式仅用于主动重放历史真数据。历史说明见 `HISTORY-20261109.md`。
+
+## 完整叶子候选边界
+
+搜索默认 `--cross-decision-leaves 0`。不同或无法识别的SSA判别值的完整叶子候选需要显式启用1；Hypersonic的指定多锚点入口已显式设置。Map-Airy默认搜索已恢复冻结二进制并通过混合输入回归。详见 `../docs/complete-leaf-decision-boundary.md`。
