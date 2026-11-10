@@ -11,6 +11,17 @@
 #include <vector>
 namespace fusion {
 class LogicalRegionState;
+// How work is executed on a path that did not originally run it.
+//  None:   never speculate work. Unmatched instructions are always guarded;
+//          only a decision's own condition slice may be evaluated early;
+//          structural dispatch does not choose local if-conversion.
+//  Legacy: historical behaviour (replication shells and else-if entries
+//          speculate whenever safe; structural local if-conversion).
+//  Budget: speculate safe work whose weight <= speculationBudget, guard the
+//          rest; also speculates cheap unmatched ranges of ordinary pairs.
+// Explicit engines (--local-compute/--local-union, full predication, triangle
+// cleanups) remain explicit commands and are not changed by this mode.
+enum class SpeculationMode { None, Legacy, Budget };
 enum class CleanupMode { None, O3, DarmCFG, DarmCFGEarlyCSE, DarmCFGScalarFixedPoint, PostOptFixedPoint, StructuralCFG, ScopedLocal, ScopedCFG, ScopedCFGTriangles };
 struct Candidate {
   std::string function, split, left, right;
@@ -23,7 +34,10 @@ struct Candidate {
   bool completeLeafPlan=false;
   bool crossDecisionLeaves=false;
   bool crossLevelB2R=false;
-  int speculationBudget=-1;
+  // Library default is Legacy so existing tools/tests reproduce; the
+  // fusion-search CLI defaults to None.
+  SpeculationMode speculation=SpeculationMode::Legacy;
+  int speculationBudget=4;
   std::string key() const { return function+":"+split+":"+left+":"+right; }
 };
 struct OperationKey {
@@ -148,9 +162,8 @@ struct Options {
   // Allow B2R/R2B whose optional block sits behind further tests of the split's
   // own discriminator (DARM would replicate that decision chain). Default off.
   bool crossLevelB2R=false;
-  // <0 historical. Otherwise cap work executed on a path that did not run it:
-  // replication-paired blocks, else-if entry hoisting, local if-conversion.
-  int speculationBudget=-1;
+  SpeculationMode speculation=SpeculationMode::Legacy;
+  int speculationBudget=4; // weight units, used only by SpeculationMode::Budget
 };
 struct Observer {
   virtual ~Observer() = default;

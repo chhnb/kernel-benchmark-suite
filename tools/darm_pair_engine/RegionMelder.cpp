@@ -104,27 +104,44 @@ unsigned llvm::speculationWeight(const Instruction &I) {
   }
 }
 
-// Budget < 0 keeps the historical rule: a block paired with a branch-only
-// replication placeholder runs on both paths whenever every instruction is
-// speculatable. Budget >= 0 also guards it when its speculation weight exceeds
-// the budget, so the expanded side does not execute the region's path work.
+bool llvm::safeToSpeculate(const Instruction &I) {
+  if (I.mayReadOrWriteMemory() || I.mayHaveSideEffects())
+    return false;
+  // isSafeToSpeculativelyExecute ignores convergence; a convergent operation
+  // run under a different set of active lanes changes its meaning.
+  if (auto *CB = dyn_cast<CallBase>(&I))
+    if (CB->isConvergent())
+      return false;
+  return isSafeToSpeculativelyExecute(&I);
+}
+
+// Mode 0 none: a block paired with a branch-only replication placeholder is
+// always guarded. Mode 1 legacy: it runs on both paths whenever every
+// instruction is speculatable (historical DARM). Mode 2 budget: legacy, but
+// guarded when its speculation weight exceeds the budget.
 bool requireUnpredication(BasicBlock* Current, BasicBlock* Corresponding,
-                          int ShellSpeculationBudget) {
+                          int Mode, int Budget) {
   if (Corresponding->size() > 1)
     return true;
-  // Replication can pair a real block with a branch-only placeholder.
-  // That does not authorize executing its loads, stores, calls or trapping
-  // arithmetic on the other path. Preserve the predicate unless every
-  // non-PHI, non-terminator instruction is safe to speculate.
+  if (Mode == 0)
+    return true;
   unsigned Weight = 0;
   for (auto &I : *Current) {
     if (isa<PHINode>(I) || I.isTerminator())
       continue;
+    // Legacy keeps its historical test (which admits e.g. dereferenceable
+    // loads) and only adds the convergence exclusion; budget mode also
+    // refuses any memory access.
     if (!isSafeToSpeculativelyExecute(&I))
+      return true;
+    if (auto *CB = dyn_cast<CallBase>(&I))
+      if (CB->isConvergent())
+        return true;
+    if (Mode == 2 && !safeToSpeculate(I))
       return true;
     Weight += speculationWeight(I);
   }
-  return ShellSpeculationBudget >= 0 && Weight > unsigned(ShellSpeculationBudget);
+  return Mode == 2 && Weight > unsigned(Budget);
 }
 
 std::string RegionMelder::sourceBlockID(BasicBlock *BB) const {
@@ -219,7 +236,7 @@ void RegionMelder::cloneInstructions() {
         assert(ClonedRightParentIt != MergedValuesToRightValues.end() &&
                "Cloned left BB not found for right value!");
         // if (cast<BasicBlock>(ClonedRightParentIt->second)->size() > 1)
-        if(requireUnpredication(LeftI->getParent(), cast<BasicBlock>(ClonedRightParentIt->second), ShellSpeculationBudget))
+        if(requireUnpredication(LeftI->getParent(), cast<BasicBlock>(ClonedRightParentIt->second), SpeculationMode, SpeculationBudget))
           updateSplitRangeMap(true, NewI);
       }
 
@@ -239,7 +256,7 @@ void RegionMelder::cloneInstructions() {
         assert(ClonedLeftParentIt != MergedValuesToLeftValues.end() &&
                "Cloned left BB not found for right value!");
         // if (cast<BasicBlock>(ClonedLeftParentIt->second)->size() > 1)
-        if(requireUnpredication(RightI->getParent(), cast<BasicBlock>(ClonedLeftParentIt->second), ShellSpeculationBudget))
+        if(requireUnpredication(RightI->getParent(), cast<BasicBlock>(ClonedLeftParentIt->second), SpeculationMode, SpeculationBudget))
           updateSplitRangeMap(false, NewI);
       }
     }
@@ -854,6 +871,23 @@ void RegionMelder::coalesceGapRanges() {
 
 void RegionMelder::runUnpredicationPass() {
   if (CoalesceGaps) coalesceGapRanges();
+  // Budget mode: a cheap, safe unmatched range stays in the melded block and
+  // runs on both paths instead of paying a guard (branch + carrier PHIs).
+  // Its definitions still dominate their uses, so no PHI is needed.
+  if (SpeculationMode == 2) {
+    SmallVector<InstrRange, 8> Kept;
+    for (auto &Range : SplitRanges) {
+      bool Safe = true; unsigned Weight = 0;
+      for (auto *I = Range.getStart();; I = I->getNextNode()) {
+        Safe &= !isa<PHINode>(I) && !I->isTerminator() && safeToSpeculate(*I);
+        Weight += speculationWeight(*I);
+        if (I == Range.getEnd()) break;
+      }
+      if (Safe && Weight <= unsigned(SpeculationBudget)) { ++SpeculatedRanges; continue; }
+      Kept.push_back(Range);
+    }
+    SplitRanges.assign(Kept.begin(), Kept.end());
+  }
 
 
   for (unsigned RangeIndex = 0; RangeIndex < SplitRanges.size(); ++RangeIndex) {

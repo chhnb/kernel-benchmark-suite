@@ -43,6 +43,8 @@ public:
 
 // Weight of executing I on a path that did not originally run it (div/rem 8, call 4, other 1).
 unsigned speculationWeight(const llvm::Instruction &I);
+// Safe to run on a path that did not execute it: no trap, memory, side effect or convergence.
+bool safeToSpeculate(const llvm::Instruction &I);
 
 class RegionMelder {
 public:
@@ -159,8 +161,10 @@ public:
       SourceBlocks.push_back({WeakVH(&BB),"B"+std::to_string(I++)});}
   }
   bool CoalesceGaps=false;
-  // <0: historical replication speculation. See requireUnpredication().
-  int ShellSpeculationBudget=-1;
+  // 0 none, 1 legacy (default), 2 budget. See requireUnpredication().
+  int SpeculationMode=1;
+  int SpeculationBudget=4;
+  unsigned SpeculatedRanges=0;
   unsigned CoalescedGapGroups=0;
   std::function<void(const ValueToValueMapTy&)> onValueMapping;
   const std::vector<BlockOrigin>& blockOrigins() const { return BlockOrigins; }

@@ -743,10 +743,13 @@ struct AdjacentLeafEntry {
   BasicBlock *first=nullptr,*second=nullptr,*left=nullptr,*right=nullptr,*tail=nullptr;
   BranchInst *a=nullptr,*b=nullptr;
   bool hitA=false,hitB=false;
-  // budget<0: historical (hoist any safe entry expression). Otherwise refuse to
-  // normalize when the hoisted second-decision body outweighs the budget:
-  // apply() makes every lane, including the first leaf's, execute it.
-  bool prepare(BasicBlock *L,BasicBlock *R,DominatorTree &DT,LoopInfo &LI,bool regions=false,int budget=-1) {
+  // apply() hoists the second decision block above the first test, so every
+  // lane evaluates it. The instructions computing that decision's own
+  // condition must be evaluated to choose a leaf; anything else in the block
+  // is leaf work. None: no leaf work may be hoisted. Legacy: any safe work.
+  // Budget: safe work up to the budget.
+  bool prepare(BasicBlock *L,BasicBlock *R,DominatorTree &DT,LoopInfo &LI,bool regions=false,
+               SpeculationMode mode=SpeculationMode::Legacy,int budget=4) {
     auto *P=L->getSinglePredecessor(),*Q=R->getSinglePredecessor();
     if(!P||!Q||P==Q)return false;
     if(P->getSinglePredecessor()==Q){std::swap(L,R);std::swap(P,Q);}
@@ -762,17 +765,23 @@ struct AdjacentLeafEntry {
     if(!L->phis().empty()||!R->phis().empty()||L->hasAddressTaken()||R->hasAddressTaken())return false;
     // Only speculate safe, memory-free entry expressions. Operands must
     // already dominate P or be earlier instructions of this same entry.
+    std::set<Instruction*> slice;{
+      SmallVector<Instruction*,16> work;if(auto *c=dyn_cast<Instruction>(B->getCondition()))work.push_back(c);
+      while(!work.empty()){auto *i=work.pop_back_val();if(i->getParent()!=Q||!slice.insert(i).second)continue;
+        for(auto &op:i->operands())if(auto *d=dyn_cast<Instruction>(op))work.push_back(d);}
+    }
     unsigned hoisted=0;
     for(auto &I:*Q){if(I.isTerminator())continue;
       if(isa<PHINode>(I)||isa<CallBase>(I)||I.mayReadOrWriteMemory()||I.mayHaveSideEffects()||!isSafeToSpeculativelyExecute(&I))return false;
-      hoisted+=speculationWeight(I);
+      if(!slice.count(&I))hoisted+=speculationWeight(I);
       for(auto &O:I.operands())if(auto *D=dyn_cast<Instruction>(O)){
         if(D->getParent()==Q){if(!D->comesBefore(&I))return false;}
         else if(!DT.dominates(D,A))return false;
       }
     }
     if(auto *C=dyn_cast<Instruction>(B->getCondition()))if(C->getParent()!=Q&&!DT.dominates(C,A))return false;
-    if(budget>=0&&hoisted>unsigned(budget))return false;
+    if(mode==SpeculationMode::None&&hoisted>0)return false;
+    if(mode==SpeculationMode::Budget&&hoisted>unsigned(budget))return false;
     first=P;second=Q;left=L;right=R;tail=Tail;a=A;b=B;hitA=HA;hitB=HB;return true;
   }
   BasicBlock *apply() {
@@ -841,7 +850,8 @@ static unsigned hoistLeafLoads(Unit &u, Function &f, BasicBlock *gate) {
 // stubs: only lanes that originally executed an anchor reach its body. SSAUpdater
 // carries path-specific values across the new join; no optional load is hoisted.
 static bool meldExclusiveBlocks(BasicBlock *left,BasicBlock *right,Value *choose,
-                                bool coalesce,unsigned &groups,std::string &why) {
+                                bool coalesce,unsigned &groups,std::string &why,
+                                SpeculationMode mode=SpeculationMode::Legacy,int budget=4) {
   auto &f=*left->getParent();
   auto *lb=dyn_cast<BranchInst>(left->getTerminator());
   auto *rb=dyn_cast<BranchInst>(right->getTerminator());
@@ -900,7 +910,7 @@ static bool meldExclusiveBlocks(BasicBlock *left,BasicBlock *right,Value *choose
   }
   if(verifyFunction(f,&errs())){why="anchor_ssa_verifier_failed";return false;}
   Analysis a(f);RegionAnalyzer ma(gate,a.dt,a.pdt);ma.selectExplicitBlocks(lbody,rbody);
-  RegionMelder melder(ma,true);melder.CoalesceGaps=coalesce;melder.merge(0);groups+=melder.CoalescedGapGroups;
+  RegionMelder melder(ma,true);melder.CoalesceGaps=coalesce;melder.SpeculationMode=int(mode);melder.SpeculationBudget=budget;melder.merge(0);groups+=melder.CoalescedGapGroups;
   if(verifyFunction(f,&errs())){why="anchor_meld_verifier_failed";return false;}
   return true;
 }
@@ -935,7 +945,7 @@ static bool meldLeafPlan(Module &m,const Candidate &c,Unit l,Unit r,BasicBlock *
     auto *lb=dyn_cast_or_null<BasicBlock>((Value*)p.left),*rb=dyn_cast_or_null<BasicBlock>((Value*)p.right);
     if(!lb||!rb||used.count(lb)||used.count(rb))continue;
     std::string reason;
-    if(!meldExclusiveBlocks(lb,rb,selector,c.coalesceGaps,groups,reason)){
+    if(!meldExclusiveBlocks(lb,rb,selector,c.coalesceGaps,groups,reason,c.speculation,c.speculationBudget)){
       if(reason=="ordered_or_crossing_anchor"||reason=="non_straight_anchor"||reason=="address_taken_anchor"||reason=="side_effect_anchor")continue;
       why=reason;return false;
     }
@@ -1076,7 +1086,7 @@ static Trial tryPairImpl(const Module&parent,const Candidate&c,unsigned version,
     if(!l.exit||l.exit!=r.exit)return reject("complete_leaf_exit_mismatch");
     for(auto *bb:l.blocks)if(r.blocks.count(bb))return reject("overlapping_pair");
     AdjacentLeafEntry entry;
-    if(!entry.prepare(l.entry,r.entry,a.dt,a.loops,true,c.speculationBudget)||entry.first!=split)
+    if(!entry.prepare(l.entry,r.entry,a.dt,a.loops,true,c.speculation,c.speculationBudget)||entry.first!=split)
       return reject("complete_leaf_entry_not_normalizable");
     auto leftBoundary=boundary(l,*f),rightBoundary=boundary(r,*f);
     auto before=features(*f);
@@ -1138,7 +1148,7 @@ static Trial tryPairImpl(const Module&parent,const Candidate&c,unsigned version,
     // Disable local dispatch: this is a complete-region scoped trial.
     inner.coalesceGaps=c.coalesceGaps;
     // The outer complete-leaf boundary already decided cross-level admission.
-    inner.crossLevelB2R=c.crossLevelB2R||c.crossDecisionLeaves;inner.speculationBudget=c.speculationBudget;
+    inner.crossLevelB2R=c.crossLevelB2R||c.crossDecisionLeaves;inner.speculation=c.speculation;inner.speculationBudget=c.speculationBudget;
     auto out=tryPair(*t.raw,inner,version,level,mode,nullptr);
     out.candidate=c;out.before=before;
     out.left=leftBoundary;out.right=rightBoundary;
@@ -1214,7 +1224,8 @@ static Trial tryPairImpl(const Module&parent,const Candidate&c,unsigned version,
       // The local engine is if-conversion: both operand trees run on every
       // lane and only the root is shared. With a budget, hand heavy trees to
       // RegionMelder, which guards unmatched instructions instead.
-      if(useLocal&&c.speculationBudget>=0){
+      if(useLocal&&c.speculation==SpeculationMode::None)useLocal=false;
+      if(useLocal&&c.speculation==SpeculationMode::Budget){
         auto weight=[](BasicBlock *b){unsigned w=0;for(auto &i:*b)if(!i.isTerminator()&&!isa<PHINode>(i))w+=speculationWeight(i);return w;};
         unsigned extra=std::max(weight(l.entry),weight(r.entry))-speculationWeight(*leftLocal.root);
         if(extra>unsigned(c.speculationBudget))useLocal=false;
@@ -1222,7 +1233,7 @@ static Trial tryPairImpl(const Module&parent,const Candidate&c,unsigned version,
     }
   }
   AdjacentLeafEntry leafEntry;
-  bool directLeaves=c.hybrid&&!useLocal&&bool(l.region)==bool(r.region)&&l.exit&&l.exit==r.exit&&leafEntry.prepare(l.entry,r.entry,a.dt,a.loops,bool(l.region),c.speculationBudget);
+  bool directLeaves=c.hybrid&&!useLocal&&bool(l.region)==bool(r.region)&&l.exit&&l.exit==r.exit&&leafEntry.prepare(l.entry,r.entry,a.dt,a.loops,bool(l.region),c.speculation,c.speculationBudget);
   t.mergePath=directLeaves?(l.region?"darm-adjacent-R2R":"darm-adjacent-B2B"):useLocal?"local-compute":"darm-"+t.planKind;
   if(!directLeaves&&!useLocal&&!c.crossLevelB2R&&(t.planKind=="B2R"||t.planKind=="R2B")){
     auto *d=decisionDiscriminator(split);
@@ -1268,7 +1279,7 @@ static Trial tryPairImpl(const Module&parent,const Candidate&c,unsigned version,
     t.planKind=l.region?"R2R":"B2B";t.replication=false;
     t.leftContext=t.left;t.rightContext=t.right;
   }
-  RegionMelder melder(directLeaves?*leafAnalyzer:ma,true);melder.CoalesceGaps=c.coalesceGaps;melder.ShellSpeculationBudget=c.speculationBudget;if(t.logicalState)melder.onValueMapping=[&](const ValueToValueMapTy &m){t.logicalState->transfer(m);};if(useLocal){
+  RegionMelder melder(directLeaves?*leafAnalyzer:ma,true);melder.CoalesceGaps=c.coalesceGaps;melder.SpeculationMode=int(c.speculation);melder.SpeculationBudget=c.speculationBudget;if(t.logicalState)melder.onValueMapping=[&](const ValueToValueMapTy &m){t.logicalState->transfer(m);};if(useLocal){
     if(l.region||r.region)return reject("local_requires_basic_blocks");
     std::string why;
     if(!fuseLocalComputations(l.entry,r.entry,melder.onValueMapping,why,c.localUnion||c.hybrid)){t.reason=why;t.totalMs=millis(started);return t;}
@@ -1380,7 +1391,7 @@ Result greedy(const Module&input,const std::string&function,const Options&o,cons
     if(candidates.size()>o.maxTrials-result.trials){result.stop="trial_budget_before_complete_round";return result;}
     const auto round=makeRound(*result.module,function,version,o.optLevel,o.cleanupMode);if(observer)observer->round(round);
     Trial best;ScoreResult bestResult;double bestScore=o.threshold;bool anyScored=false;
-    for(auto&candidate:candidates){candidate.localCopysign=o.localCopysign;candidate.localUnion=o.localUnion;candidate.hybrid=o.hybrid;candidate.coalesceGaps=o.coalesceGaps;candidate.completeLeafPlan=o.completeLeafPlan;candidate.crossDecisionLeaves=o.crossDecisionLeaves;candidate.crossLevelB2R=o.crossLevelB2R;candidate.speculationBudget=o.speculationBudget;Trial t;++result.trials;
+    for(auto&candidate:candidates){candidate.localCopysign=o.localCopysign;candidate.localUnion=o.localUnion;candidate.hybrid=o.hybrid;candidate.coalesceGaps=o.coalesceGaps;candidate.completeLeafPlan=o.completeLeafPlan;candidate.crossDecisionLeaves=o.crossDecisionLeaves;candidate.crossLevelB2R=o.crossLevelB2R;candidate.speculation=o.speculation;candidate.speculationBudget=o.speculationBudget;Trial t;++result.trials;
       // A failing candidate (cleanup non-convergence, audit, invalid IR) is a
       // rejected trial, not a failed search. The parent module is never mutated.
       try{t=tryPair(*result.module,candidate,version,o.optLevel,o.cleanupMode,logical.get());}

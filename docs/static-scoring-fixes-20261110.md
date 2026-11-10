@@ -1,6 +1,6 @@
 # 静态评分实现修复：跨层级边界、单侧成本、投机预算、试融合异常隔离
 
-基于 `e4138fb`，分两次提交。新增的 guard 和投机预算默认关闭；两条边界规则默认开启，只会从默认候选集里拒绝候选。本地所有 fixture 在默认配置下的最终 IR 与原代码逐字节相同。
+基于 `e4138fb`，分两次提交。新增的 guard 默认关闭；两条边界规则默认开启，只会从默认候选集里拒绝候选。补丁 0003 把 CLI 的默认值改成不投机执行（2.6 节）。**要复现本补丁之前的结果，加上 `--speculation legacy --cross-level-b2r 1`**：本地 8 组 fixture 运行的最终 IR 与原代码逐字节相同。`regression/prepare_current_generated.py` 已为 Map-Airy 加上这两个参数。
 
 ## 0. 层级与四种合并形态
 
@@ -63,13 +63,21 @@ before 侧取父状态 S。scoped 清理模式下 S 与 control 相同；其他�
 
 规范化之后仍走区域复制的 B2R/R2B，如果可选块的支配链上有一个分支依赖 split 的判别值，并且这个分支决定可选块是否执行，就按跨层级拒绝，原因记为 `b2r_replicates_same_decision_chain_requires_opt_in`。`--cross-level-b2r 1` 可以恢复原来的行为。complete-leaf 嵌套产生的内层 trial 继承外层的 opt-in。相邻 else-if 叶子在这项检查之前就已规范化成菱形，不受影响。split 条件不是"与常量比较"的形式时（复合条件），本规则不生效，与 2.1 节的边界一致。
 
-### 2.6 `--speculation-budget N`（默认 -1，即原有行为）
+### 2.6 投机执行模式 `--speculation none|legacy|budget`
 
-限制"在本来不执行这段代码的路径上执行的工作量"。权重：div/rem 计 8，call 计 4，其他计 1。预算作用于三处投机执行：
+投机执行指：让一段代码在原程序不会执行它的路径上执行，结果用不上就丢弃。合并时，每段没对齐上的代码只有两种处理：投机执行，或者用分支保护（unpredication）。
 
-1. **区域复制中与空壳配对的块**：权重超过 N 就做 unpredication，用分支保护，而不是让两侧都执行。
-2. **相邻 else-if 规范化**：要提前的第二个判断块权重超过 N，就放弃规范化，改走 DARM 路径。
-3. **local-compute（if-conversion）**：没有被共享的操作数链权重超过 N，就改交给 RegionMelder，未对齐的指令会被保护起来。
+| 模式 | 行为 |
+|---|---|
+| `none`（**CLI 默认**） | 不投机执行任何工作。没对齐上的指令一律用分支保护，包括与复制空壳配对的块；else-if 规范化只能提前计算第二个判断自身的条件（条件的 SSA 切片），块里有其他工作就放弃规范化；structural 分派不再自动选择 local-compute |
+| `legacy` | 原有行为，复现本补丁之前的结果时必须指定 |
+| `budget` | 安全且权重 ≤ `--speculation-budget N`（默认 4；div/rem 计 8，call 计 4，其他计 1）的工作投机执行，其余保护。这也是唯一会把普通配对里便宜的未对齐段留在合并块中的模式 |
+
+保持不变的显式命令：`--local-compute`/`--local-union`（vLLM 的 if-conversion 引擎）、`--cleanup scoped-cfg-triangles`、`postopt-fp`、隐藏选项 `--enable-full-predication`。这些本来就是用户显式选择的投机执行。
+
+库接口（`Candidate`/`Options`）的默认值是 `legacy`，所以 `recursive-all32`（vLLM 回归）、beam/backtrack 和已有测试的行为不变。
+
+**安全性**：所有投机执行路径都要求指令可以安全执行（不会出错、不访问内存、没有副作用、不是 load/store 或不安全的调用）。本次补上了 convergence 检查：`isSafeToSpeculativelyExecute` 不考虑 convergent 操作，而 convergent 操作在不同的活跃 lane 集合下执行会改变语义。这一检查在所有模式下生效。`legacy` 仍沿用原来的 `isSafeToSpeculativelyExecute` 判断（例如允许 dereferenceable 的 load），只多了这一条排除；`budget` 模式还会拒绝任何内存访问。
 
 ## 3. 本地验证范围
 
@@ -89,10 +97,11 @@ before 侧取父状态 S。scoped 清理模式下 S 与 control 相同；其他�
 guard 关闭时，原始和补丁版本的最终 IR 逐字节相同（`--cross-decision-leaves` 为 0 或 1 都一样）。
 
 - else-if 链 fixture（`L | C | D | E`，判别值都是 x）：`L+D` 走 B2R，Δ=+16，单侧 (−5, −21)，默认被 2.5 节的规则拒绝；相邻的 `L+C` 不受影响，Δ=+23，单侧 (+2, −6)。
-- 纯计算兄弟叶子：local-compute 的 Δ=+10，单侧 (−11, −11)；加上 `--speculation-budget 4` 后改走 DARM B2B，Δ=+25，单侧 (+4, +4)。
-- 第二个判断块含两次 fdiv（之后分支于无关的 y）：规范化让 L 一侧多执行 2 次 fdiv，Δ=+22，L 侧单侧收益 −36。预算 4 时改走 B2R，L 侧不再执行额外的 fdiv，但 Δ 只剩 +4，单侧 (−17, −20)，这部分是熔合本身的固有开销，需要由 `--max-uniform-loss` 拒绝。
+- 纯计算兄弟叶子：local-compute 的 Δ=+10，单侧 (−11, −11)；在 `none` 或 `budget`（N=4）模式下改走 DARM B2B，Δ=+25，单侧 (+4, +4)。
+- 第二个判断块含两次 fdiv（之后分支于无关的 y）：规范化让 L 一侧多执行 2 次 fdiv，Δ=+22，L 侧单侧收益 −36。在 `none` 或 `budget`（N=4）模式下改走 B2R，L 侧不再执行额外的 fdiv，但 Δ 只剩 +4，单侧 (−17, −20)，这部分是熔合本身的固有开销，需要由 `--max-uniform-loss` 拒绝。
 - `tests/postopt/side-metrics/b2r_budget.cpp` 把以上情形固定为回归测试。
-- 上述 3 个链式 fixture 在默认配置下，原始与补丁的最终 IR 逐字节相同。原始默认枚举会给出 4 个跨层级 E 对，补丁默认枚举不再给出。`--max-uniform-loss 10` 拒绝全部 R2B；取 5 时贪心改为自底向上的计划，每一步两侧的 uniform gain 都 ≥ 0。
+- 4 个 fixture × `--cross-decision-leaves` 取 0/1 共 8 组运行：`--speculation legacy --cross-level-b2r 1` 的最终 IR 与原代码逐字节相同。默认的 `none` 只在涉及投机执行的两个 fixture 上改变了计划。
+- `b2r_budget.cpp` 覆盖三种模式：相邻 else-if 在三种模式下都能合并（只提前判断条件）；`none` 和 `budget` 不选择 if-conversion，也不提前叶子里的工作；普通配对里便宜的未对齐 fadd，在 none/legacy 下用分支保护，在 budget 下投机执行，`budget 0` 时仍然保护。原始默认枚举会给出 4 个跨层级 E 对，补丁默认枚举不再给出。`--max-uniform-loss 10` 拒绝全部 R2B；取 5 时贪心改为自底向上的计划，每一步两侧的 uniform gain 都 ≥ 0。
 
 ## 4. 合入前须在 musa 上确认
 
@@ -100,4 +109,4 @@ guard 关闭时，原始和补丁版本的最终 IR 逐字节相同（`--cross-d
 2. 每轮多一次父状态的 worker 查询，每个 trial 多两次 CloneFunction。用 Map-Airy/Reentry 记录搜索耗时的变化。
 3. TIGRE 的 loop-header X/Z B2R（`hybrid.cpp`）如果 split 是与常量比较的形式，可能被 2.5 节的规则拒绝：跑 `build_hybrid_test.sh` 和 TIGRE 回归。如果有变化，先判断它是否属于跨层级，确实需要时加 `--cross-level-b2r 1`。
 4. 在 Map-Airy state-8 上读出 `L1+L2`（7）与 `B3:E88_96:E5_96`（16）的 uniform gain，作为 `--max-uniform-loss` 的第一组校准数据。启用前，先在已知正例（vLLM、TIGRE）上确认 guard 不会拒绝已提交的融合。
-5. `--speculation-budget`：先对 vLLM（local-compute 是主力引擎）比较预算 4、8、-1 的提交差异和实测结果，再决定是否作为默认值。
+5. 投机执行模式：对 Map-Airy、TIGRE、Hypersonic 分别比较 `none`、`legacy`、`budget`（N 取 4 和 8）的提交差异和实测结果。vLLM 走显式的 local 引擎，不受影响。Hypersonic 和 TIGRE 的实验脚本如果要复现旧结果，需要加 `--speculation legacy`。

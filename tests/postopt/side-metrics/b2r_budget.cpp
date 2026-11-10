@@ -1,7 +1,8 @@
 // B2R that would replicate a same-discriminator decision chain is opt-in, and
-// --speculation-budget caps work executed on a path that did not run it in the
-// three places that speculate: replication-paired blocks, else-if entry
-// hoisting and local if-conversion. Defaults (gate on, budget -1) are covered too.
+// the speculation mode decides whether work runs on a path that did not run
+// it: replication-paired blocks, else-if entry hoisting, local if-conversion
+// and (budget only) cheap unmatched ranges of ordinary pairs.
+// none = never, legacy = historical, budget = up to N weight units.
 #include "fusion_search.h"
 #include "llvm/AsmParser/Parser.h"
 #include "llvm/IR/Verifier.h"
@@ -128,8 +129,27 @@ join:
   ret float %r
 }
 )";
-static Trial trial(Module &m,const char *fn,const char *s,const char *l,const char *r,bool cross,int budget){
-  Candidate c{fn,s,l,r,0};c.hybrid=true;c.crossLevelB2R=cross;c.speculationBudget=budget;
+// ordinary B2B with one cheap unmatched instruction (the fadd on the right)
+static const char *GAP=R"(
+define float @gap(float %x) {
+entry:
+  %p = fcmp olt float %x, 5.000000e-01
+  br i1 %p, label %l, label %r
+l:
+  %l1 = fmul float %x, 2.000000e+00
+  br label %join
+r:
+  %r0 = fadd float %x, 1.000000e+00
+  %r1 = fmul float %r0, 3.000000e+00
+  br label %join
+join:
+  %v = phi float [ %l1, %l ], [ %r1, %r ]
+  ret float %v
+}
+)";
+static const SpeculationMode NONE=SpeculationMode::None,LEGACY=SpeculationMode::Legacy,BUDGET=SpeculationMode::Budget;
+static Trial trial(Module &m,const char *fn,const char *s,const char *l,const char *r,bool cross,SpeculationMode mode,int budget=4,bool hybrid=true){
+  Candidate c{fn,s,l,r,0};c.hybrid=hybrid;c.crossLevelB2R=cross;c.speculation=mode;c.speculationBudget=budget;
   auto hash=moduleHash(m);auto t=tryPair(m,c,0,3,CleanupMode::ScopedCFG);
   check(moduleHash(m)==hash,std::string("parent changed: ")+fn+":"+s+":"+l+":"+r);
   if(t.valid)check(!verifyModule(*t.normalized,&errs()),"invalid normalized IR");
@@ -149,34 +169,54 @@ static int extraFdiv(const Trial &t,Module &parent,const char *fn,unsigned side)
 }
 int main(int argc,char **argv){try{
   check(argc==2,"output path");LLVMContext ctx;SMDiagnostic d;
-  auto m=parseAssemblyString(std::string(CHAIN)+PURE+HEAVY,d,ctx);if(!m)d.print("b2r",errs());check(bool(m),"parse");
+  auto m=parseAssemblyString(std::string(CHAIN)+PURE+HEAVY+GAP,d,ctx);if(!m)d.print("b2r",errs());check(bool(m),"parse");
   // Blocks: entry0 L1 upperq2 q2(3) c4 d5 e6 join7 ; heavy: entry0 L1 upper2 c3 d4 join5.
 
   // 1. Gate: L + D needs the replicated x<.75 decision -> opt-in only.
-  auto g=trial(*m,"chain","B0","B1","B5",false,-1);
+  auto g=trial(*m,"chain","B0","B1","B5",false,LEGACY);
   check(!g.valid&&g.reason=="b2r_replicates_same_decision_chain_requires_opt_in","gate: "+g.reason);
-  auto go=trial(*m,"chain","B0","B1","B5",true,-1);
+  auto go=trial(*m,"chain","B0","B1","B5",true,LEGACY);
   check(go.valid&&go.mergePath=="darm-B2R","gate opt-in: "+go.reason+" "+go.mergePath);
-  // Adjacent else-if leaves are a diamond after normalization, not gated.
-  auto adj=trial(*m,"chain","B0","B1","B4",false,-1);
-  check(adj.valid&&adj.mergePath=="darm-adjacent-B2B","adjacent leaves: "+adj.reason+" "+adj.mergePath);
+  // Adjacent else-if leaves are a diamond after normalization, not gated, and
+  // hoisting only the second decision's own compare is allowed even in none.
+  for(auto mode:{NONE,LEGACY,BUDGET}){
+    auto adj=trial(*m,"chain","B0","B1","B4",false,mode);
+    check(adj.valid&&adj.mergePath=="darm-adjacent-B2B","adjacent leaves: "+adj.reason+" "+adj.mergePath);
+  }
 
-  // 2. Budget, local if-conversion: sibling pure leaves leave the local engine.
-  auto lc=trial(*m,"pure","B3","B5","B6",false,-1);
-  check(lc.valid&&lc.mergePath=="local-compute","historical local dispatch: "+lc.mergePath);
+  // 2. Local if-conversion: legacy picks it; none never; budget only when cheap.
+  auto lc=trial(*m,"pure","B3","B5","B6",false,LEGACY);
+  check(lc.valid&&lc.mergePath=="local-compute","legacy local dispatch: "+lc.mergePath);
   check(extraFdiv(lc,*m,"pure",1)==1&&extraFdiv(lc,*m,"pure",0)==1,"if-conversion runs both fdiv chains");
-  auto lb=trial(*m,"pure","B3","B5","B6",false,4);
-  check(lb.valid&&lb.mergePath!="local-compute","budget kept local engine: "+lb.mergePath);
-  check(extraFdiv(lb,*m,"pure",1)==0&&extraFdiv(lb,*m,"pure",0)==0,"budgeted sibling merge adds no fdiv on either side");
+  for(auto mode:{NONE,BUDGET}){
+    auto lb=trial(*m,"pure","B3","B5","B6",false,mode);
+    check(lb.valid&&lb.mergePath!="local-compute","local engine chosen without legacy: "+lb.mergePath);
+    check(extraFdiv(lb,*m,"pure",1)==0&&extraFdiv(lb,*m,"pure",0)==0,"sibling merge adds an fdiv on a side");
+  }
 
-  // 3. Budget, else-if hoisting + replication: L must not run `upper`'s fdivs.
-  auto h=trial(*m,"heavy","B0","B1","B4",false,-1);
-  check(h.valid&&h.mergePath=="darm-adjacent-B2B","historical hoist: "+h.mergePath);
-  check(extraFdiv(h,*m,"heavy",1)==2,"historical: L side runs the two hoisted fdivs");
-  auto hb=trial(*m,"heavy","B0","B1","B4",false,4);
-  check(hb.valid&&hb.mergePath=="darm-B2R","budget should refuse hoisting and replicate: "+hb.reason+" "+hb.mergePath);
-  check(extraFdiv(hb,*m,"heavy",1)==0,"budgeted replication: L side runs no extra fdiv");
+  // 3. else-if hoisting of leaf work + replication: L must not run upper's fdivs.
+  auto h=trial(*m,"heavy","B0","B1","B4",false,LEGACY);
+  check(h.valid&&h.mergePath=="darm-adjacent-B2B","legacy hoist: "+h.mergePath);
+  check(extraFdiv(h,*m,"heavy",1)==2,"legacy: L side runs the two hoisted fdivs");
+  for(auto mode:{NONE,BUDGET}){
+    auto hb=trial(*m,"heavy","B0","B1","B4",false,mode);
+    check(hb.valid&&hb.mergePath=="darm-B2R","hoisting refused, replicate instead: "+hb.reason+" "+hb.mergePath);
+    check(extraFdiv(hb,*m,"heavy",1)==0,"L side runs an extra fdiv");
+  }
 
+  // 4. Ordinary pair, cheap unmatched fadd: guarded in none/legacy, kept in
+  //    the melded block (no guard block) in budget mode.
+  auto guards=[](const Trial &t){unsigned n=0;for(auto &b:*t.raw->getFunction("gap"))n+=b.getName().startswith("predication.");return n;};
+  auto gn=trial(*m,"gap","B0","B1","B2",false,NONE,4,false);
+  auto gl=trial(*m,"gap","B0","B1","B2",false,LEGACY,4,false);
+  auto gb=trial(*m,"gap","B0","B1","B2",false,BUDGET,4,false);
+  auto g0=trial(*m,"gap","B0","B1","B2",false,BUDGET,0,false);
+  check(gn.valid&&gl.valid&&gb.valid&&g0.valid,"gap trials");
+  check(guards(gn)>0&&guards(gl)>0,"unmatched fadd should be guarded in none/legacy");
+  check(guards(gb)==0,"budget should speculate the cheap unmatched fadd");
+  check(guards(g0)>0,"budget 0 must still guard");
+
+  auto &hb=gb;
   std::error_code ec;raw_fd_ostream out(argv[1],ec);check(!ec,"output");hb.normalized->print(out,nullptr);
   return 0;
 }catch(const std::exception &e){errs()<<e.what()<<"\n";return 1;}}
