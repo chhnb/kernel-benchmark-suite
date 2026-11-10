@@ -1,0 +1,119 @@
+{
+  "mapairy": {
+    "source": "/home/chh/kernel-benchmark-suite/results/mapairy-llvm12-baseline-v1/start.ll",
+    "sha256": "d009a3dbf4f01ec1251d6a3b260e98bfdb8c0f7823aebf1ac7dfb6776d7d7d63",
+    "decisions": 70,
+    "arms": {
+      "Unsupported": 210,
+      "Linear": 130
+    },
+    "old_comparison": {
+      "exact_adjacent": 36,
+      "no_same_decision": 18,
+      "nonadjacent": 62,
+      "partial_arm_units": 9
+    },
+    "normalization_attempts": [
+      {
+        "decision": 3,
+        "left": 0,
+        "success": true,
+        "reason": ""
+      }
+    ]
+  },
+  "tigre": {
+    "source": "/home/chh/kernel-benchmark-suite/results/tigre-hip-o3-v2/start.ll",
+    "sha256": "0c96f8fa4cdaa9a506187b6931ef6ad4262d0759e3ffb6eb43321fd85565885f",
+    "decisions": 28,
+    "arms": {
+      "Unsupported": 42,
+      "SESE": 6,
+      "Linear": 22
+    },
+    "old_comparison": {
+      "exact_adjacent": 5,
+      "nonadjacent": 1
+    },
+    "normalization_attempts": [
+      {
+        "decision": 4,
+        "left": 0,
+        "success": false,
+        "reason": "not_adjacent_else_if\n"
+      },
+      {
+        "decision": 7,
+        "left": 0,
+        "success": false,
+        "reason": "not_adjacent_else_if\n"
+      },
+      {
+        "decision": 10,
+        "left": 0,
+        "success": false,
+        "reason": "not_adjacent_else_if\n"
+      },
+      {
+        "decision": 24,
+        "left": 0,
+        "success": true,
+        "reason": ""
+      }
+    ]
+  },
+  "hypersonic": {
+    "source": "/home/chh/kernel-benchmark-suite/results/hypersonic-hip-llvm12-ir-v1/start.ll",
+    "sha256": "e275d199bc7836f96f626b5224acf9d07711d108885ba27d3f7905472b9326b6",
+    "decisions": 31,
+    "arms": {
+      "Unsupported": 51,
+      "Linear": 35,
+      "SESE": 12
+    },
+    "old_comparison": {
+      "exact_adjacent": 10,
+      "no_same_decision": 1,
+      "nonadjacent": 1,
+      "partial_arm_units": 7,
+      "unsupported_arm": 3
+    },
+    "normalization_attempts": [
+      {
+        "decision": 7,
+        "left": 0,
+        "success": false,
+        "reason": "not_adjacent_else_if\n"
+      },
+      {
+        "decision": 9,
+        "left": 0,
+        "success": true,
+        "reason": ""
+      }
+    ]
+  },
+  "vllm": {
+    "source": "/home/chh/kernel-benchmark-suite/results/vllm-cuda-llvm-v1/start.ll",
+    "sha256": "e6b7695b769c0adbf52e321a4da347d029edf04d4a4bc2bdd6a87684f41f947d",
+    "decisions": 371,
+    "arms": {
+      "Unsupported": 1285,
+      "Linear": 427
+    },
+    "old_comparison": {
+      "exact_adjacent": 30,
+      "no_same_decision": 6,
+      "nonadjacent": 42,
+      "partial_arm_units": 2
+    },
+    "normalization_attempts": [
+      {
+        "decision": 5,
+        "left": 0,
+        "success": true,
+        "reason": ""
+      }
+    ]
+  }
+}

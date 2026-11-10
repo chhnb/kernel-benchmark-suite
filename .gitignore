@@ -1,3 +1,7 @@
 results/
 __pycache__/
 *.pyc
+
+# Local builds and downloaded toolchains
+/build/
+/toolchains/

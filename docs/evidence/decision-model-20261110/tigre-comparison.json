@@ -1,0 +1,252 @@
+{
+  "new_adjacent_pairs": [
+    {
+      "old_exact_match": false,
+      "pair": "_Z19kernelPixelDetector8GeometryPfiiP13__hip_texture:%entry:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "_Z19kernelPixelDetector8GeometryPfiiP13__hip_texture:%entry:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "_Z19kernelPixelDetector8GeometryPfiiP13__hip_texture:%lor.lhs.false:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "_Z19kernelPixelDetector8GeometryPfiiP13__hip_texture:%if.end:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "_Z19kernelPixelDetector8GeometryPfiiP13__hip_texture:%if.end:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "_Z19kernelPixelDetector8GeometryPfiiP13__hip_texture:%if.end36:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": true,
+      "pair": "_Z19kernelPixelDetector8GeometryPfiiP13__hip_texture:%if.end181:0:1",
+      "supported": true
+    },
+    {
+      "old_exact_match": false,
+      "pair": "_Z19kernelPixelDetector8GeometryPfiiP13__hip_texture:%if.then185:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "_Z19kernelPixelDetector8GeometryPfiiP13__hip_texture:%if.else:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": true,
+      "pair": "_Z19kernelPixelDetector8GeometryPfiiP13__hip_texture:%if.end231:0:1",
+      "supported": true
+    },
+    {
+      "old_exact_match": false,
+      "pair": "_Z19kernelPixelDetector8GeometryPfiiP13__hip_texture:%if.then235:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "_Z19kernelPixelDetector8GeometryPfiiP13__hip_texture:%if.else258:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": true,
+      "pair": "_Z19kernelPixelDetector8GeometryPfiiP13__hip_texture:%if.end282:0:1",
+      "supported": true
+    },
+    {
+      "old_exact_match": false,
+      "pair": "_Z19kernelPixelDetector8GeometryPfiiP13__hip_texture:%if.then286:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "_Z19kernelPixelDetector8GeometryPfiiP13__hip_texture:%if.else309:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "_Z19kernelPixelDetector8GeometryPfiiP13__hip_texture:%if.end333:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "_Z19kernelPixelDetector8GeometryPfiiP13__hip_texture:%if.end333:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "_Z19kernelPixelDetector8GeometryPfiiP13__hip_texture:%if.end333:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "_Z19kernelPixelDetector8GeometryPfiiP13__hip_texture:%if.end.i879:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "_Z19kernelPixelDetector8GeometryPfiiP13__hip_texture:%if.end.i879:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "_Z19kernelPixelDetector8GeometryPfiiP13__hip_texture:%if.end3.i884:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "_Z19kernelPixelDetector8GeometryPfiiP13__hip_texture:%_Z12tigre_rcp_rdf.exit887:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "_Z19kernelPixelDetector8GeometryPfiiP13__hip_texture:%_Z12tigre_rcp_rdf.exit887:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "_Z19kernelPixelDetector8GeometryPfiiP13__hip_texture:%_Z12tigre_rcp_rdf.exit887:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "_Z19kernelPixelDetector8GeometryPfiiP13__hip_texture:%if.end.i868:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "_Z19kernelPixelDetector8GeometryPfiiP13__hip_texture:%if.end.i868:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "_Z19kernelPixelDetector8GeometryPfiiP13__hip_texture:%if.end3.i873:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "_Z19kernelPixelDetector8GeometryPfiiP13__hip_texture:%_Z12tigre_rcp_rdf.exit876:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "_Z19kernelPixelDetector8GeometryPfiiP13__hip_texture:%_Z12tigre_rcp_rdf.exit876:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "_Z19kernelPixelDetector8GeometryPfiiP13__hip_texture:%_Z12tigre_rcp_rdf.exit876:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "_Z19kernelPixelDetector8GeometryPfiiP13__hip_texture:%if.end.i:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "_Z19kernelPixelDetector8GeometryPfiiP13__hip_texture:%if.end.i:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "_Z19kernelPixelDetector8GeometryPfiiP13__hip_texture:%if.end3.i:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "_Z19kernelPixelDetector8GeometryPfiiP13__hip_texture:%_Z12tigre_rcp_rdf.exit:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "_Z19kernelPixelDetector8GeometryPfiiP13__hip_texture:%_Z13tigre_sqrt_rdf.exit:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": true,
+      "pair": "_Z19kernelPixelDetector8GeometryPfiiP13__hip_texture:%for.body:0:1",
+      "supported": true
+    },
+    {
+      "old_exact_match": true,
+      "pair": "_Z19kernelPixelDetector8GeometryPfiiP13__hip_texture:%for.body:1:2",
+      "supported": true
+    },
+    {
+      "old_exact_match": false,
+      "pair": "_Z19kernelPixelDetector8GeometryPfiiP13__hip_texture:%for.body:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": true,
+      "pair": "_Z19kernelPixelDetector8GeometryPfiiP13__hip_texture:%if.else497:0:1",
+      "supported": true
+    },
+    {
+      "old_exact_match": false,
+      "pair": "_Z19kernelPixelDetector8GeometryPfiiP13__hip_texture:%if.else497:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "_Z19kernelPixelDetector8GeometryPfiiP13__hip_texture:%if.else511:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "_Z19kernelPixelDetector8GeometryPfiiP13__hip_texture:%if.end527:0:1",
+      "supported": false
+    }
+  ],
+  "old_pairs": [
+    {
+      "candidate": "_Z19kernelPixelDetector8GeometryPfiiP13__hip_texture:B10:R9:R10",
+      "classification": "exact_adjacent",
+      "new_pair": "_Z19kernelPixelDetector8GeometryPfiiP13__hip_texture:%if.end231:0:1"
+    },
+    {
+      "candidate": "_Z19kernelPixelDetector8GeometryPfiiP13__hip_texture:B15:R12:R13",
+      "classification": "exact_adjacent",
+      "new_pair": "_Z19kernelPixelDetector8GeometryPfiiP13__hip_texture:%if.end282:0:1"
+    },
+    {
+      "candidate": "_Z19kernelPixelDetector8GeometryPfiiP13__hip_texture:B37:B38:B40",
+      "classification": "exact_adjacent",
+      "new_pair": "_Z19kernelPixelDetector8GeometryPfiiP13__hip_texture:%for.body:0:1"
+    },
+    {
+      "candidate": "_Z19kernelPixelDetector8GeometryPfiiP13__hip_texture:B37:B38:B42",
+      "classification": "nonadjacent",
+      "new_pair": "_Z19kernelPixelDetector8GeometryPfiiP13__hip_texture:%for.body:0:2"
+    },
+    {
+      "candidate": "_Z19kernelPixelDetector8GeometryPfiiP13__hip_texture:B39:B40:B42",
+      "classification": "exact_adjacent",
+      "new_pair": "_Z19kernelPixelDetector8GeometryPfiiP13__hip_texture:%if.else497:0:1"
+    },
+    {
+      "candidate": "_Z19kernelPixelDetector8GeometryPfiiP13__hip_texture:B5:R6:R7",
+      "classification": "exact_adjacent",
+      "new_pair": "_Z19kernelPixelDetector8GeometryPfiiP13__hip_texture:%if.end181:0:1"
+    }
+  ],
+  "schema": "decision-comparison-v1",
+  "scope": "same input IR; structural coverage only, no legality or performance claim",
+  "summary": {
+    "exact_adjacent": 5,
+    "nonadjacent": 1
+  }
+}

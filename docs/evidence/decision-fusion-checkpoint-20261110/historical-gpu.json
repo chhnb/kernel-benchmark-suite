@@ -1,0 +1,332 @@
+[
+  {
+    "name": "vllm-old",
+    "binary": "/home/chh/kernel-benchmark-suite-review-speculation/build/decision-fuse/old-darm-comparison-v2/binaries/vllm-old.hsaco",
+    "rc": 1,
+    "summary": {
+      "case": "vllm",
+      "correctness_passed": true,
+      "performance_passed": false,
+      "counts": [
+        65536,
+        131072
+      ],
+      "median_us": {
+        "baseline": [
+          2897.281982,
+          5748.324707
+        ],
+        "reference": [
+          2108.001953,
+          4182.403809
+        ],
+        "candidate": [
+          2402.241943,
+          4770.244141
+        ]
+      },
+      "batch_medians_us": {
+        "baseline": [
+          [
+            2894.562012,
+            5748.645996
+          ],
+          [
+            2921.442139,
+            5748.165039
+          ],
+          [
+            2897.281982,
+            5748.324707
+          ]
+        ],
+        "reference": [
+          [
+            2107.202148,
+            4183.204102
+          ],
+          [
+            2109.602051,
+            4182.403809
+          ],
+          [
+            2108.001953,
+            4182.403809
+          ]
+        ],
+        "candidate": [
+          [
+            2402.241943,
+            4770.244141
+          ],
+          [
+            2402.241943,
+            4770.083984
+          ],
+          [
+            2404.322021,
+            4772.164062
+          ]
+        ]
+      },
+      "candidate_slowdown_vs_reference_pct": [
+        13.958240863166793,
+        14.055083125523238
+      ],
+      "candidate_decrease_vs_baseline_pct": [
+        17.08636032238301,
+        17.015054226302595
+      ],
+      "threshold_pct": 2,
+      "aliases_by_identical_binary": {
+        "baseline": "baseline",
+        "reference": "reference",
+        "candidate": "candidate"
+      },
+      "candidate_is_same_binary_as_reference": false,
+      "source_commit": "e4138fb0c337bb03ffa3c942d8ae12882011eac3",
+      "dataset": "generated synthetic; not historical Qwen / original Map-Airy shuffle",
+      "generation_receipt": "generation.json"
+    }
+  },
+  {
+    "name": "vllm-current",
+    "binary": "/home/chh/kernel-benchmark-suite-review-speculation/build/decision-fuse/old-darm-comparison-v2/binaries/vllm-current.hsaco",
+    "rc": 1,
+    "summary": {
+      "case": "vllm",
+      "correctness_passed": true,
+      "performance_passed": false,
+      "counts": [
+        65536,
+        131072
+      ],
+      "median_us": {
+        "baseline": [
+          2896.961914,
+          5748.004883
+        ],
+        "reference": [
+          2107.361084,
+          4182.723145
+        ],
+        "candidate": [
+          2445.602051,
+          4858.563965
+        ]
+      },
+      "batch_medians_us": {
+        "baseline": [
+          [
+            2897.281982,
+            5747.845215
+          ],
+          [
+            2896.64209,
+            5748.964844
+          ],
+          [
+            2896.961914,
+            5748.004883
+          ]
+        ],
+        "reference": [
+          [
+            2107.201172,
+            4181.443359
+          ],
+          [
+            2107.361084,
+            4182.723145
+          ],
+          [
+            2108.160889,
+            4184.163086
+          ]
+        ],
+        "candidate": [
+          [
+            2445.281006,
+            4856.324219
+          ],
+          [
+            2445.602051,
+            4858.563965
+          ],
+          [
+            2488.802002,
+            4859.364258
+          ]
+        ]
+      },
+      "candidate_slowdown_vs_reference_pct": [
+        16.050451418509716,
+        16.157914271899543
+      ],
+      "candidate_decrease_vs_baseline_pct": [
+        15.580455539257743,
+        15.473906792086478
+      ],
+      "threshold_pct": 2,
+      "aliases_by_identical_binary": {
+        "baseline": "baseline",
+        "reference": "reference",
+        "candidate": "candidate"
+      },
+      "candidate_is_same_binary_as_reference": false,
+      "source_commit": "e4138fb0c337bb03ffa3c942d8ae12882011eac3",
+      "dataset": "generated synthetic; not historical Qwen / original Map-Airy shuffle",
+      "generation_receipt": "generation.json"
+    }
+  },
+  {
+    "name": "mapairy-old",
+    "binary": "/home/chh/kernel-benchmark-suite-review-speculation/build/decision-fuse/old-darm-comparison-v2/binaries/mapairy-old.hsaco",
+    "rc": 1,
+    "summary": {
+      "case": "mapairy",
+      "correctness_passed": true,
+      "performance_passed": false,
+      "counts": [
+        65539
+      ],
+      "median_us": {
+        "baseline": [
+          49.60000229
+        ],
+        "reference": [
+          24.63999939
+        ],
+        "candidate": [
+          33.44000244
+        ]
+      },
+      "batch_medians_us": {
+        "baseline": [
+          [
+            49.60000229
+          ],
+          [
+            49.43999863
+          ],
+          [
+            49.60000229
+          ]
+        ],
+        "reference": [
+          [
+            24.63999939
+          ],
+          [
+            24.63999939
+          ],
+          [
+            24.63999939
+          ]
+        ],
+        "candidate": [
+          [
+            33.59999847
+          ],
+          [
+            33.44000244
+          ],
+          [
+            33.44000244
+          ]
+        ]
+      },
+      "candidate_slowdown_vs_reference_pct": [
+        35.71429897669329
+      ],
+      "candidate_decrease_vs_baseline_pct": [
+        32.580643354643676
+      ],
+      "threshold_pct": 2,
+      "aliases_by_identical_binary": {
+        "baseline": "baseline",
+        "reference": "reference",
+        "candidate": "candidate"
+      },
+      "candidate_is_same_binary_as_reference": false,
+      "source_commit": "e4138fb0c337bb03ffa3c942d8ae12882011eac3",
+      "dataset": "generated synthetic; not historical Qwen / original Map-Airy shuffle",
+      "generation_receipt": "generation.json"
+    }
+  },
+  {
+    "name": "mapairy-current",
+    "binary": "/home/chh/kernel-benchmark-suite-review-speculation/build/decision-fuse/old-darm-comparison-v2/binaries/mapairy-current.hsaco",
+    "rc": 0,
+    "summary": {
+      "case": "mapairy",
+      "correctness_passed": true,
+      "performance_passed": true,
+      "counts": [
+        65539
+      ],
+      "median_us": {
+        "baseline": [
+          49.60000229
+        ],
+        "reference": [
+          24.63999939
+        ],
+        "candidate": [
+          24.96000099
+        ]
+      },
+      "batch_medians_us": {
+        "baseline": [
+          [
+            49.43999863
+          ],
+          [
+            49.60000229
+          ],
+          [
+            49.75999832
+          ]
+        ],
+        "reference": [
+          [
+            24.63999939
+          ],
+          [
+            24.64099884
+          ],
+          [
+            24.63999939
+          ]
+        ],
+        "candidate": [
+          [
+            24.80000114
+          ],
+          [
+            24.96000099
+          ],
+          [
+            24.96000099
+          ]
+        ]
+      },
+      "candidate_slowdown_vs_reference_pct": [
+        1.2987078243592576
+      ],
+      "candidate_decrease_vs_baseline_pct": [
+        49.67741968223203
+      ],
+      "threshold_pct": 2,
+      "aliases_by_identical_binary": {
+        "baseline": "baseline",
+        "reference": "reference",
+        "candidate": "candidate"
+      },
+      "candidate_is_same_binary_as_reference": false,
+      "source_commit": "e4138fb0c337bb03ffa3c942d8ae12882011eac3",
+      "dataset": "generated synthetic; not historical Qwen / original Map-Airy shuffle",
+      "generation_receipt": "generation.json"
+    }
+  }
+]

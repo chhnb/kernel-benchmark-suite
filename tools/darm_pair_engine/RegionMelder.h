@@ -1,3 +1,4 @@
+#include "SpeculationSafety.h"
 #include <functional>
 #ifndef LLVM_LIB_TRANSFORMS_REGION_MELDER_H
 #define LLVM_LIB_TRANSFORMS_REGION_MELDER_H

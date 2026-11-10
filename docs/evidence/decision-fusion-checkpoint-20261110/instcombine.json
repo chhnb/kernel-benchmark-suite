@@ -1,0 +1,116 @@
+{
+  "minimal": {
+    "before": {
+      "selects": 4,
+      "i1_selects": 1,
+      "copysigns": 0
+    },
+    "source": "/home/chh/kernel-benchmark-suite-review-speculation/build/decision-fuse/select-instcombine-v1/select4.ll",
+    "llvm12-instcombine": {
+      "selects": 4,
+      "i1_selects": 1,
+      "copysigns": 0
+    },
+    "llvm12-repeat": {
+      "selects": 4,
+      "i1_selects": 1,
+      "copysigns": 0
+    },
+    "llvm12-aggressive": {
+      "selects": 4,
+      "i1_selects": 1,
+      "copysigns": 0
+    },
+    "llvm24-instcombine": {
+      "selects": 4,
+      "i1_selects": 1,
+      "copysigns": 0
+    },
+    "llvm24-repeat": {
+      "selects": 4,
+      "i1_selects": 1,
+      "copysigns": 0
+    },
+    "llvm24-aggressive": {
+      "selects": 4,
+      "i1_selects": 1,
+      "copysigns": 0
+    }
+  },
+  "balanced": {
+    "before": {
+      "selects": 404,
+      "i1_selects": 128,
+      "copysigns": 32
+    },
+    "source": "/home/chh/kernel-benchmark-suite-review-speculation/build/decision-fuse/condition-full-dce-v1/balanced/final.ll",
+    "llvm12-instcombine": {
+      "selects": 404,
+      "i1_selects": 128,
+      "copysigns": 32
+    },
+    "llvm12-repeat": {
+      "selects": 404,
+      "i1_selects": 128,
+      "copysigns": 32
+    },
+    "llvm12-aggressive": {
+      "selects": 404,
+      "i1_selects": 128,
+      "copysigns": 32
+    },
+    "llvm24-instcombine": {
+      "selects": 404,
+      "i1_selects": 128,
+      "copysigns": 32
+    },
+    "llvm24-repeat": {
+      "selects": 404,
+      "i1_selects": 128,
+      "copysigns": 32
+    },
+    "llvm24-aggressive": {
+      "selects": 404,
+      "i1_selects": 128,
+      "copysigns": 32
+    }
+  },
+  "greedy": {
+    "before": {
+      "selects": 268,
+      "i1_selects": 0,
+      "copysigns": 64
+    },
+    "source": "/home/chh/kernel-benchmark-suite-review-speculation/build/decision-fuse/greedy-regression-v1/vllm-search/final.ll",
+    "llvm12-instcombine": {
+      "selects": 268,
+      "i1_selects": 0,
+      "copysigns": 64
+    },
+    "llvm12-repeat": {
+      "selects": 268,
+      "i1_selects": 0,
+      "copysigns": 64
+    },
+    "llvm12-aggressive": {
+      "selects": 268,
+      "i1_selects": 0,
+      "copysigns": 64
+    },
+    "llvm24-instcombine": {
+      "selects": 268,
+      "i1_selects": 0,
+      "copysigns": 64
+    },
+    "llvm24-repeat": {
+      "selects": 268,
+      "i1_selects": 0,
+      "copysigns": 64
+    },
+    "llvm24-aggressive": {
+      "selects": 268,
+      "i1_selects": 0,
+      "copysigns": 64
+    }
+  }
+}

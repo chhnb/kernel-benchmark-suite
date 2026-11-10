@@ -1,3 +1,4 @@
+#include "SpeculationSafety.h"
 #include "RegionMelder.h"
 #include "CFMelderUtils.h"
 #include "RegionReplicator.h"
@@ -93,28 +94,6 @@ void RegionMelder::computeRegionSeqAlignment(
 // Speculation weight of one instruction executed on the other path. Division
 // and remainder are the expensive scalar operations; calls are speculatable
 // intrinsics here (anything else already failed isSafeToSpeculativelyExecute).
-unsigned llvm::speculationWeight(const Instruction &I) {
-  switch (I.getOpcode()) {
-  case Instruction::FDiv: case Instruction::FRem:
-  case Instruction::SDiv: case Instruction::UDiv:
-  case Instruction::SRem: case Instruction::URem:
-    return 8;
-  default:
-    return isa<CallBase>(I) ? 4 : 1;
-  }
-}
-
-bool llvm::safeToSpeculate(const Instruction &I) {
-  if (I.mayReadOrWriteMemory() || I.mayHaveSideEffects())
-    return false;
-  // isSafeToSpeculativelyExecute ignores convergence; a convergent operation
-  // run under a different set of active lanes changes its meaning.
-  if (auto *CB = dyn_cast<CallBase>(&I))
-    if (CB->isConvergent())
-      return false;
-  return isSafeToSpeculativelyExecute(&I);
-}
-
 // Mode 0 none: a block paired with a branch-only replication placeholder is
 // always guarded. Mode 1 legacy: it runs on both paths whenever every
 // instruction is speculatable (historical DARM). Mode 2 budget: legacy, but

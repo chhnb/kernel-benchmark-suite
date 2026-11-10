@@ -1,0 +1,7119 @@
+{
+  "new_adjacent_pairs": [
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%entry:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%for.body:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%for.cond.cleanup29:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%for.body30:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%for.cond.cleanup.i:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": true,
+      "pair": "cache_eval:%for.body.i:0:1",
+      "supported": true
+    },
+    {
+      "old_exact_match": true,
+      "pair": "cache_eval:%for.body.i:1:2",
+      "supported": true
+    },
+    {
+      "old_exact_match": true,
+      "pair": "cache_eval:%for.body.i:2:3",
+      "supported": true
+    },
+    {
+      "old_exact_match": true,
+      "pair": "cache_eval:%for.body.i:3:4",
+      "supported": true
+    },
+    {
+      "old_exact_match": true,
+      "pair": "cache_eval:%cond.true.i.i:0:1",
+      "supported": true
+    },
+    {
+      "old_exact_match": true,
+      "pair": "cache_eval:%cond.true.i.i:1:2",
+      "supported": true
+    },
+    {
+      "old_exact_match": true,
+      "pair": "cache_eval:%cond.true.i.i:2:3",
+      "supported": true
+    },
+    {
+      "old_exact_match": true,
+      "pair": "cache_eval:%98:0:1",
+      "supported": true
+    },
+    {
+      "old_exact_match": true,
+      "pair": "cache_eval:%98:1:2",
+      "supported": true
+    },
+    {
+      "old_exact_match": true,
+      "pair": "cache_eval:%104:0:1",
+      "supported": true
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z4dec8i.exit.i:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": true,
+      "pair": "cache_eval:%if.end8.i:0:1",
+      "supported": true
+    },
+    {
+      "old_exact_match": true,
+      "pair": "cache_eval:%if.end8.i:1:2",
+      "supported": true
+    },
+    {
+      "old_exact_match": true,
+      "pair": "cache_eval:%if.end8.i:2:3",
+      "supported": true
+    },
+    {
+      "old_exact_match": true,
+      "pair": "cache_eval:%if.end8.i:3:4",
+      "supported": true
+    },
+    {
+      "old_exact_match": true,
+      "pair": "cache_eval:%cond.true.i77.i:0:1",
+      "supported": true
+    },
+    {
+      "old_exact_match": true,
+      "pair": "cache_eval:%cond.true.i77.i:1:2",
+      "supported": true
+    },
+    {
+      "old_exact_match": true,
+      "pair": "cache_eval:%cond.true.i77.i:2:3",
+      "supported": true
+    },
+    {
+      "old_exact_match": true,
+      "pair": "cache_eval:%133:0:1",
+      "supported": true
+    },
+    {
+      "old_exact_match": true,
+      "pair": "cache_eval:%133:1:2",
+      "supported": true
+    },
+    {
+      "old_exact_match": true,
+      "pair": "cache_eval:%139:0:1",
+      "supported": true
+    },
+    {
+      "old_exact_match": true,
+      "pair": "cache_eval:%_Z4dec8i.exit87.i:0:1",
+      "supported": true
+    },
+    {
+      "old_exact_match": true,
+      "pair": "cache_eval:%_Z4dec8i.exit87.i:1:2",
+      "supported": true
+    },
+    {
+      "old_exact_match": true,
+      "pair": "cache_eval:%_Z4dec8i.exit87.i:2:3",
+      "supported": true
+    },
+    {
+      "old_exact_match": true,
+      "pair": "cache_eval:%_Z4dec8i.exit87.i:3:4",
+      "supported": true
+    },
+    {
+      "old_exact_match": true,
+      "pair": "cache_eval:%cond.true.i57.i:0:1",
+      "supported": true
+    },
+    {
+      "old_exact_match": true,
+      "pair": "cache_eval:%cond.true.i57.i:1:2",
+      "supported": true
+    },
+    {
+      "old_exact_match": true,
+      "pair": "cache_eval:%cond.true.i57.i:2:3",
+      "supported": true
+    },
+    {
+      "old_exact_match": true,
+      "pair": "cache_eval:%168:0:1",
+      "supported": true
+    },
+    {
+      "old_exact_match": true,
+      "pair": "cache_eval:%168:1:2",
+      "supported": true
+    },
+    {
+      "old_exact_match": true,
+      "pair": "cache_eval:%174:0:1",
+      "supported": true
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z4dec8i.exit67.i:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z4dec8i.exit67.i:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false.i374:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z4enc8f.exit:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": true,
+      "pair": "cache_eval:%cond.true.i:0:1",
+      "supported": true
+    },
+    {
+      "old_exact_match": true,
+      "pair": "cache_eval:%cond.true.i:1:2",
+      "supported": true
+    },
+    {
+      "old_exact_match": true,
+      "pair": "cache_eval:%cond.true.i:2:3",
+      "supported": true
+    },
+    {
+      "old_exact_match": true,
+      "pair": "cache_eval:%205:0:1",
+      "supported": true
+    },
+    {
+      "old_exact_match": true,
+      "pair": "cache_eval:%205:1:2",
+      "supported": true
+    },
+    {
+      "old_exact_match": true,
+      "pair": "cache_eval:%211:0:1",
+      "supported": true
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z4dec8i.exit:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.end70:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.end70:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.end70:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.end70:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.end70:4:5",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.end70:5:6",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.end70:6:7",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.end70:7:8",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else:4:5",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else:5:6",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else:6:7",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i351:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i351:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i351:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i351:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i351:4:5",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i351:5:6",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i353:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i353:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i353:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i353:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i353:4:5",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else7.i.i355:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else7.i.i355:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else7.i.i355:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else7.i.i355:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else10.i.i357:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else10.i.i357:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else10.i.i357:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else13.i.i359:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else13.i.i359:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else16.i.i361:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z1qf.exit364:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z1qf.exit364:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z1qf.exit364:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z1qf.exit364:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z1qf.exit364:4:5",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z1qf.exit364:5:6",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z1qf.exit364:6:7",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i:4:5",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i:5:6",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i:4:5",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else7.i.i:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else7.i.i:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else7.i.i:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else7.i.i:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else10.i.i:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else10.i.i:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else10.i.i:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else13.i.i:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else13.i.i:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else16.i.i:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false.i332:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false.i332:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false.i332:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false.i332:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false.i332:4:5",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false3.i334:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false3.i334:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false3.i334:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false3.i334:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false6.i336:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false6.i336:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false6.i336:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false9.i338:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false9.i338:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false12.i340:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z5pack4f.exit348:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z5pack4f.exit348:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z5pack4f.exit348:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z5pack4f.exit348:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z5pack4f.exit348:4:5",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z5pack4f.exit348:5:6",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false.i:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false.i:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false.i:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false.i:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false.i:4:5",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false3.i:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false3.i:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false3.i:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false3.i:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false6.i:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false6.i:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false6.i:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false9.i:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false9.i:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false12.i:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z5pack4f.exit:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z5pack4f.exit:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z5pack4f.exit:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z5pack4f.exit:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z5pack4f.exit:4:5",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z5pack4f.exit:5:6",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.end199:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.1:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.1:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.1:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.1:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.1:4:5",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.1:5:6",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.1:6:7",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i351.1:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i351.1:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i351.1:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i351.1:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i351.1:4:5",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i351.1:5:6",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i353.1:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i353.1:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i353.1:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i353.1:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i353.1:4:5",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else7.i.i355.1:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else7.i.i355.1:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else7.i.i355.1:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else7.i.i355.1:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else10.i.i357.1:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else10.i.i357.1:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else10.i.i357.1:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else13.i.i359.1:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else13.i.i359.1:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else16.i.i361.1:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z1qf.exit364.1:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z1qf.exit364.1:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z1qf.exit364.1:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z1qf.exit364.1:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z1qf.exit364.1:4:5",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z1qf.exit364.1:5:6",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z1qf.exit364.1:6:7",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i.1:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i.1:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i.1:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i.1:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i.1:4:5",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i.1:5:6",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i.1:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i.1:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i.1:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i.1:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i.1:4:5",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else7.i.i.1:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else7.i.i.1:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else7.i.i.1:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else7.i.i.1:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else10.i.i.1:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else10.i.i.1:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else10.i.i.1:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else13.i.i.1:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else13.i.i.1:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else16.i.i.1:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.2:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.2:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.2:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.2:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.2:4:5",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.2:5:6",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.2:6:7",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i351.2:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i351.2:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i351.2:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i351.2:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i351.2:4:5",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i351.2:5:6",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i353.2:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i353.2:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i353.2:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i353.2:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i353.2:4:5",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else7.i.i355.2:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else7.i.i355.2:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else7.i.i355.2:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else7.i.i355.2:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else10.i.i357.2:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else10.i.i357.2:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else10.i.i357.2:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else13.i.i359.2:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else13.i.i359.2:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else16.i.i361.2:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z1qf.exit364.2:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z1qf.exit364.2:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z1qf.exit364.2:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z1qf.exit364.2:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z1qf.exit364.2:4:5",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z1qf.exit364.2:5:6",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z1qf.exit364.2:6:7",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i.2:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i.2:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i.2:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i.2:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i.2:4:5",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i.2:5:6",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i.2:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i.2:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i.2:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i.2:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i.2:4:5",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else7.i.i.2:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else7.i.i.2:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else7.i.i.2:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else7.i.i.2:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else10.i.i.2:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else10.i.i.2:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else10.i.i.2:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else13.i.i.2:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else13.i.i.2:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else16.i.i.2:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.3:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.3:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.3:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.3:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.3:4:5",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.3:5:6",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.3:6:7",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i351.3:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i351.3:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i351.3:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i351.3:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i351.3:4:5",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i351.3:5:6",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i353.3:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i353.3:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i353.3:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i353.3:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i353.3:4:5",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else7.i.i355.3:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else7.i.i355.3:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else7.i.i355.3:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else7.i.i355.3:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else10.i.i357.3:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else10.i.i357.3:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else10.i.i357.3:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else13.i.i359.3:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else13.i.i359.3:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else16.i.i361.3:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z1qf.exit364.3:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z1qf.exit364.3:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z1qf.exit364.3:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z1qf.exit364.3:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z1qf.exit364.3:4:5",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z1qf.exit364.3:5:6",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z1qf.exit364.3:6:7",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i.3:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i.3:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i.3:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i.3:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i.3:4:5",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i.3:5:6",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i.3:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i.3:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i.3:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i.3:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i.3:4:5",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else7.i.i.3:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else7.i.i.3:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else7.i.i.3:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else7.i.i.3:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else10.i.i.3:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else10.i.i.3:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else10.i.i.3:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else13.i.i.3:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else13.i.i.3:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else16.i.i.3:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.4:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.4:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.4:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.4:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.4:4:5",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.4:5:6",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.4:6:7",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i351.4:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i351.4:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i351.4:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i351.4:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i351.4:4:5",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i351.4:5:6",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i353.4:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i353.4:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i353.4:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i353.4:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i353.4:4:5",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else7.i.i355.4:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else7.i.i355.4:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else7.i.i355.4:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else7.i.i355.4:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else10.i.i357.4:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else10.i.i357.4:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else10.i.i357.4:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else13.i.i359.4:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else13.i.i359.4:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else16.i.i361.4:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z1qf.exit364.4:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z1qf.exit364.4:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z1qf.exit364.4:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z1qf.exit364.4:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z1qf.exit364.4:4:5",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z1qf.exit364.4:5:6",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z1qf.exit364.4:6:7",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i.4:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i.4:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i.4:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i.4:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i.4:4:5",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i.4:5:6",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i.4:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i.4:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i.4:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i.4:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i.4:4:5",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else7.i.i.4:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else7.i.i.4:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else7.i.i.4:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else7.i.i.4:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else10.i.i.4:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else10.i.i.4:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else10.i.i.4:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else13.i.i.4:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else13.i.i.4:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else16.i.i.4:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.5:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.5:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.5:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.5:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.5:4:5",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.5:5:6",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.5:6:7",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i351.5:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i351.5:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i351.5:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i351.5:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i351.5:4:5",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i351.5:5:6",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i353.5:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i353.5:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i353.5:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i353.5:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i353.5:4:5",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else7.i.i355.5:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else7.i.i355.5:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else7.i.i355.5:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else7.i.i355.5:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else10.i.i357.5:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else10.i.i357.5:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else10.i.i357.5:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else13.i.i359.5:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else13.i.i359.5:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else16.i.i361.5:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z1qf.exit364.5:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z1qf.exit364.5:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z1qf.exit364.5:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z1qf.exit364.5:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z1qf.exit364.5:4:5",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z1qf.exit364.5:5:6",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z1qf.exit364.5:6:7",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i.5:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i.5:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i.5:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i.5:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i.5:4:5",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i.5:5:6",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i.5:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i.5:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i.5:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i.5:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i.5:4:5",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else7.i.i.5:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else7.i.i.5:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else7.i.i.5:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else7.i.i.5:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else10.i.i.5:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else10.i.i.5:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else10.i.i.5:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else13.i.i.5:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else13.i.i.5:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else16.i.i.5:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.6:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.6:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.6:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.6:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.6:4:5",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.6:5:6",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.6:6:7",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i351.6:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i351.6:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i351.6:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i351.6:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i351.6:4:5",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i351.6:5:6",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i353.6:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i353.6:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i353.6:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i353.6:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i353.6:4:5",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else7.i.i355.6:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else7.i.i355.6:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else7.i.i355.6:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else7.i.i355.6:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else10.i.i357.6:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else10.i.i357.6:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else10.i.i357.6:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else13.i.i359.6:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else13.i.i359.6:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else16.i.i361.6:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z1qf.exit364.6:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z1qf.exit364.6:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z1qf.exit364.6:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z1qf.exit364.6:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z1qf.exit364.6:4:5",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z1qf.exit364.6:5:6",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z1qf.exit364.6:6:7",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i.6:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i.6:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i.6:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i.6:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i.6:4:5",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i.6:5:6",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i.6:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i.6:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i.6:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i.6:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i.6:4:5",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else7.i.i.6:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else7.i.i.6:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else7.i.i.6:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else7.i.i.6:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else10.i.i.6:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else10.i.i.6:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else10.i.i.6:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else13.i.i.6:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else13.i.i.6:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else16.i.i.6:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.7:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.7:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.7:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.7:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.7:4:5",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.7:5:6",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.7:6:7",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i351.7:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i351.7:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i351.7:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i351.7:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i351.7:4:5",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i351.7:5:6",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i353.7:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i353.7:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i353.7:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i353.7:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i353.7:4:5",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else7.i.i355.7:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else7.i.i355.7:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else7.i.i355.7:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else7.i.i355.7:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else10.i.i357.7:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else10.i.i357.7:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else10.i.i357.7:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else13.i.i359.7:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else13.i.i359.7:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else16.i.i361.7:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z1qf.exit364.7:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z1qf.exit364.7:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z1qf.exit364.7:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z1qf.exit364.7:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z1qf.exit364.7:4:5",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z1qf.exit364.7:5:6",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z1qf.exit364.7:6:7",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i.7:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i.7:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i.7:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i.7:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i.7:4:5",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i.7:5:6",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i.7:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i.7:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i.7:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i.7:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i.7:4:5",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else7.i.i.7:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else7.i.i.7:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else7.i.i.7:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else7.i.i.7:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else10.i.i.7:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else10.i.i.7:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else10.i.i.7:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else13.i.i.7:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else13.i.i.7:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else16.i.i.7:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%for.inc133.7:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": true,
+      "pair": "cache_eval:%for.body.i.1:0:1",
+      "supported": true
+    },
+    {
+      "old_exact_match": true,
+      "pair": "cache_eval:%for.body.i.1:1:2",
+      "supported": true
+    },
+    {
+      "old_exact_match": true,
+      "pair": "cache_eval:%for.body.i.1:2:3",
+      "supported": true
+    },
+    {
+      "old_exact_match": true,
+      "pair": "cache_eval:%for.body.i.1:3:4",
+      "supported": true
+    },
+    {
+      "old_exact_match": true,
+      "pair": "cache_eval:%cond.true.i.i.1:0:1",
+      "supported": true
+    },
+    {
+      "old_exact_match": true,
+      "pair": "cache_eval:%cond.true.i.i.1:1:2",
+      "supported": true
+    },
+    {
+      "old_exact_match": true,
+      "pair": "cache_eval:%cond.true.i.i.1:2:3",
+      "supported": true
+    },
+    {
+      "old_exact_match": true,
+      "pair": "cache_eval:%299:0:1",
+      "supported": true
+    },
+    {
+      "old_exact_match": true,
+      "pair": "cache_eval:%299:1:2",
+      "supported": true
+    },
+    {
+      "old_exact_match": true,
+      "pair": "cache_eval:%301:0:1",
+      "supported": true
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z4dec8i.exit.i.1:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%for.cond.cleanup.i.1:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": true,
+      "pair": "cache_eval:%if.end8.i.1:0:1",
+      "supported": true
+    },
+    {
+      "old_exact_match": true,
+      "pair": "cache_eval:%if.end8.i.1:1:2",
+      "supported": true
+    },
+    {
+      "old_exact_match": true,
+      "pair": "cache_eval:%if.end8.i.1:2:3",
+      "supported": true
+    },
+    {
+      "old_exact_match": true,
+      "pair": "cache_eval:%if.end8.i.1:3:4",
+      "supported": true
+    },
+    {
+      "old_exact_match": true,
+      "pair": "cache_eval:%cond.true.i77.i.1:0:1",
+      "supported": true
+    },
+    {
+      "old_exact_match": true,
+      "pair": "cache_eval:%cond.true.i77.i.1:1:2",
+      "supported": true
+    },
+    {
+      "old_exact_match": true,
+      "pair": "cache_eval:%cond.true.i77.i.1:2:3",
+      "supported": true
+    },
+    {
+      "old_exact_match": true,
+      "pair": "cache_eval:%334:0:1",
+      "supported": true
+    },
+    {
+      "old_exact_match": true,
+      "pair": "cache_eval:%334:1:2",
+      "supported": true
+    },
+    {
+      "old_exact_match": true,
+      "pair": "cache_eval:%336:0:1",
+      "supported": true
+    },
+    {
+      "old_exact_match": true,
+      "pair": "cache_eval:%_Z4dec8i.exit87.i.1:0:1",
+      "supported": true
+    },
+    {
+      "old_exact_match": true,
+      "pair": "cache_eval:%_Z4dec8i.exit87.i.1:1:2",
+      "supported": true
+    },
+    {
+      "old_exact_match": true,
+      "pair": "cache_eval:%_Z4dec8i.exit87.i.1:2:3",
+      "supported": true
+    },
+    {
+      "old_exact_match": true,
+      "pair": "cache_eval:%_Z4dec8i.exit87.i.1:3:4",
+      "supported": true
+    },
+    {
+      "old_exact_match": true,
+      "pair": "cache_eval:%cond.true.i57.i.1:0:1",
+      "supported": true
+    },
+    {
+      "old_exact_match": true,
+      "pair": "cache_eval:%cond.true.i57.i.1:1:2",
+      "supported": true
+    },
+    {
+      "old_exact_match": true,
+      "pair": "cache_eval:%cond.true.i57.i.1:2:3",
+      "supported": true
+    },
+    {
+      "old_exact_match": true,
+      "pair": "cache_eval:%369:0:1",
+      "supported": true
+    },
+    {
+      "old_exact_match": true,
+      "pair": "cache_eval:%369:1:2",
+      "supported": true
+    },
+    {
+      "old_exact_match": true,
+      "pair": "cache_eval:%371:0:1",
+      "supported": true
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z4dec8i.exit67.i.1:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z4dec8i.exit67.i.1:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false.i374.1:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z4enc8f.exit.1:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": true,
+      "pair": "cache_eval:%cond.true.i.1:0:1",
+      "supported": true
+    },
+    {
+      "old_exact_match": true,
+      "pair": "cache_eval:%cond.true.i.1:1:2",
+      "supported": true
+    },
+    {
+      "old_exact_match": true,
+      "pair": "cache_eval:%cond.true.i.1:2:3",
+      "supported": true
+    },
+    {
+      "old_exact_match": true,
+      "pair": "cache_eval:%406:0:1",
+      "supported": true
+    },
+    {
+      "old_exact_match": true,
+      "pair": "cache_eval:%406:1:2",
+      "supported": true
+    },
+    {
+      "old_exact_match": true,
+      "pair": "cache_eval:%408:0:1",
+      "supported": true
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z4dec8i.exit.1:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.end70.1:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.end70.1:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.end70.1:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.end70.1:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.end70.1:4:5",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.end70.1:5:6",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.end70.1:6:7",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.end70.1:7:8",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.1392:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.1392:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.1392:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.1392:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.1392:4:5",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.1392:5:6",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.1392:6:7",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i351.1394:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i351.1394:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i351.1394:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i351.1394:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i351.1394:4:5",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i351.1394:5:6",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i353.1396:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i353.1396:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i353.1396:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i353.1396:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i353.1396:4:5",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else7.i.i355.1398:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else7.i.i355.1398:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else7.i.i355.1398:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else7.i.i355.1398:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else10.i.i357.1400:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else10.i.i357.1400:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else10.i.i357.1400:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else13.i.i359.1402:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else13.i.i359.1402:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else16.i.i361.1404:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z1qf.exit364.1412:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z1qf.exit364.1412:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z1qf.exit364.1412:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z1qf.exit364.1412:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z1qf.exit364.1412:4:5",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z1qf.exit364.1412:5:6",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z1qf.exit364.1412:6:7",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i.1414:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i.1414:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i.1414:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i.1414:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i.1414:4:5",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i.1414:5:6",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i.1416:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i.1416:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i.1416:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i.1416:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i.1416:4:5",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else7.i.i.1418:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else7.i.i.1418:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else7.i.i.1418:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else7.i.i.1418:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else10.i.i.1420:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else10.i.i.1420:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else10.i.i.1420:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else13.i.i.1422:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else13.i.i.1422:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else16.i.i.1424:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.1.1:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.1.1:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.1.1:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.1.1:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.1.1:4:5",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.1.1:5:6",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.1.1:6:7",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i351.1.1:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i351.1.1:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i351.1.1:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i351.1.1:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i351.1.1:4:5",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i351.1.1:5:6",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i353.1.1:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i353.1.1:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i353.1.1:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i353.1.1:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i353.1.1:4:5",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else7.i.i355.1.1:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else7.i.i355.1.1:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else7.i.i355.1.1:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else7.i.i355.1.1:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else10.i.i357.1.1:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else10.i.i357.1.1:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else10.i.i357.1.1:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else13.i.i359.1.1:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else13.i.i359.1.1:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else16.i.i361.1.1:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z1qf.exit364.1.1:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z1qf.exit364.1.1:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z1qf.exit364.1.1:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z1qf.exit364.1.1:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z1qf.exit364.1.1:4:5",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z1qf.exit364.1.1:5:6",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z1qf.exit364.1.1:6:7",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i.1.1:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i.1.1:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i.1.1:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i.1.1:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i.1.1:4:5",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i.1.1:5:6",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i.1.1:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i.1.1:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i.1.1:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i.1.1:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i.1.1:4:5",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else7.i.i.1.1:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else7.i.i.1.1:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else7.i.i.1.1:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else7.i.i.1.1:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else10.i.i.1.1:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else10.i.i.1.1:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else10.i.i.1.1:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else13.i.i.1.1:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else13.i.i.1.1:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else16.i.i.1.1:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.2.1:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.2.1:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.2.1:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.2.1:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.2.1:4:5",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.2.1:5:6",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.2.1:6:7",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i351.2.1:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i351.2.1:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i351.2.1:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i351.2.1:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i351.2.1:4:5",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i351.2.1:5:6",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i353.2.1:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i353.2.1:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i353.2.1:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i353.2.1:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i353.2.1:4:5",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else7.i.i355.2.1:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else7.i.i355.2.1:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else7.i.i355.2.1:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else7.i.i355.2.1:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else10.i.i357.2.1:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else10.i.i357.2.1:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else10.i.i357.2.1:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else13.i.i359.2.1:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else13.i.i359.2.1:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else16.i.i361.2.1:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z1qf.exit364.2.1:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z1qf.exit364.2.1:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z1qf.exit364.2.1:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z1qf.exit364.2.1:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z1qf.exit364.2.1:4:5",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z1qf.exit364.2.1:5:6",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z1qf.exit364.2.1:6:7",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i.2.1:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i.2.1:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i.2.1:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i.2.1:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i.2.1:4:5",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i.2.1:5:6",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i.2.1:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i.2.1:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i.2.1:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i.2.1:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i.2.1:4:5",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else7.i.i.2.1:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else7.i.i.2.1:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else7.i.i.2.1:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else7.i.i.2.1:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else10.i.i.2.1:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else10.i.i.2.1:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else10.i.i.2.1:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else13.i.i.2.1:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else13.i.i.2.1:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else16.i.i.2.1:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.3.1:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.3.1:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.3.1:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.3.1:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.3.1:4:5",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.3.1:5:6",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.3.1:6:7",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i351.3.1:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i351.3.1:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i351.3.1:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i351.3.1:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i351.3.1:4:5",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i351.3.1:5:6",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i353.3.1:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i353.3.1:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i353.3.1:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i353.3.1:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i353.3.1:4:5",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else7.i.i355.3.1:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else7.i.i355.3.1:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else7.i.i355.3.1:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else7.i.i355.3.1:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else10.i.i357.3.1:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else10.i.i357.3.1:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else10.i.i357.3.1:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else13.i.i359.3.1:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else13.i.i359.3.1:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else16.i.i361.3.1:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z1qf.exit364.3.1:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z1qf.exit364.3.1:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z1qf.exit364.3.1:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z1qf.exit364.3.1:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z1qf.exit364.3.1:4:5",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z1qf.exit364.3.1:5:6",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z1qf.exit364.3.1:6:7",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i.3.1:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i.3.1:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i.3.1:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i.3.1:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i.3.1:4:5",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i.3.1:5:6",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i.3.1:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i.3.1:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i.3.1:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i.3.1:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i.3.1:4:5",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else7.i.i.3.1:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else7.i.i.3.1:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else7.i.i.3.1:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else7.i.i.3.1:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else10.i.i.3.1:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else10.i.i.3.1:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else10.i.i.3.1:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else13.i.i.3.1:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else13.i.i.3.1:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else16.i.i.3.1:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.4.1:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.4.1:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.4.1:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.4.1:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.4.1:4:5",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.4.1:5:6",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.4.1:6:7",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i351.4.1:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i351.4.1:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i351.4.1:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i351.4.1:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i351.4.1:4:5",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i351.4.1:5:6",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i353.4.1:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i353.4.1:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i353.4.1:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i353.4.1:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i353.4.1:4:5",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else7.i.i355.4.1:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else7.i.i355.4.1:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else7.i.i355.4.1:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else7.i.i355.4.1:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else10.i.i357.4.1:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else10.i.i357.4.1:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else10.i.i357.4.1:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else13.i.i359.4.1:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else13.i.i359.4.1:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else16.i.i361.4.1:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z1qf.exit364.4.1:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z1qf.exit364.4.1:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z1qf.exit364.4.1:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z1qf.exit364.4.1:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z1qf.exit364.4.1:4:5",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z1qf.exit364.4.1:5:6",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z1qf.exit364.4.1:6:7",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i.4.1:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i.4.1:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i.4.1:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i.4.1:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i.4.1:4:5",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i.4.1:5:6",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i.4.1:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i.4.1:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i.4.1:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i.4.1:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i.4.1:4:5",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else7.i.i.4.1:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else7.i.i.4.1:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else7.i.i.4.1:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else7.i.i.4.1:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else10.i.i.4.1:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else10.i.i.4.1:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else10.i.i.4.1:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else13.i.i.4.1:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else13.i.i.4.1:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else16.i.i.4.1:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.5.1:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.5.1:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.5.1:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.5.1:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.5.1:4:5",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.5.1:5:6",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.5.1:6:7",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i351.5.1:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i351.5.1:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i351.5.1:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i351.5.1:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i351.5.1:4:5",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i351.5.1:5:6",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i353.5.1:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i353.5.1:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i353.5.1:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i353.5.1:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i353.5.1:4:5",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else7.i.i355.5.1:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else7.i.i355.5.1:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else7.i.i355.5.1:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else7.i.i355.5.1:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else10.i.i357.5.1:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else10.i.i357.5.1:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else10.i.i357.5.1:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else13.i.i359.5.1:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else13.i.i359.5.1:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else16.i.i361.5.1:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z1qf.exit364.5.1:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z1qf.exit364.5.1:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z1qf.exit364.5.1:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z1qf.exit364.5.1:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z1qf.exit364.5.1:4:5",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z1qf.exit364.5.1:5:6",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z1qf.exit364.5.1:6:7",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i.5.1:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i.5.1:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i.5.1:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i.5.1:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i.5.1:4:5",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i.5.1:5:6",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i.5.1:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i.5.1:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i.5.1:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i.5.1:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i.5.1:4:5",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else7.i.i.5.1:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else7.i.i.5.1:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else7.i.i.5.1:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else7.i.i.5.1:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else10.i.i.5.1:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else10.i.i.5.1:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else10.i.i.5.1:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else13.i.i.5.1:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else13.i.i.5.1:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else16.i.i.5.1:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.6.1:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.6.1:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.6.1:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.6.1:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.6.1:4:5",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.6.1:5:6",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.6.1:6:7",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i351.6.1:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i351.6.1:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i351.6.1:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i351.6.1:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i351.6.1:4:5",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i351.6.1:5:6",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i353.6.1:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i353.6.1:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i353.6.1:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i353.6.1:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i353.6.1:4:5",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else7.i.i355.6.1:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else7.i.i355.6.1:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else7.i.i355.6.1:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else7.i.i355.6.1:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else10.i.i357.6.1:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else10.i.i357.6.1:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else10.i.i357.6.1:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else13.i.i359.6.1:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else13.i.i359.6.1:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else16.i.i361.6.1:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z1qf.exit364.6.1:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z1qf.exit364.6.1:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z1qf.exit364.6.1:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z1qf.exit364.6.1:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z1qf.exit364.6.1:4:5",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z1qf.exit364.6.1:5:6",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z1qf.exit364.6.1:6:7",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i.6.1:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i.6.1:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i.6.1:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i.6.1:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i.6.1:4:5",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i.6.1:5:6",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i.6.1:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i.6.1:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i.6.1:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i.6.1:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i.6.1:4:5",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else7.i.i.6.1:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else7.i.i.6.1:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else7.i.i.6.1:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else7.i.i.6.1:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else10.i.i.6.1:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else10.i.i.6.1:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else10.i.i.6.1:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else13.i.i.6.1:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else13.i.i.6.1:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else16.i.i.6.1:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.7.1:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.7.1:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.7.1:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.7.1:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.7.1:4:5",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.7.1:5:6",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.7.1:6:7",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i351.7.1:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i351.7.1:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i351.7.1:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i351.7.1:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i351.7.1:4:5",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i351.7.1:5:6",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i353.7.1:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i353.7.1:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i353.7.1:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i353.7.1:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i353.7.1:4:5",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else7.i.i355.7.1:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else7.i.i355.7.1:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else7.i.i355.7.1:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else7.i.i355.7.1:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else10.i.i357.7.1:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else10.i.i357.7.1:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else10.i.i357.7.1:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else13.i.i359.7.1:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else13.i.i359.7.1:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else16.i.i361.7.1:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z1qf.exit364.7.1:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z1qf.exit364.7.1:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z1qf.exit364.7.1:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z1qf.exit364.7.1:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z1qf.exit364.7.1:4:5",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z1qf.exit364.7.1:5:6",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z1qf.exit364.7.1:6:7",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i.7.1:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i.7.1:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i.7.1:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i.7.1:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i.7.1:4:5",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else.i.i.7.1:5:6",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i.7.1:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i.7.1:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i.7.1:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i.7.1:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else4.i.i.7.1:4:5",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else7.i.i.7.1:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else7.i.i.7.1:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else7.i.i.7.1:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else7.i.i.7.1:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else10.i.i.7.1:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else10.i.i.7.1:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else10.i.i.7.1:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else13.i.i.7.1:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else13.i.i.7.1:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%if.else16.i.i.7.1:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%for.inc133.7.1:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%for.inc133.7.1:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%for.inc133.7.1:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%for.inc133.7.1:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%for.inc133.7.1:4:5",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%for.inc133.7.1:5:6",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false.i332.1:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false.i332.1:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false.i332.1:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false.i332.1:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false.i332.1:4:5",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false3.i334.1:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false3.i334.1:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false3.i334.1:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false3.i334.1:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false6.i336.1:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false6.i336.1:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false6.i336.1:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false9.i338.1:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false9.i338.1:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false12.i340.1:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z5pack4f.exit348.1:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z5pack4f.exit348.1:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z5pack4f.exit348.1:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z5pack4f.exit348.1:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z5pack4f.exit348.1:4:5",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z5pack4f.exit348.1:5:6",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false.i.1:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false.i.1:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false.i.1:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false.i.1:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false.i.1:4:5",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false3.i.1:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false3.i.1:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false3.i.1:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false3.i.1:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false6.i.1:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false6.i.1:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false6.i.1:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false9.i.1:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false9.i.1:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false12.i.1:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z5pack4f.exit.1:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z5pack4f.exit.1:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z5pack4f.exit.1:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z5pack4f.exit.1:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z5pack4f.exit.1:4:5",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z5pack4f.exit.1:5:6",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false.i332.2:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false.i332.2:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false.i332.2:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false.i332.2:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false.i332.2:4:5",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false3.i334.2:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false3.i334.2:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false3.i334.2:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false3.i334.2:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false6.i336.2:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false6.i336.2:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false6.i336.2:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false9.i338.2:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false9.i338.2:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false12.i340.2:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z5pack4f.exit348.2:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z5pack4f.exit348.2:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z5pack4f.exit348.2:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z5pack4f.exit348.2:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z5pack4f.exit348.2:4:5",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z5pack4f.exit348.2:5:6",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false.i.2:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false.i.2:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false.i.2:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false.i.2:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false.i.2:4:5",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false3.i.2:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false3.i.2:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false3.i.2:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false3.i.2:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false6.i.2:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false6.i.2:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false6.i.2:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false9.i.2:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false9.i.2:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false12.i.2:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z5pack4f.exit.2:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z5pack4f.exit.2:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z5pack4f.exit.2:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z5pack4f.exit.2:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z5pack4f.exit.2:4:5",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z5pack4f.exit.2:5:6",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false.i332.3:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false.i332.3:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false.i332.3:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false.i332.3:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false.i332.3:4:5",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false3.i334.3:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false3.i334.3:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false3.i334.3:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false3.i334.3:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false6.i336.3:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false6.i336.3:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false6.i336.3:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false9.i338.3:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false9.i338.3:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false12.i340.3:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z5pack4f.exit348.3:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z5pack4f.exit348.3:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z5pack4f.exit348.3:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z5pack4f.exit348.3:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z5pack4f.exit348.3:4:5",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z5pack4f.exit348.3:5:6",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false.i.3:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false.i.3:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false.i.3:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false.i.3:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false.i.3:4:5",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false3.i.3:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false3.i.3:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false3.i.3:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false3.i.3:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false6.i.3:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false6.i.3:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false6.i.3:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false9.i.3:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false9.i.3:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false12.i.3:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z5pack4f.exit.3:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z5pack4f.exit.3:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z5pack4f.exit.3:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z5pack4f.exit.3:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z5pack4f.exit.3:4:5",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z5pack4f.exit.3:5:6",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false.i332.4:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false.i332.4:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false.i332.4:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false.i332.4:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false.i332.4:4:5",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false3.i334.4:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false3.i334.4:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false3.i334.4:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false3.i334.4:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false6.i336.4:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false6.i336.4:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false6.i336.4:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false9.i338.4:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false9.i338.4:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false12.i340.4:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z5pack4f.exit348.4:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z5pack4f.exit348.4:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z5pack4f.exit348.4:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z5pack4f.exit348.4:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z5pack4f.exit348.4:4:5",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z5pack4f.exit348.4:5:6",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false.i.4:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false.i.4:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false.i.4:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false.i.4:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false.i.4:4:5",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false3.i.4:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false3.i.4:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false3.i.4:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false3.i.4:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false6.i.4:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false6.i.4:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false6.i.4:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false9.i.4:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false9.i.4:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false12.i.4:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z5pack4f.exit.4:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z5pack4f.exit.4:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z5pack4f.exit.4:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z5pack4f.exit.4:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z5pack4f.exit.4:4:5",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z5pack4f.exit.4:5:6",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false.i332.5:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false.i332.5:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false.i332.5:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false.i332.5:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false.i332.5:4:5",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false3.i334.5:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false3.i334.5:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false3.i334.5:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false3.i334.5:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false6.i336.5:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false6.i336.5:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false6.i336.5:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false9.i338.5:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false9.i338.5:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false12.i340.5:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z5pack4f.exit348.5:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z5pack4f.exit348.5:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z5pack4f.exit348.5:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z5pack4f.exit348.5:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z5pack4f.exit348.5:4:5",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z5pack4f.exit348.5:5:6",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false.i.5:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false.i.5:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false.i.5:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false.i.5:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false.i.5:4:5",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false3.i.5:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false3.i.5:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false3.i.5:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false3.i.5:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false6.i.5:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false6.i.5:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false6.i.5:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false9.i.5:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false9.i.5:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false12.i.5:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z5pack4f.exit.5:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z5pack4f.exit.5:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z5pack4f.exit.5:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z5pack4f.exit.5:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z5pack4f.exit.5:4:5",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z5pack4f.exit.5:5:6",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false.i332.6:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false.i332.6:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false.i332.6:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false.i332.6:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false.i332.6:4:5",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false3.i334.6:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false3.i334.6:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false3.i334.6:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false3.i334.6:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false6.i336.6:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false6.i336.6:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false6.i336.6:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false9.i338.6:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false9.i338.6:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false12.i340.6:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z5pack4f.exit348.6:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z5pack4f.exit348.6:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z5pack4f.exit348.6:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z5pack4f.exit348.6:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z5pack4f.exit348.6:4:5",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z5pack4f.exit348.6:5:6",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false.i.6:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false.i.6:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false.i.6:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false.i.6:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false.i.6:4:5",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false3.i.6:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false3.i.6:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false3.i.6:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false3.i.6:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false6.i.6:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false6.i.6:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false6.i.6:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false9.i.6:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false9.i.6:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false12.i.6:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z5pack4f.exit.6:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z5pack4f.exit.6:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z5pack4f.exit.6:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z5pack4f.exit.6:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z5pack4f.exit.6:4:5",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z5pack4f.exit.6:5:6",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false.i332.7:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false.i332.7:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false.i332.7:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false.i332.7:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false.i332.7:4:5",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false3.i334.7:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false3.i334.7:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false3.i334.7:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false3.i334.7:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false6.i336.7:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false6.i336.7:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false6.i336.7:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false9.i338.7:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false9.i338.7:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false12.i340.7:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z5pack4f.exit348.7:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z5pack4f.exit348.7:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z5pack4f.exit348.7:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z5pack4f.exit348.7:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z5pack4f.exit348.7:4:5",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z5pack4f.exit348.7:5:6",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false.i.7:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false.i.7:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false.i.7:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false.i.7:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false.i.7:4:5",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false3.i.7:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false3.i.7:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false3.i.7:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false3.i.7:3:4",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false6.i.7:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false6.i.7:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false6.i.7:2:3",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false9.i.7:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false9.i.7:1:2",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%cond.false12.i.7:0:1",
+      "supported": false
+    },
+    {
+      "old_exact_match": false,
+      "pair": "cache_eval:%_Z5pack4f.exit.7:0:1",
+      "supported": false
+    }
+  ],
+  "old_pairs": [
+    {
+      "candidate": "cache_eval:B10:B11:B12",
+      "classification": "no_same_decision",
+      "new_pair": ""
+    },
+    {
+      "candidate": "cache_eval:B10:B11:B13",
+      "classification": "exact_adjacent",
+      "new_pair": "cache_eval:%cond.true.i.i:0:1"
+    },
+    {
+      "candidate": "cache_eval:B10:B11:B15",
+      "classification": "nonadjacent",
+      "new_pair": "cache_eval:%cond.true.i.i:0:2"
+    },
+    {
+      "candidate": "cache_eval:B10:B11:B16",
+      "classification": "nonadjacent",
+      "new_pair": "cache_eval:%cond.true.i.i:0:3"
+    },
+    {
+      "candidate": "cache_eval:B12:B13:B15",
+      "classification": "exact_adjacent",
+      "new_pair": "cache_eval:%98:0:1"
+    },
+    {
+      "candidate": "cache_eval:B12:B13:B16",
+      "classification": "nonadjacent",
+      "new_pair": "cache_eval:%98:0:2"
+    },
+    {
+      "candidate": "cache_eval:B14:B15:B16",
+      "classification": "exact_adjacent",
+      "new_pair": "cache_eval:%104:0:1"
+    },
+    {
+      "candidate": "cache_eval:B19:B27:B21",
+      "classification": "exact_adjacent",
+      "new_pair": "cache_eval:%if.end8.i:0:1"
+    },
+    {
+      "candidate": "cache_eval:B19:B27:B23",
+      "classification": "nonadjacent",
+      "new_pair": "cache_eval:%if.end8.i:0:2"
+    },
+    {
+      "candidate": "cache_eval:B19:B27:B25",
+      "classification": "nonadjacent",
+      "new_pair": "cache_eval:%if.end8.i:0:3"
+    },
+    {
+      "candidate": "cache_eval:B19:B27:B26",
+      "classification": "nonadjacent",
+      "new_pair": "cache_eval:%if.end8.i:0:4"
+    },
+    {
+      "candidate": "cache_eval:B201:B209:B205",
+      "classification": "nonadjacent",
+      "new_pair": "cache_eval:%for.body.i.1:0:4"
+    },
+    {
+      "candidate": "cache_eval:B201:B209:B206",
+      "classification": "nonadjacent",
+      "new_pair": "cache_eval:%for.body.i.1:0:3"
+    },
+    {
+      "candidate": "cache_eval:B201:B209:B207",
+      "classification": "nonadjacent",
+      "new_pair": "cache_eval:%for.body.i.1:0:2"
+    },
+    {
+      "candidate": "cache_eval:B201:B209:B208",
+      "classification": "exact_adjacent",
+      "new_pair": "cache_eval:%for.body.i.1:0:1"
+    },
+    {
+      "candidate": "cache_eval:B202:B208:B203",
+      "classification": "no_same_decision",
+      "new_pair": ""
+    },
+    {
+      "candidate": "cache_eval:B202:B208:B205",
+      "classification": "nonadjacent",
+      "new_pair": "cache_eval:%cond.true.i.i.1:0:3"
+    },
+    {
+      "candidate": "cache_eval:B202:B208:B206",
+      "classification": "nonadjacent",
+      "new_pair": "cache_eval:%cond.true.i.i.1:0:2"
+    },
+    {
+      "candidate": "cache_eval:B202:B208:B207",
+      "classification": "exact_adjacent",
+      "new_pair": "cache_eval:%cond.true.i.i.1:0:1"
+    },
+    {
+      "candidate": "cache_eval:B203:B207:B205",
+      "classification": "nonadjacent",
+      "new_pair": "cache_eval:%299:0:2"
+    },
+    {
+      "candidate": "cache_eval:B203:B207:B206",
+      "classification": "exact_adjacent",
+      "new_pair": "cache_eval:%299:0:1"
+    },
+    {
+      "candidate": "cache_eval:B204:B206:B205",
+      "classification": "exact_adjacent",
+      "new_pair": "cache_eval:%301:0:1"
+    },
+    {
+      "candidate": "cache_eval:B20:B21:B22",
+      "classification": "no_same_decision",
+      "new_pair": ""
+    },
+    {
+      "candidate": "cache_eval:B20:B21:B23",
+      "classification": "exact_adjacent",
+      "new_pair": "cache_eval:%cond.true.i77.i:0:1"
+    },
+    {
+      "candidate": "cache_eval:B20:B21:B25",
+      "classification": "nonadjacent",
+      "new_pair": "cache_eval:%cond.true.i77.i:0:2"
+    },
+    {
+      "candidate": "cache_eval:B20:B21:B26",
+      "classification": "nonadjacent",
+      "new_pair": "cache_eval:%cond.true.i77.i:0:3"
+    },
+    {
+      "candidate": "cache_eval:B213:B221:B217",
+      "classification": "nonadjacent",
+      "new_pair": "cache_eval:%if.end8.i.1:0:4"
+    },
+    {
+      "candidate": "cache_eval:B213:B221:B218",
+      "classification": "nonadjacent",
+      "new_pair": "cache_eval:%if.end8.i.1:0:3"
+    },
+    {
+      "candidate": "cache_eval:B213:B221:B219",
+      "classification": "nonadjacent",
+      "new_pair": "cache_eval:%if.end8.i.1:0:2"
+    },
+    {
+      "candidate": "cache_eval:B213:B221:B220",
+      "classification": "exact_adjacent",
+      "new_pair": "cache_eval:%if.end8.i.1:0:1"
+    },
+    {
+      "candidate": "cache_eval:B214:B220:B215",
+      "classification": "no_same_decision",
+      "new_pair": ""
+    },
+    {
+      "candidate": "cache_eval:B214:B220:B217",
+      "classification": "nonadjacent",
+      "new_pair": "cache_eval:%cond.true.i77.i.1:0:3"
+    },
+    {
+      "candidate": "cache_eval:B214:B220:B218",
+      "classification": "nonadjacent",
+      "new_pair": "cache_eval:%cond.true.i77.i.1:0:2"
+    },
+    {
+      "candidate": "cache_eval:B214:B220:B219",
+      "classification": "exact_adjacent",
+      "new_pair": "cache_eval:%cond.true.i77.i.1:0:1"
+    },
+    {
+      "candidate": "cache_eval:B215:B219:B217",
+      "classification": "nonadjacent",
+      "new_pair": "cache_eval:%334:0:2"
+    },
+    {
+      "candidate": "cache_eval:B215:B219:B218",
+      "classification": "exact_adjacent",
+      "new_pair": "cache_eval:%334:0:1"
+    },
+    {
+      "candidate": "cache_eval:B216:B218:B217",
+      "classification": "exact_adjacent",
+      "new_pair": "cache_eval:%336:0:1"
+    },
+    {
+      "candidate": "cache_eval:B222:B230:B226",
+      "classification": "nonadjacent",
+      "new_pair": "cache_eval:%_Z4dec8i.exit87.i.1:0:4"
+    },
+    {
+      "candidate": "cache_eval:B222:B230:B227",
+      "classification": "nonadjacent",
+      "new_pair": "cache_eval:%_Z4dec8i.exit87.i.1:0:3"
+    },
+    {
+      "candidate": "cache_eval:B222:B230:B228",
+      "classification": "nonadjacent",
+      "new_pair": "cache_eval:%_Z4dec8i.exit87.i.1:0:2"
+    },
+    {
+      "candidate": "cache_eval:B222:B230:B229",
+      "classification": "exact_adjacent",
+      "new_pair": "cache_eval:%_Z4dec8i.exit87.i.1:0:1"
+    },
+    {
+      "candidate": "cache_eval:B223:B229:B224",
+      "classification": "no_same_decision",
+      "new_pair": ""
+    },
+    {
+      "candidate": "cache_eval:B223:B229:B226",
+      "classification": "nonadjacent",
+      "new_pair": "cache_eval:%cond.true.i57.i.1:0:3"
+    },
+    {
+      "candidate": "cache_eval:B223:B229:B227",
+      "classification": "nonadjacent",
+      "new_pair": "cache_eval:%cond.true.i57.i.1:0:2"
+    },
+    {
+      "candidate": "cache_eval:B223:B229:B228",
+      "classification": "exact_adjacent",
+      "new_pair": "cache_eval:%cond.true.i57.i.1:0:1"
+    },
+    {
+      "candidate": "cache_eval:B224:B228:B226",
+      "classification": "nonadjacent",
+      "new_pair": "cache_eval:%369:0:2"
+    },
+    {
+      "candidate": "cache_eval:B224:B228:B227",
+      "classification": "exact_adjacent",
+      "new_pair": "cache_eval:%369:0:1"
+    },
+    {
+      "candidate": "cache_eval:B225:B227:B226",
+      "classification": "exact_adjacent",
+      "new_pair": "cache_eval:%371:0:1"
+    },
+    {
+      "candidate": "cache_eval:B22:B23:B25",
+      "classification": "exact_adjacent",
+      "new_pair": "cache_eval:%133:0:1"
+    },
+    {
+      "candidate": "cache_eval:B22:B23:B26",
+      "classification": "nonadjacent",
+      "new_pair": "cache_eval:%133:0:2"
+    },
+    {
+      "candidate": "cache_eval:B235:B241:B236",
+      "classification": "partial_arm_units",
+      "new_pair": ""
+    },
+    {
+      "candidate": "cache_eval:B235:B241:B238",
+      "classification": "nonadjacent",
+      "new_pair": "cache_eval:%cond.true.i.1:0:3"
+    },
+    {
+      "candidate": "cache_eval:B235:B241:B239",
+      "classification": "nonadjacent",
+      "new_pair": "cache_eval:%cond.true.i.1:0:2"
+    },
+    {
+      "candidate": "cache_eval:B235:B241:B240",
+      "classification": "exact_adjacent",
+      "new_pair": "cache_eval:%cond.true.i.1:0:1"
+    },
+    {
+      "candidate": "cache_eval:B236:B240:B238",
+      "classification": "nonadjacent",
+      "new_pair": "cache_eval:%406:0:2"
+    },
+    {
+      "candidate": "cache_eval:B236:B240:B239",
+      "classification": "exact_adjacent",
+      "new_pair": "cache_eval:%406:0:1"
+    },
+    {
+      "candidate": "cache_eval:B237:B239:B238",
+      "classification": "exact_adjacent",
+      "new_pair": "cache_eval:%408:0:1"
+    },
+    {
+      "candidate": "cache_eval:B24:B25:B26",
+      "classification": "exact_adjacent",
+      "new_pair": "cache_eval:%139:0:1"
+    },
+    {
+      "candidate": "cache_eval:B28:B36:B30",
+      "classification": "exact_adjacent",
+      "new_pair": "cache_eval:%_Z4dec8i.exit87.i:0:1"
+    },
+    {
+      "candidate": "cache_eval:B28:B36:B32",
+      "classification": "nonadjacent",
+      "new_pair": "cache_eval:%_Z4dec8i.exit87.i:0:2"
+    },
+    {
+      "candidate": "cache_eval:B28:B36:B34",
+      "classification": "nonadjacent",
+      "new_pair": "cache_eval:%_Z4dec8i.exit87.i:0:3"
+    },
+    {
+      "candidate": "cache_eval:B28:B36:B35",
+      "classification": "nonadjacent",
+      "new_pair": "cache_eval:%_Z4dec8i.exit87.i:0:4"
+    },
+    {
+      "candidate": "cache_eval:B29:B30:B31",
+      "classification": "no_same_decision",
+      "new_pair": ""
+    },
+    {
+      "candidate": "cache_eval:B29:B30:B32",
+      "classification": "exact_adjacent",
+      "new_pair": "cache_eval:%cond.true.i57.i:0:1"
+    },
+    {
+      "candidate": "cache_eval:B29:B30:B34",
+      "classification": "nonadjacent",
+      "new_pair": "cache_eval:%cond.true.i57.i:0:2"
+    },
+    {
+      "candidate": "cache_eval:B29:B30:B35",
+      "classification": "nonadjacent",
+      "new_pair": "cache_eval:%cond.true.i57.i:0:3"
+    },
+    {
+      "candidate": "cache_eval:B31:B32:B34",
+      "classification": "exact_adjacent",
+      "new_pair": "cache_eval:%168:0:1"
+    },
+    {
+      "candidate": "cache_eval:B31:B32:B35",
+      "classification": "nonadjacent",
+      "new_pair": "cache_eval:%168:0:2"
+    },
+    {
+      "candidate": "cache_eval:B33:B34:B35",
+      "classification": "exact_adjacent",
+      "new_pair": "cache_eval:%174:0:1"
+    },
+    {
+      "candidate": "cache_eval:B41:B42:B43",
+      "classification": "partial_arm_units",
+      "new_pair": ""
+    },
+    {
+      "candidate": "cache_eval:B41:B42:B44",
+      "classification": "exact_adjacent",
+      "new_pair": "cache_eval:%cond.true.i:0:1"
+    },
+    {
+      "candidate": "cache_eval:B41:B42:B46",
+      "classification": "nonadjacent",
+      "new_pair": "cache_eval:%cond.true.i:0:2"
+    },
+    {
+      "candidate": "cache_eval:B41:B42:B47",
+      "classification": "nonadjacent",
+      "new_pair": "cache_eval:%cond.true.i:0:3"
+    },
+    {
+      "candidate": "cache_eval:B43:B44:B46",
+      "classification": "exact_adjacent",
+      "new_pair": "cache_eval:%205:0:1"
+    },
+    {
+      "candidate": "cache_eval:B43:B44:B47",
+      "classification": "nonadjacent",
+      "new_pair": "cache_eval:%205:0:2"
+    },
+    {
+      "candidate": "cache_eval:B45:B46:B47",
+      "classification": "exact_adjacent",
+      "new_pair": "cache_eval:%211:0:1"
+    },
+    {
+      "candidate": "cache_eval:B9:B17:B11",
+      "classification": "exact_adjacent",
+      "new_pair": "cache_eval:%for.body.i:0:1"
+    },
+    {
+      "candidate": "cache_eval:B9:B17:B13",
+      "classification": "nonadjacent",
+      "new_pair": "cache_eval:%for.body.i:0:2"
+    },
+    {
+      "candidate": "cache_eval:B9:B17:B15",
+      "classification": "nonadjacent",
+      "new_pair": "cache_eval:%for.body.i:0:3"
+    },
+    {
+      "candidate": "cache_eval:B9:B17:B16",
+      "classification": "nonadjacent",
+      "new_pair": "cache_eval:%for.body.i:0:4"
+    }
+  ],
+  "schema": "decision-comparison-v1",
+  "scope": "same input IR; structural coverage only, no legality or performance claim",
+  "summary": {
+    "exact_adjacent": 30,
+    "no_same_decision": 6,
+    "nonadjacent": 42,
+    "partial_arm_units": 2
+  }
+}

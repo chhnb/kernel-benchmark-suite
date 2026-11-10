@@ -1,0 +1,30 @@
+RUN python3 /home/chh/kernel-benchmark-suite-review-speculation/tests/decision-model/run.py
+chain execution equivalence OK
+inverse-second-predicate execution equivalence OK
+reverse-second execution equivalence OK
+reverse execution equivalence OK
+guarded-div execution equivalence OK
+guarded-load execution equivalence OK
+multi-block prefix selector dominance and execution OK
+inverted short-circuit prefix identity OK
+switch aliases OK
+unsupported arms rejected without output OK
+convergent control-flow change rejected OK
+all decision-model checks passed
+RUN python3 /home/chh/kernel-benchmark-suite-review-speculation/tests/decision-model/fuse_check.py
+three RegionMelder fusions; 201 outputs per stage equal; unique arm rebind; no speculation
+RUN python3 /home/chh/kernel-benchmark-suite-review-speculation/tests/decision-model/full_tree_check.py
+recursive 7 fusions; 8 -> 1 copysign; all 201 outputs equal at every step
+balanced 7 fusions; 8 -> 1 copysign; all 201 outputs equal at every step
+evidence /home/chh/kernel-benchmark-suite-review-speculation/build/decision-fuse/decision-full-wv55o7ny
+RUN python3 /home/chh/kernel-benchmark-suite-review-speculation/tests/decision-model/identity_check.py
+stable pair IDs survive reordered catalog; missing ID rejected without ordinal fallback
+RUN python3 /home/chh/kernel-benchmark-suite-review-speculation/tests/decision-model/condition_check.py
+{"functions": 6620, "evaluations": 460800, "equal": true, "evidence": "/home/chh/kernel-benchmark-suite-review-speculation/build/decision-fuse/interval-test-m4piux38"}
+RUN /home/chh/kernel-benchmark-suite-review-speculation/build/decision-fuse/scoped-cfg-check
+scoped constant branch and outside protection OK
+RUN /home/chh/kernel-benchmark-suite-review-speculation/build/decision-fuse/trial-simplifycfg-check
+safe select folded; volatile load guard and outside boundary preserved
+RUN python3 /home/chh/kernel-benchmark-suite-review-speculation/tests/decision-model/check_greedy_report.py /home/chh/kernel-benchmark-suite-review-speculation/build/decision-fuse/map-fix-regression-v1/mapairy-search/summary.json
+mapairy-search best-positive selection, stopping conditions, scores and commit counts verified
+ALL CHECKS PASSED

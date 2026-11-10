@@ -1,0 +1,9 @@
+chain execution equivalence OK
+reverse-second execution equivalence OK
+reverse execution equivalence OK
+guarded-div execution equivalence OK
+guarded-load execution equivalence OK
+switch aliases OK
+unsupported arms rejected without output OK
+convergent control-flow change rejected OK
+all decision-model checks passed
