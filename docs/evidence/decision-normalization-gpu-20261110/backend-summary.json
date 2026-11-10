@@ -1,0 +1,62 @@
+{
+  "mapairy": {
+    "baseline": {
+      "ir_instruction_lines": 2758,
+      "conditional_br": 70,
+      "unconditional_br": 44,
+      "phi": 32,
+      "select": 65,
+      "remaining_gate_names": 0,
+      "resources": {
+        "vgpr_count": 37,
+        "sgpr_count": 44,
+        "private_segment_fixed_size": 0,
+        "group_segment_fixed_size": 0
+      }
+    },
+    "variant": {
+      "ir_instruction_lines": 2758,
+      "conditional_br": 70,
+      "unconditional_br": 44,
+      "phi": 32,
+      "select": 65,
+      "remaining_gate_names": 0,
+      "resources": {
+        "vgpr_count": 37,
+        "sgpr_count": 44,
+        "private_segment_fixed_size": 0,
+        "group_segment_fixed_size": 0
+      }
+    }
+  },
+  "vllm": {
+    "baseline": {
+      "ir_instruction_lines": 2248,
+      "conditional_br": 351,
+      "unconditional_br": 315,
+      "phi": 88,
+      "select": 52,
+      "remaining_gate_names": 0,
+      "resources": {
+        "vgpr_count": 62,
+        "sgpr_count": 82,
+        "private_segment_fixed_size": 0,
+        "group_segment_fixed_size": 512
+      }
+    },
+    "variant": {
+      "ir_instruction_lines": 2280,
+      "conditional_br": 319,
+      "unconditional_br": 283,
+      "phi": 88,
+      "select": 84,
+      "remaining_gate_names": 31,
+      "resources": {
+        "vgpr_count": 62,
+        "sgpr_count": 82,
+        "private_segment_fixed_size": 0,
+        "group_segment_fixed_size": 512
+      }
+    }
+  }
+}

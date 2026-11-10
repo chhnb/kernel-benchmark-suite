@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+set -euo pipefail
+r=$(cd "$(dirname "$0")/.." && pwd)
+b="$r/build/decision-fuse";mkdir -p "$b"
+e=${ENGINE_ROOT:-$r}/tools/darm_pair_engine
+# Keep the production engine unchanged. Supply the reviewed speculation API
+# only to this opt-in executable, from a reproducible staged source copy.
+if [[ -z ${ENGINE_ROOT:-} ]] && ! grep -q 'int SpeculationMode' "$e/RegionMelder.h"; then
+ engine_temp=$(mktemp -d "$b/engine.XXXXXX")
+ trap 'rm -rf -- "$engine_temp"' EXIT
+ mkdir -p "$engine_temp/tools"
+ cp -R "$e" "$engine_temp/tools/darm_pair_engine"
+ patch --batch -p1 -d "$engine_temp" < "$r/tools/decision_engine/speculation-modes.patch"
+ e="$engine_temp/tools/darm_pair_engine"
+fi
+lc=${LLVM_CONFIG:-/home/chh/darm-artifacts-repro/build/bin/llvm-config}
+[[ $($lc --version) == 12.* ]] || { echo 'LLVM12 required' >&2; exit 2; }
+# Do not silently use legacy speculation when the reviewed API is unavailable.
+grep -q 'int SpeculationMode' "$e/RegionMelder.h" || { echo 'Requires the speculation-mode engine patch; set ENGINE_ROOT to the reviewed checkout' >&2; exit 2; }
+read -r -a cf <<< "$($lc --cxxflags)"
+read -r -a lf <<< "$($lc --ldflags --libs core irreader analysis transformutils scalaropts instcombine --system-libs | tr '\n' ' ')"
+objs=()
+for n in RegionAnalyzer RegionMelder RegionReplicator CFMelderUtils InstructionMatch; do
+ ${CXX:-g++} "${cf[@]}" -std=c++17 -O2 -DFUSION_DETERMINISTIC_REGION_ORDER -I"$e" -c "$e/$n.cpp" -o "$b/$n.o"
+ objs+=("$b/$n.o")
+done
+${CXX:-g++} "${cf[@]}" -std=c++17 -O2 -DFUSION_DETERMINISTIC_REGION_ORDER -I"$(dirname "$e")" -I"$r/tools" "$r/tools/decision_model.cpp" "$r/tools/decision_fuse_main.cpp" "${objs[@]}" "${lf[@]}" -o "$b/decision-fuse"

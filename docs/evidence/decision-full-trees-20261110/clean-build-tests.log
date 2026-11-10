@@ -1,0 +1,883 @@
+In file included from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/ADT/STLExtras.h:20,
+                 from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/ADT/ArrayRef.h:15,
+                 from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/ADT/DenseMapInfo.h:17,
+                 from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/ADT/DenseMap.h:16,
+                 from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/ADT/DenseSet.h:16,
+                 from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/Function.h:20,
+                 from /tmp/decision-commit-check-20261110/tools/decision_model.h:2,
+                 from /tmp/decision-commit-check-20261110/tools/decision_model.cpp:1:
+/home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/ADT/iterator.h:68:19: warning: ‘template<class _Category, class _Tp, class _Distance, class _Pointer, class _Reference> struct std::iterator’ is deprecated [-Wdeprecated-declarations]
+   68 |     : public std::iterator<IteratorCategoryT, T, DifferenceTypeT, PointerT,
+      |                   ^~~~~~~~
+In file included from /usr/include/c++/12/bits/stl_algobase.h:65,
+                 from /usr/include/c++/12/algorithm:60,
+                 from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/Support/MathExtras.h:17,
+                 from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/ADT/APInt.h:19,
+                 from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/ADT/DenseMapInfo.h:16:
+/usr/include/c++/12/bits/stl_iterator_base_types.h:127:34: note: declared here
+  127 |     struct _GLIBCXX17_DEPRECATED iterator
+      |                                  ^~~~~~~~
+In file included from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/Argument.h:19,
+                 from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/Function.h:25:
+/home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/Value.h:125:21: warning: ‘template<class _Category, class _Tp, class _Distance, class _Pointer, class _Reference> struct std::iterator’ is deprecated [-Wdeprecated-declarations]
+  125 |       : public std::iterator<std::forward_iterator_tag, UseT *> {
+      |                     ^~~~~~~~
+/usr/include/c++/12/bits/stl_iterator_base_types.h:127:34: note: declared here
+  127 |     struct _GLIBCXX17_DEPRECATED iterator
+      |                                  ^~~~~~~~
+/home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/Value.h:164:21: warning: ‘template<class _Category, class _Tp, class _Distance, class _Pointer, class _Reference> struct std::iterator’ is deprecated [-Wdeprecated-declarations]
+  164 |       : public std::iterator<std::forward_iterator_tag, UserTy *> {
+      |                     ^~~~~~~~
+/usr/include/c++/12/bits/stl_iterator_base_types.h:127:34: note: declared here
+  127 |     struct _GLIBCXX17_DEPRECATED iterator
+      |                                  ^~~~~~~~
+In file included from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/TrackingMDRef.h:16,
+                 from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/DebugLoc.h:17,
+                 from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/Instruction.h:22,
+                 from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/BasicBlock.h:22,
+                 from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/Function.h:27:
+/home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/Metadata.h:1199:19: warning: ‘template<class _Category, class _Tp, class _Distance, class _Pointer, class _Reference> struct std::iterator’ is deprecated [-Wdeprecated-declarations]
+ 1199 |     : public std::iterator<std::input_iterator_tag, T *, std::ptrdiff_t, void,
+      |                   ^~~~~~~~
+/usr/include/c++/12/bits/stl_iterator_base_types.h:127:34: note: declared here
+  127 |     struct _GLIBCXX17_DEPRECATED iterator
+      |                                  ^~~~~~~~
+/home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/Metadata.h:1344:19: warning: ‘template<class _Category, class _Tp, class _Distance, class _Pointer, class _Reference> struct std::iterator’ is deprecated [-Wdeprecated-declarations]
+ 1344 |       public std::iterator<std::bidirectional_iterator_tag, T2> {
+      |                   ^~~~~~~~
+/usr/include/c++/12/bits/stl_iterator_base_types.h:127:34: note: declared here
+  127 |     struct _GLIBCXX17_DEPRECATED iterator
+      |                                  ^~~~~~~~
+In file included from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/Analysis/PostDominators.h:16,
+                 from /tmp/decision-commit-check-20261110/tools/decision_model.cpp:2:
+/home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/ADT/DepthFirstIterator.h:86:19: warning: ‘template<class _Category, class _Tp, class _Distance, class _Pointer, class _Reference> struct std::iterator’ is deprecated [-Wdeprecated-declarations]
+   86 |     : public std::iterator<std::forward_iterator_tag, typename GT::NodeRef>,
+      |                   ^~~~~~~~
+/usr/include/c++/12/bits/stl_iterator_base_types.h:127:34: note: declared here
+  127 |     struct _GLIBCXX17_DEPRECATED iterator
+      |                                  ^~~~~~~~
+/home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/ADT/DepthFirstIterator.h:88:22: warning: ‘template<class _Category, class _Tp, class _Distance, class _Pointer, class _Reference> struct std::iterator’ is deprecated [-Wdeprecated-declarations]
+   88 |   using super = std::iterator<std::forward_iterator_tag, typename GT::NodeRef>;
+      |                      ^~~~~~~~
+/usr/include/c++/12/bits/stl_iterator_base_types.h:127:34: note: declared here
+  127 |     struct _GLIBCXX17_DEPRECATED iterator
+      |                                  ^~~~~~~~
+In file included from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/Dominators.h:22,
+                 from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/Analysis/PostDominators.h:17:
+/home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/CFG.h:43:34: warning: ‘template<class _Category, class _Tp, class _Distance, class _Pointer, class _Reference> struct std::iterator’ is deprecated [-Wdeprecated-declarations]
+   43 | class PredIterator : public std::iterator<std::forward_iterator_tag,
+      |                                  ^~~~~~~~
+/usr/include/c++/12/bits/stl_iterator_base_types.h:127:34: note: declared here
+  127 |     struct _GLIBCXX17_DEPRECATED iterator
+      |                                  ^~~~~~~~
+/home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/CFG.h:46:12: warning: ‘template<class _Category, class _Tp, class _Distance, class _Pointer, class _Reference> struct std::iterator’ is deprecated [-Wdeprecated-declarations]
+   46 |       std::iterator<std::forward_iterator_tag, Ptr, ptrdiff_t, Ptr*, Ptr*>;
+      |            ^~~~~~~~
+/usr/include/c++/12/bits/stl_iterator_base_types.h:127:34: note: declared here
+  127 |     struct _GLIBCXX17_DEPRECATED iterator
+      |                                  ^~~~~~~~
+In file included from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/PassManager.h:46,
+                 from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/Dominators.h:23:
+/home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/Module.h:716:21: warning: ‘template<class _Category, class _Tp, class _Distance, class _Pointer, class _Reference> struct std::iterator’ is deprecated [-Wdeprecated-declarations]
+  716 |       : public std::iterator<std::input_iterator_tag, DICompileUnit *> {
+      |                     ^~~~~~~~
+/usr/include/c++/12/bits/stl_iterator_base_types.h:127:34: note: declared here
+  127 |     struct _GLIBCXX17_DEPRECATED iterator
+      |                                  ^~~~~~~~
+In file included from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/ADT/STLExtras.h:20,
+                 from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/ADT/ArrayRef.h:15,
+                 from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/ADT/DenseMapInfo.h:17,
+                 from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/ADT/DenseMap.h:16,
+                 from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/ADT/DenseSet.h:16,
+                 from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/Function.h:20,
+                 from /tmp/decision-commit-check-20261110/tools/decision_model.h:2,
+                 from /tmp/decision-commit-check-20261110/tools/decision_model_main.cpp:1:
+/home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/ADT/iterator.h:68:19: warning: ‘template<class _Category, class _Tp, class _Distance, class _Pointer, class _Reference> struct std::iterator’ is deprecated [-Wdeprecated-declarations]
+   68 |     : public std::iterator<IteratorCategoryT, T, DifferenceTypeT, PointerT,
+      |                   ^~~~~~~~
+In file included from /usr/include/c++/12/bits/stl_algobase.h:65,
+                 from /usr/include/c++/12/algorithm:60,
+                 from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/Support/MathExtras.h:17,
+                 from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/ADT/APInt.h:19,
+                 from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/ADT/DenseMapInfo.h:16:
+/usr/include/c++/12/bits/stl_iterator_base_types.h:127:34: note: declared here
+  127 |     struct _GLIBCXX17_DEPRECATED iterator
+      |                                  ^~~~~~~~
+In file included from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/Argument.h:19,
+                 from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/Function.h:25:
+/home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/Value.h:125:21: warning: ‘template<class _Category, class _Tp, class _Distance, class _Pointer, class _Reference> struct std::iterator’ is deprecated [-Wdeprecated-declarations]
+  125 |       : public std::iterator<std::forward_iterator_tag, UseT *> {
+      |                     ^~~~~~~~
+/usr/include/c++/12/bits/stl_iterator_base_types.h:127:34: note: declared here
+  127 |     struct _GLIBCXX17_DEPRECATED iterator
+      |                                  ^~~~~~~~
+/home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/Value.h:164:21: warning: ‘template<class _Category, class _Tp, class _Distance, class _Pointer, class _Reference> struct std::iterator’ is deprecated [-Wdeprecated-declarations]
+  164 |       : public std::iterator<std::forward_iterator_tag, UserTy *> {
+      |                     ^~~~~~~~
+/usr/include/c++/12/bits/stl_iterator_base_types.h:127:34: note: declared here
+  127 |     struct _GLIBCXX17_DEPRECATED iterator
+      |                                  ^~~~~~~~
+In file included from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/TrackingMDRef.h:16,
+                 from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/DebugLoc.h:17,
+                 from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/Instruction.h:22,
+                 from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/BasicBlock.h:22,
+                 from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/Function.h:27:
+/home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/Metadata.h:1199:19: warning: ‘template<class _Category, class _Tp, class _Distance, class _Pointer, class _Reference> struct std::iterator’ is deprecated [-Wdeprecated-declarations]
+ 1199 |     : public std::iterator<std::input_iterator_tag, T *, std::ptrdiff_t, void,
+      |                   ^~~~~~~~
+/usr/include/c++/12/bits/stl_iterator_base_types.h:127:34: note: declared here
+  127 |     struct _GLIBCXX17_DEPRECATED iterator
+      |                                  ^~~~~~~~
+/home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/Metadata.h:1344:19: warning: ‘template<class _Category, class _Tp, class _Distance, class _Pointer, class _Reference> struct std::iterator’ is deprecated [-Wdeprecated-declarations]
+ 1344 |       public std::iterator<std::bidirectional_iterator_tag, T2> {
+      |                   ^~~~~~~~
+/usr/include/c++/12/bits/stl_iterator_base_types.h:127:34: note: declared here
+  127 |     struct _GLIBCXX17_DEPRECATED iterator
+      |                                  ^~~~~~~~
+In file included from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/PassManager.h:46,
+                 from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/Verifier.h:24,
+                 from /tmp/decision-commit-check-20261110/tools/decision_model_main.cpp:5:
+/home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/Module.h:716:21: warning: ‘template<class _Category, class _Tp, class _Distance, class _Pointer, class _Reference> struct std::iterator’ is deprecated [-Wdeprecated-declarations]
+  716 |       : public std::iterator<std::input_iterator_tag, DICompileUnit *> {
+      |                     ^~~~~~~~
+/usr/include/c++/12/bits/stl_iterator_base_types.h:127:34: note: declared here
+  127 |     struct _GLIBCXX17_DEPRECATED iterator
+      |                                  ^~~~~~~~
+In file included from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/Support/YAMLTraits.h:23,
+                 from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/DiagnosticInfo.h:24,
+                 from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/Analysis/OptimizationRemarkEmitter.h:19,
+                 from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/Analysis/InlineCost.h:18,
+                 from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/Transforms/Utils/Cloning.h:23,
+                 from /tmp/decision-commit-check-20261110/tools/decision_model_main.cpp:9:
+/home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/Support/YAMLParser.h:324:19: warning: ‘template<class _Category, class _Tp, class _Distance, class _Pointer, class _Reference> struct std::iterator’ is deprecated [-Wdeprecated-declarations]
+  324 |     : public std::iterator<std::input_iterator_tag, ValueT> {
+      |                   ^~~~~~~~
+/usr/include/c++/12/bits/stl_iterator_base_types.h:127:34: note: declared here
+  127 |     struct _GLIBCXX17_DEPRECATED iterator
+      |                                  ^~~~~~~~
+In file included from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/Transforms/Utils/ValueMapper.h:19,
+                 from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/Transforms/Utils/Cloning.h:25:
+/home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/ValueMap.h:328:17: warning: ‘template<class _Category, class _Tp, class _Distance, class _Pointer, class _Reference> struct std::iterator’ is deprecated [-Wdeprecated-declarations]
+  328 |     public std::iterator<std::forward_iterator_tag,
+      |                 ^~~~~~~~
+/usr/include/c++/12/bits/stl_iterator_base_types.h:127:34: note: declared here
+  127 |     struct _GLIBCXX17_DEPRECATED iterator
+      |                                  ^~~~~~~~
+/home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/ValueMap.h:380:17: warning: ‘template<class _Category, class _Tp, class _Distance, class _Pointer, class _Reference> struct std::iterator’ is deprecated [-Wdeprecated-declarations]
+  380 |     public std::iterator<std::forward_iterator_tag,
+      |                 ^~~~~~~~
+/usr/include/c++/12/bits/stl_iterator_base_types.h:127:34: note: declared here
+  127 |     struct _GLIBCXX17_DEPRECATED iterator
+      |                                  ^~~~~~~~
+In file included from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/ADT/STLExtras.h:20,
+                 from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/ADT/ArrayRef.h:15,
+                 from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/ADT/DenseMapInfo.h:17,
+                 from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/ADT/DenseMap.h:16,
+                 from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/ADT/DenseSet.h:16,
+                 from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/Function.h:20,
+                 from /tmp/decision-commit-check-20261110/tools/decision_model.h:2,
+                 from /tmp/decision-commit-check-20261110/tools/decision_compare.h:2,
+                 from /tmp/decision-commit-check-20261110/tools/decision_compare.cpp:1:
+/home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/ADT/iterator.h:68:19: warning: ‘template<class _Category, class _Tp, class _Distance, class _Pointer, class _Reference> struct std::iterator’ is deprecated [-Wdeprecated-declarations]
+   68 |     : public std::iterator<IteratorCategoryT, T, DifferenceTypeT, PointerT,
+      |                   ^~~~~~~~
+In file included from /usr/include/c++/12/bits/stl_algobase.h:65,
+                 from /usr/include/c++/12/algorithm:60,
+                 from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/Support/MathExtras.h:17,
+                 from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/ADT/APInt.h:19,
+                 from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/ADT/DenseMapInfo.h:16:
+/usr/include/c++/12/bits/stl_iterator_base_types.h:127:34: note: declared here
+  127 |     struct _GLIBCXX17_DEPRECATED iterator
+      |                                  ^~~~~~~~
+In file included from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/Argument.h:19,
+                 from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/Function.h:25:
+/home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/Value.h:125:21: warning: ‘template<class _Category, class _Tp, class _Distance, class _Pointer, class _Reference> struct std::iterator’ is deprecated [-Wdeprecated-declarations]
+  125 |       : public std::iterator<std::forward_iterator_tag, UseT *> {
+      |                     ^~~~~~~~
+/usr/include/c++/12/bits/stl_iterator_base_types.h:127:34: note: declared here
+  127 |     struct _GLIBCXX17_DEPRECATED iterator
+      |                                  ^~~~~~~~
+/home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/Value.h:164:21: warning: ‘template<class _Category, class _Tp, class _Distance, class _Pointer, class _Reference> struct std::iterator’ is deprecated [-Wdeprecated-declarations]
+  164 |       : public std::iterator<std::forward_iterator_tag, UserTy *> {
+      |                     ^~~~~~~~
+/usr/include/c++/12/bits/stl_iterator_base_types.h:127:34: note: declared here
+  127 |     struct _GLIBCXX17_DEPRECATED iterator
+      |                                  ^~~~~~~~
+In file included from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/TrackingMDRef.h:16,
+                 from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/DebugLoc.h:17,
+                 from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/Instruction.h:22,
+                 from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/BasicBlock.h:22,
+                 from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/Function.h:27:
+/home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/Metadata.h:1199:19: warning: ‘template<class _Category, class _Tp, class _Distance, class _Pointer, class _Reference> struct std::iterator’ is deprecated [-Wdeprecated-declarations]
+ 1199 |     : public std::iterator<std::input_iterator_tag, T *, std::ptrdiff_t, void,
+      |                   ^~~~~~~~
+/usr/include/c++/12/bits/stl_iterator_base_types.h:127:34: note: declared here
+  127 |     struct _GLIBCXX17_DEPRECATED iterator
+      |                                  ^~~~~~~~
+/home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/Metadata.h:1344:19: warning: ‘template<class _Category, class _Tp, class _Distance, class _Pointer, class _Reference> struct std::iterator’ is deprecated [-Wdeprecated-declarations]
+ 1344 |       public std::iterator<std::bidirectional_iterator_tag, T2> {
+      |                   ^~~~~~~~
+/usr/include/c++/12/bits/stl_iterator_base_types.h:127:34: note: declared here
+  127 |     struct _GLIBCXX17_DEPRECATED iterator
+      |                                  ^~~~~~~~
+In file included from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/Analysis/RegionInfo.h:40,
+                 from /tmp/decision-commit-check-20261110/tools/decision_compare.cpp:2:
+/home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/ADT/DepthFirstIterator.h:86:19: warning: ‘template<class _Category, class _Tp, class _Distance, class _Pointer, class _Reference> struct std::iterator’ is deprecated [-Wdeprecated-declarations]
+   86 |     : public std::iterator<std::forward_iterator_tag, typename GT::NodeRef>,
+      |                   ^~~~~~~~
+/usr/include/c++/12/bits/stl_iterator_base_types.h:127:34: note: declared here
+  127 |     struct _GLIBCXX17_DEPRECATED iterator
+      |                                  ^~~~~~~~
+/home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/ADT/DepthFirstIterator.h:88:22: warning: ‘template<class _Category, class _Tp, class _Distance, class _Pointer, class _Reference> struct std::iterator’ is deprecated [-Wdeprecated-declarations]
+   88 |   using super = std::iterator<std::forward_iterator_tag, typename GT::NodeRef>;
+      |                      ^~~~~~~~
+/usr/include/c++/12/bits/stl_iterator_base_types.h:127:34: note: declared here
+  127 |     struct _GLIBCXX17_DEPRECATED iterator
+      |                                  ^~~~~~~~
+In file included from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/Dominators.h:22,
+                 from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/Analysis/RegionInfo.h:46:
+/home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/CFG.h:43:34: warning: ‘template<class _Category, class _Tp, class _Distance, class _Pointer, class _Reference> struct std::iterator’ is deprecated [-Wdeprecated-declarations]
+   43 | class PredIterator : public std::iterator<std::forward_iterator_tag,
+      |                                  ^~~~~~~~
+/usr/include/c++/12/bits/stl_iterator_base_types.h:127:34: note: declared here
+  127 |     struct _GLIBCXX17_DEPRECATED iterator
+      |                                  ^~~~~~~~
+/home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/CFG.h:46:12: warning: ‘template<class _Category, class _Tp, class _Distance, class _Pointer, class _Reference> struct std::iterator’ is deprecated [-Wdeprecated-declarations]
+   46 |       std::iterator<std::forward_iterator_tag, Ptr, ptrdiff_t, Ptr*, Ptr*>;
+      |            ^~~~~~~~
+/usr/include/c++/12/bits/stl_iterator_base_types.h:127:34: note: declared here
+  127 |     struct _GLIBCXX17_DEPRECATED iterator
+      |                                  ^~~~~~~~
+In file included from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/PassManager.h:46,
+                 from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/Dominators.h:23:
+/home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/Module.h:716:21: warning: ‘template<class _Category, class _Tp, class _Distance, class _Pointer, class _Reference> struct std::iterator’ is deprecated [-Wdeprecated-declarations]
+  716 |       : public std::iterator<std::input_iterator_tag, DICompileUnit *> {
+      |                     ^~~~~~~~
+/usr/include/c++/12/bits/stl_iterator_base_types.h:127:34: note: declared here
+  127 |     struct _GLIBCXX17_DEPRECATED iterator
+      |                                  ^~~~~~~~
+patching file tools/darm_pair_engine/RegionMelder.cpp
+patching file tools/darm_pair_engine/RegionMelder.h
+In file included from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/ADT/SmallSet.h:19,
+                 from /tmp/decision-commit-check-20261110/build/decision-fuse/engine.zlJwqs/tools/darm_pair_engine/CFMelderUtils.h:5,
+                 from /tmp/decision-commit-check-20261110/build/decision-fuse/engine.zlJwqs/tools/darm_pair_engine/RegionAnalyzer.h:4,
+                 from /tmp/decision-commit-check-20261110/build/decision-fuse/engine.zlJwqs/tools/darm_pair_engine/RegionAnalyzer.cpp:1:
+/home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/ADT/iterator.h:68:19: warning: ‘template<class _Category, class _Tp, class _Distance, class _Pointer, class _Reference> struct std::iterator’ is deprecated [-Wdeprecated-declarations]
+   68 |     : public std::iterator<IteratorCategoryT, T, DifferenceTypeT, PointerT,
+      |                   ^~~~~~~~
+In file included from /usr/include/c++/12/iterator:61,
+                 from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/ADT/SmallPtrSet.h:26,
+                 from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/ADT/SmallSet.h:17:
+/usr/include/c++/12/bits/stl_iterator_base_types.h:127:34: note: declared here
+  127 |     struct _GLIBCXX17_DEPRECATED iterator
+      |                                  ^~~~~~~~
+In file included from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/Argument.h:19,
+                 from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/Function.h:25,
+                 from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/CFG.h:25,
+                 from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/Analysis/LoopInfo.h:46,
+                 from /tmp/decision-commit-check-20261110/build/decision-fuse/engine.zlJwqs/tools/darm_pair_engine/CFMelderUtils.h:8:
+/home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/Value.h:125:21: warning: ‘template<class _Category, class _Tp, class _Distance, class _Pointer, class _Reference> struct std::iterator’ is deprecated [-Wdeprecated-declarations]
+  125 |       : public std::iterator<std::forward_iterator_tag, UseT *> {
+      |                     ^~~~~~~~
+/usr/include/c++/12/bits/stl_iterator_base_types.h:127:34: note: declared here
+  127 |     struct _GLIBCXX17_DEPRECATED iterator
+      |                                  ^~~~~~~~
+/home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/Value.h:164:21: warning: ‘template<class _Category, class _Tp, class _Distance, class _Pointer, class _Reference> struct std::iterator’ is deprecated [-Wdeprecated-declarations]
+  164 |       : public std::iterator<std::forward_iterator_tag, UserTy *> {
+      |                     ^~~~~~~~
+/usr/include/c++/12/bits/stl_iterator_base_types.h:127:34: note: declared here
+  127 |     struct _GLIBCXX17_DEPRECATED iterator
+      |                                  ^~~~~~~~
+In file included from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/TrackingMDRef.h:16,
+                 from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/DebugLoc.h:17,
+                 from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/Instruction.h:22,
+                 from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/BasicBlock.h:22,
+                 from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/Function.h:27:
+/home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/Metadata.h:1199:19: warning: ‘template<class _Category, class _Tp, class _Distance, class _Pointer, class _Reference> struct std::iterator’ is deprecated [-Wdeprecated-declarations]
+ 1199 |     : public std::iterator<std::input_iterator_tag, T *, std::ptrdiff_t, void,
+      |                   ^~~~~~~~
+/usr/include/c++/12/bits/stl_iterator_base_types.h:127:34: note: declared here
+  127 |     struct _GLIBCXX17_DEPRECATED iterator
+      |                                  ^~~~~~~~
+/home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/Metadata.h:1344:19: warning: ‘template<class _Category, class _Tp, class _Distance, class _Pointer, class _Reference> struct std::iterator’ is deprecated [-Wdeprecated-declarations]
+ 1344 |       public std::iterator<std::bidirectional_iterator_tag, T2> {
+      |                   ^~~~~~~~
+/usr/include/c++/12/bits/stl_iterator_base_types.h:127:34: note: declared here
+  127 |     struct _GLIBCXX17_DEPRECATED iterator
+      |                                  ^~~~~~~~
+/home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/CFG.h:43:34: warning: ‘template<class _Category, class _Tp, class _Distance, class _Pointer, class _Reference> struct std::iterator’ is deprecated [-Wdeprecated-declarations]
+   43 | class PredIterator : public std::iterator<std::forward_iterator_tag,
+      |                                  ^~~~~~~~
+/usr/include/c++/12/bits/stl_iterator_base_types.h:127:34: note: declared here
+  127 |     struct _GLIBCXX17_DEPRECATED iterator
+      |                                  ^~~~~~~~
+/home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/CFG.h:46:12: warning: ‘template<class _Category, class _Tp, class _Distance, class _Pointer, class _Reference> struct std::iterator’ is deprecated [-Wdeprecated-declarations]
+   46 |       std::iterator<std::forward_iterator_tag, Ptr, ptrdiff_t, Ptr*, Ptr*>;
+      |            ^~~~~~~~
+/usr/include/c++/12/bits/stl_iterator_base_types.h:127:34: note: declared here
+  127 |     struct _GLIBCXX17_DEPRECATED iterator
+      |                                  ^~~~~~~~
+In file included from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/PassManager.h:46,
+                 from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/Analysis/LoopInfo.h:49:
+/home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/Module.h:716:21: warning: ‘template<class _Category, class _Tp, class _Distance, class _Pointer, class _Reference> struct std::iterator’ is deprecated [-Wdeprecated-declarations]
+  716 |       : public std::iterator<std::input_iterator_tag, DICompileUnit *> {
+      |                     ^~~~~~~~
+/usr/include/c++/12/bits/stl_iterator_base_types.h:127:34: note: declared here
+  127 |     struct _GLIBCXX17_DEPRECATED iterator
+      |                                  ^~~~~~~~
+In file included from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/Analysis/PostDominators.h:16,
+                 from /tmp/decision-commit-check-20261110/build/decision-fuse/engine.zlJwqs/tools/darm_pair_engine/CFMelderUtils.h:9:
+/home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/ADT/DepthFirstIterator.h:86:19: warning: ‘template<class _Category, class _Tp, class _Distance, class _Pointer, class _Reference> struct std::iterator’ is deprecated [-Wdeprecated-declarations]
+   86 |     : public std::iterator<std::forward_iterator_tag, typename GT::NodeRef>,
+      |                   ^~~~~~~~
+/usr/include/c++/12/bits/stl_iterator_base_types.h:127:34: note: declared here
+  127 |     struct _GLIBCXX17_DEPRECATED iterator
+      |                                  ^~~~~~~~
+/home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/ADT/DepthFirstIterator.h:88:22: warning: ‘template<class _Category, class _Tp, class _Distance, class _Pointer, class _Reference> struct std::iterator’ is deprecated [-Wdeprecated-declarations]
+   88 |   using super = std::iterator<std::forward_iterator_tag, typename GT::NodeRef>;
+      |                      ^~~~~~~~
+/usr/include/c++/12/bits/stl_iterator_base_types.h:127:34: note: declared here
+  127 |     struct _GLIBCXX17_DEPRECATED iterator
+      |                                  ^~~~~~~~
+In file included from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/ADT/SmallSet.h:19,
+                 from /tmp/decision-commit-check-20261110/build/decision-fuse/engine.zlJwqs/tools/darm_pair_engine/CFMelderUtils.h:5,
+                 from /tmp/decision-commit-check-20261110/build/decision-fuse/engine.zlJwqs/tools/darm_pair_engine/RegionAnalyzer.h:4,
+                 from /tmp/decision-commit-check-20261110/build/decision-fuse/engine.zlJwqs/tools/darm_pair_engine/RegionMelder.h:5,
+                 from /tmp/decision-commit-check-20261110/build/decision-fuse/engine.zlJwqs/tools/darm_pair_engine/RegionMelder.cpp:1:
+/home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/ADT/iterator.h:68:19: warning: ‘template<class _Category, class _Tp, class _Distance, class _Pointer, class _Reference> struct std::iterator’ is deprecated [-Wdeprecated-declarations]
+   68 |     : public std::iterator<IteratorCategoryT, T, DifferenceTypeT, PointerT,
+      |                   ^~~~~~~~
+In file included from /usr/include/c++/12/bits/stl_construct.h:61,
+                 from /usr/include/c++/12/bits/alloc_traits.h:33,
+                 from /usr/include/c++/12/ext/alloc_traits.h:34,
+                 from /usr/include/c++/12/unordered_map:41,
+                 from /usr/include/c++/12/functional:61,
+                 from /tmp/decision-commit-check-20261110/build/decision-fuse/engine.zlJwqs/tools/darm_pair_engine/RegionMelder.h:1:
+/usr/include/c++/12/bits/stl_iterator_base_types.h:127:34: note: declared here
+  127 |     struct _GLIBCXX17_DEPRECATED iterator
+      |                                  ^~~~~~~~
+In file included from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/Argument.h:19,
+                 from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/Function.h:25,
+                 from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/CFG.h:25,
+                 from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/Analysis/LoopInfo.h:46,
+                 from /tmp/decision-commit-check-20261110/build/decision-fuse/engine.zlJwqs/tools/darm_pair_engine/CFMelderUtils.h:8:
+/home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/Value.h:125:21: warning: ‘template<class _Category, class _Tp, class _Distance, class _Pointer, class _Reference> struct std::iterator’ is deprecated [-Wdeprecated-declarations]
+  125 |       : public std::iterator<std::forward_iterator_tag, UseT *> {
+      |                     ^~~~~~~~
+/usr/include/c++/12/bits/stl_iterator_base_types.h:127:34: note: declared here
+  127 |     struct _GLIBCXX17_DEPRECATED iterator
+      |                                  ^~~~~~~~
+/home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/Value.h:164:21: warning: ‘template<class _Category, class _Tp, class _Distance, class _Pointer, class _Reference> struct std::iterator’ is deprecated [-Wdeprecated-declarations]
+  164 |       : public std::iterator<std::forward_iterator_tag, UserTy *> {
+      |                     ^~~~~~~~
+/usr/include/c++/12/bits/stl_iterator_base_types.h:127:34: note: declared here
+  127 |     struct _GLIBCXX17_DEPRECATED iterator
+      |                                  ^~~~~~~~
+In file included from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/TrackingMDRef.h:16,
+                 from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/DebugLoc.h:17,
+                 from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/Instruction.h:22,
+                 from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/BasicBlock.h:22,
+                 from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/Function.h:27:
+/home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/Metadata.h:1199:19: warning: ‘template<class _Category, class _Tp, class _Distance, class _Pointer, class _Reference> struct std::iterator’ is deprecated [-Wdeprecated-declarations]
+ 1199 |     : public std::iterator<std::input_iterator_tag, T *, std::ptrdiff_t, void,
+      |                   ^~~~~~~~
+/usr/include/c++/12/bits/stl_iterator_base_types.h:127:34: note: declared here
+  127 |     struct _GLIBCXX17_DEPRECATED iterator
+      |                                  ^~~~~~~~
+/home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/Metadata.h:1344:19: warning: ‘template<class _Category, class _Tp, class _Distance, class _Pointer, class _Reference> struct std::iterator’ is deprecated [-Wdeprecated-declarations]
+ 1344 |       public std::iterator<std::bidirectional_iterator_tag, T2> {
+      |                   ^~~~~~~~
+/usr/include/c++/12/bits/stl_iterator_base_types.h:127:34: note: declared here
+  127 |     struct _GLIBCXX17_DEPRECATED iterator
+      |                                  ^~~~~~~~
+/home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/CFG.h:43:34: warning: ‘template<class _Category, class _Tp, class _Distance, class _Pointer, class _Reference> struct std::iterator’ is deprecated [-Wdeprecated-declarations]
+   43 | class PredIterator : public std::iterator<std::forward_iterator_tag,
+      |                                  ^~~~~~~~
+/usr/include/c++/12/bits/stl_iterator_base_types.h:127:34: note: declared here
+  127 |     struct _GLIBCXX17_DEPRECATED iterator
+      |                                  ^~~~~~~~
+/home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/CFG.h:46:12: warning: ‘template<class _Category, class _Tp, class _Distance, class _Pointer, class _Reference> struct std::iterator’ is deprecated [-Wdeprecated-declarations]
+   46 |       std::iterator<std::forward_iterator_tag, Ptr, ptrdiff_t, Ptr*, Ptr*>;
+      |            ^~~~~~~~
+/usr/include/c++/12/bits/stl_iterator_base_types.h:127:34: note: declared here
+  127 |     struct _GLIBCXX17_DEPRECATED iterator
+      |                                  ^~~~~~~~
+In file included from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/PassManager.h:46,
+                 from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/Analysis/LoopInfo.h:49:
+/home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/Module.h:716:21: warning: ‘template<class _Category, class _Tp, class _Distance, class _Pointer, class _Reference> struct std::iterator’ is deprecated [-Wdeprecated-declarations]
+  716 |       : public std::iterator<std::input_iterator_tag, DICompileUnit *> {
+      |                     ^~~~~~~~
+/usr/include/c++/12/bits/stl_iterator_base_types.h:127:34: note: declared here
+  127 |     struct _GLIBCXX17_DEPRECATED iterator
+      |                                  ^~~~~~~~
+In file included from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/Analysis/PostDominators.h:16,
+                 from /tmp/decision-commit-check-20261110/build/decision-fuse/engine.zlJwqs/tools/darm_pair_engine/CFMelderUtils.h:9:
+/home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/ADT/DepthFirstIterator.h:86:19: warning: ‘template<class _Category, class _Tp, class _Distance, class _Pointer, class _Reference> struct std::iterator’ is deprecated [-Wdeprecated-declarations]
+   86 |     : public std::iterator<std::forward_iterator_tag, typename GT::NodeRef>,
+      |                   ^~~~~~~~
+/usr/include/c++/12/bits/stl_iterator_base_types.h:127:34: note: declared here
+  127 |     struct _GLIBCXX17_DEPRECATED iterator
+      |                                  ^~~~~~~~
+/home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/ADT/DepthFirstIterator.h:88:22: warning: ‘template<class _Category, class _Tp, class _Distance, class _Pointer, class _Reference> struct std::iterator’ is deprecated [-Wdeprecated-declarations]
+   88 |   using super = std::iterator<std::forward_iterator_tag, typename GT::NodeRef>;
+      |                      ^~~~~~~~
+/usr/include/c++/12/bits/stl_iterator_base_types.h:127:34: note: declared here
+  127 |     struct _GLIBCXX17_DEPRECATED iterator
+      |                                  ^~~~~~~~
+In file included from /tmp/decision-commit-check-20261110/build/decision-fuse/engine.zlJwqs/tools/darm_pair_engine/RegionMelder.h:13:
+/home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/ValueMap.h:328:17: warning: ‘template<class _Category, class _Tp, class _Distance, class _Pointer, class _Reference> struct std::iterator’ is deprecated [-Wdeprecated-declarations]
+  328 |     public std::iterator<std::forward_iterator_tag,
+      |                 ^~~~~~~~
+/usr/include/c++/12/bits/stl_iterator_base_types.h:127:34: note: declared here
+  127 |     struct _GLIBCXX17_DEPRECATED iterator
+      |                                  ^~~~~~~~
+/home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/ValueMap.h:380:17: warning: ‘template<class _Category, class _Tp, class _Distance, class _Pointer, class _Reference> struct std::iterator’ is deprecated [-Wdeprecated-declarations]
+  380 |     public std::iterator<std::forward_iterator_tag,
+      |                 ^~~~~~~~
+/usr/include/c++/12/bits/stl_iterator_base_types.h:127:34: note: declared here
+  127 |     struct _GLIBCXX17_DEPRECATED iterator
+      |                                  ^~~~~~~~
+In file included from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/ADT/SmallSet.h:19,
+                 from /tmp/decision-commit-check-20261110/build/decision-fuse/engine.zlJwqs/tools/darm_pair_engine/CFMelderUtils.h:5,
+                 from /tmp/decision-commit-check-20261110/build/decision-fuse/engine.zlJwqs/tools/darm_pair_engine/RegionAnalyzer.h:4,
+                 from /tmp/decision-commit-check-20261110/build/decision-fuse/engine.zlJwqs/tools/darm_pair_engine/RegionReplicator.h:4,
+                 from /tmp/decision-commit-check-20261110/build/decision-fuse/engine.zlJwqs/tools/darm_pair_engine/RegionReplicator.cpp:1:
+/home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/ADT/iterator.h:68:19: warning: ‘template<class _Category, class _Tp, class _Distance, class _Pointer, class _Reference> struct std::iterator’ is deprecated [-Wdeprecated-declarations]
+   68 |     : public std::iterator<IteratorCategoryT, T, DifferenceTypeT, PointerT,
+      |                   ^~~~~~~~
+In file included from /usr/include/c++/12/iterator:61,
+                 from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/ADT/SmallPtrSet.h:26,
+                 from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/ADT/SmallSet.h:17:
+/usr/include/c++/12/bits/stl_iterator_base_types.h:127:34: note: declared here
+  127 |     struct _GLIBCXX17_DEPRECATED iterator
+      |                                  ^~~~~~~~
+In file included from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/Argument.h:19,
+                 from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/Function.h:25,
+                 from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/CFG.h:25,
+                 from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/Analysis/LoopInfo.h:46,
+                 from /tmp/decision-commit-check-20261110/build/decision-fuse/engine.zlJwqs/tools/darm_pair_engine/CFMelderUtils.h:8:
+/home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/Value.h:125:21: warning: ‘template<class _Category, class _Tp, class _Distance, class _Pointer, class _Reference> struct std::iterator’ is deprecated [-Wdeprecated-declarations]
+  125 |       : public std::iterator<std::forward_iterator_tag, UseT *> {
+      |                     ^~~~~~~~
+/usr/include/c++/12/bits/stl_iterator_base_types.h:127:34: note: declared here
+  127 |     struct _GLIBCXX17_DEPRECATED iterator
+      |                                  ^~~~~~~~
+/home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/Value.h:164:21: warning: ‘template<class _Category, class _Tp, class _Distance, class _Pointer, class _Reference> struct std::iterator’ is deprecated [-Wdeprecated-declarations]
+  164 |       : public std::iterator<std::forward_iterator_tag, UserTy *> {
+      |                     ^~~~~~~~
+/usr/include/c++/12/bits/stl_iterator_base_types.h:127:34: note: declared here
+  127 |     struct _GLIBCXX17_DEPRECATED iterator
+      |                                  ^~~~~~~~
+In file included from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/TrackingMDRef.h:16,
+                 from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/DebugLoc.h:17,
+                 from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/Instruction.h:22,
+                 from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/BasicBlock.h:22,
+                 from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/Function.h:27:
+/home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/Metadata.h:1199:19: warning: ‘template<class _Category, class _Tp, class _Distance, class _Pointer, class _Reference> struct std::iterator’ is deprecated [-Wdeprecated-declarations]
+ 1199 |     : public std::iterator<std::input_iterator_tag, T *, std::ptrdiff_t, void,
+      |                   ^~~~~~~~
+/usr/include/c++/12/bits/stl_iterator_base_types.h:127:34: note: declared here
+  127 |     struct _GLIBCXX17_DEPRECATED iterator
+      |                                  ^~~~~~~~
+/home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/Metadata.h:1344:19: warning: ‘template<class _Category, class _Tp, class _Distance, class _Pointer, class _Reference> struct std::iterator’ is deprecated [-Wdeprecated-declarations]
+ 1344 |       public std::iterator<std::bidirectional_iterator_tag, T2> {
+      |                   ^~~~~~~~
+/usr/include/c++/12/bits/stl_iterator_base_types.h:127:34: note: declared here
+  127 |     struct _GLIBCXX17_DEPRECATED iterator
+      |                                  ^~~~~~~~
+/home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/CFG.h:43:34: warning: ‘template<class _Category, class _Tp, class _Distance, class _Pointer, class _Reference> struct std::iterator’ is deprecated [-Wdeprecated-declarations]
+   43 | class PredIterator : public std::iterator<std::forward_iterator_tag,
+      |                                  ^~~~~~~~
+/usr/include/c++/12/bits/stl_iterator_base_types.h:127:34: note: declared here
+  127 |     struct _GLIBCXX17_DEPRECATED iterator
+      |                                  ^~~~~~~~
+/home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/CFG.h:46:12: warning: ‘template<class _Category, class _Tp, class _Distance, class _Pointer, class _Reference> struct std::iterator’ is deprecated [-Wdeprecated-declarations]
+   46 |       std::iterator<std::forward_iterator_tag, Ptr, ptrdiff_t, Ptr*, Ptr*>;
+      |            ^~~~~~~~
+/usr/include/c++/12/bits/stl_iterator_base_types.h:127:34: note: declared here
+  127 |     struct _GLIBCXX17_DEPRECATED iterator
+      |                                  ^~~~~~~~
+In file included from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/PassManager.h:46,
+                 from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/Analysis/LoopInfo.h:49:
+/home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/Module.h:716:21: warning: ‘template<class _Category, class _Tp, class _Distance, class _Pointer, class _Reference> struct std::iterator’ is deprecated [-Wdeprecated-declarations]
+  716 |       : public std::iterator<std::input_iterator_tag, DICompileUnit *> {
+      |                     ^~~~~~~~
+/usr/include/c++/12/bits/stl_iterator_base_types.h:127:34: note: declared here
+  127 |     struct _GLIBCXX17_DEPRECATED iterator
+      |                                  ^~~~~~~~
+In file included from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/Analysis/PostDominators.h:16,
+                 from /tmp/decision-commit-check-20261110/build/decision-fuse/engine.zlJwqs/tools/darm_pair_engine/CFMelderUtils.h:9:
+/home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/ADT/DepthFirstIterator.h:86:19: warning: ‘template<class _Category, class _Tp, class _Distance, class _Pointer, class _Reference> struct std::iterator’ is deprecated [-Wdeprecated-declarations]
+   86 |     : public std::iterator<std::forward_iterator_tag, typename GT::NodeRef>,
+      |                   ^~~~~~~~
+/usr/include/c++/12/bits/stl_iterator_base_types.h:127:34: note: declared here
+  127 |     struct _GLIBCXX17_DEPRECATED iterator
+      |                                  ^~~~~~~~
+/home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/ADT/DepthFirstIterator.h:88:22: warning: ‘template<class _Category, class _Tp, class _Distance, class _Pointer, class _Reference> struct std::iterator’ is deprecated [-Wdeprecated-declarations]
+   88 |   using super = std::iterator<std::forward_iterator_tag, typename GT::NodeRef>;
+      |                      ^~~~~~~~
+/usr/include/c++/12/bits/stl_iterator_base_types.h:127:34: note: declared here
+  127 |     struct _GLIBCXX17_DEPRECATED iterator
+      |                                  ^~~~~~~~
+In file included from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/ADT/SmallSet.h:19,
+                 from /tmp/decision-commit-check-20261110/build/decision-fuse/engine.zlJwqs/tools/darm_pair_engine/CFMelderUtils.h:5,
+                 from /tmp/decision-commit-check-20261110/build/decision-fuse/engine.zlJwqs/tools/darm_pair_engine/CFMelderUtils.cpp:1:
+/home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/ADT/iterator.h:68:19: warning: ‘template<class _Category, class _Tp, class _Distance, class _Pointer, class _Reference> struct std::iterator’ is deprecated [-Wdeprecated-declarations]
+   68 |     : public std::iterator<IteratorCategoryT, T, DifferenceTypeT, PointerT,
+      |                   ^~~~~~~~
+In file included from /usr/include/c++/12/iterator:61,
+                 from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/ADT/SmallPtrSet.h:26,
+                 from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/ADT/SmallSet.h:17:
+/usr/include/c++/12/bits/stl_iterator_base_types.h:127:34: note: declared here
+  127 |     struct _GLIBCXX17_DEPRECATED iterator
+      |                                  ^~~~~~~~
+In file included from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/Argument.h:19,
+                 from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/Function.h:25,
+                 from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/CFG.h:25,
+                 from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/Analysis/LoopInfo.h:46,
+                 from /tmp/decision-commit-check-20261110/build/decision-fuse/engine.zlJwqs/tools/darm_pair_engine/CFMelderUtils.h:8:
+/home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/Value.h:125:21: warning: ‘template<class _Category, class _Tp, class _Distance, class _Pointer, class _Reference> struct std::iterator’ is deprecated [-Wdeprecated-declarations]
+  125 |       : public std::iterator<std::forward_iterator_tag, UseT *> {
+      |                     ^~~~~~~~
+/usr/include/c++/12/bits/stl_iterator_base_types.h:127:34: note: declared here
+  127 |     struct _GLIBCXX17_DEPRECATED iterator
+      |                                  ^~~~~~~~
+/home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/Value.h:164:21: warning: ‘template<class _Category, class _Tp, class _Distance, class _Pointer, class _Reference> struct std::iterator’ is deprecated [-Wdeprecated-declarations]
+  164 |       : public std::iterator<std::forward_iterator_tag, UserTy *> {
+      |                     ^~~~~~~~
+/usr/include/c++/12/bits/stl_iterator_base_types.h:127:34: note: declared here
+  127 |     struct _GLIBCXX17_DEPRECATED iterator
+      |                                  ^~~~~~~~
+In file included from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/TrackingMDRef.h:16,
+                 from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/DebugLoc.h:17,
+                 from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/Instruction.h:22,
+                 from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/BasicBlock.h:22,
+                 from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/Function.h:27:
+/home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/Metadata.h:1199:19: warning: ‘template<class _Category, class _Tp, class _Distance, class _Pointer, class _Reference> struct std::iterator’ is deprecated [-Wdeprecated-declarations]
+ 1199 |     : public std::iterator<std::input_iterator_tag, T *, std::ptrdiff_t, void,
+      |                   ^~~~~~~~
+/usr/include/c++/12/bits/stl_iterator_base_types.h:127:34: note: declared here
+  127 |     struct _GLIBCXX17_DEPRECATED iterator
+      |                                  ^~~~~~~~
+/home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/Metadata.h:1344:19: warning: ‘template<class _Category, class _Tp, class _Distance, class _Pointer, class _Reference> struct std::iterator’ is deprecated [-Wdeprecated-declarations]
+ 1344 |       public std::iterator<std::bidirectional_iterator_tag, T2> {
+      |                   ^~~~~~~~
+/usr/include/c++/12/bits/stl_iterator_base_types.h:127:34: note: declared here
+  127 |     struct _GLIBCXX17_DEPRECATED iterator
+      |                                  ^~~~~~~~
+/home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/CFG.h:43:34: warning: ‘template<class _Category, class _Tp, class _Distance, class _Pointer, class _Reference> struct std::iterator’ is deprecated [-Wdeprecated-declarations]
+   43 | class PredIterator : public std::iterator<std::forward_iterator_tag,
+      |                                  ^~~~~~~~
+/usr/include/c++/12/bits/stl_iterator_base_types.h:127:34: note: declared here
+  127 |     struct _GLIBCXX17_DEPRECATED iterator
+      |                                  ^~~~~~~~
+/home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/CFG.h:46:12: warning: ‘template<class _Category, class _Tp, class _Distance, class _Pointer, class _Reference> struct std::iterator’ is deprecated [-Wdeprecated-declarations]
+   46 |       std::iterator<std::forward_iterator_tag, Ptr, ptrdiff_t, Ptr*, Ptr*>;
+      |            ^~~~~~~~
+/usr/include/c++/12/bits/stl_iterator_base_types.h:127:34: note: declared here
+  127 |     struct _GLIBCXX17_DEPRECATED iterator
+      |                                  ^~~~~~~~
+In file included from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/PassManager.h:46,
+                 from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/Analysis/LoopInfo.h:49:
+/home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/Module.h:716:21: warning: ‘template<class _Category, class _Tp, class _Distance, class _Pointer, class _Reference> struct std::iterator’ is deprecated [-Wdeprecated-declarations]
+  716 |       : public std::iterator<std::input_iterator_tag, DICompileUnit *> {
+      |                     ^~~~~~~~
+/usr/include/c++/12/bits/stl_iterator_base_types.h:127:34: note: declared here
+  127 |     struct _GLIBCXX17_DEPRECATED iterator
+      |                                  ^~~~~~~~
+In file included from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/Analysis/PostDominators.h:16,
+                 from /tmp/decision-commit-check-20261110/build/decision-fuse/engine.zlJwqs/tools/darm_pair_engine/CFMelderUtils.h:9:
+/home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/ADT/DepthFirstIterator.h:86:19: warning: ‘template<class _Category, class _Tp, class _Distance, class _Pointer, class _Reference> struct std::iterator’ is deprecated [-Wdeprecated-declarations]
+   86 |     : public std::iterator<std::forward_iterator_tag, typename GT::NodeRef>,
+      |                   ^~~~~~~~
+/usr/include/c++/12/bits/stl_iterator_base_types.h:127:34: note: declared here
+  127 |     struct _GLIBCXX17_DEPRECATED iterator
+      |                                  ^~~~~~~~
+/home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/ADT/DepthFirstIterator.h:88:22: warning: ‘template<class _Category, class _Tp, class _Distance, class _Pointer, class _Reference> struct std::iterator’ is deprecated [-Wdeprecated-declarations]
+   88 |   using super = std::iterator<std::forward_iterator_tag, typename GT::NodeRef>;
+      |                      ^~~~~~~~
+/usr/include/c++/12/bits/stl_iterator_base_types.h:127:34: note: declared here
+  127 |     struct _GLIBCXX17_DEPRECATED iterator
+      |                                  ^~~~~~~~
+In file included from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/ADT/STLExtras.h:20,
+                 from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/ADT/ArrayRef.h:15,
+                 from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/ADT/APFloat.h:20,
+                 from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/Constants.h:23,
+                 from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/Operator.h:19,
+                 from /tmp/decision-commit-check-20261110/build/decision-fuse/engine.zlJwqs/tools/darm_pair_engine/InstructionMatch.cpp:1:
+/home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/ADT/iterator.h:68:19: warning: ‘template<class _Category, class _Tp, class _Distance, class _Pointer, class _Reference> struct std::iterator’ is deprecated [-Wdeprecated-declarations]
+   68 |     : public std::iterator<IteratorCategoryT, T, DifferenceTypeT, PointerT,
+      |                   ^~~~~~~~
+In file included from /usr/include/c++/12/bits/stl_algobase.h:65,
+                 from /usr/include/c++/12/memory:63,
+                 from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/ADT/Optional.h:22,
+                 from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/Operator.h:18:
+/usr/include/c++/12/bits/stl_iterator_base_types.h:127:34: note: declared here
+  127 |     struct _GLIBCXX17_DEPRECATED iterator
+      |                                  ^~~~~~~~
+In file included from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/User.h:24,
+                 from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/Constant.h:16,
+                 from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/Constants.h:30:
+/home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/Value.h:125:21: warning: ‘template<class _Category, class _Tp, class _Distance, class _Pointer, class _Reference> struct std::iterator’ is deprecated [-Wdeprecated-declarations]
+  125 |       : public std::iterator<std::forward_iterator_tag, UseT *> {
+      |                     ^~~~~~~~
+/usr/include/c++/12/bits/stl_iterator_base_types.h:127:34: note: declared here
+  127 |     struct _GLIBCXX17_DEPRECATED iterator
+      |                                  ^~~~~~~~
+/home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/Value.h:164:21: warning: ‘template<class _Category, class _Tp, class _Distance, class _Pointer, class _Reference> struct std::iterator’ is deprecated [-Wdeprecated-declarations]
+  164 |       : public std::iterator<std::forward_iterator_tag, UserTy *> {
+      |                     ^~~~~~~~
+/usr/include/c++/12/bits/stl_iterator_base_types.h:127:34: note: declared here
+  127 |     struct _GLIBCXX17_DEPRECATED iterator
+      |                                  ^~~~~~~~
+In file included from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/TrackingMDRef.h:16,
+                 from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/DebugLoc.h:17,
+                 from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/Instruction.h:22,
+                 from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/Operator.h:20:
+/home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/Metadata.h:1199:19: warning: ‘template<class _Category, class _Tp, class _Distance, class _Pointer, class _Reference> struct std::iterator’ is deprecated [-Wdeprecated-declarations]
+ 1199 |     : public std::iterator<std::input_iterator_tag, T *, std::ptrdiff_t, void,
+      |                   ^~~~~~~~
+/usr/include/c++/12/bits/stl_iterator_base_types.h:127:34: note: declared here
+  127 |     struct _GLIBCXX17_DEPRECATED iterator
+      |                                  ^~~~~~~~
+/home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/Metadata.h:1344:19: warning: ‘template<class _Category, class _Tp, class _Distance, class _Pointer, class _Reference> struct std::iterator’ is deprecated [-Wdeprecated-declarations]
+ 1344 |       public std::iterator<std::bidirectional_iterator_tag, T2> {
+      |                   ^~~~~~~~
+/usr/include/c++/12/bits/stl_iterator_base_types.h:127:34: note: declared here
+  127 |     struct _GLIBCXX17_DEPRECATED iterator
+      |                                  ^~~~~~~~
+In file included from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/Instructions.h:30,
+                 from /tmp/decision-commit-check-20261110/build/decision-fuse/engine.zlJwqs/tools/darm_pair_engine/InstructionMatch.h:5,
+                 from /tmp/decision-commit-check-20261110/build/decision-fuse/engine.zlJwqs/tools/darm_pair_engine/InstructionMatch.cpp:2:
+/home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/CFG.h:43:34: warning: ‘template<class _Category, class _Tp, class _Distance, class _Pointer, class _Reference> struct std::iterator’ is deprecated [-Wdeprecated-declarations]
+   43 | class PredIterator : public std::iterator<std::forward_iterator_tag,
+      |                                  ^~~~~~~~
+/usr/include/c++/12/bits/stl_iterator_base_types.h:127:34: note: declared here
+  127 |     struct _GLIBCXX17_DEPRECATED iterator
+      |                                  ^~~~~~~~
+/home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/CFG.h:46:12: warning: ‘template<class _Category, class _Tp, class _Distance, class _Pointer, class _Reference> struct std::iterator’ is deprecated [-Wdeprecated-declarations]
+   46 |       std::iterator<std::forward_iterator_tag, Ptr, ptrdiff_t, Ptr*, Ptr*>;
+      |            ^~~~~~~~
+/usr/include/c++/12/bits/stl_iterator_base_types.h:127:34: note: declared here
+  127 |     struct _GLIBCXX17_DEPRECATED iterator
+      |                                  ^~~~~~~~
+In file included from /tmp/decision-commit-check-20261110/build/decision-fuse/engine.zlJwqs/tools/darm_pair_engine/InstructionMatch.cpp:5:
+/home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/Module.h:716:21: warning: ‘template<class _Category, class _Tp, class _Distance, class _Pointer, class _Reference> struct std::iterator’ is deprecated [-Wdeprecated-declarations]
+  716 |       : public std::iterator<std::input_iterator_tag, DICompileUnit *> {
+      |                     ^~~~~~~~
+/usr/include/c++/12/bits/stl_iterator_base_types.h:127:34: note: declared here
+  127 |     struct _GLIBCXX17_DEPRECATED iterator
+      |                                  ^~~~~~~~
+In file included from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/ADT/STLExtras.h:20,
+                 from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/ADT/ArrayRef.h:15,
+                 from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/ADT/DenseMapInfo.h:17,
+                 from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/ADT/DenseMap.h:16,
+                 from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/ADT/DenseSet.h:16,
+                 from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/Function.h:20,
+                 from /tmp/decision-commit-check-20261110/tools/decision_model.h:2,
+                 from /tmp/decision-commit-check-20261110/tools/decision_model.cpp:1:
+/home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/ADT/iterator.h:68:19: warning: ‘template<class _Category, class _Tp, class _Distance, class _Pointer, class _Reference> struct std::iterator’ is deprecated [-Wdeprecated-declarations]
+   68 |     : public std::iterator<IteratorCategoryT, T, DifferenceTypeT, PointerT,
+      |                   ^~~~~~~~
+In file included from /usr/include/c++/12/bits/stl_algobase.h:65,
+                 from /usr/include/c++/12/algorithm:60,
+                 from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/Support/MathExtras.h:17,
+                 from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/ADT/APInt.h:19,
+                 from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/ADT/DenseMapInfo.h:16:
+/usr/include/c++/12/bits/stl_iterator_base_types.h:127:34: note: declared here
+  127 |     struct _GLIBCXX17_DEPRECATED iterator
+      |                                  ^~~~~~~~
+In file included from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/Argument.h:19,
+                 from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/Function.h:25:
+/home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/Value.h:125:21: warning: ‘template<class _Category, class _Tp, class _Distance, class _Pointer, class _Reference> struct std::iterator’ is deprecated [-Wdeprecated-declarations]
+  125 |       : public std::iterator<std::forward_iterator_tag, UseT *> {
+      |                     ^~~~~~~~
+/usr/include/c++/12/bits/stl_iterator_base_types.h:127:34: note: declared here
+  127 |     struct _GLIBCXX17_DEPRECATED iterator
+      |                                  ^~~~~~~~
+/home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/Value.h:164:21: warning: ‘template<class _Category, class _Tp, class _Distance, class _Pointer, class _Reference> struct std::iterator’ is deprecated [-Wdeprecated-declarations]
+  164 |       : public std::iterator<std::forward_iterator_tag, UserTy *> {
+      |                     ^~~~~~~~
+/usr/include/c++/12/bits/stl_iterator_base_types.h:127:34: note: declared here
+  127 |     struct _GLIBCXX17_DEPRECATED iterator
+      |                                  ^~~~~~~~
+In file included from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/TrackingMDRef.h:16,
+                 from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/DebugLoc.h:17,
+                 from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/Instruction.h:22,
+                 from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/BasicBlock.h:22,
+                 from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/Function.h:27:
+/home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/Metadata.h:1199:19: warning: ‘template<class _Category, class _Tp, class _Distance, class _Pointer, class _Reference> struct std::iterator’ is deprecated [-Wdeprecated-declarations]
+ 1199 |     : public std::iterator<std::input_iterator_tag, T *, std::ptrdiff_t, void,
+      |                   ^~~~~~~~
+/usr/include/c++/12/bits/stl_iterator_base_types.h:127:34: note: declared here
+  127 |     struct _GLIBCXX17_DEPRECATED iterator
+      |                                  ^~~~~~~~
+/home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/Metadata.h:1344:19: warning: ‘template<class _Category, class _Tp, class _Distance, class _Pointer, class _Reference> struct std::iterator’ is deprecated [-Wdeprecated-declarations]
+ 1344 |       public std::iterator<std::bidirectional_iterator_tag, T2> {
+      |                   ^~~~~~~~
+/usr/include/c++/12/bits/stl_iterator_base_types.h:127:34: note: declared here
+  127 |     struct _GLIBCXX17_DEPRECATED iterator
+      |                                  ^~~~~~~~
+In file included from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/Analysis/PostDominators.h:16,
+                 from /tmp/decision-commit-check-20261110/tools/decision_model.cpp:2:
+/home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/ADT/DepthFirstIterator.h:86:19: warning: ‘template<class _Category, class _Tp, class _Distance, class _Pointer, class _Reference> struct std::iterator’ is deprecated [-Wdeprecated-declarations]
+   86 |     : public std::iterator<std::forward_iterator_tag, typename GT::NodeRef>,
+      |                   ^~~~~~~~
+/usr/include/c++/12/bits/stl_iterator_base_types.h:127:34: note: declared here
+  127 |     struct _GLIBCXX17_DEPRECATED iterator
+      |                                  ^~~~~~~~
+/home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/ADT/DepthFirstIterator.h:88:22: warning: ‘template<class _Category, class _Tp, class _Distance, class _Pointer, class _Reference> struct std::iterator’ is deprecated [-Wdeprecated-declarations]
+   88 |   using super = std::iterator<std::forward_iterator_tag, typename GT::NodeRef>;
+      |                      ^~~~~~~~
+/usr/include/c++/12/bits/stl_iterator_base_types.h:127:34: note: declared here
+  127 |     struct _GLIBCXX17_DEPRECATED iterator
+      |                                  ^~~~~~~~
+In file included from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/Dominators.h:22,
+                 from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/Analysis/PostDominators.h:17:
+/home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/CFG.h:43:34: warning: ‘template<class _Category, class _Tp, class _Distance, class _Pointer, class _Reference> struct std::iterator’ is deprecated [-Wdeprecated-declarations]
+   43 | class PredIterator : public std::iterator<std::forward_iterator_tag,
+      |                                  ^~~~~~~~
+/usr/include/c++/12/bits/stl_iterator_base_types.h:127:34: note: declared here
+  127 |     struct _GLIBCXX17_DEPRECATED iterator
+      |                                  ^~~~~~~~
+/home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/CFG.h:46:12: warning: ‘template<class _Category, class _Tp, class _Distance, class _Pointer, class _Reference> struct std::iterator’ is deprecated [-Wdeprecated-declarations]
+   46 |       std::iterator<std::forward_iterator_tag, Ptr, ptrdiff_t, Ptr*, Ptr*>;
+      |            ^~~~~~~~
+/usr/include/c++/12/bits/stl_iterator_base_types.h:127:34: note: declared here
+  127 |     struct _GLIBCXX17_DEPRECATED iterator
+      |                                  ^~~~~~~~
+In file included from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/PassManager.h:46,
+                 from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/Dominators.h:23:
+/home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/Module.h:716:21: warning: ‘template<class _Category, class _Tp, class _Distance, class _Pointer, class _Reference> struct std::iterator’ is deprecated [-Wdeprecated-declarations]
+  716 |       : public std::iterator<std::input_iterator_tag, DICompileUnit *> {
+      |                     ^~~~~~~~
+/usr/include/c++/12/bits/stl_iterator_base_types.h:127:34: note: declared here
+  127 |     struct _GLIBCXX17_DEPRECATED iterator
+      |                                  ^~~~~~~~
+In file included from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/ADT/STLExtras.h:20,
+                 from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/ADT/ArrayRef.h:15,
+                 from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/ADT/DenseMapInfo.h:17,
+                 from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/ADT/DenseMap.h:16,
+                 from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/ADT/DenseSet.h:16,
+                 from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/Function.h:20,
+                 from /tmp/decision-commit-check-20261110/tools/decision_model.h:2,
+                 from /tmp/decision-commit-check-20261110/tools/decision_fuse_main.cpp:2:
+/home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/ADT/iterator.h:68:19: warning: ‘template<class _Category, class _Tp, class _Distance, class _Pointer, class _Reference> struct std::iterator’ is deprecated [-Wdeprecated-declarations]
+   68 |     : public std::iterator<IteratorCategoryT, T, DifferenceTypeT, PointerT,
+      |                   ^~~~~~~~
+In file included from /usr/include/c++/12/bits/stl_algobase.h:65,
+                 from /usr/include/c++/12/algorithm:60,
+                 from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/Support/MathExtras.h:17,
+                 from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/ADT/APInt.h:19,
+                 from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/ADT/DenseMapInfo.h:16:
+/usr/include/c++/12/bits/stl_iterator_base_types.h:127:34: note: declared here
+  127 |     struct _GLIBCXX17_DEPRECATED iterator
+      |                                  ^~~~~~~~
+In file included from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/Argument.h:19,
+                 from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/Function.h:25:
+/home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/Value.h:125:21: warning: ‘template<class _Category, class _Tp, class _Distance, class _Pointer, class _Reference> struct std::iterator’ is deprecated [-Wdeprecated-declarations]
+  125 |       : public std::iterator<std::forward_iterator_tag, UseT *> {
+      |                     ^~~~~~~~
+/usr/include/c++/12/bits/stl_iterator_base_types.h:127:34: note: declared here
+  127 |     struct _GLIBCXX17_DEPRECATED iterator
+      |                                  ^~~~~~~~
+/home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/Value.h:164:21: warning: ‘template<class _Category, class _Tp, class _Distance, class _Pointer, class _Reference> struct std::iterator’ is deprecated [-Wdeprecated-declarations]
+  164 |       : public std::iterator<std::forward_iterator_tag, UserTy *> {
+      |                     ^~~~~~~~
+/usr/include/c++/12/bits/stl_iterator_base_types.h:127:34: note: declared here
+  127 |     struct _GLIBCXX17_DEPRECATED iterator
+      |                                  ^~~~~~~~
+In file included from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/TrackingMDRef.h:16,
+                 from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/DebugLoc.h:17,
+                 from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/Instruction.h:22,
+                 from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/BasicBlock.h:22,
+                 from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/Function.h:27:
+/home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/Metadata.h:1199:19: warning: ‘template<class _Category, class _Tp, class _Distance, class _Pointer, class _Reference> struct std::iterator’ is deprecated [-Wdeprecated-declarations]
+ 1199 |     : public std::iterator<std::input_iterator_tag, T *, std::ptrdiff_t, void,
+      |                   ^~~~~~~~
+/usr/include/c++/12/bits/stl_iterator_base_types.h:127:34: note: declared here
+  127 |     struct _GLIBCXX17_DEPRECATED iterator
+      |                                  ^~~~~~~~
+/home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/Metadata.h:1344:19: warning: ‘template<class _Category, class _Tp, class _Distance, class _Pointer, class _Reference> struct std::iterator’ is deprecated [-Wdeprecated-declarations]
+ 1344 |       public std::iterator<std::bidirectional_iterator_tag, T2> {
+      |                   ^~~~~~~~
+/usr/include/c++/12/bits/stl_iterator_base_types.h:127:34: note: declared here
+  127 |     struct _GLIBCXX17_DEPRECATED iterator
+      |                                  ^~~~~~~~
+In file included from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/Analysis/LoopInfo.h:46,
+                 from /tmp/decision-commit-check-20261110/build/decision-fuse/engine.zlJwqs/tools/darm_pair_engine/CFMelderUtils.h:8,
+                 from /tmp/decision-commit-check-20261110/build/decision-fuse/engine.zlJwqs/tools/darm_pair_engine/RegionAnalyzer.h:4,
+                 from /tmp/decision-commit-check-20261110/build/decision-fuse/engine.zlJwqs/tools/darm_pair_engine/RegionMelder.h:5,
+                 from /tmp/decision-commit-check-20261110/tools/decision_fuse_main.cpp:3:
+/home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/CFG.h:43:34: warning: ‘template<class _Category, class _Tp, class _Distance, class _Pointer, class _Reference> struct std::iterator’ is deprecated [-Wdeprecated-declarations]
+   43 | class PredIterator : public std::iterator<std::forward_iterator_tag,
+      |                                  ^~~~~~~~
+/usr/include/c++/12/bits/stl_iterator_base_types.h:127:34: note: declared here
+  127 |     struct _GLIBCXX17_DEPRECATED iterator
+      |                                  ^~~~~~~~
+/home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/CFG.h:46:12: warning: ‘template<class _Category, class _Tp, class _Distance, class _Pointer, class _Reference> struct std::iterator’ is deprecated [-Wdeprecated-declarations]
+   46 |       std::iterator<std::forward_iterator_tag, Ptr, ptrdiff_t, Ptr*, Ptr*>;
+      |            ^~~~~~~~
+/usr/include/c++/12/bits/stl_iterator_base_types.h:127:34: note: declared here
+  127 |     struct _GLIBCXX17_DEPRECATED iterator
+      |                                  ^~~~~~~~
+In file included from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/PassManager.h:46,
+                 from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/Analysis/LoopInfo.h:49:
+/home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/Module.h:716:21: warning: ‘template<class _Category, class _Tp, class _Distance, class _Pointer, class _Reference> struct std::iterator’ is deprecated [-Wdeprecated-declarations]
+  716 |       : public std::iterator<std::input_iterator_tag, DICompileUnit *> {
+      |                     ^~~~~~~~
+/usr/include/c++/12/bits/stl_iterator_base_types.h:127:34: note: declared here
+  127 |     struct _GLIBCXX17_DEPRECATED iterator
+      |                                  ^~~~~~~~
+In file included from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/Analysis/PostDominators.h:16,
+                 from /tmp/decision-commit-check-20261110/build/decision-fuse/engine.zlJwqs/tools/darm_pair_engine/CFMelderUtils.h:9:
+/home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/ADT/DepthFirstIterator.h:86:19: warning: ‘template<class _Category, class _Tp, class _Distance, class _Pointer, class _Reference> struct std::iterator’ is deprecated [-Wdeprecated-declarations]
+   86 |     : public std::iterator<std::forward_iterator_tag, typename GT::NodeRef>,
+      |                   ^~~~~~~~
+/usr/include/c++/12/bits/stl_iterator_base_types.h:127:34: note: declared here
+  127 |     struct _GLIBCXX17_DEPRECATED iterator
+      |                                  ^~~~~~~~
+/home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/ADT/DepthFirstIterator.h:88:22: warning: ‘template<class _Category, class _Tp, class _Distance, class _Pointer, class _Reference> struct std::iterator’ is deprecated [-Wdeprecated-declarations]
+   88 |   using super = std::iterator<std::forward_iterator_tag, typename GT::NodeRef>;
+      |                      ^~~~~~~~
+/usr/include/c++/12/bits/stl_iterator_base_types.h:127:34: note: declared here
+  127 |     struct _GLIBCXX17_DEPRECATED iterator
+      |                                  ^~~~~~~~
+In file included from /tmp/decision-commit-check-20261110/build/decision-fuse/engine.zlJwqs/tools/darm_pair_engine/RegionMelder.h:13:
+/home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/ValueMap.h:328:17: warning: ‘template<class _Category, class _Tp, class _Distance, class _Pointer, class _Reference> struct std::iterator’ is deprecated [-Wdeprecated-declarations]
+  328 |     public std::iterator<std::forward_iterator_tag,
+      |                 ^~~~~~~~
+/usr/include/c++/12/bits/stl_iterator_base_types.h:127:34: note: declared here
+  127 |     struct _GLIBCXX17_DEPRECATED iterator
+      |                                  ^~~~~~~~
+/home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/ValueMap.h:380:17: warning: ‘template<class _Category, class _Tp, class _Distance, class _Pointer, class _Reference> struct std::iterator’ is deprecated [-Wdeprecated-declarations]
+  380 |     public std::iterator<std::forward_iterator_tag,
+      |                 ^~~~~~~~
+/usr/include/c++/12/bits/stl_iterator_base_types.h:127:34: note: declared here
+  127 |     struct _GLIBCXX17_DEPRECATED iterator
+      |                                  ^~~~~~~~
+In file included from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/Support/YAMLTraits.h:23,
+                 from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/IR/DiagnosticInfo.h:24,
+                 from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/Analysis/OptimizationRemarkEmitter.h:19,
+                 from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/Analysis/InlineCost.h:18,
+                 from /home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/Transforms/Utils/Cloning.h:23,
+                 from /tmp/decision-commit-check-20261110/tools/decision_fuse_main.cpp:12:
+/home/chh/darm-artifacts-repro/upstream/code/llvm/include/llvm/Support/YAMLParser.h:324:19: warning: ‘template<class _Category, class _Tp, class _Distance, class _Pointer, class _Reference> struct std::iterator’ is deprecated [-Wdeprecated-declarations]
+  324 |     : public std::iterator<std::input_iterator_tag, ValueT> {
+      |                   ^~~~~~~~
+/usr/include/c++/12/bits/stl_iterator_base_types.h:127:34: note: declared here
+  127 |     struct _GLIBCXX17_DEPRECATED iterator
+      |                                  ^~~~~~~~
+chain execution equivalence OK
+reverse-second execution equivalence OK
+reverse execution equivalence OK
+guarded-div execution equivalence OK
+guarded-load execution equivalence OK
+switch aliases OK
+unsupported arms rejected without output OK
+convergent control-flow change rejected OK
+all decision-model checks passed
+three RegionMelder fusions; 201 outputs per stage equal; unique arm rebind; no speculation
+recursive 7 fusions; 8 -> 1 copysign; all 201 outputs equal at every step
+balanced 7 fusions; 8 -> 1 copysign; all 201 outputs equal at every step
+evidence /tmp/decision-commit-check-20261110/build/decision-fuse/decision-full-c5hn_g9c

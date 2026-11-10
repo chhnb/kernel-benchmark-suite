@@ -1,0 +1,68 @@
+{
+  "old_frozen_greedy": {
+    "vgpr_count": 50,
+    "sgpr_count": 76,
+    "vgpr_spill_count": 0,
+    "sgpr_spill_count": 0,
+    "private_segment_fixed_size": 0,
+    "group_segment_fixed_size": 512,
+    "v_writelane_b32_count": 0,
+    "v_readlane_b32_count": 0,
+    "scratch_mnemonic_count": 0
+  },
+  "old_frozen_baseline": {
+    "vgpr_count": 62,
+    "sgpr_count": 82,
+    "vgpr_spill_count": 0,
+    "sgpr_spill_count": 0,
+    "private_segment_fixed_size": 0,
+    "group_segment_fixed_size": 512,
+    "v_writelane_b32_count": 0,
+    "v_readlane_b32_count": 0,
+    "scratch_mnemonic_count": 0
+  },
+  "current_baseline": {
+    "vgpr_count": 62,
+    "sgpr_count": 82,
+    "vgpr_spill_count": 0,
+    "sgpr_spill_count": 0,
+    "private_segment_fixed_size": 0,
+    "group_segment_fixed_size": 512,
+    "v_writelane_b32_count": 0,
+    "v_readlane_b32_count": 0,
+    "scratch_mnemonic_count": 0
+  },
+  "three_levels": {
+    "vgpr_count": 78,
+    "sgpr_count": 78,
+    "vgpr_spill_count": 0,
+    "sgpr_spill_count": 0,
+    "private_segment_fixed_size": 0,
+    "group_segment_fixed_size": 512,
+    "v_writelane_b32_count": 0,
+    "v_readlane_b32_count": 0,
+    "scratch_mnemonic_count": 0
+  },
+  "recursive": {
+    "vgpr_count": 93,
+    "sgpr_count": 104,
+    "vgpr_spill_count": 0,
+    "sgpr_spill_count": 14,
+    "private_segment_fixed_size": 0,
+    "group_segment_fixed_size": 512,
+    "v_writelane_b32_count": 14,
+    "v_readlane_b32_count": 14,
+    "scratch_mnemonic_count": 0
+  },
+  "balanced": {
+    "vgpr_count": 125,
+    "sgpr_count": 104,
+    "vgpr_spill_count": 0,
+    "sgpr_spill_count": 37,
+    "private_segment_fixed_size": 0,
+    "group_segment_fixed_size": 512,
+    "v_writelane_b32_count": 37,
+    "v_readlane_b32_count": 43,
+    "scratch_mnemonic_count": 0
+  }
+}

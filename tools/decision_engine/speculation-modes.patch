@@ -1,0 +1,141 @@
+diff --git a/tools/darm_pair_engine/RegionMelder.cpp b/tools/darm_pair_engine/RegionMelder.cpp
+index af1b56d..5307a43 100644
+--- a/tools/darm_pair_engine/RegionMelder.cpp
++++ b/tools/darm_pair_engine/RegionMelder.cpp
+@@ -90,18 +90,58 @@ void RegionMelder::computeRegionSeqAlignment(
+   }
+ }
+ 
+-bool requireUnpredication(BasicBlock* Current, BasicBlock* Corresponding) {
++// Speculation weight of one instruction executed on the other path. Division
++// and remainder are the expensive scalar operations; calls are speculatable
++// intrinsics here (anything else already failed isSafeToSpeculativelyExecute).
++unsigned llvm::speculationWeight(const Instruction &I) {
++  switch (I.getOpcode()) {
++  case Instruction::FDiv: case Instruction::FRem:
++  case Instruction::SDiv: case Instruction::UDiv:
++  case Instruction::SRem: case Instruction::URem:
++    return 8;
++  default:
++    return isa<CallBase>(I) ? 4 : 1;
++  }
++}
++
++bool llvm::safeToSpeculate(const Instruction &I) {
++  if (I.mayReadOrWriteMemory() || I.mayHaveSideEffects())
++    return false;
++  // isSafeToSpeculativelyExecute ignores convergence; a convergent operation
++  // run under a different set of active lanes changes its meaning.
++  if (auto *CB = dyn_cast<CallBase>(&I))
++    if (CB->isConvergent())
++      return false;
++  return isSafeToSpeculativelyExecute(&I);
++}
++
++// Mode 0 none: a block paired with a branch-only replication placeholder is
++// always guarded. Mode 1 legacy: it runs on both paths whenever every
++// instruction is speculatable (historical DARM). Mode 2 budget: legacy, but
++// guarded when its speculation weight exceeds the budget.
++bool requireUnpredication(BasicBlock* Current, BasicBlock* Corresponding,
++                          int Mode, int Budget) {
+   if (Corresponding->size() > 1)
+     return true;
+-  // Replication can pair a real block with a branch-only placeholder.
+-  // That does not authorize executing its loads, stores, calls or trapping
+-  // arithmetic on the other path. Preserve the predicate unless every
+-  // non-PHI, non-terminator instruction is safe to speculate.
+-  for (auto &I : *Current)
+-    if (!isa<PHINode>(I) && !I.isTerminator() &&
+-        !isSafeToSpeculativelyExecute(&I))
++  if (Mode == 0)
++    return true;
++  unsigned Weight = 0;
++  for (auto &I : *Current) {
++    if (isa<PHINode>(I) || I.isTerminator())
++      continue;
++    // Legacy keeps its historical test (which admits e.g. dereferenceable
++    // loads) and only adds the convergence exclusion; budget mode also
++    // refuses any memory access.
++    if (!isSafeToSpeculativelyExecute(&I))
++      return true;
++    if (auto *CB = dyn_cast<CallBase>(&I))
++      if (CB->isConvergent())
++        return true;
++    if (Mode == 2 && !safeToSpeculate(I))
+       return true;
+-  return false;
++    Weight += speculationWeight(I);
++  }
++  return Mode == 2 && Weight > unsigned(Budget);
+ }
+ 
+ std::string RegionMelder::sourceBlockID(BasicBlock *BB) const {
+@@ -196,7 +236,7 @@ void RegionMelder::cloneInstructions() {
+         assert(ClonedRightParentIt != MergedValuesToRightValues.end() &&
+                "Cloned left BB not found for right value!");
+         // if (cast<BasicBlock>(ClonedRightParentIt->second)->size() > 1)
+-        if(requireUnpredication(LeftI->getParent(), cast<BasicBlock>(ClonedRightParentIt->second)))
++        if(requireUnpredication(LeftI->getParent(), cast<BasicBlock>(ClonedRightParentIt->second), SpeculationMode, SpeculationBudget))
+           updateSplitRangeMap(true, NewI);
+       }
+ 
+@@ -216,7 +256,7 @@ void RegionMelder::cloneInstructions() {
+         assert(ClonedLeftParentIt != MergedValuesToLeftValues.end() &&
+                "Cloned left BB not found for right value!");
+         // if (cast<BasicBlock>(ClonedLeftParentIt->second)->size() > 1)
+-        if(requireUnpredication(RightI->getParent(), cast<BasicBlock>(ClonedLeftParentIt->second)))
++        if(requireUnpredication(RightI->getParent(), cast<BasicBlock>(ClonedLeftParentIt->second), SpeculationMode, SpeculationBudget))
+           updateSplitRangeMap(false, NewI);
+       }
+     }
+@@ -831,6 +871,23 @@ void RegionMelder::coalesceGapRanges() {
+ 
+ void RegionMelder::runUnpredicationPass() {
+   if (CoalesceGaps) coalesceGapRanges();
++  // Budget mode: a cheap, safe unmatched range stays in the melded block and
++  // runs on both paths instead of paying a guard (branch + carrier PHIs).
++  // Its definitions still dominate their uses, so no PHI is needed.
++  if (SpeculationMode == 2) {
++    SmallVector<InstrRange, 8> Kept;
++    for (auto &Range : SplitRanges) {
++      bool Safe = true; unsigned Weight = 0;
++      for (auto *I = Range.getStart();; I = I->getNextNode()) {
++        Safe &= !isa<PHINode>(I) && !I->isTerminator() && safeToSpeculate(*I);
++        Weight += speculationWeight(*I);
++        if (I == Range.getEnd()) break;
++      }
++      if (Safe && Weight <= unsigned(SpeculationBudget)) { ++SpeculatedRanges; continue; }
++      Kept.push_back(Range);
++    }
++    SplitRanges.assign(Kept.begin(), Kept.end());
++  }
+ 
+ 
+   for (unsigned RangeIndex = 0; RangeIndex < SplitRanges.size(); ++RangeIndex) {
+diff --git a/tools/darm_pair_engine/RegionMelder.h b/tools/darm_pair_engine/RegionMelder.h
+index 38333d4..882eed4 100644
+--- a/tools/darm_pair_engine/RegionMelder.h
++++ b/tools/darm_pair_engine/RegionMelder.h
+@@ -41,6 +41,11 @@ public:
+   int gap(int K) override { return 2; }
+ };
+ 
++// Weight of executing I on a path that did not originally run it (div/rem 8, call 4, other 1).
++unsigned speculationWeight(const llvm::Instruction &I);
++// Safe to run on a path that did not execute it: no trap, memory, side effect or convergence.
++bool safeToSpeculate(const llvm::Instruction &I);
++
+ class RegionMelder {
+ public:
+   // Observational trace only. WeakVH does not follow RAUW; deletion is unknown,
+@@ -156,6 +161,10 @@ public:
+       SourceBlocks.push_back({WeakVH(&BB),"B"+std::to_string(I++)});}
+   }
+   bool CoalesceGaps=false;
++  // 0 none, 1 legacy (default), 2 budget. See requireUnpredication().
++  int SpeculationMode=1;
++  int SpeculationBudget=4;
++  unsigned SpeculatedRanges=0;
+   unsigned CoalescedGapGroups=0;
+   std::function<void(const ValueToValueMapTy&)> onValueMapping;
+   const std::vector<BlockOrigin>& blockOrigins() const { return BlockOrigins; }

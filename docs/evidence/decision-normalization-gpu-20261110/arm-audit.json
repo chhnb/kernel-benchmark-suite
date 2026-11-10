@@ -1,0 +1,2115 @@
+{
+  "vllm": {
+    "complete_eight_arm_decisions": 32,
+    "mapping": [
+      {
+        "legacy_decision": "D13",
+        "root": "%if.else.7",
+        "join": "%quant_decide.exit",
+        "new_order_as_legacy_ids": [
+          "D13.L0",
+          "D13.L1",
+          "D13.L2",
+          "D13.L3",
+          "D13.L4",
+          "D13.L5",
+          "D13.L7",
+          "D13.L6"
+        ],
+        "kinds": [
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear"
+        ],
+        "blocks_per_arm": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      {
+        "legacy_decision": "D14",
+        "root": "%quant_decide.exit",
+        "join": "%quant_decide.exit729",
+        "new_order_as_legacy_ids": [
+          "D14.L0",
+          "D14.L1",
+          "D14.L2",
+          "D14.L3",
+          "D14.L4",
+          "D14.L5",
+          "D14.L7",
+          "D14.L6"
+        ],
+        "kinds": [
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear"
+        ],
+        "blocks_per_arm": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      {
+        "legacy_decision": "D15",
+        "root": "%quant_decide.exit729",
+        "join": "%quant_decide.exit707",
+        "new_order_as_legacy_ids": [
+          "D15.L0",
+          "D15.L1",
+          "D15.L2",
+          "D15.L3",
+          "D15.L4",
+          "D15.L5",
+          "D15.L7",
+          "D15.L6"
+        ],
+        "kinds": [
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear"
+        ],
+        "blocks_per_arm": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      {
+        "legacy_decision": "D16",
+        "root": "%quant_decide.exit707",
+        "join": "%quant_decide.exit685",
+        "new_order_as_legacy_ids": [
+          "D16.L0",
+          "D16.L1",
+          "D16.L2",
+          "D16.L3",
+          "D16.L4",
+          "D16.L5",
+          "D16.L7",
+          "D16.L6"
+        ],
+        "kinds": [
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear"
+        ],
+        "blocks_per_arm": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      {
+        "legacy_decision": "D17",
+        "root": "%quant_decide.exit685",
+        "join": "%quant_decide.exit663",
+        "new_order_as_legacy_ids": [
+          "D17.L0",
+          "D17.L1",
+          "D17.L2",
+          "D17.L3",
+          "D17.L4",
+          "D17.L5",
+          "D17.L7",
+          "D17.L6"
+        ],
+        "kinds": [
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear"
+        ],
+        "blocks_per_arm": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      {
+        "legacy_decision": "D18",
+        "root": "%quant_decide.exit663",
+        "join": "%quant_decide.exit641",
+        "new_order_as_legacy_ids": [
+          "D18.L0",
+          "D18.L1",
+          "D18.L2",
+          "D18.L3",
+          "D18.L4",
+          "D18.L5",
+          "D18.L7",
+          "D18.L6"
+        ],
+        "kinds": [
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear"
+        ],
+        "blocks_per_arm": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      {
+        "legacy_decision": "D19",
+        "root": "%quant_decide.exit641",
+        "join": "%quant_decide.exit619",
+        "new_order_as_legacy_ids": [
+          "D19.L0",
+          "D19.L1",
+          "D19.L2",
+          "D19.L3",
+          "D19.L4",
+          "D19.L5",
+          "D19.L7",
+          "D19.L6"
+        ],
+        "kinds": [
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear"
+        ],
+        "blocks_per_arm": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      {
+        "legacy_decision": "D20",
+        "root": "%quant_decide.exit619",
+        "join": "%quant_decide.exit597",
+        "new_order_as_legacy_ids": [
+          "D20.L0",
+          "D20.L1",
+          "D20.L2",
+          "D20.L3",
+          "D20.L4",
+          "D20.L5",
+          "D20.L7",
+          "D20.L6"
+        ],
+        "kinds": [
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear"
+        ],
+        "blocks_per_arm": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      {
+        "legacy_decision": "D21",
+        "root": "%quant_decide.exit597",
+        "join": "%quant_decide.exit575",
+        "new_order_as_legacy_ids": [
+          "D21.L0",
+          "D21.L1",
+          "D21.L2",
+          "D21.L3",
+          "D21.L4",
+          "D21.L5",
+          "D21.L7",
+          "D21.L6"
+        ],
+        "kinds": [
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear"
+        ],
+        "blocks_per_arm": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      {
+        "legacy_decision": "D22",
+        "root": "%quant_decide.exit575",
+        "join": "%quant_decide.exit553",
+        "new_order_as_legacy_ids": [
+          "D22.L0",
+          "D22.L1",
+          "D22.L2",
+          "D22.L3",
+          "D22.L4",
+          "D22.L5",
+          "D22.L7",
+          "D22.L6"
+        ],
+        "kinds": [
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear"
+        ],
+        "blocks_per_arm": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      {
+        "legacy_decision": "D23",
+        "root": "%quant_decide.exit553",
+        "join": "%quant_decide.exit531",
+        "new_order_as_legacy_ids": [
+          "D23.L0",
+          "D23.L1",
+          "D23.L2",
+          "D23.L3",
+          "D23.L4",
+          "D23.L5",
+          "D23.L7",
+          "D23.L6"
+        ],
+        "kinds": [
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear"
+        ],
+        "blocks_per_arm": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      {
+        "legacy_decision": "D24",
+        "root": "%quant_decide.exit531",
+        "join": "%quant_decide.exit509",
+        "new_order_as_legacy_ids": [
+          "D24.L0",
+          "D24.L1",
+          "D24.L2",
+          "D24.L3",
+          "D24.L4",
+          "D24.L5",
+          "D24.L7",
+          "D24.L6"
+        ],
+        "kinds": [
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear"
+        ],
+        "blocks_per_arm": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      {
+        "legacy_decision": "D25",
+        "root": "%quant_decide.exit509",
+        "join": "%quant_decide.exit487",
+        "new_order_as_legacy_ids": [
+          "D25.L0",
+          "D25.L1",
+          "D25.L2",
+          "D25.L3",
+          "D25.L4",
+          "D25.L5",
+          "D25.L7",
+          "D25.L6"
+        ],
+        "kinds": [
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear"
+        ],
+        "blocks_per_arm": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      {
+        "legacy_decision": "D26",
+        "root": "%quant_decide.exit487",
+        "join": "%quant_decide.exit465",
+        "new_order_as_legacy_ids": [
+          "D26.L0",
+          "D26.L1",
+          "D26.L2",
+          "D26.L3",
+          "D26.L4",
+          "D26.L5",
+          "D26.L7",
+          "D26.L6"
+        ],
+        "kinds": [
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear"
+        ],
+        "blocks_per_arm": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      {
+        "legacy_decision": "D27",
+        "root": "%quant_decide.exit465",
+        "join": "%quant_decide.exit443",
+        "new_order_as_legacy_ids": [
+          "D27.L0",
+          "D27.L1",
+          "D27.L2",
+          "D27.L3",
+          "D27.L4",
+          "D27.L5",
+          "D27.L7",
+          "D27.L6"
+        ],
+        "kinds": [
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear"
+        ],
+        "blocks_per_arm": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      {
+        "legacy_decision": "D28",
+        "root": "%quant_decide.exit443",
+        "join": "%quant_decide.exit421",
+        "new_order_as_legacy_ids": [
+          "D28.L0",
+          "D28.L1",
+          "D28.L2",
+          "D28.L3",
+          "D28.L4",
+          "D28.L5",
+          "D28.L7",
+          "D28.L6"
+        ],
+        "kinds": [
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear"
+        ],
+        "blocks_per_arm": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      {
+        "legacy_decision": "D38",
+        "root": "%if.else.7.1",
+        "join": "%quant_decide.exit399",
+        "new_order_as_legacy_ids": [
+          "D38.L0",
+          "D38.L1",
+          "D38.L2",
+          "D38.L3",
+          "D38.L4",
+          "D38.L5",
+          "D38.L7",
+          "D38.L6"
+        ],
+        "kinds": [
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear"
+        ],
+        "blocks_per_arm": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      {
+        "legacy_decision": "D39",
+        "root": "%quant_decide.exit399",
+        "join": "%quant_decide.exit377",
+        "new_order_as_legacy_ids": [
+          "D39.L0",
+          "D39.L1",
+          "D39.L2",
+          "D39.L3",
+          "D39.L4",
+          "D39.L5",
+          "D39.L7",
+          "D39.L6"
+        ],
+        "kinds": [
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear"
+        ],
+        "blocks_per_arm": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      {
+        "legacy_decision": "D40",
+        "root": "%quant_decide.exit377",
+        "join": "%quant_decide.exit355",
+        "new_order_as_legacy_ids": [
+          "D40.L0",
+          "D40.L1",
+          "D40.L2",
+          "D40.L3",
+          "D40.L4",
+          "D40.L5",
+          "D40.L7",
+          "D40.L6"
+        ],
+        "kinds": [
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear"
+        ],
+        "blocks_per_arm": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      {
+        "legacy_decision": "D41",
+        "root": "%quant_decide.exit355",
+        "join": "%quant_decide.exit333",
+        "new_order_as_legacy_ids": [
+          "D41.L0",
+          "D41.L1",
+          "D41.L2",
+          "D41.L3",
+          "D41.L4",
+          "D41.L5",
+          "D41.L7",
+          "D41.L6"
+        ],
+        "kinds": [
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear"
+        ],
+        "blocks_per_arm": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      {
+        "legacy_decision": "D42",
+        "root": "%quant_decide.exit333",
+        "join": "%quant_decide.exit311",
+        "new_order_as_legacy_ids": [
+          "D42.L0",
+          "D42.L1",
+          "D42.L2",
+          "D42.L3",
+          "D42.L4",
+          "D42.L5",
+          "D42.L7",
+          "D42.L6"
+        ],
+        "kinds": [
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear"
+        ],
+        "blocks_per_arm": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      {
+        "legacy_decision": "D43",
+        "root": "%quant_decide.exit311",
+        "join": "%quant_decide.exit289",
+        "new_order_as_legacy_ids": [
+          "D43.L0",
+          "D43.L1",
+          "D43.L2",
+          "D43.L3",
+          "D43.L4",
+          "D43.L5",
+          "D43.L7",
+          "D43.L6"
+        ],
+        "kinds": [
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear"
+        ],
+        "blocks_per_arm": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      {
+        "legacy_decision": "D44",
+        "root": "%quant_decide.exit289",
+        "join": "%quant_decide.exit267",
+        "new_order_as_legacy_ids": [
+          "D44.L0",
+          "D44.L1",
+          "D44.L2",
+          "D44.L3",
+          "D44.L4",
+          "D44.L5",
+          "D44.L7",
+          "D44.L6"
+        ],
+        "kinds": [
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear"
+        ],
+        "blocks_per_arm": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      {
+        "legacy_decision": "D45",
+        "root": "%quant_decide.exit267",
+        "join": "%quant_decide.exit245",
+        "new_order_as_legacy_ids": [
+          "D45.L0",
+          "D45.L1",
+          "D45.L2",
+          "D45.L3",
+          "D45.L4",
+          "D45.L5",
+          "D45.L7",
+          "D45.L6"
+        ],
+        "kinds": [
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear"
+        ],
+        "blocks_per_arm": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      {
+        "legacy_decision": "D46",
+        "root": "%quant_decide.exit245",
+        "join": "%quant_decide.exit223",
+        "new_order_as_legacy_ids": [
+          "D46.L0",
+          "D46.L1",
+          "D46.L2",
+          "D46.L3",
+          "D46.L4",
+          "D46.L5",
+          "D46.L7",
+          "D46.L6"
+        ],
+        "kinds": [
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear"
+        ],
+        "blocks_per_arm": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      {
+        "legacy_decision": "D47",
+        "root": "%quant_decide.exit223",
+        "join": "%quant_decide.exit201",
+        "new_order_as_legacy_ids": [
+          "D47.L0",
+          "D47.L1",
+          "D47.L2",
+          "D47.L3",
+          "D47.L4",
+          "D47.L5",
+          "D47.L7",
+          "D47.L6"
+        ],
+        "kinds": [
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear"
+        ],
+        "blocks_per_arm": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      {
+        "legacy_decision": "D48",
+        "root": "%quant_decide.exit201",
+        "join": "%quant_decide.exit179",
+        "new_order_as_legacy_ids": [
+          "D48.L0",
+          "D48.L1",
+          "D48.L2",
+          "D48.L3",
+          "D48.L4",
+          "D48.L5",
+          "D48.L7",
+          "D48.L6"
+        ],
+        "kinds": [
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear"
+        ],
+        "blocks_per_arm": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      {
+        "legacy_decision": "D49",
+        "root": "%quant_decide.exit179",
+        "join": "%quant_decide.exit157",
+        "new_order_as_legacy_ids": [
+          "D49.L0",
+          "D49.L1",
+          "D49.L2",
+          "D49.L3",
+          "D49.L4",
+          "D49.L5",
+          "D49.L7",
+          "D49.L6"
+        ],
+        "kinds": [
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear"
+        ],
+        "blocks_per_arm": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      {
+        "legacy_decision": "D50",
+        "root": "%quant_decide.exit157",
+        "join": "%quant_decide.exit135",
+        "new_order_as_legacy_ids": [
+          "D50.L0",
+          "D50.L1",
+          "D50.L2",
+          "D50.L3",
+          "D50.L4",
+          "D50.L5",
+          "D50.L7",
+          "D50.L6"
+        ],
+        "kinds": [
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear"
+        ],
+        "blocks_per_arm": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      {
+        "legacy_decision": "D51",
+        "root": "%quant_decide.exit135",
+        "join": "%quant_decide.exit113",
+        "new_order_as_legacy_ids": [
+          "D51.L0",
+          "D51.L1",
+          "D51.L2",
+          "D51.L3",
+          "D51.L4",
+          "D51.L5",
+          "D51.L7",
+          "D51.L6"
+        ],
+        "kinds": [
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear"
+        ],
+        "blocks_per_arm": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      {
+        "legacy_decision": "D52",
+        "root": "%quant_decide.exit113",
+        "join": "%quant_decide.exit91",
+        "new_order_as_legacy_ids": [
+          "D52.L0",
+          "D52.L1",
+          "D52.L2",
+          "D52.L3",
+          "D52.L4",
+          "D52.L5",
+          "D52.L7",
+          "D52.L6"
+        ],
+        "kinds": [
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear"
+        ],
+        "blocks_per_arm": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      {
+        "legacy_decision": "D53",
+        "root": "%quant_decide.exit91",
+        "join": "%quant_decide.exit69",
+        "new_order_as_legacy_ids": [
+          "D53.L0",
+          "D53.L1",
+          "D53.L2",
+          "D53.L3",
+          "D53.L4",
+          "D53.L5",
+          "D53.L7",
+          "D53.L6"
+        ],
+        "kinds": [
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear",
+          "Linear"
+        ],
+        "blocks_per_arm": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      }
+    ],
+    "ordering_note": "CFG terminal true-edge order is L7,L6; not interval order. No greedy search enabled."
+  },
+  "mapairy": {
+    "root": "%cond.false7.i.i.i",
+    "join": "%_ZN5boost4math6detail25mapairy_quantile_imp_precIdEET_RKS3_bRKSt17integral_constantIiLi53EE.exit.i.i",
+    "arms": [
+      {
+        "legacy_index": 0,
+        "blocks": [
+          "%if.then.i21.i.i.i"
+        ],
+        "entry": "%if.then.i21.i.i.i",
+        "exit_sources": [
+          "%if.then.i21.i.i.i"
+        ],
+        "id": "evaluate:%if.then.i21.i.i.i",
+        "kind": "Linear",
+        "merged_from": [],
+        "ordered_predicate": [
+          {
+            "successor": 1,
+            "test": "%cond.false7.i.i.i"
+          }
+        ],
+        "predicate_alternatives": [
+          [
+            {
+              "successor": 1,
+              "test": "%cond.false7.i.i.i"
+            }
+          ]
+        ],
+        "reason": ""
+      },
+      {
+        "legacy_index": 1,
+        "blocks": [
+          "%if.then3.i27.i.i.i"
+        ],
+        "entry": "%if.then3.i27.i.i.i",
+        "exit_sources": [
+          "%if.then3.i27.i.i.i"
+        ],
+        "id": "evaluate:%if.then3.i27.i.i.i",
+        "kind": "Linear",
+        "merged_from": [],
+        "ordered_predicate": [
+          {
+            "successor": 0,
+            "test": "%cond.false7.i.i.i"
+          },
+          {
+            "successor": 1,
+            "test": "%if.else.i23.i.i.i"
+          }
+        ],
+        "predicate_alternatives": [
+          [
+            {
+              "successor": 0,
+              "test": "%cond.false7.i.i.i"
+            },
+            {
+              "successor": 1,
+              "test": "%if.else.i23.i.i.i"
+            }
+          ]
+        ],
+        "reason": ""
+      },
+      {
+        "legacy_index": 2,
+        "blocks": [
+          "%if.then11.i.i.i.i"
+        ],
+        "entry": "%if.then11.i.i.i.i",
+        "exit_sources": [
+          "%if.then11.i.i.i.i"
+        ],
+        "id": "evaluate:%if.then11.i.i.i.i",
+        "kind": "Linear",
+        "merged_from": [],
+        "ordered_predicate": [
+          {
+            "successor": 0,
+            "test": "%cond.false7.i.i.i"
+          },
+          {
+            "successor": 0,
+            "test": "%if.else.i23.i.i.i"
+          },
+          {
+            "successor": 1,
+            "test": "%if.else9.i28.i.i.i"
+          }
+        ],
+        "predicate_alternatives": [
+          [
+            {
+              "successor": 0,
+              "test": "%cond.false7.i.i.i"
+            },
+            {
+              "successor": 0,
+              "test": "%if.else.i23.i.i.i"
+            },
+            {
+              "successor": 1,
+              "test": "%if.else9.i28.i.i.i"
+            }
+          ]
+        ],
+        "reason": ""
+      },
+      {
+        "legacy_index": 3,
+        "blocks": [
+          "%if.then20.i.i.i.i"
+        ],
+        "entry": "%if.then20.i.i.i.i",
+        "exit_sources": [
+          "%if.then20.i.i.i.i"
+        ],
+        "id": "evaluate:%if.then20.i.i.i.i",
+        "kind": "Linear",
+        "merged_from": [],
+        "ordered_predicate": [
+          {
+            "successor": 0,
+            "test": "%cond.false7.i.i.i"
+          },
+          {
+            "successor": 0,
+            "test": "%if.else.i23.i.i.i"
+          },
+          {
+            "successor": 0,
+            "test": "%if.else9.i28.i.i.i"
+          },
+          {
+            "successor": 0,
+            "test": "%if.else17.i.i.i.i"
+          }
+        ],
+        "predicate_alternatives": [
+          [
+            {
+              "successor": 0,
+              "test": "%cond.false7.i.i.i"
+            },
+            {
+              "successor": 0,
+              "test": "%if.else.i23.i.i.i"
+            },
+            {
+              "successor": 0,
+              "test": "%if.else9.i28.i.i.i"
+            },
+            {
+              "successor": 0,
+              "test": "%if.else17.i.i.i.i"
+            }
+          ]
+        ],
+        "reason": ""
+      },
+      {
+        "legacy_index": 4,
+        "blocks": [
+          "%if.then30.i.i.i.i"
+        ],
+        "entry": "%if.then30.i.i.i.i",
+        "exit_sources": [
+          "%if.then30.i.i.i.i"
+        ],
+        "id": "evaluate:%if.then30.i.i.i.i",
+        "kind": "Linear",
+        "merged_from": [],
+        "ordered_predicate": [
+          {
+            "successor": 0,
+            "test": "%cond.false7.i.i.i"
+          },
+          {
+            "successor": 0,
+            "test": "%if.else.i23.i.i.i"
+          },
+          {
+            "successor": 0,
+            "test": "%if.else9.i28.i.i.i"
+          },
+          {
+            "successor": 1,
+            "test": "%if.else17.i.i.i.i"
+          },
+          {
+            "successor": 0,
+            "test": "%if.else27.i.i.i.i"
+          }
+        ],
+        "predicate_alternatives": [
+          [
+            {
+              "successor": 0,
+              "test": "%cond.false7.i.i.i"
+            },
+            {
+              "successor": 0,
+              "test": "%if.else.i23.i.i.i"
+            },
+            {
+              "successor": 0,
+              "test": "%if.else9.i28.i.i.i"
+            },
+            {
+              "successor": 1,
+              "test": "%if.else17.i.i.i.i"
+            },
+            {
+              "successor": 0,
+              "test": "%if.else27.i.i.i.i"
+            }
+          ]
+        ],
+        "reason": ""
+      },
+      {
+        "legacy_index": 5,
+        "blocks": [
+          "%if.then41.i.i.i.i"
+        ],
+        "entry": "%if.then41.i.i.i.i",
+        "exit_sources": [
+          "%if.then41.i.i.i.i"
+        ],
+        "id": "evaluate:%if.then41.i.i.i.i",
+        "kind": "Linear",
+        "merged_from": [],
+        "ordered_predicate": [
+          {
+            "successor": 0,
+            "test": "%cond.false7.i.i.i"
+          },
+          {
+            "successor": 0,
+            "test": "%if.else.i23.i.i.i"
+          },
+          {
+            "successor": 0,
+            "test": "%if.else9.i28.i.i.i"
+          },
+          {
+            "successor": 1,
+            "test": "%if.else17.i.i.i.i"
+          },
+          {
+            "successor": 1,
+            "test": "%if.else27.i.i.i.i"
+          },
+          {
+            "successor": 0,
+            "test": "%if.else38.i.i.i.i"
+          }
+        ],
+        "predicate_alternatives": [
+          [
+            {
+              "successor": 0,
+              "test": "%cond.false7.i.i.i"
+            },
+            {
+              "successor": 0,
+              "test": "%if.else.i23.i.i.i"
+            },
+            {
+              "successor": 0,
+              "test": "%if.else9.i28.i.i.i"
+            },
+            {
+              "successor": 1,
+              "test": "%if.else17.i.i.i.i"
+            },
+            {
+              "successor": 1,
+              "test": "%if.else27.i.i.i.i"
+            },
+            {
+              "successor": 0,
+              "test": "%if.else38.i.i.i.i"
+            }
+          ]
+        ],
+        "reason": ""
+      },
+      {
+        "legacy_index": 6,
+        "blocks": [
+          "%if.then52.i35.i.i.i"
+        ],
+        "entry": "%if.then52.i35.i.i.i",
+        "exit_sources": [
+          "%if.then52.i35.i.i.i"
+        ],
+        "id": "evaluate:%if.then52.i35.i.i.i",
+        "kind": "Linear",
+        "merged_from": [],
+        "ordered_predicate": [
+          {
+            "successor": 0,
+            "test": "%cond.false7.i.i.i"
+          },
+          {
+            "successor": 0,
+            "test": "%if.else.i23.i.i.i"
+          },
+          {
+            "successor": 0,
+            "test": "%if.else9.i28.i.i.i"
+          },
+          {
+            "successor": 1,
+            "test": "%if.else17.i.i.i.i"
+          },
+          {
+            "successor": 1,
+            "test": "%if.else27.i.i.i.i"
+          },
+          {
+            "successor": 1,
+            "test": "%if.else38.i.i.i.i"
+          },
+          {
+            "successor": 0,
+            "test": "%if.else49.i32.i.i.i"
+          }
+        ],
+        "predicate_alternatives": [
+          [
+            {
+              "successor": 0,
+              "test": "%cond.false7.i.i.i"
+            },
+            {
+              "successor": 0,
+              "test": "%if.else.i23.i.i.i"
+            },
+            {
+              "successor": 0,
+              "test": "%if.else9.i28.i.i.i"
+            },
+            {
+              "successor": 1,
+              "test": "%if.else17.i.i.i.i"
+            },
+            {
+              "successor": 1,
+              "test": "%if.else27.i.i.i.i"
+            },
+            {
+              "successor": 1,
+              "test": "%if.else38.i.i.i.i"
+            },
+            {
+              "successor": 0,
+              "test": "%if.else49.i32.i.i.i"
+            }
+          ]
+        ],
+        "reason": ""
+      },
+      {
+        "legacy_index": 7,
+        "blocks": [
+          "%if.then63.i.i.i.i"
+        ],
+        "entry": "%if.then63.i.i.i.i",
+        "exit_sources": [
+          "%if.then63.i.i.i.i"
+        ],
+        "id": "evaluate:%if.then63.i.i.i.i",
+        "kind": "Linear",
+        "merged_from": [],
+        "ordered_predicate": [
+          {
+            "successor": 0,
+            "test": "%cond.false7.i.i.i"
+          },
+          {
+            "successor": 0,
+            "test": "%if.else.i23.i.i.i"
+          },
+          {
+            "successor": 0,
+            "test": "%if.else9.i28.i.i.i"
+          },
+          {
+            "successor": 1,
+            "test": "%if.else17.i.i.i.i"
+          },
+          {
+            "successor": 1,
+            "test": "%if.else27.i.i.i.i"
+          },
+          {
+            "successor": 1,
+            "test": "%if.else38.i.i.i.i"
+          },
+          {
+            "successor": 1,
+            "test": "%if.else49.i32.i.i.i"
+          },
+          {
+            "successor": 0,
+            "test": "%if.else60.i.i.i.i"
+          }
+        ],
+        "predicate_alternatives": [
+          [
+            {
+              "successor": 0,
+              "test": "%cond.false7.i.i.i"
+            },
+            {
+              "successor": 0,
+              "test": "%if.else.i23.i.i.i"
+            },
+            {
+              "successor": 0,
+              "test": "%if.else9.i28.i.i.i"
+            },
+            {
+              "successor": 1,
+              "test": "%if.else17.i.i.i.i"
+            },
+            {
+              "successor": 1,
+              "test": "%if.else27.i.i.i.i"
+            },
+            {
+              "successor": 1,
+              "test": "%if.else38.i.i.i.i"
+            },
+            {
+              "successor": 1,
+              "test": "%if.else49.i32.i.i.i"
+            },
+            {
+              "successor": 0,
+              "test": "%if.else60.i.i.i.i"
+            }
+          ]
+        ],
+        "reason": ""
+      },
+      {
+        "legacy_index": 8,
+        "blocks": [
+          "%if.then74.i.i.i.i"
+        ],
+        "entry": "%if.then74.i.i.i.i",
+        "exit_sources": [
+          "%if.then74.i.i.i.i"
+        ],
+        "id": "evaluate:%if.then74.i.i.i.i",
+        "kind": "Linear",
+        "merged_from": [],
+        "ordered_predicate": [
+          {
+            "successor": 0,
+            "test": "%cond.false7.i.i.i"
+          },
+          {
+            "successor": 0,
+            "test": "%if.else.i23.i.i.i"
+          },
+          {
+            "successor": 0,
+            "test": "%if.else9.i28.i.i.i"
+          },
+          {
+            "successor": 1,
+            "test": "%if.else17.i.i.i.i"
+          },
+          {
+            "successor": 1,
+            "test": "%if.else27.i.i.i.i"
+          },
+          {
+            "successor": 1,
+            "test": "%if.else38.i.i.i.i"
+          },
+          {
+            "successor": 1,
+            "test": "%if.else49.i32.i.i.i"
+          },
+          {
+            "successor": 1,
+            "test": "%if.else60.i.i.i.i"
+          },
+          {
+            "successor": 0,
+            "test": "%if.else71.i37.i.i.i"
+          }
+        ],
+        "predicate_alternatives": [
+          [
+            {
+              "successor": 0,
+              "test": "%cond.false7.i.i.i"
+            },
+            {
+              "successor": 0,
+              "test": "%if.else.i23.i.i.i"
+            },
+            {
+              "successor": 0,
+              "test": "%if.else9.i28.i.i.i"
+            },
+            {
+              "successor": 1,
+              "test": "%if.else17.i.i.i.i"
+            },
+            {
+              "successor": 1,
+              "test": "%if.else27.i.i.i.i"
+            },
+            {
+              "successor": 1,
+              "test": "%if.else38.i.i.i.i"
+            },
+            {
+              "successor": 1,
+              "test": "%if.else49.i32.i.i.i"
+            },
+            {
+              "successor": 1,
+              "test": "%if.else60.i.i.i.i"
+            },
+            {
+              "successor": 0,
+              "test": "%if.else71.i37.i.i.i"
+            }
+          ]
+        ],
+        "reason": ""
+      },
+      {
+        "legacy_index": 9,
+        "blocks": [
+          "%if.then85.i.i.i.i"
+        ],
+        "entry": "%if.then85.i.i.i.i",
+        "exit_sources": [
+          "%if.then85.i.i.i.i"
+        ],
+        "id": "evaluate:%if.then85.i.i.i.i",
+        "kind": "Linear",
+        "merged_from": [],
+        "ordered_predicate": [
+          {
+            "successor": 0,
+            "test": "%cond.false7.i.i.i"
+          },
+          {
+            "successor": 0,
+            "test": "%if.else.i23.i.i.i"
+          },
+          {
+            "successor": 0,
+            "test": "%if.else9.i28.i.i.i"
+          },
+          {
+            "successor": 1,
+            "test": "%if.else17.i.i.i.i"
+          },
+          {
+            "successor": 1,
+            "test": "%if.else27.i.i.i.i"
+          },
+          {
+            "successor": 1,
+            "test": "%if.else38.i.i.i.i"
+          },
+          {
+            "successor": 1,
+            "test": "%if.else49.i32.i.i.i"
+          },
+          {
+            "successor": 1,
+            "test": "%if.else60.i.i.i.i"
+          },
+          {
+            "successor": 1,
+            "test": "%if.else71.i37.i.i.i"
+          },
+          {
+            "successor": 0,
+            "test": "%if.else82.i.i.i.i"
+          }
+        ],
+        "predicate_alternatives": [
+          [
+            {
+              "successor": 0,
+              "test": "%cond.false7.i.i.i"
+            },
+            {
+              "successor": 0,
+              "test": "%if.else.i23.i.i.i"
+            },
+            {
+              "successor": 0,
+              "test": "%if.else9.i28.i.i.i"
+            },
+            {
+              "successor": 1,
+              "test": "%if.else17.i.i.i.i"
+            },
+            {
+              "successor": 1,
+              "test": "%if.else27.i.i.i.i"
+            },
+            {
+              "successor": 1,
+              "test": "%if.else38.i.i.i.i"
+            },
+            {
+              "successor": 1,
+              "test": "%if.else49.i32.i.i.i"
+            },
+            {
+              "successor": 1,
+              "test": "%if.else60.i.i.i.i"
+            },
+            {
+              "successor": 1,
+              "test": "%if.else71.i37.i.i.i"
+            },
+            {
+              "successor": 0,
+              "test": "%if.else82.i.i.i.i"
+            }
+          ]
+        ],
+        "reason": ""
+      },
+      {
+        "legacy_index": 10,
+        "blocks": [
+          "%if.then96.i.i.i.i"
+        ],
+        "entry": "%if.then96.i.i.i.i",
+        "exit_sources": [
+          "%if.then96.i.i.i.i"
+        ],
+        "id": "evaluate:%if.then96.i.i.i.i",
+        "kind": "Linear",
+        "merged_from": [],
+        "ordered_predicate": [
+          {
+            "successor": 0,
+            "test": "%cond.false7.i.i.i"
+          },
+          {
+            "successor": 0,
+            "test": "%if.else.i23.i.i.i"
+          },
+          {
+            "successor": 0,
+            "test": "%if.else9.i28.i.i.i"
+          },
+          {
+            "successor": 1,
+            "test": "%if.else17.i.i.i.i"
+          },
+          {
+            "successor": 1,
+            "test": "%if.else27.i.i.i.i"
+          },
+          {
+            "successor": 1,
+            "test": "%if.else38.i.i.i.i"
+          },
+          {
+            "successor": 1,
+            "test": "%if.else49.i32.i.i.i"
+          },
+          {
+            "successor": 1,
+            "test": "%if.else60.i.i.i.i"
+          },
+          {
+            "successor": 1,
+            "test": "%if.else71.i37.i.i.i"
+          },
+          {
+            "successor": 1,
+            "test": "%if.else82.i.i.i.i"
+          },
+          {
+            "successor": 0,
+            "test": "%if.else93.i.i.i.i"
+          }
+        ],
+        "predicate_alternatives": [
+          [
+            {
+              "successor": 0,
+              "test": "%cond.false7.i.i.i"
+            },
+            {
+              "successor": 0,
+              "test": "%if.else.i23.i.i.i"
+            },
+            {
+              "successor": 0,
+              "test": "%if.else9.i28.i.i.i"
+            },
+            {
+              "successor": 1,
+              "test": "%if.else17.i.i.i.i"
+            },
+            {
+              "successor": 1,
+              "test": "%if.else27.i.i.i.i"
+            },
+            {
+              "successor": 1,
+              "test": "%if.else38.i.i.i.i"
+            },
+            {
+              "successor": 1,
+              "test": "%if.else49.i32.i.i.i"
+            },
+            {
+              "successor": 1,
+              "test": "%if.else60.i.i.i.i"
+            },
+            {
+              "successor": 1,
+              "test": "%if.else71.i37.i.i.i"
+            },
+            {
+              "successor": 1,
+              "test": "%if.else82.i.i.i.i"
+            },
+            {
+              "successor": 0,
+              "test": "%if.else93.i.i.i.i"
+            }
+          ]
+        ],
+        "reason": ""
+      },
+      {
+        "legacy_index": 11,
+        "blocks": [
+          "%if.then107.i.i.i.i"
+        ],
+        "entry": "%if.then107.i.i.i.i",
+        "exit_sources": [
+          "%if.then107.i.i.i.i"
+        ],
+        "id": "evaluate:%if.then107.i.i.i.i",
+        "kind": "Linear",
+        "merged_from": [],
+        "ordered_predicate": [
+          {
+            "successor": 0,
+            "test": "%cond.false7.i.i.i"
+          },
+          {
+            "successor": 0,
+            "test": "%if.else.i23.i.i.i"
+          },
+          {
+            "successor": 0,
+            "test": "%if.else9.i28.i.i.i"
+          },
+          {
+            "successor": 1,
+            "test": "%if.else17.i.i.i.i"
+          },
+          {
+            "successor": 1,
+            "test": "%if.else27.i.i.i.i"
+          },
+          {
+            "successor": 1,
+            "test": "%if.else38.i.i.i.i"
+          },
+          {
+            "successor": 1,
+            "test": "%if.else49.i32.i.i.i"
+          },
+          {
+            "successor": 1,
+            "test": "%if.else60.i.i.i.i"
+          },
+          {
+            "successor": 1,
+            "test": "%if.else71.i37.i.i.i"
+          },
+          {
+            "successor": 1,
+            "test": "%if.else82.i.i.i.i"
+          },
+          {
+            "successor": 1,
+            "test": "%if.else93.i.i.i.i"
+          },
+          {
+            "successor": 0,
+            "test": "%if.else104.i.i.i.i"
+          }
+        ],
+        "predicate_alternatives": [
+          [
+            {
+              "successor": 0,
+              "test": "%cond.false7.i.i.i"
+            },
+            {
+              "successor": 0,
+              "test": "%if.else.i23.i.i.i"
+            },
+            {
+              "successor": 0,
+              "test": "%if.else9.i28.i.i.i"
+            },
+            {
+              "successor": 1,
+              "test": "%if.else17.i.i.i.i"
+            },
+            {
+              "successor": 1,
+              "test": "%if.else27.i.i.i.i"
+            },
+            {
+              "successor": 1,
+              "test": "%if.else38.i.i.i.i"
+            },
+            {
+              "successor": 1,
+              "test": "%if.else49.i32.i.i.i"
+            },
+            {
+              "successor": 1,
+              "test": "%if.else60.i.i.i.i"
+            },
+            {
+              "successor": 1,
+              "test": "%if.else71.i37.i.i.i"
+            },
+            {
+              "successor": 1,
+              "test": "%if.else82.i.i.i.i"
+            },
+            {
+              "successor": 1,
+              "test": "%if.else93.i.i.i.i"
+            },
+            {
+              "successor": 0,
+              "test": "%if.else104.i.i.i.i"
+            }
+          ]
+        ],
+        "reason": ""
+      },
+      {
+        "legacy_index": 12,
+        "blocks": [],
+        "entry": "%_ZN5boost4math6detail25mapairy_quantile_imp_precIdEET_RKS3_bRKSt17integral_constantIiLi53EE.exit.i.i",
+        "exit_sources": [],
+        "id": "evaluate:%_ZN5boost4math6detail25mapairy_quantile_imp_precIdEET_RKS3_bRKSt17integral_constantIiLi53EE.exit.i.i",
+        "kind": "Unsupported",
+        "merged_from": [],
+        "ordered_predicate": [
+          {
+            "successor": 0,
+            "test": "%cond.false7.i.i.i"
+          },
+          {
+            "successor": 0,
+            "test": "%if.else.i23.i.i.i"
+          },
+          {
+            "successor": 0,
+            "test": "%if.else9.i28.i.i.i"
+          },
+          {
+            "successor": 1,
+            "test": "%if.else17.i.i.i.i"
+          },
+          {
+            "successor": 1,
+            "test": "%if.else27.i.i.i.i"
+          },
+          {
+            "successor": 1,
+            "test": "%if.else38.i.i.i.i"
+          },
+          {
+            "successor": 1,
+            "test": "%if.else49.i32.i.i.i"
+          },
+          {
+            "successor": 1,
+            "test": "%if.else60.i.i.i.i"
+          },
+          {
+            "successor": 1,
+            "test": "%if.else71.i37.i.i.i"
+          },
+          {
+            "successor": 1,
+            "test": "%if.else82.i.i.i.i"
+          },
+          {
+            "successor": 1,
+            "test": "%if.else93.i.i.i.i"
+          },
+          {
+            "successor": 1,
+            "test": "%if.else104.i.i.i.i"
+          }
+        ],
+        "predicate_alternatives": [
+          [
+            {
+              "successor": 0,
+              "test": "%cond.false7.i.i.i"
+            },
+            {
+              "successor": 0,
+              "test": "%if.else.i23.i.i.i"
+            },
+            {
+              "successor": 0,
+              "test": "%if.else9.i28.i.i.i"
+            },
+            {
+              "successor": 1,
+              "test": "%if.else17.i.i.i.i"
+            },
+            {
+              "successor": 1,
+              "test": "%if.else27.i.i.i.i"
+            },
+            {
+              "successor": 1,
+              "test": "%if.else38.i.i.i.i"
+            },
+            {
+              "successor": 1,
+              "test": "%if.else49.i32.i.i.i"
+            },
+            {
+              "successor": 1,
+              "test": "%if.else60.i.i.i.i"
+            },
+            {
+              "successor": 1,
+              "test": "%if.else71.i37.i.i.i"
+            },
+            {
+              "successor": 1,
+              "test": "%if.else82.i.i.i.i"
+            },
+            {
+              "successor": 1,
+              "test": "%if.else93.i.i.i.i"
+            },
+            {
+              "successor": 1,
+              "test": "%if.else104.i.i.i.i"
+            }
+          ]
+        ],
+        "reason": "empty_arm"
+      }
+    ],
+    "tested_pair": [
+      4,
+      5
+    ],
+    "fallback_note": "L12 is the direct edge to join; empty arm, intentionally unsupported."
+  }
+}

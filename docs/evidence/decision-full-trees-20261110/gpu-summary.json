@@ -1,0 +1,97 @@
+{
+  "vllm": {
+    "scope": "Full L0-L7 RegionMelder trees, manual recursive versus balanced, speculation none",
+    "correctness_passed": true,
+    "inputs": [
+      {
+        "count": 65536,
+        "layout": "random-bf16",
+        "seed": 2026111001
+      },
+      {
+        "count": 131072,
+        "layout": "random-bf16",
+        "seed": 2026111002
+      }
+    ],
+    "binary_sha256": {
+      "baseline": "5a11c36bb754b38eb6864830d66925a59604bdac1cbe9d08b37d451aeb1b810a",
+      "recursive": "c0d52942f8fceb39e55ea842328203b3012b4216baea2946ed80519e50d97d13",
+      "balanced": "668e75ee742f1e8b9b49618981aa29768add4879b0498fa6bfff9fb54e38061f"
+    },
+    "binary_identical": false,
+    "median_us": {
+      "baseline": [
+        2897.602051,
+        5749.285156
+      ],
+      "recursive": [
+        3344.802002,
+        6656.325684
+      ],
+      "balanced": [
+        4082.723145,
+        8087.046387
+      ]
+    },
+    "batch_medians_us": {
+      "baseline": [
+        [
+          2897.602051,
+          5749.924316
+        ],
+        [
+          2896.802002,
+          5749.285156
+        ],
+        [
+          2898.082031,
+          5748.004883
+        ]
+      ],
+      "recursive": [
+        [
+          3345.922852,
+          6657.125977
+        ],
+        [
+          3344.802002,
+          6654.885742
+        ],
+        [
+          3344.481934,
+          6656.325684
+        ]
+      ],
+      "balanced": [
+        [
+          4081.603027,
+          8087.046387
+        ],
+        [
+          4119.522949,
+          8069.287109
+        ],
+        [
+          4082.723145,
+          8096.166504
+        ]
+      ]
+    },
+    "variant_slowdown_pct": {
+      "recursive": [
+        15.433449560324043,
+        15.776579233566213
+      ],
+      "balanced": [
+        40.90006402331885,
+        40.66177216067104
+      ]
+    },
+    "aliases_by_identical_binary": {
+      "baseline": "baseline",
+      "recursive": "recursive",
+      "balanced": "balanced"
+    }
+  }
+}

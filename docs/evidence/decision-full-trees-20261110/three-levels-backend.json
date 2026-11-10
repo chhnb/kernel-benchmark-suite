@@ -1,0 +1,30 @@
+{
+  "baseline": {
+    "copysign": 256,
+    "conditional_br": 351,
+    "unconditional_br": 315,
+    "select": 52,
+    "phi": 88,
+    "resources": {
+      "vgpr_count": 62,
+      "sgpr_count": 82,
+      "vgpr_spill_count": 0,
+      "sgpr_spill_count": 0,
+      "private_segment_fixed_size": 0
+    }
+  },
+  "variant": {
+    "copysign": 32,
+    "conditional_br": 223,
+    "unconditional_br": 123,
+    "select": 180,
+    "phi": 88,
+    "resources": {
+      "vgpr_count": 78,
+      "sgpr_count": 78,
+      "vgpr_spill_count": 0,
+      "sgpr_spill_count": 0,
+      "private_segment_fixed_size": 0
+    }
+  }
+}

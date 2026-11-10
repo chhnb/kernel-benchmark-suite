@@ -1,0 +1,67 @@
+{
+  "vllm": {
+    "scope": "RegionMelder fixed left-deep three levels, all 32 trees, speculation none",
+    "correctness_passed": true,
+    "inputs": [
+      {
+        "count": 65536,
+        "layout": "random-bf16",
+        "seed": 2026111001
+      },
+      {
+        "count": 131072,
+        "layout": "random-bf16",
+        "seed": 2026111002
+      }
+    ],
+    "binary_sha256": {
+      "baseline": "5a11c36bb754b38eb6864830d66925a59604bdac1cbe9d08b37d451aeb1b810a",
+      "normalized": "9e2d34e86c30a2d2fcf923fa848f1399c9d6a18a7d11b616ab00174ba32e72e3"
+    },
+    "binary_identical": false,
+    "median_us": {
+      "baseline": [
+        2895.041992,
+        5746.404297
+      ],
+      "normalized": [
+        2692.961914,
+        5353.124023
+      ]
+    },
+    "batch_medians_us": {
+      "baseline": [
+        [
+          2895.682129,
+          5745.763672
+        ],
+        [
+          2895.041992,
+          5747.523926
+        ],
+        [
+          2894.719971,
+          5746.404297
+        ]
+      ],
+      "normalized": [
+        [
+          2726.562012,
+          5350.883789
+        ],
+        [
+          2692.961914,
+          5353.124023
+        ],
+        [
+          2692.001953,
+          5353.124023
+        ]
+      ]
+    },
+    "normalized_slowdown_pct": [
+      -6.980212327089452,
+      -6.843936724141009
+    ]
+  }
+}

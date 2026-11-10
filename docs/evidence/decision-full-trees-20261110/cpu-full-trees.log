@@ -1,0 +1,3 @@
+recursive 7 fusions; 8 -> 1 copysign; all 201 outputs equal at every step
+balanced 7 fusions; 8 -> 1 copysign; all 201 outputs equal at every step
+evidence /home/chh/kernel-benchmark-suite-review-speculation/build/decision-fuse/decision-full-ffkm3a8c

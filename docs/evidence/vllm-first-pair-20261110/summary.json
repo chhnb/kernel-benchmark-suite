@@ -1,0 +1,23 @@
+{
+  "before": {
+    "source": "/home/chh/kernel-benchmark-suite/experiments/recursive-all32-greedy-20261108-v1/state-0.ll",
+    "sha256": "7e1e57ebb0adeb1beef9382eab38a3ff5dfb37e2449ccfc79396ddcf89cd9962",
+    "cost": 5423,
+    "unknown": 0,
+    "instructions": 2248
+  },
+  "old_after": {
+    "source": "/home/chh/kernel-benchmark-suite/experiments/recursive-all32-greedy-20261108-v1/state-1.ll",
+    "sha256": "f8a9d90c2b43bbad9b12284fe9f642f572ac7c58d130cc399e14d5f5d199cd27",
+    "cost": 5412,
+    "unknown": 0,
+    "instructions": 2246
+  },
+  "new_after": {
+    "source": "/home/chh/kernel-benchmark-suite-review-speculation/build/decision-fuse/full-all32-v1/recursive/0-0/fused.ll",
+    "sha256": "6ee73ce080a04998046edf76005469a466e917d5909aa134352ec3fdadf56567",
+    "cost": 5438,
+    "unknown": 0,
+    "instructions": 2254
+  }
+}

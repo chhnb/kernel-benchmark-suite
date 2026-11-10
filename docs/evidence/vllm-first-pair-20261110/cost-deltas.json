@@ -1,0 +1,32 @@
+[
+  {
+    "key": "br.conditional:void:cost7",
+    "before": 351,
+    "old_after": 350,
+    "new_after": 351
+  },
+  {
+    "key": "br.unconditional:void:cost4",
+    "before": 315,
+    "old_after": 314,
+    "new_after": 318
+  },
+  {
+    "key": "call:llvm.copysign.f32:float:cost1",
+    "before": 256,
+    "old_after": 255,
+    "new_after": 255
+  },
+  {
+    "key": "phi:i1:cost1",
+    "before": 1,
+    "old_after": 1,
+    "new_after": 4
+  },
+  {
+    "key": "select:float:cost1",
+    "before": 3,
+    "old_after": 4,
+    "new_after": 4
+  }
+]

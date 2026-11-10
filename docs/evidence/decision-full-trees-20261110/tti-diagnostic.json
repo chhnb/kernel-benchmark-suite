@@ -1,0 +1,59 @@
+{
+  "scope": "read-only snapshot totals; not greedy selection",
+  "snapshots": {
+    "parent": {
+      "llvm_version": "24.0.0",
+      "cost_kind": "TCK_RecipThroughput",
+      "cost": 5423,
+      "modeled_cost": 5423,
+      "unknown": 0,
+      "instructions": 2248,
+      "source": "/home/chh/kernel-benchmark-suite/experiments/recursive-all32-greedy-20261108-v1/state-0.ll"
+    },
+    "first_pair": {
+      "llvm_version": "24.0.0",
+      "cost_kind": "TCK_RecipThroughput",
+      "cost": 5438,
+      "modeled_cost": 5438,
+      "unknown": 0,
+      "instructions": 2254,
+      "source": "/home/chh/kernel-benchmark-suite-review-speculation/build/decision-fuse/full-all32-v1/recursive/0-0/fused.ll"
+    },
+    "recursive_raw": {
+      "llvm_version": "24.0.0",
+      "cost_kind": "TCK_RecipThroughput",
+      "cost": 12815,
+      "modeled_cost": 12815,
+      "unknown": 0,
+      "instructions": 4552,
+      "source": "/home/chh/kernel-benchmark-suite-review-speculation/build/decision-fuse/full-all32-v1/recursive/final.ll"
+    },
+    "balanced_raw": {
+      "llvm_version": "24.0.0",
+      "cost_kind": "TCK_RecipThroughput",
+      "cost": 6703,
+      "modeled_cost": 6703,
+      "unknown": 0,
+      "instructions": 3144,
+      "source": "/home/chh/kernel-benchmark-suite-review-speculation/build/decision-fuse/full-all32-v1/balanced/final.ll"
+    },
+    "recursive_codegen_o3": {
+      "llvm_version": "24.0.0",
+      "cost_kind": "TCK_RecipThroughput",
+      "cost": 3375,
+      "modeled_cost": 3375,
+      "unknown": 0,
+      "instructions": 2024,
+      "source": "/home/chh/kernel-benchmark-suite-review-speculation/build/decision-fuse/full-all32-v1/recursive/vllm-pair/variant-final.ll"
+    },
+    "balanced_codegen_o3": {
+      "llvm_version": "24.0.0",
+      "cost_kind": "TCK_RecipThroughput",
+      "cost": 3983,
+      "modeled_cost": 3983,
+      "unknown": 0,
+      "instructions": 2440,
+      "source": "/home/chh/kernel-benchmark-suite-review-speculation/build/decision-fuse/full-all32-v1/balanced/vllm-pair/variant-final.ll"
+    }
+  }
+}

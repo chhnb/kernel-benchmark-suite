@@ -1,0 +1,34 @@
+{
+  "old_greedy": {
+    "file": "/home/chh/kernel-benchmark-suite/experiments/recursive-all32-greedy-20261108-v1/final.ll",
+    "br_conditional": 127,
+    "br_unconditional": 91,
+    "phi": 88,
+    "select": 276,
+    "copysign": 32
+  },
+  "baseline": {
+    "file": "/home/chh/kernel-benchmark-suite-review-speculation/build/decision-fuse/full-all32-v1/recursive/vllm-pair/baseline-final.ll",
+    "br_conditional": 351,
+    "br_unconditional": 315,
+    "phi": 88,
+    "select": 52,
+    "copysign": 256
+  },
+  "recursive": {
+    "file": "/home/chh/kernel-benchmark-suite-review-speculation/build/decision-fuse/full-all32-v1/recursive/vllm-pair/variant-final.ll",
+    "br_conditional": 159,
+    "br_unconditional": 91,
+    "phi": 88,
+    "select": 244,
+    "copysign": 32
+  },
+  "balanced": {
+    "file": "/home/chh/kernel-benchmark-suite-review-speculation/build/decision-fuse/full-all32-v1/balanced/vllm-pair/variant-final.ll",
+    "br_conditional": 191,
+    "br_unconditional": 91,
+    "phi": 408,
+    "select": 308,
+    "copysign": 32
+  }
+}

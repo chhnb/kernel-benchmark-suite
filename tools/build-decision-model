@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+set -euo pipefail
+r=$(cd "$(dirname "$0")/.." && pwd)
+lc=${LLVM_CONFIG:-/home/chh/darm-artifacts-repro/build/bin/llvm-config}
+[[ $($lc --version) == 12.* ]] || { echo 'LLVM12 required' >&2; exit 2; }
+read -r -a cf <<< "$($lc --cxxflags)"
+read -r -a lf <<< "$($lc --ldflags --libs core irreader analysis transformutils --system-libs | tr '\n' ' ')"
+mkdir -p "$r/build/decision-model"
+${CXX:-g++} "${cf[@]}" -std=c++17 -O2 "$r/tools/decision_model.cpp" "$r/tools/decision_model_main.cpp" "$r/tools/decision_compare.cpp" "${lf[@]}" -o "$r/build/decision-model/decision-model"

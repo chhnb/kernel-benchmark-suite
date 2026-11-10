@@ -1,0 +1,71 @@
+[
+  {
+    "count": 65539,
+    "seed": 2026110301,
+    "spec": "/home/chh/kernel-benchmark-suite-review-speculation/build/decision-model/gpu-normalization/measurement-v2/generated/mapairy/65539/input.txt",
+    "files": {
+      "input.bin": "0018705f2b9c28db1fcc20f4fd6356db8e2ae19972c910029e8978b4baa51125",
+      "input.txt": "48df34fd7c04ececc3d0514491bb267a1b5c43fcc097896ce67f79d5f0ae4157",
+      "output-init.bin": "29030f2cf2b457628ba0d7d2afd24a6666bea024198f23f84e650aa5ce14b9e3",
+      "reference.bin": "584c3a9a5e9d1b20cfb3552b021eb528d8dab34ebc4a091a5599bc09a1c0ec26"
+    },
+    "case": "mapairy",
+    "layout": "mixture"
+  },
+  {
+    "count": 65536,
+    "seed": 2026111001,
+    "spec": "/home/chh/kernel-benchmark-suite-review-speculation/build/decision-model/gpu-normalization/measurement-v2/generated/vllm/65536/input.txt",
+    "files": {
+      "input.txt": "d1e907e658b008fcc36fd1a0ae11240c294f8d18e243791936313b48c6e531ab",
+      "kd-init.bin": "28b8ebe9350d502e7d260cf1198bbbe8814fadea38c4fd023fe27097d962f7e5",
+      "kd-ref.bin": "7969e595571dc4407877d0fb7d59ca283efb66b9879041c56e88c5231e2bbbe6",
+      "key.bin": "94cb448499f8334eba460217146646af120b0fb55b648336f4646d5a583d5467",
+      "ks-init.bin": "159250a9d53ceeb1f8bb05007e4fb2825da30553057165c24116362aba783725",
+      "ks-ref.bin": "ca872b59dc8cde2495829ac91a57451fb1223ba04eed16632b26cfaa2bf06715",
+      "slots.bin": "907b906f4af788d68bfa7df1361a3ec539be5217c6efff23e2d4928d7b9c531a",
+      "value.bin": "c28bf7e18c558d2bdd5e86ef2161ac81b29fbb5b4e9021b07466a78388d41372",
+      "vd-init.bin": "28b8ebe9350d502e7d260cf1198bbbe8814fadea38c4fd023fe27097d962f7e5",
+      "vd-ref.bin": "f139673e49be958711c453e78f0d5e8cefc38e74630e912ef8352d470c49b3e2",
+      "vs-init.bin": "159250a9d53ceeb1f8bb05007e4fb2825da30553057165c24116362aba783725",
+      "vs-ref.bin": "0d3aefcc52d0a32a6554087aa469d1c7912bf53a0da306387db713ab08e6be3d"
+    },
+    "case": "vllm",
+    "layout": "random-bf16"
+  },
+  {
+    "count": 131072,
+    "seed": 2026111002,
+    "spec": "/home/chh/kernel-benchmark-suite-review-speculation/build/decision-model/gpu-normalization/measurement-v2/generated/vllm/131072/input.txt",
+    "files": {
+      "input.txt": "bc65bc97ca929feaecd63742b63f649b2a2f47b43d7299407238822bf105c14f",
+      "kd-init.bin": "2c28dd659453564d4e30a2baa0b5eb1ba55317f75165dc089fe81fab6075cf30",
+      "kd-ref.bin": "1f6127f9672d56c90af75fb1763a50a4f88ce9f61115b3f41b1ec935ac5bedb1",
+      "key.bin": "56a76982e6bf7382955467706c9b2b047ac7b4df941e2c92aa68d179c8bc28ee",
+      "ks-init.bin": "19c19a3a6926d23af38ef46058091e03fc2f35e822fc828b21544d1023fab2a6",
+      "ks-ref.bin": "2bcdb58d09f74f2c6a49b91d85f43111e2889292312657900f141a26db9481fa",
+      "slots.bin": "69499187cfe2ceaaebfdeb744810fb43bda830e830d75d756359a2c1f5fb6734",
+      "value.bin": "612e721e50ea0ec13850d543d3897adb3ba9e5cb4a8d1f3cf2b0777eb8484e03",
+      "vd-init.bin": "2c28dd659453564d4e30a2baa0b5eb1ba55317f75165dc089fe81fab6075cf30",
+      "vd-ref.bin": "c342029bffbf73e15fe58ac9b8c24bd31fa08340dff81c5d48e0b702a641749f",
+      "vs-init.bin": "19c19a3a6926d23af38ef46058091e03fc2f35e822fc828b21544d1023fab2a6",
+      "vs-ref.bin": "27442ac1a04fa6b4ab3425a148cd81481c7562401e6e80bb104e6850783c0971"
+    },
+    "case": "vllm",
+    "layout": "random-bf16"
+  },
+  {
+    "case": "mapairy",
+    "layout": "coherent-blocks",
+    "count": 65539,
+    "seed": 2026110301,
+    "spec": "/home/chh/kernel-benchmark-suite-review-speculation/build/decision-model/gpu-normalization/measurement-v2/generated/mapairy-coherent/input.txt",
+    "files": {
+      "input.txt": "48df34fd7c04ececc3d0514491bb267a1b5c43fcc097896ce67f79d5f0ae4157",
+      "reference.bin": "cd0b7d0b08c7123cc5905cc582a07a167be63893b5f4121fd4c8d3d71a489663",
+      "output-init.bin": "29030f2cf2b457628ba0d7d2afd24a6666bea024198f23f84e650aa5ce14b9e3",
+      "input.bin": "9a2cee9ba858c18f622494b6cca37c177ff6c790b90d32e0b572b306af810b23"
+    },
+    "generator_source_sha256": "cbe6c1e2d776fe7f35256f42e1a9b840462a0fc4907456ebe68fa541e75580c7"
+  }
+]
