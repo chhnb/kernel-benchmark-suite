@@ -33,4 +33,15 @@ for f in glob.glob(sys.argv[1]+'/trial-*/trial.json'):
 assert seen, 'no cross-level R2B trial'
 print('side-metrics e2e ok')
 PY
+  # Explicit pairs must use the same speculation mode as greedy (default none):
+  # in heavy.ll the else-if hoist of leaf work is refused and B2R is used.
+  "$b/fusion-search-llvm24" --ir "$r/tests/postopt/side-metrics/heavy-amdgcn.ll" --function tree --out "$d/pair.ll" \
+    --structural 1 --cleanup scoped-cfg --scorer llvm24 --tti-worker "$worker" \
+    --split B0 --left B1 --right B4 --debug-dir "$d/pair" >/dev/null 2>&1
+  python3 - "$d/pair" <<'PY'
+import json,glob,sys
+t=[json.load(open(f)) for f in glob.glob(sys.argv[1]+'/**/trial.json',recursive=True)]
+assert t and t[0]['merge_path']=='darm-B2R', [x['merge_path'] for x in t]
+print('explicit pair speculation ok')
+PY
 fi
