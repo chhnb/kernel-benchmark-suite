@@ -39,4 +39,6 @@ python3 tools/suite.py build srad --profile hip-o3-binary --out results/srad-bui
 
 这里的耗时是kernel event耗时，不含输入生成、传输、模型前向或CPU oracle。默认单次2+5适合初筛；正式回归采用3批、每批3次预热＋15次测量。
 
-本次仅整理文档入口，未移动case/工具/实验目录，未删除任何复现材料。旧运行时迁移说明见 [2026-11-05历史状态](docs/history/runtime-migration-20261105.md)。
+已完成首轮实际精简：归档16份历史专题、统一公共CPU入口、裁剪未选中的重复trial IR，净释放约792MiB。见 [执行记录](docs/REPOSITORY_CLEANUP_20261110.md)。case与实验目录尚未大规模搬迁。旧运行时迁移说明见 [2026-11-05历史状态](docs/history/runtime-migration-20261105.md)。
+
+历史策略文档见 [专题归档索引](docs/history/topics/README.md)。

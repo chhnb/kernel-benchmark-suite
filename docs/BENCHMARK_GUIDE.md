@@ -42,15 +42,15 @@ cat results/mapairy-ir-new/command.json
 搜索构建尚未接入统一CMake；已有构建脚本是 `tools/build-llvm24-tti`。在musa通过CPU配额包装器执行：
 
 ```sh
-python3 experiments/saspoint5-cuda-v1/run_cpu.py build-search-new bash /home/chh/kernel-benchmark-suite/tools/build-llvm24-tti
+python3 tools/run_cpu.py build-search-new bash /home/chh/kernel-benchmark-suite/tools/build-llvm24-tti
 ```
 
-包装器放在Saspoint5历史目录是技术债，不表示搜索仅适用于Saspoint5。不要绕开配额运行重编译。
+公共入口现在位于tools；旧Saspoint5路径保留兼容转发。不要绕开配额运行重编译。
 
 Map-Airy示例（命令中所有输出必须不存在）：
 
 ```sh
-python3 experiments/saspoint5-cuda-v1/run_cpu.py mapairy-search-new \
+python3 tools/run_cpu.py mapairy-search-new \
   /home/chh/kernel-benchmark-suite/build/llvm24-tti/fusion-search-llvm24 \
   --ir /home/chh/kernel-benchmark-suite/results/mapairy-ir-new/start.ll \
   --function evaluate --structural 1 --scorer llvm24 \

@@ -16,7 +16,7 @@ def main():
  assert sha(S/m['generator_source'])==m['generator_sha256'],'generator changed; freeze a new protocol explicitly'
  candidate=a.candidate.resolve();assert candidate.is_file();out=a.out.resolve();out.mkdir(parents=True,exist_ok=False)
  gen=out/'generated';label='generated-'+a.case+'-'+str(time.time_ns())
- subprocess.run(['python3',str(S/'experiments/saspoint5-cuda-v1/run_cpu.py'),label,'python3',str(S/'regression/generators/prepare.py'),a.case,str(gen)],check=True)
+ subprocess.run(['python3',str(S/'tools/run_cpu.py'),label,'python3',str(S/'regression/generators/prepare.py'),a.case,str(gen)],check=True)
  generation=json.loads((gen/'generation.json').read_text());assert [r['count'] for r in generation['rows']]==cfg['counts'];assert [r['seed'] for r in generation['rows']]==cfg['seeds']
  (out/'generation.json').write_text(json.dumps(generation,indent=2))
  case=out/'case';case.mkdir();inputs=[r['spec'] for r in generation['rows']]

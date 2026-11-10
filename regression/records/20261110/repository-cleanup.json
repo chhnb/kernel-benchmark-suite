@@ -1,0 +1,14 @@
+{
+  "plan_sha256": "b652cc2d2503ec5b77a001ff47a21d91c1ba60f9222805b17c6ff436f9efccc4",
+  "status": "complete",
+  "removed_files": 5494,
+  "removed_bytes": 820094059,
+  "protected_hashes_checked": 975,
+  "protected_hashes_unchanged": true,
+  "runs_before_kib": 1409308,
+  "runs_after_kib": 598348,
+  "net_disk_reduction_kib": 810960,
+  "archived_topic_documents": 16,
+  "engine_changed": false,
+  "full_plan": "/home/chh/kernel-benchmark-suite/regression/runs/20261110-repository-cleanup/prune-plan.json"
+}

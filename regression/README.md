@@ -22,7 +22,7 @@ python3 tools/run_generated_regression.py mapairy --candidate /absolute/current-
 CPU 生成器一致性检查：
 
 ```sh
-python3 experiments/saspoint5-cuda-v1/run_cpu.py UNIQUE_LABEL python3 /home/chh/kernel-benchmark-suite/regression/generators/check.py
+python3 tools/run_cpu.py UNIQUE_LABEL python3 /home/chh/kernel-benchmark-suite/regression/generators/check.py
 ```
 
 当前 `check.py` 使用固定测试输出目录；已有结果时请先归档该目录再重新执行，避免覆盖证据。
@@ -30,7 +30,7 @@ python3 experiments/saspoint5-cuda-v1/run_cpu.py UNIQUE_LABEL python3 /home/chh/
 当前融合代码重建候选（CPU 队列内运行）：
 
 ```sh
-python3 experiments/saspoint5-cuda-v1/run_cpu.py UNIQUE_LABEL python3 /home/chh/kernel-benchmark-suite/regression/prepare_current_generated.py /absolute/new-current-build
+python3 tools/run_cpu.py UNIQUE_LABEL python3 /home/chh/kernel-benchmark-suite/regression/prepare_current_generated.py /absolute/new-current-build
 ```
 
 ## TIGRE 和历史记录

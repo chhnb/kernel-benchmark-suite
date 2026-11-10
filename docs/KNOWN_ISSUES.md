@@ -14,7 +14,7 @@
 | P1 | 基线身份不够统一 | vLLM HIP依赖保留IR和历史软件移植；Fluid native runtime与LLVM12 IR不应混用 | 每case提供可重建源→IR链及hash；无法从原始源码独立重建的明确标移植/遗留输入 |
 | P1 | 源码模块与历史试验混放 | fusion_search.cpp包含枚举、清理、分派、特殊路径、循环；tools有多个旧入口 | 先建立稳定接口和测试，再分文件迁移，逐步保证二进制或行为等价 |
 | P1 | 文档/manifest状态会漂移 | 旧README宣称10个active含Landau、STATUS宣称尚无融合；case.enabled仍是历史 | 新导航已整理；下一步统一case registry，区分研究重点/基线验收/搜索/性能回归状态 |
-| P2 | 工具链与设备路径硬编码 | CMake及脚本依赖/home/chh、/opt/rocm、多个外部项目；CPU包装器位于Saspoint5实验目录 | 配置化路径并统一构建/准入入口；配额锁逻辑不复制多份 |
+| P2 | 工具链与设备路径硬编码 | CMake及脚本依赖/home/chh、/opt/rocm、多个外部项目；公共CPU包装器已移到tools，旧路径兼容保留 | 配置化路径并统一构建/准入入口；配额锁逻辑不复制多份 |
 | P2 | 通用paired codegen仅AMD | postopt_compile_pair.py明确拒绝非AMD；Cholla/HLLC有CUDA路径 | 增加明确CUDA后端实现与测试，不能仅复用AMD参数 |
 | P2 | IR/trial数据膨胀 | experiments约8.2GB、work约2.5GB、build约2.3GB；很多拒绝trial保留全IR | 支持摘要默认、选中/失败诊断按需保留；先确认再生链和依赖后清理 |
 | P2 | 统计与回归范围有限 | 2%是工程门槛非显著性检验；Map连续分块慢；SRAD部分批次波动 | 保留输入敏感反例、原始样本、漂移信息，不只发布成功case |

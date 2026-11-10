@@ -1,0 +1,101 @@
+{
+  "storage": "local historical archive; full documents were previously untracked and remain outside Git",
+  "files": [
+    {
+      "name": "backtracking-v2.md",
+      "previous_path": "docs/backtracking-v2.md",
+      "bytes": 5783,
+      "sha256": "6d6cd2787b9eb13b71cc8b3a97aa99eab3662c5ffafc1ef2c7e211f3b483d233"
+    },
+    {
+      "name": "beam-expanded-v2.md",
+      "previous_path": "docs/beam-expanded-v2.md",
+      "bytes": 7662,
+      "sha256": "10de6b4a36967cda29d8936cd71f3fa37062d0bfdc5525827acff1c822ca1c82"
+    },
+    {
+      "name": "beam-replay-fix.md",
+      "previous_path": "docs/beam-replay-fix.md",
+      "bytes": 5431,
+      "sha256": "34473a35555c2d4e2542f782c900f8dc1617e99640e35ba8296a5fbcbbb85f62"
+    },
+    {
+      "name": "beam-search-v4.md",
+      "previous_path": "docs/beam-search-v4.md",
+      "bytes": 7107,
+      "sha256": "ce6b27ad4d912644beef8836dbc7148ec877a4027775078bf1d9ccd59b6d2163"
+    },
+    {
+      "name": "landau-adjacent-ablation.md",
+      "previous_path": "docs/landau-adjacent-ablation.md",
+      "bytes": 10539,
+      "sha256": "5285b8ce1458f2632bbdd5a35bd7137e39465549cda50f5f64ef257b91e00d6c"
+    },
+    {
+      "name": "landau-greedy-darm-performance-v1.md",
+      "previous_path": "docs/landau-greedy-darm-performance-v1.md",
+      "bytes": 208518,
+      "sha256": "a94967397f6118894722dce3068550ed9f3b7eecf7c51afd2c012e858c790801"
+    },
+    {
+      "name": "landau-manual-tree-cleanup.md",
+      "previous_path": "docs/landau-manual-tree-cleanup.md",
+      "bytes": 7915,
+      "sha256": "d50aaeb55c7e0e93a82aaa7e2a1a56b15890956b4316fd5a98f3aee64eb2652c"
+    },
+    {
+      "name": "landau-o3-cleanup-diff.md",
+      "previous_path": "docs/landau-o3-cleanup-diff.md",
+      "bytes": 370088,
+      "sha256": "1ea87450444ab1c7cadec41e28d3037a054dabc18e7aee5ef842437581ccd34c"
+    },
+    {
+      "name": "landau-old-tree-direct-v1.md",
+      "previous_path": "docs/landau-old-tree-direct-v1.md",
+      "bytes": 330756,
+      "sha256": "a6ccedf70014f2ffa7faf460992ab7ca53cbc27692c0f0d5279e577cbbfaadac"
+    },
+    {
+      "name": "landau-remerge-full-v1.md",
+      "previous_path": "docs/landau-remerge-full-v1.md",
+      "bytes": 29590,
+      "sha256": "dc9e6390903c4080a945d57853428332b617fb6bfdf861b2cbed9f3e446b03d4"
+    },
+    {
+      "name": "landau-separate-score-state.md",
+      "previous_path": "docs/landau-separate-score-state.md",
+      "bytes": 40960,
+      "sha256": "464193c8cb2377005c05044e9ce2af7cd305f617bc4c18efe7816d249fca172e"
+    },
+    {
+      "name": "landau-static-cost-compare.md",
+      "previous_path": "docs/landau-static-cost-compare.md",
+      "bytes": 1778,
+      "sha256": "e011b6e0234d2b4b1b8531181627925560b134886ba12c0c8705f9aed3ecf3e1"
+    },
+    {
+      "name": "oamp-e0-diagnostics.md",
+      "previous_path": "docs/oamp-e0-diagnostics.md",
+      "bytes": 7895,
+      "sha256": "0808e6a595556977f8507a88832cb1c54d0ee9d36a3d21cb9690c8750559e4a3"
+    },
+    {
+      "name": "saspoint5-cuda-results.md",
+      "previous_path": "docs/saspoint5-cuda-results.md",
+      "bytes": 6818,
+      "sha256": "2e2171d6423556a0d82b743e35e3f36975065b0ced0d03f3c686b1b656f0a1e6"
+    },
+    {
+      "name": "share-bloat-adjacent-experiment.md",
+      "previous_path": "docs/share-bloat-adjacent-experiment.md",
+      "bytes": 40225,
+      "sha256": "f30ebfc87b7d09c705e3e1729feaf83cf83251f7a19ff04ddf3bbb14179d0764"
+    },
+    {
+      "name": "share-bloat-experiment.md",
+      "previous_path": "docs/share-bloat-experiment.md",
+      "bytes": 169842,
+      "sha256": "049ac39d8b29b6e7c844181ad6ce150d1750e2a2057dae277a275955864776e6"
+    }
+  ]
+}
