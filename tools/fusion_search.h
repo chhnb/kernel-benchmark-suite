@@ -22,6 +22,8 @@ struct Candidate {
   bool coalesceGaps=false;
   bool completeLeafPlan=false;
   bool crossDecisionLeaves=false;
+  bool crossLevelB2R=false;
+  int speculationBudget=-1;
   std::string key() const { return function+":"+split+":"+left+":"+right; }
 };
 struct OperationKey {
@@ -143,6 +145,12 @@ struct Options {
   // <0 disables. Otherwise reject a candidate whose uniform-wave gain on either
   // side is below -maxUniformLoss (TTI units). Needs side metrics (llvm24 scorer).
   double maxUniformLoss=-1;
+  // Allow B2R/R2B whose optional block sits behind further tests of the split's
+  // own discriminator (DARM would replicate that decision chain). Default off.
+  bool crossLevelB2R=false;
+  // <0 historical. Otherwise cap work executed on a path that did not run it:
+  // replication-paired blocks, else-if entry hoisting, local if-conversion.
+  int speculationBudget=-1;
 };
 struct Observer {
   virtual ~Observer() = default;

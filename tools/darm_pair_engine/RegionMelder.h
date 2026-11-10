@@ -41,6 +41,9 @@ public:
   int gap(int K) override { return 2; }
 };
 
+// Weight of executing I on a path that did not originally run it (div/rem 8, call 4, other 1).
+unsigned speculationWeight(const llvm::Instruction &I);
+
 class RegionMelder {
 public:
   // Observational trace only. WeakVH does not follow RAUW; deletion is unknown,
@@ -156,6 +159,8 @@ public:
       SourceBlocks.push_back({WeakVH(&BB),"B"+std::to_string(I++)});}
   }
   bool CoalesceGaps=false;
+  // <0: historical replication speculation. See requireUnpredication().
+  int ShellSpeculationBudget=-1;
   unsigned CoalescedGapGroups=0;
   std::function<void(const ValueToValueMapTy&)> onValueMapping;
   const std::vector<BlockOrigin>& blockOrigins() const { return BlockOrigins; }

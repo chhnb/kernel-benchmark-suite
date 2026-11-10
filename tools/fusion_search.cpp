@@ -489,6 +489,25 @@ static bool containsSubDecision(const std::set<BasicBlock*> &blocks,Value *discr
   }
   return false;
 }
+// B2R/R2B: the optional block is reached only through further branches on
+// the same side. If one of those branches tests the split's discriminator,
+// DARM's region replication re-evaluates that decision chain on the other
+// path (one compare, select and branch per level) and every lane of the
+// region side pays the operand selects. Adjacent else-if leaves are not
+// affected: they are normalized into one diamond before this check applies.
+static bool optionalBehindSameDecision(BasicBlock *opt,BasicBlock *sideEntry,Value *discriminator,Analysis &a) {
+  if(!discriminator||a.pdt.dominates(opt,sideEntry))return false;
+  auto *node=a.dt.getNode(opt);
+  for(auto *n=node?node->getIDom():nullptr;n;n=n->getIDom()){
+    auto *x=n->getBlock();
+    if(!a.dt.dominates(sideEntry,x))break;
+    auto *t=x->getTerminator();Value *cond=nullptr;
+    if(auto *br=dyn_cast<BranchInst>(t))cond=br->isConditional()?br->getCondition():nullptr;
+    else if(auto *sw=dyn_cast<SwitchInst>(t))cond=sw->getCondition();
+    if(cond&&!a.pdt.dominates(opt,x)&&dependsOn(cond,discriminator))return true;
+  }
+  return false;
+}
 struct Inventory {
   std::vector<std::unique_ptr<Region>> logicalRegions;
   std::vector<std::tuple<std::string,std::string,std::string>> leafPairs;
@@ -724,7 +743,10 @@ struct AdjacentLeafEntry {
   BasicBlock *first=nullptr,*second=nullptr,*left=nullptr,*right=nullptr,*tail=nullptr;
   BranchInst *a=nullptr,*b=nullptr;
   bool hitA=false,hitB=false;
-  bool prepare(BasicBlock *L,BasicBlock *R,DominatorTree &DT,LoopInfo &LI,bool regions=false) {
+  // budget<0: historical (hoist any safe entry expression). Otherwise refuse to
+  // normalize when the hoisted second-decision body outweighs the budget:
+  // apply() makes every lane, including the first leaf's, execute it.
+  bool prepare(BasicBlock *L,BasicBlock *R,DominatorTree &DT,LoopInfo &LI,bool regions=false,int budget=-1) {
     auto *P=L->getSinglePredecessor(),*Q=R->getSinglePredecessor();
     if(!P||!Q||P==Q)return false;
     if(P->getSinglePredecessor()==Q){std::swap(L,R);std::swap(P,Q);}
@@ -740,14 +762,17 @@ struct AdjacentLeafEntry {
     if(!L->phis().empty()||!R->phis().empty()||L->hasAddressTaken()||R->hasAddressTaken())return false;
     // Only speculate safe, memory-free entry expressions. Operands must
     // already dominate P or be earlier instructions of this same entry.
+    unsigned hoisted=0;
     for(auto &I:*Q){if(I.isTerminator())continue;
       if(isa<PHINode>(I)||isa<CallBase>(I)||I.mayReadOrWriteMemory()||I.mayHaveSideEffects()||!isSafeToSpeculativelyExecute(&I))return false;
+      hoisted+=speculationWeight(I);
       for(auto &O:I.operands())if(auto *D=dyn_cast<Instruction>(O)){
         if(D->getParent()==Q){if(!D->comesBefore(&I))return false;}
         else if(!DT.dominates(D,A))return false;
       }
     }
     if(auto *C=dyn_cast<Instruction>(B->getCondition()))if(C->getParent()!=Q&&!DT.dominates(C,A))return false;
+    if(budget>=0&&hoisted>unsigned(budget))return false;
     first=P;second=Q;left=L;right=R;tail=Tail;a=A;b=B;hitA=HA;hitB=HB;return true;
   }
   BasicBlock *apply() {
@@ -1051,7 +1076,7 @@ static Trial tryPairImpl(const Module&parent,const Candidate&c,unsigned version,
     if(!l.exit||l.exit!=r.exit)return reject("complete_leaf_exit_mismatch");
     for(auto *bb:l.blocks)if(r.blocks.count(bb))return reject("overlapping_pair");
     AdjacentLeafEntry entry;
-    if(!entry.prepare(l.entry,r.entry,a.dt,a.loops,true)||entry.first!=split)
+    if(!entry.prepare(l.entry,r.entry,a.dt,a.loops,true,c.speculationBudget)||entry.first!=split)
       return reject("complete_leaf_entry_not_normalizable");
     auto leftBoundary=boundary(l,*f),rightBoundary=boundary(r,*f);
     auto before=features(*f);
@@ -1112,6 +1137,8 @@ static Trial tryPairImpl(const Module&parent,const Candidate&c,unsigned version,
     // Native RegionMelder handles conditional terminators and optional blocks.
     // Disable local dispatch: this is a complete-region scoped trial.
     inner.coalesceGaps=c.coalesceGaps;
+    // The outer complete-leaf boundary already decided cross-level admission.
+    inner.crossLevelB2R=c.crossLevelB2R||c.crossDecisionLeaves;inner.speculationBudget=c.speculationBudget;
     auto out=tryPair(*t.raw,inner,version,level,mode,nullptr);
     out.candidate=c;out.before=before;
     out.left=leftBoundary;out.right=rightBoundary;
@@ -1184,11 +1211,24 @@ static Trial tryPairImpl(const Module&parent,const Candidate&c,unsigned version,
       useLocal=describeLocalComputation(l.entry,leftLocal)&&describeLocalComputation(r.entry,rightLocal)
         &&leftLocal.root->isSameOperationAs(rightLocal.root)
         &&leftLocal.root->getRawSubclassOptionalData()==rightLocal.root->getRawSubclassOptionalData();
+      // The local engine is if-conversion: both operand trees run on every
+      // lane and only the root is shared. With a budget, hand heavy trees to
+      // RegionMelder, which guards unmatched instructions instead.
+      if(useLocal&&c.speculationBudget>=0){
+        auto weight=[](BasicBlock *b){unsigned w=0;for(auto &i:*b)if(!i.isTerminator()&&!isa<PHINode>(i))w+=speculationWeight(i);return w;};
+        unsigned extra=std::max(weight(l.entry),weight(r.entry))-speculationWeight(*leftLocal.root);
+        if(extra>unsigned(c.speculationBudget))useLocal=false;
+      }
     }
   }
   AdjacentLeafEntry leafEntry;
-  bool directLeaves=c.hybrid&&!useLocal&&bool(l.region)==bool(r.region)&&l.exit&&l.exit==r.exit&&leafEntry.prepare(l.entry,r.entry,a.dt,a.loops,bool(l.region));
+  bool directLeaves=c.hybrid&&!useLocal&&bool(l.region)==bool(r.region)&&l.exit&&l.exit==r.exit&&leafEntry.prepare(l.entry,r.entry,a.dt,a.loops,bool(l.region),c.speculationBudget);
   t.mergePath=directLeaves?(l.region?"darm-adjacent-R2R":"darm-adjacent-B2B"):useLocal?"local-compute":"darm-"+t.planKind;
+  if(!directLeaves&&!useLocal&&!c.crossLevelB2R&&(t.planKind=="B2R"||t.planKind=="R2B")){
+    auto *d=decisionDiscriminator(split);
+    if(optionalBehindSameDecision(r.entry,br->getSuccessor(1),d,a)||optionalBehindSameDecision(l.entry,br->getSuccessor(0),d,a))
+      return reject("b2r_replicates_same_decision_chain_requires_opt_in");
+  }
   t.originalSimilarity=ma.explicitSimilarity();t.originalProfitable=ma.isRegionMatchProfitable(0);
   auto ft=Clock::now();t.before=features(*f);t.featuresMs+=millis(ft);t.left=boundary(l,*f);t.right=boundary(r,*f);t.replication=ma.requireRegionReplication();
   if(t.replication&&!l.region){
@@ -1228,7 +1268,7 @@ static Trial tryPairImpl(const Module&parent,const Candidate&c,unsigned version,
     t.planKind=l.region?"R2R":"B2B";t.replication=false;
     t.leftContext=t.left;t.rightContext=t.right;
   }
-  RegionMelder melder(directLeaves?*leafAnalyzer:ma,true);melder.CoalesceGaps=c.coalesceGaps;if(t.logicalState)melder.onValueMapping=[&](const ValueToValueMapTy &m){t.logicalState->transfer(m);};if(useLocal){
+  RegionMelder melder(directLeaves?*leafAnalyzer:ma,true);melder.CoalesceGaps=c.coalesceGaps;melder.ShellSpeculationBudget=c.speculationBudget;if(t.logicalState)melder.onValueMapping=[&](const ValueToValueMapTy &m){t.logicalState->transfer(m);};if(useLocal){
     if(l.region||r.region)return reject("local_requires_basic_blocks");
     std::string why;
     if(!fuseLocalComputations(l.entry,r.entry,melder.onValueMapping,why,c.localUnion||c.hybrid)){t.reason=why;t.totalMs=millis(started);return t;}
@@ -1340,7 +1380,7 @@ Result greedy(const Module&input,const std::string&function,const Options&o,cons
     if(candidates.size()>o.maxTrials-result.trials){result.stop="trial_budget_before_complete_round";return result;}
     const auto round=makeRound(*result.module,function,version,o.optLevel,o.cleanupMode);if(observer)observer->round(round);
     Trial best;ScoreResult bestResult;double bestScore=o.threshold;bool anyScored=false;
-    for(auto&candidate:candidates){candidate.localCopysign=o.localCopysign;candidate.localUnion=o.localUnion;candidate.hybrid=o.hybrid;candidate.coalesceGaps=o.coalesceGaps;candidate.completeLeafPlan=o.completeLeafPlan;candidate.crossDecisionLeaves=o.crossDecisionLeaves;Trial t;++result.trials;
+    for(auto&candidate:candidates){candidate.localCopysign=o.localCopysign;candidate.localUnion=o.localUnion;candidate.hybrid=o.hybrid;candidate.coalesceGaps=o.coalesceGaps;candidate.completeLeafPlan=o.completeLeafPlan;candidate.crossDecisionLeaves=o.crossDecisionLeaves;candidate.crossLevelB2R=o.crossLevelB2R;candidate.speculationBudget=o.speculationBudget;Trial t;++result.trials;
       // A failing candidate (cleanup non-convergence, audit, invalid IR) is a
       // rejected trial, not a failed search. The parent module is never mutated.
       try{t=tryPair(*result.module,candidate,version,o.optLevel,o.cleanupMode,logical.get());}

@@ -90,18 +90,41 @@ void RegionMelder::computeRegionSeqAlignment(
   }
 }
 
-bool requireUnpredication(BasicBlock* Current, BasicBlock* Corresponding) {
+// Speculation weight of one instruction executed on the other path. Division
+// and remainder are the expensive scalar operations; calls are speculatable
+// intrinsics here (anything else already failed isSafeToSpeculativelyExecute).
+unsigned llvm::speculationWeight(const Instruction &I) {
+  switch (I.getOpcode()) {
+  case Instruction::FDiv: case Instruction::FRem:
+  case Instruction::SDiv: case Instruction::UDiv:
+  case Instruction::SRem: case Instruction::URem:
+    return 8;
+  default:
+    return isa<CallBase>(I) ? 4 : 1;
+  }
+}
+
+// Budget < 0 keeps the historical rule: a block paired with a branch-only
+// replication placeholder runs on both paths whenever every instruction is
+// speculatable. Budget >= 0 also guards it when its speculation weight exceeds
+// the budget, so the expanded side does not execute the region's path work.
+bool requireUnpredication(BasicBlock* Current, BasicBlock* Corresponding,
+                          int ShellSpeculationBudget) {
   if (Corresponding->size() > 1)
     return true;
   // Replication can pair a real block with a branch-only placeholder.
   // That does not authorize executing its loads, stores, calls or trapping
   // arithmetic on the other path. Preserve the predicate unless every
   // non-PHI, non-terminator instruction is safe to speculate.
-  for (auto &I : *Current)
-    if (!isa<PHINode>(I) && !I.isTerminator() &&
-        !isSafeToSpeculativelyExecute(&I))
+  unsigned Weight = 0;
+  for (auto &I : *Current) {
+    if (isa<PHINode>(I) || I.isTerminator())
+      continue;
+    if (!isSafeToSpeculativelyExecute(&I))
       return true;
-  return false;
+    Weight += speculationWeight(I);
+  }
+  return ShellSpeculationBudget >= 0 && Weight > unsigned(ShellSpeculationBudget);
 }
 
 std::string RegionMelder::sourceBlockID(BasicBlock *BB) const {
@@ -196,7 +219,7 @@ void RegionMelder::cloneInstructions() {
         assert(ClonedRightParentIt != MergedValuesToRightValues.end() &&
                "Cloned left BB not found for right value!");
         // if (cast<BasicBlock>(ClonedRightParentIt->second)->size() > 1)
-        if(requireUnpredication(LeftI->getParent(), cast<BasicBlock>(ClonedRightParentIt->second)))
+        if(requireUnpredication(LeftI->getParent(), cast<BasicBlock>(ClonedRightParentIt->second), ShellSpeculationBudget))
           updateSplitRangeMap(true, NewI);
       }
 
@@ -216,7 +239,7 @@ void RegionMelder::cloneInstructions() {
         assert(ClonedLeftParentIt != MergedValuesToLeftValues.end() &&
                "Cloned left BB not found for right value!");
         // if (cast<BasicBlock>(ClonedLeftParentIt->second)->size() > 1)
-        if(requireUnpredication(RightI->getParent(), cast<BasicBlock>(ClonedLeftParentIt->second)))
+        if(requireUnpredication(RightI->getParent(), cast<BasicBlock>(ClonedLeftParentIt->second), ShellSpeculationBudget))
           updateSplitRangeMap(false, NewI);
       }
     }

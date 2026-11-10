@@ -10,6 +10,8 @@ objects=()
 for n in postopt_profile_policy postopt_scorer ir_pressure ir_dependency fusion_search logical_region_state RegionAnalyzer RegionMelder RegionReplicator CFMelderUtils InstructionMatch; do objects+=("$b/$n.o"); done
 g++ "${flags[@]}" -std=c++17 -fexceptions -O2 -DFUSION_DETERMINISTIC_REGION_ORDER -I"$r/tools" -I"$r/tools/darm_pair_engine" "$r/tests/postopt/side-metrics/check.cpp" "${objects[@]}" "${libs[@]}" -lcrypto -o "$b/side-metrics-test"
 "$b/side-metrics-test" "$b/side-metrics.ll"
+g++ "${flags[@]}" -std=c++17 -fexceptions -O2 -DFUSION_DETERMINISTIC_REGION_ORDER -I"$r/tools" -I"$r/tools/darm_pair_engine" "$r/tests/postopt/side-metrics/b2r_budget.cpp" "${objects[@]}" "${libs[@]}" -lcrypto -o "$b/b2r-budget-test"
+"$b/b2r-budget-test" "$b/b2r-budget.ll"
 # End to end with the real LLVM24 worker: the balanced tree must report negative
 # uniform gains for cross-level R2B (opt-in) and the guard must reject them.
 worker=${TTI_WORKER:-$r/tools/run-llvm24-tti}
