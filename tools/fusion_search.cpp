@@ -464,10 +464,37 @@ static Value *decisionDiscriminator(BasicBlock *b) {
   if(isa<Constant>(a)==isa<Constant>(c))return nullptr;
   return isa<Constant>(a)?c:a;
 }
+// True when v is computed from d through SSA operands (including PHIs).
+static bool dependsOn(Value *v,Value *d) {
+  if(!v||!d)return false;
+  std::set<Value*> seen;SmallVector<Value*,16> work{v};
+  while(!work.empty()){
+    auto *x=work.pop_back_val();if(x==d)return true;
+    auto *i=dyn_cast<Instruction>(x);if(!i||!seen.insert(i).second||seen.size()>256)continue;
+    for(auto &op:i->operands())work.push_back(op.get());
+  }
+  return false;
+}
+// A complete leaf is a leaf of the decision only if no branch inside it tests
+// the decision's own discriminator. Otherwise the unit is a sub-decision
+// (for example a whole lower subtree of a balanced x<a / x<b tree), and pairing
+// it with a single opposite leaf is a cross-level fusion. Only the default
+// enumeration is restricted; --cross-decision-leaves 1 keeps the capability.
+static bool containsSubDecision(const std::set<BasicBlock*> &blocks,Value *discriminator) {
+  for(auto *b:blocks){
+    auto *t=b->getTerminator();Value *cond=nullptr;
+    if(auto *br=dyn_cast<BranchInst>(t))cond=br->isConditional()?br->getCondition():nullptr;
+    else if(auto *sw=dyn_cast<SwitchInst>(t))cond=sw->getCondition();
+    if(cond&&dependsOn(cond,discriminator))return true;
+  }
+  return false;
+}
 struct Inventory {
   std::vector<std::unique_ptr<Region>> logicalRegions;
   std::vector<std::tuple<std::string,std::string,std::string>> leafPairs;
   std::set<std::tuple<std::string,std::string,std::string>> sameDecisionLeafPairs;
+  // Same discriminator, but one side is itself a sub-decision of it.
+  std::set<std::tuple<std::string,std::string,std::string>> crossLevelLeafPairs;
   std::map<std::string,BasicBlock*> blocks;
   std::map<BasicBlock*,std::string> ids;
   std::map<std::string,Unit> units;
@@ -529,8 +556,12 @@ struct Inventory {
           if(!overlap){
             auto pair=std::make_tuple(ids.at(&p),li,ri);leafPairs.push_back(pair);
             auto *discriminator=decisionDiscriminator(&p);
-            if(discriminator && discriminator==decisionDiscriminator(q))
-              sameDecisionLeafPairs.insert(pair);
+            if(discriminator && discriminator==decisionDiscriminator(q)){
+              if(containsSubDecision(units.at(li).blocks,discriminator)||
+                 containsSubDecision(units.at(ri).blocks,discriminator))
+                crossLevelLeafPairs.insert(pair);
+              else sameDecisionLeafPairs.insert(pair);
+            }
           }
         }
       }
@@ -889,8 +920,105 @@ static bool meldLeafPlan(Module &m,const Candidate &c,Unit l,Unit r,BasicBlock *
   return true;
 }
 
+// ---- Uniform-wave side reachability (static, no probabilities) ----
+// The split condition is tagged in the trial clone so it can be found again
+// after CloneModule and cleanup. Instruction conditions carry instruction
+// metadata; argument conditions carry function metadata with the arg number.
+static const char *SideTag="fusion.side.condition";
+static const char *SideArgTag="fusion.side.condition.arg";
+static bool hasSideTag(const Function *f) {
+  if(!f)return false;
+  if(f->getMetadata(SideArgTag))return true;
+  for(auto &b:*f)for(auto &i:b)if(i.getMetadata(SideTag))return true;
+  return false;
+}
+static void stripSideTag(Module *m) {
+  if(!m)return;
+  for(auto &f:*m){f.setMetadata(SideArgTag,nullptr);for(auto &b:f)for(auto &i:b)if(i.getMetadata(SideTag))i.setMetadata(SideTag,nullptr);}
+}
+static bool tagSideCondition(Function &f,Value *cond) {
+  auto &ctx=f.getContext();
+  if(auto *i=dyn_cast<Instruction>(cond)){i->setMetadata(SideTag,MDNode::get(ctx,{}));return true;}
+  if(auto *a=dyn_cast<Argument>(cond)){
+    f.setMetadata(SideArgTag,MDNode::get(ctx,{ConstantAsMetadata::get(ConstantInt::get(Type::getInt32Ty(ctx),a->getArgNo()))}));
+    return true;
+  }
+  return false; // constants need no tracking; callers handle them directly
+}
+static Value *findSideCondition(Function &f,std::string &why) {
+  if(auto *md=f.getMetadata(SideArgTag)){
+    auto *c=mdconst::dyn_extract<ConstantInt>(md->getOperand(0));
+    if(!c||c->getZExtValue()>=f.arg_size()){why="side_condition_bad_argument";return nullptr;}
+    return f.getArg(c->getZExtValue());
+  }
+  Value *found=nullptr;
+  for(auto &b:f)for(auto &i:b)if(i.getMetadata(SideTag)){
+    if(found){why="side_condition_duplicated";return nullptr;}
+    found=&i;
+  }
+  if(!found)why="side_condition_lost";
+  return found;
+}
+// Blocks reachable when the split condition is fixed to `value`. Only branch
+// and switch conditions that fold after substituting the constant are pruned;
+// every other branch keeps both successors. The clone is discarded, so
+// simplified instructions are never removed from the cost accounting: costs
+// are summed later over these block indices of the real function.
+static bool sideBlocks(Function &f,Value *cond,bool value,std::vector<unsigned> &out,std::string &why) {
+  out.clear();
+  if(!cond||!cond->getType()->isIntegerTy(1)){why="side_condition_not_i1";return false;}
+  ValueToValueMapTy vm;Function *clone=CloneFunction(&f,vm);
+  struct Erase{Function *f;~Erase(){f->eraseFromParent();}} erase{clone};
+  Value *c=cond;if(!isa<Constant>(cond))c=vm.lookup(cond);
+  if(!c){why="side_condition_unmapped";return false;}
+  auto *k=ConstantInt::get(Type::getInt1Ty(f.getContext()),value);
+  SimplifyQuery query(f.getParent()->getDataLayout());
+  SmallVector<Instruction*,64> work;
+  auto users=[&](Value *v){for(auto *u:v->users())if(auto *i=dyn_cast<Instruction>(u))work.push_back(i);};
+  if(!isa<Constant>(c)){users(c);c->replaceAllUsesWith(k);}
+  for(unsigned guard=0;!work.empty();){
+    if(++guard>200000){why="side_simplification_budget";return false;}
+    auto *i=work.pop_back_val();
+    if(auto *v=SimplifyInstruction(i,query))if(v!=i){users(i);i->replaceAllUsesWith(v);}
+  }
+  std::map<BasicBlock*,unsigned> index;unsigned n=0;for(auto &b:*clone)index[&b]=n++;
+  std::set<BasicBlock*> seen;SmallVector<BasicBlock*,32> todo{&clone->getEntryBlock()};
+  while(!todo.empty()){
+    auto *b=todo.pop_back_val();if(!seen.insert(b).second)continue;
+    auto *t=b->getTerminator();
+    if(auto *br=dyn_cast<BranchInst>(t))if(br->isConditional())if(auto *ci=dyn_cast<ConstantInt>(br->getCondition())){
+      todo.push_back(br->getSuccessor(ci->isZero()?1:0));continue;
+    }
+    if(auto *sw=dyn_cast<SwitchInst>(t))if(auto *ci=dyn_cast<ConstantInt>(sw->getCondition())){
+      todo.push_back(sw->findCaseValue(ci)->getCaseSuccessor());continue;
+    }
+    for(auto *s:successors(b))todo.push_back(s);
+  }
+  for(auto *b:seen)out.push_back(index.at(b));
+  std::sort(out.begin(),out.end());
+  return true;
+}
+static bool sideBlocksBoth(Function &f,Value *cond,std::vector<unsigned> (&sides)[2],std::string &why) {
+  return sideBlocks(f,cond,false,sides[0],why)&&sideBlocks(f,cond,true,sides[1],why);
+}
+
+static Trial tryPairImpl(const Module&parent,const Candidate&c,unsigned version,unsigned level,CleanupMode mode,const LogicalRegionState *logical,bool nested);
+// Public entry. The outermost call owns the side tag and removes it from every
+// IR it returns, so committed modules, debug dumps and hashes never carry it.
 Trial tryPair(const Module&parent,const Candidate&c,unsigned version,unsigned level,CleanupMode mode,const LogicalRegionState *logical) {
+  bool nested=hasSideTag(parent.getFunction(c.function));
+  Trial t=tryPairImpl(parent,c,version,level,mode,logical,nested);
+  if(!nested){stripSideTag(t.raw.get());stripSideTag(t.normalized.get());}
+  return t;
+}
+static Trial tryPairImpl(const Module&parent,const Candidate&c,unsigned version,unsigned level,CleanupMode mode,const LogicalRegionState *logical,bool nested) {
   auto started=Clock::now();Trial t;t.candidate=c;t.cleanupMode=mode;auto reject=[&](const char*reason){t.reason=reason;t.totalMs=millis(started);return std::move(t);};
+  // After-side reachability on the final cleaned IR, before the tag is stripped.
+  auto finishSides=[&](Function *after){
+    std::string why;Value *cond=findSideCondition(*after,why);
+    if(cond)t.sideAfterOk=sideBlocksBoth(*after,cond,t.sideAfter,why);
+    if(!t.sideAfterOk&&t.sideReason.empty())t.sideReason=why;
+  };
   if(c.version!=version)return reject("stale_candidate_version");
   ValueToValueMapTy parentMap;
   t.raw=CloneModule(parent,parentMap);if(logical)t.logicalState=logical->clone(parentMap);parentMap.clear();auto*f=t.raw->getFunction(c.function);
@@ -901,6 +1029,14 @@ Trial tryPair(const Module&parent,const Candidate&c,unsigned version,unsigned le
   auto*split=inv.blocks.at(c.split);auto*br=dyn_cast<BranchInst>(split->getTerminator());auto*node=a.pdt.getNode(split);
   bool completeLeaf=!c.left.empty()&&c.left[0]=='E'&&!c.right.empty()&&c.right[0]=='E';
   if(!br||!br->isConditional())return reject("unsupported_split_location");
+  // Outermost trial: tag the split condition and record before-side blocks on
+  // the still-unmodified clone (block indices equal the parent's).
+  if(!nested){
+    std::string why;
+    if(!tagSideCondition(*f,br->getCondition()))t.sideReason="side_condition_constant";
+    else t.sideBeforeOk=sideBlocksBoth(*f,br->getCondition(),t.sideBefore,why);
+    if(!t.sideBeforeOk&&t.sideReason.empty())t.sideReason=why;
+  }
   if(!completeLeaf&&(!node||!node->getIDom()||!node->getIDom()->getBlock()||!Utils::isValidMergeLocation(*split,a.pdt)))return reject("unsupported_split_location");
   Unit l=inv.units.at(c.left),r=inv.units.at(c.right);
   if(completeLeaf){
@@ -908,7 +1044,8 @@ Trial tryPair(const Module&parent,const Candidate&c,unsigned version,unsigned le
     auto reverse=std::make_tuple(c.split,c.right,c.left);
     if(!c.crossDecisionLeaves && !inv.sameDecisionLeafPairs.count(key) &&
        !inv.sameDecisionLeafPairs.count(reverse))
-      return reject("complete_leaf_cross_or_unknown_decision_requires_opt_in");
+      return reject(inv.crossLevelLeafPairs.count(key)||inv.crossLevelLeafPairs.count(reverse)?
+        "complete_leaf_cross_level_requires_opt_in":"complete_leaf_cross_or_unknown_decision_requires_opt_in");
     if(logical)return reject("complete_leaf_requires_structural_enumeration");
     if(!c.hybrid)return reject("complete_leaf_requires_structural_mode");
     if(!l.exit||l.exit!=r.exit)return reject("complete_leaf_exit_mismatch");
@@ -948,6 +1085,7 @@ Trial tryPair(const Module&parent,const Candidate&c,unsigned version,unsigned le
         auto *raw=t.raw->getFunction(g.getName()),*after=t.normalized->getFunction(g.getName());
         if(!raw||!after||text(g)!=text(*raw)||text(g)!=text(*after))return reject("other_function_changed");
       }
+      finishSides(t.normalized->getFunction(c.function));
       t.valid=true;t.reason="verified_ir_only";t.totalMs=millis(started);return t;
     }
     if(verifyModule(*t.raw,&errs()))return reject("complete_leaf_gate_verifier_failed");
@@ -979,6 +1117,10 @@ Trial tryPair(const Module&parent,const Candidate&c,unsigned version,unsigned le
     out.left=leftBoundary;out.right=rightBoundary;
     out.leftContext=leftBoundary;out.rightContext=rightBoundary;
     out.mergePath="darm-complete-leaf/"+out.mergePath;
+    // The inner trial starts from the gated clone; its before-sides would use
+    // the wrong parent. Keep this trial's (pre-gate) sides instead.
+    for(unsigned s=0;s<2;++s)out.sideBefore[s]=t.sideBefore[s];
+    out.sideBeforeOk=t.sideBeforeOk;if(!t.sideReason.empty())out.sideReason=t.sideReason;
     out.totalMs=millis(started);
     return out;
   }
@@ -1123,6 +1265,7 @@ Trial tryPair(const Module&parent,const Candidate&c,unsigned version,unsigned le
   auto*after=t.normalized->getFunction(c.function);if(!after||after->isDeclaration())return reject("target_lost_after_normalization");
   ft=Clock::now();t.after=features(*after);t.featuresMs+=millis(ft);if(t.after.loops>t.before.loops)return reject("new_normalized_loop");
   if(t.logicalState){if(!t.logicalState->stageMerge(c))return reject("logical_state_candidate_mismatch");t.logicalState->rebind(*after);}
+  finishSides(after);
   t.valid=true;t.reason="verified_ir_only";t.totalMs=millis(started);return t;
 }
 RoundContext makeRound(const Module&parent,const std::string&function,unsigned version,unsigned level,CleanupMode mode) {
@@ -1169,12 +1312,20 @@ ScoreResult evaluateTrial(const Module&parent,Trial&t,const RoundContext&r,const
   if(t.candidate.version!=r.parentVersion||t.candidate.function!=r.function||moduleHash(parent)!=r.parentHash){s.reason="round_identity_mismatch";return s;}
   auto start=Clock::now();auto*before=parent.getFunction(r.function);auto*raw=t.raw->getFunction(r.function);auto*after=t.normalized->getFunction(r.function);
   Analysis ba(*before),aa(*after);
-  s=scorer.evaluate({t.candidate,*before,*raw,*after,ba,aa,t.before,t.afterRaw,t.after,t.left,t.right,t.replication},r);
+  s=scorer.evaluate({t.candidate,*before,*raw,*after,ba,aa,t.before,t.afterRaw,t.after,t.left,t.right,t.replication,&t},r);
   if(s.status==ScoreStatus::Scored&&(!std::isfinite(s.total)||!std::isfinite(s.staticGain)||!std::isfinite(s.staticScore)||!std::isfinite(s.cleanupGain)||!std::isfinite(s.parentGain)||!std::isfinite(s.dependencyPenalty)||!std::isfinite(s.livenessPenalty))){s.status=ScoreStatus::NotEvaluable;s.reason="nonfinite_score";}
   t.scoreMs=millis(start);return s;
 }
 bool eligible(const Trial&t,const ScoreResult&s,const Options&o) {
-  return t.valid&&s.status==ScoreStatus::Scored&&std::isfinite(s.total)&&s.total>o.threshold&&(!o.requireParentGain||s.parentGain>0);
+  if(!(t.valid&&s.status==ScoreStatus::Scored&&std::isfinite(s.total)&&s.total>o.threshold&&(!o.requireParentGain||s.parentGain>0)))return false;
+  if(o.maxUniformLoss>=0){
+    // Conservative: without side metrics the guard cannot be checked.
+    auto ok=s.metrics.find("side_metrics_available");
+    if(ok==s.metrics.end()||ok->second!=1)return false;
+    double worst=std::min(s.metrics.at("uniform_gain_false"),s.metrics.at("uniform_gain_true"));
+    if(worst< -o.maxUniformLoss)return false;
+  }
+  return true;
 }
 Result greedy(const Module&input,const std::string&function,const Options&o,const Scorer&scorer,Observer*observer) {
   Result result;result.module=CloneModule(input);if(o.cleanupMode==CleanupMode::O3)normalize(*result.module,o.optLevel);
@@ -1189,8 +1340,14 @@ Result greedy(const Module&input,const std::string&function,const Options&o,cons
     if(candidates.size()>o.maxTrials-result.trials){result.stop="trial_budget_before_complete_round";return result;}
     const auto round=makeRound(*result.module,function,version,o.optLevel,o.cleanupMode);if(observer)observer->round(round);
     Trial best;ScoreResult bestResult;double bestScore=o.threshold;bool anyScored=false;
-    for(auto&candidate:candidates){candidate.localCopysign=o.localCopysign;candidate.localUnion=o.localUnion;candidate.hybrid=o.hybrid;candidate.coalesceGaps=o.coalesceGaps;candidate.completeLeafPlan=o.completeLeafPlan;candidate.crossDecisionLeaves=o.crossDecisionLeaves;auto t=tryPair(*result.module,candidate,version,o.optLevel,o.cleanupMode,logical.get());++result.trials;
-      auto score=evaluateTrial(*result.module,t,round,scorer);bool accept=eligible(t,score,o);anyScored|=score.status==ScoreStatus::Scored;
+    for(auto&candidate:candidates){candidate.localCopysign=o.localCopysign;candidate.localUnion=o.localUnion;candidate.hybrid=o.hybrid;candidate.coalesceGaps=o.coalesceGaps;candidate.completeLeafPlan=o.completeLeafPlan;candidate.crossDecisionLeaves=o.crossDecisionLeaves;Trial t;++result.trials;
+      // A failing candidate (cleanup non-convergence, audit, invalid IR) is a
+      // rejected trial, not a failed search. The parent module is never mutated.
+      try{t=tryPair(*result.module,candidate,version,o.optLevel,o.cleanupMode,logical.get());}
+      catch(const std::exception&e){t=Trial();t.candidate=candidate;t.cleanupMode=o.cleanupMode;t.reason=std::string("trial_exception:")+e.what();}
+      ScoreResult score;
+      try{score=evaluateTrial(*result.module,t,round,scorer);}
+      catch(const std::exception&e){score=ScoreResult();score.reason=std::string("score_exception:")+e.what();}bool accept=eligible(t,score,o);anyScored|=score.status==ScoreStatus::Scored;
       if(observer)observer->trial(t,round,score,accept);
       if(accept&&score.total>bestScore){bestScore=score.total;bestResult=std::move(score);best=std::move(t);}
     }

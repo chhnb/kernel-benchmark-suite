@@ -57,6 +57,9 @@ int main(int argc,char**argv){try{
  auto otherHash=[](Function *f){std::string s;raw_string_ostream os(s);f->print(os);return os.str();};
  auto untouched=otherHash(m->getFunction("unchanged"));
  Candidate c{"multi","B0","E1_10","E6_10",0};c.hybrid=true;c.completeLeafPlan=true;c.coalesceGaps=true;
+ // %pickL/%pickR are different SSA predicates: since the default decision
+ // boundary (4ac5a90) this fixture, like Hypersonic, needs the explicit opt-in.
+ c.crossDecisionLeaves=true;
  auto rejectCandidate=c;rejectCandidate.function="sensitive";
  auto rejected=tryPair(*m,rejectCandidate,0,3,CleanupMode::ScopedCFGTriangles);
  require(!rejected.valid&&rejected.reason=="leaf_plan_convergence_sensitive_call","convergent leaf accepted");

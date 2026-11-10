@@ -11,10 +11,18 @@
 namespace fusion {
 // LLVM12 owns all transformation IR; the isolated worker only reads text snapshots.
 class LLVM24Scorer final:public Scorer {
-  struct Cost {double value=0;int64_t unknown=0,zero=0,count=0;bool adjusted=false;std::map<std::string,double> counts;};
+  struct Cost {double value=0;int64_t unknown=0,zero=0,count=0;bool adjusted=false;std::map<std::string,double> counts;
+    std::vector<double> blockCost;std::vector<bool> blockUnknown;}; // indexed by function block position
   std::string worker;
   mutable std::string cachedHash;
   mutable Cost cachedControl;
+  mutable std::string cachedParentHash;
+  mutable Cost cachedParent;
+  // Sum of accepted per-instruction costs over the given blocks; false if any
+  // listed block has an unknown cost or lies outside the worker's block range.
+  static bool sideCost(const Cost&c,const std::vector<unsigned>&blocks,double&out){
+    out=0;for(auto b:blocks){if(b>=c.blockCost.size()||c.blockUnknown[b])return false;out+=c.blockCost[b];}return true;
+  }
   Cost query(const llvm::Function&f)const {
     using namespace llvm;
     SmallString<128> directory;
@@ -46,6 +54,19 @@ class LLVM24Scorer final:public Scorer {
     auto adjustment=o->getString("compatibility_adjustment");c.adjusted=adjustment&&!adjustment->empty();
     auto*h=o->getObject("histogram");if(!h)throw std::runtime_error("worker histogram missing");
     for(auto&kv:*h){auto value=kv.second.getAsInteger();if(!value)throw std::runtime_error("invalid histogram");c.counts[kv.first.str()]=*value;}
+    // Per-block costs. block_index counts every block in function order, the
+    // same order LLVM12 uses, so side block indices map directly.
+    // Diagnostic only: a malformed row disables side metrics (empty vectors),
+    // it never rejects the main score.
+    c.blockCost.assign(f.size(),0);c.blockUnknown.assign(f.size(),false);
+    bool rowsOk=true;
+    if(auto*rows=o->getArray("instruction_costs")){
+      for(auto&row:*rows){auto*r=row.getAsObject();if(!r){rowsOk=false;break;}
+        auto bi=r->getInteger("block_index");if(!bi||*bi<0||size_t(*bi)>=f.size()){rowsOk=false;break;}
+        Optional<int64_t> v;if(auto*accepted=r->get("accepted_cost"))v=accepted->getAsInteger();
+        if(v)c.blockCost[*bi]+=*v;else c.blockUnknown[*bi]=true;}
+    }else rowsOk=false;
+    if(!rowsOk){c.blockCost.clear();c.blockUnknown.clear();}
     return c;
   }
 public:
@@ -65,6 +86,26 @@ public:
       if(before.unknown||after.unknown){s.reason="llvm24_unknown_cost_rejection";return s;}
       s.staticGain=before.value-after.value;s.staticScore=s.staticGain/std::max(1.0,before.value);s.total=s.staticScore;
       s.parentGain=s.staticGain; // Preserve v1 acceptance semantics, not diagnostic S-A.
+      // staticGain equals the gain of a wave in which both sides execute every
+      // block. Report the uniform-wave gains alongside: the cost of the blocks a
+      // wave executes when all its lanes take one side, before vs after fusion.
+      // "before" is the parent S (equal to control in scoped cleanup modes).
+      s.metrics["side_metrics_available"]=0;
+      if(i.trial&&i.trial->sideBeforeOk&&i.trial->sideAfterOk){
+        // A failing parent query only disables side metrics for this trial.
+        if(cachedParentHash!=r.parentHash){
+          try{cachedParent=query(i.beforeIR);}catch(const std::exception&){cachedParent=Cost();}
+          cachedParentHash=r.parentHash;
+        }
+        double b0,b1,a0,a1;
+        if(sideCost(cachedParent,i.trial->sideBefore[0],b0)&&sideCost(cachedParent,i.trial->sideBefore[1],b1)&&
+           sideCost(after,i.trial->sideAfter[0],a0)&&sideCost(after,i.trial->sideAfter[1],a1)){
+          s.metrics["side_false_before"]=b0;s.metrics["side_false_after"]=a0;
+          s.metrics["side_true_before"]=b1;s.metrics["side_true_after"]=a1;
+          s.metrics["uniform_gain_false"]=b0-a0;s.metrics["uniform_gain_true"]=b1-a1;
+          s.metrics["side_metrics_available"]=1;
+        }else s.metrics["side_metrics_unknown_cost"]=1;
+      }
       s.status=ScoreStatus::Scored;s.reason="llvm24_static_control_delta";
     }catch(const std::exception&e){s.reason=e.what();}
     return s;

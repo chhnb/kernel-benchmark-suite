@@ -97,6 +97,11 @@ struct Trial {
   unsigned coalescedGapGroups=0;
   unsigned movedLeafInstructions=0, leafAnchors=0;
   std::vector<std::string> leafAnchorPairs;
+  // Blocks reachable when the split condition is fixed to false ([0]) / true
+  // ([1]); indices into the parent (before) and cleaned (after) functions.
+  std::vector<unsigned> sideBefore[2], sideAfter[2];
+  bool sideBeforeOk=false, sideAfterOk=false;
+  std::string sideReason;
   std::string reason;
   std::string mergePath, localRejectReason;
   std::string planKind, matchedLeft, matchedRight;
@@ -111,6 +116,7 @@ struct ScoreInput {
   const Features &before, &afterRaw, &after;
   const Boundary &left, &right;
   bool replication;
+  const Trial *trial=nullptr; // optional: side reachability for uniform-wave metrics
 };
 class Scorer {
 public:
@@ -134,6 +140,9 @@ struct Options {
   bool coalesceGaps=false;
   bool completeLeafPlan=false;
   bool crossDecisionLeaves=false;
+  // <0 disables. Otherwise reject a candidate whose uniform-wave gain on either
+  // side is below -maxUniformLoss (TTI units). Needs side metrics (llvm24 scorer).
+  double maxUniformLoss=-1;
 };
 struct Observer {
   virtual ~Observer() = default;

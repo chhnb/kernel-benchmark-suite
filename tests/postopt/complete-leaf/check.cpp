@@ -115,6 +115,56 @@ int main(int argc,char **argv){try{
   check(moduleHash(*u)==hash,"rejected parent changed");rejected=true;
  }
  check(rejected,"unsafe candidate missing");
+ // Balanced tree on ONE SSA discriminator: the lower subtree is a sub-decision
+ // of %x, so (lower subtree, single upper leaf) is cross-level even though both
+ // splits compare the same value. Default enumeration must not offer it.
+ auto tree=parseAssemblyString(R"(
+define i32 @tree(i32 %x, i32* %ptr) {
+entry:
+ %p = icmp slt i32 %x, 50
+ br i1 %p, label %lower, label %upperq
+lower:
+ %pl = icmp slt i32 %x, 25
+ br i1 %pl, label %a, label %b
+a:
+ %a1 = load i32, i32* %ptr
+ %a2 = mul i32 %a1, 3
+ br label %join
+b:
+ %b1 = load i32, i32* %ptr
+ %b2 = mul i32 %b1, 5
+ br label %join
+upperq:
+ %pu = icmp slt i32 %x, 75
+ br i1 %pu, label %c, label %d
+c:
+ %c1 = load i32, i32* %ptr
+ %c2 = mul i32 %c1, 7
+ br label %join
+d:
+ %d1 = load i32, i32* %ptr
+ %d2 = mul i32 %d1, 9
+ br label %join
+join:
+ %r = phi i32 [ %a2, %a ], [ %b2, %b ], [ %c2, %c ], [ %d2, %d ]
+ ret i32 %r
+}
+)",diag,ctx);check(bool(tree),"tree parse");
+ auto *tf=tree->getFunction("tree");unsigned crossLevel=0;
+ for(auto c:enumerate(*tf,0))check(!(c.left[0]=='E'&&c.right[0]=='E'),"cross-level leaf pair in default enumeration");
+ for(auto c:enumerate(*tf,0,true)){
+  if(c.left.empty()||c.left[0]!='E'||c.right[0]!='E')continue;
+  auto hash=moduleHash(*tree);c.hybrid=true;
+  auto rejected=tryPair(*tree,c,0,3,CleanupMode::ScopedCFG);
+  check(!rejected.valid&&rejected.reason=="complete_leaf_cross_level_requires_opt_in","cross-level explicit bypass");
+  check(moduleHash(*tree)==hash,"cross-level parent changed");
+  c.crossDecisionLeaves=true;
+  auto accepted=tryPair(*tree,c,0,3,CleanupMode::ScopedCFG);
+  check(accepted.valid&&!verifyModule(*accepted.normalized,&errs()),"cross-level opt-in capability lost");
+  ++crossLevel;
+ }
+ check(crossLevel>0,"cross-level opt-in candidates missing");
+
  std::error_code ec;raw_fd_ostream out(argv[1],ec);check(!ec,"output");m->print(out,nullptr);
  return 0;
 }catch(const std::exception&e){errs()<<e.what()<<"\n";return 1;}}
