@@ -1,3 +1,4 @@
+#include "GapPlanning.h"
 #include "SpeculationSafety.h"
 #include <functional>
 #ifndef LLVM_LIB_TRANSFORMS_REGION_MELDER_H
@@ -88,37 +89,7 @@ private:
   SmallVector<BasicBlock *, 0> MergedBBs;
 
   // un-predication
-  struct InstrRange {
-  private:
-    Instruction *StartI, *EndI;
-    bool Direction;
-
-  public:
-    InstrRange(Instruction *Start, Instruction *End, bool Dir)
-        : StartI(Start), EndI(End), Direction(Dir) {}
-    Instruction *getStart() const { return StartI; }
-    Instruction *getEnd() const { return EndI; }
-    bool splitToTrue() const { return Direction; }
-    bool splitToFalse() const { return !Direction; }
-    friend raw_ostream &operator<<(raw_ostream &OS, const InstrRange &Range) {
-      OS << "start : ";
-      Range.getStart()->print(OS);
-      OS << ", end : ";
-      Range.getEnd()->print(OS);
-      OS << ", direction : " << (Range.splitToTrue() ? "T" : "F");
-      return OS;
-    }
-
-    bool canExtendUsing(const InstrRange &Other) {
-      return Other.getStart()->getPrevNode() == EndI &&
-             Other.splitToTrue() == splitToTrue();
-    }
-    InstrRange extendUsing(const InstrRange &Other) {
-      assert(canExtendUsing(Other) &&
-             "this range can not be extended with provided range !");
-      return InstrRange(StartI, Other.getEnd(), splitToTrue());
-    }
-  };
+  using InstrRange = GapRange;
 
   SmallVector<InstrRange, 16> SplitRanges;
 
@@ -147,7 +118,6 @@ private:
   bool isExitBlockSafeToMerge(BasicBlock *Exit, BasicBlock *Entry);
   void updateMapping(BasicBlock *NewBb, BasicBlock *OldBb, bool IsLeft);
 
-  void coalesceGapRanges();
   void runUnpredicationPass();
   void updateSplitRangeMap(bool Direction, Instruction *I);
 
@@ -165,6 +135,9 @@ public:
   // 0 none, 1 legacy (default), 2 budget. See requireUnpredication().
   int SpeculationMode=1;
   int SpeculationBudget=4;
+  const llvm::TargetTransformInfo *SpeculationTTI=nullptr;
+  unsigned SpeculationCostThreshold=4;
+  std::vector<llvm::GapDecision> SegmentDecisions;
   unsigned SpeculatedRanges=0;
   unsigned CoalescedGapGroups=0;
   std::function<void(const ValueToValueMapTy&)> onValueMapping;

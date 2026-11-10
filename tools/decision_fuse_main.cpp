@@ -1,8 +1,13 @@
 // Opt-in single-pair bridge to the existing RegionMelder. No ranking or fallback.
 #include "decision_model.h"
 #include "trial_simplify_cfg.h"
+#include "trial_full_cfg.h"
+#include "trial_implicit_metrics.h"
 #include "scoped_cfg_cleanup.h"
 #include "ir_pressure.h"
+#include "decision_speculation_tti.h"
+#include "llvm/IR/ModuleSlotTracker.h"
+#include "decision_side_metrics.h"
 #include <darm_pair_engine/RegionMelder.h>
 #include "llvm/IRReader/IRReader.h"
 #include "llvm/IR/Verifier.h"
@@ -45,9 +50,14 @@ static unsigned foldEmptyDiamonds(BasicBlock *entry, BasicBlock *exit) {
  }
 }
 int main(int argc,char **argv){
- int mode=0;unsigned budget=4;
- if(const char *v=std::getenv("DECISION_SPECULATION")){std::string m=v;if(m=="budget")mode=2;else if(m=="legacy")mode=1;else if(m!="none")return 2;}
+ if(std::getenv("DECISION_CFG_CLEANUP")&&std::getenv("DECISION_DISABLE_SIMPLIFYCFG")){errs()<<"DECISION_CFG_CLEANUP conflicts with legacy DECISION_DISABLE_SIMPLIFYCFG\n";return 2;}
+ std::string cleanup="structural";
+ if(const char *v=std::getenv("DECISION_CFG_CLEANUP")){cleanup=v;if(cleanup!="full"&&cleanup!="structural")return 2;}
+ int mode=0;unsigned budget=4,conditionBudget=4,costThreshold=4;
+ if(const char *v=std::getenv("DECISION_SPECULATION")){std::string m=v;if(m=="cost")mode=3;else if(m=="budget")mode=2;else if(m=="legacy")mode=1;else if(m!="none")return 2;}
  if(const char *v=std::getenv("DECISION_SPECULATION_BUDGET")){char *end=nullptr;long n=std::strtol(v,&end,10);if(!*v||*end||n<0||n>100000)return 2;budget=n;}
+ if(const char *v=std::getenv("DECISION_CONDITION_BUDGET")){char *end=nullptr;long n=std::strtol(v,&end,10);if(!*v||*end||n<0||n>100000)return 2;conditionBudget=n;}
+ if(const char *v=std::getenv("DECISION_COST_THRESHOLD")){char *end=nullptr;long n=std::strtol(v,&end,10);if(!*v||*end||n<0||n>100000)return 2;costThreshold=n;}
  if(argc!=6&&argc!=7&&argc!=8){errs()<<"usage: decision-fuse input.ll function decision-index left-index NEW_DIR [ORDER_JSON [PAIR_JSON]]\n";return 2;}
  if(sys::fs::exists(argv[5])){errs()<<"output directory already exists\n";return 2;}
  LLVMContext ctx;SMDiagnostic error;auto parent=parseIRFile(argv[1],error,ctx);
@@ -56,8 +66,11 @@ int main(int argc,char **argv){
  auto trial=CloneModule(*parent);auto *f=trial->getFunction(argv[2]);if(!f)return 2;
  if(sys::fs::create_directories(argv[5]))return 2;
  std::string dir=argv[5];json::Object report{{"schema","decision-fuse-trial-v1"},{"engine","RegionMelder"},{"speculation","none"},{"extra_cleanup","arm-local linear folding and identical-value empty diamonds"},{"status","started"}};
- report["speculation"]=mode==0?"none":mode==1?"legacy":"budget";report["speculation_budget"]=budget;
+ report["speculation"]=mode==0?"none":mode==1?"legacy":mode==2?"budget":"cost";report["speculation_budget"]=budget;report["condition_budget"]=conditionBudget;report["tti_source"]=cleanup=="full"?"LLVM12_target_TTI":"cleanup_structural_no_tti";
+ report["speculation_cost_kind"]="LLVM12_TCK_SizeAndLatency";report["speculation_cost_threshold"]=costThreshold;
+ report["cfg_cleanup"]=cleanup;report["implicit_speculation_allowed"]=cleanup=="full";
  auto finish=[&](StringRef reason,int code){report["status"]=code?"rejected":"verified";report["reason"]=reason.str();std::error_code ec;raw_fd_ostream out(dir+"/trial.json",ec,sys::fs::OF_None);out<<formatv("{0:2}\n",json::Value(std::move(report)));return code;};
+ if(cleanup=="full")for(auto &bb:*f)for(auto &i:bb)if(auto *cb=dyn_cast<CallBase>(&i))if(cb->isConvergent())return finish("full_cleanup_function_contains_convergent",3);
  writeIR(*trial,dir+"/parent.ll");
  for(auto &bb:*f)if(!bb.getTerminator()->getMetadata("decision.origin"))bb.getTerminator()->setMetadata("decision.origin",MDNode::get(ctx,MDString::get(ctx,f->getName().str()+":"+label(&bb))));
  if(argc>=7){auto buf=MemoryBuffer::getFile(argv[6]);if(!buf)return finish("order_file_unreadable",3);auto parsed=json::parse((*buf)->getBuffer());if(!parsed){consumeError(parsed.takeError());return finish("invalid_order_json",3);}auto *array=parsed->getAsArray();if(!array)return finish("order_array_required",3);
@@ -78,9 +91,15 @@ int main(int argc,char **argv){
  }else{di=std::stoul(argv[3]);li=std::stoul(argv[4]);}
  if(di>=ds.size()||li+1>=ds[di].arms.size())return finish("pair_out_of_range",3);
  report["decision"]=ds[di].id;report["left"]=ds[di].arms[li].id;report["right"]=ds[di].arms[li+1].id;
+ auto beforePressure=fusion::irPressure(*f);
+ report["ir_pressure_before"]=json::Object{{"peak_slots32",int64_t(beforePressure.peakSlots32)},{"complete",beforePressure.complete}};
+ auto *sideBranch=dyn_cast<BranchInst>(ds[di].arms[li].predicate.back().test->getTerminator());
+ WeakTrackingVH sideCondition(sideBranch&&sideBranch->isConditional()?sideBranch->getCondition():nullptr);
+ std::vector<unsigned> sidesBefore[2],sidesAfter[2];std::string sideReason;
+ bool sideBeforeOK=decision_side::sideBlocksBoth(*f,sideCondition,sidesBefore,sideReason);
  std::vector<WeakVH> originalBlocks;for(auto &b:*f)originalBlocks.emplace_back(&b);
  BasicBlock *dispatch=nullptr;std::string reason;
- if(!decision::normalize(*f,ds[di],li,reason,&dispatch,budget))return finish(reason,3);
+ if(!decision::normalize(*f,ds[di],li,reason,&dispatch,conditionBudget))return finish(reason,3);
  auto *order=dispatch->getTerminator()->getMetadata("decision.order");
  auto *origins=dispatch->getTerminator()->getMetadata("decision.merged_from");auto *identity=dispatch->getTerminator()->getMetadata("decision.origin");
  BasicBlock *bindingEntry=dispatch;
@@ -99,8 +118,9 @@ int main(int argc,char **argv){
  if(pair->arms[0].kind==decision::ArmKind::Unsupported||pair->arms[1].kind==decision::ArmKind::Unsupported)return finish("unsupported_normalized_arm",3);
  bool bothLinear=pair->arms[0].kind==decision::ArmKind::Linear&&pair->arms[1].kind==decision::ArmKind::Linear;
  auto *join=pair->join;std::set<BasicBlock*> scope{dispatch,join};for(auto &a:pair->arms)scope.insert(a.blocks.begin(),a.blocks.end());
+ ModuleSlotTracker auditSlots(trial.get());auditSlots.incorporateFunction(*f);
  std::vector<OutsideInstruction> audit;
- for(auto &bb:*f)if(!scope.count(&bb))for(auto &i:bb){OutsideInstruction x;x.instruction=&i;{raw_string_ostream text(x.original);i.print(text);text.flush();}for(auto &op:i.operands())x.operands.emplace_back(op.get());audit.push_back(std::move(x));}
+ for(auto &bb:*f)if(!scope.count(&bb))for(auto &i:bb){OutsideInstruction x;x.instruction=&i;{raw_string_ostream text(x.original);i.print(text,auditSlots);text.flush();}for(auto &op:i.operands())x.operands.emplace_back(op.get());audit.push_back(std::move(x));}
  std::map<std::string,std::string> others;
  for(auto &g:*trial)if(&g!=f){std::string s;raw_string_ostream o(s);g.print(o);others[g.getName().str()]=o.str();}
  // Canonicalize a complete Linear arm to one block without touching its join.
@@ -134,7 +154,9 @@ int main(int argc,char **argv){
  report["replication"]=analyzer.requireRegionReplication();
  auto anchors=analyzer.getRegionMatchEntryBlocks(0);report["matched_left"]=label(anchors.first);report["matched_right"]=label(anchors.second);
  if(!scope.count(anchors.first)||!scope.count(anchors.second))return finish("native_anchor_outside_trial",3);
- RegionMelder melder(analyzer,true);melder.SpeculationMode=mode;melder.SpeculationBudget=budget;
+ std::unique_ptr<decision::SpeculationTTI> speculationTTI;
+ if(mode==3){try{speculationTTI=std::make_unique<decision::SpeculationTTI>(*f);}catch(const std::exception&e){return finish(e.what(),3);}}
+ RegionMelder melder(analyzer,true);melder.SpeculationMode=mode;melder.SpeculationBudget=budget;melder.SpeculationTTI=speculationTTI?speculationTTI->info.get():nullptr;melder.SpeculationCostThreshold=costThreshold;
  WeakVH dispatchHandle(dispatch);melder.merge(0);
  if(!dispatchHandle)return finish("dispatch_deleted_identity_unknown",3);
  dispatch=cast<BasicBlock>((Value*)dispatchHandle);
@@ -171,11 +193,37 @@ int main(int argc,char **argv){
  report["cfg_cleanup_rounds"]=fusion::cleanupScopedCFG(*f,clean,created);
  bindingEntry->getTerminator()->setMetadata("decision.merged_from",origins);bindingEntry->getTerminator()->setMetadata("decision.origin",identity);if(order)bindingEntry->getTerminator()->setMetadata("decision.order",order);
  if(!std::getenv("DECISION_DISABLE_SIMPLIFYCFG")){
-  try{report["simplifycfg_changes"]=decision::simplifyTrialCFG(*f,bindingEntry,ds[di].join);}
+  try{
+   if(cleanup=="full"){
+    std::vector<unsigned> before[2],after[2];std::string why;
+    bool beforeOK=decision_side::sideBlocksBoth(*f,sideCondition,before,why);
+    writeIR(*trial,dir+"/pre-full-cleanup.ll");
+    decision::SpeculationTTI fullProvider(*f);
+    DominatorTree fullDT(*f);PostDominatorTree fullPDT(*f);
+    std::map<BasicBlock*,std::set<BasicBlock*>> conditionalHoists;
+    for(auto &bb:*f)for(auto *node=fullDT.getNode(&bb);node;node=node->getIDom())if(node->getBlock()!=&bb&&!fullPDT.dominates(&bb,node->getBlock()))conditionalHoists[&bb].insert(node->getBlock());
+    struct Prior{WeakVH inst;BasicBlock*block;};std::vector<Prior> prior;
+    for(auto &bb:*f)for(auto &i:bb)if(!i.isTerminator()&&!isa<PHINode>(i))prior.push_back({WeakVH(&i),&bb});
+    report["simplifycfg_changes"]=decision::simplifyTrialCFGFull(*f,bindingEntry,ds[di].join,fullProvider.info.get());
+    bool afterOK=decision_side::sideBlocksBoth(*f,sideCondition,after,why);
+    writeIR(*trial,dir+"/post-full-cleanup.ll");
+    json::Array moved;for(auto &p:prior)if(auto*i=dyn_cast_or_null<Instruction>((Value*)p.inst))if(i->getParent()!=p.block){std::string text;raw_string_ostream os(text);i->print(os);moved.push_back(json::Object{{"opcode",i->getOpcodeName()},{"weight",speculationWeight(*i)},{"tti_size_latency",fullProvider.info->getInstructionCost(i,TargetTransformInfo::TCK_SizeAndLatency)},{"movement",conditionalHoists[p.block].count(i->getParent())?"conditional_hoist":"structural_or_unclassified_move"},{"ir",os.str()}});}
+    report["full_cleanup_moved_instructions"]=std::move(moved);
+    decision::recordImplicitMetrics(report,argv[0],*f,dir,before,after,beforeOK&&afterOK,why);
+   }else report["simplifycfg_changes"]=decision::simplifyTrialCFG(*f,bindingEntry,ds[di].join);
+  }
   catch(const std::exception &e){return finish(e.what(),3);}
   bindingEntry->getTerminator()->setMetadata("decision.merged_from",origins);bindingEntry->getTerminator()->setMetadata("decision.origin",identity);if(order)bindingEntry->getTerminator()->setMetadata("decision.order",order);
  }
  auto pressure=fusion::irPressure(*f);report["ir_pressure"]=json::Object{{"peak_slots32",int64_t(pressure.peakSlots32)},{"peak_values",int64_t(pressure.peakValues)},{"complete",pressure.complete}};
+ bool sideAfterOK=decision_side::sideBlocksBoth(*f,sideCondition,sidesAfter,sideReason);
+ report["side_metrics_available"]=sideBeforeOK&&sideAfterOK;
+ report["side_metrics_reason"]=sideReason;
+ auto sideJSON=[](const std::vector<unsigned>&blocks){json::Array a;for(auto b:blocks)a.push_back(int64_t(b));return a;};
+ for(unsigned side=0;side<2;++side){auto name=side?"true":"false";report[std::string("side_before_")+name]=sideJSON(sidesBefore[side]);report[std::string("side_after_")+name]=sideJSON(sidesAfter[side]);}
+ json::Array segments;
+ for(auto &D:melder.SegmentDecisions){json::Array inst;for(auto &I:D.Instructions)inst.push_back(json::Object{{"opcode",I.Opcode},{"weight",I.Weight},{"tti",I.TTI},{"safe",I.Safe}});segments.push_back(json::Object{{"count",D.Count},{"weight",D.Weight},{"tti",D.TTI},{"safe",D.Safe},{"operands_available",D.Available},{"decision",D.Speculate?"speculate":"protect"},{"reason",D.Reason},{"instructions",std::move(inst)}});}
+ report["segments"]=std::move(segments);
  report["binding_entry"]=label(bindingEntry);
  writeIR(*trial,dir+"/fused.ll");
  auto rebound=decision::discover(*f);unsigned bindings=0;std::string kind;

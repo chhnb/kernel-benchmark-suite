@@ -1,0 +1,20 @@
+outside/inside convergent, independent budgets, pressure/uniform/missing-metric acceptance checks passed
+chain execution equivalence OK
+inverse-second-predicate execution equivalence OK
+reverse-second execution equivalence OK
+reverse execution equivalence OK
+guarded-div execution equivalence OK
+guarded-load execution equivalence OK
+multi-block prefix selector dominance and execution OK
+inverted short-circuit prefix identity OK
+switch aliases OK
+unsupported arms rejected without output OK
+convergent control-flow change rejected OK
+all decision-model checks passed
+{"functions": 6620, "evaluations": 460800, "equal": true, "evidence": "/home/chh/kernel-benchmark-suite-review-speculation/build/decision-fuse/interval-test-5787a0hn"}
+three RegionMelder fusions; 201 outputs per stage equal; unique arm rebind; no speculation
+recursive 7 fusions; 8 -> 1 copysign; all 201 outputs equal at every step
+balanced 7 fusions; 8 -> 1 copysign; all 201 outputs equal at every step
+stable pair IDs survive reordered catalog; missing ID rejected without ordinal fallback
+vllm {'actual': 'adc38fb80b4460edd9c442c08e5bc23ecd66c0186a6128a36f79df4bd0a362a9', 'expected': 'adc38fb80b4460edd9c442c08e5bc23ecd66c0186a6128a36f79df4bd0a362a9', 'equal': True}
+mapairy {'actual': 'affe64a238c73c36aa5704f46b50becdd2f8d4902b355536fa83745bea098422', 'expected': 'affe64a238c73c36aa5704f46b50becdd2f8d4902b355536fa83745bea098422', 'equal': True}

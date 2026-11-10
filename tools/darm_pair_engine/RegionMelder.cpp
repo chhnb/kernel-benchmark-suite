@@ -100,27 +100,7 @@ void RegionMelder::computeRegionSeqAlignment(
 // guarded when its speculation weight exceeds the budget.
 bool requireUnpredication(BasicBlock* Current, BasicBlock* Corresponding,
                           int Mode, int Budget) {
-  if (Corresponding->size() > 1)
-    return true;
-  if (Mode == 0)
-    return true;
-  unsigned Weight = 0;
-  for (auto &I : *Current) {
-    if (isa<PHINode>(I) || I.isTerminator())
-      continue;
-    // Legacy keeps its historical test (which admits e.g. dereferenceable
-    // loads) and only adds the convergence exclusion; budget mode also
-    // refuses any memory access.
-    if (!isSafeToSpeculativelyExecute(&I))
-      return true;
-    if (auto *CB = dyn_cast<CallBase>(&I))
-      if (CB->isConvergent())
-        return true;
-    if (Mode == 2 && !safeToSpeculate(I))
-      return true;
-    Weight += speculationWeight(I);
-  }
-  return Mode == 2 && Weight > unsigned(Budget);
+ return speculation_policy::guardOriginalBlock(Current,Corresponding,Mode,Budget);
 }
 
 std::string RegionMelder::sourceBlockID(BasicBlock *BB) const {
@@ -789,117 +769,18 @@ Instruction *RegionMelder::cloneInstruction(Instruction *OrigI,
 // Each side keeps its original instruction/memory order and remains guarded.
 // Cross-side SSA dependencies, calls, volatile/atomic accesses and barriers
 // stop grouping. This is scheduling within one block, not speculation.
-void RegionMelder::coalesceGapRanges() {
-  DenseMap<Instruction *, bool> Side;
-  for (auto &Range : SplitRanges)
-    for (auto *I = Range.getStart();; I = I->getNextNode()) {
-      Side[I] = Range.splitToTrue();
-      if (I == Range.getEnd()) break;
-    }
-  auto movable = [](Instruction *I) {
-    if (I->isTerminator() || isa<PHINode>(I) || I->isEHPad() ||
-        isa<CallBase>(I) || isa<FenceInst>(I)) return false;
-    if (auto *L = dyn_cast<LoadInst>(I)) return L->isSimple();
-    if (auto *S = dyn_cast<StoreInst>(I)) return S->isSimple();
-    return !I->mayReadOrWriteMemory() && !I->mayHaveSideEffects();
-  };
-  for (auto &BB : *MA.getParentFunction()) {
-    SmallVector<Instruction *, 64> Instructions;
-    for (auto &I : BB) Instructions.push_back(&I);
-    for (unsigned Begin = 0; Begin < Instructions.size();) {
-      if (!Side.count(Instructions[Begin]) || !movable(Instructions[Begin])) {
-        ++Begin; continue;
-      }
-      unsigned End = Begin;
-      while (End < Instructions.size() && Side.count(Instructions[End]) &&
-             movable(Instructions[End])) ++End;
-      SmallPtrSet<Instruction *, 32> Group;
-      unsigned Runs = 0;
-      bool Prev = !Side.lookup(Instructions[Begin]);
-      for (unsigned N = Begin; N < End; ++N) {
-        Group.insert(Instructions[N]);
-        bool Dir = Side.lookup(Instructions[N]);
-        if (Dir != Prev) ++Runs;
-        Prev = Dir;
-      }
-      bool Legal = Runs > 2;
-      for (unsigned N = Begin; N < End && Legal; ++N)
-        for (auto &Op : Instructions[N]->operands())
-          if (auto *Def = dyn_cast<Instruction>(Op.get()))
-            if (Group.count(Def) && Side.lookup(Def) != Side.lookup(Instructions[N]))
-              Legal = false;
-      if (Legal) {
-        auto *Anchor = Instructions[End - 1]->getNextNode();
-        bool First = Side.lookup(Instructions[Begin]);
-        for (bool Dir : {First, !First})
-          for (unsigned N = Begin; N < End; ++N)
-            if (Side.lookup(Instructions[N]) == Dir)
-              Instructions[N]->moveBefore(Anchor);
-        ++CoalescedGapGroups;
-      }
-      Begin = End;
-    }
-  }
-  // Rebuild in instruction order so the existing complementary-gap handler
-  // sees one left run and one right run, and introduces only one diamond.
-  SplitRanges.clear();
-  for (auto &BB : *MA.getParentFunction())
-    for (auto &I : BB)
-      if (Side.count(&I)) updateSplitRangeMap(Side.lookup(&I), &I);
-}
-
 void RegionMelder::runUnpredicationPass() {
-  if (CoalesceGaps) coalesceGapRanges();
-  // Budget mode: a cheap, safe unmatched range stays in the melded block and
-  // runs on both paths instead of paying a guard (branch + carrier PHIs).
-  // Its definitions still dominate their uses, so no PHI is needed.
-  if (SpeculationMode == 2) {
-    SmallVector<InstrRange, 8> Kept;
-    for (auto &Range : SplitRanges) {
-      bool Safe = true; unsigned Weight = 0;
-      for (auto *I = Range.getStart();; I = I->getNextNode()) {
-        Safe &= !isa<PHINode>(I) && !I->isTerminator() && safeToSpeculate(*I);
-        Weight += speculationWeight(*I);
-        if (I == Range.getEnd()) break;
-      }
-      if (Safe && Weight <= unsigned(SpeculationBudget)) { ++SpeculatedRanges; continue; }
-      Kept.push_back(Range);
-    }
-    SplitRanges.assign(Kept.begin(), Kept.end());
-  }
-
-
-  for (unsigned RangeIndex = 0; RangeIndex < SplitRanges.size(); ++RangeIndex) {
-    auto &Range = SplitRanges[RangeIndex];
-    // Consecutive unmatched runs on opposite paths form one diamond, not two
-    // serial guard diamonds. Do this before introducing undef-carrier PHIs.
-    if (RangeIndex + 1 < SplitRanges.size()) {
-      auto &Other = SplitRanges[RangeIndex + 1];
-      bool Adjacent = Range.splitToTrue() != Other.splitToTrue() &&
-                      Range.getStart()->getParent() == Other.getStart()->getParent() &&
-                      Range.getEnd()->getNextNode() == Other.getStart();
-      if (Adjacent) {
-        SmallPtrSet<Instruction *, 16> First, Second;
-        for (auto *I = Range.getStart();; I = I->getNextNode()) {
-          First.insert(I);
-          if (I == Range.getEnd()) break;
-        }
-        for (auto *I = Other.getStart();; I = I->getNextNode()) {
-          Second.insert(I);
-          if (I == Other.getEnd()) break;
-        }
-        // Selecting two mutually exclusive arms must not introduce a use of a
-        // value produced only by the other arm. Fall back to the old path.
-        for (auto *I : First)
-          for (auto &Op : I->operands())
-            if (auto *Def = dyn_cast<Instruction>(Op.get()))
-              Adjacent &= !Second.count(Def);
-        for (auto *I : Second)
-          for (auto &Op : I->operands())
-            if (auto *Def = dyn_cast<Instruction>(Op.get()))
-              Adjacent &= !First.count(Def);
-      }
-      if (Adjacent) {
+  auto Plan = planGaps(*MA.getParentFunction(), SplitRanges, SpeculationMode,
+                       SpeculationBudget, CoalesceGaps,SpeculationTTI,SpeculationCostThreshold);
+  SegmentDecisions.insert(SegmentDecisions.end(),Plan.Decisions.begin(),Plan.Decisions.end());
+  if(SpeculationMode==3)for(auto &Segment:Plan.Speculated)for(auto *I:Segment.Instructions)speculation_policy::sanitize(*I);
+  applyGapSchedule(Plan);
+  CoalescedGapGroups += Plan.CoalescedGroups;
+  SpeculatedRanges += Plan.Speculated.size();
+  for (auto &Guard : Plan.Guards) {
+    auto Range = Guard.First.range();
+    if (!Guard.Second.empty()) {
+      GapRange Other(Guard.Second.front(), Guard.Second.back(), !Range.Left);
         auto *Head = Range.getStart()->getParent();
         auto *First = SplitBlock(Head, Range.getStart(), nullptr, nullptr,
                                  nullptr, "predication.first");
@@ -961,9 +842,7 @@ void RegionMelder::runUnpredicationPass() {
         }
         for (auto *Phi : Carriers)
           if (Phi->use_empty()) Phi->eraseFromParent();
-        ++RangeIndex;
         continue;
-      }
     }
     BasicBlock *BB = Range.getStart()->getParent();
     BasicBlock *SplitBb = SplitBlock(BB, Range.getStart(), nullptr, nullptr,
@@ -1013,13 +892,7 @@ void RegionMelder::runUnpredicationPass() {
 }
 
 void RegionMelder::updateSplitRangeMap(bool Direction, Instruction *I) {
-  InstrRange Range(I, I, Direction);
-  if (!SplitRanges.empty() && SplitRanges.back().canExtendUsing(Range)) {
-    InstrRange Prev = SplitRanges.pop_back_val();
-    SplitRanges.push_back(Prev.extendUsing(Range));
-  } else {
-    SplitRanges.push_back(Range);
-  }
+  appendGap(SplitRanges,Direction,I);
 }
 
 bool RegionMelder::isExitBlockSafeToMerge(BasicBlock *Exit, BasicBlock *Entry) {

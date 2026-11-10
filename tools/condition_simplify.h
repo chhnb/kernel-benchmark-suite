@@ -1,6 +1,7 @@
 #pragma once
 #include "llvm/IR/Constants.h"
 #include "llvm/IR/Instructions.h"
+#include "llvm/IR/Function.h"
 #include "llvm/IR/ConstantRange.h"
 #include "llvm/IR/ValueHandle.h"
 #include "llvm/Transforms/Utils/Local.h"
@@ -38,6 +39,13 @@ inline llvm::Value *simplifyCondition(llvm::Instruction *root) {
  collect(root);if(!valid||!variable||leaves.empty())return root;
  std::vector<Constant*> cells;
  if(fp){
+  auto *f=root->getFunction();
+  auto mode=f->getFnAttribute("denormal-fp-math").getValueAsString();
+  auto f32=f->getFnAttribute("denormal-fp-math-f32").getValueAsString();
+  if(variable->getType()->isFloatTy()&&!f32.empty())mode=f32;
+  bool ieee=mode.empty()||mode=="ieee"||mode=="ieee,ieee";
+  if(!ieee)for(auto *c:leaves)
+   if(cast<ConstantFP>(constant(c))->getValueAPF().isDenormal())return root;
   const auto &sem=cast<ConstantFP>(constant(leaves[0]))->getValueAPF().getSemantics();
   for(auto v:{APFloat::getInf(sem),APFloat::getInf(sem,true),APFloat::getNaN(sem),APFloat::getZero(sem)})cells.push_back(ConstantFP::get(root->getContext(),v));
   for(auto *c:leaves){auto v=cast<ConstantFP>(constant(c))->getValueAPF();cells.push_back(ConstantFP::get(root->getContext(),v));if(!v.isNaN()){auto low=v,high=v;low.next(true);high.next(false);cells.push_back(ConstantFP::get(root->getContext(),low));cells.push_back(ConstantFP::get(root->getContext(),high));}}

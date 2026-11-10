@@ -1,4 +1,5 @@
 #include "ir_pressure.h"
+#include "llvm/ADT/STLExtras.h"
 #include "llvm/IR/CFG.h"
 #include "llvm/IR/Instructions.h"
 #include "llvm/IR/IntrinsicInst.h"
@@ -39,7 +40,9 @@ IRPressure irPressure(const Function &f, const std::set<const Value*> *uniform) 
   bool changed;
   do {
     changed=false;
-    for(auto &bb:f) {
+    // Backward liveness: visit successors before predecessors where layout permits.
+    // The fixed point and transfer function are unchanged.
+    for(auto &bb:llvm::reverse(f)) {
       auto*b=&bb;if(!reachable.count(b))continue;
       Live next;
       for(auto*s:successors(b)) {

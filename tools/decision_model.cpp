@@ -123,9 +123,13 @@ std::vector<Decision> discover(Function &f) {
 json::Array describe(const std::vector<Decision>&ds){json::Array out;for(auto &d:ds){json::Array arms,tests;for(auto *b:d.tests)tests.push_back(name(b));for(auto &a:d.arms){json::Array blocks,exits,path,alternatives,origins;for(auto &id:a.mergedFrom)origins.push_back(id);for(auto &p:a.alternatives){json::Array edges;for(auto e:p)edges.push_back(json::Object{{"test",name(e.test)},{"successor",e.successor}});alternatives.push_back(std::move(edges));}for(auto *b:a.blocks)blocks.push_back(name(b));for(auto *b:a.exitSources)exits.push_back(name(b));for(auto e:a.predicate)path.push_back(json::Object{{"test",name(e.test)},{"successor",e.successor}});arms.push_back(json::Object{{"id",a.id},{"entry",name(a.entry)},{"kind",a.kind==ArmKind::Linear?"Linear":a.kind==ArmKind::SESE?"SESE":"Unsupported"},{"reason",a.reason},{"blocks",std::move(blocks)},{"exit_sources",std::move(exits)},{"ordered_predicate",std::move(path)},{"predicate_alternatives",std::move(alternatives)},{"merged_from",std::move(origins)},{"order_family",a.orderFamily},{"order_first",a.orderFirst},{"order_last",a.orderLast}});}out.push_back(json::Object{{"id",d.id},{"root",name(d.root)},{"join",name(d.join)},{"tests",std::move(tests)},{"arms",std::move(arms)},{"identity_scope","persistent_origin_if_tagged_else_snapshot"}});}return out;}
 bool normalize(Function &f,const Decision &d,unsigned left,std::string &reason,BasicBlock **dispatchOut,unsigned conditionBudget){
  auto fail=[&](const char*s){reason=s;return false;};
- for(auto &bb:f)for(auto &i:bb)if(auto *c=dyn_cast<CallBase>(&i))if(c->isConvergent())return fail("convergent_function_not_supported");
  if(left+1>=d.arms.size())return fail("pair_out_of_range");
  auto &a=d.arms[left];auto &b=d.arms[left+1];
+ std::set<BasicBlock*> affected(d.tests.begin(),d.tests.end());
+ affected.insert(a.blocks.begin(),a.blocks.end());affected.insert(b.blocks.begin(),b.blocks.end());
+ if(d.join)affected.insert(d.join);
+ for(auto *bb:affected)for(auto &i:*bb)if(auto *c=dyn_cast<CallBase>(&i))
+  if(c->isConvergent())return fail("convergent_trial_region_not_supported");
  if(a.kind==ArmKind::Unsupported||b.kind==ArmKind::Unsupported)return fail("unsupported_arm");
  if(a.predicate.empty()||b.predicate.empty()||!d.join)return fail("missing_boundary");
  if(!a.orderFamily.empty()&&a.orderFamily==b.orderFamily&&a.orderLast+1!=b.orderFirst)return fail("nonadjacent_logical_ranges");

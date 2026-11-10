@@ -1,0 +1,103 @@
+{
+  "base_commit": "35f9ccdc1795348cfb314b3cbf750216bf5448e7",
+  "scope": "review fixes only; planGaps stash not restored",
+  "production_frozen": {
+    "vllm": {
+      "actual": "adc38fb80b4460edd9c442c08e5bc23ecd66c0186a6128a36f79df4bd0a362a9",
+      "expected": "adc38fb80b4460edd9c442c08e5bc23ecd66c0186a6128a36f79df4bd0a362a9",
+      "equal": true
+    },
+    "mapairy": {
+      "actual": "affe64a238c73c36aa5704f46b50becdd2f8d4902b355536fa83745bea098422",
+      "expected": "affe64a238c73c36aa5704f46b50becdd2f8d4902b355536fa83745bea098422",
+      "equal": true
+    }
+  },
+  "tigre_frozen": {
+    "actual": "3db26ca4a829da96931c5ef7f8b8e769b22c8e05e474ed046b30ffc865024a2a",
+    "expected": "3db26ca4a829da96931c5ef7f8b8e769b22c8e05e474ed046b30ffc865024a2a",
+    "equal": true
+  },
+  "raw_ir": [
+    {
+      "fixture": "chain",
+      "mode": "none",
+      "equal": true,
+      "sha256": "e62abde348300f6cbcf8b393c3345d868d762af77dc9ebf62563449526e3ec74"
+    },
+    {
+      "fixture": "chain",
+      "mode": "legacy",
+      "equal": true,
+      "sha256": "e62abde348300f6cbcf8b393c3345d868d762af77dc9ebf62563449526e3ec74"
+    },
+    {
+      "fixture": "chain",
+      "mode": "budget",
+      "equal": true,
+      "sha256": "279910c76dc4aab65c55b3cc9787000b32f8c0d327ce1edbfd8b917d78c49289"
+    },
+    {
+      "fixture": "vllm-first",
+      "mode": "none",
+      "equal": true,
+      "sha256": "d70dd8a718c3d2847b5fd2789b81e038bb3a2ac4f38432e4498112eafd91e489"
+    },
+    {
+      "fixture": "vllm-first",
+      "mode": "legacy",
+      "equal": true,
+      "sha256": "d70dd8a718c3d2847b5fd2789b81e038bb3a2ac4f38432e4498112eafd91e489"
+    },
+    {
+      "fixture": "vllm-first",
+      "mode": "budget",
+      "equal": true,
+      "sha256": "d70dd8a718c3d2847b5fd2789b81e038bb3a2ac4f38432e4498112eafd91e489"
+    }
+  ],
+  "vllm_first_real_metrics": {
+    "before": {
+      "total_cost": 5423,
+      "false": 5340,
+      "true": 5418
+    },
+    "after": {
+      "total_cost": 5412,
+      "false": 5412,
+      "true": 5412
+    },
+    "uniform_gain": {
+      "false": -72,
+      "true": 6
+    },
+    "pressure_before": {
+      "complete": true,
+      "peak_slots32": 81
+    },
+    "pressure_after": {
+      "complete": true,
+      "peak_slots32": 81,
+      "peak_values": 64
+    }
+  },
+  "successful_final_receipt": {
+    "exit": 0,
+    "seconds": 17.851669549942017
+  },
+  "uniform_guard_change_receipt": {
+    "exit": 0,
+    "seconds": 9.685363531112671
+  },
+  "condition_functions": 6620,
+  "condition_executions": 460800,
+  "gpu_performance_remeasured": false,
+  "policy": {
+    "uniform_loss_guard_enabled": false,
+    "max_uniform_loss": -1,
+    "max_pressure_growth": 0,
+    "max_pressure": 1000000,
+    "condition_budget": 4,
+    "unmatched_budget": 4
+  }
+}

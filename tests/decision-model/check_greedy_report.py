@@ -11,7 +11,7 @@ for row in s['rounds']:
     assert actual['decision']==row['decision'] and actual['left']==a['left'] and actual['right']==a['right'], ('candidate identity mismatch',a['directory'])
   if 'cost' in a:assert trial.exists() and actual['status']=='verified'
 
- scored=[a for a in row['attempts'] if 'cost' in a];trials+=len(row['attempts'])
+ scored=[a for a in row['attempts'] if 'cost' in a and a.get('eligible',True)];trials+=len(row['attempts'])
  if row['selected']:
   best=min(a['cost'] for a in scored);assert best<cost and best==row['selected_cost'];selected=next(a for a in scored if a['directory']==row['selected']);assert selected['cost']==best
   assert abs(row['score']-(cost-best)/max(cost,1))<1e-12

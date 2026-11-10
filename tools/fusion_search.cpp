@@ -41,6 +41,81 @@ static std::string text(const Value &v) {
 }
 // PHI edge ordering is semantically irrelevant, but pointer-map insertion
 // order must not leak into reproducibility IDs or downstream pass traversal.
+static unsigned cleanupProductionScopedCFG(Function &f, const std::set<Instruction*> &local,
+                                  const std::set<BasicBlock*> &created, bool scalarTriangles=false) {
+  std::set<Instruction*> permitted=local;
+  std::vector<WeakVH> blocks, work;
+  for(auto &b:f)if(created.count(&b)){
+    blocks.emplace_back(&b);
+    for(auto &i:b)permitted.insert(&i);
+    for(auto *p:predecessors(&b))permitted.insert(p->getTerminator());
+    for(auto *s:successors(&b))for(auto &phi:s->phis())permitted.insert(&phi);
+  }
+  struct Protected {WeakVH inst;BasicBlock *parent;unsigned opcode;std::vector<WeakTrackingVH> operands;};
+  std::vector<Protected> outside;
+  for(auto &b:f)for(auto &i:b){
+    if(permitted.count(&i)){work.emplace_back(&i);continue;}
+    Protected p{WeakVH(&i),&b,i.getOpcode(),{}};
+    for(auto &op:i.operands())p.operands.emplace_back(op.get());
+    outside.push_back(std::move(p));
+  }
+  auto audit=[&](){for(auto &p:outside){auto *i=dyn_cast_or_null<Instruction>((Value*)p.inst);
+    if(!i||i->getParent()!=p.parent||i->getOpcode()!=p.opcode||i->getNumOperands()!=p.operands.size())throw std::runtime_error("scoped_cfg_changed_outside_instruction");
+    for(unsigned n=0;n<p.operands.size();++n)if(i->getOperand(n)!=(Value*)p.operands[n])throw std::runtime_error("scoped_cfg_changed_outside_operand");
+  }};
+  for(unsigned round=1;round<=32;++round){
+    auto before=moduleHash(*f.getParent());
+    std::set<Instruction*> scalar;
+    for(auto &h:work)if(auto *i=dyn_cast_or_null<Instruction>((Value*)h))if(!i->isTerminator())scalar.insert(i);
+    cleanupScoped(f,scalar);
+    std::set<BasicBlock*> live;
+    for(auto &h:blocks)if(auto *b=dyn_cast_or_null<BasicBlock>((Value*)h))live.insert(b);
+    if(scalarTriangles && foldScopedScalarTriangle(f,live,permitted,work)){
+      audit();if(verifyFunction(f,&errs()))throw std::runtime_error("scoped_triangle_invalid_ir");
+      continue;
+    }
+    // Fold only conditions implied by dominating edges, within new blocks.
+    foldProvenBranch(f,&live);
+    for(auto &h:blocks){auto *head=dyn_cast_or_null<BasicBlock>((Value*)h);if(!head)continue;
+      auto *br=dyn_cast<BranchInst>(head->getTerminator());if(!br||!br->isConditional())continue;
+      auto *a=br->getSuccessor(0),*b=br->getSuccessor(1);
+      if(a==b||!live.count(a)||!live.count(b)||a->size()!=1||b->size()!=1||
+         a->getSinglePredecessor()!=head||b->getSinglePredecessor()!=head)continue;
+      auto *join=a->getSingleSuccessor();if(!join||join!=b->getSingleSuccessor()||join==head)continue;
+      bool safe=true;for(auto &phi:join->phis())safe&=permitted.count(&phi)&&phi.getBasicBlockIndex(a)>=0&&phi.getBasicBlockIndex(b)>=0;
+      if(!safe)continue;
+      IRBuilder<> builder(br);
+      for(auto &phi:join->phis()){
+        auto *v=builder.CreateSelect(br->getCondition(),phi.getIncomingValueForBlock(a),phi.getIncomingValueForBlock(b),"scoped.exit.select");
+        if(auto *i=dyn_cast<Instruction>(v))if(i->getParent()==head){work.emplace_back(i);permitted.insert(i);}
+        phi.removeIncomingValue(a,false);phi.removeIncomingValue(b,false);phi.addIncoming(v,head);
+      }
+      BranchInst::Create(join,br);br->eraseFromParent();
+      a->eraseFromParent();b->eraseFromParent();break;
+    }
+    // Bypass only newly-created branch-only blocks. LLVM's utility handles
+    // PHI edge compatibility, including multiple edges from one predecessor.
+    for(auto &h:blocks){auto *b=dyn_cast_or_null<BasicBlock>((Value*)h);if(!b||b==&f.getEntryBlock()||b->size()!=1)continue;
+      auto *br=dyn_cast<BranchInst>(b->getTerminator());if(!br||!br->isUnconditional()||br->getSuccessor(0)==b)continue;
+      bool safe=true;
+      for(auto *p:predecessors(b))safe&=created.count(p)||permitted.count(p->getTerminator());
+      for(auto &phi:br->getSuccessor(0)->phis())safe&=permitted.count(&phi);
+      if(safe&&TryToSimplifyUncondBranchFromEmptyBlock(b))break;
+    }
+    // Join a newly-created block to its sole unconditional predecessor.
+    // This only removes a straight-line boundary; no conditional is crossed.
+    for(auto &h:blocks){auto *b=dyn_cast_or_null<BasicBlock>((Value*)h);if(!b)continue;
+      auto *pred=b->getSinglePredecessor();if(!pred||pred==b)continue;
+      auto *br=dyn_cast<BranchInst>(pred->getTerminator());if(!br||!br->isUnconditional())continue;
+      if(!created.count(pred)&&!permitted.count(br))continue;
+      if(MergeBlockIntoPredecessor(b))break;
+    }
+    audit();if(verifyFunction(f,&errs()))throw std::runtime_error("scoped_cfg_invalid_ir");
+    if(moduleHash(*f.getParent())==before)return round;
+  }
+  throw std::runtime_error("scoped_cfg_did_not_converge");
+}
+
 static void canonicalPhiOrder(Module &m, StringRef selectedFunction) {
   for(auto &f:m) {
     if(f.getName()!=selectedFunction)continue;
@@ -893,7 +968,7 @@ static Trial tryPairImpl(const Module&parent,const Candidate&c,unsigned version,
       for(auto *i:rawScope)if(auto *v=dyn_cast_or_null<Instruction>(map.lookup(i)))cleanScope.insert(v);
       for(auto *b:created)if(auto *v=dyn_cast_or_null<BasicBlock>(map.lookup(b)))cleanCreated.insert(v);
       map.clear();
-      t.cleanupIterations=(mode==CleanupMode::ScopedCFG||mode==CleanupMode::ScopedCFGTriangles)?cleanupScopedCFG(*t.normalized->getFunction(c.function),cleanScope,cleanCreated,mode==CleanupMode::ScopedCFGTriangles):mode==CleanupMode::ScopedLocal?cleanupScoped(*t.normalized->getFunction(c.function),cleanScope):cleanup(*t.normalized,c.function,level,mode);
+      t.cleanupIterations=(mode==CleanupMode::ScopedCFG||mode==CleanupMode::ScopedCFGTriangles)?cleanupProductionScopedCFG(*t.normalized->getFunction(c.function),cleanScope,cleanCreated,mode==CleanupMode::ScopedCFGTriangles):mode==CleanupMode::ScopedLocal?cleanupScoped(*t.normalized->getFunction(c.function),cleanScope):cleanup(*t.normalized,c.function,level,mode);
       canonicalPhiOrder(*t.normalized,c.function);t.normalizeMs=millis(nt);
       if(verifyModule(*t.normalized,&errs()))return reject("normalized_verifier_failed");
       t.after=features(*t.normalized->getFunction(c.function));if(t.after.loops>t.before.loops)return reject("new_normalized_loop");
@@ -1090,7 +1165,7 @@ static Trial tryPairImpl(const Module&parent,const Candidate&c,unsigned version,
   for(auto *b:rawCreated)if(auto *mapped=dyn_cast_or_null<BasicBlock>(CloneMap.lookup(b)))cleanCreated.insert(mapped);
   // Do not retain CloneMap's tracking handles while cleanup mutates the clone.
   CloneMap.clear();
-  t.cleanupIterations=(mode==CleanupMode::ScopedCFG||mode==CleanupMode::ScopedCFGTriangles)?cleanupScopedCFG(*t.normalized->getFunction(c.function),cleanLocalScope,cleanCreated,mode==CleanupMode::ScopedCFGTriangles):mode==CleanupMode::ScopedLocal?cleanupScoped(*t.normalized->getFunction(c.function),cleanLocalScope):cleanup(*t.normalized,c.function,level,mode);canonicalPhiOrder(*t.normalized,c.function);t.normalizeMs=millis(nt);
+  t.cleanupIterations=(mode==CleanupMode::ScopedCFG||mode==CleanupMode::ScopedCFGTriangles)?cleanupProductionScopedCFG(*t.normalized->getFunction(c.function),cleanLocalScope,cleanCreated,mode==CleanupMode::ScopedCFGTriangles):mode==CleanupMode::ScopedLocal?cleanupScoped(*t.normalized->getFunction(c.function),cleanLocalScope):cleanup(*t.normalized,c.function,level,mode);canonicalPhiOrder(*t.normalized,c.function);t.normalizeMs=millis(nt);
   for(size_t I=0;I<CleanedBlocks.size();++I)if(Value *V=CleanedBlocks[I])
     t.blockProvenance[I].cleanedBlock=blockLabel(V);
   if(verifyModule(*t.normalized,&errs()))return reject("normalized_verifier_failed");
