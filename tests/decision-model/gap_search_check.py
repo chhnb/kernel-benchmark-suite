@@ -1,6 +1,6 @@
 """Check actual emitted plans, CPU semantics, monotone cost and replay stability."""
 from pathlib import Path
-import subprocess,tempfile,os,json,re
+import subprocess,tempfile,os,json,re,sys
 r=Path(__file__).resolve().parents[2];exe=r/'build/decision-fuse/decision-fuse'
 select='''target triple = "amdgcn-amd-amdhsa"
 define float @case(i1 %c, i1 %a, i1 %b, float %x, float %y, float %z, float %w) #0 {
@@ -34,8 +34,11 @@ attributes #0 = { "target-cpu"="gfx906" }
 '''
 def run(src,out,mode):
  env=dict(os.environ,DECISION_SPECULATION=mode,DECISION_GAP_SEARCH='1',DECISION_CFG_CLEANUP='structural')
+ env.pop('DECISION_GAP_KEEP_TRIALS',None)
  p=subprocess.run([str(exe),str(src),'case','0','0',str(out)],env=env,capture_output=True)
  assert p.returncode==0,p.stderr.decode()
+ if sys.platform.startswith('linux'):
+  assert {path.name for path in out.iterdir()}=={'meld-raw.ll','fused.ll','trial.json','decisions.json','gap-search.json'}
  s=json.loads((out/'gap-search.json').read_text());cost=s['initial_cost']
  for a in s['accepted']:assert a['before']==cost and a['after']<cost;cost=a['after']
  assert cost==s['final_cost'];return s
@@ -67,6 +70,19 @@ with tempfile.TemporaryDirectory() as tmp:
  print('80 complete CPU outputs equal, including NaN payloads, infinities and signed zeros')
  a=run(src,d/'repeat','cost');assert (d/'cost/fused.ll').read_bytes()==(d/'repeat/fused.ll').read_bytes()
  first=json.loads((d/'cost/gap-search.json').read_text());assert [x['state'] for x in first['accepted']]==[x['state'] for x in a['accepted']]
+ if sys.platform.startswith('linux'):
+  expected=[row['root'] for row in json.loads((d/'cost/decisions.json').read_text())]
+  env=dict(os.environ,DECISION_SPECULATION='cost',DECISION_GAP_SEARCH='1',
+           DECISION_CFG_CLEANUP='structural',DECISION_GAP_ROOTS_STDOUT='1')
+  env.pop('DECISION_GAP_KEEP_TRIALS',None)
+  for keep in ['0','1']:
+   dest=d/('roots-'+keep)
+   result=subprocess.run([exe,src,'case','0','0',dest],
+                         env=dict(env,DECISION_GAP_KEEP_CATALOG=keep),capture_output=True,check=True)
+   assert json.loads(result.stdout)==expected
+   assert (dest/'decisions.json').exists()==(keep=='1')
+   assert (dest/'fused.ll').read_bytes()==(d/'cost/fused.ll').read_bytes()
+  print('stdout roots and debug catalog match full catalog; final IR identical',flush=True)
  chain=select.replace('i1 %b, float %x','i1 %b, i1 %d, i1 %e, float %x').replace('float %z, float %w) #0','float %z, float %w, float %u, float %other) #0')
  chain=chain.replace(' %lv = call',' %l1 = select i1 %d, float %l, float %u\n %lv = call').replace('float %l, float -1.0','float %l1, float -1.0')
  chain=chain.replace(' %rv = call',' %r1 = select i1 %e, float %r, float %other\n %rv = call').replace('float %r, float -1.0','float %r1, float -1.0')

@@ -42,9 +42,43 @@ the checkpoint policy, after eligibility has been checked.
 Only strict improvements are accepted, with deterministic alignment/segment
 order for ties. Visited states are retained and each split is irreversible.
 `gap-search.json` records every attempted state, rejection, cost and accepted
-step. The chosen child's IR/report files are copied to the ordinary trial output
-paths so outer greedy search continues to apply its final TTI, pressure and
-configured side-loss acceptance checks.
+step. The selected IR and reports use the ordinary trial output paths so outer
+greedy search continues to apply its final TTI, pressure and configured
+side-loss acceptance checks.
+
+On Linux, the default search parses the parent module once, clones it in process
+for each candidate, and passes raw IR and aggregate TTI through anonymous memory
+descriptors. Rejected candidate artifacts are not written to the filesystem.
+The trace keeps every attempted state, outcome and score. The selected plan is replayed before its IR and report files are published.
+The worker path checks raw IR equality and the in-process backport checks
+throughput cost equality. Structural-cleanup trials compute pressure and side
+reports only for the selected plan.
+Set `DECISION_GAP_KEEP_TRIALS=1` to retain all candidate artifacts and detailed TTI.
+
+Set `DECISION_VLLM_LLVM24_TTI=1` to try the in-process throughput backport
+for the Linux `gfx906` vLLM `cache_eval` gap search. This overrides the branch,
+freeze, alloca and three AMDGPU intrinsic costs that differ on the checked
+vLLM IRs. Other instruction queries use LLVM 12 TTI. The pinned worker remains
+the default and the oracle for parity checks. This option does not change
+speculation cost policy, outer greedy scoring, cleanup diagnostics or codegen.
+
+For the fixed vLLM schedules, run `tools/run_vllm_fixed_tree.py` with
+`balanced` or `recursive` and a new `--out` directory. The driver receives
+only the ordered decision roots over stdout and keeps a rolling fused IR
+checkpoint. Set `DECISION_GAP_KEEP_CATALOG=1` to keep full catalogs and IR
+snapshots for debugging. Existing direct callers keep the file-based catalog
+unless they opt into `DECISION_GAP_ROOTS_STDOUT=1`.
+
+Set `DECISION_GREEDY_JOBS=4` to evaluate up to four outer greedy candidates
+concurrently. Each batch shares the current parent IR. Candidate numbering,
+ranking and tie-breaking still follow adjacency order. The default is one
+worker, and each new round starts after the previous decision is committed.
+
+Set `DECISION_GAP_EARLY_SCORE=1` with the in-process vLLM scorer and structural
+cleanup to stop an inner trial after raw IR verification if its throughput
+score cannot beat the incumbent. These attempts are marked `score-only` in
+the trace. Improving candidates still pass the full cleanup, scope audit,
+and binding checks before they can become incumbents.
 
 Limitations: this is single-match / single-segment greedy search, with small
 joint plans only for the two newly split instructions. It does not exhaustively
@@ -102,3 +136,57 @@ pinned LLVM revision are unchanged. This is an output-generation optimization.
 The GPU summary's source_commit identifies the main benchmark runner checkout;
 the transform base is 38565fe with uncommitted changes and explicit source hashes
 in this evidence directory. Frozen references were not changed.
+
+## Greedy acceptance gates on epyc
+
+The original `cost` + structural greedy run used
+`DECISION_MAX_UNIFORM_LOSS=0` and `DECISION_MAX_PRESSURE_GROWTH=0`.
+All 812 outer trials verified. The greedy search committed 138 fusions.
+The recorded rejection reason was `uniform_loss_limit` for 666 trials
+and `pressure_limit` for 8. All 674 rejected trials reduced whole-function
+throughput cost. Pressure is checked first, so six of the eight pressure
+rejections also exceeded the side-cost limit.
+
+The side gate sums static TTI over blocks conservatively reachable with
+the selected condition set to true or false. For example, the first
+two-leaf fusion in the first quantization tree reduced whole-function TTI
+from 5368 to 5357. The true side saved six points and the false side
+increased by 72 points, so the zero-tolerance gate rejected it. The
+pressure gate uses estimated peak live 32-bit IR slots. One E4M3 decode
+candidate saved eleven TTI points and improved both side scores but was
+rejected for increasing its estimate from 81 to 82. Neither metric is a
+GPU timing or a hardware register-allocation measurement.
+
+The relaxed run set both limits to 1000000. No candidate hit either
+limit. IR verification and the strict whole-function TTI improvement
+requirement still applied. Greedy evaluated 908 candidates and committed
+236 fusions, including all 224 tree-internal fusions and 12 outside those
+trees. Greedy's final throughput score was 2795, versus 3905 with the
+original gates and 2927 for the fixed balanced schedule.
+
+| Variant | Committed fusions | Remaining copysign calls | 64K | 128K |
+| --- | ---: | ---: | ---: | ---: |
+| Original greedy, earlier run | 138 | 128 | 2.636 ms | 5.139 ms |
+| Relaxed greedy | 236 | 32 | 2.228 ms | 4.305 ms |
+| Fixed balanced tree, paired with relaxed greedy | 224 | 32 | 2.167 ms | 4.335 ms |
+| Unfused baseline, paired with relaxed greedy | 0 | 256 | 3.021 ms | 5.919 ms |
+
+These are kernel medians on the same Radeon VII, with three warmups and
+15 measured launches per variant and input. Both sizes passed exact
+generated-output validation. The relaxed candidate had zero spills and
+reduced time versus its paired baseline by approximately 26% and 27%.
+It was 2.8% slower than balanced at 64K and 0.7% faster at 128K. Both
+limits changed together, so the measurements do not isolate their
+individual effects or change the default acceptance policy.
+
+For the same relaxed configuration, four outer workers reduced search
+wall time from 480.06 s to 246.41 s. Early scoring reduced it further to
+179.30 s. Of 6296 inner gap plans, 4392 could not beat the incumbent
+after verified raw-IR scoring and skipped late validation. All 908 outer
+candidate results, 236 commits and the final IR matched the serial run.
+The optimized configuration used `DECISION_GAP_SEARCH=1`,
+`DECISION_SPECULATION=cost`, `DECISION_CFG_CLEANUP=structural`,
+`DECISION_VLLM_LLVM24_TTI=1`, `DECISION_GREEDY_JOBS=4` and
+`DECISION_GAP_EARLY_SCORE=1`. This is a generated-input GPU comparison.
+The frozen runner and reference binaries were unavailable on epyc, so
+the formal frozen 2% regression gate was not rerun.

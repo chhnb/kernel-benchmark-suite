@@ -13,11 +13,23 @@ using namespace llvm;
 static void save(const std::string&p,const json::Value&v){std::error_code e;raw_fd_ostream o(p,e);if(e)throw std::runtime_error(e.message());o<<formatv("{0:2}\n",v);}
 static json::Value read(const std::string&p){auto b=MemoryBuffer::getFile(p);if(!b)throw std::runtime_error("missing "+p);auto v=json::parse((*b)->getBuffer());if(!v)throw std::runtime_error(toString(v.takeError()));return std::move(*v);}
 static int run(std::vector<std::string> a,const std::string&out,const std::string&err){for(const auto&p:{out,err})if(auto e=sys::fs::remove(p))throw std::runtime_error("cannot reset child output: "+p+": "+e.message());std::vector<StringRef> refs;for(auto&s:a)refs.push_back(s);std::array<Optional<StringRef>,3> red{{StringRef(""),StringRef(out),StringRef(err)}};return sys::ExecuteAndWait(a[0],refs,None,red,120);}
+static sys::ProcessInfo startTrial(const std::vector<std::string> &args,
+                                   const std::string &dir) {
+  std::vector<StringRef> refs(args.begin(),args.end());
+  const std::string output=dir+".stdout",error=dir+".stderr";
+  std::array<Optional<StringRef>,3> redirects{
+      StringRef(""),StringRef(output),StringRef(error)};
+  bool failed=false;
+  auto process=sys::ExecuteNoWait(refs.front(),refs,None,redirects,0,nullptr,&failed);
+  return failed?sys::ProcessInfo():process;
+}
 static bool eligible(const decision::Arm&a,const decision::Arm&b){return a.kind!=decision::ArmKind::Unsupported&&b.kind!=decision::ArmKind::Unsupported;}
 int main(int argc,char**argv){try{
  if(argc!=5)throw std::runtime_error("INPUT FUNCTION TOOL_ROOT NEW_OUTPUT required");
  std::string current=argv[1],fn=argv[2],root=argv[3],out=argv[4];if(sys::fs::exists(out))throw std::runtime_error("output exists");if(auto e=sys::fs::create_directories(out))throw std::runtime_error(e.message());
  auto limit=[](const char *name,int64_t fallback){const char*v=std::getenv(name);if(!v)return fallback;char*end=nullptr;auto n=std::strtoll(v,&end,10);if(!*v||*end||n<0||n>1000000)throw std::runtime_error(std::string("invalid ")+name);return int64_t(n);};
+ const auto jobs=limit("DECISION_GREEDY_JOBS",1);
+ if(jobs<1||jobs>64)throw std::runtime_error("DECISION_GREEDY_JOBS must be between 1 and 64");
  if(std::getenv("DECISION_CFG_CLEANUP")&&std::getenv("DECISION_DISABLE_SIMPLIFYCFG"))throw std::runtime_error("DECISION_CFG_CLEANUP conflicts with legacy DECISION_DISABLE_SIMPLIFYCFG");
  std::string cleanup=std::getenv("DECISION_CFG_CLEANUP")?std::getenv("DECISION_CFG_CLEANUP"):"structural";
  if(cleanup!="full"&&cleanup!="structural")throw std::runtime_error("invalid DECISION_CFG_CLEANUP");
@@ -36,7 +48,40 @@ int main(int argc,char**argv){try{
   unsigned identities=0;for(auto &candidate:catalog)identities+=candidate.id==target;if(identities!=1)throw std::runtime_error("ambiguous decision identity: "+target);
   cost(current,out+"/parent-side-tti");
   auto &d=catalog[di];int64_t bestCost=parentCost;std::string best;json::Array attempts;
-  for(unsigned left=0;left+1<d.arms.size();++left){if(!eligible(d.arms[left],d.arms[left+1]))continue;if(trials>=100000)throw std::runtime_error("trial budget exceeded");std::string dir=out+"/trial-"+std::to_string(trials++);save(dir+".request.json",json::Value(json::Object{{"decision",target},{"left",d.arms[left].id},{"right",d.arms[left+1].id}}));int rc=run({root+"/build/decision-fuse/decision-fuse",current,fn,std::to_string(di),std::to_string(left),dir,out+"/order.json",dir+".request.json"},dir+".stdout",dir+".stderr");json::Object attempt{{"directory",dir},{"left",d.arms[left].id},{"right",d.arms[left+1].id},{"exit_code",rc}};
+  struct Trial { unsigned left; std::string dir; int rc; };
+  std::vector<Trial> evaluated;
+  unsigned next=0;
+  while(next+1<d.arms.size()){
+   std::vector<sys::ProcessInfo> running;
+   const size_t start=evaluated.size();
+   while(next+1<d.arms.size()&&evaluated.size()-start<size_t(jobs)){
+    unsigned left=next++;
+    if(!eligible(d.arms[left],d.arms[left+1]))continue;
+    if(trials>=100000)throw std::runtime_error("trial budget exceeded");
+    std::string dir=out+"/trial-"+std::to_string(trials++);
+    save(dir+".request.json",json::Value(json::Object{
+         {"decision",target},{"left",d.arms[left].id},{"right",d.arms[left+1].id}}));
+    std::vector<std::string> args{root+"/build/decision-fuse/decision-fuse",current,fn,
+        std::to_string(di),std::to_string(left),dir,out+"/order.json",dir+".request.json"};
+    if(jobs==1){
+      int rc=run(std::move(args),dir+".stdout",dir+".stderr");
+      evaluated.push_back({left,std::move(dir),rc});
+    }else{
+      running.push_back(startTrial(args,dir));
+      evaluated.push_back({left,std::move(dir),-1});
+    }
+   }
+   for(size_t i=0;i<running.size();++i)
+    if(running[i].Pid)
+      evaluated[start+i].rc=sys::Wait(running[i],120,false).ReturnCode;
+  }
+  // Rank in the original adjacency order so ties select the same trial.
+  for(const auto &trial:evaluated){
+   const auto left=trial.left;
+   const auto &dir=trial.dir;
+   const int rc=trial.rc;
+   json::Object attempt{{"directory",dir},{"left",d.arms[left].id},
+                        {"right",d.arms[left+1].id},{"exit_code",rc}};
    if(rc){if(sys::fs::exists(dir+"/trial.json")){auto v=read(dir+"/trial.json");auto*r=v.getAsObject();if(r)if(auto reason=r->getString("reason"))attempt["reason"]=reason->str();}else attempt["reason"]="trial_process_failed";}
    else{auto verified=read(dir+"/trial.json");auto *actual=verified.getAsObject();
     if(!actual||actual->getString("decision")!=Optional<StringRef>(target)||actual->getString("left")!=Optional<StringRef>(d.arms[left].id)||actual->getString("right")!=Optional<StringRef>(d.arms[left+1].id))throw std::runtime_error("trial identity mismatch: "+dir);

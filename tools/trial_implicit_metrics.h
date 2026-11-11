@@ -1,4 +1,5 @@
 #pragma once
+#include "tti_memory_io.h"
 #include <array>
 #include <set>
 #include <vector>
@@ -12,7 +13,8 @@
 namespace decision {
 inline void recordImplicitMetrics(llvm::json::Object &report,const char *executable,
  llvm::Function &f,const std::string &dir,const std::vector<unsigned>(&before)[2],
- const std::vector<unsigned>(&after)[2],bool masksOK,std::string why){
+ const std::vector<unsigned>(&after)[2],bool masksOK,std::string why,llvm::StringRef beforeIR={},
+ llvm::StringRef afterIR={}){
  using namespace llvm;
  report["implicit_speculation_cost_true"]=nullptr;report["implicit_speculation_cost_false"]=nullptr;
  report["implicit_speculation_metrics_available"]=false;
@@ -25,13 +27,20 @@ inline void recordImplicitMetrics(llvm::json::Object &report,const char *executa
   else{auto root=sys::path::parent_path(sys::path::parent_path(sys::path::parent_path(exe)));worker=(root+"/tools/run-llvm24-tti").str();}
   int64_t sums[2][2]{};
   for(unsigned stage=0;stage<2;++stage){
+   auto readCost=[&]()->std::string{
+#ifdef __linux__
+    if(!beforeIR.empty())return runMemoryTTI(worker,stage?afterIR:beforeIR,f.getName(),false,60);
+#endif
    std::string prefix=dir+(stage?"/post-full-cleanup":"/pre-full-cleanup");
    std::string input=prefix+".ll",output=prefix+"-tti.json",error=prefix+"-tti.stderr",name=f.getName().str();
    for(auto &p:{output,error})if(auto e=sys::fs::remove(p))throw std::runtime_error(e.message());
    std::array<StringRef,3> args{{worker,input,name}};std::array<Optional<StringRef>,3> redirects{{StringRef(""),StringRef(output),StringRef(error)}};
    if(sys::ExecuteAndWait(worker,args,None,redirects,60))throw std::runtime_error("implicit_metrics_worker_failed");
    auto buffer=MemoryBuffer::getFile(output);if(!buffer)throw std::runtime_error("implicit_metrics_output_missing");
-   auto parsed=json::parse((*buffer)->getBuffer());if(!parsed)throw std::runtime_error(toString(parsed.takeError()));
+   return (*buffer)->getBuffer().str();
+   };
+   auto parsed=json::parse(readCost());
+   if(!parsed)throw std::runtime_error(toString(parsed.takeError()));
    auto*o=parsed->getAsObject();if(!o||o->getString("source_revision")!=Optional<StringRef>("6be16f356d3e")||o->getInteger("unknown")!=Optional<int64_t>(0))throw std::runtime_error("implicit_metrics_unknown_cost_or_worker");
    auto*rows=o->getArray("instruction_costs");if(!rows)throw std::runtime_error("implicit_metrics_rows_missing");
    for(unsigned side=0;side<2;++side){
