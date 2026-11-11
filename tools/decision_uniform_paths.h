@@ -154,6 +154,14 @@ inline std::vector<UniformArmFacts> uniformFacts(const Decision &decision,
  for(const auto &arm:decision.arms){
   UniformArmFacts facts;facts.id=arm.id;
   facts.originalBlocks.insert(arm.blocks.begin(),arm.blocks.end());
+  // The original path includes the shared suffix up to the decision join.
+  // Private arm ownership is narrower than the accounting scope.
+  auto suffix=arm.exitTargets;
+  while(!suffix.empty()){
+   auto *block=suffix.back();suffix.pop_back();
+   if(block==decision.join||!facts.originalBlocks.insert(block).second)continue;
+   for(auto *next:successors(block))suffix.push_back(next);
+  }
   for(const auto &edges:arm.alternatives){
    UniformPath path;
    for(const auto &edge:edges){

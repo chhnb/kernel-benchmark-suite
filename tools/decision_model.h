@@ -10,7 +10,7 @@ struct Edge { llvm::BasicBlock *test; unsigned successor; };
 struct Arm {
   std::string id;
   llvm::BasicBlock *entry=nullptr;
-  std::vector<llvm::BasicBlock*> blocks, exitSources;
+  std::vector<llvm::BasicBlock*> blocks, exitSources, exitTargets;
   std::vector<Edge> predicate;
   std::vector<std::vector<Edge>> alternatives;
   std::vector<std::string> mergedFrom;
@@ -19,11 +19,16 @@ struct Arm {
   ArmKind kind=ArmKind::Unsupported;
   std::string reason;
 };
+struct PairBoundary {
+  llvm::BasicBlock *join=nullptr;
+  std::string reason;
+};
 struct Decision {
   std::string id;
   llvm::BasicBlock *root=nullptr, *join=nullptr;
   std::vector<llvm::BasicBlock*> tests;
   std::vector<Arm> arms;
+  std::vector<PairBoundary> pairs;
 };
 // Read-only; all pointers are valid only for this function snapshot.
 std::vector<Decision> discover(llvm::Function &);
@@ -32,5 +37,5 @@ llvm::json::Array describe(const std::vector<Decision>&);
 // Safe condition speculation within budget; no fusion. Caller discards failures.
 bool normalize(llvm::Function&, const Decision&, unsigned left, std::string &reason,
                llvm::BasicBlock **dispatchOut=nullptr, unsigned conditionBudget=4,
-               std::vector<llvm::WeakVH> *conditionHoists=nullptr);
+               std::vector<llvm::WeakVH> *conditionHoists=nullptr, llvm::BasicBlock **localJoinOut=nullptr);
 }

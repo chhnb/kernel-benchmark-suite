@@ -17,6 +17,7 @@ build/decision-fuse/review-policy-check
 build/decision-fuse/scoped-cfg-check
 build/decision-fuse/uniform-paths-check
 python3 tests/decision-model/cleanup_mode_check.py
+python3 tests/decision-model/pair_join_check.py
 for test in review_policy run condition_check fuse_check full_tree_check identity_check; do
   python3 "tests/decision-model/$test.py"
 done

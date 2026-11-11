@@ -1,5 +1,6 @@
 // Opt-in single-pair bridge to the existing RegionMelder. No ranking or fallback.
 #include "decision_model.h"
+#include "complete_leaf_plan.h"
 #include "decision_gap_search.h"
 #include "trial_simplify_cfg.h"
 #include "trial_full_cfg.h"
@@ -63,6 +64,7 @@ struct PreparedDecision {
  std::vector<BasicBlock*> originalBlocks;
  std::string decision, left, right;
  unsigned armCount=0;
+ bool localPair=false;
 };
 static int runDecisionTrial(int argc,char **argv,Module &parent,
                             StringRef cleanup,int mode,unsigned budget,
@@ -99,10 +101,11 @@ static int runDecisionTrial(int argc,char **argv,Module &parent,
  BasicBlock *dispatch=nullptr,*bindingEntry=nullptr,*decisionJoin=nullptr;
  std::string decisionID,reason;
  unsigned armCount=0;
+ bool localPair=false;
  if(reuse){
    auto mapBlock=[&](BasicBlock *block){return cast<BasicBlock>(mapping.lookup(block));};
    dispatch=mapBlock(prepared->dispatch);bindingEntry=mapBlock(prepared->binding);
-   decisionJoin=mapBlock(prepared->join);armCount=prepared->armCount;decisionID=prepared->decision;
+   decisionJoin=mapBlock(prepared->join);localPair=prepared->localPair;armCount=prepared->armCount;decisionID=prepared->decision;
    for(auto *block:prepared->originalBlocks)originalBlocks.emplace_back(mapBlock(block));
    report["decision"]=decisionID;report["left"]=prepared->left;report["right"]=prepared->right;
  }else{
@@ -161,14 +164,18 @@ static int runDecisionTrial(int argc,char **argv,Module &parent,
    sideCondition=sideBranch&&sideBranch->isConditional()?sideBranch->getCondition():nullptr;
    sideBeforeOK=decision_side::sideBlocksBoth(*f,sideCondition,sidesBefore,sideReason);
  }
- decisionID=ds[di].id;armCount=ds[di].arms.size();decisionJoin=ds[di].join;
+ decisionID=ds[di].id;armCount=ds[di].arms.size();
+ if(!ds[di].pairs[li].join)return finish(ds[di].pairs[li].reason,3);
+ localPair=ds[di].pairs[li].join!=ds[di].join;
+ report["pair_join"]=label(ds[di].pairs[li].join);
+ report["decision_join"]=label(ds[di].join);
  if(uniformReport){
    uniformRoot=ds[di].root;uniformJoin=ds[di].join;
    uniformArms=decision::uniformFacts(ds[di],uniformKeys);
    report["uniform_before"]=decision::uniformBlocks(ds[di].root,ds[di].join,uniformArms,uniformKeys,true);
  }
  for(auto &b:*f)originalBlocks.emplace_back(&b);
- if(!decision::normalize(*f,ds[di],li,reason,&dispatch,conditionBudget,uniformReport?&conditionHoists:nullptr))return finish(reason,3);
+ if(!decision::normalize(*f,ds[di],li,reason,&dispatch,conditionBudget,uniformReport?&conditionHoists:nullptr,&decisionJoin))return finish(reason,3);
  bindingEntry=dispatch;
  // When the last arms of an already-normalized subdecision are fused, the
  // opaque arm must include its short-circuit evaluation prefix as well.
@@ -184,7 +191,7 @@ static int runDecisionTrial(int argc,char **argv,Module &parent,
     prepared->module=CloneModule(*trial,snapshot);
     auto mapBlock=[&](BasicBlock *block){return cast<BasicBlock>(snapshot.lookup(block));};
     prepared->dispatch=mapBlock(dispatch);prepared->binding=mapBlock(bindingEntry);
-    prepared->join=mapBlock(decisionJoin);prepared->armCount=armCount;
+    prepared->join=mapBlock(decisionJoin);prepared->localPair=localPair;prepared->armCount=armCount;
     prepared->decision=decisionID;prepared->left=ds[di].arms[li].id;prepared->right=ds[di].arms[li+1].id;
     for(auto &handle:originalBlocks)if(auto *block=dyn_cast_or_null<BasicBlock>((Value*)handle))
       prepared->originalBlocks.push_back(mapBlock(block));
@@ -217,6 +224,32 @@ static int runDecisionTrial(int argc,char **argv,Module &parent,
  auto *branch=dyn_cast<BranchInst>(dispatch->getTerminator());if(!branch||!branch->isConditional())return finish("dispatch_lost",3);
  auto *left=branch->getSuccessor(0),*right=branch->getSuccessor(1);
  if(bothLinear&&(left->getSingleSuccessor()!=join||right->getSingleSuccessor()!=join))return finish("B2B_exit_mismatch",3);
+ WeakVH dispatchHandle(dispatch);
+ unsigned speculatedRanges=0;
+ json::Array segments;
+ std::unique_ptr<decision::SpeculationTTI> speculationTTI;
+ if(mode==3){try{speculationTTI=std::make_unique<decision::SpeculationTTI>(*f);}catch(const std::exception&e){return finish(e.what(),3);}}
+ const bool multiAnchor=localPair&&!bothLinear;
+ if(multiAnchor){
+  fusion::LeafArm a{left,{pair->arms[0].blocks.begin(),pair->arms[0].blocks.end()}};
+  fusion::LeafArm b{right,{pair->arms[1].blocks.begin(),pair->arms[1].blocks.end()}};
+  fusion::LeafPlanOptions options{true,mode,int(budget),int(costThreshold),
+    speculationTTI?speculationTTI->info.get():nullptr,uniformReport?&approvedSpeculation:nullptr,
+    &speculatedRanges};
+  unsigned moved=0,anchors=0,groups=0;
+  std::vector<std::string> pairs;
+  try{
+   if(!fusion::meldLeafPlan(*f,options,std::move(a),std::move(b),dispatch,
+                           moved,anchors,groups,pairs,reason))
+    return finish(reason,3);
+  }catch(const std::exception &e){return finish(e.what(),3);}
+  report["plan"]="complete-leaf-multi-anchor";
+  report["moved_leaf_instructions"]=int64_t(moved);
+  report["leaf_anchor_pairs"]=json::Array(pairs);
+  report["coalesced_gap_groups"]=int64_t(groups);
+  report["alignment_choices"]=json::Array{};
+  report["gap_choices"]=json::Array{};
+ }else{
  DominatorTree dt(*f);PostDominatorTree pdt(*f);RegionAnalyzer analyzer(dispatch,dt,pdt);
  if(bothLinear)analyzer.selectExplicitBlocks(left,right);else {
   // Reuse the native similarity, but do not call a match of empty plumbing
@@ -235,18 +268,22 @@ static int runDecisionTrial(int argc,char **argv,Module &parent,
  report["replication"]=analyzer.requireRegionReplication();
  auto anchors=analyzer.getRegionMatchEntryBlocks(0);report["matched_left"]=label(anchors.first);report["matched_right"]=label(anchors.second);
  if(!scope.count(anchors.first)||!scope.count(anchors.second))return finish("native_anchor_outside_trial",3);
- std::unique_ptr<decision::SpeculationTTI> speculationTTI;
- if(mode==3){try{speculationTTI=std::make_unique<decision::SpeculationTTI>(*f);}catch(const std::exception&e){return finish(e.what(),3);}}
  RegionMelder melder(analyzer,true);melder.SpeculatedInstructions=uniformReport?&approvedSpeculation:nullptr;melder.SpeculationMode=mode;melder.SpeculationBudget=budget;melder.SpeculationTTI=speculationTTI?speculationTTI->info.get():nullptr;melder.SpeculationCostThreshold=costThreshold;
  if(explicitState){
   melder.SplitMatchIDs=explicitState->Split;melder.SpeculateGapIDs=explicitState->Speculate;melder.ExplicitGapPlan=true;
   if(mode!=3&&!melder.SpeculateGapIDs.empty())return finish("explicit_speculation_requires_cost_mode",3);
  }
  melder.CoalesceGaps=std::getenv("DECISION_COALESCE_GAPS")!=nullptr;
- WeakVH dispatchHandle(dispatch);
  try{melder.merge(0);}catch(const std::exception&E){return finish(E.what(),3);}
  report["alignment_choices"]=std::move(melder.AlignmentChoices);
  report["gap_choices"]=std::move(melder.GapChoices);
+ speculatedRanges=melder.SpeculatedRanges;
+ if(diagnostics)for(auto &D:melder.SegmentDecisions){
+  json::Array inst;
+  for(auto &I:D.Instructions)inst.push_back(json::Object{{"opcode",I.Opcode},{"weight",I.Weight},{"tti",I.TTI},{"safe",I.Safe}});
+  segments.push_back(json::Object{{"count",D.Count},{"weight",D.Weight},{"tti",D.TTI},{"safe",D.Safe},{"operands_available",D.Available},{"decision",D.Speculate?"speculate":"protect"},{"reason",D.Reason},{"instructions",std::move(inst)}});
+ }
+ }
  if(!dispatchHandle)return finish("dispatch_deleted_identity_unknown",3);
  dispatch=cast<BasicBlock>((Value*)dispatchHandle);
  // RegionMelder can replace the dispatch terminator: restore logical identity
@@ -282,7 +319,7 @@ static int runDecisionTrial(int argc,char **argv,Module &parent,
  }
  std::set<BasicBlock*> oldBlocks;for(auto &h:originalBlocks)if(auto *b=dyn_cast_or_null<BasicBlock>((Value*)h))oldBlocks.insert(b);
  std::set<BasicBlock*> created;std::set<Instruction*> clean;
- for(auto &b:*f)if(!oldBlocks.count(&b)&&&b!=bindingEntry&&&b!=dispatch){created.insert(&b);for(auto &i:b)clean.insert(&i);}
+ for(auto &b:*f)if(!oldBlocks.count(&b)&&&b!=bindingEntry&&&b!=dispatch&&(!localPair||&b!=decisionJoin)){created.insert(&b);for(auto &i:b)clean.insert(&i);}
  for(auto &i:*dispatch)clean.insert(&i);
  // Canonicalize a selector's polarity without creating a selection PHI.
  for(auto &b:*f)if(created.count(&b)||&b==dispatch)for(auto &i:b)if(auto *sel=dyn_cast<SelectInst>(&i))if(auto *inv=dyn_cast<BinaryOperator>(sel->getCondition()))if(inv->getOpcode()==Instruction::Xor)if(auto *one=dyn_cast<ConstantInt>(inv->getOperand(1)))if(one->isOne()){
@@ -324,8 +361,6 @@ static int runDecisionTrial(int argc,char **argv,Module &parent,
  report["side_metrics_reason"]=sideReason;
  auto sideJSON=[](const std::vector<unsigned>&blocks){json::Array a;for(auto b:blocks)a.push_back(int64_t(b));return a;};
  for(unsigned side=0;side<2;++side){auto name=side?"true":"false";report[std::string("side_before_")+name]=sideJSON(sidesBefore[side]);report[std::string("side_after_")+name]=sideJSON(sidesAfter[side]);}
- json::Array segments;
- for(auto &D:melder.SegmentDecisions){json::Array inst;for(auto &I:D.Instructions)inst.push_back(json::Object{{"opcode",I.Opcode},{"weight",I.Weight},{"tti",I.TTI},{"safe",I.Safe}});segments.push_back(json::Object{{"count",D.Count},{"weight",D.Weight},{"tti",D.TTI},{"safe",D.Safe},{"operands_available",D.Available},{"decision",D.Speculate?"speculate":"protect"},{"reason",D.Reason},{"instructions",std::move(inst)}});}
  report["segments"]=std::move(segments);
  }
  if(uniformReport){
@@ -378,12 +413,12 @@ static int runDecisionTrial(int argc,char **argv,Module &parent,
  else if(!memory)writeIR(*trial,dir+"/fused.ll");
  auto rebound=decision::discover(*f);unsigned bindings=0;std::string kind;
  for(auto &d:rebound)if(d.id==decisionID)for(auto &a:d.arms)if(a.entry==bindingEntry&&a.kind!=decision::ArmKind::Unsupported){++bindings;kind=a.kind==decision::ArmKind::Linear?"Linear":"SESE";}
- if(bindings==0&&armCount==2){
+ if(bindings==0&&(armCount==2||localPair)){
   DominatorTree dtAfter(*f);PostDominatorTree pdtAfter(*f);auto *exit=decisionJoin;bool owned=pdtAfter.dominates(exit,bindingEntry);std::set<BasicBlock*> visited;std::vector<BasicBlock*> todo{bindingEntry};bool linear=true;
   while(!todo.empty()){auto *b=todo.back();todo.pop_back();if(b==exit||!visited.insert(b).second)continue;if(!dtAfter.dominates(bindingEntry,b))owned=false;if(b->getTerminator()->getNumSuccessors()!=1)linear=false;for(auto *next:successors(b))todo.push_back(next);}
-  if(owned){bindings=1;kind=linear?"Linear":"SESE";report["completed_decision"]=true;}
+  if(owned){bindings=1;kind=linear?"Linear":"SESE";if(armCount==2)report["completed_decision"]=true;}
  }
- report["rebound_bindings"]=bindings;report["rebound_kind"]=kind;report["speculated_gap_ranges"]=melder.SpeculatedRanges;report["outside_audit"]="preserved instructions and SSA-tracked operands";
+ report["rebound_bindings"]=bindings;report["rebound_kind"]=kind;report["speculated_gap_ranges"]=speculatedRanges;report["outside_audit"]="preserved instructions and SSA-tracked operands";
  if(publish){
    if(decision::gapKeepCatalog())memory->Catalog=json::Value(decision::describe(rebound));
    if(decision::gapRootsStdout())for(const auto &d:rebound)memory->Roots.push_back(label(d.root));

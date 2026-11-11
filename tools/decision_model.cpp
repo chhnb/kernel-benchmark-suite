@@ -11,6 +11,7 @@
 #include <set>
 #include <map>
 #include <functional>
+#include <tuple>
 using namespace llvm;
 namespace decision {
 static std::string name(BasicBlock *b) { if(!b)return ""; std::string s; raw_string_ostream o(s); b->printAsOperand(o,false); return o.str(); }
@@ -88,11 +89,17 @@ std::vector<Decision> discover(Function &f) {
  while(!pending.empty()){auto *x=pending.back();pending.pop_back();if(x==d.join||!seen.insert(x).second)continue;
   a.blocks.push_back(x);
   if(x->hasAddressTaken()||x->isEHPad()||(!isa<BranchInst>(x->getTerminator())&&!isa<SwitchInst>(x->getTerminator())))a.reason="unsupported_terminator_or_address_taken";
-  if(!dt.dominates(b,x))a.reason="multiple_entry_or_shared_suffix";
+
   if(x==&root||li.getLoopFor(x)!=li.getLoopFor(&root))a.reason="unsupported_loop_scope";
   if(x->getTerminator()->getNumSuccessors()==0)a.reason="early_exit";
   for(auto &i:*x){if(i.mayHaveSideEffects())a.reason="side_effects";if(auto *c=dyn_cast<CallBase>(&i))if(c->isConvergent())a.reason="convergent_call";}
-  for(auto *s:successors(x)){if(s==d.join)a.exitSources.push_back(x);else if(dt.dominates(s,x))a.reason="backedge";else pending.push_back(s);}
+  for(auto *s:successors(x)){
+   if(s==d.join||!dt.dominates(b,s)){
+    if(!is_contained(a.exitSources,x))a.exitSources.push_back(x);
+    if(!is_contained(a.exitTargets,s))a.exitTargets.push_back(s);
+   }else if(dt.dominates(s,x))a.reason="backedge";
+   else pending.push_back(s);
+  }
  }
  if(a.blocks.empty())a.reason="empty_arm";
  for(auto *x:a.blocks)for(auto *p:predecessors(x))if(!seen.count(p)&&x!=b)a.reason="multiple_entry";
@@ -116,22 +123,59 @@ std::vector<Decision> discover(Function &f) {
  bool ordered=!d.arms.empty()&&!d.arms[0].orderFamily.empty();
  for(auto &a:d.arms)if(a.orderFamily!=d.arms[0].orderFamily||a.orderFirst<0||a.orderLast<a.orderFirst)ordered=false;
  if(ordered)std::stable_sort(d.arms.begin(),d.arms.end(),[](const Arm&a,const Arm&b){return a.orderFirst<b.orderFirst;});
+ for(size_t i=1;i<d.arms.size();++i){
+  auto &a=d.arms[i-1],&b=d.arms[i];
+  auto *join=pdt.findNearestCommonDominator(a.entry,b.entry);
+  PairBoundary pair;
+  if(!join||a.exitTargets.size()!=1||b.exitTargets.size()!=1||
+     a.exitTargets.front()!=join||b.exitTargets.front()!=join)
+   pair.reason="pair_exit_targets_mismatch";
+  else if(a.kind==ArmKind::Unsupported||b.kind==ArmKind::Unsupported)
+   pair.reason="unsupported_arm";
+  else pair.join=join;
+  d.pairs.push_back(std::move(pair));
+ }
  result.push_back(std::move(d));
+ }
+ // If a nested decision already owns this exact pair at its regular
+ // join, keep that canonical owner. An outer test-only prefix can expose
+ // the same leaves and must not preempt the established search order.
+ using PairKey=std::tuple<BasicBlock*,BasicBlock*,BasicBlock*>;
+ std::map<PairKey,std::vector<BasicBlock*>> canonical;
+ auto key=[](const Decision &d,size_t i){
+  return PairKey{d.arms[i].entry,d.arms[i+1].entry,d.pairs[i].join};
+ };
+ for(auto &d:result)for(size_t i=0;i<d.pairs.size();++i)
+  if(d.pairs[i].join&&d.pairs[i].join==d.join)
+   canonical[key(d,i)].push_back(d.root);
+ for(auto &d:result)for(size_t i=0;i<d.pairs.size();++i){
+  auto &pair=d.pairs[i];
+  if(!pair.join||pair.join==d.join)continue;
+  auto found=canonical.find(key(d,i));
+  if(found!=canonical.end()&&llvm::any_of(found->second,[&](BasicBlock *root){
+       return is_contained(d.tests,root);
+     }))pair={nullptr,"pair_owned_by_nested_decision"};
  }
  return result;
 }
-json::Array describe(const std::vector<Decision>&ds){json::Array out;for(auto &d:ds){json::Array arms,tests;for(auto *b:d.tests)tests.push_back(name(b));for(auto &a:d.arms){json::Array blocks,exits,path,alternatives,origins;for(auto &id:a.mergedFrom)origins.push_back(id);for(auto &p:a.alternatives){json::Array edges;for(auto e:p)edges.push_back(json::Object{{"test",name(e.test)},{"successor",e.successor}});alternatives.push_back(std::move(edges));}for(auto *b:a.blocks)blocks.push_back(name(b));for(auto *b:a.exitSources)exits.push_back(name(b));for(auto e:a.predicate)path.push_back(json::Object{{"test",name(e.test)},{"successor",e.successor}});arms.push_back(json::Object{{"id",a.id},{"entry",name(a.entry)},{"kind",a.kind==ArmKind::Linear?"Linear":a.kind==ArmKind::SESE?"SESE":"Unsupported"},{"reason",a.reason},{"blocks",std::move(blocks)},{"exit_sources",std::move(exits)},{"ordered_predicate",std::move(path)},{"predicate_alternatives",std::move(alternatives)},{"merged_from",std::move(origins)},{"order_family",a.orderFamily},{"order_first",a.orderFirst},{"order_last",a.orderLast}});}out.push_back(json::Object{{"id",d.id},{"root",name(d.root)},{"join",name(d.join)},{"tests",std::move(tests)},{"arms",std::move(arms)},{"identity_scope","persistent_origin_if_tagged_else_snapshot"}});}return out;}
-bool normalize(Function &f,const Decision &d,unsigned left,std::string &reason,BasicBlock **dispatchOut,unsigned conditionBudget,std::vector<WeakVH> *conditionHoists){
+json::Array describe(const std::vector<Decision>&ds){json::Array out;for(auto &d:ds){json::Array arms,tests,pairs;for(auto &pair:d.pairs)pairs.push_back(json::Object{{"join",name(pair.join)},{"reason",pair.reason}});for(auto *b:d.tests)tests.push_back(name(b));for(auto &a:d.arms){json::Array blocks,exits,targets,path,alternatives,origins;for(auto *target:a.exitTargets)targets.push_back(name(target));for(auto &id:a.mergedFrom)origins.push_back(id);for(auto &p:a.alternatives){json::Array edges;for(auto e:p)edges.push_back(json::Object{{"test",name(e.test)},{"successor",e.successor}});alternatives.push_back(std::move(edges));}for(auto *b:a.blocks)blocks.push_back(name(b));for(auto *b:a.exitSources)exits.push_back(name(b));for(auto e:a.predicate)path.push_back(json::Object{{"test",name(e.test)},{"successor",e.successor}});arms.push_back(json::Object{{"id",a.id},{"entry",name(a.entry)},{"kind",a.kind==ArmKind::Linear?"Linear":a.kind==ArmKind::SESE?"SESE":"Unsupported"},{"reason",a.reason},{"blocks",std::move(blocks)},{"exit_sources",std::move(exits)},{"exit_targets",std::move(targets)},{"ordered_predicate",std::move(path)},{"predicate_alternatives",std::move(alternatives)},{"merged_from",std::move(origins)},{"order_family",a.orderFamily},{"order_first",a.orderFirst},{"order_last",a.orderLast}});}out.push_back(json::Object{{"id",d.id},{"root",name(d.root)},{"join",name(d.join)},{"tests",std::move(tests)},{"arms",std::move(arms)},{"pairs",std::move(pairs)},{"identity_scope","persistent_origin_if_tagged_else_snapshot"}});}return out;}
+bool normalize(Function &f,const Decision &d,unsigned left,std::string &reason,BasicBlock **dispatchOut,unsigned conditionBudget,std::vector<WeakVH> *conditionHoists,BasicBlock **localJoinOut){
  auto fail=[&](const char*s){reason=s;return false;};
  if(left+1>=d.arms.size())return fail("pair_out_of_range");
  auto &a=d.arms[left];auto &b=d.arms[left+1];
+ auto *pairJoin=d.pairs[left].join;
+ if(!pairJoin){reason=d.pairs[left].reason;return false;}
+ if(localJoinOut)*localJoinOut=pairJoin;
+ auto recordSplit=[&](BasicBlock *split){
+  if(localJoinOut&&pairJoin!=d.join)*localJoinOut=split;
+ };
  std::set<BasicBlock*> affected(d.tests.begin(),d.tests.end());
  affected.insert(a.blocks.begin(),a.blocks.end());affected.insert(b.blocks.begin(),b.blocks.end());
- if(d.join)affected.insert(d.join);
+ affected.insert(pairJoin);
  for(auto *bb:affected)for(auto &i:*bb)if(auto *c=dyn_cast<CallBase>(&i))
   if(c->isConvergent())return fail("convergent_trial_region_not_supported");
  if(a.kind==ArmKind::Unsupported||b.kind==ArmKind::Unsupported)return fail("unsupported_arm");
- if(a.predicate.empty()||b.predicate.empty()||!d.join)return fail("missing_boundary");
+ if(a.predicate.empty()||b.predicate.empty())return fail("missing_boundary");
  if(!a.orderFamily.empty()&&a.orderFamily==b.orderFamily&&a.orderLast+1!=b.orderFirst)return fail("nonadjacent_logical_ranges");
  auto attachIdentity=[&](BasicBlock *entry){
   SmallVector<Metadata*,8> origins;for(auto *arm:{&a,&b}){if(arm->mergedFrom.empty())origins.push_back(MDString::get(f.getContext(),arm->id));else for(auto &id:arm->mergedFrom)origins.push_back(MDString::get(f.getContext(),id));}
@@ -139,14 +183,16 @@ bool normalize(Function &f,const Decision &d,unsigned left,std::string &reason,B
   entry->getTerminator()->setMetadata("decision.origin",MDNode::get(ctx,MDString::get(ctx,"merge("+a.id+","+b.id+")")));
   if(!a.orderFamily.empty()&&a.orderFamily==b.orderFamily)entry->getTerminator()->setMetadata("decision.order",MDNode::get(ctx,{MDString::get(ctx,a.orderFamily),ConstantAsMetadata::get(ConstantInt::get(Type::getInt32Ty(ctx),a.orderFirst)),ConstantAsMetadata::get(ConstantInt::get(Type::getInt32Ty(ctx),b.orderLast))}));
  };
- auto foldExitPhis=[&](){for(auto it=d.join->begin();it!=d.join->end();){auto *p=dyn_cast<PHINode>(&*it++);if(p&&p->getNumIncomingValues()==1&&p->getIncomingValue(0)!=p){p->replaceAllUsesWith(p->getIncomingValue(0));p->eraseFromParent();}}};
+ auto foldExitPhis=[&](){for(auto it=pairJoin->begin();it!=pairJoin->end();){auto *p=dyn_cast<PHINode>(&*it++);if(p&&p->getNumIncomingValues()==1&&p->getIncomingValue(0)!=p){p->replaceAllUsesWith(p->getIncomingValue(0));p->eraseFromParent();}}};
  auto ea=a.predicate.back(),eb=b.predicate.back();
  auto *x=ea.test,*y=eb.test;auto *bx=dyn_cast<BranchInst>(x->getTerminator());auto *by=dyn_cast<BranchInst>(y->getTerminator());
  if(x==y&&bx&&bx->isConditional()&&ea.successor!=eb.successor){
   if(a.entry->getSinglePredecessor()!=x||b.entry->getSinglePredecessor()!=x)return fail("sibling_entry_not_exclusive");
   if(!a.entry->phis().empty()||!b.entry->phis().empty())return fail("sibling_entry_phi_unsupported");
   SmallVector<BasicBlock*,16> exits;for(auto *v:a.exitSources)if(!is_contained(exits,v))exits.push_back(v);for(auto *v:b.exitSources)if(!is_contained(exits,v))exits.push_back(v);
-  if(!SplitBlockPredecessors(d.join,exits,".pair.join"))return fail("sibling_exit_split_failed");
+  auto *split=SplitBlockPredecessors(pairJoin,exits,".pair.join");
+  if(!split)return fail("sibling_exit_split_failed");
+  recordSplit(split);
   foldExitPhis();
   if(ea.successor==1){bx->setCondition(BinaryOperator::CreateNot(bx->getCondition(),"decision.left",bx));bx->swapSuccessors();}
   attachIdentity(x);if(dispatchOut)*dispatchOut=x;reason="existing_diamond";
@@ -168,8 +214,9 @@ bool normalize(Function &f,const Decision &d,unsigned left,std::string &reason,B
  for(auto &i:*y){if(!i.isTerminator()&&i.mayHaveSideEffects())return fail("test_side_effects");if(auto *c=dyn_cast<CallBase>(&i))if(c->isConvergent())return fail("convergent_test");}
  std::vector<BasicBlock*> exits=a.exitSources;exits.insert(exits.end(),b.exitSources.begin(),b.exitSources.end());
  std::sort(exits.begin(),exits.end());exits.erase(std::unique(exits.begin(),exits.end()),exits.end());
- auto *j=SplitBlockPredecessors(d.join,exits,".pair.join");
+ auto *j=SplitBlockPredecessors(pairJoin,exits,".pair.join");
  if(!j)return fail("cannot_split_exit");
+ recordSplit(j);
  foldExitPhis();
  auto &ctx=f.getContext();
  // Hoisting is permitted only for a single, exclusively owned test block.

@@ -27,7 +27,6 @@ static sys::ProcessInfo startTrial(const std::vector<std::string> &args,
   auto process=sys::ExecuteNoWait(refs.front(),refs,None,redirects,0,nullptr,&failed);
   return failed?sys::ProcessInfo():process;
 }
-static bool eligible(const decision::Arm&a,const decision::Arm&b){return a.kind!=decision::ArmKind::Unsupported&&b.kind!=decision::ArmKind::Unsupported;}
 int main(int argc,char**argv){try{
  if(argc!=5)throw std::runtime_error("INPUT FUNCTION TOOL_ROOT NEW_OUTPUT required");
  std::string current=argv[1],fn=argv[2],root=argv[3],out=argv[4];if(sys::fs::exists(out))throw std::runtime_error("output exists");if(auto e=sys::fs::create_directories(out))throw std::runtime_error(e.message());
@@ -58,7 +57,7 @@ int main(int argc,char**argv){try{
  const int64_t maxUniformLoss=transactional||cleanup=="full"?-1:requestedUniformLoss,maxPressureGrowth=limit("DECISION_MAX_PRESSURE_GROWTH",0),maxPressure=limit("DECISION_MAX_PRESSURE",1000000);
  LLVMContext ctx;SMDiagnostic error;auto initial=parseIRFile(current,error,ctx);if(!initial||!initial->getFunction(fn)||verifyModule(*initial,&errs()))throw std::runtime_error("invalid input");
  auto ds=decision::discover(*initial->getFunction(fn));std::vector<std::string> targets;std::set<BasicBlock*> covered,tagged;json::Array order;
- for(auto &d:ds){bool yes=false;for(unsigned i=0;i+1<d.arms.size();++i)yes|=eligible(d.arms[i],d.arms[i+1]);if(!yes||covered.count(d.root))continue;targets.push_back(d.id);for(auto*b:d.tests)covered.insert(b);for(unsigned i=0;i<d.arms.size();++i){auto&a=d.arms[i];if(!tagged.insert(a.entry).second)continue;std::string label;raw_string_ostream stream(label);a.entry->printAsOperand(stream,false);stream.flush();order.push_back(json::Object{{"entry",label},{"family",d.id},{"index",int64_t(i)}});}}
+ for(auto &d:ds){bool yes=false;for(unsigned i=0;i+1<d.arms.size();++i)yes|=d.pairs[i].join!=nullptr;if(!yes||covered.count(d.root))continue;targets.push_back(d.id);for(auto*b:d.tests)covered.insert(b);for(unsigned i=0;i<d.arms.size();++i){auto&a=d.arms[i];if(!tagged.insert(a.entry).second)continue;std::string label;raw_string_ostream stream(label);a.entry->printAsOperand(stream,false);stream.flush();order.push_back(json::Object{{"entry",label},{"family",d.id},{"index",int64_t(i)}});}}
  save(out+"/order.json",json::Value(std::move(order)));json::Array targetJSON;for(auto&t:targets)targetJSON.push_back(t);save(out+"/targets.json",json::Value(std::move(targetJSON)));
  if(std::string(std::getenv("DECISION_SPECULATION"))=="cost"||cleanup=="full"){
   const auto probe=out+"/target";
@@ -158,7 +157,7 @@ int main(int argc,char**argv){try{
    const size_t start=evaluated.size();
    while(next+1<d.arms.size()&&evaluated.size()-start<size_t(jobs)){
     unsigned left=next++;
-    if(!eligible(d.arms[left],d.arms[left+1])||blacklist.count(pairKey(d.arms[left],d.arms[left+1])))continue;
+    if(!d.pairs[left].join||blacklist.count(pairKey(d.arms[left],d.arms[left+1])))continue;
     if(trials>=100000)throw std::runtime_error("trial budget exceeded");
     std::string dir=out+"/trial-"+std::to_string(trials++);
     json::Object request{{"decision",target},{"left",d.arms[left].id},{"right",d.arms[left+1].id}};

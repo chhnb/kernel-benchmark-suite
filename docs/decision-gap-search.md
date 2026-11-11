@@ -293,3 +293,27 @@ removing the reference path. When timing exceeds 2%, use the recorded
 endpoints to shortlist decisions, then rerun with each suspect decision
 omitted and remeasure on the same GPU and inputs. Rebuild the subsequent
 search from the changed state for each omission.
+
+## Decision joins and pair-local exits
+
+Discovery walks the portion reachable from each arm entry and dominated
+by it, stopping at the decision join or a boundary edge. The catalog
+records the outgoing targets of that private portion. Adjacent arms
+can be paired when both have exactly one target and that target is
+their nearest common postdominator. A pair exposed through an outer
+test-only prefix keeps its canonical nested owner if that owner
+already exposes the same entries at its regular decision join.
+
+Normalization splits the two arms' incoming edges to the selected
+join. For a pair whose join differs from the decision join, scoped
+cleanup retains that split boundary and the branch to the shared
+suffix. The decision join still defines the uniform-cost accounting
+scope, including reachable shared suffixes. Both joins appear in
+verified trial reports.
+
+Non-linear pairs with a local exit use the same protected multi-anchor
+plan as the complete-leaf search. This plan moves only mandatory load
+dependency chains to their own leaf prefix and aligns compatible
+mutually exclusive blocks under the original selector. The compound
+plan is verified and scored once. The existing same-join plans and
+their gap search continue to use their existing alignment paths.
