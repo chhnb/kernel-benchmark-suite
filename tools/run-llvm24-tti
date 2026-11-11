@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
 set -euo pipefail
 root=$(cd "$(dirname "$0")/.." && pwd)
-export LD_LIBRARY_PATH="$root/toolchains/llvm24-tti/root/usr/lib/x86_64-linux-gnu${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+export LD_LIBRARY_PATH="${LLVM24_LIBDIR:-"$root/toolchains/llvm24-tti/root/usr/lib/x86_64-linux-gnu"}${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
 exec "$root/build/llvm24-tti/llvm24-tti" "$@"
