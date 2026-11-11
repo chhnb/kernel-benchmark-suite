@@ -317,3 +317,46 @@ dependency chains to their own leaf prefix and aligns compatible
 mutually exclusive blocks under the original selector. The compound
 plan is verified and scored once. The existing same-join plans and
 their gap search continue to use their existing alignment paths.
+
+### Hypersonic and vLLM replay
+
+The recovered Hypersonic no-JT input selects the complete L1 + L2 pair.
+Its trial uses `complete-leaf-multi-anchor`, with `%if.end52` as the
+pair join and `%cleanup65` as the decision join. Four anchors move 22
+mandatory load-chain instructions and reduce LLVM24 TTI from 1915 to
+1810. The following local merge reduces it to 1787. Both transactions
+pass. The L1 + L2 checkpoint uses 91 VGPR and 62 SGPR, with no spills and
+two active workgroups per CU. After rebinding, the merged arm still exits
+at `%if.end52`, since L0 also reaches it. L3 exits at `%cleanup65` and its
+store leaves the arm unsupported.
+
+The Radeon VII synthetic replay used the same recovered IR and input for
+all roles. All outputs agreed exactly. The medians were 2.023 ms unmerged,
+1.992 ms with the original greedy, 1.963 ms with the archived explicit
+plan, and 1.957 ms with the current greedy. The last role reduced the
+median paired time by 3.25% versus unmerged. The historical frozen-input
+experiment measured 4.86% and 4.81% on steps 1 and 24. Those input files
+were unavailable for this replay, so the current frozen 2% gate remains
+unverified.
+
+Trial reports include the must-execute status of each anchor on each
+side, skipped anchor pairs with their reasons, and native segment
+decisions tagged by anchor. The Hypersonic trial used one must-execute
+pair on both sides and three optional pairs. In a separate first-pair
+ablation, the required-only plan ran in 1.986 ms and the complete plan
+in 1.963 ms, against 2.022 ms unmerged on the same synthetic input. The
+required-only TTI was 1931, above the unmerged 1915. These measurements
+compare the two compound plans. Individual optional-anchor effects
+were not isolated.
+
+An anchor can be guarded by control flow on both sides. Its performance
+depends on how AMDGPU StructurizeCFG and code generation lower the
+guarded reconvergence. The GPU timing evidence here applies to gfx906.
+The checkpoint measures occupancy and spills. The benchmark checks
+timing effects that those resource metrics cannot detect. Gap search
+still does not prune the component matches of the composite plan.
+
+The vLLM replay evaluated 908 trials and retained the original 236
+selections, including 224 tree merges. The ordered pair IDs and TTI
+scores matched. LLVM12 bitcode was byte-identical, and the textual IR
+differed only in the ModuleID path.

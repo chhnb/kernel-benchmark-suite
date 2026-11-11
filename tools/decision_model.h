@@ -30,6 +30,14 @@ struct Decision {
   std::vector<Arm> arms;
   std::vector<PairBoundary> pairs;
 };
+inline const Arm *armAtEntry(const Decision &decision, const llvm::BasicBlock *entry) {
+  const Arm *match=nullptr;
+  for(const auto &arm:decision.arms)if(arm.entry==entry){
+    if(match)return nullptr;
+    match=&arm;
+  }
+  return match;
+}
 // Read-only; all pointers are valid only for this function snapshot.
 std::vector<Decision> discover(llvm::Function &);
 llvm::json::Array describe(const std::vector<Decision>&);

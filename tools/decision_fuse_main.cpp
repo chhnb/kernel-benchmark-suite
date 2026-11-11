@@ -98,14 +98,14 @@ static int runDecisionTrial(int argc,char **argv,Module &parent,
  std::vector<unsigned> sidesBefore[2],sidesAfter[2];std::string sideReason;
  bool sideBeforeOK=false;
  std::vector<WeakVH> originalBlocks;
- BasicBlock *dispatch=nullptr,*bindingEntry=nullptr,*decisionJoin=nullptr;
+ BasicBlock *dispatch=nullptr,*bindingEntry=nullptr,*trialExit=nullptr;
  std::string decisionID,reason;
  unsigned armCount=0;
  bool localPair=false;
  if(reuse){
    auto mapBlock=[&](BasicBlock *block){return cast<BasicBlock>(mapping.lookup(block));};
    dispatch=mapBlock(prepared->dispatch);bindingEntry=mapBlock(prepared->binding);
-   decisionJoin=mapBlock(prepared->join);localPair=prepared->localPair;armCount=prepared->armCount;decisionID=prepared->decision;
+   trialExit=mapBlock(prepared->join);localPair=prepared->localPair;armCount=prepared->armCount;decisionID=prepared->decision;
    for(auto *block:prepared->originalBlocks)originalBlocks.emplace_back(mapBlock(block));
    report["decision"]=decisionID;report["left"]=prepared->left;report["right"]=prepared->right;
  }else{
@@ -175,7 +175,7 @@ static int runDecisionTrial(int argc,char **argv,Module &parent,
    report["uniform_before"]=decision::uniformBlocks(ds[di].root,ds[di].join,uniformArms,uniformKeys,true);
  }
  for(auto &b:*f)originalBlocks.emplace_back(&b);
- if(!decision::normalize(*f,ds[di],li,reason,&dispatch,conditionBudget,uniformReport?&conditionHoists:nullptr,&decisionJoin))return finish(reason,3);
+ if(!decision::normalize(*f,ds[di],li,reason,&dispatch,conditionBudget,uniformReport?&conditionHoists:nullptr,&trialExit))return finish(reason,3);
  bindingEntry=dispatch;
  // When the last arms of an already-normalized subdecision are fused, the
  // opaque arm must include its short-circuit evaluation prefix as well.
@@ -191,7 +191,7 @@ static int runDecisionTrial(int argc,char **argv,Module &parent,
     prepared->module=CloneModule(*trial,snapshot);
     auto mapBlock=[&](BasicBlock *block){return cast<BasicBlock>(snapshot.lookup(block));};
     prepared->dispatch=mapBlock(dispatch);prepared->binding=mapBlock(bindingEntry);
-    prepared->join=mapBlock(decisionJoin);prepared->localPair=localPair;prepared->armCount=armCount;
+    prepared->join=mapBlock(trialExit);prepared->localPair=localPair;prepared->armCount=armCount;
     prepared->decision=decisionID;prepared->left=ds[di].arms[li].id;prepared->right=ds[di].arms[li+1].id;
     for(auto &handle:originalBlocks)if(auto *block=dyn_cast_or_null<BasicBlock>((Value*)handle))
       prepared->originalBlocks.push_back(mapBlock(block));
@@ -223,6 +223,10 @@ static int runDecisionTrial(int argc,char **argv,Module &parent,
  report["linear_blocks_folded"]=folded;
  auto *branch=dyn_cast<BranchInst>(dispatch->getTerminator());if(!branch||!branch->isConditional())return finish("dispatch_lost",3);
  auto *left=branch->getSuccessor(0),*right=branch->getSuccessor(1);
+ const auto *leftArm=decision::armAtEntry(*pair,left);
+ const auto *rightArm=decision::armAtEntry(*pair,right);
+ if(!leftArm||!rightArm||leftArm==rightArm)
+  return finish("normalized_arm_entry_mismatch",3);
  if(bothLinear&&(left->getSingleSuccessor()!=join||right->getSingleSuccessor()!=join))return finish("B2B_exit_mismatch",3);
  WeakVH dispatchHandle(dispatch);
  unsigned speculatedRanges=0;
@@ -231,11 +235,12 @@ static int runDecisionTrial(int argc,char **argv,Module &parent,
  if(mode==3){try{speculationTTI=std::make_unique<decision::SpeculationTTI>(*f);}catch(const std::exception&e){return finish(e.what(),3);}}
  const bool multiAnchor=localPair&&!bothLinear;
  if(multiAnchor){
-  fusion::LeafArm a{left,{pair->arms[0].blocks.begin(),pair->arms[0].blocks.end()}};
-  fusion::LeafArm b{right,{pair->arms[1].blocks.begin(),pair->arms[1].blocks.end()}};
+  fusion::LeafArm a{left,{leftArm->blocks.begin(),leftArm->blocks.end()}};
+  fusion::LeafArm b{right,{rightArm->blocks.begin(),rightArm->blocks.end()}};
+  fusion::LeafPlanTrace trace;
   fusion::LeafPlanOptions options{true,mode,int(budget),int(costThreshold),
     speculationTTI?speculationTTI->info.get():nullptr,uniformReport?&approvedSpeculation:nullptr,
-    &speculatedRanges};
+    &speculatedRanges,diagnostics?&trace:nullptr};
   unsigned moved=0,anchors=0,groups=0;
   std::vector<std::string> pairs;
   try{
@@ -247,6 +252,11 @@ static int runDecisionTrial(int argc,char **argv,Module &parent,
   report["moved_leaf_instructions"]=int64_t(moved);
   report["leaf_anchor_pairs"]=json::Array(pairs);
   report["coalesced_gap_groups"]=int64_t(groups);
+  if(diagnostics){
+   report["leaf_anchors"]=std::move(trace.anchors);
+   report["leaf_rejected_anchors"]=std::move(trace.rejected);
+   segments=std::move(trace.segments);
+  }
   report["alignment_choices"]=json::Array{};
   report["gap_choices"]=json::Array{};
  }else{
@@ -256,7 +266,7 @@ static int runDecisionTrial(int argc,char **argv,Module &parent,
   // a computation fusion. Restrict anchors to must-execute blocks in each arm.
   BasicBlock *bestL=nullptr,*bestR=nullptr;double best=-1;
   auto useful=[](BasicBlock *l,BasicBlock *r){for(auto &a:*l)if(!a.isTerminator()&&!isa<PHINode>(a))for(auto &b:*r)if(!b.isTerminator()&&!isa<PHINode>(b)&&InstructionMatch::match(&a,&b))return true;return false;};
-  std::set<BasicBlock*> lb(pair->arms[0].blocks.begin(),pair->arms[0].blocks.end()),rb(pair->arms[1].blocks.begin(),pair->arms[1].blocks.end());
+  std::set<BasicBlock*> lb(leftArm->blocks.begin(),leftArm->blocks.end()),rb(rightArm->blocks.begin(),rightArm->blocks.end());
   for(auto &l:*f)if(lb.count(&l)&&pdt.dominates(&l,left))for(auto &r:*f)if(rb.count(&r)&&pdt.dominates(&r,right)&&useful(&l,&r)){
    double sim=Utils::computeBBSimilarty(&l,&r);if(sim>best){best=sim;bestL=&l;bestR=&r;}
   }
@@ -278,11 +288,7 @@ static int runDecisionTrial(int argc,char **argv,Module &parent,
  report["alignment_choices"]=std::move(melder.AlignmentChoices);
  report["gap_choices"]=std::move(melder.GapChoices);
  speculatedRanges=melder.SpeculatedRanges;
- if(diagnostics)for(auto &D:melder.SegmentDecisions){
-  json::Array inst;
-  for(auto &I:D.Instructions)inst.push_back(json::Object{{"opcode",I.Opcode},{"weight",I.Weight},{"tti",I.TTI},{"safe",I.Safe}});
-  segments.push_back(json::Object{{"count",D.Count},{"weight",D.Weight},{"tti",D.TTI},{"safe",D.Safe},{"operands_available",D.Available},{"decision",D.Speculate?"speculate":"protect"},{"reason",D.Reason},{"instructions",std::move(inst)}});
- }
+ if(diagnostics)fusion::appendSegmentDecisions(melder,segments);
  }
  if(!dispatchHandle)return finish("dispatch_deleted_identity_unknown",3);
  dispatch=cast<BasicBlock>((Value*)dispatchHandle);
@@ -319,7 +325,7 @@ static int runDecisionTrial(int argc,char **argv,Module &parent,
  }
  std::set<BasicBlock*> oldBlocks;for(auto &h:originalBlocks)if(auto *b=dyn_cast_or_null<BasicBlock>((Value*)h))oldBlocks.insert(b);
  std::set<BasicBlock*> created;std::set<Instruction*> clean;
- for(auto &b:*f)if(!oldBlocks.count(&b)&&&b!=bindingEntry&&&b!=dispatch&&(!localPair||&b!=decisionJoin)){created.insert(&b);for(auto &i:b)clean.insert(&i);}
+ for(auto &b:*f)if(!oldBlocks.count(&b)&&&b!=bindingEntry&&&b!=dispatch&&(!localPair||&b!=trialExit)){created.insert(&b);for(auto &i:b)clean.insert(&i);}
  for(auto &i:*dispatch)clean.insert(&i);
  // Canonicalize a selector's polarity without creating a selection PHI.
  for(auto &b:*f)if(created.count(&b)||&b==dispatch)for(auto &i:b)if(auto *sel=dyn_cast<SelectInst>(&i))if(auto *inv=dyn_cast<BinaryOperator>(sel->getCondition()))if(inv->getOpcode()==Instruction::Xor)if(auto *one=dyn_cast<ConstantInt>(inv->getOperand(1)))if(one->isOne()){
@@ -342,14 +348,14 @@ static int runDecisionTrial(int argc,char **argv,Module &parent,
     for(auto &bb:*f)for(auto *node=fullDT.getNode(&bb);node;node=node->getIDom())if(node->getBlock()!=&bb&&!fullPDT.dominates(&bb,node->getBlock()))conditionalHoists[&bb].insert(node->getBlock());
     struct Prior{WeakVH inst;BasicBlock*block;};std::vector<Prior> prior;
     for(auto &bb:*f)for(auto &i:bb)if(!i.isTerminator()&&!isa<PHINode>(i))prior.push_back({WeakVH(&i),&bb});
-    report["simplifycfg_changes"]=decision::simplifyTrialCFGFull(*f,bindingEntry,decisionJoin,fullProvider.info.get());
+    report["simplifycfg_changes"]=decision::simplifyTrialCFGFull(*f,bindingEntry,trialExit,fullProvider.info.get());
     bool afterOK=decision_side::sideBlocksBoth(*f,sideCondition,after,why);
     if(memory){raw_string_ostream raw(postCleanup);trial->print(raw,nullptr);}
     else writeIR(*trial,dir+"/post-full-cleanup.ll");
     json::Array moved;for(auto &p:prior)if(auto*i=dyn_cast_or_null<Instruction>((Value*)p.inst))if(i->getParent()!=p.block){std::string text;raw_string_ostream os(text);i->print(os);moved.push_back(json::Object{{"opcode",i->getOpcodeName()},{"weight",speculationWeight(*i)},{"tti_size_latency",fullProvider.info->getInstructionCost(i,TargetTransformInfo::TCK_SizeAndLatency)},{"movement",conditionalHoists[p.block].count(i->getParent())?"conditional_hoist":"structural_or_unclassified_move"},{"ir",os.str()}});}
     report["full_cleanup_moved_instructions"]=std::move(moved);
     decision::recordImplicitMetrics(report,argv[0],*f,dir,before,after,beforeOK&&afterOK,why,preCleanup,postCleanup);
-   }else report["simplifycfg_changes"]=decision::simplifyTrialCFG(*f,bindingEntry,decisionJoin);
+   }else report["simplifycfg_changes"]=decision::simplifyTrialCFG(*f,bindingEntry,trialExit);
   }
   catch(const std::exception &e){return finish(e.what(),3);}
   bindingEntry->getTerminator()->setMetadata("decision.merged_from",origins);bindingEntry->getTerminator()->setMetadata("decision.origin",identity);if(order)bindingEntry->getTerminator()->setMetadata("decision.order",order);
@@ -414,7 +420,7 @@ static int runDecisionTrial(int argc,char **argv,Module &parent,
  auto rebound=decision::discover(*f);unsigned bindings=0;std::string kind;
  for(auto &d:rebound)if(d.id==decisionID)for(auto &a:d.arms)if(a.entry==bindingEntry&&a.kind!=decision::ArmKind::Unsupported){++bindings;kind=a.kind==decision::ArmKind::Linear?"Linear":"SESE";}
  if(bindings==0&&(armCount==2||localPair)){
-  DominatorTree dtAfter(*f);PostDominatorTree pdtAfter(*f);auto *exit=decisionJoin;bool owned=pdtAfter.dominates(exit,bindingEntry);std::set<BasicBlock*> visited;std::vector<BasicBlock*> todo{bindingEntry};bool linear=true;
+  DominatorTree dtAfter(*f);PostDominatorTree pdtAfter(*f);auto *exit=trialExit;bool owned=pdtAfter.dominates(exit,bindingEntry);std::set<BasicBlock*> visited;std::vector<BasicBlock*> todo{bindingEntry};bool linear=true;
   while(!todo.empty()){auto *b=todo.back();todo.pop_back();if(b==exit||!visited.insert(b).second)continue;if(!dtAfter.dominates(bindingEntry,b))owned=false;if(b->getTerminator()->getNumSuccessors()!=1)linear=false;for(auto *next:successors(b))todo.push_back(next);}
   if(owned){bindings=1;kind=linear?"Linear":"SESE";if(armCount==2)report["completed_decision"]=true;}
  }

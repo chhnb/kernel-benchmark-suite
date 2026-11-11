@@ -21,6 +21,26 @@ struct LeafArm {
   std::set<BasicBlock*> blocks;
 };
 
+struct LeafPlanTrace {
+  json::Array anchors, rejected, segments;
+};
+
+inline void appendSegmentDecisions(const RegionMelder &melder,json::Array &out,
+                                   StringRef anchor={}) {
+  for(const auto &segment:melder.SegmentDecisions){
+    json::Array instructions;
+    for(const auto &i:segment.Instructions)
+      instructions.push_back(json::Object{{"opcode",i.Opcode},{"weight",i.Weight},
+                                         {"tti",i.TTI},{"safe",i.Safe}});
+    json::Object row{{"count",segment.Count},{"weight",segment.Weight},
+      {"tti",segment.TTI},{"safe",segment.Safe},{"operands_available",segment.Available},
+      {"decision",segment.Speculate?"speculate":"protect"},{"reason",segment.Reason},
+      {"instructions",std::move(instructions)}};
+    if(!anchor.empty())row["anchor"]=anchor.str();
+    out.push_back(std::move(row));
+  }
+}
+
 struct LeafPlanOptions {
   bool coalesce;
   int mode, budget;
@@ -28,6 +48,7 @@ struct LeafPlanOptions {
   TargetTransformInfo *tti=nullptr;
   std::vector<WeakVH> *speculated=nullptr;
   unsigned *speculatedRanges=nullptr;
+  LeafPlanTrace *trace=nullptr;
 };
 
 inline std::string leafBlockName(const BasicBlock &block) {
@@ -80,7 +101,8 @@ inline unsigned hoistLeafLoads(LeafArm &u, Function &f, BasicBlock *gate) {
 // stubs: only lanes that originally executed an anchor reach its body. SSAUpdater
 // carries path-specific values across the new join; no optional load is hoisted.
 inline bool meldExclusiveBlocks(BasicBlock *left,BasicBlock *right,Value *choose,
-                                const LeafPlanOptions &options,unsigned &groups,std::string &why) {
+                                const LeafPlanOptions &options,unsigned &groups,std::string &why,
+                                StringRef anchor={}) {
   auto &f=*left->getParent();
   auto *lb=dyn_cast<BranchInst>(left->getTerminator());
   auto *rb=dyn_cast<BranchInst>(right->getTerminator());
@@ -150,6 +172,7 @@ inline bool meldExclusiveBlocks(BasicBlock *left,BasicBlock *right,Value *choose
   melder.SpeculatedInstructions=options.speculated;
   melder.merge(0);
   groups+=melder.CoalescedGapGroups;
+  if(options.trace)appendSegmentDecisions(melder,options.trace->segments,anchor);
   if(options.speculatedRanges)*options.speculatedRanges+=melder.SpeculatedRanges;
   if(verifyFunction(f,&errs())){why="anchor_meld_verifier_failed";return false;}
   return true;
@@ -168,14 +191,16 @@ inline bool meldLeafPlan(Function &f,const LeafPlanOptions &options,LeafArm l,Le
   moved=hoistLeafLoads(l,f,gate);
   moved+=hoistLeafLoads(r,f,gate);
   if(verifyFunction(f,&errs())){why="leaf_load_motion_verifier_failed";return false;}
-  struct Pair {WeakVH left,right;double score;std::string label;};
+  PostDominatorTree initialPDT(f);
+  struct Pair {WeakVH left,right;double score;std::string label;bool leftRequired,rightRequired;};
   std::vector<Pair> plan;
   for(auto &lb:f)if(l.blocks.count(&lb)&&lb.getSingleSuccessor())
     for(auto &rb:f)if(r.blocks.count(&rb)&&rb.getSingleSuccessor()){
       auto count=[](BasicBlock &b){unsigned n=0;for(auto &i:b)if(!isa<PHINode>(i)&&!i.isTerminator())++n;return n;};
       unsigned n=std::min(count(lb),count(rb));if(!n)continue;
       double sim=Utils::computeBBSimilarty(&lb,&rb);if(sim<=0)continue;
-      plan.push_back({WeakVH(&lb),WeakVH(&rb),sim*n,leafBlockName(lb)+" + "+leafBlockName(rb)});
+      plan.push_back({WeakVH(&lb),WeakVH(&rb),sim*n,leafBlockName(lb)+" + "+leafBlockName(rb),
+        initialPDT.dominates(&lb,l.entry),initialPDT.dominates(&rb,r.entry)});
     }
   std::stable_sort(plan.begin(),plan.end(),[](const Pair &a,const Pair &b){return a.score>b.score;});
   std::set<BasicBlock*> used;
@@ -184,11 +209,15 @@ inline bool meldLeafPlan(Function &f,const LeafPlanOptions &options,LeafArm l,Le
     auto *lb=dyn_cast_or_null<BasicBlock>((Value*)p.left),*rb=dyn_cast_or_null<BasicBlock>((Value*)p.right);
     if(!lb||!rb||used.count(lb)||used.count(rb))continue;
     std::string reason;
-    if(!meldExclusiveBlocks(lb,rb,selector,options,groups,reason)){
+    if(!meldExclusiveBlocks(lb,rb,selector,options,groups,reason,p.label)){
+      if(options.trace)options.trace->rejected.push_back(
+        json::Object{{"pair",p.label},{"reason",reason}});
       if(reason=="ordered_or_crossing_anchor"||reason=="non_straight_anchor"||reason=="address_taken_anchor"||reason=="side_effect_anchor")continue;
       why=reason;return false;
     }
     used.insert(lb);used.insert(rb);++anchors;pairs.push_back(p.label);
+    if(options.trace)options.trace->anchors.push_back(json::Object{{"pair",p.label},
+      {"left_must_execute",p.leftRequired},{"right_must_execute",p.rightRequired}});
   }
   if(!anchors){why="no_compatible_multi_anchor";return false;}
   return true;
