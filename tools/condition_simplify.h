@@ -9,15 +9,68 @@
 #include <vector>
 #include <functional>
 namespace decision {
-// Exact partition of the scalar domain by all comparison boundaries. A cell
-// has constant truth for every leaf, hence for the complete Boolean DAG.
-// APFloat neighbours represent open cells exactly (no double conversion).
-// NaN is its own cell; signed zeros have identical comparison truth values.
+inline llvm::Constant *comparisonConstant(llvm::CmpInst *C) {
+ return llvm::dyn_cast<llvm::Constant>(C->getOperand(
+     llvm::isa<llvm::Constant>(C->getOperand(1))?1:0));
+}
+inline llvm::Value *comparisonVariable(llvm::CmpInst *C) {
+ return C->getOperand(llvm::isa<llvm::Constant>(C->getOperand(1))?0:1);
+}
+inline llvm::CmpInst::Predicate comparisonPredicate(llvm::CmpInst *C) {
+ return llvm::isa<llvm::Constant>(C->getOperand(1))?C->getPredicate():
+        llvm::CmpInst::getSwappedPredicate(C->getPredicate());
+}
+
+// Representatives for exact scalar comparison cells. Neighbours cover the
+// open intervals without conversion to double. NaN has its own cell, and
+// positive and negative zero have identical comparison truth values.
+class CellSpace {
+ std::vector<llvm::Constant*> Cells;
+public:
+ CellSpace(llvm::Type *type, const llvm::Function &function,
+           const std::vector<llvm::Constant*> &bounds) {
+  using namespace llvm;
+  if(bounds.empty())return;
+  auto &ctx=type->getContext();
+  if(type->isFloatingPointTy()){
+   auto mode=function.getFnAttribute("denormal-fp-math").getValueAsString();
+   auto f32=function.getFnAttribute("denormal-fp-math-f32").getValueAsString();
+   if(type->isFloatTy()&&!f32.empty())mode=f32;
+   if(!mode.empty()&&mode!="ieee"&&mode!="ieee,ieee")
+    for(auto *k:bounds)if(cast<ConstantFP>(k)->getValueAPF().isDenormal())return;
+   const auto &sem=cast<ConstantFP>(bounds.front())->getValueAPF().getSemantics();
+   for(auto v:{APFloat::getInf(sem),APFloat::getInf(sem,true),APFloat::getNaN(sem),APFloat::getZero(sem)})
+    Cells.push_back(ConstantFP::get(ctx,v));
+   for(auto *k:bounds){
+    auto v=cast<ConstantFP>(k)->getValueAPF();Cells.push_back(ConstantFP::get(ctx,v));
+    if(!v.isNaN()){auto low=v,high=v;low.next(true);high.next(false);
+     Cells.push_back(ConstantFP::get(ctx,low));Cells.push_back(ConstantFP::get(ctx,high));}
+   }
+  }else if(type->isIntegerTy()){
+   unsigned w=type->getIntegerBitWidth();
+   for(auto v:{APInt(w,0),APInt::getAllOnesValue(w),APInt::getSignedMinValue(w),APInt::getSignedMaxValue(w)})
+    Cells.push_back(ConstantInt::get(type,v));
+   for(auto *k:bounds){
+    auto v=cast<ConstantInt>(k)->getValue();
+    for(auto p:{v,v-1,v+1})Cells.push_back(ConstantInt::get(type,p));
+   }
+  }
+ }
+ const std::vector<llvm::Constant*> &cells() const {return Cells;}
+ static bool compare(llvm::CmpInst::Predicate p,llvm::Constant *x,llvm::Constant *k) {
+  using namespace llvm;
+  if(CmpInst::isIntPredicate(p))
+   return ConstantRange::makeExactICmpRegion(p,cast<ConstantInt>(k)->getValue())
+      .contains(cast<ConstantInt>(x)->getValue());
+  return cast<ConstantInt>(ConstantExpr::getCompare(p,x,k))->isOne();
+ }
+};
+
 inline llvm::Value *simplifyCondition(llvm::Instruction *root) {
  using namespace llvm;
  if(!root->getType()->isIntegerTy(1))return root;
- auto constant=[](CmpInst *c)->Constant*{return dyn_cast<Constant>(c->getOperand(1))?cast<Constant>(c->getOperand(1)):dyn_cast<Constant>(c->getOperand(0));};
- auto predicate=[](CmpInst *c){return isa<Constant>(c->getOperand(1))?c->getPredicate():CmpInst::getSwappedPredicate(c->getPredicate());};
+ auto constant=comparisonConstant;
+ auto predicate=comparisonPredicate;
  Value *variable=nullptr;bool fp=false,valid=true;
  std::vector<CmpInst*> leaves;std::vector<WeakVH> nodes;
  std::set<Value*> seen;
@@ -37,27 +90,12 @@ inline llvm::Value *simplifyCondition(llvm::Instruction *root) {
   valid=false;
  };
  collect(root);if(!valid||!variable||leaves.empty())return root;
- std::vector<Constant*> cells;
- if(fp){
-  auto *f=root->getFunction();
-  auto mode=f->getFnAttribute("denormal-fp-math").getValueAsString();
-  auto f32=f->getFnAttribute("denormal-fp-math-f32").getValueAsString();
-  if(variable->getType()->isFloatTy()&&!f32.empty())mode=f32;
-  bool ieee=mode.empty()||mode=="ieee"||mode=="ieee,ieee";
-  if(!ieee)for(auto *c:leaves)
-   if(cast<ConstantFP>(constant(c))->getValueAPF().isDenormal())return root;
-  const auto &sem=cast<ConstantFP>(constant(leaves[0]))->getValueAPF().getSemantics();
-  for(auto v:{APFloat::getInf(sem),APFloat::getInf(sem,true),APFloat::getNaN(sem),APFloat::getZero(sem)})cells.push_back(ConstantFP::get(root->getContext(),v));
-  for(auto *c:leaves){auto v=cast<ConstantFP>(constant(c))->getValueAPF();cells.push_back(ConstantFP::get(root->getContext(),v));if(!v.isNaN()){auto low=v,high=v;low.next(true);high.next(false);cells.push_back(ConstantFP::get(root->getContext(),low));cells.push_back(ConstantFP::get(root->getContext(),high));}}
- }else{
-  unsigned w=variable->getType()->getIntegerBitWidth();
-  for(auto v:{APInt(w,0),APInt::getAllOnesValue(w),APInt::getSignedMinValue(w),APInt::getSignedMaxValue(w)})cells.push_back(ConstantInt::get(variable->getType(),v));
-  for(auto *c:leaves){auto v=cast<ConstantInt>(constant(c))->getValue();for(auto p:{v,v-1,v+1})cells.push_back(ConstantInt::get(variable->getType(),p));}
- }
- auto compare=[&](CmpInst::Predicate p,Constant *x,Constant *k){
-  if(!fp)return ConstantRange::makeExactICmpRegion(p,cast<ConstantInt>(k)->getValue()).contains(cast<ConstantInt>(x)->getValue());
-  return cast<ConstantInt>(ConstantExpr::getCompare(p,x,k))->isOne();
- };
+ std::vector<Constant*> bounds;
+ for(auto *c:leaves)bounds.push_back(constant(c));
+ CellSpace space(variable->getType(),*root->getFunction(),bounds);
+ const auto &cells=space.cells();
+ if(cells.empty())return root;
+ auto compare=CellSpace::compare;
  std::function<bool(Value*,Constant*)> eval=[&](Value *v,Constant *cell)->bool{
   if(auto *k=dyn_cast<ConstantInt>(v))return k->isOne();
   if(auto *c=dyn_cast<CmpInst>(v))return compare(predicate(c),cell,constant(c));

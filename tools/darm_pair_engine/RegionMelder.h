@@ -12,6 +12,7 @@
 #include "llvm/IR/BasicBlock.h"
 #include "llvm/IR/Function.h"
 #include "llvm/IR/IRBuilder.h"
+#include "llvm/IR/ValueHandle.h"
 #include "llvm/IR/ValueMap.h"
 #include "llvm/TableGen/Record.h"
 #include <string>
@@ -138,6 +139,7 @@ public:
   }
   std::set<unsigned> SplitMatchIDs, SpeculateGapIDs;
   bool ExplicitGapPlan=false;
+  std::vector<WeakVH> *SpeculatedInstructions=nullptr;
   json::Array AlignmentChoices, GapChoices;
   bool CoalesceGaps=false;
   // 0 none, 1 legacy (default), 2 budget. See requireUnpredication().

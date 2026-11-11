@@ -1,5 +1,6 @@
 #pragma once
 #include "llvm/IR/Function.h"
+#include "llvm/IR/ValueHandle.h"
 #include "llvm/Support/JSON.h"
 #include <string>
 #include <vector>
@@ -30,5 +31,6 @@ llvm::json::Array describe(const std::vector<Decision>&);
 // Experimental adjacent chain normalization. Caller owns a disposable clone.
 // Safe condition speculation within budget; no fusion. Caller discards failures.
 bool normalize(llvm::Function&, const Decision&, unsigned left, std::string &reason,
-               llvm::BasicBlock **dispatchOut=nullptr, unsigned conditionBudget=4);
+               llvm::BasicBlock **dispatchOut=nullptr, unsigned conditionBudget=4,
+               std::vector<llvm::WeakVH> *conditionHoists=nullptr);
 }

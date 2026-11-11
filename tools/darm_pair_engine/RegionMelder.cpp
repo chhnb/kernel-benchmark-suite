@@ -813,7 +813,10 @@ void RegionMelder::runUnpredicationPass() {
       {"speculated",D.Speculate},{"safe",D.Safe&&D.Available}});
   }
   SegmentDecisions.insert(SegmentDecisions.end(),Plan.Decisions.begin(),Plan.Decisions.end());
-  if(SpeculationMode==3)for(auto &Segment:Plan.Speculated)for(auto *I:Segment.Instructions)speculation_policy::sanitize(*I);
+  if(SpeculationMode==3)for(auto &Segment:Plan.Speculated)for(auto *I:Segment.Instructions){
+    speculation_policy::sanitize(*I);
+    if(SpeculatedInstructions)SpeculatedInstructions->emplace_back(I);
+  }
   applyGapSchedule(Plan);
   CoalescedGapGroups += Plan.CoalescedGroups;
   SpeculatedRanges += Plan.Speculated.size();

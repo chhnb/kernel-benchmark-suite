@@ -190,3 +190,106 @@ The optimized configuration used `DECISION_GAP_SEARCH=1`,
 `DECISION_GAP_EARLY_SCORE=1`. This is a generated-input GPU comparison.
 The frozen runner and reference binaries were unavailable on epyc, so
 the formal frozen 2% regression gate was not rerun.
+
+## Per-arm uniform-cost diagnostics
+
+Set `DECISION_UNIFORM_REPORT=1` to record per-arm cost for verified outer
+trials. This mode leaves the existing acceptance gates in charge. The
+report compares the original decision entry through its original join,
+excluding the join and everything after it. Each original arm's path
+facts are used on both IRs. Scalar comparisons on one value share exact
+integer or floating-point cells, including a separate NaN cell. Duplicate
+`fabs` and deterministic cast expressions use the same key. Multi-variable
+relationships and unrecognized values remain unknown.
+
+When a conditional branch cannot be proved under the facts, both
+successors contribute to the static cost. PHIs merge only reachable
+incoming edges. A cyclic or leaking decision scope yields unavailable
+data. For each arm, the before-path invariant compares the calculated
+set against its original tests and arm blocks. The invariant is recorded
+even if it fails.
+
+The report sums LLVM 24 reciprocal-throughput TTI over the reachable
+blocks. It records the raw delta, surviving approved gap speculation,
+surviving eager condition hoists, and the residual. The trial tracks surviving instructions through cleanup and marks them
+when collecting coordinates. It removes the markers before publishing
+the IR. The report joins the coordinates with the worker's instruction
+costs. A marked instruction is counted at
+most once. These are static sums, with no path-probability weighting.
+
+In the archived vLLM trial that previously reported +72 on the false
+side, the per-arm delta is +2. The eager comparison accounts for 1 point,
+gap speculation contributes 0, and the residual is +1. The earlier 70
+points came from later test and leaf blocks that are unreachable under
+the original arm's comparison facts.
+
+## Decision checkpoints
+
+The greedy driver defaults to `DECISION_SPECULATION=cost`,
+`DECISION_CFG_CLEANUP=structural` and `DECISION_CHECKPOINT_MODE=enforce`.
+It probes the input triple and CPU with the same LLVM 12 TargetMachine
+used by the speculation pass before scoring candidates. Use
+`DECISION_CHECKPOINT_MODE=report` to inspect endpoints without rolling
+them back. Both modes retain the hard IR pressure cap
+(`DECISION_MAX_PRESSURE`) and require each selected trial to verify and
+strictly improve function TTI. The per-step growth gate applies only
+with checkpoints off. The legacy `DECISION_MAX_UNIFORM_LOSS` defaults to
+disabled in all modes and is deprecated. Explicit values are honored
+only with checkpoints off and structural cleanup. Direct invocations
+of the pair tool keep their own defaults.
+
+The executable in `DECISION_CHECKPOINT_TOOL` receives the snapshot IR path
+and kernel name. If unset, the driver uses the repository AMDGPU adapter.
+The executable returns JSON containing VGPR and SGPR counts, their
+spill counts, and active blocks per CU. The AMDGPU adapter is
+`tools/decision_amdgpu_checkpoint.py`. Configure the LLVM 12 bin directory
+with `DECISION_AMDGPU_LLVM_BIN`, the GPU with `DECISION_AMDGPU_CPU`,
+target features with `DECISION_AMDGPU_FEATURES`, and the launch size with
+`DECISION_AMDGPU_BLOCK_SIZE`. Build `tools/decision_amdgpu_occupancy.cpp`
+with `hipcc` and set `DECISION_AMDGPU_OCCUPANCY_TOOL` to its executable.
+The occupancy probe assumes zero dynamic shared memory. Set the visible
+HIP device to match the target before running the search.
+
+Each endpoint is compared with the decision's starting resources.
+Increases in either spill count or decreases in active blocks per CU
+fail the check. On failure in enforce mode, the driver searches
+backwards for the longest passing prefix and blacklists the next pair
+by its original arm identities. Backend admissibility can alternate
+between prefixes, so a binary search can miss a longer passing prefix.
+The compiler cache reuses the preceding decision's endpoint and any
+already checked rollback prefix. `DECISION_CHECKPOINT_RETRIES` defaults
+to four continuation attempts after rollback.
+
+Checkpoint reports also contain cumulative uniform costs for the
+original arms, with each value evaluated from the decision's initial
+predicates in the endpoint CFG. Candidate reports carry coordinate
+mappings for surviving predicate operands and marked instructions.
+The endpoint subtracts surviving approved speculation and condition
+hoists once per instruction. The cumulative side cost is diagnostic.
+Unsupported scopes yield unavailable cost data. The existing
+`tests/decision-model/check_greedy_report.py` audits selection, the
+checkpoint comparisons, the rollback prefix, the blacklist, and the
+number of retained commits.
+
+The vLLM acceptance run used gap search and the vLLM scorer
+(`DECISION_GAP_SEARCH=1`, `DECISION_VLLM_LLVM24_TTI=1`,
+`DECISION_GAP_EARLY_SCORE=1`). All 44 decisions passed their backend
+checks. The 236 selections included 224 tree merges and produced
+51 VGPR, 76 SGPR, zero spill and 16 active workgroups per CU. A
+forced-spill checkpoint exercised rollback and blacklisting. Four
+alternating-order batches against balanced gave median paired deltas of
+−0.05% and +0.18% at 64K and 128K. The paired 95% mean-difference
+intervals were [−2.36%, +1.94%] and [−1.14%, +1.76%], respectively.
+Both include zero under the chosen acceptance rule. The intervals are
+wider than ±0.5%, so this run does not establish equivalence within that
+margin. All 280 vLLM cumulative side-cost residuals were negative.
+Keep the cumulative metric in report mode pending evidence on
+positive residuals and GPU performance.
+
+Retire the local-union reference only after all four workloads pass the
+2% frozen-reference gate and paired vLLM results satisfy the agreed
+noise criterion against local-union. Preserve the comparisons before
+removing the reference path. When timing exceeds 2%, use the recorded
+endpoints to shortlist decisions, then rerun with each suspect decision
+omitted and remeasure on the same GPU and inputs. Rebuild the subsequent
+search from the changed state for each omission.

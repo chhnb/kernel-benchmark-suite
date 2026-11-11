@@ -11,6 +11,7 @@
 #include "llvm/ADT/StringMap.h"
 #include "llvm/IR/ModuleSlotTracker.h"
 #include "decision_side_metrics.h"
+#include "decision_uniform_tracking.h"
 #include <darm_pair_engine/RegionMelder.h>
 #include "llvm/IRReader/IRReader.h"
 #include "llvm/IR/Verifier.h"
@@ -82,6 +83,15 @@ static int runDecisionTrial(int argc,char **argv,Module &parent,
  report["cfg_cleanup"]=cleanup;report["implicit_speculation_allowed"]=cleanup=="full";
  auto finish=[&](StringRef reason,int code){report["status"]=code?"rejected":"verified";report["reason"]=reason.str();if(memory){memory->Report=json::Value(std::move(report));return code;}std::error_code ec;raw_fd_ostream out(dir+"/trial.json",ec,sys::fs::OF_None);out<<formatv("{0:2}\n",json::Value(std::move(report)));return code;};
  const bool diagnostics=!memory||publish||cleanup=="full";
+ const char *checkpointMode=std::getenv("DECISION_CHECKPOINT_MODE");
+ const bool uniformReport=(!memory||publish)&&(std::getenv("DECISION_UNIFORM_REPORT")||
+     (checkpointMode&&StringRef(checkpointMode)!="off"));
+ decision::UniformValueKeys uniformKeys;
+ std::vector<decision::UniformArmFacts> uniformArms;
+ WeakVH uniformRoot,uniformJoin;
+ std::vector<WeakVH> conditionHoists,approvedSpeculation;
+ std::vector<WeakVH> trackedAnchors,trackedHoists,trackedSpeculation;
+ bool trackUniform=false;
  WeakTrackingVH sideCondition;
  std::vector<unsigned> sidesBefore[2],sidesAfter[2];std::string sideReason;
  bool sideBeforeOK=false;
@@ -130,6 +140,17 @@ static int runDecisionTrial(int argc,char **argv,Module &parent,
    for(unsigned l=0;l+1<ds[d].arms.size();++l)
     if(ds[d].arms[l].id==*left&&ds[d].arms[l+1].id==*right){di=d;li=l;++matches;}
   if(matches!=1)return finish("requested_pair_not_unique_or_adjacent",3);
+  if(uniformReport)if(auto *tracking=o->getObject("uniform_tracking")){
+   decision::UniformCoordinates coords(*f);
+   auto *anchors=tracking->getArray("anchors");
+   auto *hoists=tracking->getArray("hoists");
+   auto *speculation=tracking->getArray("speculation");
+   if(!anchors||!hoists||!speculation)return finish("invalid_uniform_tracking",3);
+   trackedAnchors=decision::uniformResolve(coords,*anchors);
+   trackedHoists=decision::uniformResolve(coords,*hoists);
+   trackedSpeculation=decision::uniformResolve(coords,*speculation);
+   trackUniform=true;
+  }
  }else{di=std::stoul(argv[3]);li=std::stoul(argv[4]);}
  if(di>=ds.size()||li+1>=ds[di].arms.size())return finish("pair_out_of_range",3);
  report["decision"]=ds[di].id;report["left"]=ds[di].arms[li].id;report["right"]=ds[di].arms[li+1].id;
@@ -141,8 +162,13 @@ static int runDecisionTrial(int argc,char **argv,Module &parent,
    sideBeforeOK=decision_side::sideBlocksBoth(*f,sideCondition,sidesBefore,sideReason);
  }
  decisionID=ds[di].id;armCount=ds[di].arms.size();decisionJoin=ds[di].join;
+ if(uniformReport){
+   uniformRoot=ds[di].root;uniformJoin=ds[di].join;
+   uniformArms=decision::uniformFacts(ds[di],uniformKeys);
+   report["uniform_before"]=decision::uniformBlocks(ds[di].root,ds[di].join,uniformArms,uniformKeys,true);
+ }
  for(auto &b:*f)originalBlocks.emplace_back(&b);
- if(!decision::normalize(*f,ds[di],li,reason,&dispatch,conditionBudget))return finish(reason,3);
+ if(!decision::normalize(*f,ds[di],li,reason,&dispatch,conditionBudget,uniformReport?&conditionHoists:nullptr))return finish(reason,3);
  bindingEntry=dispatch;
  // When the last arms of an already-normalized subdecision are fused, the
  // opaque arm must include its short-circuit evaluation prefix as well.
@@ -211,7 +237,7 @@ static int runDecisionTrial(int argc,char **argv,Module &parent,
  if(!scope.count(anchors.first)||!scope.count(anchors.second))return finish("native_anchor_outside_trial",3);
  std::unique_ptr<decision::SpeculationTTI> speculationTTI;
  if(mode==3){try{speculationTTI=std::make_unique<decision::SpeculationTTI>(*f);}catch(const std::exception&e){return finish(e.what(),3);}}
- RegionMelder melder(analyzer,true);melder.SpeculationMode=mode;melder.SpeculationBudget=budget;melder.SpeculationTTI=speculationTTI?speculationTTI->info.get():nullptr;melder.SpeculationCostThreshold=costThreshold;
+ RegionMelder melder(analyzer,true);melder.SpeculatedInstructions=uniformReport?&approvedSpeculation:nullptr;melder.SpeculationMode=mode;melder.SpeculationBudget=budget;melder.SpeculationTTI=speculationTTI?speculationTTI->info.get():nullptr;melder.SpeculationCostThreshold=costThreshold;
  if(explicitState){
   melder.SplitMatchIDs=explicitState->Split;melder.SpeculateGapIDs=explicitState->Speculate;melder.ExplicitGapPlan=true;
   if(mode!=3&&!melder.SpeculateGapIDs.empty())return finish("explicit_speculation_requires_cost_mode",3);
@@ -235,7 +261,9 @@ static int runDecisionTrial(int argc,char **argv,Module &parent,
      memory->ScoredOnly=true;
      return 0;
    }
-   if(!memory->LocalCost||publish){raw_string_ostream raw(memory->RawIR);trial->print(raw,nullptr);}
+   if(!memory->LocalCost||publish){
+     raw_string_ostream raw(memory->RawIR);trial->print(raw,nullptr);
+   }
  }
  else writeIR(*trial,dir+"/meld-raw.ll");
  report["empty_diamonds_folded"]=foldEmptyDiamonds(dispatch,join);
@@ -300,6 +328,51 @@ static int runDecisionTrial(int argc,char **argv,Module &parent,
  for(auto &D:melder.SegmentDecisions){json::Array inst;for(auto &I:D.Instructions)inst.push_back(json::Object{{"opcode",I.Opcode},{"weight",I.Weight},{"tti",I.TTI},{"safe",I.Safe}});segments.push_back(json::Object{{"count",D.Count},{"weight",D.Weight},{"tti",D.TTI},{"safe",D.Safe},{"operands_available",D.Available},{"decision",D.Speculate?"speculate":"protect"},{"reason",D.Reason},{"instructions",std::move(inst)}});}
  report["segments"]=std::move(segments);
  }
+ if(uniformReport){
+   report["uniform_after"]=decision::uniformBlocks(
+       dyn_cast_or_null<BasicBlock>((Value*)uniformRoot),
+       dyn_cast_or_null<BasicBlock>((Value*)uniformJoin),uniformArms,uniformKeys,false);
+   // Mark surviving instructions only after transforms that inspect metadata.
+   auto *uniformMarker=MDNode::getDistinct(ctx,{});
+   auto mark=[&](const std::vector<WeakVH> &instructions,StringRef kind) {
+     for(const auto &handle:instructions)
+       if(auto *instruction=dyn_cast_or_null<Instruction>((Value*)handle))
+         instruction->setMetadata(kind,uniformMarker);
+   };
+   mark(approvedSpeculation,"decision.speculated");
+   mark(conditionHoists,"decision.condition_hoist");
+   json::Array approved,hoisted;
+   unsigned blockIndex=0;
+   for(auto &b:*f){
+     unsigned instructionIndex=0;
+     for(auto &i:b){
+       if(isa<DbgInfoIntrinsic>(i))continue;
+       auto coordinate=[&] {return json::Array{int64_t(blockIndex),int64_t(instructionIndex)};};
+       if(i.getMetadata("decision.speculated")==uniformMarker)approved.push_back(coordinate());
+       else if(i.getMetadata("decision.condition_hoist")==uniformMarker)hoisted.push_back(coordinate());
+       for(auto *kind:{"decision.speculated","decision.condition_hoist"})
+         if(i.getMetadata(kind)==uniformMarker)i.setMetadata(kind,nullptr);
+       ++instructionIndex;
+     }
+     ++blockIndex;
+   }
+   if(trackUniform){
+    decision::UniformCoordinates coords(*f);
+    auto extend=[&](const std::vector<WeakVH> &previous,const json::Array &current){
+     json::Array result;
+     for(const auto &handle:previous)
+      if(handle)result.push_back(coords.locate(handle));
+     for(const auto &value:current)result.push_back(value);
+     return result;
+    };
+    report["uniform_tracking"]=json::Object{
+     {"anchors",decision::uniformTrack(coords,trackedAnchors)},
+     {"hoists",extend(trackedHoists,hoisted)},
+     {"speculation",extend(trackedSpeculation,approved)}};
+   }
+   report["uniform_approved_speculation"]=std::move(approved);
+   report["uniform_condition_hoists"]=std::move(hoisted);
+ }
  report["binding_entry"]=label(bindingEntry);
  if(publish){raw_string_ostream raw(memory->FinalIR);trial->print(raw,nullptr);}
  else if(!memory)writeIR(*trial,dir+"/fused.ll");
@@ -321,6 +394,20 @@ static int runDecisionTrial(int argc,char **argv,Module &parent,
 }
 
 int main(int argc,char **argv){
+ if(argc==4&&StringRef(argv[1])=="--probe-target"){
+  LLVMContext ctx;SMDiagnostic error;
+  auto module=parseIRFile(argv[2],error,ctx);
+  if(!module){error.print(argv[0],errs());return 2;}
+  auto *function=module->getFunction(argv[3]);
+  if(!function||function->isDeclaration()){errs()<<"target probe function missing\n";return 2;}
+  try {
+   decision::SpeculationTTI target(*function);
+   outs()<<formatv("{0}\n",json::Value(json::Object{
+    {"triple",target.machine->getTargetTriple().str()},
+    {"cpu",target.machine->getTargetCPU().str()}}));
+   return 0;
+  }catch(const std::exception &e){errs()<<e.what()<<"\n";return 3;}
+ }
  if(std::getenv("DECISION_CFG_CLEANUP")&&std::getenv("DECISION_DISABLE_SIMPLIFYCFG")){errs()<<"DECISION_CFG_CLEANUP conflicts with legacy DECISION_DISABLE_SIMPLIFYCFG\n";return 2;}
  std::string cleanup="structural";
  if(const char *v=std::getenv("DECISION_CFG_CLEANUP")){cleanup=v;if(cleanup!="full"&&cleanup!="structural")return 2;}

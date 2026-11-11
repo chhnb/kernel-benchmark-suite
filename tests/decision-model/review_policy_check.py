@@ -21,7 +21,7 @@ if mode!='missing':o['instruction_costs']=[{'block_index':i,'accepted_cost':100 
 print(json.dumps(o))
 ''');worker.chmod(0o755)
  for mode,cap,guard,reason in [('ok','0',False,'pressure_limit'),('loss','1000000',True,'uniform_loss_limit'),('missing','1000000',True,'side_metrics_unavailable'),('ok','1000000',False,None),('loss','1000000',False,None),('missing','1000000',False,None)]:
-  out=d/f'g-{mode}-{cap}-{guard}';env=dict(os.environ,MOCK=mode,DECISION_MAX_PRESSURE=cap,DECISION_MAX_PRESSURE_GROWTH='1000000');env.pop('DECISION_MAX_UNIFORM_LOSS',None)
+  out=d/f'g-{mode}-{cap}-{guard}';env=dict(os.environ,DECISION_CHECKPOINT_MODE="off",DECISION_SPECULATION="none",MOCK=mode,DECISION_MAX_PRESSURE=cap,DECISION_MAX_PRESSURE_GROWTH='1000000');env.pop('DECISION_MAX_UNIFORM_LOSS',None)
   if guard:env['DECISION_MAX_UNIFORM_LOSS']='0'
   p=run([r/'build/decision-fuse/decision-greedy',src,'case',root,out],env);assert p.returncode==0,p.stderr
   summary=json.loads((out/'summary.json').read_text());assert summary['uniform_loss_guard_enabled']==guard;assert summary['max_uniform_loss']==(0 if guard else -1)
@@ -37,5 +37,5 @@ print(json.dumps(o))
  first=base[:base.rindex('}')].replace('ret i32 %v','br label %entry_second')
  dup=first+second+'}\n!0 = !{!"same-root"}\n'
  dup=dup.replace('br i1 %c0, label %a, label %test1','br i1 %c0, label %a, label %test1, !decision.origin !0').replace('br i1 %c0_second, label %a_second, label %test1_second','br i1 %c0_second, label %a_second, label %test1_second, !decision.origin !0')
- src=d/'duplicate.ll';src.write_text(dup);p=run([r/'build/decision-fuse/decision-greedy',src,'case',root,d/'duplicate']);assert p.returncode!=0 and 'ambiguous decision identity' in p.stderr,p.stderr
+ src=d/'duplicate.ll';src.write_text(dup);p=run([r/'build/decision-fuse/decision-greedy',src,'case',root,d/'duplicate'],dict(os.environ,DECISION_CHECKPOINT_MODE='off',DECISION_SPECULATION='none'));assert p.returncode!=0 and 'ambiguous decision identity' in p.stderr,p.stderr
  print('outside/inside convergent, independent budgets, pressure/uniform/missing-metric acceptance checks passed')
