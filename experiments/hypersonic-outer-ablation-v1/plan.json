@@ -1,0 +1,67 @@
+{
+  "scope": "Controlled historical prepared face_decide-region ablation; fixed opaque-call wrapper transformed by DARM once; fully inline all variants before common finalization. Whole classifier including nested boundary logic, not solely cross-leaf merges. Not helper-free standard suite baseline.",
+  "sources": {
+    "none": {
+      "path": "/home/chh/divergence-strategy-search/explorations/fluid-sims-repro-20261104/fusion-enum-flat-v2/hypersonic/states/state-0/linked.ll",
+      "sha256": "5c4dcfaac4041a51f6d75f7dc9a651ed630303b1c4d91cf31affece5e849e813"
+    },
+    "e017": {
+      "path": "/home/chh/divergence-strategy-search/explorations/fluid-sims-repro-20261104/fusion-enum-flat-v2/hypersonic/states/state-17/linked.ll",
+      "sha256": "133a52c20e09bcada95103743e877529d5ade5a71ef8e2dc2000db429cad92ae"
+    },
+    "greedy": {
+      "path": "/home/chh/kernel-benchmark-suite/experiments/hypersonic-greedy-native-score-v1/search/states/state-1/linked.ll",
+      "sha256": "85f4b587b829482b943d0e09d505973a80065075e4fac222c9a267ff1b6bfb7f"
+    }
+  },
+  "engine": {
+    "path": "/home/chh/divergence-strategy-search/explorations/fluid-sims-repro-20261104/e017-repair-v1/repaired2/opt",
+    "sha256": "2ff7146522057f3d9ef181c977e63c56eebf95d85d3046db9f12b239ce37f170"
+  },
+  "roles": [
+    "none",
+    "auto",
+    "e017",
+    "greedy"
+  ],
+  "batches": 3,
+  "warmup": 2,
+  "repeat": 5,
+  "retry": false,
+  "pairs": [
+    "/home/chh/kernel-benchmark-suite/experiments/hypersonic-outer-ablation-v1/pair-auto-vs-none",
+    "/home/chh/kernel-benchmark-suite/experiments/hypersonic-outer-ablation-v1/pair-e017-vs-auto",
+    "/home/chh/kernel-benchmark-suite/experiments/hypersonic-outer-ablation-v1/pair-greedy-vs-auto"
+  ],
+  "auto_melds": [
+    "Melding entry blocks %if.then24 , %if.then",
+    "Melding entry blocks %if.then37 , %g_1_1.exit",
+    "Melding entry blocks %replicated.bb , %if.end9.i.i48",
+    "Melding entry blocks %merged.bb93 , %merged.bb90",
+    "Melding entry blocks %replicated.bb , %if.end15.i.i",
+    "Melding entry blocks %replicated.bb , %predication.tail202",
+    "Melding entry blocks %merged.bb92 , %merged.bb91"
+  ],
+  "outside_melds": [
+    "Melding entry blocks %if.then103 , %_Z6hllc_x4ConsS_.exit",
+    "Melding entry blocks %if.then25.i1528.i.i , %if.end31.i1588.i.i",
+    "Melding entry blocks %if.then25.i1295.i.i , %if.end31.i1355.i.i",
+    "Melding entry blocks %if.then25.i1055.i.i , %if.end31.i1115.i.i",
+    "Melding entry blocks %if.then25.i822.i.i , %if.end31.i882.i.i",
+    "Melding entry blocks %if.then25.i589.i.i , %if.end31.i649.i.i",
+    "Melding entry blocks %if.end127.i.i , %if.end21.i.i.i"
+  ],
+  "fixed_outside_sha256": "96450a57ab860b76043c4c1ec0c7ef8d534ac94be9da1599bc967ab5acd5ee44",
+  "wrapper_hashes": {
+    "none": "c34b233c7b42d834a986c4939d145fcfb24479c5dad8ab777178aa420c36577c",
+    "auto": "c34b233c7b42d834a986c4939d145fcfb24479c5dad8ab777178aa420c36577c",
+    "e017": "c34b233c7b42d834a986c4939d145fcfb24479c5dad8ab777178aa420c36577c",
+    "greedy": "c34b233c7b42d834a986c4939d145fcfb24479c5dad8ab777178aa420c36577c"
+  },
+  "final_ir_sha256": {
+    "none": "56088ff9a829f4c59fd9ae9ea3ff4c0fcccf14d99ddcae8156cb88d3ef8cf9f8",
+    "auto": "10d9e8b4b9c559bdc76fd1a5ff63dd39c514f15ddf2b2a7813aa3ce6b5877527",
+    "e017": "1c7105bb9af1da0c14487c443da16c52fd81c14c44f7476ffe9de695b207a670",
+    "greedy": "4d998451107e506e0b4c1a7c26ac737c04d2305ad3e512da6dbd55dc85dbb346"
+  }
+}

@@ -1,0 +1,98 @@
+{
+  "scope": "Controlled historical prepared face_decide-region ablation; fixed opaque-call wrapper transformed by DARM once; fully inline all variants before common finalization. Whole classifier including nested boundary logic, not solely cross-leaf merges. Not helper-free standard suite baseline.",
+  "measurement_status": {
+    "status": "completed",
+    "completed": [
+      "/home/chh/kernel-benchmark-suite/experiments/hypersonic-outer-ablation-v1/measure-pair-auto-vs-none",
+      "/home/chh/kernel-benchmark-suite/experiments/hypersonic-outer-ablation-v1/measure-pair-e017-vs-auto",
+      "/home/chh/kernel-benchmark-suite/experiments/hypersonic-outer-ablation-v1/measure-pair-greedy-vs-auto"
+    ]
+  },
+  "budget": {
+    "batches": 3,
+    "warmup_per_batch": 2,
+    "measurements_per_batch": 5,
+    "inputs": [
+      "hypersonic-1",
+      "hypersonic-24"
+    ]
+  },
+  "outside_meld_count": 7,
+  "auto_region_meld_count": 7,
+  "identical_outside_before_inlining": true,
+  "comparisons": {
+    "measure-pair-auto-vs-none": {
+      "0:hypersonic-1": {
+        "baseline_gmean_batch_median_us": 1713.0660880830173,
+        "variant_gmean_batch_median_us": 1598.7196580379282,
+        "time_change_percent": -6.674957308450661,
+        "batch_change_percent": [
+          -6.672900086948967,
+          -6.653582256018555,
+          -6.698384171377125
+        ],
+        "label": "beneficial"
+      },
+      "0:hypersonic-24": {
+        "baseline_gmean_batch_median_us": 1712.266557442289,
+        "variant_gmean_batch_median_us": 1598.6131186836483,
+        "time_change_percent": -6.637601970595758,
+        "batch_change_percent": [
+          -6.604394986417048,
+          -6.637376047117593,
+          -6.671022990572513
+        ],
+        "label": "beneficial"
+      }
+    },
+    "measure-pair-e017-vs-auto": {
+      "0:hypersonic-1": {
+        "baseline_gmean_batch_median_us": 1605.0560150411986,
+        "variant_gmean_batch_median_us": 1600.9569461354042,
+        "time_change_percent": -0.2553847882804502,
+        "batch_change_percent": [
+          0.05999952465296678,
+          -0.5256416565692558,
+          -0.2996380604409421
+        ],
+        "label": "unclear"
+      },
+      "0:hypersonic-24": {
+        "baseline_gmean_batch_median_us": 1601.8123711722335,
+        "variant_gmean_batch_median_us": 1598.7699960606435,
+        "time_change_percent": -0.18993330094987926,
+        "batch_change_percent": [
+          -0.15971373349203855,
+          -0.08981593347597332,
+          -0.32013049100191737
+        ],
+        "label": "unclear"
+      }
+    },
+    "measure-pair-greedy-vs-auto": {
+      "0:hypersonic-1": {
+        "baseline_gmean_batch_median_us": 1600.5831941230365,
+        "variant_gmean_batch_median_us": 1688.1058454373224,
+        "time_change_percent": 5.468172578323363,
+        "batch_change_percent": [
+          5.182894928845217,
+          5.464920039556461,
+          5.757485420376296
+        ],
+        "label": "harmful"
+      },
+      "0:hypersonic-24": {
+        "baseline_gmean_batch_median_us": 1601.4391956301902,
+        "variant_gmean_batch_median_us": 1690.1258439724427,
+        "time_change_percent": 5.537934164734383,
+        "batch_change_percent": [
+          5.069353743011415,
+          5.454539364705909,
+          6.092437287964792
+        ],
+        "label": "harmful"
+      }
+    }
+  },
+  "auto_binary_identical_across_pairs": true
+}

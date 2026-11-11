@@ -1,0 +1,126 @@
+{
+  "schema": "postopt-full-pipeline-comparison-v0",
+  "case": "hypersonic",
+  "scope": "Controlled historical prepared face_decide-region ablation; fixed opaque-call wrapper transformed by DARM once; fully inline all variants before common finalization. Whole classifier including nested boundary logic, not solely cross-leaf merges. Not helper-free standard suite baseline.; auto-vs-none",
+  "candidate": null,
+  "context": {
+    "function": "face_kernel"
+  },
+  "files": {
+    "baseline": {
+      "source": "/home/chh/kernel-benchmark-suite/experiments/hypersonic-outer-ablation-v1/none/post.ll",
+      "sha256": "56088ff9a829f4c59fd9ae9ea3ff4c0fcccf14d99ddcae8156cb88d3ef8cf9f8"
+    },
+    "baseline_binary": {
+      "sha256": "e70bae3b5f4ee35f5210a03b761598de059f24c768f0bc00d4031a15adbb412b"
+    },
+    "baseline_resources": {
+      "path": "baseline-resources.stdout",
+      "sha256": "c717c82e2ca1bde211c2d92f09d4d0ccbf04aabe2684e5efb84b948cd19901c8"
+    },
+    "variant": {
+      "source": "/home/chh/kernel-benchmark-suite/experiments/hypersonic-outer-ablation-v1/auto/post.ll",
+      "sha256": "10d9e8b4b9c559bdc76fd1a5ff63dd39c514f15ddf2b2a7813aa3ce6b5877527"
+    },
+    "variant_binary": {
+      "sha256": "fd3538b04f5c39e995ffe9891136ffad2d6e55a12f2e3aeb6a45172d761df0a4"
+    },
+    "variant_resources": {
+      "path": "variant-resources.stdout",
+      "sha256": "09ccb323e0c44aeb38a70175f7618423e86ebfe725502525c6ac8e7396c1642c"
+    }
+  },
+  "commands": [
+    {
+      "stage": "baseline-opt",
+      "argv": [
+        "/home/chh/region-fusion-lab/toolchains/llvm12/amd-bootstrap/bin/opt",
+        "/home/chh/kernel-benchmark-suite/experiments/hypersonic-outer-ablation-v1/pair-auto-vs-none/baseline.ll",
+        "-O3",
+        "-verify-each",
+        "-S",
+        "-o",
+        "/home/chh/kernel-benchmark-suite/experiments/hypersonic-outer-ablation-v1/pair-auto-vs-none/baseline-final.ll"
+      ]
+    },
+    {
+      "stage": "baseline-llc",
+      "argv": [
+        "/home/chh/region-fusion-lab/toolchains/llvm12/amd-bootstrap/bin/llc",
+        "/home/chh/kernel-benchmark-suite/experiments/hypersonic-outer-ablation-v1/pair-auto-vs-none/baseline-final.ll",
+        "-O3",
+        "-mtriple=amdgcn-amd-amdhsa",
+        "-mcpu=gfx906",
+        "-mattr=+sram-ecc,-xnack",
+        "-filetype=obj",
+        "-o",
+        "/home/chh/kernel-benchmark-suite/experiments/hypersonic-outer-ablation-v1/pair-auto-vs-none/baseline.o"
+      ]
+    },
+    {
+      "stage": "baseline-link",
+      "argv": [
+        "/opt/rocm/llvm/bin/ld.lld",
+        "-shared",
+        "/home/chh/kernel-benchmark-suite/experiments/hypersonic-outer-ablation-v1/pair-auto-vs-none/baseline.o",
+        "-o",
+        "/home/chh/kernel-benchmark-suite/experiments/hypersonic-outer-ablation-v1/pair-auto-vs-none/baseline.hsaco"
+      ]
+    },
+    {
+      "stage": "baseline-resources",
+      "argv": [
+        "/opt/rocm/llvm/bin/llvm-readobj",
+        "--notes",
+        "/home/chh/kernel-benchmark-suite/experiments/hypersonic-outer-ablation-v1/pair-auto-vs-none/baseline.hsaco"
+      ]
+    },
+    {
+      "stage": "variant-opt",
+      "argv": [
+        "/home/chh/region-fusion-lab/toolchains/llvm12/amd-bootstrap/bin/opt",
+        "/home/chh/kernel-benchmark-suite/experiments/hypersonic-outer-ablation-v1/pair-auto-vs-none/variant.ll",
+        "-O3",
+        "-verify-each",
+        "-S",
+        "-o",
+        "/home/chh/kernel-benchmark-suite/experiments/hypersonic-outer-ablation-v1/pair-auto-vs-none/variant-final.ll"
+      ]
+    },
+    {
+      "stage": "variant-llc",
+      "argv": [
+        "/home/chh/region-fusion-lab/toolchains/llvm12/amd-bootstrap/bin/llc",
+        "/home/chh/kernel-benchmark-suite/experiments/hypersonic-outer-ablation-v1/pair-auto-vs-none/variant-final.ll",
+        "-O3",
+        "-mtriple=amdgcn-amd-amdhsa",
+        "-mcpu=gfx906",
+        "-mattr=+sram-ecc,-xnack",
+        "-filetype=obj",
+        "-o",
+        "/home/chh/kernel-benchmark-suite/experiments/hypersonic-outer-ablation-v1/pair-auto-vs-none/variant.o"
+      ]
+    },
+    {
+      "stage": "variant-link",
+      "argv": [
+        "/opt/rocm/llvm/bin/ld.lld",
+        "-shared",
+        "/home/chh/kernel-benchmark-suite/experiments/hypersonic-outer-ablation-v1/pair-auto-vs-none/variant.o",
+        "-o",
+        "/home/chh/kernel-benchmark-suite/experiments/hypersonic-outer-ablation-v1/pair-auto-vs-none/variant.hsaco"
+      ]
+    },
+    {
+      "stage": "variant-resources",
+      "argv": [
+        "/opt/rocm/llvm/bin/llvm-readobj",
+        "--notes",
+        "/home/chh/kernel-benchmark-suite/experiments/hypersonic-outer-ablation-v1/pair-auto-vs-none/variant.hsaco"
+      ]
+    }
+  ],
+  "semantic_validation": "not_run",
+  "status": "compiled_pair_not_validated",
+  "further_melding": false
+}
