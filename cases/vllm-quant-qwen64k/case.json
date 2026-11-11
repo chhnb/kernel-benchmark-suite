@@ -1,0 +1,34 @@
+{
+  "name": "vllm-quant-qwen64k",
+  "status": "validated_and_timed",
+  "origin": "../vllm-quant/inputs/qwen35-64k",
+  "runtime": {
+    "kind": "cpp",
+    "backend": "amd",
+    "runner": "build/bin/bench_hip",
+    "default_kernel": "/home/chh/kernel-benchmark-suite/results/vllm-hip-software-v1/kernel.hsaco",
+    "inputs": [
+      "/home/chh/kernel-benchmark-suite/cases/vllm-quant-large/fixtures/qwen64k-layer03/input.txt",
+      "/home/chh/kernel-benchmark-suite/cases/vllm-quant-large/fixtures/qwen64k-layer07/input.txt",
+      "/home/chh/kernel-benchmark-suite/cases/vllm-quant-large/fixtures/qwen64k-layer11/input.txt",
+      "/home/chh/kernel-benchmark-suite/cases/vllm-quant-large/fixtures/qwen64k-layer15/input.txt",
+      "/home/chh/kernel-benchmark-suite/cases/vllm-quant-large/fixtures/qwen64k-layer19/input.txt",
+      "/home/chh/kernel-benchmark-suite/cases/vllm-quant-large/fixtures/qwen64k-layer23/input.txt"
+    ],
+    "timing_modes": [
+      "event",
+      "graph"
+    ],
+    "scope": "Six real Qwen3.5 65536-token KV layers, shape [65536,2,256], original scales and sequential slots; software HIP cache_eval; all32 greedy versus fixed balanced",
+    "environment": {
+      "LD_LIBRARY_PATH": "/opt/rocm/lib:/opt/rocm/lib64:/usr/local/cuda/lib64",
+      "HIP_VISIBLE_DEVICES": "0",
+      "ROCR_VISIBLE_DEVICES": "0"
+    }
+  },
+  "experiment": "experiments/qwen64k-all32-greedy-20261108-v1",
+  "measurements": {
+    "specified_tree": "experiments/qwen64k-specified-tree-20261108-v1",
+    "specified_without_final_merge": "experiments/qwen64k-specified-partial-20261108-v1"
+  }
+}

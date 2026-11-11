@@ -1,0 +1,89 @@
+{
+  "name": "tpacf",
+  "enabled": true,
+  "status": "cpp_baseline_validated_and_timed",
+  "helper_extraction": false,
+  "scope": "Full original ACFKernel; synthetic seeded 16384-point catalogs; common historical no-unroll source profile, FP contraction off; no classifier extraction",
+  "profiles": {
+    "hip-no-unroll-binary": {
+      "argv": [
+        "python3",
+        "{case}/build_binary.py",
+        "{out}"
+      ],
+      "artifact": "kernel.hsaco",
+      "kind": "hip-code-object",
+      "gpu_execution": false
+    }
+  },
+  "runtime": {
+    "kind": "cpp",
+    "backend": "amd",
+    "runner": "build/bin/bench_tpacf",
+    "default_kernel": "/home/chh/kernel-benchmark-suite/results/tpacf-baseline-v1/kernel.hsaco",
+    "inputs": [
+      "fixtures"
+    ],
+    "timing_modes": [
+      "event"
+    ],
+    "scope": "One complete ACFKernel launch; exact all 67108864 packed output words, input/bounds immutability and buffer guards; synthetic 16384-point fixture, not official astronomical catalog",
+    "environment": {
+      "HIP_VISIBLE_DEVICES": "0",
+      "ROCR_VISIBLE_DEVICES": "0",
+      "LD_LIBRARY_PATH": "/opt/rocm/lib:/opt/rocm/lib64"
+    }
+  },
+  "provenance": {
+    "upstream": {
+      "repository": "https://github.com/ORNL/HeCBench",
+      "commit": "6f44356a3ddc6ac7dbf5f626c671ed1638c17374",
+      "user_master_ACF_kernel_matches_pinned": true,
+      "files": [
+        "ACF_kernel.cu",
+        "README"
+      ]
+    },
+    "historical_fixture": "/home/chh/divergence-strategy-search/explorations/baseline-profile-20261031/tpacf-fixtures",
+    "source_adaptations": [
+      "HIP runtime/types and C linkage",
+      "seven existing unroll pragmas disabled uniformly; same historical controlled profile"
+    ],
+    "fixture_hashes": {
+      "b1.bin": "979aafc5bd89cae9b5e7f3d5210fc99d33bd346be64ff056ab328290d170f198",
+      "b0.bin": "80325867f349a30a2ef5ac48a30bd4c48e8182a5110a27790748e7a9f70b57f1",
+      "a0.bin": "781fd8f8970befa26c6e40ec2bde7b0d1dfb5fb8fe3d26d11b9582845623bdc4",
+      "oracle-status.json": "ff397ce3c6ceab772063d594955cf212d415866f39cab962e4e77e4295f0a641",
+      "prepared.txt": "8282c329136ee35774a0a4944204835466ed128230eaddd407ca814aeaa51a6a",
+      "reference.bin": "08889c0bdd6a13ba4ba9e63b32b4342c2620a822650e9ef32d017c1d456f77be",
+      "a2.bin": "52ebef398ffdf150a8bdc77ad516166f7cbe366219cb77b5869001d145b3d027",
+      "bounds.bin": "42bd85361f75ea0c337ce013865813e91ed20f03e38579a0150736d0642f2e2c",
+      "b2.bin": "923b083b8a7b9ba31b4980e5cd46a75a662bdc909e561c4e4eb718ba8f0ee53a",
+      "a1.bin": "26b389089d6c796c69ac1556ffc0eab90f076773a29fb6f96dedf756c8657d96"
+    }
+  },
+  "validation": {
+    "baseline": "results/tpacf-baseline-validation-runtime-fixed-v1",
+    "pair": "/home/chh/kernel-benchmark-suite/experiments/tpacf-adjacent-four-v1/measure-authorized-v1",
+    "words_per_launch": 67108864
+  },
+  "region_analysis": {
+    "ir": "/home/chh/kernel-benchmark-suite/results/tpacf-baseline-v1/post.ll",
+    "function": "ACFKernel",
+    "region_count": 32,
+    "report": "/home/chh/kernel-benchmark-suite/analysis/tpacf-regions-v1/tpacf/inventory.json",
+    "llvm_version": 12,
+    "optimization": "O3/no-unroll"
+  },
+  "acceptance": {
+    "source_build": true,
+    "gpu_correctness": true,
+    "timing": true,
+    "complete_benchmark": true
+  },
+  "benchmark": {
+    "review": "/home/chh/kernel-benchmark-suite/experiments/tpacf-adjacent-four-v1/summary.json",
+    "status": "three paired fixed-budget screening batches"
+  },
+  "specified_merge_experiment": "/home/chh/kernel-benchmark-suite/experiments/tpacf-adjacent-four-v1/summary.json"
+}

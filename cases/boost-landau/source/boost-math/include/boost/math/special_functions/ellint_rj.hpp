@@ -1,0 +1,365 @@
+//  Copyright (c) 2006 Xiaogang Zhang, 2015 John Maddock
+//  Copyright (c) 2024 Matt Borland
+//  Use, modification and distribution are subject to the
+//  Boost Software License, Version 1.0. (See accompanying file
+//  LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+//
+//  History:
+//  XZ wrote the original of this file as part of the Google
+//  Summer of Code 2006.  JM modified it to fit into the
+//  Boost.Math conceptual framework better, and to correctly
+//  handle the p < 0 case.
+//  Updated 2015 to use Carlson's latest methods.
+//
+
+#ifndef BOOST_MATH_ELLINT_RJ_HPP
+#define BOOST_MATH_ELLINT_RJ_HPP
+
+#ifdef _MSC_VER
+#pragma once
+#endif
+
+#include <boost/math/tools/config.hpp>
+#include <boost/math/tools/numeric_limits.hpp>
+#include <boost/math/special_functions/math_fwd.hpp>
+#include <boost/math/policies/error_handling.hpp>
+#include <boost/math/special_functions/ellint_rc.hpp>
+#include <boost/math/special_functions/ellint_rf.hpp>
+#include <boost/math/special_functions/ellint_rd.hpp>
+
+// Carlson's elliptic integral of the third kind
+// R_J(x, y, z, p) = 1.5 * \int_{0}^{\infty} (t+p)^{-1} [(t+x)(t+y)(t+z)]^{-1/2} dt
+// Carlson, Numerische Mathematik, vol 33, 1 (1979)
+
+BOOST_MATH_NAMESPACE_BEGIN namespace detail{
+
+template <typename T, typename Policy>
+BOOST_MATH_GPU_ENABLED T ellint_rc1p_imp(T y, const Policy& pol)
+{
+   using namespace BOOST_MATH_NAMESPACE;
+   // Calculate RC(1, 1 + x)
+   BOOST_MATH_STD_USING
+
+   BOOST_MATH_ASSERT(y != -1);
+
+   // for 1 + y < 0, the integral is singular, return Cauchy principal value
+   T result;
+   if(y < -1)
+   {
+      result = sqrt(1 / -y) * detail::ellint_rc_imp(T(-y), T(-1 - y), pol);
+   }
+   else if(y == 0)
+   {
+      result = 1;
+   }
+   else if(y > 0)
+   {
+      result = atan(sqrt(y)) / sqrt(y);
+   }
+   else
+   {
+      if(y > T(-0.5))
+      {
+         T arg = sqrt(-y);
+         result = (BOOST_MATH_NAMESPACE::log1p(arg, pol) - BOOST_MATH_NAMESPACE::log1p(-arg, pol)) / (2 * sqrt(-y));
+      }
+      else
+      {
+         result = log((1 + sqrt(-y)) / sqrt(1 + y)) / sqrt(-y);
+      }
+   }
+   return result;
+}
+
+//
+// RC(1, 1+e) = 1 - e/3 + e^2/5 - ..., summed until the terms are negligible, for small |e|.
+//
+template <typename T>
+BOOST_MATH_GPU_ENABLED T ellint_rc1p_series(T e)
+{
+   BOOST_MATH_STD_USING
+   T sum = 1;
+   T term = 1;
+   for(unsigned k = 1; k < 10000; ++k)
+   {
+      term *= -e;
+      T t = term / (2 * k + 1);
+      sum += t;
+      if(fabs(t) < tools::epsilon<T>())
+         break;
+   }
+   return sum;
+}
+//
+// The series in the final step of the RJ algorithm, through order B:
+// sum_N (3/2)_N / (5/2)_N T_N with N T_N = -sum_{r=2}^{5} (-1)^r (N - r/2) E_r T_{N-r},
+// Carlson, J. Res. Natl. Inst. Stand. Technol. 107 (2002) 413-418, Eq. (3.9).
+//
+template <typename T>
+BOOST_MATH_GPU_ENABLED T ellint_rj_series(T E2, T E3, T E4, T E5, unsigned B)
+{
+   T tm1 = 1, tm2 = 0, tm3 = 0, tm4 = 0, tm5 = 0; // T_{N-1}, ..., T_{N-5}
+   T sum = 1;
+   T c = 1;
+   for(unsigned N = 1; N <= B; ++N)
+   {
+      T tn = -((T(N) - 1) * E2 * tm2 - (T(N) - T(1.5)) * E3 * tm3 + (T(N) - 2) * E4 * tm4 - (T(N) - T(2.5)) * E5 * tm5) / N;
+      c *= T(2 * N + 1) / (2 * N + 3);
+      sum += c * tn;
+      tm5 = tm4;
+      tm4 = tm3;
+      tm3 = tm2;
+      tm2 = tm1;
+      tm1 = tn;
+   }
+   return sum;
+}
+
+template <typename T, typename Policy>
+BOOST_MATH_GPU_ENABLED T ellint_rj_imp_final(T x, T y, T z, T p, const Policy& pol)
+{
+   BOOST_MATH_STD_USING
+
+   //
+   // Special cases from http://dlmf.nist.gov/19.20#iii
+   //
+   if(x == y)
+   {
+      if(x == z)
+      {
+         if(x == p)
+         {
+            // All values equal:
+            return 1 / (x * sqrt(x));
+         }
+         else
+         {
+            // x = y = z:
+            return 3 * (ellint_rc_imp(x, p, pol) - 1 / sqrt(x)) / (x - p);
+         }
+      }
+      else
+      {
+         // x = y only, permute so y = z:
+         BOOST_MATH_GPU_SAFE_SWAP(x, z);
+         if(y == p)
+         {
+            return ellint_rd_imp(x, y, y, pol);
+         }
+         else if(BOOST_MATH_GPU_SAFE_MAX(y, p) / BOOST_MATH_GPU_SAFE_MIN(y, p) > T(1.2))
+         {
+            return 3 * (ellint_rc_imp(x, y, pol) - ellint_rc_imp(x, p, pol)) / (p - y);
+         }
+         // Otherwise fall through to normal method, special case above will suffer too much cancellation...
+      }
+   }
+   if(y == z)
+   {
+      if(y == p)
+      {
+         // y = z = p:
+         return ellint_rd_imp(x, y, y, pol);
+      }
+      else if(BOOST_MATH_GPU_SAFE_MAX(y, p) / BOOST_MATH_GPU_SAFE_MIN(y, p) > T(1.2))
+      {
+         // y = z:
+         return 3 * (ellint_rc_imp(x, y, pol) - ellint_rc_imp(x, p, pol)) / (p - y);
+      }
+      // Otherwise fall through to normal method, special case above will suffer too much cancellation...
+   }
+   if(z == p)
+   {
+      return ellint_rd_imp(x, y, z, pol);
+   }
+
+   T xn = x;
+   T yn = y;
+   T zn = z;
+   T pn = p;
+   T An = (x + y + z + 2 * p) / 5;
+   T A0 = An;
+   T delta = (p - x) * (p - y) * (p - z);
+   //
+   // Beyond long double precision, fewer duplications with a longer final series pay off, with order
+   // ~2 p^0.4 for p bits (Johansson, arXiv:1806.06725), and so does summing the series for RC(1, 1+E_n)
+   // whenever |E_n| <= 1/8, rather than calling atan or log.
+   //
+   const bool high_precision = tools::digits<T>() > 64;
+   const unsigned order = high_precision ? static_cast<unsigned>(2 * pow(static_cast<double>(tools::digits<T>()), 0.4) + 0.5) : 7u;
+   const T rc_series_limit = high_precision ? T(0.125) : T(0);
+   T Q = (high_precision ? T(pow(tools::epsilon<T>() / 5, -T(1) / (order + 1))) : T(sqrt(sqrt(sqrt(5 / tools::epsilon<T>()))))) * BOOST_MATH_GPU_SAFE_MAX(BOOST_MATH_GPU_SAFE_MAX(fabs(An - x), fabs(An - y)), BOOST_MATH_GPU_SAFE_MAX(fabs(An - z), fabs(An - p)));
+
+   unsigned n;
+   T lambda;
+   T Dn;
+   T En;
+   T rx, ry, rz, rp;
+   T fmn = 1; // 4^-n
+   T RC_sum = 0;
+   // After the first iteration or two E_n is tiny, and RC(1, 1+E_n) is cheaper from its
+   // series 1 - E/3 + E^2/5 - ... (as Johansson also suggests, arXiv:1806.06725):
+   // below this limit the first omitted term is under epsilon / 13.
+   const T series_limit = sqrt(tools::cbrt_epsilon<T>());
+
+   for(n = 0; n < policies::get_max_series_iterations<Policy>(); ++n)
+   {
+      rx = sqrt(xn);
+      ry = sqrt(yn);
+      rz = sqrt(zn);
+      rp = sqrt(pn);
+      Dn = (rp + rx) * (rp + ry) * (rp + rz);
+      En = delta / Dn;
+      En /= Dn;
+      if(fabs(En) < series_limit)
+      {
+         RC_sum += fmn / Dn * (1 + En * (T(-1) / 3 + En * (T(1) / 5 + En * (T(-1) / 7 + En * (T(1) / 9 + En * (T(-1) / 11))))));
+      }
+      else if(fabs(En) <= rc_series_limit)
+      {
+         RC_sum += fmn / Dn * ellint_rc1p_series(En);
+      }
+      else if((En < T(-0.5)) && (En > T(-1.5)))
+      {
+         //
+         // Occasionally En ~ -1, we then have no means of calculating
+         // RC(1, 1+En) without terrible cancellation error, so we
+         // need to get to 1+En directly.  By substitution we have
+         //
+         // 1+E_0 = 1 + (p-x)*(p-y)*(p-z)/((sqrt(p) + sqrt(x))*(sqrt(p)+sqrt(y))*(sqrt(p)+sqrt(z)))^2
+         //       = 2*sqrt(p)*(p+sqrt(x) * (sqrt(y)+sqrt(z)) + sqrt(y)*sqrt(z)) / ((sqrt(p) + sqrt(x))*(sqrt(p) + sqrt(y)*(sqrt(p)+sqrt(z))))
+         //
+         // And since this is just an application of the duplication formula for RJ, the same
+         // expression works for 1+En if we use x,y,z,p_n etc.
+         // This branch is taken only once or twice at the start of iteration,
+         // after than En reverts to it's usual very small values.
+         //
+         T b = 2 * rp * (pn + rx * (ry + rz) + ry * rz) / Dn;
+         RC_sum += fmn / Dn * detail::ellint_rc_imp(T(1), b, pol);
+      }
+      else
+      {
+         RC_sum += fmn / Dn * ellint_rc1p_imp(En, pol);
+      }
+      lambda = rx * ry + rx * rz + ry * rz;
+
+      // From here on we move to n+1:
+      An = (An + lambda) / 4;
+      fmn /= 4;
+
+      if(fmn * Q < An)
+         break;
+
+      xn = (xn + lambda) / 4;
+      yn = (yn + lambda) / 4;
+      zn = (zn + lambda) / 4;
+      pn = (pn + lambda) / 4;
+      delta /= 64;
+   }
+
+   T X = fmn * (A0 - x) / An;
+   T Y = fmn * (A0 - y) / An;
+   T Z = fmn * (A0 - z) / An;
+   T P = (-X - Y - Z) / 2;
+   T E2 = X * Y + X * Z + Y * Z - 3 * P * P;
+   T E3 = X * Y * Z + 2 * E2 * P + 4 * P * P * P;
+   T E4 = (2 * X * Y * Z + E2 * P + 3 * P * P * P) * P;
+   T E5 = X * Y * Z * P * P;
+   if(high_precision)
+      return fmn / (An * sqrt(An)) * ellint_rj_series(E2, E3, E4, E5, order) + 6 * RC_sum;
+   T result = fmn / (An * sqrt(An)) *
+      (1 - 3 * E2 / 14 + E3 / 6 + 9 * E2 * E2 / 88 - 3 * E4 / 22 - 9 * E2 * E3 / 52 + 3 * E5 / 26 - E2 * E2 * E2 / 16
+      + 3 * E3 * E3 / 40 + 3 * E2 * E4 / 20 + 45 * E2 * E2 * E3 / 272 - 9 * (E3 * E4 + E2 * E5) / 68);
+
+   result += 6 * RC_sum;
+   return result;
+}
+
+template <typename T, typename Policy>
+BOOST_MATH_GPU_ENABLED T ellint_rj_imp(T x, T y, T z, T p, const Policy& pol)
+{
+   BOOST_MATH_STD_USING
+   
+   constexpr auto function = "boost::math::ellint_rj<%1%>(%1%,%1%,%1%)";
+
+   if(x < 0)
+   {
+      return policies::raise_domain_error<T>(function, "Argument x must be non-negative, but got x = %1%", x, pol);
+   }
+   if(y < 0)
+   {
+      return policies::raise_domain_error<T>(function, "Argument y must be non-negative, but got y = %1%", y, pol);
+   }
+   if(z < 0)
+   {
+      return policies::raise_domain_error<T>(function, "Argument z must be non-negative, but got z = %1%", z, pol);
+   }
+   if(p == 0)
+   {
+      return policies::raise_domain_error<T>(function, "Argument p must not be zero, but got p = %1%", p, pol);
+   }
+   if(x + y == 0 || y + z == 0 || z + x == 0)
+   {
+      return policies::raise_domain_error<T>(function, "At most one argument can be zero, only possible result is %1%.", BOOST_MATH_NAMESPACE::numeric_limits<T>::quiet_NaN(), pol);
+   }
+
+   // for p < 0, the integral is singular, return Cauchy principal value
+   if(p < 0)
+   {
+      //
+      // We must ensure that x < y < z.
+      // Since the integral is symmetrical in x, y and z
+      // we can just permute the values:
+      //
+      if(x > y)
+         BOOST_MATH_GPU_SAFE_SWAP(x, y);
+      if(y > z)
+         BOOST_MATH_GPU_SAFE_SWAP(y, z);
+      if(x > y)
+         BOOST_MATH_GPU_SAFE_SWAP(x, y);
+
+      BOOST_MATH_ASSERT(x <= y);
+      BOOST_MATH_ASSERT(y <= z);
+
+      T q = -p;
+      p = (z * (x + y + q) - x * y) / (z + q);
+
+      BOOST_MATH_ASSERT(p >= 0);
+
+      T value = (p - z) * ellint_rj_imp_final(x, y, z, p, pol);
+      value -= 3 * ellint_rf_imp(x, y, z, pol);
+      value += 3 * sqrt((x * y * z) / (x * y + p * q)) * ellint_rc_imp(T(x * y + p * q), T(p * q), pol);
+      value /= (z + q);
+      return value;
+   }
+
+   return ellint_rj_imp_final(x, y, z, p, pol);
+}
+
+} // namespace detail
+
+BOOST_MATH_EXPORT template <class T1, class T2, class T3, class T4, class Policy>
+BOOST_MATH_GPU_ENABLED inline typename tools::promote_args<T1, T2, T3, T4>::type 
+   ellint_rj(T1 x, T2 y, T3 z, T4 p, const Policy& pol)
+{
+   typedef typename tools::promote_args<T1, T2, T3, T4>::type result_type;
+   typedef typename policies::evaluation<result_type, Policy>::type value_type;
+   return policies::checked_narrowing_cast<result_type, Policy>(
+      detail::ellint_rj_imp(
+         static_cast<value_type>(x),
+         static_cast<value_type>(y),
+         static_cast<value_type>(z),
+         static_cast<value_type>(p),
+         pol), "boost::math::ellint_rj<%1%>(%1%,%1%,%1%,%1%)");
+}
+
+BOOST_MATH_EXPORT template <class T1, class T2, class T3, class T4>
+BOOST_MATH_GPU_ENABLED inline typename tools::promote_args<T1, T2, T3, T4>::type 
+   ellint_rj(T1 x, T2 y, T3 z, T4 p)
+{
+   return ellint_rj(x, y, z, p, policies::policy<>());
+}
+
+BOOST_MATH_NAMESPACE_END
+
+#endif // BOOST_MATH_ELLINT_RJ_HPP
+

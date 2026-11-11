@@ -1,0 +1,34 @@
+{
+  "name": "vllm-quant-large",
+  "status": "validated_and_timed",
+  "runtime": {
+    "kind": "cpp",
+    "backend": "amd",
+    "runner": "build/bin/bench_hip",
+    "default_kernel": "/home/chh/kernel-benchmark-suite/results/vllm-hip-software-v1/kernel.hsaco",
+    "inputs": [
+      "/home/chh/kernel-benchmark-suite/cases/vllm-quant-large/fixtures/qwen64k-layer03/input.txt",
+      "/home/chh/kernel-benchmark-suite/cases/vllm-quant-large/fixtures/qwen64k-layer07/input.txt",
+      "/home/chh/kernel-benchmark-suite/cases/vllm-quant-large/fixtures/qwen64k-layer11/input.txt",
+      "/home/chh/kernel-benchmark-suite/cases/vllm-quant-large/fixtures/qwen64k-layer15/input.txt",
+      "/home/chh/kernel-benchmark-suite/cases/vllm-quant-large/fixtures/qwen64k-layer19/input.txt",
+      "/home/chh/kernel-benchmark-suite/cases/vllm-quant-large/fixtures/qwen64k-layer23/input.txt",
+      "/home/chh/kernel-benchmark-suite/cases/vllm-quant/fixtures-cpp/131072/input.txt"
+    ],
+    "timing_modes": [
+      "event",
+      "graph"
+    ],
+    "scope": "Six real Qwen 65536-token layers with historical scales/sequential slots plus synthetic 131072-token fixture; full software HIP cache_eval; D16 tree comparison",
+    "environment": {
+      "LD_LIBRARY_PATH": "/opt/rocm/lib:/opt/rocm/lib64:/usr/local/cuda/lib64",
+      "HIP_VISIBLE_DEVICES": "0",
+      "ROCR_VISIBLE_DEVICES": "0"
+    }
+  },
+  "measurements": {
+    "single_D16": "experiments/large-kv-tree-comparison-20261108-v1",
+    "all32_balanced": "experiments/all32-balanced-comparison-20261108-v1/measure-resumed-v1",
+    "completion_receipt": "experiments/all32-balanced-comparison-20261108-v1/measure-resumed-v1/continuation.json"
+  }
+}

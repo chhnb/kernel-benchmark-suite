@@ -1,0 +1,16 @@
+{
+  "command": [
+    "/home/chh/region-fusion-lab/toolchains/llvm12/amd-bootstrap/bin/llc",
+    "/home/chh/region-fusion-lab/runs/amd-boost-landau-partition-adjacent-v1/original/post.ll",
+    "-O3",
+    "-mtriple=amdgcn-amd-amdhsa",
+    "-mcpu=gfx906",
+    "-mattr=+sram-ecc,-xnack",
+    "-filetype=obj",
+    "-o",
+    "/home/chh/region-fusion-lab/runs/amd-boost-landau-partition-adjacent-v1/original/kernel.o"
+  ],
+  "returncode": 0,
+  "stdout": "",
+  "stderr": ""
+}

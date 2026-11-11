@@ -7,9 +7,10 @@ b=s.add_parser('build');b.add_argument('case');b.add_argument('--profile',requir
 a=p.parse_args()
 if a.action=='list':
  for f in sorted((ROOT/'cases').glob('*/case.json')):
-  j=json.loads(f.read_text());print(j['name'],','.join(j['profiles']) or 'pending',j['status'], 'ACTIVE' if j.get('enabled',True) else 'INACTIVE')
+  j=json.loads(f.read_text());print(j['name'],','.join(j.get('profiles', {})) or 'pending',j['status'], 'ACTIVE' if j.get('enabled',True) else 'INACTIVE')
  sys.exit(0)
-case=ROOT/'cases'/a.case; m=json.loads((case/'case.json').read_text());profile=m['profiles'][a.profile]
+case=ROOT/'cases'/a.case; m=json.loads((case/'case.json').read_text());profile=m.get('profiles', {}).get(a.profile)
+if profile is None:raise SystemExit(f"No build profile {a.profile!r} for {a.case!r}")
 out=Path(a.out).resolve()
 if out.exists():raise SystemExit('Output must be new')
 if not a.admitted:

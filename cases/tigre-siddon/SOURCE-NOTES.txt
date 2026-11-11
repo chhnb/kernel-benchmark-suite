@@ -1,0 +1,71 @@
+TIGRE Siddon — retained native full-kernel framework case
+
+Remote root: /home/chh/region-fusion-lab/cases/tigre_siddon
+Upstream CERN/TIGRE 69bdd9f728e02095f38d27a9746a88eb79fc5e09.
+License and original source are in upstream/. Full adapted HIP source and canonical
+LLVM12 O3 IR are in source/. Inputs include the official head.mat-derived head64
+fixture and complete original-float CPU recurrence references. Original arithmetic
+and first-match X/Y/Z behavior retained; explicit launch_bounds(729), positive RD
+compatibility adapters and LLVM18 backend are documented experimental adaptations.
+
+This is a native whole-function adapter, NOT a helper-based CompositionalSession
+case. Use the module below; do not pass it to the legacy run.py build --case API.
+Existing generic search/scoring implementation is unchanged.
+
+From /home/chh/region-fusion-lab:
+  python3 -m cases.tigre_siddon.native info
+  python3 -m cases.tigre_siddon.native prepare --out runs/NEW-tigre-input
+
+Build under the canonical compilation quota (fresh label/output):
+  python3 work/run-cpu.py NEW-tigre-build python3 -m cases.tigre_siddon.native build --frontend --out /home/chh/region-fusion-lab/runs/NEW-tigre-build
+
+--frontend rebuilds from the retained source. Without it, build starts with the
+frozen full-kernel O3 IR. --roles accepts a comma-separated subset of:
+ baseline: no fusion, common final cleanup
+ darm_auto: original Git default full automatic fusion
+ full_xy: same original merger, choose initial XY, retain outside automatic melds
+ axis_xy: original merger, restrict to axis root, choose initial XY
+Both fusion stages use the same two intervening simplifycfg/O3/mem2reg rounds and
+same final cleanup. XY requires cleanup/re-entry before final Z. All build outputs
+must be fresh, retain commands/logs, and compare final .text against frozen validated
+references. A mismatch fails closed and needs review/new correctness, never inherited
+acceptance. No GPU job is started by any of these commands.
+
+Native candidate discovery integration (same quota wrapper):
+  python3 work/run-cpu.py NEW-tigre-discover python3 -m cases.tigre_siddon.native discover --out /home/chh/region-fusion-lab/runs/NEW-tigre-discover
+Delegates to the native full-function candidate export protocol. Its exporter is
+an independently modified active-mirror compiler, NOT the original Git timing
+baseline. Discovery is not exhaustive legality checking, trial fusion, or a claim
+that automatic greedy selects the manual winner. prepare also emits native-case.json
+with exact function/input/fixture locations for downstream native sessions.
+
+Verified integration 2026-11-04:
+- Fresh source rebuild of all four roles: final .text byte-identical to all retained
+  validated references (evidence/framework-build-review.json).
+- Native discovery: six finite scored candidates, input unmodified, standard/export
+  IR byte-identical (evidence/framework-discovery-status.json).
+- No new GPU timing needed for packaging; benchmark evidence remains unchanged.
+
+Historical controlled results (do not pool samples):
+- Full default DARM vs full XY independent3+15: 2.040639 vs1.894079ms; B3.097920ms.
+- Separate scope-only independent3+15: full XY1.894558 vsaxis XY1.842239ms,
+  2.7615% lower time. Inputs same, all output checks pass. All raw samples retained.
+- axis XY vs default DARM/B ratios use DIFFERENT batches; not a new paired claim.
+- Axis-only final text also equals earlier patched manual XY+Z text. Thus not a
+  unique patched-merger capability. Outside four melds jointly hurt this workload;
+  no per-region or occupancy causal attribution has been measured.
+
+GPU harness source and fixed2+5 /3+15 runners are retained in harness/; fresh jobs
+must get reviewed requests, new directories, canonical admission/lock/queue, full
+correctness/negative checks before timing. Evidence request files are historical
+and RETIRED; never replay them. Paths therein point to immutable old experiments.
+Numerical limitation: original float recurrence bitwise oracle; prior127 deviations
+against independent double plane integration are retained, not silently tolerated.
+
+Dependencies intentionally remain external and pinned by case.json / compiler/:
+LLVM12 bootstrap, clean Git DARM e9bc0540325ad9806313d34e84fc901496fd8be6,
+selection-only and scope-only compiler executables, ROCm4 headers/bitcode,
+LLVM18 llc/linker and ROCm6 runtime. Compiler source snapshots/patches and build
+commands are preserved. Do not remove those dependencies with temporary work.
+This package is replayable in the retained musa environment, not a standalone
+portable toolchain distribution. No commits or publication performed.

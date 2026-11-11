@@ -1,0 +1,606 @@
+// Copyright 2008 Gautam Sewani
+// Copyright 2008 John Maddock
+//
+// Use, modification and distribution are subject to the
+// Boost Software License, Version 1.0.
+// (See accompanying file LICENSE_1_0.txt
+// or copy at http://www.boost.org/LICENSE_1_0.txt)
+
+#ifndef BOOST_MATH_DISTRIBUTIONS_DETAIL_HG_PDF_HPP
+#define BOOST_MATH_DISTRIBUTIONS_DETAIL_HG_PDF_HPP
+
+#include <boost/math/constants/constants.hpp>
+#include <boost/math/special_functions/lanczos.hpp>
+#include <boost/math/special_functions/gamma.hpp>
+#include <boost/math/special_functions/pow.hpp>
+#include <boost/math/special_functions/prime.hpp>
+#include <boost/math/policies/error_handling.hpp>
+#include <boost/math/distributions/detail/saddle_point.hpp>
+#ifndef BOOST_MATH_BUILD_MODULE
+#include <algorithm>
+#include <cstdint>
+#include <limits>
+#endif
+
+#ifdef BOOST_MATH_INSTRUMENT
+#ifndef BOOST_MATH_BUILD_MODULE
+#include <typeinfo>
+#endif
+#endif
+
+BOOST_MATH_NAMESPACE_BEGIN namespace detail{
+
+template <class T, class Func>
+void bubble_down_one(T* first, T* last, Func f)
+{
+   using std::swap;
+   T* next = first;
+   ++next;
+   while((next != last) && (!f(*first, *next)))
+   {
+      swap(*first, *next);
+      ++first;
+      ++next;
+   }
+}
+
+template <class T>
+struct sort_functor
+{
+   sort_functor(const T* exponents) : m_exponents(exponents){}
+   bool operator()(std::size_t i, std::size_t j)
+   {
+      return m_exponents[i] > m_exponents[j];
+   }
+private:
+   const T* m_exponents;
+};
+
+template <class T, class Lanczos, class Policy>
+T hypergeometric_pdf_lanczos_imp(T /*dummy*/, std::uint64_t x, std::uint64_t r, std::uint64_t n, std::uint64_t N, const Lanczos&, const Policy&)
+{
+   BOOST_MATH_STD_USING
+
+   BOOST_MATH_INSTRUMENT_FPU
+   BOOST_MATH_INSTRUMENT_VARIABLE(x);
+   BOOST_MATH_INSTRUMENT_VARIABLE(r);
+   BOOST_MATH_INSTRUMENT_VARIABLE(n);
+   BOOST_MATH_INSTRUMENT_VARIABLE(N);
+   BOOST_MATH_INSTRUMENT_VARIABLE(typeid(Lanczos).name());
+
+   T bases[9] = {
+      T(n) + static_cast<T>(Lanczos::g()) + 0.5f,
+      T(r) + static_cast<T>(Lanczos::g()) + 0.5f,
+      T(N - n) + static_cast<T>(Lanczos::g()) + 0.5f,
+      T(N - r) + static_cast<T>(Lanczos::g()) + 0.5f,
+      1 / (T(N) + static_cast<T>(Lanczos::g()) + 0.5f),
+      1 / (T(x) + static_cast<T>(Lanczos::g()) + 0.5f),
+      1 / (T(n - x) + static_cast<T>(Lanczos::g()) + 0.5f),
+      1 / (T(r - x) + static_cast<T>(Lanczos::g()) + 0.5f),
+      1 / (T(N - n - r + x) + static_cast<T>(Lanczos::g()) + 0.5f)
+   };
+   T exponents[9] = {
+      n + T(0.5f),
+      r + T(0.5f),
+      N - n + T(0.5f),
+      N - r + T(0.5f),
+      N + T(0.5f),
+      x + T(0.5f),
+      n - x + T(0.5f),
+      r - x + T(0.5f),
+      N - n - r + x + T(0.5f)
+   };
+   int base_e_factors[9] = {
+      -1, -1, -1, -1, 1, 1, 1, 1, 1
+   };
+   int sorted_indexes[9] = {
+      0, 1, 2, 3, 4, 5, 6, 7, 8
+   };
+#ifdef BOOST_MATH_INSTRUMENT
+   BOOST_MATH_INSTRUMENT_FPU
+   for(unsigned i = 0; i < 9; ++i)
+   {
+      BOOST_MATH_INSTRUMENT_VARIABLE(i);
+      BOOST_MATH_INSTRUMENT_VARIABLE(bases[i]);
+      BOOST_MATH_INSTRUMENT_VARIABLE(exponents[i]);
+      BOOST_MATH_INSTRUMENT_VARIABLE(base_e_factors[i]);
+      BOOST_MATH_INSTRUMENT_VARIABLE(sorted_indexes[i]);
+   }
+#endif
+   std::sort(sorted_indexes, sorted_indexes + 9, sort_functor<T>(exponents));
+#ifdef BOOST_MATH_INSTRUMENT
+   BOOST_MATH_INSTRUMENT_FPU
+   for(unsigned i = 0; i < 9; ++i)
+   {
+      BOOST_MATH_INSTRUMENT_VARIABLE(i);
+      BOOST_MATH_INSTRUMENT_VARIABLE(bases[i]);
+      BOOST_MATH_INSTRUMENT_VARIABLE(exponents[i]);
+      BOOST_MATH_INSTRUMENT_VARIABLE(base_e_factors[i]);
+      BOOST_MATH_INSTRUMENT_VARIABLE(sorted_indexes[i]);
+   }
+#endif
+
+   do{
+      exponents[sorted_indexes[0]] -= exponents[sorted_indexes[1]];
+      bases[sorted_indexes[1]] *= bases[sorted_indexes[0]];
+      if((bases[sorted_indexes[1]] < tools::min_value<T>()) && (exponents[sorted_indexes[1]] != 0))
+      {
+         return 0;
+      }
+      base_e_factors[sorted_indexes[1]] += base_e_factors[sorted_indexes[0]];
+      bubble_down_one(sorted_indexes, sorted_indexes + 9, sort_functor<T>(exponents));
+
+#ifdef BOOST_MATH_INSTRUMENT
+      for(unsigned i = 0; i < 9; ++i)
+      {
+         BOOST_MATH_INSTRUMENT_VARIABLE(i);
+         BOOST_MATH_INSTRUMENT_VARIABLE(bases[i]);
+         BOOST_MATH_INSTRUMENT_VARIABLE(exponents[i]);
+         BOOST_MATH_INSTRUMENT_VARIABLE(base_e_factors[i]);
+         BOOST_MATH_INSTRUMENT_VARIABLE(sorted_indexes[i]);
+      }
+#endif
+   }while(exponents[sorted_indexes[1]] > 1);
+
+   //
+   // Combine equal powers:
+   //
+   std::size_t j = 8;
+   while(exponents[sorted_indexes[j]] == 0) --j;
+   while(j)
+   {
+      while(j && (exponents[sorted_indexes[j-1]] == exponents[sorted_indexes[j]]))
+      {
+         bases[sorted_indexes[j-1]] *= bases[sorted_indexes[j]];
+         exponents[sorted_indexes[j]] = 0;
+         base_e_factors[sorted_indexes[j-1]] += base_e_factors[sorted_indexes[j]];
+         bubble_down_one(sorted_indexes + j, sorted_indexes + 9, sort_functor<T>(exponents));
+         --j;
+      }
+      --j;
+
+#ifdef BOOST_MATH_INSTRUMENT
+      BOOST_MATH_INSTRUMENT_VARIABLE(j);
+      for(unsigned i = 0; i < 9; ++i)
+      {
+         BOOST_MATH_INSTRUMENT_VARIABLE(i);
+         BOOST_MATH_INSTRUMENT_VARIABLE(bases[i]);
+         BOOST_MATH_INSTRUMENT_VARIABLE(exponents[i]);
+         BOOST_MATH_INSTRUMENT_VARIABLE(base_e_factors[i]);
+         BOOST_MATH_INSTRUMENT_VARIABLE(sorted_indexes[i]);
+      }
+#endif
+   }
+
+#ifdef BOOST_MATH_INSTRUMENT
+   BOOST_MATH_INSTRUMENT_FPU
+   for(unsigned i = 0; i < 9; ++i)
+   {
+      BOOST_MATH_INSTRUMENT_VARIABLE(i);
+      BOOST_MATH_INSTRUMENT_VARIABLE(bases[i]);
+      BOOST_MATH_INSTRUMENT_VARIABLE(exponents[i]);
+      BOOST_MATH_INSTRUMENT_VARIABLE(base_e_factors[i]);
+      BOOST_MATH_INSTRUMENT_VARIABLE(sorted_indexes[i]);
+   }
+#endif
+
+   T result;
+   BOOST_MATH_INSTRUMENT_VARIABLE(bases[sorted_indexes[0]] * exp(static_cast<T>(base_e_factors[sorted_indexes[0]])));
+   BOOST_MATH_INSTRUMENT_VARIABLE(exponents[sorted_indexes[0]]);
+   {
+      BOOST_FPU_EXCEPTION_GUARD
+      result = pow(bases[sorted_indexes[0]] * exp(static_cast<T>(base_e_factors[sorted_indexes[0]])), exponents[sorted_indexes[0]]);
+   }
+   BOOST_MATH_INSTRUMENT_VARIABLE(result);
+   for(std::size_t i = 1; (i < 9) && (exponents[sorted_indexes[i]] > 0); ++i)
+   {
+      BOOST_FPU_EXCEPTION_GUARD
+      if(result < tools::min_value<T>())
+         return 0; // short circuit further evaluation
+      if(exponents[sorted_indexes[i]] == 1)
+         result *= bases[sorted_indexes[i]] * exp(static_cast<T>(base_e_factors[sorted_indexes[i]]));
+      else if(exponents[sorted_indexes[i]] == 0.5f)
+         result *= sqrt(bases[sorted_indexes[i]] * exp(static_cast<T>(base_e_factors[sorted_indexes[i]])));
+      else
+         result *= pow(bases[sorted_indexes[i]] * exp(static_cast<T>(base_e_factors[sorted_indexes[i]])), exponents[sorted_indexes[i]]);
+   
+      BOOST_MATH_INSTRUMENT_VARIABLE(result);
+   }
+
+   result *= Lanczos::lanczos_sum_expG_scaled(static_cast<T>(n + 1))
+      * Lanczos::lanczos_sum_expG_scaled(static_cast<T>(r + 1))
+      * Lanczos::lanczos_sum_expG_scaled(static_cast<T>(N - n + 1))
+      * Lanczos::lanczos_sum_expG_scaled(static_cast<T>(N - r + 1))
+      / 
+      ( Lanczos::lanczos_sum_expG_scaled(static_cast<T>(N + 1))
+         * Lanczos::lanczos_sum_expG_scaled(static_cast<T>(x + 1))
+         * Lanczos::lanczos_sum_expG_scaled(static_cast<T>(n - x + 1))
+         * Lanczos::lanczos_sum_expG_scaled(static_cast<T>(r - x + 1))
+         * Lanczos::lanczos_sum_expG_scaled(static_cast<T>(N - n - r + x + 1)));
+   
+   BOOST_MATH_INSTRUMENT_VARIABLE(result);
+   return result;
+}
+
+template <class T, class Policy>
+T hypergeometric_pdf_lanczos_imp(T /*dummy*/, std::uint64_t x, std::uint64_t r, std::uint64_t n, std::uint64_t N, const BOOST_MATH_NAMESPACE::lanczos::undefined_lanczos&, const Policy& pol)
+{
+   BOOST_MATH_STD_USING
+   return exp(
+      BOOST_MATH_NAMESPACE::lgamma(T(n + 1), pol)
+      + BOOST_MATH_NAMESPACE::lgamma(T(r + 1), pol)
+      + BOOST_MATH_NAMESPACE::lgamma(T(N - n + 1), pol)
+      + BOOST_MATH_NAMESPACE::lgamma(T(N - r + 1), pol)
+      - BOOST_MATH_NAMESPACE::lgamma(T(N + 1), pol)
+      - BOOST_MATH_NAMESPACE::lgamma(T(x + 1), pol)
+      - BOOST_MATH_NAMESPACE::lgamma(T(n - x + 1), pol)
+      - BOOST_MATH_NAMESPACE::lgamma(T(r - x + 1), pol)
+      - BOOST_MATH_NAMESPACE::lgamma(T(N - n - r + x + 1), pol));
+}
+
+template <class T>
+inline T integer_power(const T& x, int ex)
+{
+   if(ex < 0)
+      return 1 / integer_power(x, -ex);
+   switch(ex)
+   {
+   case 0:
+      return 1;
+   case 1:
+      return x;
+   case 2:
+      return x * x;
+   case 3:
+      return x * x * x;
+   case 4:
+      return BOOST_MATH_NAMESPACE::pow<4>(x);
+   case 5:
+      return BOOST_MATH_NAMESPACE::pow<5>(x);
+   case 6:
+      return BOOST_MATH_NAMESPACE::pow<6>(x);
+   case 7:
+      return BOOST_MATH_NAMESPACE::pow<7>(x);
+   case 8:
+      return BOOST_MATH_NAMESPACE::pow<8>(x);
+   }
+   BOOST_MATH_STD_USING
+#ifdef __SUNPRO_CC
+   return pow(x, T(ex));
+#else
+   return static_cast<T>(pow(x, ex));
+#endif
+}
+template <class T>
+struct hypergeometric_pdf_prime_loop_result_entry
+{
+   T value;
+   const hypergeometric_pdf_prime_loop_result_entry* next;
+};
+
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable:4510 4512 4610)
+#endif
+
+struct hypergeometric_pdf_prime_loop_data
+{
+   const std::uint64_t x;
+   const std::uint64_t r;
+   const std::uint64_t n;
+   const std::uint64_t N;
+   std::size_t prime_index;
+   std::uint64_t current_prime;
+};
+
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
+
+template <class T>
+T hypergeometric_pdf_prime_loop_imp(hypergeometric_pdf_prime_loop_data& data, hypergeometric_pdf_prime_loop_result_entry<T>& result)
+{
+   while(data.current_prime <= data.N)
+   {
+      std::uint64_t base = data.current_prime;
+      std::uint64_t prime_powers = 0;
+      while(base <= data.N)
+      {
+         prime_powers += data.n / base;
+         prime_powers += data.r / base;
+         prime_powers += (data.N - data.n) / base;
+         prime_powers += (data.N - data.r) / base;
+         prime_powers -= data.N / base;
+         prime_powers -= data.x / base;
+         prime_powers -= (data.n - data.x) / base;
+         prime_powers -= (data.r - data.x) / base;
+         prime_powers -= (data.N - data.n - data.r + data.x) / base;
+         base *= data.current_prime;
+      }
+      if(prime_powers)
+      {
+         T p = integer_power<T>(static_cast<T>(data.current_prime), static_cast<int>(prime_powers));
+         if((p > 1) && (tools::max_value<T>() / p < result.value))
+         {
+            //
+            // The next calculation would overflow, use recursion
+            // to sidestep the issue:
+            //
+            hypergeometric_pdf_prime_loop_result_entry<T> t = { p, &result };
+            data.current_prime = prime(static_cast<unsigned>(++data.prime_index));
+            return hypergeometric_pdf_prime_loop_imp<T>(data, t);
+         }
+         if((p < 1) && (tools::min_value<T>() / p > result.value))
+         {
+            //
+            // The next calculation would underflow, use recursion
+            // to sidestep the issue:
+            //
+            hypergeometric_pdf_prime_loop_result_entry<T> t = { p, &result };
+            data.current_prime = prime(static_cast<unsigned>(++data.prime_index));
+            return hypergeometric_pdf_prime_loop_imp<T>(data, t);
+         }
+         result.value *= p;
+      }
+      data.current_prime = prime(static_cast<unsigned>(++data.prime_index));
+   }
+   //
+   // When we get to here we have run out of prime factors,
+   // the overall result is the product of all the partial
+   // results we have accumulated on the stack so far, these
+   // are in a linked list starting with "data.head" and ending
+   // with "result".
+   //
+   // All that remains is to multiply them together, taking
+   // care not to overflow or underflow.
+   //
+   // Enumerate partial results >= 1 in variable i
+   // and partial results < 1 in variable j:
+   //
+   hypergeometric_pdf_prime_loop_result_entry<T> const *i, *j;
+   i = &result;
+   while(i && i->value < 1)
+      i = i->next;
+   j = &result;
+   while(j && j->value >= 1)
+      j = j->next;
+
+   T prod = 1;
+
+   while(i || j)
+   {
+      while(i && ((prod <= 1) || (j == 0)))
+      {
+         prod *= i->value;
+         i = i->next;
+         while(i && i->value < 1)
+            i = i->next;
+      }
+      while(j && ((prod >= 1) || (i == 0)))
+      {
+         prod *= j->value;
+         j = j->next;
+         while(j && j->value >= 1)
+            j = j->next;
+      }
+   }
+
+   return prod;
+}
+
+template <class T, class Policy>
+inline T hypergeometric_pdf_prime_imp(std::uint64_t x, std::uint64_t r, std::uint64_t n, std::uint64_t N, const Policy&)
+{
+   hypergeometric_pdf_prime_loop_result_entry<T> result = { 1, 0 };
+   hypergeometric_pdf_prime_loop_data data = { x, r, n, N, 0, prime(0) };
+   return hypergeometric_pdf_prime_loop_imp<T>(data, result);
+}
+
+template <class T, class Policy>
+T hypergeometric_pdf_factorial_imp(std::uint64_t x, std::uint64_t r, std::uint64_t n, std::uint64_t N, const Policy&)
+{
+   BOOST_MATH_STD_USING
+   BOOST_MATH_ASSERT(N <= BOOST_MATH_NAMESPACE::max_factorial<T>::value);
+   T result = BOOST_MATH_NAMESPACE::unchecked_factorial<T>(static_cast<unsigned>(n));
+   T num[3] = {
+      BOOST_MATH_NAMESPACE::unchecked_factorial<T>(static_cast<unsigned>(r)),
+      BOOST_MATH_NAMESPACE::unchecked_factorial<T>(static_cast<unsigned>(N - n)),
+      BOOST_MATH_NAMESPACE::unchecked_factorial<T>(static_cast<unsigned>(N - r))
+   };
+   T denom[5] = {
+      BOOST_MATH_NAMESPACE::unchecked_factorial<T>(static_cast<unsigned>(N)),
+      BOOST_MATH_NAMESPACE::unchecked_factorial<T>(static_cast<unsigned>(x)),
+      BOOST_MATH_NAMESPACE::unchecked_factorial<T>(static_cast<unsigned>(n - x)),
+      BOOST_MATH_NAMESPACE::unchecked_factorial<T>(static_cast<unsigned>(r - x)),
+      BOOST_MATH_NAMESPACE::unchecked_factorial<T>(static_cast<unsigned>(N - n - r + x))
+   };
+   std::size_t i = 0;
+   std::size_t j = 0;
+   while((i < 3) || (j < 5))
+   {
+      while((j < 5) && ((result >= 1) || (i >= 3)))
+      {
+         result /= denom[j];
+         ++j;
+      }
+      while((i < 3) && ((result <= 1) || (j >= 5)))
+      {
+         result *= num[i];
+         ++i;
+      }
+   }
+   return result;
+}
+
+
+#ifndef BOOST_MATH_HAS_GPU_SUPPORT
+//
+// Loader's method, as in R's dhyper: the ratio of binomial densities
+//   Binom(x; r, p) Binom(n - x; N - r, p) / Binom(n; N, p),
+// in which the powers of p cancel. With p = n / N the denominator is at its mode. Near the mode
+// the accuracy does not degrade as N grows, as long as the products of counts formed below are
+// exact (below 2^53 for double); in the tails the relative error grows like |ln pdf| eps.
+//
+template <class T, class Policy>
+T hypergeometric_pdf_saddle_point_imp(std::uint64_t x, std::uint64_t r, std::uint64_t n, std::uint64_t N, const Policy& pol)
+{
+   BOOST_MATH_STD_USING
+   if (n > N - n)
+   {
+      // Swap the sample with the rest of the population, pdf(x; r, n, N) = pdf(r - x; r, N - n, N),
+      // so that p = n / N <= 1/2: with p near 1, powers of q = 1 - p with huge exponents would
+      // have to cancel between the binomials.
+      return hypergeometric_pdf_saddle_point_imp<T>(r - x, r, N - n, N, pol);
+   }
+   const std::uint64_t r_x = r - x, n_x = n - x, rest = N - r - n + x;
+   const T p = static_cast<T>(n) / static_cast<T>(N);
+   const T q = static_cast<T>(N - n) / static_cast<T>(N);
+   if ((x == 0) || (r_x == 0) || (n_x == 0) || (rest == 0) || (n == 0) || (n == N))
+   {
+      // At the ends of the support one binomial is degenerate; its own branches handle that.
+      // Combined as logarithms, so that no intermediate product underflows before the division.
+      return exp(log_binomial_pdf_saddle_point(static_cast<T>(x), static_cast<T>(r), p, q, pol)
+         + log_binomial_pdf_saddle_point(static_cast<T>(n_x), static_cast<T>(N - r), p, q, pol)
+         - log_binomial_pdf_saddle_point(static_cast<T>(n), static_cast<T>(N), p, q, pol));
+   }
+   // All three binomials in one exponent. The means are r n / N, r (N - n) / N, (N - r) n / N and
+   // (N - r)(N - n) / N, passed as ratios; the denominator's deviance terms vanish, as n = N p exactly.
+   const T vN = static_cast<T>(N), vn = static_cast<T>(n), vm = static_cast<T>(N - n);
+   const T vr = static_cast<T>(r), vs = static_cast<T>(N - r);
+   const T vx = static_cast<T>(x), vr_x = static_cast<T>(r_x), vn_x = static_cast<T>(n_x), vrest = static_cast<T>(rest);
+   const T lc = stirlerr(vr, pol) - stirlerr(vx, pol) - stirlerr(vr_x, pol)
+      + stirlerr(vs, pol) - stirlerr(vn_x, pol) - stirlerr(vrest, pol)
+      - stirlerr(vN, pol) + stirlerr(vn, pol) + stirlerr(vm, pol)
+      - bd0_ratio(vx, T(vr * vn), vN, pol) - bd0_ratio(vr_x, T(vr * vm), vN, pol)
+      - bd0_ratio(vn_x, T(vs * vn), vN, pol) - bd0_ratio(vrest, T(vs * vm), vN, pol);
+   // The Gaussian prefactors: sqrt(r / (2 pi x (r - x))) sqrt((N - r) / (2 pi (n - x) rest)) / sqrt(N / (2 pi n (N - n))).
+   const T prefactor = sqrt((vr / (vx * vr_x)) * (vs / (vn_x * vrest)) * ((vn * vm) / vN) / constants::two_pi<T>());
+   return exp(lc) * prefactor;
+}
+#endif
+
+template <class T, class Policy>
+inline typename tools::promote_args<T>::type 
+   hypergeometric_pdf(std::uint64_t x, std::uint64_t r, std::uint64_t n, std::uint64_t N, const Policy&)
+{
+   BOOST_FPU_EXCEPTION_GUARD
+   typedef typename tools::promote_args<T>::type result_type;
+   typedef typename policies::evaluation<result_type, Policy>::type value_type;
+   typedef typename policies::normalise<
+      Policy, 
+      policies::promote_float<false>, 
+      policies::promote_double<false>, 
+      policies::discrete_quantile<>,
+      policies::assert_undefined<> >::type forwarding_policy;
+
+   value_type result;
+   if(N <= BOOST_MATH_NAMESPACE::max_factorial<value_type>::value)
+   {
+      //
+      // If N is small enough then we can evaluate the PDF via the factorials
+      // directly: table lookup of the factorials gives the best performance
+      // of the methods available:
+      //
+      result = detail::hypergeometric_pdf_factorial_imp<value_type>(x, r, n, N, forwarding_policy());
+   }
+#ifndef BOOST_MATH_HAS_GPU_SUPPORT
+   else if((N <= BOOST_MATH_NAMESPACE::prime(BOOST_MATH_NAMESPACE::max_prime - 1)) && !(std::numeric_limits<value_type>::is_specialized && (std::numeric_limits<value_type>::digits <= 64)))
+   {
+      //
+      // Beyond 64-bit precision, Loader's method needs many more steps for its Stirling remainders
+      // at small arguments, so while the table of primes reaches we keep prime factorisation.
+      //
+      result = detail::hypergeometric_pdf_prime_imp<value_type>(x, r, n, N, forwarding_policy());
+   }
+   else
+   {
+      //
+      // Otherwise Loader's saddle-point method, as in R's dhyper: it keeps its accuracy however
+      // large N is, and is hundreds of times faster than prime factorisation at N ~ 1e5.
+      // Its relative error grows like |ln pdf| eps, though, since it exponentiates, so in the
+      // tails, where the prime table reaches, prime factorisation is more accurate:
+      //
+      result = detail::hypergeometric_pdf_saddle_point_imp<value_type>(x, r, n, N, forwarding_policy());
+      if((result < value_type(3.0590232050182578837e-7L)) && (N <= BOOST_MATH_NAMESPACE::prime(BOOST_MATH_NAMESPACE::max_prime - 1)))  // e^-15
+      {
+         result = detail::hypergeometric_pdf_prime_imp<value_type>(x, r, n, N, forwarding_policy());
+      }
+   }
+#else
+   else if(N <= BOOST_MATH_NAMESPACE::prime(BOOST_MATH_NAMESPACE::max_prime - 1))
+   {
+      //
+      // If N is no larger than the largest prime number in our lookup table
+      // (104729) then we can use prime factorisation to evaluate the PDF,
+      // this is slow but accurate:
+      //
+      result = detail::hypergeometric_pdf_prime_imp<value_type>(x, r, n, N, forwarding_policy());
+   }
+   else
+   {
+      //
+      // Catch all case - use the lanczos approximation - where available -
+      // to evaluate the ratio of factorials.  This loses around log10(N) decimal digits.
+      //
+      typedef typename lanczos::lanczos<value_type, Policy>::type evaluation_type;
+      result = detail::hypergeometric_pdf_lanczos_imp(value_type(), x, r, n, N, evaluation_type(), forwarding_policy());
+   }
+#endif
+
+   if(result > 1)
+   {
+      result = 1;
+   }
+   if(result < 0)
+   {
+      result = 0;
+   }
+
+   return policies::checked_narrowing_cast<result_type, forwarding_policy>(result, "boost::math::hypergeometric_pdf<%1%>(%1%,%1%,%1%,%1%)");
+}
+
+//
+// The analytic continuation C(r, x) C(N - r, n - x) / C(N, n) to non-integer x, lower < x < upper.
+// Anchor at k = floor(x) (passed as floor_x), whose PDF the integer code computes accurately, and shift by d = x - k:
+//   pdf(x) = pdf(k) D(k + 1) D(N - r - n + k + 1) / (D(r - x + 1) D(n - x + 1)),
+// where D(z) = Gamma(z) / Gamma(z + d) is tgamma_delta_ratio. Each ratio is accurate for small d
+// and large z, where a quotient of gamma functions or of powers would lose digits in proportion to N,
+// and each tends to 1 as d -> 0, so the continuation meets the integer values.
+//
+template <class T, class Policy>
+inline typename tools::promote_args<T>::type
+   hypergeometric_pdf_noninteger(T x, std::uint64_t floor_x, std::uint64_t r, std::uint64_t n, std::uint64_t N, const Policy&)
+{
+   BOOST_FPU_EXCEPTION_GUARD
+   BOOST_MATH_STD_USING
+   typedef typename tools::promote_args<T>::type result_type;
+   typedef typename policies::evaluation<result_type, Policy>::type value_type;
+   typedef typename policies::normalise<
+      Policy,
+      policies::promote_float<false>,
+      policies::promote_double<false>,
+      policies::discrete_quantile<>,
+      policies::assert_undefined<> >::type forwarding_policy;
+
+   const value_type vx = x;
+   const value_type k = static_cast<value_type>(floor_x);
+   const value_type d = vx - k;
+   const value_type base = hypergeometric_pdf<value_type>(floor_x, r, n, N, forwarding_policy());
+   // Differences of the counts are formed in integers, where they are exact and, inside the support,
+   // non-negative; converting the counts first would round them when they exceed the precision.
+   const value_type failures_left = static_cast<value_type>(N + floor_x - r - n);  // N - r - n + floor(x) >= 0
+   const value_type r_left = static_cast<value_type>(r - floor_x);                 // >= 1, as x < r
+   const value_type n_left = static_cast<value_type>(n - floor_x);                 // >= 1, as x < n
+   // Each numerator is paired with a denominator, so that no intermediate product underflows early.
+   value_type result = base
+      * (BOOST_MATH_NAMESPACE::tgamma_delta_ratio(value_type(k + 1), d, forwarding_policy())
+         / BOOST_MATH_NAMESPACE::tgamma_delta_ratio(value_type(r_left + 1 - d), d, forwarding_policy()))
+      * (BOOST_MATH_NAMESPACE::tgamma_delta_ratio(value_type(failures_left + 1), d, forwarding_policy())
+         / BOOST_MATH_NAMESPACE::tgamma_delta_ratio(value_type(n_left + 1 - d), d, forwarding_policy()));
+   return policies::checked_narrowing_cast<result_type, forwarding_policy>(result, "boost::math::hypergeometric_pdf<%1%>(%1%,%1%,%1%,%1%)");
+}
+
+} BOOST_MATH_NAMESPACE_END
+
+#endif
+

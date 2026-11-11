@@ -44,3 +44,5 @@ python3 tools/suite.py build srad --profile hip-o3-binary --out results/srad-bui
 历史策略文档见 [专题归档索引](docs/history/topics/README.md)。
 
 For a fresh checkout on another machine, see [portable VLLM and Map-Airy benchmarks](docs/portable-benchmarks.md).
+
+The [benchmark case inventory](docs/benchmark-case-inventory.md) lists the checked-in case manifests and their runtime requirements.

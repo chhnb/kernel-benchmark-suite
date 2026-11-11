@@ -1,0 +1,353 @@
+//  Copyright John Maddock 2006.
+//  Copyright Matt Borland 2024
+//  Use, modification and distribution are subject to the
+//  Boost Software License, Version 1.0. (See accompanying file
+//  LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+
+#ifndef BOOST_STATS_EXPONENTIAL_HPP
+#define BOOST_STATS_EXPONENTIAL_HPP
+
+#include <boost/math/tools/config.hpp>
+#include <boost/math/tools/tuple.hpp>
+#include <boost/math/tools/numeric_limits.hpp>
+#include <boost/math/constants/constants.hpp>
+#include <boost/math/special_functions/log1p.hpp>
+#include <boost/math/special_functions/expm1.hpp>
+#include <boost/math/distributions/complement.hpp>
+#include <boost/math/distributions/detail/common_error_handling.hpp>
+#include <boost/math/policies/policy.hpp>
+#include <boost/math/policies/error_handling.hpp>
+
+#ifdef _MSC_VER
+# pragma warning(push)
+# pragma warning(disable: 4127) // conditional expression is constant
+# pragma warning(disable: 4702) // unreachable code (return after domain_error throw).
+#endif
+
+#ifndef BOOST_MATH_HAS_NVRTC
+#include <boost/math/distributions/fwd.hpp>
+#ifndef BOOST_MATH_BUILD_MODULE
+#include <utility>
+#include <cmath>
+#endif
+#endif
+
+BOOST_MATH_NAMESPACE_BEGIN
+
+namespace detail{
+//
+// Error check:
+//
+template <class RealType, class Policy>
+BOOST_MATH_GPU_ENABLED inline bool verify_lambda(const char* function, RealType l, RealType* presult, const Policy& pol)
+{
+   if((l <= 0) || !(BOOST_MATH_NAMESPACE::isfinite)(l))
+   {
+      *presult = policies::raise_domain_error<RealType>(
+         function,
+         "The scale parameter \"lambda\" must be > 0, but was: %1%.", l, pol);
+      return false;
+   }
+   return true;
+}
+
+template <class RealType, class Policy>
+BOOST_MATH_GPU_ENABLED inline bool verify_exp_x(const char* function, RealType x, RealType* presult, const Policy& pol)
+{
+   if((x < 0) || (BOOST_MATH_NAMESPACE::isnan)(x))
+   {
+      *presult = policies::raise_domain_error<RealType>(
+         function,
+         "The random variable must be >= 0, but was: %1%.", x, pol);
+      return false;
+   }
+   return true;
+}
+
+} // namespace detail
+
+BOOST_MATH_EXPORT template <class RealType = double, class Policy = policies::policy<> >
+class exponential_distribution
+{
+public:
+   using value_type = RealType;
+   using policy_type = Policy;
+
+   BOOST_MATH_GPU_ENABLED explicit exponential_distribution(RealType l_lambda = 1)
+      : m_lambda(l_lambda)
+   {
+      RealType err;
+      detail::verify_lambda("boost::math::exponential_distribution<%1%>::exponential_distribution", l_lambda, &err, Policy());
+   } // exponential_distribution
+
+   BOOST_MATH_GPU_ENABLED RealType lambda()const { return m_lambda; }
+
+private:
+   RealType m_lambda;
+};
+
+BOOST_MATH_EXPORT using exponential = exponential_distribution<double>;
+
+#ifdef __cpp_deduction_guides
+BOOST_MATH_EXPORT template <class RealType>
+exponential_distribution(RealType)->exponential_distribution<typename BOOST_MATH_NAMESPACE::tools::promote_args<RealType>::type>;
+#endif
+
+BOOST_MATH_EXPORT template <class RealType, class Policy>
+BOOST_MATH_GPU_ENABLED inline BOOST_MATH_NAMESPACE::pair<RealType, RealType> range(const exponential_distribution<RealType, Policy>& /*dist*/)
+{ // Range of permissible values for random variable x.
+  BOOST_MATH_IF_CONSTEXPR (BOOST_MATH_NAMESPACE::numeric_limits<RealType>::has_infinity)
+  { 
+    return BOOST_MATH_NAMESPACE::pair<RealType, RealType>(static_cast<RealType>(0), BOOST_MATH_NAMESPACE::numeric_limits<RealType>::infinity()); // 0 to + infinity.
+  }
+  else
+  {
+   using BOOST_MATH_NAMESPACE::tools::max_value;
+   return BOOST_MATH_NAMESPACE::pair<RealType, RealType>(static_cast<RealType>(0), max_value<RealType>()); // 0 to + max
+  }
+}
+
+BOOST_MATH_EXPORT template <class RealType, class Policy>
+BOOST_MATH_GPU_ENABLED inline BOOST_MATH_NAMESPACE::pair<RealType, RealType> support(const exponential_distribution<RealType, Policy>& /*dist*/)
+{ // Range of supported values for random variable x.
+   // This is range where cdf rises from 0 to 1, and outside it, the pdf is zero.
+   using BOOST_MATH_NAMESPACE::tools::max_value;
+   using BOOST_MATH_NAMESPACE::tools::min_value;
+   return BOOST_MATH_NAMESPACE::pair<RealType, RealType>(min_value<RealType>(),  max_value<RealType>());
+   // min_value<RealType>() to avoid a discontinuity at x = 0.
+}
+
+BOOST_MATH_EXPORT template <class RealType, class Policy>
+BOOST_MATH_GPU_ENABLED inline RealType pdf(const exponential_distribution<RealType, Policy>& dist, const RealType& x)
+{
+   BOOST_MATH_STD_USING // for ADL of std functions
+
+   constexpr auto function = "boost::math::pdf(const exponential_distribution<%1%>&, %1%)";
+
+   RealType lambda = dist.lambda();
+   RealType result = 0;
+   if(0 == detail::verify_lambda(function, lambda, &result, Policy()))
+      return result;
+   if(0 == detail::verify_exp_x(function, x, &result, Policy()))
+      return result;
+   // Workaround for VC11/12 bug:
+   if ((BOOST_MATH_NAMESPACE::isinf)(x))
+      return 0;
+   result = lambda * exp(-lambda * x);
+   return result;
+} // pdf
+
+BOOST_MATH_EXPORT template <class RealType, class Policy>
+BOOST_MATH_GPU_ENABLED inline RealType logpdf(const exponential_distribution<RealType, Policy>& dist, const RealType& x)
+{
+   BOOST_MATH_STD_USING // for ADL of std functions
+
+   constexpr auto function = "boost::math::logpdf(const exponential_distribution<%1%>&, %1%)";
+
+   RealType lambda = dist.lambda();
+   RealType result = -BOOST_MATH_NAMESPACE::numeric_limits<RealType>::infinity();
+   if(0 == detail::verify_lambda(function, lambda, &result, Policy()))
+      return result;
+   if(0 == detail::verify_exp_x(function, x, &result, Policy()))
+      return result;
+   
+   result = log(lambda) - lambda * x;
+   return result;
+} // logpdf
+
+BOOST_MATH_EXPORT template <class RealType, class Policy>
+BOOST_MATH_GPU_ENABLED inline RealType cdf(const exponential_distribution<RealType, Policy>& dist, const RealType& x)
+{
+   BOOST_MATH_STD_USING // for ADL of std functions
+
+   constexpr auto function = "boost::math::cdf(const exponential_distribution<%1%>&, %1%)";
+
+   RealType result = 0;
+   RealType lambda = dist.lambda();
+   if(0 == detail::verify_lambda(function, lambda, &result, Policy()))
+      return result;
+   if(0 == detail::verify_exp_x(function, x, &result, Policy()))
+      return result;
+   result = -BOOST_MATH_NAMESPACE::expm1(-x * lambda, Policy());
+
+   return result;
+} // cdf
+
+BOOST_MATH_EXPORT template <class RealType, class Policy>
+BOOST_MATH_GPU_ENABLED inline RealType logcdf(const exponential_distribution<RealType, Policy>& dist, const RealType& x)
+{
+   BOOST_MATH_STD_USING // for ADL of std functions
+
+   constexpr auto function = "boost::math::logcdf(const exponential_distribution<%1%>&, %1%)";
+
+   RealType result = 0;
+   RealType lambda = dist.lambda();
+   if(0 == detail::verify_lambda(function, lambda, &result, Policy()))
+      return result;
+   if(0 == detail::verify_exp_x(function, x, &result, Policy()))
+      return result;
+   result = BOOST_MATH_NAMESPACE::log1p(-exp(-x * lambda), Policy());
+
+   return result;
+} // cdf
+
+BOOST_MATH_EXPORT template <class RealType, class Policy>
+BOOST_MATH_GPU_ENABLED inline RealType quantile(const exponential_distribution<RealType, Policy>& dist, const RealType& p)
+{
+   BOOST_MATH_STD_USING // for ADL of std functions
+
+   constexpr auto function = "boost::math::quantile(const exponential_distribution<%1%>&, %1%)";
+
+   RealType result = 0;
+   RealType lambda = dist.lambda();
+   if(0 == detail::verify_lambda(function, lambda, &result, Policy()))
+      return result;
+   if(0 == detail::check_probability(function, p, &result, Policy()))
+      return result;
+
+   if(p == 0)
+      return 0;
+   if(p == 1)
+      return policies::raise_overflow_error<RealType>(function, 0, Policy());
+
+   result = -BOOST_MATH_NAMESPACE::log1p(-p, Policy()) / lambda;
+   return result;
+} // quantile
+
+BOOST_MATH_EXPORT template <class RealType, class Policy>
+BOOST_MATH_GPU_ENABLED inline RealType cdf(const complemented2_type<exponential_distribution<RealType, Policy>, RealType>& c)
+{
+   BOOST_MATH_STD_USING // for ADL of std functions
+
+   constexpr auto function = "boost::math::cdf(const exponential_distribution<%1%>&, %1%)";
+
+   RealType result = 0;
+   RealType lambda = c.dist.lambda();
+   if(0 == detail::verify_lambda(function, lambda, &result, Policy()))
+      return result;
+   if(0 == detail::verify_exp_x(function, c.param, &result, Policy()))
+      return result;
+   // Workaround for VC11/12 bug:
+   if (c.param >= tools::max_value<RealType>())
+      return 0;
+   result = exp(-c.param * lambda);
+
+   return result;
+}
+
+BOOST_MATH_EXPORT template <class RealType, class Policy>
+BOOST_MATH_GPU_ENABLED inline RealType logcdf(const complemented2_type<exponential_distribution<RealType, Policy>, RealType>& c)
+{
+   BOOST_MATH_STD_USING // for ADL of std functions
+
+   constexpr auto function = "boost::math::logcdf(const exponential_distribution<%1%>&, %1%)";
+
+   RealType result = 0;
+   RealType lambda = c.dist.lambda();
+   if(0 == detail::verify_lambda(function, lambda, &result, Policy()))
+      return result;
+   if(0 == detail::verify_exp_x(function, c.param, &result, Policy()))
+      return result;
+   // Workaround for VC11/12 bug:
+   if (c.param >= tools::max_value<RealType>())
+      return 0;
+   result = -c.param * lambda;
+
+   return result;
+}
+
+BOOST_MATH_EXPORT template <class RealType, class Policy>
+BOOST_MATH_GPU_ENABLED inline RealType quantile(const complemented2_type<exponential_distribution<RealType, Policy>, RealType>& c)
+{
+   BOOST_MATH_STD_USING // for ADL of std functions
+
+   constexpr auto function = "boost::math::quantile(const exponential_distribution<%1%>&, %1%)";
+
+   RealType result = 0;
+   RealType lambda = c.dist.lambda();
+   if(0 == detail::verify_lambda(function, lambda, &result, Policy()))
+      return result;
+
+   RealType q = c.param;
+   if(0 == detail::check_probability(function, q, &result, Policy()))
+      return result;
+
+   if(q == 1)
+      return 0;
+   if(q == 0)
+      return policies::raise_overflow_error<RealType>(function, 0, Policy());
+
+   result = -log(q) / lambda;
+   return result;
+}
+
+BOOST_MATH_EXPORT template <class RealType, class Policy>
+BOOST_MATH_GPU_ENABLED inline RealType mean(const exponential_distribution<RealType, Policy>& dist)
+{
+   RealType result = 0;
+   RealType lambda = dist.lambda();
+   if(0 == detail::verify_lambda("boost::math::mean(const exponential_distribution<%1%>&)", lambda, &result, Policy()))
+      return result;
+   return 1 / lambda;
+}
+
+BOOST_MATH_EXPORT template <class RealType, class Policy>
+BOOST_MATH_GPU_ENABLED inline RealType standard_deviation(const exponential_distribution<RealType, Policy>& dist)
+{
+   RealType result = 0;
+   RealType lambda = dist.lambda();
+   if(0 == detail::verify_lambda("boost::math::standard_deviation(const exponential_distribution<%1%>&)", lambda, &result, Policy()))
+      return result;
+   return 1 / lambda;
+}
+
+BOOST_MATH_EXPORT template <class RealType, class Policy>
+BOOST_MATH_GPU_ENABLED inline RealType mode(const exponential_distribution<RealType, Policy>& /*dist*/)
+{
+   return 0;
+}
+
+BOOST_MATH_EXPORT template <class RealType, class Policy>
+BOOST_MATH_GPU_ENABLED inline RealType median(const exponential_distribution<RealType, Policy>& dist)
+{
+   using BOOST_MATH_NAMESPACE::constants::ln_two;
+   return ln_two<RealType>() / dist.lambda(); // ln(2) / lambda
+}
+
+BOOST_MATH_EXPORT template <class RealType, class Policy>
+BOOST_MATH_GPU_ENABLED inline RealType skewness(const exponential_distribution<RealType, Policy>& /*dist*/)
+{
+   return 2;
+}
+
+BOOST_MATH_EXPORT template <class RealType, class Policy>
+BOOST_MATH_GPU_ENABLED inline RealType kurtosis(const exponential_distribution<RealType, Policy>& /*dist*/)
+{
+   return 9;
+}
+
+BOOST_MATH_EXPORT template <class RealType, class Policy>
+BOOST_MATH_GPU_ENABLED inline RealType kurtosis_excess(const exponential_distribution<RealType, Policy>& /*dist*/)
+{
+   return 6;
+}
+
+BOOST_MATH_EXPORT template <class RealType, class Policy>
+BOOST_MATH_GPU_ENABLED inline RealType entropy(const exponential_distribution<RealType, Policy>& dist)
+{
+   using std::log;
+   return 1 - log(dist.lambda());
+}
+
+BOOST_MATH_NAMESPACE_END
+
+#ifdef _MSC_VER
+# pragma warning(pop)
+#endif
+
+// This include must be at the end, *after* the accessors
+// for this distribution have been defined, in order to
+// keep compilers that support two-phase lookup happy.
+#include <boost/math/distributions/detail/derived_accessors.hpp>
+
+#endif // BOOST_STATS_EXPONENTIAL_HPP

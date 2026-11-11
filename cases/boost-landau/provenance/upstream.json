@@ -1,0 +1,6 @@
+{
+  "repository": "https://github.com/boostorg/math",
+  "commit": "4a6ce7851dc3e54ca7a6e3db3181e86e39d6d9ce",
+  "download_sha256": "b728e76a306e4485407eb7bd955d3c4892ee8336b703fa6d04e2786b6004a835",
+  "restored": "unmodified include/ tree; HIP annotations only in source/kernel.hip"
+}

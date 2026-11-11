@@ -1,0 +1,18 @@
+{
+  "command": [
+    "/home/chh/region-fusion-lab/toolchains/llvm12/amd-bootstrap/bin/opt",
+    "/home/chh/region-fusion-lab/runs/amd-boost-landau-partition-adjacent-v1/original/source.ll",
+    "-always-inline",
+    "-O3",
+    "-internalize",
+    "-internalize-public-api-list=evaluate",
+    "-globaldce",
+    "-verify",
+    "-S",
+    "-o",
+    "/home/chh/region-fusion-lab/runs/amd-boost-landau-partition-adjacent-v1/original/post.ll"
+  ],
+  "returncode": 0,
+  "stdout": "",
+  "stderr": ""
+}

@@ -1,0 +1,168 @@
+{
+  "name": "vllm-quant",
+  "status": "cpp_baseline_validated_and_timed",
+  "origin": "/home/chh/region-fusion-lab/runs/amd-vllm-cache-port-v1",
+  "scope": "Full cache_eval software 4/6 cache writer; existing quant_decide implementation retained and inlined, no new extraction",
+  "helper_extraction": false,
+  "profiles": {
+    "hip-software-baseline": {
+      "argv": [
+        "python3",
+        "{case}/build_hip.py",
+        "{out}"
+      ],
+      "artifact": "kernel.hsaco",
+      "kind": "hip-code-object",
+      "gpu_execution": false
+    },
+    "cuda-software-nvcc": {
+      "argv": [
+        "/usr/local/cuda-12.9/bin/nvcc",
+        "-arch=sm_70",
+        "--fmad=false",
+        "-O3",
+        "-cubin",
+        "{case}/source/cache.cu",
+        "-o",
+        "{out}/cache.cubin"
+      ],
+      "artifact": "cache.cubin",
+      "kind": "cuda-cubin",
+      "gpu_execution": false
+    },
+    "cuda-software-llvm-ir": {
+      "argv": [
+        "/home/chh/region-fusion-lab/toolchains/llvm12/amd-bootstrap/bin/clang",
+        "-std=c++17",
+        "-x",
+        "cuda",
+        "--cuda-device-only",
+        "-nocudainc",
+        "-nocudalib",
+        "--cuda-gpu-arch=sm_70",
+        "-ffp-contract=off",
+        "-O3",
+        "-Xclang",
+        "-mlink-builtin-bitcode",
+        "-Xclang",
+        "/usr/local/cuda-12.9/nvvm/libdevice/libdevice.10.bc",
+        "-S",
+        "-emit-llvm",
+        "{case}/source/llvm-cache.cu",
+        "-o",
+        "{out}/start.ll"
+      ],
+      "artifact": "start.ll",
+      "kind": "llvm-ir",
+      "gpu_execution": false
+    },
+    "cuda-software-llvm": {
+      "argv": [
+        "python3",
+        "{case}/build_cuda_llvm.py",
+        "{out}"
+      ],
+      "artifact": "llvm-cache.cubin",
+      "kind": "cuda-cubin",
+      "gpu_execution": false
+    }
+  },
+  "validation": {
+    "cpu": "results/vllm-cpu-oracle-v1/cpu-validation.json",
+    "cuda": "results/vllm-cuda-validation-v1/main-accepted.json",
+    "final_inputs": "results/vllm-hip-final-input-validation-v1",
+    "cpp": "results/cpp-vllm-quant-validation-v1"
+  },
+  "benchmark": {
+    "status": "C++ fixed 2+5 completed",
+    "review": "results/cpp-review.json"
+  },
+  "upstream_commit": "5d55ef1590c92213e3893dc8e8712f7f2e0bc508",
+  "preference": "User: execute the same implementation as before; HIP primary, CUDA software port secondary",
+  "blockers": [],
+  "hardware_check": {
+    "gpu": "TITAN V",
+    "compute_capability": "7.0",
+    "receipt": "results/vllm-sm70-probe-v2/build.stderr",
+    "conclusion": "Original upstream cvt e2m1x2 instruction is not supported on sm70"
+  },
+  "acceptance": {
+    "source_build": true,
+    "cuda_gpu_correctness": true,
+    "hip_machine_code_matches_historical": true,
+    "hip_fresh_gpu_correctness": true,
+    "timing": true,
+    "complete_benchmark": true,
+    "gpu_correctness": true
+  },
+  "original_upstream_status": "Native FP4 route unsupported on sm70; reference only, does not block software benchmark",
+  "baseline_dependency": "Retained unmerged quant LLVM module, not rebuilt from source yet",
+  "inputs": {
+    "cuda": "inputs/kv/manifest.json",
+    "hip": "harness/run_hip.py deterministic historical generator; final five token counts"
+  },
+  "verified_builds": [
+    {
+      "profile": "cuda-software-llvm",
+      "receipt": "results/vllm-cuda-llvm-binary-v1/receipt.json"
+    },
+    {
+      "profile": "cuda-software-llvm-ir",
+      "receipt": "results/vllm-cuda-llvm-v1/receipt.json"
+    },
+    {
+      "profile": "cuda-software-nvcc",
+      "receipt": "results/vllm-cuda-software-v1/receipt.json"
+    },
+    {
+      "profile": "hip-software-baseline",
+      "receipt": "results/vllm-hip-software-v1/receipt.json"
+    }
+  ],
+  "runtime": {
+    "kind": "cpp",
+    "backend": "amd",
+    "runner": "build/bin/bench_hip",
+    "default_kernel": "/home/chh/kernel-benchmark-suite/results/vllm-hip-software-v1/kernel.hsaco",
+    "inputs": [
+      "fixtures-cpp/1024/input.txt",
+      "fixtures-cpp/131072/input.txt",
+      "fixtures-cpp/16384/input.txt",
+      "fixtures-cpp/32768/input.txt",
+      "fixtures-cpp/4096/input.txt"
+    ],
+    "timing_modes": [
+      "event",
+      "graph"
+    ],
+    "scope": "Historical HIP software quant cache_eval baseline; same deterministic seed and token counts 1024/4096/16384/32768/131072, 8 heads dim128, skipped and shuffled slots. Full byte oracle on final inputs; no tiny diagnostic fixture.",
+    "environment": {
+      "LD_LIBRARY_PATH": "/opt/rocm/lib:/opt/rocm/lib64:/usr/local/cuda/lib64",
+      "HIP_VISIBLE_DEVICES": "0",
+      "ROCR_VISIBLE_DEVICES": "0"
+    }
+  },
+  "runtime_limitations": "Historical HIP software port; retained quant-unmerged.ll dependency not reconstructed from source. CUDA timing pending.",
+  "cpp_migration": {
+    "status": "validated_and_timed",
+    "review": "results/cpp-review.json",
+    "historical_python_runtime": "archive/python-runtime/vllm-quant-runtime.json"
+  },
+  "region_analysis": {
+    "llvm_version": 12,
+    "ir": "/home/chh/kernel-benchmark-suite/results/vllm-hip-software-v1/post.ll",
+    "ir_sha256": "f215c0732579a5d5673bb1342dab21502e547246e67f01a3ed6f845a113e197d",
+    "optimization": "O3",
+    "report": "/home/chh/kernel-benchmark-suite/analysis/suite-regions-llvm12-v4/vllm-quant/inventory.json",
+    "darm_status": "analyzed",
+    "scope": "software HIP quant route, same LLVM IR used by default code object"
+  },
+  "neighbor_similarity": {
+    "llvm_version": 12,
+    "results": "/home/chh/kernel-benchmark-suite/analysis/neighbor-similarity-llvm12-v2/vllm-quant/scores-factored.json",
+    "status": "completed",
+    "fusion_performed": false,
+    "native_darm_scoring": true,
+    "darm_candidate_sorter_used": false
+  }
+}

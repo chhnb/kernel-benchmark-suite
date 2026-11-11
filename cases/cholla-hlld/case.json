@@ -1,0 +1,145 @@
+{
+  "name": "cholla-hlld",
+  "status": "cpp_baseline_validated_and_timed",
+  "origin": "/home/chh/divergence-strategy-search/explorations/cholla-hlld-cuda-fusion-20261104",
+  "scope": "Original complete Cholla HLLD CUDA function, FP64/MHD; no helper extraction.",
+  "helper_extraction": false,
+  "profiles": {
+    "cuda-o3": {
+      "argv": [
+        "/home/chh/region-fusion-lab/toolchains/llvm12/amd-bootstrap/bin/clang",
+        "-x",
+        "cuda",
+        "--cuda-device-only",
+        "--cuda-path=/usr/local/cuda",
+        "--no-cuda-version-check",
+        "-nocudalib",
+        "-Xclang",
+        "-mlink-builtin-bitcode",
+        "-Xclang",
+        "/usr/local/cuda/nvvm/libdevice/libdevice.10.bc",
+        "--cuda-gpu-arch=sm_70",
+        "-include",
+        "{case}/source/legacy-launch.h",
+        "-std=c++17",
+        "-O3",
+        "-ffp-contract=off",
+        "-DMHD",
+        "-DHLLD",
+        "-DPRECISION=2",
+        "-S",
+        "-emit-llvm",
+        "{case}/source/src/riemann_solvers/hlld_cuda.cu",
+        "-o",
+        "{out}/start.ll"
+      ],
+      "artifact": "start.ll",
+      "kind": "llvm-ir",
+      "origin_command": "/home/chh/divergence-strategy-search/explorations/cholla-hlld-cuda-fusion-20261104/build/v3/front.json",
+      "gpu_execution": false
+    },
+    "nvcc-o3": {
+      "argv": [
+        "/usr/local/cuda/bin/nvcc",
+        "-std=c++17",
+        "-O3",
+        "-arch=sm_70",
+        "--fmad=false",
+        "-DMHD",
+        "-DHLLD",
+        "-DPRECISION=2",
+        "-cubin",
+        "{case}/source/src/riemann_solvers/hlld_cuda.cu",
+        "-o",
+        "{out}/baseline.cubin"
+      ],
+      "artifact": "baseline.cubin",
+      "kind": "cuda-cubin",
+      "gpu_execution": false
+    }
+  },
+  "validation": {
+    "status": "pending fresh suite validation",
+    "final_inputs": "results/cholla-final-input-validation-v1",
+    "cpp": "results/cpp-cholla-hlld-validation-v1"
+  },
+  "benchmark": {
+    "status": "C++ fixed 2+5 completed",
+    "review": "results/cpp-review.json"
+  },
+  "input_and_harness_inventory": [
+    {
+      "path": "/home/chh/divergence-strategy-search/explorations/cholla-hlld-cuda-fusion-20261104/fixture",
+      "exists": true,
+      "migrated": false
+    },
+    {
+      "path": "/home/chh/divergence-strategy-search/explorations/cholla-hlld-cuda-fusion-20261104/runner.py",
+      "exists": true,
+      "migrated": false
+    },
+    {
+      "path": "/home/chh/divergence-strategy-search/explorations/cholla-hlld-cuda-fusion-20261104/cuda_driver_local.py",
+      "exists": true,
+      "migrated": false
+    }
+  ],
+  "verified_builds": [
+    {
+      "profile": "nvcc-o3",
+      "receipt": "results/cholla-nvcc-baseline-v1/receipt.json"
+    },
+    {
+      "profile": "cuda-o3",
+      "receipt": "results/cholla-hlld-cuda-o3-v1/receipt.json"
+    }
+  ],
+  "acceptance": {
+    "source_build": true,
+    "gpu_correctness": true,
+    "timing": true,
+    "complete_benchmark": true
+  },
+  "runtime": {
+    "kind": "cpp",
+    "backend": "cuda",
+    "runner": "build/bin/bench_cuda",
+    "default_kernel": "/home/chh/kernel-benchmark-suite/results/cholla-nvcc-baseline-v1/baseline.cubin",
+    "inputs": [
+      "fixtures-cpp/OT/input.txt"
+    ],
+    "timing_modes": [
+      "event",
+      "graph"
+    ],
+    "scope": "Original captured OT startup X-face; complete output comparison to fixed CPU reference, readonly/guards; no tiny historical fixture matrix",
+    "environment": {
+      "LD_LIBRARY_PATH": "/opt/rocm/lib:/opt/rocm/lib64:/usr/local/cuda/lib64",
+      "HIP_VISIBLE_DEVICES": "0",
+      "ROCR_VISIBLE_DEVICES": "0"
+    }
+  },
+  "runtime_limitations": "Baseline profile only; toolchains and admission service remain external.",
+  "cpp_migration": {
+    "status": "validated_and_timed",
+    "review": "results/cpp-review.json",
+    "historical_python_runtime": "archive/python-runtime/cholla-hlld-runtime.json"
+  },
+  "region_analysis": {
+    "llvm_version": 12,
+    "ir": "/home/chh/kernel-benchmark-suite/results/cholla-hlld-cuda-o3-v1/start.ll",
+    "ir_sha256": "809f4c2a6cd0a3ded0a4ed39b47c26c30786052f86a7ed0b468ddb8152defc87",
+    "optimization": "O3",
+    "report": "/home/chh/kernel-benchmark-suite/analysis/suite-regions-llvm12-v4/cholla-hlld/inventory.json",
+    "darm_status": "analyzed",
+    "scope": "Clang12 source companion; default runtime is NVCC"
+  },
+  "neighbor_similarity": {
+    "llvm_version": 12,
+    "results": "/home/chh/kernel-benchmark-suite/analysis/neighbor-similarity-llvm12-v2/cholla-hlld/scores-factored.json",
+    "status": "completed",
+    "fusion_performed": false,
+    "native_darm_scoring": true,
+    "darm_candidate_sorter_used": false
+  }
+}

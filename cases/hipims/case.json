@@ -1,0 +1,178 @@
+{
+  "name": "hipims",
+  "status": "cpp_baseline_validated_and_timed",
+  "origin": "/home/chh/divergence-strategy-search/explorations/hipims-integration-20261104",
+  "scope": "Full original CUDA operators; HLLC/George/MSWE have distinct validation status.",
+  "helper_extraction": false,
+  "profiles": {
+    "cuda-hllc-nvcc-o3": {
+      "argv": [
+        "/usr/local/cuda/bin/nvcc",
+        "-std=c++11",
+        "-O3",
+        "-arch=sm_70",
+        "--fmad=false",
+        "-cubin",
+        "{case}/source/kernel.cu",
+        "-o",
+        "{out}/baseline.cubin",
+        "-I{case}/source",
+        "-I{case}/source/lib/include/primitives",
+        "-I{case}/source/lib/include/mesh",
+        "-I{case}/source/lib/include/operators",
+        "-I{case}/source/lib/include/utilities",
+        "-I{case}/source/lib/src/operators"
+      ],
+      "artifact": "baseline.cubin",
+      "kind": "cuda-cubin",
+      "origin_command": "/home/chh/divergence-strategy-search/explorations/hipims-integration-20261104/cuda-baseline/build-v1/command.json",
+      "gpu_execution": false
+    },
+    "runtime-hllc-harness": {
+      "argv": [
+        "/usr/local/cuda/bin/nvcc",
+        "-std=c++14",
+        "-O3",
+        "-arch=sm_70",
+        "--fmad=false",
+        "-I{case}/source/lib/include/primitives",
+        "-I{case}/source/lib/include/mesh",
+        "-I{case}/source/lib/include/operators",
+        "-I{case}/source/lib/include/utilities",
+        "-I{case}/source/lib/src/operators",
+        "{case}/harness/hllc.cu",
+        "-L/usr/local/cuda/lib64/stubs",
+        "-lcuda",
+        "-o",
+        "{out}/replay"
+      ],
+      "artifact": "replay",
+      "kind": "executable",
+      "gpu_execution": false
+    },
+    "cuda-hllc-llvm-o3": {
+      "argv": [
+        "/home/chh/region-fusion-lab/toolchains/llvm12/amd-bootstrap/bin/clang",
+        "-include",
+        "{case}/clang-compat/Vector.h",
+        "-x",
+        "cuda",
+        "--cuda-device-only",
+        "--cuda-path=/usr/local/cuda",
+        "--no-cuda-version-check",
+        "-nocudalib",
+        "-Xclang",
+        "-mlink-builtin-bitcode",
+        "-Xclang",
+        "/usr/local/cuda/nvvm/libdevice/libdevice.10.bc",
+        "--cuda-gpu-arch=sm_70",
+        "-std=c++17",
+        "-O3",
+        "-ffp-contract=off",
+        "-S",
+        "-emit-llvm",
+        "{case}/source/kernel.cu",
+        "-o",
+        "{out}/start.ll",
+        "-I{case}/source",
+        "-I{case}/source/lib/include/primitives",
+        "-I{case}/source/lib/include/mesh",
+        "-I{case}/source/lib/include/operators",
+        "-I{case}/source/lib/include/utilities",
+        "-I{case}/source/lib/src/operators"
+      ],
+      "artifact": "start.ll",
+      "kind": "llvm-ir",
+      "gpu_execution": false,
+      "scope": "LLVM12 analysis companion, six Vector conversion constructors carry matching host/device annotations in preincluded header; arithmetic untouched; NVCC runtime differs"
+    }
+  },
+  "validation": {
+    "status": "pending fresh suite validation",
+    "final_inputs": "results/hipims-hllc-final-input-validation-v1",
+    "cpp": "results/cpp-hipims-validation-v1"
+  },
+  "benchmark": {
+    "status": "C++ fixed 2+5 completed",
+    "review": "results/cpp-review.json"
+  },
+  "input_and_harness_inventory": [
+    {
+      "path": "/home/chh/divergence-strategy-search/explorations/hipims-integration-20261104/official-demo-v2",
+      "exists": true,
+      "migrated": false
+    },
+    {
+      "path": "/home/chh/divergence-strategy-search/explorations/hipims-integration-20261104/capture",
+      "exists": true,
+      "migrated": false
+    },
+    {
+      "path": "/home/chh/divergence-strategy-search/explorations/hipims-integration-20261104/validate.py",
+      "exists": true,
+      "migrated": false
+    }
+  ],
+  "verified_builds": [
+    {
+      "profile": "cuda-hllc-nvcc-o3",
+      "receipt": "results/hipims-cuda-hllc-v1/receipt.json"
+    },
+    {
+      "profile": "runtime-hllc-harness",
+      "receipt": "results/hipims-hllc-harness-v1/receipt.json"
+    },
+    {
+      "profile": "cuda-hllc-llvm-o3",
+      "receipt": "results/hipims-hllc-llvm-o3-v2/receipt.json"
+    }
+  ],
+  "acceptance": {
+    "source_build": true,
+    "gpu_correctness": true,
+    "timing": true,
+    "complete_benchmark": true
+  },
+  "runtime": {
+    "kind": "cpp",
+    "backend": "cuda",
+    "runner": "build/bin/bench_hipims",
+    "default_kernel": "/home/chh/kernel-benchmark-suite/results/hipims-cuda-hllc-v1/baseline.cubin",
+    "inputs": [
+      "input/step0-",
+      "input/step100-"
+    ],
+    "timing_modes": [
+      "event"
+    ],
+    "scope": "HLLC Cartesian full kernel only; official 43512-cell startup dispatch0/100, corrected geometry, original launch metadata, complete CPU oracle and output guards. George/MSWE pending.",
+    "environment": {
+      "LD_LIBRARY_PATH": "/opt/rocm/lib:/opt/rocm/lib64:/usr/local/cuda/lib64",
+      "HIP_VISIBLE_DEVICES": "0",
+      "ROCR_VISIBLE_DEVICES": "0"
+    }
+  },
+  "runtime_limitations": "HLLC Cartesian accepted; George/MSWE not integrated",
+  "cpp_migration": {
+    "status": "validated_and_timed",
+    "review": "results/cpp-review.json",
+    "historical_python_runtime": "archive/python-runtime/hipims-runtime.json"
+  },
+  "region_analysis": {
+    "llvm_version": 12,
+    "ir": "/home/chh/kernel-benchmark-suite/results/hipims-hllc-llvm-o3-v2/start.ll",
+    "ir_sha256": "a01e18f7cb198026b2f3eec447761f80676831fa63f550881255f034d1279b8f",
+    "optimization": "O3",
+    "report": "/home/chh/kernel-benchmark-suite/analysis/suite-regions-llvm12-v4/hipims/inventory.json",
+    "darm_status": "analyzed",
+    "scope": "Clang12 source companion with Vector constructor annotation compatibility; default runtime is NVCC"
+  },
+  "neighbor_similarity": {
+    "llvm_version": 12,
+    "results": "/home/chh/kernel-benchmark-suite/analysis/neighbor-similarity-llvm12-v2/hipims/scores-factored.json",
+    "status": "completed",
+    "fusion_performed": false,
+    "native_darm_scoring": true,
+    "darm_candidate_sorter_used": false
+  }
+}

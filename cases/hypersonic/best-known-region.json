@@ -1,0 +1,235 @@
+{
+  "schema": "hypersonic-best-known-region-v1",
+  "recorded_date": "2026-11-08",
+  "status": "current_best_measured_in_declared_domain",
+  "case": "hypersonic",
+  "region": "outer four-way face_decide classifier including nested boundary logic",
+  "selection": "E008",
+  "forest": "(0,1)|(2,3)",
+  "stop_after_melds": 2,
+  "outside_policy": "same frozen 7 DARM melds; final common inlining/O3/backend; no later DARM",
+  "supersedes": {
+    "selection": "E017",
+    "tree": "((0,2),(1,3))",
+    "reason": "E008 wins complete-state screening and independent top-three confirmation",
+    "retain_historical_artifacts": true
+  },
+  "coverage": {
+    "theoretical_structures": 37,
+    "generated_states": 21,
+    "distinct_bfs_binaries": 18,
+    "inputs": [
+      "hypersonic-1",
+      "hypersonic-24"
+    ],
+    "all_outputs_passed": true
+  },
+  "confirmation": [
+    {
+      "role": "E008",
+      "tree": "(0,1)|(2,3)",
+      "inputs": {
+        "0:hypersonic-1": {
+          "gmean_batch_median_us": 1566.507401189665,
+          "batch_medians_us": [
+            1567.8410530090332,
+            1566.0810470581055,
+            1565.6009912490845
+          ],
+          "change_vs_auto_percent": -2.063961546064214,
+          "batch_change_percent": [
+            -2.019790774471786,
+            -2.071029074018993,
+            -2.101047553236768
+          ],
+          "label": "beneficial"
+        },
+        "0:hypersonic-24": {
+          "gmean_batch_median_us": 1566.1341465726716,
+          "batch_medians_us": [
+            1565.7609701156616,
+            1567.201018333435,
+            1565.4410123825073
+          ],
+          "change_vs_auto_percent": -2.162328800306759,
+          "batch_change_percent": [
+            -2.218228762602159,
+            -2.04999619648093,
+            -2.2186648025582456
+          ],
+          "label": "beneficial"
+        }
+      },
+      "geomean_change_vs_auto_percent": -2.113157529437681
+    },
+    {
+      "role": "E001",
+      "tree": "(0,1)|2|3",
+      "inputs": {
+        "0:hypersonic-1": {
+          "gmean_batch_median_us": 1585.3334450724055,
+          "batch_medians_us": [
+            1585.921049118042,
+            1587.0410203933716,
+            1583.0409526824951
+          ],
+          "change_vs_auto_percent": -0.8869813695037141,
+          "batch_change_percent": [
+            -0.8899046816452483,
+            -0.7603762037768025,
+            -1.010505349580737
+          ],
+          "label": "unclear"
+        },
+        "0:hypersonic-24": {
+          "gmean_batch_median_us": 1585.8141215441162,
+          "batch_medians_us": [
+            1586.7209434509277,
+            1585.921049118042,
+            1584.8009586334229
+          ],
+          "change_vs_auto_percent": -0.9329047917133277,
+          "batch_change_percent": [
+            -0.9092784458373027,
+            -0.8799949872524415,
+            -1.0093944571466729
+          ],
+          "label": "unclear"
+        }
+      },
+      "geomean_change_vs_auto_percent": -0.9099457410176494
+    },
+    {
+      "role": "E017",
+      "tree": "((0,2),(1,3))",
+      "inputs": {
+        "0:hypersonic-1": {
+          "gmean_batch_median_us": 1595.626971529812,
+          "batch_medians_us": [
+            1596.4809656143188,
+            1594.0810441970825,
+            1596.3200330734253
+          ],
+          "change_vs_auto_percent": -0.2434432654427274,
+          "batch_change_percent": [
+            -0.22997628793239855,
+            -0.3201548706044721,
+            -0.18014814682293379
+          ],
+          "label": "unclear"
+        },
+        "0:hypersonic-24": {
+          "gmean_batch_median_us": 1595.1476209105167,
+          "batch_medians_us": [
+            1595.3609943389893,
+            1594.720959663391,
+            1595.3609943389893
+          ],
+          "change_vs_auto_percent": -0.34983351129286844,
+          "batch_change_percent": [
+            -0.36970727530704073,
+            -0.3300009141856797,
+            -0.3497883890448694
+          ],
+          "label": "unclear"
+        }
+      },
+      "geomean_change_vs_auto_percent": -0.29665257906938836
+    },
+    {
+      "role": "AUTO",
+      "tree": "native-region-auto-7-melds",
+      "inputs": {
+        "0:hypersonic-1": {
+          "gmean_batch_median_us": 1599.5208974339641,
+          "batch_medians_us": [
+            1600.1609563827515,
+            1599.200963973999,
+            1599.200963973999
+          ],
+          "change_vs_auto_percent": 0.0,
+          "batch_change_percent": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "label": "unclear"
+        },
+        "0:hypersonic-24": {
+          "gmean_batch_median_us": 1600.7475723498032,
+          "batch_medians_us": [
+            1601.2810468673706,
+            1600.0009775161743,
+            1600.9609699249268
+          ],
+          "change_vs_auto_percent": 0.0,
+          "batch_change_percent": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "label": "unclear"
+        }
+      },
+      "geomean_change_vs_auto_percent": 0.0
+    }
+  ],
+  "artifact": {
+    "role": "E008",
+    "tree": "(0,1)|(2,3)",
+    "scope": "All 21 successfully generated historical BFS forests, same fixed 7 outside DARM melds as controlled ablation; helper preparation fully inlined; no new alignments; not universal full-IR exhaustive search.",
+    "binary": "/home/chh/kernel-benchmark-suite/experiments/hypersonic-bfs-sweep-v1/E008/kernel.hsaco",
+    "binary_sha256": "f9675e59ad95948b12803eaa0b8ea927acabac41c8f3deb0305b1545bc797072",
+    "final_ir": "/home/chh/kernel-benchmark-suite/experiments/hypersonic-bfs-sweep-v1/E008/final.ll",
+    "final_ir_sha256": "a84fcadca1aee90eb21db9b06b1bd67c07a44e730f8b6dfd0ff3f6cdfdc52104",
+    "fixed_outside_sha256": "96450a57ab860b76043c4c1ec0c7ef8d534ac94be9da1599bc967ab5acd5ee44",
+    "independent_confirmation": {
+      "role": "E008",
+      "tree": "(0,1)|(2,3)",
+      "inputs": {
+        "0:hypersonic-1": {
+          "gmean_batch_median_us": 1566.507401189665,
+          "batch_medians_us": [
+            1567.8410530090332,
+            1566.0810470581055,
+            1565.6009912490845
+          ],
+          "change_vs_auto_percent": -2.063961546064214,
+          "batch_change_percent": [
+            -2.019790774471786,
+            -2.071029074018993,
+            -2.101047553236768
+          ],
+          "label": "beneficial"
+        },
+        "0:hypersonic-24": {
+          "gmean_batch_median_us": 1566.1341465726716,
+          "batch_medians_us": [
+            1565.7609701156616,
+            1567.201018333435,
+            1565.4410123825073
+          ],
+          "change_vs_auto_percent": -2.162328800306759,
+          "batch_change_percent": [
+            -2.218228762602159,
+            -2.04999619648093,
+            -2.2186648025582456
+          ],
+          "label": "beneficial"
+        }
+      },
+      "geomean_change_vs_auto_percent": -2.113157529437681
+    },
+    "limits": "Best measured in this 21-state forest domain, two fixed snapshots; no universal optimum or untested alignment claim."
+  },
+  "evidence": {
+    "results": "/home/chh/kernel-benchmark-suite/experiments/hypersonic-bfs-sweep-v1/results.json",
+    "report": "/home/chh/kernel-benchmark-suite/experiments/hypersonic-bfs-sweep-v1/report.txt",
+    "archive": "/home/chh/kernel-benchmark-suite/experiments/hypersonic-bfs-sweep-v1/evidence.tar.gz"
+  },
+  "limitations": [
+    "Best only in the tested prepared compositional domain and fixed two snapshots; not all alignments or inputs.",
+    "E017 and unrestricted COMBINED history retained; do not pool pipelines.",
+    "Research best-known record only; suite default kernel and case manifest unchanged."
+  ]
+}

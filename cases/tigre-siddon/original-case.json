@@ -1,0 +1,46 @@
+{
+  "name": "tigre-siddon",
+  "integration": "native-full-kernel",
+  "upstream": "CERN/TIGRE",
+  "commit": "69bdd9f728e02095f38d27a9746a88eb79fc5e09",
+  "function": "_Z19kernelPixelDetector8GeometryPfiiP13__hip_texture",
+  "device": "gfx906",
+  "wave_size": 64,
+  "block": [
+    9,
+    9,
+    9
+  ],
+  "grid": [
+    15,
+    15,
+    1
+  ],
+  "volume": [
+    64,
+    64,
+    64
+  ],
+  "detector": [
+    128,
+    128
+  ],
+  "angles": 50,
+  "roles": [
+    "baseline",
+    "darm_auto",
+    "full_xy",
+    "axis_xy"
+  ],
+  "manual_reference": "axis_xy",
+  "automatic_search_validated": false,
+  "oracle": "Original float recurrence bitwise;127 deviations against independent double plane integration retained",
+  "dependencies": {
+    "clean_opt": "/home/chh/darm-artifacts-repro/build/bin/opt",
+    "select_opt": "/home/chh/region-fusion-lab/work/tigre-original-order-20261104/opt",
+    "scope_opt": "/home/chh/region-fusion-lab/work/tigre-xy-gap-scope-20261104/opt",
+    "cleanup_opt": "/home/chh/region-fusion-lab/toolchains/llvm12/amd-bootstrap/bin/opt",
+    "backend": "/opt/rocm/llvm/bin/llc"
+  },
+  "gpu_policy": "Fresh reviewed request through canonical gpu_admission and queue; preserved requests retired, do not replay"
+}

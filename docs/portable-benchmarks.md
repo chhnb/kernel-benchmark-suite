@@ -12,12 +12,13 @@ build and input generation job.
 python3 tools/run_portable_benchmark.py vllm \
   --llvm12-bin /path/to/llvm12/bin --rocm /opt/rocm --out build/vllm-portable
 
-git clone https://github.com/boostorg/math.git /path/to/boost-math
-git -C /path/to/boost-math checkout 4a6ce7851dc3e54ca7a6e3db3181e86e39d6d9ce
 python3 tools/run_portable_benchmark.py mapairy \
-  --llvm12-bin /path/to/llvm12/bin --rocm /opt/rocm \
-  --boost-math-include /path/to/boost-math/include --out build/mapairy-portable
+  --llvm12-bin /path/to/llvm12/bin --rocm /opt/rocm --out build/mapairy-portable
 ```
+
+Map-Airy uses the bundled Boost.Math headers from revision
+`4a6ce7851dc3e54ca7a6e3db3181e86e39d6d9ce`. An alternate header directory
+can be provided with `--boost-math-include`.
 
 Choose a fresh output directory. The generator uses fixed seeds for the 65,536
 and 131,072 token VLLM workloads and the 65,539 input Map-Airy workload. VLLM

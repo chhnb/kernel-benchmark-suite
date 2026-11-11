@@ -1,0 +1,13 @@
+[
+  "/home/chh/region-fusion-lab/toolchains/llvm12/amd-bootstrap/bin/opt",
+  "{out}/linked.ll",
+  "-always-inline",
+  "-O3",
+  "-internalize",
+  "-internalize-public-api-list=cache_eval",
+  "-globaldce",
+  "-verify",
+  "-S",
+  "-o",
+  "{out}/post.ll"
+]

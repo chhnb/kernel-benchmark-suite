@@ -1,0 +1,78 @@
+{
+  "name": "boost-saspoint5",
+  "enabled": true,
+  "status": "cuda_validated_nonexclusive_timing_completed",
+  "helper_extraction": false,
+  "baseline_profile": "cuda-llvm12-o3",
+  "profiles": {
+    "cuda-llvm12-o3": {
+      "argv": [
+        "bash",
+        "{case}/compile_cuda.sh",
+        "{case}",
+        "{out}"
+      ],
+      "artifact": "kernel.cubin",
+      "kind": "cubin",
+      "gpu_execution": false
+    }
+  },
+  "runtime": {
+    "kind": "cpp",
+    "backend": "cuda",
+    "runner": "build/bin/bench_cuda",
+    "default_kernel": "/home/chh/kernel-benchmark-suite/results/saspoint5-cuda-baseline-v1/kernel.cubin",
+    "inputs": [
+      "fixtures-cpp/interval-mixture/input.txt",
+      "fixtures-cpp/coherent-blocks/input.txt",
+      "fixtures-cpp/uniform-01/input.txt"
+    ],
+    "timing_modes": [
+      "event",
+      "graph"
+    ],
+    "scope": "Full Boost Saspoint5 PDF FP64; three synthetic 65539-element inputs; sm70; block256; long-double CPU oracle",
+    "environment": {
+      "CUDA_VISIBLE_DEVICES": "0"
+    }
+  },
+  "provenance": {
+    "boost_commit": "4a6ce7851dc3e54ca7a6e3db3181e86e39d6d9ce",
+    "input_seed": 20261106,
+    "inputs": "new deterministic synthetic fixtures, not historical CUDA inputs or official Boost.Random sequence"
+  },
+  "validation": {
+    "status": "passed",
+    "result": "results/saspoint5-cuda-shared-sync-validate-v1",
+    "checks": "CPU long-double tolerance, guards, exact baseline output bytes"
+  },
+  "benchmark": {
+    "status": "completed_nonexclusive",
+    "result": "results/saspoint5-cuda-shared-sync-benchmark-v1",
+    "warmup": 3,
+    "repeat": 30,
+    "timing": "CUDA Event",
+    "limitation": "resident external CUDA process; no exclusive confirmation; short timing quantization"
+  },
+  "limitations": [
+    "New synthetic inputs; not a replication of the missing historical CUDA experiment.",
+    "Explicit Boost GPU annotations and Clang allow-variadic-functions compatibility flag; shared pinned headers unmodified.",
+    "All variants start from same aggressively inlined LLVM12 O3 baseline; NVCC is not the baseline compiler.",
+    "Only new synthetic finite fixtures tested; no proof of historical CUDA result replication or exclusive timing."
+  ],
+  "optimization_experiments": [
+    {
+      "path": "experiments/saspoint5-cuda-v1",
+      "roles": [
+        "baseline",
+        "auto_DARM",
+        "manual_FP",
+        "manual_CFG"
+      ],
+      "manual_tree": "(0,1)|2|(((3,4),(5,6)),((7,8),9))|10",
+      "manual_steps": 7,
+      "automatic_melds": 9,
+      "status": "validated_and_timed_nonexclusive"
+    }
+  ]
+}

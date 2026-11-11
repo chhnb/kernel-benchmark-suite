@@ -1,0 +1,259 @@
+{
+  "name": "tigre-siddon",
+  "status": "cpp_baseline_validated_and_timed",
+  "origin": "/home/chh/region-fusion-lab/cases/tigre_siddon",
+  "scope": "Native full kernel; retained environment-specific adaptations must be listed.",
+  "helper_extraction": false,
+  "profiles": {
+    "hip-o3": {
+      "argv": [
+        "/home/chh/region-fusion-lab/toolchains/llvm12/amd-bootstrap/bin/clang",
+        "-cc1",
+        "-triple",
+        "amdgcn-amd-amdhsa",
+        "-aux-triple",
+        "x86_64-unknown-linux-gnu",
+        "--mrelax-relocations",
+        "-disable-free",
+        "-main-file-name",
+        "main.cu",
+        "-mrelocation-model",
+        "pic",
+        "-pic-level",
+        "1",
+        "-mframe-pointer=none",
+        "-fno-rounding-math",
+        "-mconstructor-aliases",
+        "-aux-target-cpu",
+        "x86-64",
+        "-fcuda-is-device",
+        "-fcuda-allow-variadic-functions",
+        "-fvisibility",
+        "hidden",
+        "-fapply-global-visibility-to-externs",
+        "-mlink-builtin-bitcode",
+        "/home/chh/divergence-strategy-search/explorations/darm-artifact-rocm-20260922/rocm4-userspace/opt/rocm-4.0.0/amdgcn/bitcode/hip.bc",
+        "-mlink-builtin-bitcode",
+        "/home/chh/divergence-strategy-search/explorations/darm-artifact-rocm-20260922/rocm4-userspace/opt/rocm-4.0.0/amdgcn/bitcode/ocml.bc",
+        "-mlink-builtin-bitcode",
+        "/home/chh/divergence-strategy-search/explorations/darm-artifact-rocm-20260922/rocm4-userspace/opt/rocm-4.0.0/amdgcn/bitcode/ockl.bc",
+        "-mlink-builtin-bitcode",
+        "/home/chh/divergence-strategy-search/explorations/darm-artifact-rocm-20260922/rocm4-userspace/opt/rocm-4.0.0/amdgcn/bitcode/oclc_daz_opt_off.bc",
+        "-mlink-builtin-bitcode",
+        "/home/chh/divergence-strategy-search/explorations/darm-artifact-rocm-20260922/rocm4-userspace/opt/rocm-4.0.0/amdgcn/bitcode/oclc_unsafe_math_off.bc",
+        "-mlink-builtin-bitcode",
+        "/home/chh/divergence-strategy-search/explorations/darm-artifact-rocm-20260922/rocm4-userspace/opt/rocm-4.0.0/amdgcn/bitcode/oclc_finite_only_off.bc",
+        "-mlink-builtin-bitcode",
+        "/home/chh/divergence-strategy-search/explorations/darm-artifact-rocm-20260922/rocm4-userspace/opt/rocm-4.0.0/amdgcn/bitcode/oclc_correctly_rounded_sqrt_on.bc",
+        "-mlink-builtin-bitcode",
+        "/home/chh/divergence-strategy-search/explorations/darm-artifact-rocm-20260922/rocm4-userspace/opt/rocm-4.0.0/amdgcn/bitcode/oclc_wavefrontsize64_on.bc",
+        "-mlink-builtin-bitcode",
+        "/home/chh/divergence-strategy-search/explorations/darm-artifact-rocm-20260922/rocm4-userspace/opt/rocm-4.0.0/amdgcn/bitcode/oclc_isa_version_906.bc",
+        "-target-cpu",
+        "gfx906",
+        "-fno-split-dwarf-inlining",
+        "-debugger-tuning=gdb",
+        "-resource-dir",
+        "/home/chh/region-fusion-lab/toolchains/llvm12/amd-bootstrap/lib/clang/12.0.0",
+        "-internal-isystem",
+        "/home/chh/region-fusion-lab/toolchains/llvm12/amd-bootstrap/lib/clang/12.0.0",
+        "-isystem",
+        "/home/chh/region-fusion-lab/toolchains/llvm12/amd-bootstrap/lib/clang/12.0.0/include/..",
+        "-isystem",
+        "/home/chh/divergence-strategy-search/explorations/darm-artifact-rocm-20260922/rocm4-userspace/opt/rocm-4.0.0/hsa/include",
+        "-isystem",
+        "/home/chh/divergence-strategy-search/explorations/darm-artifact-rocm-20260922/rocm4-userspace/opt/rocm-4.0.0/hip/include",
+        "-D",
+        "__HIP_ROCclr__",
+        "-internal-isystem",
+        "/usr/lib/gcc/x86_64-linux-gnu/12/../../../../include/c++/12",
+        "-internal-isystem",
+        "/usr/lib/gcc/x86_64-linux-gnu/12/../../../../include/x86_64-linux-gnu/c++/12",
+        "-internal-isystem",
+        "/usr/lib/gcc/x86_64-linux-gnu/12/../../../../include/x86_64-linux-gnu/c++/12",
+        "-internal-isystem",
+        "/usr/lib/gcc/x86_64-linux-gnu/12/../../../../include/c++/12/backward",
+        "-internal-isystem",
+        "/usr/lib/gcc/x86_64-linux-gnu/12/../../../../include/c++/12",
+        "-internal-isystem",
+        "/usr/lib/gcc/x86_64-linux-gnu/12/../../../../include/x86_64-linux-gnu/c++/12",
+        "-internal-isystem",
+        "/usr/lib/gcc/x86_64-linux-gnu/12/../../../../include/x86_64-linux-gnu/c++/12",
+        "-internal-isystem",
+        "/usr/lib/gcc/x86_64-linux-gnu/12/../../../../include/c++/12/backward",
+        "-internal-isystem",
+        "/usr/local/include",
+        "-internal-isystem",
+        "/home/chh/region-fusion-lab/toolchains/llvm12/amd-bootstrap/lib/clang/12.0.0/include",
+        "-internal-externc-isystem",
+        "/usr/include/x86_64-linux-gnu",
+        "-internal-externc-isystem",
+        "/include",
+        "-internal-externc-isystem",
+        "/usr/include",
+        "-internal-isystem",
+        "/usr/local/include",
+        "-internal-isystem",
+        "/home/chh/region-fusion-lab/toolchains/llvm12/amd-bootstrap/lib/clang/12.0.0/include",
+        "-internal-externc-isystem",
+        "/usr/include/x86_64-linux-gnu",
+        "-internal-externc-isystem",
+        "/include",
+        "-internal-externc-isystem",
+        "/usr/include",
+        "-O3",
+        "-disable-O0-optnone",
+        "-std=c++17",
+        "-fdeprecated-macro",
+        "-fno-autolink",
+        "-fdebug-compilation-dir",
+        "/home/chh/divergence-strategy-search/explorations/case-search-20261020",
+        "-ferror-limit",
+        "19",
+        "-fhip-new-launch-api",
+        "-fgnuc-version=4.2.1",
+        "-fcxx-exceptions",
+        "-fexceptions",
+        "-vectorize-loops",
+        "-vectorize-slp",
+        "-fcuda-allow-variadic-functions",
+        "-faddrsig",
+        "-o",
+        "{out}/start.ll",
+        "-x",
+        "hip",
+        "{case}/source/device.hip",
+        "-ffp-contract=off",
+        "-mllvm",
+        "-amdgpu-internalize-symbols",
+        "-mllvm",
+        "-amdgpu-early-inline-all=true",
+        "-mllvm",
+        "-amdgpu-function-calls=false",
+        "-S",
+        "-emit-llvm"
+      ],
+      "artifact": "start.ll",
+      "kind": "llvm-ir",
+      "origin_command": "/home/chh/region-fusion-lab/cases/tigre_siddon/source/frontend.json",
+      "gpu_execution": false
+    },
+    "hip-o3-binary": {
+      "argv": [
+        "python3",
+        "{case}/build_binary.py",
+        "{out}"
+      ],
+      "artifact": "kernel.hsaco",
+      "kind": "hsaco",
+      "gpu_execution": false
+    },
+    "runtime-harness": {
+      "argv": [
+        "/opt/rocm/bin/hipcc",
+        "-O2",
+        "-std=c++17",
+        "--offload-arch=gfx906",
+        "-x",
+        "hip",
+        "{case}/harness/screen.hip",
+        "-o",
+        "{out}/screen"
+      ],
+      "artifact": "screen",
+      "kind": "executable",
+      "gpu_execution": false
+    }
+  },
+  "validation": {
+    "status": "pending fresh suite validation",
+    "final_inputs": "results/tigre-final-input-validation-v1",
+    "cpp": "results/cpp-tigre-siddon-validation-v1"
+  },
+  "benchmark": {
+    "status": "C++ fixed 2+5 completed",
+    "review": "results/cpp-review.json"
+  },
+  "input_and_harness_inventory": [
+    {
+      "path": "/home/chh/region-fusion-lab/cases/tigre_siddon/input",
+      "exists": true,
+      "migrated": false
+    },
+    {
+      "path": "/home/chh/region-fusion-lab/cases/tigre_siddon/harness",
+      "exists": true,
+      "migrated": false
+    },
+    {
+      "path": "/home/chh/region-fusion-lab/cases/tigre_siddon/references",
+      "exists": true,
+      "migrated": false
+    }
+  ],
+  "verified_builds": [
+    {
+      "profile": "hip-o3",
+      "receipt": "results/tigre-hip-o3-v2/receipt.json"
+    },
+    {
+      "profile": "runtime-harness",
+      "receipt": "results/tigre-harness-v1/receipt.json"
+    },
+    {
+      "profile": "hip-o3",
+      "receipt": "results/tigre-hip-o3-v1/receipt.json"
+    },
+    {
+      "profile": "hip-o3-binary",
+      "receipt": "results/tigre-baseline-binary-v1/receipt.json"
+    }
+  ],
+  "acceptance": {
+    "source_build": true,
+    "gpu_correctness": true,
+    "timing": true,
+    "complete_benchmark": true
+  },
+  "runtime": {
+    "kind": "cpp",
+    "backend": "amd",
+    "runner": "build/bin/bench_tigre",
+    "default_kernel": "/home/chh/kernel-benchmark-suite/results/tigre-baseline-binary-v1/kernel.hsaco",
+    "inputs": [
+      "input"
+    ],
+    "timing_modes": [
+      "event"
+    ],
+    "scope": "Full Siddon kernel, head64 phantom, 50 projections in six batches, original 9x9x9 block, bitwise CPU recurrence and full guards; retained positive RD and launch-bound adaptations.",
+    "environment": {
+      "LD_LIBRARY_PATH": "/opt/rocm/lib:/opt/rocm/lib64:/usr/local/cuda/lib64",
+      "HIP_VISIBLE_DEVICES": "0",
+      "ROCR_VISIBLE_DEVICES": "0"
+    }
+  },
+  "runtime_limitations": "Baseline profile only; toolchains and admission service remain external.",
+  "cpp_migration": {
+    "status": "validated_and_timed",
+    "review": "results/cpp-review.json",
+    "historical_python_runtime": "archive/python-runtime/tigre-siddon-runtime.json"
+  },
+  "region_analysis": {
+    "llvm_version": 12,
+    "ir": "/home/chh/kernel-benchmark-suite/results/tigre-baseline-binary-v1/post.ll",
+    "ir_sha256": "d4f77b409817282cd40aa99f6e9e7bc2d0bc2f6396bb9005fc3c34726754a836",
+    "optimization": "O3",
+    "report": "/home/chh/kernel-benchmark-suite/analysis/suite-regions-llvm12-v4/tigre-siddon/inventory.json",
+    "darm_status": "analyzed",
+    "scope": "same LLVM IR used by default code object"
+  },
+  "neighbor_similarity": {
+    "llvm_version": 12,
+    "results": "/home/chh/kernel-benchmark-suite/analysis/neighbor-similarity-llvm12-v2/tigre-siddon/scores-factored.json",
+    "status": "completed",
+    "fusion_performed": false,
+    "native_darm_scoring": true,
+    "darm_candidate_sorter_used": false
+  }
+}

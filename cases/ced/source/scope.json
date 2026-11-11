@@ -1,0 +1,14 @@
+{
+  "source": "HeCBench6f44356/src/ced-hip/main.cu226-346",
+  "target": "complete non_max_supp_kernel",
+  "new_target": "previousCEDexperiments targeted sobel angle chain,notNMS",
+  "preservation": "nativekernel body exact slice,no math/branch/helper rewrite",
+  "stages": [
+    "native cfmelder",
+    "lowerswitch",
+    "lowered cfmelder"
+  ],
+  "scope": "CPUstaticcompatibility only,noGPU",
+  "limits": "60seconds percommand;canonicalcompilequota;verifierfail retained;no originalcompilerpatch",
+  "fairness": "future comparison native,lowered-noDARM,lowered+DARM;lowering not counted fusion"
+}

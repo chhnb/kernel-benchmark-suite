@@ -1,0 +1,92 @@
+[
+  {
+    "case": "landau",
+    "inputs": "boundaries-special",
+    "command": [
+      "/home/chh/divergence-strategy-search/explorations/partition-darm-rocm-20261025/boost/full-gpu-prep/oracle",
+      "landau",
+      "/home/chh/region-fusion-lab/runs/ir-net-boost-inputs-v1/boundaries-special.bin",
+      "/home/chh/region-fusion-lab/runs/ir-net-boost-inputs-v1/landau-boundaries-special"
+    ],
+    "exit": 0,
+    "stdout": "",
+    "stderr": "",
+    "tool_identity": "3c54957da47d7f5fb60e6fa3028e09939695d28ce0c8d204d4d252f137672f54",
+    "input_identity": "6a8077f63f5b2fb3a020209129da4b0a7c9b5047a2e8a7c3a24dbd1ce2c126ee"
+  },
+  {
+    "case": "landau",
+    "inputs": "interval-mixture",
+    "command": [
+      "/home/chh/divergence-strategy-search/explorations/partition-darm-rocm-20261025/boost/full-gpu-prep/oracle",
+      "landau",
+      "/home/chh/region-fusion-lab/runs/ir-net-boost-inputs-v1/interval-mixture.bin",
+      "/home/chh/region-fusion-lab/runs/ir-net-boost-inputs-v1/landau-interval-mixture"
+    ],
+    "exit": 0,
+    "stdout": "",
+    "stderr": "",
+    "tool_identity": "3c54957da47d7f5fb60e6fa3028e09939695d28ce0c8d204d4d252f137672f54",
+    "input_identity": "cc3bb199d5c24036a23057d0c5c2185fcd285b7ba0aabf022dd6fb550e2ee85c"
+  },
+  {
+    "case": "landau",
+    "inputs": "coherent-blocks",
+    "command": [
+      "/home/chh/divergence-strategy-search/explorations/partition-darm-rocm-20261025/boost/full-gpu-prep/oracle",
+      "landau",
+      "/home/chh/region-fusion-lab/runs/ir-net-boost-inputs-v1/coherent-blocks.bin",
+      "/home/chh/region-fusion-lab/runs/ir-net-boost-inputs-v1/landau-coherent-blocks"
+    ],
+    "exit": 0,
+    "stdout": "",
+    "stderr": "",
+    "tool_identity": "3c54957da47d7f5fb60e6fa3028e09939695d28ce0c8d204d4d252f137672f54",
+    "input_identity": "e1fed14414a8068229db85e8f954cd83f33b9bfd853640e2fcbff87dc03e2dde"
+  },
+  {
+    "case": "mapairy",
+    "inputs": "boundaries-special",
+    "command": [
+      "/home/chh/divergence-strategy-search/explorations/partition-darm-rocm-20261025/boost/full-gpu-prep/oracle",
+      "mapairy",
+      "/home/chh/region-fusion-lab/runs/ir-net-boost-inputs-v1/boundaries-special.bin",
+      "/home/chh/region-fusion-lab/runs/ir-net-boost-inputs-v1/mapairy-boundaries-special"
+    ],
+    "exit": 0,
+    "stdout": "",
+    "stderr": "",
+    "tool_identity": "3c54957da47d7f5fb60e6fa3028e09939695d28ce0c8d204d4d252f137672f54",
+    "input_identity": "6a8077f63f5b2fb3a020209129da4b0a7c9b5047a2e8a7c3a24dbd1ce2c126ee"
+  },
+  {
+    "case": "mapairy",
+    "inputs": "interval-mixture",
+    "command": [
+      "/home/chh/divergence-strategy-search/explorations/partition-darm-rocm-20261025/boost/full-gpu-prep/oracle",
+      "mapairy",
+      "/home/chh/region-fusion-lab/runs/ir-net-boost-inputs-v1/interval-mixture.bin",
+      "/home/chh/region-fusion-lab/runs/ir-net-boost-inputs-v1/mapairy-interval-mixture"
+    ],
+    "exit": 0,
+    "stdout": "",
+    "stderr": "",
+    "tool_identity": "3c54957da47d7f5fb60e6fa3028e09939695d28ce0c8d204d4d252f137672f54",
+    "input_identity": "cc3bb199d5c24036a23057d0c5c2185fcd285b7ba0aabf022dd6fb550e2ee85c"
+  },
+  {
+    "case": "mapairy",
+    "inputs": "coherent-blocks",
+    "command": [
+      "/home/chh/divergence-strategy-search/explorations/partition-darm-rocm-20261025/boost/full-gpu-prep/oracle",
+      "mapairy",
+      "/home/chh/region-fusion-lab/runs/ir-net-boost-inputs-v1/coherent-blocks.bin",
+      "/home/chh/region-fusion-lab/runs/ir-net-boost-inputs-v1/mapairy-coherent-blocks"
+    ],
+    "exit": 0,
+    "stdout": "",
+    "stderr": "",
+    "tool_identity": "3c54957da47d7f5fb60e6fa3028e09939695d28ce0c8d204d4d252f137672f54",
+    "input_identity": "e1fed14414a8068229db85e8f954cd83f33b9bfd853640e2fcbff87dc03e2dde"
+  }
+]

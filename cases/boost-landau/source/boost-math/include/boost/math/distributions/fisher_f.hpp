@@ -1,0 +1,702 @@
+// Copyright John Maddock 2006.
+// Copyright Matt Borland 2024.
+// Use, modification and distribution are subject to the
+// Boost Software License, Version 1.0.
+// (See accompanying file LICENSE_1_0.txt
+// or copy at http://www.boost.org/LICENSE_1_0.txt)
+
+#ifndef BOOST_MATH_DISTRIBUTIONS_FISHER_F_HPP
+#define BOOST_MATH_DISTRIBUTIONS_FISHER_F_HPP
+
+#include <boost/math/tools/config.hpp>
+#include <boost/math/tools/tuple.hpp>
+#include <boost/math/tools/promotion.hpp>
+#include <boost/math/distributions/fwd.hpp>
+#include <boost/math/special_functions/beta.hpp> // for incomplete beta.
+#include <boost/math/distributions/complement.hpp> // complements
+#include <boost/math/distributions/chi_squared.hpp>
+#include <boost/math/distributions/detail/common_error_handling.hpp> // error checks
+#include <boost/math/special_functions/fpclassify.hpp>
+
+#ifndef BOOST_MATH_HAS_NVRTC
+#include <boost/math/distributions/detail/entropy.hpp>
+#endif
+
+BOOST_MATH_NAMESPACE_BEGIN
+   namespace detail{
+      template <class RealType, class Policy>
+      struct fisher_degrees_of_freedom_finder
+      {
+         fisher_degrees_of_freedom_finder(
+            RealType x_, RealType v_, bool find_v1_, RealType p_, bool c)
+            : x(x_), v(v_), find_v1(find_v1_), p(p_), comp(c) {}
+
+         RealType operator()(const RealType& input_v)
+         {
+            RealType v1 = find_v1 ? input_v : v; 
+            RealType v2 = find_v1 ? v : input_v; 
+            fisher_f_distribution<RealType, Policy> d(v1, v2);
+            return comp ?
+               p - cdf(complement(d, x))
+               : cdf(d, x) - p;
+         }
+      private:
+         RealType x;
+         RealType v;
+         bool find_v1;
+         RealType p;
+         bool comp;
+      };
+
+      template <class RealType, class Policy>
+      RealType fisher_large_v1_approximation(RealType x, RealType v, RealType p, RealType q)
+      {     // For v1 -> inf approximate f_degreese_of_freedom_finder with chi squared distribution 
+            // with degrees of freedom v2 at the cdf at v2 / x
+            bool comp = p < q ? false : true;
+            RealType pval =  p < q ? p : q;
+            chi_squared_distribution<RealType, Policy> d(v);
+            return comp ? pval - cdf(d, v / x) : cdf(complement(d, v / x)) - pval;
+      }
+
+      template <class RealType, class Policy>
+      RealType fisher_large_v2_approximation(RealType x, RealType v, RealType p, RealType q)
+      {     // For v2 -> inf approximate f_degrees_of_freedom_finder with chi squared distribution 
+            // with degrees of freedom v1 at the cdf at x * v1
+            bool comp = p < q ? false : true;
+            RealType pval =  p < q ? p : q;
+            chi_squared_distribution<RealType, Policy> d(v);
+            return comp ? pval - cdf(complement(d, v * x)) : cdf(d, v * x) - pval;
+      }
+
+      template <class RealType, class Policy>
+      RealType fisher_small_v1_approximation(RealType p, RealType q)
+      { // For v1 -> 0, chi-squared(v1) collapses to a point mass at 0, so cdf(x) -> 1 for any x > 0.
+            bool comp = p < q ? false : true;
+            RealType pval =  p < q ? p : q;
+            return comp ? pval : 1 - pval;
+      }
+
+      template <class RealType, class Policy>
+      RealType fisher_small_v2_approximation(RealType p, RealType q)
+      { // For v2 -> 0, F diverges to infinity a.s., so cdf(x) -> 0 for any finite x.
+            bool comp = p < q ? false : true;
+            RealType pval =  p < q ? p : q;
+            return comp ? pval - 1 : -pval;
+      }
+
+      template <class RealType, class Policy>
+      inline RealType find_degrees_of_freedom_fisher_f(
+         const RealType x, const RealType v, const bool find_v1, const RealType p, const RealType q, const Policy& pol)
+      {
+         BOOST_MATH_STD_USING
+         using std::fabs;
+         const char* function = "fisher_f_distribution<%1%>::find_degrees_of_freedom_f";
+         if((p == 0) || (q == 0))
+         {
+            //
+            // Can't find a thing if one of p and q is zero:
+            //
+            return policies::raise_domain_error<RealType>(function, "Can't find degrees of freedom when the probability is 0 or 1, only possible answer is %1%",
+               RealType(std::numeric_limits<RealType>::quiet_NaN()), Policy()); // LCOV_EXCL_LINE
+         }
+         if (x < tools::epsilon<RealType>())
+         {
+            return policies::raise_evaluation_error<RealType>(function, "Can't find degrees of freedom when the abscissa value is very close to zero as all degrees of freedom generate the same CDF at x=0: try again further out in the tails!!",
+               RealType(std::numeric_limits<RealType>::quiet_NaN()), Policy()); // LCOV_EXCL_LINE
+         }
+         fisher_degrees_of_freedom_finder<RealType, Policy> f(x, v, find_v1, p < q ? p : q, p < q ? false : true);
+
+         // There are times when f has two roots - thus, two degrees of freedom can
+         // be found. We find this case by checking if the sign of f for large and 
+         // small values of v have the same sign. If the sign is the same, then there 
+         // are an even number of roots. If the signs differ, there is only one root
+         // and we can safely find the root.
+
+         // Rather than evaluating f at an enormous or minuscule degrees of freedom, use its
+         // limits. As v1 -> infinity, F tends to v2 / chi-squared(v2); as v2 -> infinity, F
+         // tends to chi-squared(v1) / v1. As v1 -> 0, F collapses to a point mass at 0, so
+         // cdf(x) -> 1; as v2 -> 0, F diverges to infinity almost surely, so cdf(x) -> 0.
+         RealType large_difference;
+         if (find_v1)
+         {
+            large_difference = fisher_large_v1_approximation<RealType, Policy>(x, v, p, q);
+         }
+         else
+            large_difference = fisher_large_v2_approximation<RealType, Policy>(x, v, p, q);
+
+         RealType small_difference = find_v1
+            ? fisher_small_v1_approximation<RealType, Policy>(p, q)
+            : fisher_small_v2_approximation<RealType, Policy>(p, q);
+
+         if ((large_difference < 0) == (small_difference < 0)){
+            return policies::raise_evaluation_error<RealType>(function, "Can't find degrees of freedom because two degrees of freedom can be found using the given parameters",
+               RealType(std::numeric_limits<RealType>::quiet_NaN()), Policy()); // LCOV_EXCL_LINE 
+         }
+
+         tools::eps_tolerance<RealType> tol(policies::digits<RealType, Policy>());
+         std::uintmax_t max_iter = policies::get_max_root_iterations<Policy>();
+         //
+         // Pick an initial guess:
+         //
+         RealType guess = 1;
+         std::pair<RealType, RealType> ir = tools::bracket_and_solve_root(
+            f, guess, RealType(2), f(guess) < 0 ? true : false, tol, max_iter, pol);
+         RealType result = ir.first + (ir.second - ir.first) / 2;
+         if(max_iter >= policies::get_max_root_iterations<Policy>())
+         {
+            return policies::raise_evaluation_error<RealType>(function, "Unable to locate solution in a reasonable time:" // LCOV_EXCL_LINE
+               " or there is no answer to problem. Current best guess is %1%", result, Policy()); // LCOV_EXCL_LINE
+         }
+         return result;
+      }
+   }
+
+BOOST_MATH_EXPORT template <class RealType = double, class Policy = policies::policy<> >
+class fisher_f_distribution
+{
+public:
+   typedef RealType value_type;
+   typedef Policy policy_type;
+
+   BOOST_MATH_GPU_ENABLED fisher_f_distribution(const RealType& i, const RealType& j) : m_df1(i), m_df2(j)
+   {
+      constexpr auto function = "fisher_f_distribution<%1%>::fisher_f_distribution";
+      RealType result;
+      detail::check_df(
+         function, m_df1, &result, Policy());
+      detail::check_df(
+         function, m_df2, &result, Policy());
+   } // fisher_f_distribution
+
+   BOOST_MATH_GPU_ENABLED RealType degrees_of_freedom1()const
+   {
+      return m_df1;
+   }
+   BOOST_MATH_GPU_ENABLED RealType degrees_of_freedom2()const
+   {
+      return m_df2;
+   }
+   BOOST_MATH_GPU_ENABLED static RealType find_v1(const RealType x, const RealType v2, const RealType p)
+   {
+      constexpr auto function = "fisher_f_distribution<%1%>::find_v1";
+      typedef typename policies::evaluation<RealType, Policy>::type eval_type;
+      typedef typename policies::normalise<
+         Policy,
+         policies::promote_float<false>,
+         policies::promote_double<false>,
+         policies::discrete_quantile<>,
+         policies::assert_undefined<> >::type forwarding_policy;
+      eval_type result = detail::find_degrees_of_freedom_fisher_f(
+         static_cast<eval_type>(x),
+         static_cast<eval_type>(v2),
+         true,
+         static_cast<eval_type>(p),
+         static_cast<eval_type>(1-p),
+         forwarding_policy());
+      return policies::checked_narrowing_cast<RealType, forwarding_policy>(
+         result,
+         function);
+   }
+   template <class A, class B, class C>
+   BOOST_MATH_GPU_ENABLED static RealType find_v1(const complemented3_type<A,B,C>& c)
+   {
+      constexpr auto function = "fisher_f_distribution<%1%>::find_v1";
+      typedef typename policies::evaluation<RealType, Policy>::type eval_type;
+      typedef typename policies::normalise<
+         Policy,
+         policies::promote_float<false>,
+         policies::promote_double<false>,
+         policies::discrete_quantile<>,
+         policies::assert_undefined<> >::type forwarding_policy;
+      eval_type result = detail::find_degrees_of_freedom_fisher_f(
+         static_cast<eval_type>(c.dist),
+         static_cast<eval_type>(c.param1),
+         true,
+         static_cast<eval_type>(1-c.param2),
+         static_cast<eval_type>(c.param2),
+         forwarding_policy());
+      return policies::checked_narrowing_cast<RealType, forwarding_policy>(
+         result,
+         function);
+   }
+   BOOST_MATH_GPU_ENABLED static RealType find_v2(const RealType x, const RealType v2, const RealType p)
+   {
+      constexpr auto function = "fisher_f_distribution<%1%>::find_v2";
+      typedef typename policies::evaluation<RealType, Policy>::type eval_type;
+      typedef typename policies::normalise<
+         Policy,
+         policies::promote_float<false>,
+         policies::promote_double<false>,
+         policies::discrete_quantile<>,
+         policies::assert_undefined<> >::type forwarding_policy;
+      eval_type result = detail::find_degrees_of_freedom_fisher_f(
+         static_cast<eval_type>(x),
+         static_cast<eval_type>(v2),
+         false,
+         static_cast<eval_type>(p),
+         static_cast<eval_type>(1-p),
+         forwarding_policy());
+      return policies::checked_narrowing_cast<RealType, forwarding_policy>(
+         result,
+         function);
+   }
+   template <class A, class B, class C>
+   BOOST_MATH_GPU_ENABLED static RealType find_v2(const complemented3_type<A,B,C>& c)
+   {
+      constexpr auto function = "fisher_f_distribution<%1%>::find_v2";
+      typedef typename policies::evaluation<RealType, Policy>::type eval_type;
+      typedef typename policies::normalise<
+         Policy,
+         policies::promote_float<false>,
+         policies::promote_double<false>,
+         policies::discrete_quantile<>,
+         policies::assert_undefined<> >::type forwarding_policy;
+      eval_type result = detail::find_degrees_of_freedom_fisher_f(
+         static_cast<eval_type>(c.dist),
+         static_cast<eval_type>(c.param1),
+         false,
+         static_cast<eval_type>(1-c.param2),
+         static_cast<eval_type>(c.param2),
+         forwarding_policy());
+      return policies::checked_narrowing_cast<RealType, forwarding_policy>(
+         result,
+         function);
+   }
+private:
+   //
+   // Data members:
+   //
+   RealType m_df1;  // degrees of freedom are a real number.
+   RealType m_df2;  // degrees of freedom are a real number.
+};
+
+BOOST_MATH_EXPORT typedef fisher_f_distribution<double> fisher_f;
+
+#ifdef __cpp_deduction_guides
+BOOST_MATH_EXPORT template <class RealType>
+fisher_f_distribution(RealType,RealType)->fisher_f_distribution<typename BOOST_MATH_NAMESPACE::tools::promote_args<RealType>::type>;
+#endif
+
+BOOST_MATH_EXPORT template <class RealType, class Policy>
+BOOST_MATH_GPU_ENABLED inline const BOOST_MATH_NAMESPACE::pair<RealType, RealType> range(const fisher_f_distribution<RealType, Policy>& /*dist*/)
+{ // Range of permissible values for random variable x.
+   using BOOST_MATH_NAMESPACE::tools::max_value;
+   return BOOST_MATH_NAMESPACE::pair<RealType, RealType>(static_cast<RealType>(0), max_value<RealType>());
+}
+
+BOOST_MATH_EXPORT template <class RealType, class Policy>
+BOOST_MATH_GPU_ENABLED inline const BOOST_MATH_NAMESPACE::pair<RealType, RealType> support(const fisher_f_distribution<RealType, Policy>& /*dist*/)
+{ // Range of supported values for random variable x.
+   // This is range where cdf rises from 0 to 1, and outside it, the pdf is zero.
+   using BOOST_MATH_NAMESPACE::tools::max_value;
+   return BOOST_MATH_NAMESPACE::pair<RealType, RealType>(static_cast<RealType>(0),  max_value<RealType>());
+}
+
+BOOST_MATH_EXPORT template <class RealType, class Policy>
+BOOST_MATH_GPU_ENABLED RealType pdf(const fisher_f_distribution<RealType, Policy>& dist, const RealType& x)
+{
+   BOOST_MATH_STD_USING  // for ADL of std functions
+   RealType df1 = dist.degrees_of_freedom1();
+   RealType df2 = dist.degrees_of_freedom2();
+   // Error check:
+   RealType error_result = 0;
+   constexpr auto function = "boost::math::pdf(fisher_f_distribution<%1%> const&, %1%)";
+   if(false == (detail::check_df(
+         function, df1, &error_result, Policy())
+         && detail::check_df(
+         function, df2, &error_result, Policy())))
+      return error_result;
+
+   if((x < 0) || !(BOOST_MATH_NAMESPACE::isfinite)(x))
+   {
+      return policies::raise_domain_error<RealType>(
+         function, "Random variable parameter was %1%, but must be > 0 !", x, Policy());
+   }
+
+   if(x == 0)
+   {
+      // special cases:
+      if(df1 < 2)
+         return policies::raise_overflow_error<RealType>(
+            function, 0, Policy());
+      else if(df1 == 2)
+         return 1;
+      else
+         return 0;
+   }
+
+   //
+   // You reach this formula by direct differentiation of the
+   // cdf expressed in terms of the incomplete beta.
+   //
+   // There are two versions so we don't pass a value of z
+   // that is very close to 1 to ibeta_derivative: for some values
+   // of df1 and df2, all the change takes place in this area.
+   //
+   RealType v1x = df1 * x;
+   RealType result;
+   if(v1x > df2)
+   {
+      result = (df2 * df1) / ((df2 + v1x) * (df2 + v1x));
+      result *= ibeta_derivative(df2 / 2, df1 / 2, df2 / (df2 + v1x), Policy());
+   }
+   else
+   {
+      result = df2 + df1 * x;
+      result = (result * df1 - x * df1 * df1) / (result * result);
+      result *= ibeta_derivative(df1 / 2, df2 / 2, v1x / (df2 + v1x), Policy());
+   }
+   return result;
+} // pdf
+
+BOOST_MATH_EXPORT template <class RealType, class Policy>
+BOOST_MATH_GPU_ENABLED inline RealType cdf(const fisher_f_distribution<RealType, Policy>& dist, const RealType& x)
+{
+   constexpr auto function = "boost::math::cdf(fisher_f_distribution<%1%> const&, %1%)";
+   RealType df1 = dist.degrees_of_freedom1();
+   RealType df2 = dist.degrees_of_freedom2();
+   // Error check:
+   RealType error_result = 0;
+   if(false == detail::check_df(
+         function, df1, &error_result, Policy())
+         && detail::check_df(
+         function, df2, &error_result, Policy()))
+      return error_result;
+
+   if((x < 0) || !(BOOST_MATH_NAMESPACE::isfinite)(x))
+   {
+      return policies::raise_domain_error<RealType>(
+         function, "Random Variable parameter was %1%, but must be > 0 !", x, Policy());
+   }
+
+   RealType v1x = df1 * x;
+   //
+   // There are two equivalent formulas used here, the aim is
+   // to prevent the final argument to the incomplete beta
+   // from being too close to 1: for some values of df1 and df2
+   // the rate of change can be arbitrarily large in this area,
+   // whilst the value we're passing will have lost information
+   // content as a result of being 0.999999something.  Better
+   // to switch things around so we're passing 1-z instead.
+   //
+   return v1x > df2
+      ? BOOST_MATH_NAMESPACE::ibetac(df2 / 2, df1 / 2, df2 / (df2 + v1x), Policy())
+      : BOOST_MATH_NAMESPACE::ibeta(df1 / 2, df2 / 2, v1x / (df2 + v1x), Policy());
+} // cdf
+
+BOOST_MATH_EXPORT template <class RealType, class Policy>
+BOOST_MATH_GPU_ENABLED inline RealType quantile(const fisher_f_distribution<RealType, Policy>& dist, const RealType& p)
+{
+   constexpr auto function = "boost::math::quantile(fisher_f_distribution<%1%> const&, %1%)";
+   RealType df1 = dist.degrees_of_freedom1();
+   RealType df2 = dist.degrees_of_freedom2();
+   // Error check:
+   RealType error_result = 0;
+   if(false == (detail::check_df(
+            function, df1, &error_result, Policy())
+         && detail::check_df(
+            function, df2, &error_result, Policy())
+         && detail::check_probability(
+            function, p, &error_result, Policy())))
+      return error_result;
+
+   // With optimizations turned on, gcc wrongly warns about y being used
+   // uninitialized unless we initialize it to something:
+   RealType x, y(0);
+
+   x = BOOST_MATH_NAMESPACE::ibeta_inv(df1 / 2, df2 / 2, p, &y, Policy());
+
+   return df2 * x / (df1 * y);
+} // quantile
+
+BOOST_MATH_EXPORT template <class RealType, class Policy>
+BOOST_MATH_GPU_ENABLED inline RealType cdf(const complemented2_type<fisher_f_distribution<RealType, Policy>, RealType>& c)
+{
+   constexpr auto function = "boost::math::cdf(fisher_f_distribution<%1%> const&, %1%)";
+   RealType df1 = c.dist.degrees_of_freedom1();
+   RealType df2 = c.dist.degrees_of_freedom2();
+   RealType x = c.param;
+   // Error check:
+   RealType error_result = 0;
+   if(false == detail::check_df(
+         function, df1, &error_result, Policy())
+         && detail::check_df(
+         function, df2, &error_result, Policy()))
+      return error_result;
+
+   if((x < 0) || !(BOOST_MATH_NAMESPACE::isfinite)(x))
+   {
+      return policies::raise_domain_error<RealType>(
+         function, "Random Variable parameter was %1%, but must be > 0 !", x, Policy());
+   }
+
+   RealType v1x = df1 * x;
+   //
+   // There are two equivalent formulas used here, the aim is
+   // to prevent the final argument to the incomplete beta
+   // from being too close to 1: for some values of df1 and df2
+   // the rate of change can be arbitrarily large in this area,
+   // whilst the value we're passing will have lost information
+   // content as a result of being 0.999999something.  Better
+   // to switch things around so we're passing 1-z instead.
+   //
+   return v1x > df2
+      ? BOOST_MATH_NAMESPACE::ibeta(df2 / 2, df1 / 2, df2 / (df2 + v1x), Policy())
+      : BOOST_MATH_NAMESPACE::ibetac(df1 / 2, df2 / 2, v1x / (df2 + v1x), Policy());
+}
+
+BOOST_MATH_EXPORT template <class RealType, class Policy>
+BOOST_MATH_GPU_ENABLED inline RealType logcdf(const fisher_f_distribution<RealType, Policy>& dist, const RealType& x)
+{
+   constexpr auto function = "boost::math::logcdf(fisher_f_distribution<%1%> const&, %1%)";
+   RealType df1 = dist.degrees_of_freedom1();
+   RealType df2 = dist.degrees_of_freedom2();
+   RealType error_result = 0;
+   if(false == (detail::check_df(function, df1, &error_result, Policy())
+         && detail::check_df(function, df2, &error_result, Policy())))
+      return error_result;
+   if((x < 0) || !(BOOST_MATH_NAMESPACE::isfinite)(x))
+   {
+      return policies::raise_domain_error<RealType>(
+         function, "Random Variable parameter was %1%, but must be > 0 !", x, Policy());
+   }
+   // As in cdf, keep the incomplete beta's argument away from 1:
+   RealType v1x = df1 * x;
+   return v1x > df2
+      ? BOOST_MATH_NAMESPACE::libetac(df2 / 2, df1 / 2, df2 / (df2 + v1x), Policy())
+      : BOOST_MATH_NAMESPACE::libeta(df1 / 2, df2 / 2, v1x / (df2 + v1x), Policy());
+}
+
+BOOST_MATH_EXPORT template <class RealType, class Policy>
+BOOST_MATH_GPU_ENABLED inline RealType logcdf(const complemented2_type<fisher_f_distribution<RealType, Policy>, RealType>& c)
+{
+   constexpr auto function = "boost::math::logcdf(fisher_f_distribution<%1%> const&, %1%)";
+   RealType df1 = c.dist.degrees_of_freedom1();
+   RealType df2 = c.dist.degrees_of_freedom2();
+   RealType x = c.param;
+   RealType error_result = 0;
+   if(false == (detail::check_df(function, df1, &error_result, Policy())
+         && detail::check_df(function, df2, &error_result, Policy())))
+      return error_result;
+   if((x < 0) || !(BOOST_MATH_NAMESPACE::isfinite)(x))
+   {
+      return policies::raise_domain_error<RealType>(
+         function, "Random Variable parameter was %1%, but must be > 0 !", x, Policy());
+   }
+   RealType v1x = df1 * x;
+   return v1x > df2
+      ? BOOST_MATH_NAMESPACE::libeta(df2 / 2, df1 / 2, df2 / (df2 + v1x), Policy())
+      : BOOST_MATH_NAMESPACE::libetac(df1 / 2, df2 / 2, v1x / (df2 + v1x), Policy());
+}
+
+BOOST_MATH_EXPORT template <class RealType, class Policy>
+BOOST_MATH_GPU_ENABLED inline RealType quantile(const complemented2_type<fisher_f_distribution<RealType, Policy>, RealType>& c)
+{
+   constexpr auto function = "boost::math::quantile(fisher_f_distribution<%1%> const&, %1%)";
+   RealType df1 = c.dist.degrees_of_freedom1();
+   RealType df2 = c.dist.degrees_of_freedom2();
+   RealType p = c.param;
+   // Error check:
+   RealType error_result = 0;
+   if(false == (detail::check_df(
+            function, df1, &error_result, Policy())
+         && detail::check_df(
+            function, df2, &error_result, Policy())
+         && detail::check_probability(
+            function, p, &error_result, Policy())))
+      return error_result;
+
+   RealType x, y;
+
+   x = BOOST_MATH_NAMESPACE::ibetac_inv(df1 / 2, df2 / 2, p, &y, Policy());
+
+   return df2 * x / (df1 * y);
+}
+
+BOOST_MATH_EXPORT template <class RealType, class Policy>
+BOOST_MATH_GPU_ENABLED inline RealType mean(const fisher_f_distribution<RealType, Policy>& dist)
+{ // Mean of F distribution = v.
+   constexpr auto function = "boost::math::mean(fisher_f_distribution<%1%> const&)";
+   RealType df1 = dist.degrees_of_freedom1();
+   RealType df2 = dist.degrees_of_freedom2();
+   // Error check:
+   RealType error_result = 0;
+   if(false == detail::check_df(
+            function, df1, &error_result, Policy())
+         && detail::check_df(
+            function, df2, &error_result, Policy()))
+      return error_result;
+   if(df2 <= 2)
+   {
+      return policies::raise_domain_error<RealType>(
+         function, "Second degree of freedom was %1% but must be > 2 in order for the distribution to have a mean.", df2, Policy());
+   }
+   return df2 / (df2 - 2);
+} // mean
+
+BOOST_MATH_EXPORT template <class RealType, class Policy>
+BOOST_MATH_GPU_ENABLED inline RealType variance(const fisher_f_distribution<RealType, Policy>& dist)
+{ // Variance of F distribution.
+   constexpr auto function = "boost::math::variance(fisher_f_distribution<%1%> const&)";
+   RealType df1 = dist.degrees_of_freedom1();
+   RealType df2 = dist.degrees_of_freedom2();
+   // Error check:
+   RealType error_result = 0;
+   if(false == detail::check_df(
+            function, df1, &error_result, Policy())
+         && detail::check_df(
+            function, df2, &error_result, Policy()))
+      return error_result;
+   if(df2 <= 4)
+   {
+      return policies::raise_domain_error<RealType>(
+         function, "Second degree of freedom was %1% but must be > 4 in order for the distribution to have a valid variance.", df2, Policy());
+   }
+   return 2 * df2 * df2 * (df1 + df2 - 2) / (df1 * (df2 - 2) * (df2 - 2) * (df2 - 4));
+} // variance
+
+BOOST_MATH_EXPORT template <class RealType, class Policy>
+BOOST_MATH_GPU_ENABLED inline RealType mode(const fisher_f_distribution<RealType, Policy>& dist)
+{
+   constexpr auto function = "boost::math::mode(fisher_f_distribution<%1%> const&)";
+   RealType df1 = dist.degrees_of_freedom1();
+   RealType df2 = dist.degrees_of_freedom2();
+   // Error check:
+   RealType error_result = 0;
+   if(false == detail::check_df(
+            function, df1, &error_result, Policy())
+         && detail::check_df(
+            function, df2, &error_result, Policy()))
+      return error_result;
+   if(df1 <= 2)
+   {
+      return policies::raise_domain_error<RealType>(
+         function, "First degree of freedom was %1% but must be > 2 in order for the distribution to have a mode.", df1, Policy());
+   }
+   return df2 * (df1 - 2) / (df1 * (df2 + 2));
+}
+
+//template <class RealType, class Policy>
+//inline RealType median(const fisher_f_distribution<RealType, Policy>& dist)
+//{ // Median of Fisher F distribution is not defined.
+//  return tools::domain_error<RealType>(BOOST_CURRENT_FUNCTION, "Median is not implemented, result is %1%!", boost::math::numeric_limits<RealType>::quiet_NaN());
+//  } // median
+
+// Now implemented via quantile(half) in derived accessors.
+
+BOOST_MATH_EXPORT template <class RealType, class Policy>
+BOOST_MATH_GPU_ENABLED inline RealType skewness(const fisher_f_distribution<RealType, Policy>& dist)
+{
+   constexpr auto function = "boost::math::skewness(fisher_f_distribution<%1%> const&)";
+   BOOST_MATH_STD_USING // ADL of std names
+   // See http://mathworld.wolfram.com/F-Distribution.html
+   RealType df1 = dist.degrees_of_freedom1();
+   RealType df2 = dist.degrees_of_freedom2();
+   // Error check:
+   RealType error_result = 0;
+   if(false == detail::check_df(
+            function, df1, &error_result, Policy())
+         && detail::check_df(
+            function, df2, &error_result, Policy()))
+      return error_result;
+   if(df2 <= 6)
+   {
+      return policies::raise_domain_error<RealType>(
+         function, "Second degree of freedom was %1% but must be > 6 in order for the distribution to have a skewness.", df2, Policy());
+   }
+   return 2 * (df2 + 2 * df1 - 2) * sqrt((2 * df2 - 8) / (df1 * (df2 + df1 - 2))) / (df2 - 6);
+}
+
+BOOST_MATH_EXPORT template <class RealType, class Policy>
+BOOST_MATH_GPU_ENABLED RealType kurtosis_excess(const fisher_f_distribution<RealType, Policy>& dist);
+
+BOOST_MATH_EXPORT template <class RealType, class Policy>
+BOOST_MATH_GPU_ENABLED inline RealType kurtosis(const fisher_f_distribution<RealType, Policy>& dist)
+{
+   return 3 + kurtosis_excess(dist);
+}
+
+BOOST_MATH_EXPORT template <class RealType, class Policy>
+BOOST_MATH_GPU_ENABLED inline RealType kurtosis_excess(const fisher_f_distribution<RealType, Policy>& dist)
+{
+   constexpr auto function = "boost::math::kurtosis_excess(fisher_f_distribution<%1%> const&)";
+   // See http://mathworld.wolfram.com/F-Distribution.html
+   RealType df1 = dist.degrees_of_freedom1();
+   RealType df2 = dist.degrees_of_freedom2();
+   // Error check:
+   RealType error_result = 0;
+   if(false == detail::check_df(
+            function, df1, &error_result, Policy())
+         && detail::check_df(
+            function, df2, &error_result, Policy()))
+      return error_result;
+   if(df2 <= 8)
+   {
+      return policies::raise_domain_error<RealType>(
+         function, "Second degree of freedom was %1% but must be > 8 in order for the distribution to have a kurtosis.", df2, Policy());
+   }
+   RealType df2_2 = df2 * df2;
+   RealType df1_2 = df1 * df1;
+   RealType n = -16 + 20 * df2 - 8 * df2_2 + df2_2 * df2 + 44 * df1 - 32 * df2 * df1 + 5 * df2_2 * df1 - 22 * df1_2 + 5 * df2 * df1_2;
+   n *= 12;
+   RealType d = df1 * (df2 - 6) * (df2 - 8) * (df1 + df2 - 2);
+   return n / d;
+}
+
+#ifndef BOOST_MATH_HAS_NVRTC
+// Not GPU enabled: the Stirling series use Bernoulli numbers.
+BOOST_MATH_EXPORT template <class RealType, class Policy>
+inline RealType entropy(const fisher_f_distribution<RealType, Policy>& dist)
+{
+   BOOST_MATH_STD_USING
+   // With a = df1/2, b = df2/2 and s = a + b,
+   //   H = log(b/a) + lgamma(a) + lgamma(b) - lgamma(s) - (a - 1) digamma(a) - (b + 1) digamma(b) + s digamma(s).
+   // Its terms are ~s log(s) while H ~ -log(s)/2, so every parameter at or above the threshold has
+   // lgamma and digamma replaced by their Stirling forms, with the logs combined exactly
+   // (r and nu as in detail::entropy_stirling_series).
+   RealType a = dist.degrees_of_freedom1() / 2;
+   RealType b = dist.degrees_of_freedom2() / 2;
+   RealType s = a + b;
+   const RealType threshold = detail::entropy_series_threshold<RealType, Policy>();
+   RealType r_s, nu_s;
+   if (s >= threshold)
+      detail::entropy_stirling_series(s, r_s, nu_s, Policy());
+   if ((a >= threshold) && (b >= threshold))
+   {
+      RealType r_a, nu_a, r_b, nu_b;
+      detail::entropy_stirling_series(a, r_a, nu_a, Policy());
+      detail::entropy_stirling_series(b, r_b, nu_b, Policy());
+      return constants::log_root_two_pi<RealType>() + constants::half<RealType>() + log(1 / a + 1 / b) / 2
+         - 1 / (2 * a) + 1 / (2 * b) + r_a + r_b - r_s + 2 * nu_b - nu_s;
+   }
+   if (b >= threshold)
+   {
+      RealType r_b, nu_b;
+      detail::entropy_stirling_series(b, r_b, nu_b, Policy());
+      return BOOST_MATH_NAMESPACE::log1p(a / b, Policy()) / 2 + a + 1 / (2 * b) + r_b + 2 * nu_b - r_s - nu_s
+         - log(a) + BOOST_MATH_NAMESPACE::lgamma(a, Policy()) - (a - 1) * BOOST_MATH_NAMESPACE::digamma(a, Policy());
+   }
+   if (a >= threshold)
+   {
+      RealType r_a, nu_a;
+      detail::entropy_stirling_series(a, r_a, nu_a, Policy());
+      return BOOST_MATH_NAMESPACE::log1p(b / a, Policy()) / 2 + b - 1 / (2 * a) + r_a - r_s - nu_s
+         + log(b) + BOOST_MATH_NAMESPACE::lgamma(b, Policy()) - (b + 1) * BOOST_MATH_NAMESPACE::digamma(b, Policy());
+   }
+   // Both small: -lgamma(s) + s digamma(s) = log(s)/2 + s - log(2 pi e)/2 - r(s) - nu(s) for large s.
+   RealType s_part = (s >= threshold)
+      ? RealType(log(s) / 2 + s - constants::log_root_two_pi<RealType>() - constants::half<RealType>() - r_s - nu_s)
+      : RealType(s * BOOST_MATH_NAMESPACE::digamma(s, Policy()) - BOOST_MATH_NAMESPACE::lgamma(s, Policy()));
+   return log(b / a) + BOOST_MATH_NAMESPACE::lgamma(a, Policy()) - (a - 1) * BOOST_MATH_NAMESPACE::digamma(a, Policy())
+      + BOOST_MATH_NAMESPACE::lgamma(b, Policy()) - (b + 1) * BOOST_MATH_NAMESPACE::digamma(b, Policy()) + s_part;
+}
+#endif
+
+BOOST_MATH_NAMESPACE_END
+
+// This include must be at the end, *after* the accessors
+// for this distribution have been defined, in order to
+// keep compilers that support two-phase lookup happy.
+#include <boost/math/distributions/detail/derived_accessors.hpp>
+
+#endif // BOOST_MATH_DISTRIBUTIONS_FISHER_F_HPP
