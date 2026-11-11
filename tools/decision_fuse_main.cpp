@@ -1,5 +1,6 @@
 // Opt-in single-pair bridge to the existing RegionMelder. No ranking or fallback.
 #include "decision_model.h"
+#include "decision_gap_search.h"
 #include "trial_simplify_cfg.h"
 #include "trial_full_cfg.h"
 #include "trial_implicit_metrics.h"
@@ -59,6 +60,7 @@ int main(int argc,char **argv){
  if(const char *v=std::getenv("DECISION_CONDITION_BUDGET")){char *end=nullptr;long n=std::strtol(v,&end,10);if(!*v||*end||n<0||n>100000)return 2;conditionBudget=n;}
  if(const char *v=std::getenv("DECISION_COST_THRESHOLD")){char *end=nullptr;long n=std::strtol(v,&end,10);if(!*v||*end||n<0||n>100000)return 2;costThreshold=n;}
  if(argc!=6&&argc!=7&&argc!=8){errs()<<"usage: decision-fuse input.ll function decision-index left-index NEW_DIR [ORDER_JSON [PAIR_JSON]]\n";return 2;}
+ if(std::getenv("DECISION_GAP_SEARCH")&&!std::getenv("DECISION_GAP_STATE"))return decision::searchGapPlans(argc,argv,mode);
  if(sys::fs::exists(argv[5])){errs()<<"output directory already exists\n";return 2;}
  LLVMContext ctx;SMDiagnostic error;auto parent=parseIRFile(argv[1],error,ctx);
  if(!parent){error.print(argv[0],errs());return 2;}
@@ -157,7 +159,16 @@ int main(int argc,char **argv){
  std::unique_ptr<decision::SpeculationTTI> speculationTTI;
  if(mode==3){try{speculationTTI=std::make_unique<decision::SpeculationTTI>(*f);}catch(const std::exception&e){return finish(e.what(),3);}}
  RegionMelder melder(analyzer,true);melder.SpeculationMode=mode;melder.SpeculationBudget=budget;melder.SpeculationTTI=speculationTTI?speculationTTI->info.get():nullptr;melder.SpeculationCostThreshold=costThreshold;
- WeakVH dispatchHandle(dispatch);melder.merge(0);
+ if(const char *Path=std::getenv("DECISION_GAP_STATE")){
+  try{auto State=decision::readGapState(Path);melder.SplitMatchIDs=std::move(State.Split);melder.SpeculateGapIDs=std::move(State.Speculate);melder.ExplicitGapPlan=true;
+   if(mode!=3&&!melder.SpeculateGapIDs.empty())return finish("explicit_speculation_requires_cost_mode",3);
+  }catch(const std::exception&E){return finish(E.what(),3);}
+ }
+ melder.CoalesceGaps=std::getenv("DECISION_COALESCE_GAPS")!=nullptr;
+ WeakVH dispatchHandle(dispatch);
+ try{melder.merge(0);}catch(const std::exception&E){return finish(E.what(),3);}
+ report["alignment_choices"]=std::move(melder.AlignmentChoices);
+ report["gap_choices"]=std::move(melder.GapChoices);
  if(!dispatchHandle)return finish("dispatch_deleted_identity_unknown",3);
  dispatch=cast<BasicBlock>((Value*)dispatchHandle);
  // RegionMelder can replace the dispatch terminator: restore logical identity

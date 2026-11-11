@@ -113,6 +113,33 @@ void RegionMelder::recordBlockOrigin(BasicBlock *Left,BasicBlock *Right,BasicBlo
   BlockOrigins.push_back({sourceBlockID(Left),sourceBlockID(Right),label(Left),label(Right),WeakVH(Merged)});
 }
 
+void RegionMelder::prepareGapChoices() {
+  AlignedSeq<Value *> Rewritten;
+  unsigned Index = 0;
+  std::set<unsigned> Resolved;
+  for (auto &Entry : RegionInstrAlignement) {
+    auto *L = Entry.getLeft(), *R = Entry.getRight();
+    if (L) OriginalAlignmentIDs[L] = 2 * Index;
+    if (R) OriginalAlignmentIDs[R] = 2 * Index + 1;
+    auto *LI = dyn_cast_or_null<Instruction>(L);
+    bool Eligible = Entry.match() && LI && !isa<PHINode>(LI) &&
+                    !LI->isTerminator() && !LI->isEHPad() && !isa<AllocaInst>(LI);
+    if (Eligible && !SplitMatchIDs.count(Index))
+      AlignmentChoices.push_back(json::Object{{"id",int64_t(Index)},
+        {"opcode",LI->getOpcodeName()}, {"left_gap",int64_t(2 * Index)},
+        {"right_gap",int64_t(2 * Index + 1)}});
+    if (SplitMatchIDs.count(Index)) {
+      if (!Eligible) throw std::runtime_error("cannot_split_structural_alignment_entry");
+      Resolved.insert(Index);
+      Rewritten.push_back(AlignedPair<Value *>(L, nullptr));
+      Rewritten.push_back(AlignedPair<Value *>(nullptr, R));
+    } else Rewritten.push_back(Entry);
+    ++Index;
+  }
+  if (Resolved != SplitMatchIDs) throw std::runtime_error("split_match_id_not_found");
+  RegionInstrAlignement = std::move(Rewritten);
+}
+
 void RegionMelder::cloneInstructions() {
   INFO << "Cloning instructions\n";
   // generate the control flow for merged region
@@ -702,6 +729,7 @@ void RegionMelder::merge(unsigned Index) {
     auto T1 = std::chrono::high_resolution_clock::now();
 #endif
     computeRegionSeqAlignment(CurrMapping);
+    prepareGapChoices();
 #if ENABLE_TIMING == 1
     auto T2 = std::chrono::high_resolution_clock::now();
     auto micros = std::chrono::duration_cast<std::chrono::microseconds>(T2-T1).count();
@@ -761,7 +789,9 @@ Instruction *RegionMelder::cloneInstruction(Instruction *OrigI,
   // insertion
   Builder.SetInsertPoint(InsertAt);
   Builder.Insert(NewI);
-
+  auto It = OriginalAlignmentIDs.find(OrigI);
+  if (It != OriginalAlignmentIDs.end() && !isa<PHINode>(OrigI))
+    EmittedGapIDs[NewI] = It->second;
   return NewI;
 }
 
@@ -770,8 +800,18 @@ Instruction *RegionMelder::cloneInstruction(Instruction *OrigI,
 // Cross-side SSA dependencies, calls, volatile/atomic accesses and barriers
 // stop grouping. This is scheduling within one block, not speculation.
 void RegionMelder::runUnpredicationPass() {
+  DenseMap<Instruction *, bool> Choices;
+  for (auto &Pair : EmittedGapIDs) Choices[Pair.first] = SpeculateGapIDs.count(Pair.second);
   auto Plan = planGaps(*MA.getParentFunction(), SplitRanges, SpeculationMode,
-                       SpeculationBudget, CoalesceGaps,SpeculationTTI,SpeculationCostThreshold);
+                       SpeculationBudget, CoalesceGaps,SpeculationTTI,SpeculationCostThreshold,
+                       ExplicitGapPlan ? &Choices : nullptr);
+  for (unsigned N=0; N<Plan.Segments.size(); ++N) {
+    auto &Segment=Plan.Segments[N]; json::Array IDs;
+    for(auto *I:Segment.Instructions){auto It=EmittedGapIDs.find(I);if(It==EmittedGapIDs.end())throw std::runtime_error("gap_origin_missing");IDs.push_back(int64_t(It->second));}
+    auto &D=Plan.Decisions[N];
+    GapChoices.push_back(json::Object{{"ids",std::move(IDs)},{"left",Segment.Left},
+      {"speculated",D.Speculate},{"safe",D.Safe&&D.Available}});
+  }
   SegmentDecisions.insert(SegmentDecisions.end(),Plan.Decisions.begin(),Plan.Decisions.end());
   if(SpeculationMode==3)for(auto &Segment:Plan.Speculated)for(auto *I:Segment.Instructions)speculation_policy::sanitize(*I);
   applyGapSchedule(Plan);

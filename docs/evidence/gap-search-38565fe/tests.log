@@ -1,0 +1,10 @@
+shared guard and transitive protected-definition dependency checks passed
+none selects 4 cost 43 -> 43 trials 3
+cost selects 3 cost 43 -> 42 trials 13
+80 complete CPU outputs equal, including NaN payloads, infinities and signed zeros
+dependent matched users rescored; accepted 2 strict improvements
+guarded load preserves null-pointer untaken-side behavior
+expensive fdiv match retained; deterministic IR and strict cost descent verified
+recursive 7 fusions; 8 -> 1 copysign; all 201 outputs equal at every step
+balanced 7 fusions; 8 -> 1 copysign; all 201 outputs equal at every step
+evidence /home/chh/kernel-benchmark-suite-review-speculation/build/decision-fuse/decision-full-eko_kep2

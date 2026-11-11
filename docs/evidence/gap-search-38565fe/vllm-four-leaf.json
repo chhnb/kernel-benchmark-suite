@@ -1,0 +1,47 @@
+[
+  {
+    "mode": "none",
+    "search": false,
+    "rc": 0,
+    "selects": 58,
+    "i1_selects": 1
+  },
+  {
+    "mode": "none",
+    "search": true,
+    "rc": 0,
+    "selects": 58,
+    "i1_selects": 1,
+    "initial": 5393,
+    "final": 5393,
+    "trials": 3,
+    "accepted": []
+  },
+  {
+    "mode": "cost",
+    "search": true,
+    "rc": 0,
+    "selects": 57,
+    "i1_selects": 0,
+    "initial": 5393,
+    "final": 5392,
+    "trials": 13,
+    "accepted": [
+      {
+        "after": 5392,
+        "before": 5393,
+        "directory": "/home/chh/kernel-benchmark-suite-review-speculation/build/gap-restart-38565fe/search-smoke/cost-search/gap-trial-4",
+        "round": 0,
+        "state": {
+          "speculate": [
+            2,
+            3
+          ],
+          "split": [
+            1
+          ]
+        }
+      }
+    ]
+  }
+]

@@ -16,6 +16,8 @@
 #include "llvm/TableGen/Record.h"
 #include <string>
 #include <vector>
+#include <set>
+#include "llvm/Support/JSON.h"
 
 namespace llvm {
 
@@ -73,6 +75,9 @@ private:
   DenseMap<BasicBlock *, BasicBlock *> CurrMapping;
 
   AlignedSeq<Value *> RegionInstrAlignement;
+  DenseMap<const Value *, unsigned> OriginalAlignmentIDs;
+  DenseMap<Instruction *, unsigned> EmittedGapIDs;
+  void prepareGapChoices();
   using ValueToValueMapTy = ValueMap<const Value *, WeakTrackingVH>;
 
   // value maps
@@ -131,6 +136,9 @@ public:
     if(RecordOrigins){unsigned I=0;for(auto &BB:*MA.getParentFunction())
       SourceBlocks.push_back({WeakVH(&BB),"B"+std::to_string(I++)});}
   }
+  std::set<unsigned> SplitMatchIDs, SpeculateGapIDs;
+  bool ExplicitGapPlan=false;
+  json::Array AlignmentChoices, GapChoices;
   bool CoalesceGaps=false;
   // 0 none, 1 legacy (default), 2 budget. See requireUnpredication().
   int SpeculationMode=1;

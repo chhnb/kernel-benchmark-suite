@@ -1,0 +1,6 @@
+{
+  "before_sha256": "101ac61af95c7c93177e4af7e079bccd5a2d6f5df41a1fbf45fc4aa615252cc4",
+  "after_sha256": "352cc27b82c0ad2a97e410561a1a6f78f9ee1a0f4c7193cccbf4c571e192b60b",
+  "full_tti_json_equal_cases": 20,
+  "resume_fixture_rounds_and_final_ir_equal": true
+}

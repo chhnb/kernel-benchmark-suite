@@ -1,0 +1,9 @@
+{
+  "base_commit": "38565fe0adb031251b26c56ae568983393fdd433",
+  "environment": {
+    "DECISION_GAP_SEARCH": "1",
+    "DECISION_SPECULATION": "cost",
+    "DECISION_CFG_CLEANUP": "structural"
+  },
+  "policy": "current defaults: pressure growth 0; cost+structural uniform loss 0; no case-specific tuning"
+}

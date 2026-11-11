@@ -1,0 +1,16 @@
+{
+  "baseline_commit": "38565fe0adb031251b26c56ae568983393fdd433",
+  "cases": 69,
+  "raw_and_fused": "byte-identical",
+  "normalized": "identical after removing comments; existing pointer-sorted predecessors can change comment order",
+  "modes": [
+    "budget",
+    "legacy",
+    "none"
+  ],
+  "shapes": [
+    "Map-Airy replay",
+    "VLLM recursive",
+    "VLLM balanced"
+  ]
+}

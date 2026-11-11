@@ -2,6 +2,7 @@
 #include "llvm/Config/llvm-config.h"
 #include "llvm/IR/LLVMContext.h"
 #include "llvm/IR/Module.h"
+#include "llvm/IR/ModuleSlotTracker.h"
 #include "llvm/IR/Instructions.h"
 #include "llvm/IR/CFG.h"
 #include "llvm/IR/IntrinsicInst.h"
@@ -53,10 +54,11 @@ int main(int argc,char**argv) {
   json::Array instructions;std::map<std::string,int64_t> histogram;
   std::set<const BasicBlock*> reachable;std::vector<const BasicBlock*> pending{&f->getEntryBlock()};
   while(!pending.empty()){auto*b=pending.back();pending.pop_back();if(!reachable.insert(b).second)continue;for(auto*s:successors(b))pending.push_back(s);}
+  ModuleSlotTracker slots(m.get());slots.incorporateFunction(*f);
   unsigned blockID=0;
   for(auto &b:*f){unsigned bid=blockID++;if(!reachable.count(&b))continue;unsigned iid=0;
    for(auto&i:b){if(isa<DbgInfoIntrinsic>(i))continue;++count;
-    std::string ir;raw_string_ostream stream(ir);i.print(stream);stream.flush();
+    std::string ir;raw_string_ostream stream(ir);i.print(stream,slots);stream.flush();
     std::string key=i.getOpcodeName();
     if(isa<CondBrInst>(i))key="br.conditional";
     if(isa<UncondBrInst>(i))key="br.unconditional";

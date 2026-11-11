@@ -171,7 +171,8 @@ inline bool independentGaps(ArrayRef<Instruction *> A,
 // applies Moves. Virtual order includes operand-select instructions inserted by
 // the emitter, so such instructions are never silently crossed by a gap.
 inline GapPlan planGaps(Function &F, ArrayRef<GapRange> Ranges, int Mode,
-                         unsigned Budget, bool Coalesce,const TargetTransformInfo *TTI=nullptr,unsigned CostThreshold=4) {
+                         unsigned Budget, bool Coalesce,const TargetTransformInfo *TTI=nullptr,unsigned CostThreshold=4,
+                         const DenseMap<Instruction*,bool> *Explicit=nullptr) {
   GapPlan Plan;
   std::vector<GapSegment> Segments;
   DenseMap<Instruction *, bool> Side;
@@ -240,8 +241,23 @@ inline GapPlan planGaps(Function &F, ArrayRef<GapRange> Ranges, int Mode,
     for(unsigned I=0;I<Order.size();++I)Position[Order[I]]=I;
     for (unsigned I = 1; I < Order.size(); ++I) Next[Order[I - 1]] = Order[I];
   }
+  if(Explicit){
+    std::vector<GapSegment> Parts;
+    for(auto &S:Segments){bool First=true,Previous=false;
+      for(auto *I:S.Instructions){bool Want=Explicit->lookup(I);
+        if(First||Want!=Previous)Parts.push_back({S.Left,{}});
+        Parts.back().Instructions.push_back(I);First=false;Previous=Want;
+      }
+    }
+    Segments=std::move(Parts);
+  }
   Plan.Segments = Segments;
   for(auto &S:Segments)Plan.Decisions.push_back(speculation_policy::decide(S.Instructions,Mode,Budget,TTI,CostThreshold,DT,Position));
+  if(Explicit)for(unsigned N=0;N<Segments.size();++N){
+    auto &D=Plan.Decisions[N];bool Want=Explicit->lookup(Segments[N].Instructions.front());
+    if(Want&&(Mode!=3||!D.Safe||!D.Available))throw std::runtime_error("unsafe_or_unavailable_gap_request");
+    D.Speculate=Want;D.Reason=Want?"explicit_safe_speculation":"explicit_protection";
+  }
   if(Mode==3){
    bool Changed;
    do{
@@ -254,6 +270,9 @@ inline GapPlan planGaps(Function &F, ArrayRef<GapRange> Ranges, int Mode,
     }
    }while(Changed);
   }
+  if(Explicit)for(unsigned N=0;N<Segments.size();++N)
+    if(Explicit->lookup(Segments[N].Instructions.front())&&!Plan.Decisions[N].Speculate)
+      throw std::runtime_error("requested_gap_depends_on_protected_definition");
   std::vector<GapSegment> Guarded;
   for(unsigned n=0;n<Segments.size();++n){if(Plan.Decisions[n].Speculate)Plan.Speculated.push_back(Segments[n]);else Guarded.push_back(Segments[n]);}
   for (unsigned I = 0; I < Guarded.size(); ++I) {
