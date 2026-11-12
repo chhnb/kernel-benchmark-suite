@@ -15,6 +15,21 @@
       "kind": "hip-code-object",
       "gpu_execution": false
     },
+    "hip-software-shared-source": {
+      "argv": [
+        "/opt/rocm/bin/hipcc",
+        "--genco",
+        "--offload-arch=gfx906",
+        "-ffp-contract=off",
+        "-O3",
+        "{case}/source/cache-portable.hip",
+        "-o",
+        "{out}/kernel.hsaco"
+      ],
+      "artifact": "kernel.hsaco",
+      "kind": "hip-code-object",
+      "gpu_execution": false
+    },
     "cuda-software-nvcc": {
       "argv": [
         "/usr/local/cuda-12.9/bin/nvcc",
