@@ -62,7 +62,7 @@ struct PreparedDecision {
  BasicBlock *binding=nullptr;
  BasicBlock *join=nullptr;
  std::vector<BasicBlock*> originalBlocks;
- std::string decision, left, right;
+ std::string decision, left, right, requestedPlan;
  unsigned armCount=0;
  bool localPair=false;
 };
@@ -99,7 +99,7 @@ static int runDecisionTrial(int argc,char **argv,Module &parent,
  bool sideBeforeOK=false;
  std::vector<WeakVH> originalBlocks;
  BasicBlock *dispatch=nullptr,*bindingEntry=nullptr,*trialExit=nullptr;
- std::string decisionID,reason;
+ std::string decisionID,reason,requestedPlan;
  unsigned armCount=0;
  bool localPair=false;
  if(reuse){
@@ -107,6 +107,7 @@ static int runDecisionTrial(int argc,char **argv,Module &parent,
    dispatch=mapBlock(prepared->dispatch);bindingEntry=mapBlock(prepared->binding);
    trialExit=mapBlock(prepared->join);localPair=prepared->localPair;armCount=prepared->armCount;decisionID=prepared->decision;
    for(auto *block:prepared->originalBlocks)originalBlocks.emplace_back(mapBlock(block));
+   requestedPlan=prepared->requestedPlan;
    report["decision"]=decisionID;report["left"]=prepared->left;report["right"]=prepared->right;
  }else{
  if(cleanup=="full")for(auto &bb:*f)for(auto &i:bb)if(auto *cb=dyn_cast<CallBase>(&i))if(cb->isConvergent())return finish("full_cleanup_function_contains_convergent",3);
@@ -143,6 +144,11 @@ static int runDecisionTrial(int argc,char **argv,Module &parent,
    for(unsigned l=0;l+1<ds[d].arms.size();++l)
     if(ds[d].arms[l].id==*left&&ds[d].arms[l+1].id==*right){di=d;li=l;++matches;}
   if(matches!=1)return finish("requested_pair_not_unique_or_adjacent",3);
+  if(auto plan=o->getString("anchor_plan")){
+   if(*plan!="single-anchor"&&*plan!="multi-anchor")
+    return finish("invalid_anchor_plan",3);
+   requestedPlan=plan->str();
+  }
   if(uniformReport)if(auto *tracking=o->getObject("uniform_tracking")){
    decision::UniformCoordinates coords(*f);
    auto *anchors=tracking->getArray("anchors");
@@ -192,6 +198,7 @@ static int runDecisionTrial(int argc,char **argv,Module &parent,
     auto mapBlock=[&](BasicBlock *block){return cast<BasicBlock>(snapshot.lookup(block));};
     prepared->dispatch=mapBlock(dispatch);prepared->binding=mapBlock(bindingEntry);
     prepared->join=mapBlock(trialExit);prepared->localPair=localPair;prepared->armCount=armCount;
+    prepared->requestedPlan=requestedPlan;
     prepared->decision=decisionID;prepared->left=ds[di].arms[li].id;prepared->right=ds[di].arms[li+1].id;
     for(auto &handle:originalBlocks)if(auto *block=dyn_cast_or_null<BasicBlock>((Value*)handle))
       prepared->originalBlocks.push_back(mapBlock(block));
@@ -233,7 +240,9 @@ static int runDecisionTrial(int argc,char **argv,Module &parent,
  json::Array segments;
  std::unique_ptr<decision::SpeculationTTI> speculationTTI;
  if(mode==3){try{speculationTTI=std::make_unique<decision::SpeculationTTI>(*f);}catch(const std::exception&e){return finish(e.what(),3);}}
- const bool multiAnchor=localPair&&!bothLinear;
+ const bool multiAnchor=requestedPlan.empty()?localPair&&!bothLinear:requestedPlan=="multi-anchor";
+ if(multiAnchor&&bothLinear)return finish("multi_anchor_requires_se_se_arm",3);
+ if(!requestedPlan.empty())report["anchor_plan"]=requestedPlan;
  if(multiAnchor){
   fusion::LeafArm a{left,{leftArm->blocks.begin(),leftArm->blocks.end()}};
   fusion::LeafArm b{right,{rightArm->blocks.begin(),rightArm->blocks.end()}};

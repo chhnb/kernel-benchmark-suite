@@ -99,6 +99,7 @@ inline int searchGapPlans(int Argc,char **Argv,int Mode,
     return RC;
   };
   unsigned Trials=0;json::Array Trace;
+  json::Value InitialRejection=nullptr;
   struct Candidate {GapSearchState State;std::string Dir;int64_t Cost;json::Value Report;std::string RawIR;};
   std::set<GapSearchState> Visited;
   auto Evaluate=[&](const GapSearchState &S,StringRef Action,
@@ -114,6 +115,7 @@ inline int searchGapPlans(int Argc,char **Argv,int Mode,
     auto *Report=Result.Report.getAsObject();
     if(RC){
       if(Report)if(auto Reason=Report->getString("reason"))Row["reason"]=Reason->str();
+      if(Trials==1&&Report)InitialRejection=std::move(Result.Report);
       Trace.push_back(std::move(Row));
       return nullptr;
     }
@@ -151,7 +153,11 @@ inline int searchGapPlans(int Argc,char **Argv,int Mode,
     return std::unique_ptr<Candidate>(new Candidate{S,Dir,Cost,std::move(Result.Report),std::move(Result.RawIR)});
   };
   auto Current=Evaluate(GapSearchState{},"all-gaps-protected");
-  if(!Current)throw std::runtime_error("initial protected gap plan rejected");
+  if(!Current){
+    if(InitialRejection.getAsObject())
+      writeGapJSON(Out+"/trial.json",InitialRejection);
+    throw std::runtime_error("initial protected gap plan rejected");
+  }
   int64_t Initial=Current->Cost;json::Array Accepted;
   for(unsigned Round=0;;++Round) {
     if(Round>=100000)throw std::runtime_error("gap search round limit");

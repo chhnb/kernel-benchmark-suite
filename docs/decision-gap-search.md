@@ -311,8 +311,14 @@ suffix. The decision join still defines the uniform-cost accounting
 scope, including reachable shared suffixes. Both joins appear in
 verified trial reports.
 
-Non-linear pairs with a local exit use the same protected multi-anchor
-plan as the complete-leaf search. This plan moves only mandatory load
+For a pair with a SESE arm, greedy generates both a single-anchor trial
+and a protected multi-anchor trial from the same parent. Both go through
+verification, LLVM24 TTI scoring and the usual pressure checks. The
+lowest eligible TTI wins. Ties preserve the previous preference
+(multi-anchor for a local exit and single-anchor for a regular exit).
+Both trial reports record `pair_plan_scores`, including rejection
+reasons when a plan cannot produce a score. Linear pairs retain one
+B2B trial. The multi-anchor plan shares the complete-leaf implementation. This plan moves only mandatory load
 dependency chains to their own leaf prefix and aligns compatible
 mutually exclusive blocks under the original selector. The compound
 plan is verified and scored once. The existing same-join plans and
@@ -325,8 +331,11 @@ Its trial uses `complete-leaf-multi-anchor`, with `%if.end52` as the
 pair join and `%cleanup65` as the decision join. Four anchors move 22
 mandatory load-chain instructions and reduce LLVM24 TTI from 1915 to
 1810. The following local merge reduces it to 1787. Both transactions
-pass. The L1 + L2 checkpoint uses 91 VGPR and 62 SGPR, with no spills and
-two active workgroups per CU. After rebinding, the merged arm still exits
+pass. On the L1 + L2 checkpoint, VGPR count goes from 92 to 91 and SGPR
+count goes from 54 to 62. Both endpoints have no spills and two active
+workgroups per CU. The single-anchor plan scores 1938 for this same
+pair, and the four-anchor plan scores 1810. The unmerged parent scores
+1915. After rebinding, the merged arm still exits
 at `%if.end52`, since L0 also reaches it. L3 exits at `%cleanup65` and its
 store leaves the arm unsupported.
 
@@ -334,7 +343,8 @@ The Radeon VII synthetic replay used the same recovered IR and input for
 all roles. All outputs agreed exactly. The medians were 2.023 ms unmerged,
 1.992 ms with the original greedy, 1.963 ms with the archived explicit
 plan, and 1.957 ms with the current greedy. The last role reduced the
-median paired time by 3.25% versus unmerged. The historical frozen-input
+median paired time by 3.25% versus unmerged and was effectively tied
+with the archived explicit plan on that input. The historical frozen-input
 experiment measured 4.86% and 4.81% on steps 1 and 24. Those input files
 were unavailable for this replay, so the current frozen 2% gate remains
 unverified.
@@ -345,7 +355,11 @@ decisions tagged by anchor. The Hypersonic trial used one must-execute
 pair on both sides and three optional pairs. In a separate first-pair
 ablation, the required-only plan ran in 1.986 ms and the complete plan
 in 1.963 ms, against 2.022 ms unmerged on the same synthetic input. The
-required-only TTI was 1931, above the unmerged 1915. These measurements
+required-only TTI was 1931, above the unmerged 1915. The strict static
+gain rule would therefore reject that plan despite the measured
+speedup. This is a known ranking limitation for guarded multi-anchor
+plans. Reconvergence and load motion are possible contributors.
+These measurements
 compare the two compound plans. Individual optional-anchor effects
 were not isolated.
 
@@ -360,3 +374,14 @@ The vLLM replay evaluated 908 trials and retained the original 236
 selections, including 224 tree merges. The ordered pair IDs and TTI
 scores matched. LLVM12 bitcode was byte-identical, and the textual IR
 differed only in the ModuleID path.
+
+The plan-choice replay kept the original selected sequence and final
+LLVM12 bitcode in vLLM (236 selections), Map-Airy (25), TIGRE (5), and
+Hypersonic (2). Hypersonic selected the multi-anchor plan above. Three
+TIGRE pairs selected single-anchor after the multi-anchor trials found
+no compatible anchors. Map-Airy evaluated one additional plan without
+changing its selection. These results were obtained on epyc.
+The musa machine has an NVIDIA TITAN V, and the frozen references are
+AMDGPU gfx906 code objects. The frozen three-case performance gate
+requires a compatible AMD GPU and the original reference files and
+fixtures.

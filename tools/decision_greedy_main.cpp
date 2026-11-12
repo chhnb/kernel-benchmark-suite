@@ -149,28 +149,39 @@ int main(int argc,char**argv){try{
   }
   int64_t bestCost=parentCost;std::string best;Pair bestPair;json::Array attempts;
   json::Value bestTracking=nullptr;
-  struct Trial { unsigned left; std::string dir; int rc; };
-  std::vector<Trial> evaluated;
-  unsigned next=0;
-  while(next+1<d.arms.size()){
+  struct Trial { unsigned left; StringRef plan; std::string dir; int rc; };
+  std::vector<Trial> pending,evaluated;
+  for(unsigned left=0;left+1<d.arms.size();++left){
+   if(!d.pairs[left].join||blacklist.count(pairKey(d.arms[left],d.arms[left+1])))continue;
+   bool hasSESE=d.arms[left].kind==decision::ArmKind::SESE||
+                d.arms[left+1].kind==decision::ArmKind::SESE;
+   if(!hasSESE){pending.push_back({left,{},{},-1});continue;}
+   // Preserve the previous preference only when both scores tie.
+   bool local=d.pairs[left].join!=d.join;
+   pending.push_back({left,local?"multi-anchor":"single-anchor",{},-1});
+   pending.push_back({left,local?"single-anchor":"multi-anchor",{},-1});
+  }
+  size_t next=0;
+  while(next<pending.size()){
    std::vector<sys::ProcessInfo> running;
    const size_t start=evaluated.size();
-   while(next+1<d.arms.size()&&evaluated.size()-start<size_t(jobs)){
-    unsigned left=next++;
-    if(!d.pairs[left].join||blacklist.count(pairKey(d.arms[left],d.arms[left+1])))continue;
+   while(next<pending.size()&&evaluated.size()-start<size_t(jobs)){
+    auto candidate=pending[next++];
+    auto left=candidate.left;
     if(trials>=100000)throw std::runtime_error("trial budget exceeded");
     std::string dir=out+"/trial-"+std::to_string(trials++);
     json::Object request{{"decision",target},{"left",d.arms[left].id},{"right",d.arms[left+1].id}};
+    if(!candidate.plan.empty())request["anchor_plan"]=candidate.plan.str();
     if(transactional)request["uniform_tracking"]=prefixes.back().tracking;
     save(dir+".request.json",json::Value(std::move(request)));
     std::vector<std::string> args{root+"/build/decision-fuse/decision-fuse",current,fn,
         std::to_string(di),std::to_string(left),dir,out+"/order.json",dir+".request.json"};
     if(jobs==1){
       int rc=run(std::move(args),dir+".stdout",dir+".stderr");
-      evaluated.push_back({left,std::move(dir),rc});
+      evaluated.push_back({left,candidate.plan,std::move(dir),rc});
     }else{
       running.push_back(startTrial(args,dir));
-      evaluated.push_back({left,std::move(dir),-1});
+      evaluated.push_back({left,candidate.plan,std::move(dir),-1});
     }
    }
    for(size_t i=0;i<running.size();++i)
@@ -178,12 +189,14 @@ int main(int argc,char**argv){try{
       evaluated[start+i].rc=sys::Wait(running[i],120,false).ReturnCode;
   }
   // Rank in the original adjacency order so ties select the same trial.
+  std::map<unsigned,json::Array> planScores;
   for(const auto &trial:evaluated){
    const auto left=trial.left;
    const auto &dir=trial.dir;
    const int rc=trial.rc;
    json::Object attempt{{"directory",dir},{"left",d.arms[left].id},
                         {"right",d.arms[left+1].id},{"exit_code",rc}};
+   if(!trial.plan.empty())attempt["anchor_plan"]=trial.plan.str();
    if(transactional){
     auto pair=pairKey(d.arms[left],d.arms[left+1]);
     attempt["pair_key"]=json::Array{pair.first,pair.second};
@@ -191,6 +204,8 @@ int main(int argc,char**argv){try{
    if(rc){if(sys::fs::exists(dir+"/trial.json")){auto v=read(dir+"/trial.json");auto*r=v.getAsObject();if(r)if(auto reason=r->getString("reason"))attempt["reason"]=reason->str();}else attempt["reason"]="trial_process_failed";}
    else{auto verified=read(dir+"/trial.json");auto *actual=verified.getAsObject();
     if(!actual||actual->getString("decision")!=Optional<StringRef>(target)||actual->getString("left")!=Optional<StringRef>(d.arms[left].id)||actual->getString("right")!=Optional<StringRef>(d.arms[left+1].id))throw std::runtime_error("trial identity mismatch: "+dir);
+    if(!trial.plan.empty()&&actual->getString("anchor_plan")!=Optional<StringRef>(trial.plan))
+      throw std::runtime_error("trial anchor plan mismatch: "+dir);
     auto c=cost(dir+"/fused.ll",dir+"/tti");attempt["cost"]=c;attempt["gain"]=parentCost-c;std::string reject;
     auto *pb=actual->getObject("ir_pressure_before"),*pa=actual->getObject("ir_pressure");
     if(!pa||pa->getBoolean("complete")!=Optional<bool>(true)||!pa->getInteger("peak_slots32")||(!transactional&&(!pb||pb->getBoolean("complete")!=Optional<bool>(true)||!pb->getInteger("peak_slots32"))))reject="pressure_metrics_unavailable";
@@ -211,7 +226,33 @@ int main(int argc,char**argv){try{
       if(!tracking)throw std::runtime_error("missing checkpoint tracking: "+dir);
       bestTracking=json::Object(*tracking);
      }}}
+   if(!trial.plan.empty()){
+    json::Object score{{"plan",trial.plan.str()},{"directory",dir},{"exit_code",rc}};
+    if(auto value=attempt.getInteger("cost")){
+     score["cost"]=*value;
+     score["gain"]=parentCost-*value;
+     score["eligible"]=attempt.getBoolean("eligible").getValueOr(false);
+    }
+    if(auto reason=attempt.getString("reason"))score["reason"]=reason->str();
+    else if(auto gain=attempt.getInteger("gain"))if(*gain<=0)score["reason"]="non_improving_tti";
+    planScores[left].push_back(std::move(score));
+   }
    attempts.push_back(std::move(attempt));
+  }
+  for(const auto &trial:evaluated)if(!trial.plan.empty()){
+   auto path=trial.dir+"/trial.json";
+   json::Object report;
+   if(sys::fs::exists(path)){
+    auto value=read(path);
+    if(auto *object=value.getAsObject())report=std::move(*object);
+   }else{
+    if(auto error=sys::fs::create_directories(trial.dir))throw std::runtime_error(error.message());
+    report=json::Object{{"decision",target},{"left",d.arms[trial.left].id},
+       {"right",d.arms[trial.left+1].id},{"status","rejected"},{"reason","trial_process_failed"}};
+   }
+   report["anchor_plan"]=trial.plan.str();
+   report["pair_plan_scores"]=json::Array(planScores.at(trial.left));
+   save(path,json::Value(std::move(report)));
   }
   if(transactional&&!uniformOriginal)uniformOriginal=std::move(m);
   json::Object record{{"decision",target},{"iteration",int64_t(iteration)},{"parent",current},{"parent_cost",parentCost},{"attempts",std::move(attempts)},{"selected",best}};

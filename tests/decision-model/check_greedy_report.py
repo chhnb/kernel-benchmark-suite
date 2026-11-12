@@ -5,6 +5,10 @@ import sys
 
 def audit_round(row, parent, cost, blacklist):
     assert row['parent'] == parent and row['parent_cost'] == cost
+    by_pair = {}
+    for attempt in row['attempts']:
+        if 'anchor_plan' in attempt:
+            by_pair.setdefault((attempt['left'], attempt['right']), []).append(attempt)
     for attempt in row['attempts']:
         assert tuple(attempt.get('pair_key', ())) not in blacklist
         trial = Path(attempt['directory']) / 'trial.json'
@@ -15,6 +19,17 @@ def audit_round(row, parent, cost, blacklist):
                     row['decision'], attempt['left'], attempt['right'])
         if 'cost' in attempt:
             assert trial.exists() and actual['status'] == 'verified'
+        if 'anchor_plan' in attempt:
+            assert trial.exists() and actual['anchor_plan'] == attempt['anchor_plan']
+            alternatives = by_pair[attempt['left'], attempt['right']]
+            scores = actual['pair_plan_scores']
+            assert {a['anchor_plan'] for a in alternatives} == {'single-anchor', 'multi-anchor'}
+            assert len(scores) == len(alternatives) == 2
+            for score, other in zip(scores, alternatives):
+                assert score['plan'] == other['anchor_plan']
+                assert score['directory'] == other['directory']
+                for key in ('exit_code', 'cost', 'gain', 'eligible'):
+                    assert score.get(key) == other.get(key)
 
     scored = [a for a in row['attempts'] if 'cost' in a and a.get('eligible', True)]
     if not row['selected']:

@@ -52,4 +52,64 @@ with tempfile.TemporaryDirectory(prefix="multi-anchor-") as temp:
         subprocess.run([os.getenv("CLANG", "clang"),out/"main.c",out/"original.ll",
                         out/"fused.ll","-o",out/"check"],check=True)
         subprocess.run([out/"check"],check=True)
+    # Give all plans the same mock TTI so the initial catalogs can be audited
+    # without committing a change. Exercise both equal and different joins.
+    driver = out/"driver"
+    (driver/"build/decision-fuse").mkdir(parents=True)
+    (driver/"build/decision-fuse/decision-fuse").symlink_to(tools/"decision-fuse")
+    (driver/"tools").mkdir()
+    worker = driver/"tools/run-llvm24-tti"
+    worker.write_text("#!/usr/bin/env python3\nprint(" + repr(json.dumps({
+        "source_revision": "6be16f356d3e", "unknown": 0,
+        "cost": 100, "instruction_costs": []})) + ")\n")
+    worker.chmod(0o755)
+    same = out/"same-join.ll"
+    same.write_text(fixture.read_text().replace(
+        "third:\n  br label %exit", "third:\n  br label %shared").replace(
+        "[ %ro, %rt ]", "[ %ro, %rt ], [ -0.0, %third ]").replace(
+        "[ %v, %shared ], [ -0.0, %third ]", "[ %v, %shared ]"))
+    env["DECISION_CHECKPOINT_MODE"] = "off"
+    for name, source, local in (("local", fixture, True), ("same", same, False)):
+        result = out/name
+        subprocess.run([tools/"decision-greedy", source, "evaluate", driver, result],
+                       env=env, check=True)
+        summary = json.loads((result/"summary.json").read_text())
+        pair = [a for r in summary["rounds"] for a in r["attempts"]
+                if (a["left"], a["right"]) == ("evaluate:%left", "evaluate:%right")]
+        assert {a["anchor_plan"] for a in pair} == {"single-anchor", "multi-anchor"}
+        for attempt in pair:
+            report = json.loads((Path(attempt["directory"])/"trial.json").read_text())
+            assert (report["pair_join"] != report["decision_join"]) == local
+            if attempt["exit_code"] == 0:
+                expected = ("complete-leaf-multi-anchor" if attempt["anchor_plan"] == "multi-anchor"
+                            else "native-must-execute-anchors")
+                assert report["plan"] == expected
+            assert {s["plan"] for s in report["pair_plan_scores"]} == {
+                "single-anchor", "multi-anchor"}
+        subprocess.run(["python3", Path(__file__).with_name("check_greedy_report.py"),
+                        result/"summary.json"],check=True)
+    # Gap search must retain the actual initial-plan rejection for reporting.
+    order = out/"order.json"
+    order.write_text("[]")
+    request = out/"request.json"
+    request.write_text(json.dumps({"decision":"evaluate:%entry", "left":"evaluate:%a",
+                                   "right":"evaluate:%b", "anchor_plan":"multi-anchor"}))
+    linear = out/"linear.ll"
+    linear.write_text("""define i32 @evaluate(i1 %flag, i32 %x) {
+entry: br i1 %flag, label %a, label %b
+a: %l = add i32 %x, 1
+   br label %exit
+b: %r = add i32 %x, 2
+   br label %exit
+exit: %out = phi i32 [ %l, %a ], [ %r, %b ]
+      ret i32 %out
+}
+""")
+    env["DECISION_GAP_SEARCH"] = "1"
+    rejected = out/"rejected"
+    result = subprocess.run([tools/"decision-fuse",linear,"evaluate","0","0",rejected,
+                             order,request],env=env,capture_output=True,text=True)
+    assert result.returncode != 0
+    report = json.loads((rejected/"trial.json").read_text())
+    assert report["reason"] == "multi_anchor_requires_se_se_arm"
 print("Multi-anchor and swapped catalog: 2744 CPU cases each, including NaN, infinities and signed zeros")
