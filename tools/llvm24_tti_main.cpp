@@ -4,6 +4,7 @@
 #include "llvm/IR/Module.h"
 #include "llvm/IR/ModuleSlotTracker.h"
 #include "llvm/IR/Instructions.h"
+#include "llvm/IR/InlineAsm.h"
 #include "llvm/IR/CFG.h"
 #include "llvm/IR/IntrinsicInst.h"
 #include "llvm/IR/Verifier.h"
@@ -63,7 +64,20 @@ int main(int argc,char**argv) {
     bool ttiValid=cost.isValid();
     auto v=ttiValid?cost.getValue():0;
     std::string reason;
-    if(auto*c=dyn_cast<CallBase>(&i))if(!c->getCalledFunction()||!c->getCalledFunction()->isIntrinsic())reason="opaque_call_cost_not_whole_callee_cost";
+    if (auto *call = dyn_cast<CallBase>(&i)) {
+      if (auto *assembly = dyn_cast<InlineAsm>(call->getCalledOperand())) {
+        // This exact NVPTX instruction has no hidden callee body.
+        if (!triple.isNVPTX() || assembly->hasSideEffects() ||
+            assembly->getAsmString() != "rcp.approx.ftz.f32 $0,$1;" ||
+            assembly->getConstraintString() != "=f,f" ||
+            !call->getType()->isFloatTy() || call->arg_size() != 1 ||
+            !call->getArgOperand(0)->getType()->isFloatTy())
+          reason = "unsupported_inline_assembly_cost";
+      } else if (!call->getCalledFunction() ||
+                 !call->getCalledFunction()->isIntrinsic()) {
+        reason = "opaque_call_cost_not_whole_callee_cost";
+      }
+    }
     if(!ttiValid||v<0)reason="invalid_tti_cost";
     bool valid=reason.empty();
     if(valid){total+=v;zero+=v==0;}else ++unknown;

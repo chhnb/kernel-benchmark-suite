@@ -6,8 +6,11 @@
   "helper_extraction": false,
   "profiles": {
     "cuda-o3": {
+      "inlining": "Raise the LLVM12 inline threshold so the complete partPushK input exposes the device-function bodies to whole-function TTI scoring. Use the same IR for baseline, DARM, and greedy.",
       "argv": [
         "/home/chh/region-fusion-lab/toolchains/llvm12/amd-bootstrap/bin/clang",
+        "-mllvm",
+        "-inline-threshold=100000",
         "-x",
         "cuda",
         "--cuda-device-only",
