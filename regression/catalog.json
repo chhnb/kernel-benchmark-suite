@@ -18,6 +18,14 @@
       "snapshot": "golden/20261109-gfx906-v1",
       "runner": "tools/run_golden_regression.py",
       "input": "head64 phantom 50 projections"
+    },
+    "hypersonic-3d": {
+      "hardware": "NVIDIA TITAN V (sm_70)",
+      "runner": "cases/hypersonic-3d/Makefile",
+      "reference": "records/20261112/hypersonic-3d-sm70.json",
+      "input": "frozen 12-step sphere-flow state on 64^3 and 96^3 grids",
+      "gate": "paired greedy-vs-baseline speedup floors in the benchmark target",
+      "target": "benchmark"
     }
   },
   "generated_input_policy": "temporary; delete after success; never git"

@@ -1,0 +1,17 @@
+{
+  "name": "hypersonic-3d",
+  "enabled": true,
+  "status": "positive_sm70",
+  "kernel": "k_step",
+  "backend": "cuda",
+  "reference_gpu": "NVIDIA TITAN V (sm_70)",
+  "upstream": {
+    "repository": "https://github.com/seanwevans/fluid-sims.git",
+    "revision": "cffb0e8f5e137193c50e9812fd88cb628ded4ccf",
+    "file": "tau_hypersonic_3d_cuda.cu",
+    "sha256": "533edca7dacd1f6353ecae8ad643028e7c16ea72bae71098000ed03cec19602a"
+  },
+  "runner": "cases/hypersonic-3d/Makefile",
+  "reference": "regression/records/20261112/hypersonic-3d-sm70.json",
+  "target": "benchmark"
+}

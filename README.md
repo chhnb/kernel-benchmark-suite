@@ -46,3 +46,4 @@ python3 tools/suite.py build srad --profile hip-o3-binary --out results/srad-bui
 For a fresh checkout on another machine, see [portable VLLM and Map-Airy benchmarks](docs/portable-benchmarks.md).
 
 The [benchmark case inventory](docs/benchmark-case-inventory.md) lists the checked-in case manifests and their runtime requirements.
+The [AMD and CUDA comparison entry points](benchmarks/README.md) build and replay Baseline, native DARM, and automatic greedy.

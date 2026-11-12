@@ -1,0 +1,255 @@
+{
+  "gpu": "NVIDIA TITAN V sm_70",
+  "source_revision": "cffb0e8f5e137193c50e9812fd88cb628ded4ccf",
+  "kernel": "k_step",
+  "input": "Sphere flow evolved 12 steps using upstream NVCC, frozen single-step replay; same inlined LLVM12 starting IR for all three binaries.",
+  "validation": "Full six arrays and maximum wave speed compared against LLVM12 baseline each launch, atol=3e-5 rtol=5e-5.",
+  "resources": {
+    "registers_per_thread": {
+      "baseline": 141,
+      "greedy": 141,
+      "darm": 151
+    },
+    "dynamic_shared_bytes": 49000,
+    "active_blocks_per_sm": 1,
+    "spill_bytes": 0
+  },
+  "greedy_commits": 19,
+  "darm_profitable_melding_log_entries": 27,
+  "darm_artifact_revision": "e9bc054",
+  "cubin_sha256": {
+    "baseline": "73dbae3453d4dd8dab09a7e132044e696f2ceae07197a5232a3b69228942962f",
+    "greedy": "251c2adb357ac97112b3cc6f72cb15fcfdb37a898203fe708d035e441ca0ec42",
+    "darm": "c423cd6836535edc356cff581077d7677635a30841e7da22d076013750354192"
+  },
+  "results": {
+    "64": {
+      "median_us": {
+        "baseline": 1394.6880493165,
+        "greedy": 1283.583984375,
+        "darm": 1382.91204834
+      },
+      "median_paired_delta_pct": {
+        "greedy_vs_baseline": -7.20286415389555,
+        "darm_vs_baseline": -0.8445103805929444,
+        "greedy_vs_darm": -6.805521911877365
+      },
+      "samples_us": {
+        "3": {
+          "baseline": 1359.871948242,
+          "greedy": 1319.936035156,
+          "darm": 1393.6640625
+        },
+        "4": {
+          "greedy": 1310.719970703,
+          "darm": 1383.424072266,
+          "baseline": 1406.975952148
+        },
+        "5": {
+          "darm": 1376.255981445,
+          "baseline": 1368.064086914,
+          "greedy": 1282.047973633
+        },
+        "6": {
+          "baseline": 1400.83203125,
+          "greedy": 1297.407958984,
+          "darm": 1393.6640625
+        },
+        "7": {
+          "greedy": 1308.67199707,
+          "darm": 1382.400024414,
+          "baseline": 1413.119995117
+        },
+        "8": {
+          "darm": 1364.99206543,
+          "baseline": 1393.6640625,
+          "greedy": 1275.904052734
+        },
+        "9": {
+          "baseline": 1381.375976562,
+          "greedy": 1272.83203125,
+          "darm": 1369.088012695
+        },
+        "10": {
+          "greedy": 1283.072021484,
+          "darm": 1387.519897461,
+          "baseline": 1375.231933594
+        },
+        "11": {
+          "darm": 1371.135986328,
+          "baseline": 1370.111938477,
+          "greedy": 1281.023925781
+        },
+        "12": {
+          "baseline": 1404.927978516,
+          "greedy": 1270.784057617,
+          "darm": 1393.695922852
+        },
+        "13": {
+          "greedy": 1304.576049805,
+          "darm": 1396.736083984,
+          "baseline": 1395.712036133
+        },
+        "14": {
+          "darm": 1366.015991211,
+          "baseline": 1402.880004883,
+          "greedy": 1259.520019531
+        },
+        "15": {
+          "baseline": 1406.975952148,
+          "greedy": 1290.239990234,
+          "darm": 1380.352050781
+        },
+        "16": {
+          "greedy": 1270.784057617,
+          "darm": 1383.424072266,
+          "baseline": 1412.096069336
+        },
+        "17": {
+          "darm": 1377.280029297,
+          "baseline": 1355.776000977,
+          "greedy": 1284.095947266
+        },
+        "18": {
+          "baseline": 1377.280029297,
+          "greedy": 1287.16796875,
+          "darm": 1387.519897461
+        },
+        "19": {
+          "greedy": 1276.927978516,
+          "darm": 1388.543945312,
+          "baseline": 1404.927978516
+        },
+        "20": {
+          "darm": 1369.088012695,
+          "baseline": 1389.567993164,
+          "greedy": 1280.0
+        },
+        "21": {
+          "baseline": 1399.808105469,
+          "greedy": 1301.50402832,
+          "darm": 1373.183959961
+        },
+        "22": {
+          "greedy": 1295.359985352,
+          "darm": 1390.591918945,
+          "baseline": 1390.624023438
+        }
+      }
+    },
+    "96": {
+      "median_us": {
+        "baseline": 3851.7760009764997,
+        "greedy": 3598.8480224610003,
+        "darm": 3890.6879882815
+      },
+      "median_paired_delta_pct": {
+        "greedy_vs_baseline": -6.653357101140855,
+        "darm_vs_baseline": 1.0621338690555704,
+        "greedy_vs_darm": -7.289469333568105
+      },
+      "samples_us": {
+        "3": {
+          "baseline": 3861.504150391,
+          "greedy": 3566.592041016,
+          "darm": 3891.199951172
+        },
+        "4": {
+          "greedy": 3601.407958984,
+          "darm": 3866.624023438,
+          "baseline": 3869.695800781
+        },
+        "5": {
+          "darm": 3908.607910156,
+          "baseline": 3858.432128906,
+          "greedy": 3608.576171875
+        },
+        "6": {
+          "baseline": 3867.647949219,
+          "greedy": 3590.143798828,
+          "darm": 3867.647949219
+        },
+        "7": {
+          "greedy": 3594.239990234,
+          "darm": 3921.920166016,
+          "baseline": 3841.023925781
+        },
+        "8": {
+          "darm": 3895.296142578,
+          "baseline": 3842.047851562,
+          "greedy": 3580.927978516
+        },
+        "9": {
+          "baseline": 3823.615966797,
+          "greedy": 3607.552001953,
+          "darm": 3880.959960938
+        },
+        "10": {
+          "greedy": 3580.927978516,
+          "darm": 3890.176025391,
+          "baseline": 3838.975830078
+        },
+        "11": {
+          "darm": 3891.199951172,
+          "baseline": 3841.023925781,
+          "greedy": 3609.600097656
+        },
+        "12": {
+          "baseline": 3867.647949219,
+          "greedy": 3608.576171875,
+          "darm": 3881.983886719
+        },
+        "13": {
+          "greedy": 3584.0,
+          "darm": 3891.199951172,
+          "baseline": 3856.384033203
+        },
+        "14": {
+          "darm": 3889.152099609,
+          "baseline": 3818.49609375,
+          "greedy": 3631.104003906
+        },
+        "15": {
+          "baseline": 3847.16796875,
+          "greedy": 3594.239990234,
+          "darm": 3907.583984375
+        },
+        "16": {
+          "greedy": 3596.288085938,
+          "darm": 3871.743896484,
+          "baseline": 3868.671875
+        },
+        "17": {
+          "darm": 3865.600097656,
+          "baseline": 3858.432128906,
+          "greedy": 3603.456054688
+        },
+        "18": {
+          "baseline": 3856.384033203,
+          "greedy": 3596.288085938,
+          "darm": 3903.488037109
+        },
+        "19": {
+          "greedy": 3605.504150391,
+          "darm": 3891.199951172,
+          "baseline": 3865.600097656
+        },
+        "20": {
+          "darm": 3910.656005859,
+          "baseline": 3838.975830078,
+          "greedy": 3616.767822266
+        },
+        "21": {
+          "baseline": 3843.072021484,
+          "greedy": 3594.239990234,
+          "darm": 3870.719970703
+        },
+        "22": {
+          "greedy": 3603.456054688,
+          "darm": 3864.576171875,
+          "baseline": 3847.16796875
+        }
+      }
+    }
+  }
+}

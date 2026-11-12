@@ -33,6 +33,10 @@ python3 tools/run_cpu.py UNIQUE_LABEL python3 /home/chh/kernel-benchmark-suite/r
 python3 tools/run_cpu.py UNIQUE_LABEL python3 /home/chh/kernel-benchmark-suite/regression/prepare_current_generated.py /absolute/new-current-build
 ```
 
+## 3D Hypersonic（TITAN V）
+
+`hypersonic-3d` 是独立的 CUDA 收益回归，测完整 `k_step` 的 64³ 和 96³ 球体绕流快照。两档相对同批 LLVM12 baseline 的冻结配对收益为 7.20% 和 6.65%。当前阈值分别为 5.20% 和 4.65%。用 case 的 `make benchmark` 构建并运行 C++/CUDA harness。[复跑命令与编译流程](../cases/hypersonic-3d/README.md) · [三组冻结记录](records/20261112/hypersonic-3d-sm70.json)
+
 ## TIGRE 和历史记录
 
 TIGRE 沿用 `tools/run_golden_regression.py tigre --candidate /absolute/current-tigre.hsaco --out /absolute/new-tigre-run` 与现有冻结 head64/50 projections 基准。
