@@ -109,7 +109,11 @@ inline GapDecision decide(ArrayRef<Instruction*> Instructions,int Mode,unsigned 
   if(Mode==3&&(I->getOpcode()==Instruction::SDiv||I->getOpcode()==Instruction::UDiv||I->getOpcode()==Instruction::SRem||I->getOpcode()==Instruction::URem))Safe=false;
   if(Mode==3)if(auto *CB=dyn_cast<CallBase>(I))if(!isa<IntrinsicInst>(CB))Safe=false;
   D.Safe &= Safe;
+#ifdef FUSION_PACKAGED_LLVM12
+  int C=TTI?TTI->getInstructionCost(I,TargetTransformInfo::TCK_SizeAndLatency).getValue().getValueOr(-1):-1;
+#else
   int C=TTI?TTI->getInstructionCost(I,TargetTransformInfo::TCK_SizeAndLatency):-1;
+#endif
   if(C<0)D.TTI=-1;else if(D.TTI>=0)D.TTI+=C;
   D.Instructions.push_back({I->getOpcodeName(),W,C,Safe});
   for(auto &Op:I->operands())if(auto *Def=dyn_cast<Instruction>(Op.get())){

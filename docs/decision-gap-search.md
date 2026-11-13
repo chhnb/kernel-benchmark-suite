@@ -42,9 +42,43 @@ the checkpoint policy, after eligibility has been checked.
 Only strict improvements are accepted, with deterministic alignment/segment
 order for ties. Visited states are retained and each split is irreversible.
 `gap-search.json` records every attempted state, rejection, cost and accepted
-step. The chosen child's IR/report files are copied to the ordinary trial output
-paths so outer greedy search continues to apply its final TTI, pressure and
-configured side-loss acceptance checks.
+step. The selected IR and reports use the ordinary trial output paths so outer
+greedy search continues to apply its final TTI, pressure and configured
+side-loss acceptance checks.
+
+On Linux, the default search parses the parent module once, clones it in process
+for each candidate, and passes raw IR and aggregate TTI through anonymous memory
+descriptors. Rejected candidate artifacts are not written to the filesystem.
+The trace keeps every attempted state, outcome and score. The selected plan is replayed before its IR and report files are published.
+The worker path checks raw IR equality and the in-process backport checks
+throughput cost equality. Structural-cleanup trials compute pressure and side
+reports only for the selected plan.
+Set `DECISION_GAP_KEEP_TRIALS=1` to retain all candidate artifacts and detailed TTI.
+
+Set `DECISION_VLLM_LLVM24_TTI=1` to try the in-process throughput backport
+for the Linux `gfx906` vLLM `cache_eval` gap search. This overrides the branch,
+freeze, alloca and three AMDGPU intrinsic costs that differ on the checked
+vLLM IRs. Other instruction queries use LLVM 12 TTI. The pinned worker remains
+the default and the oracle for parity checks. This option does not change
+speculation cost policy, outer greedy scoring, cleanup diagnostics or codegen.
+
+For the fixed vLLM schedules, run `tools/run_vllm_fixed_tree.py` with
+`balanced` or `recursive` and a new `--out` directory. The driver receives
+only the ordered decision roots over stdout and keeps a rolling fused IR
+checkpoint. Set `DECISION_GAP_KEEP_CATALOG=1` to keep full catalogs and IR
+snapshots for debugging. Existing direct callers keep the file-based catalog
+unless they opt into `DECISION_GAP_ROOTS_STDOUT=1`.
+
+Set `DECISION_GREEDY_JOBS=4` to evaluate up to four outer greedy candidates
+concurrently. Each batch shares the current parent IR. Candidate numbering,
+ranking and tie-breaking still follow adjacency order. The default is one
+worker, and each new round starts after the previous decision is committed.
+
+Set `DECISION_GAP_EARLY_SCORE=1` with the in-process vLLM scorer and structural
+cleanup to stop an inner trial after raw IR verification if its throughput
+score cannot beat the incumbent. These attempts are marked `score-only` in
+the trace. Improving candidates still pass the full cleanup, scope audit,
+and binding checks before they can become incumbents.
 
 Limitations: this is single-match / single-segment greedy search, with small
 joint plans only for the two newly split instructions. It does not exhaustively

@@ -6,6 +6,7 @@
 #include "llvm/IR/Verifier.h"
 #include "llvm/IR/IRBuilder.h"
 #include "llvm/Analysis/ValueTracking.h"
+#include "llvm/Analysis/CaptureTracking.h"
 #include "llvm/Analysis/InstructionSimplify.h"
 #include "llvm/IR/IntrinsicInst.h"
 #include "llvm/IR/LegacyPassManager.h"
@@ -155,7 +156,15 @@ static OperationKey operation(Instruction&i) {
   if(isa<CmpInst>(i))t=i.getOperand(0)->getType();
   k.type=typeName(t);k.attributes="result="+typeName(i.getType());
   for(auto&op:i.operands())k.operandTypes+=typeName(op->getType())+";";
-  if(auto*v=dyn_cast<VectorType>(t)){k.lanes=v->getElementCount().Min;k.scalable=v->getElementCount().Scalable;t=v->getElementType();}
+  if(auto *v=dyn_cast<VectorType>(t)) {
+    auto count=v->getElementCount();
+#ifdef FUSION_PACKAGED_LLVM12
+    k.lanes=count.getKnownMinValue();k.scalable=count.isScalable();
+#else
+    k.lanes=count.Min;k.scalable=count.Scalable;
+#endif
+    t=v->getElementType();
+  }
   k.category=t->isIntegerTy()?"integer":t->isFloatingPointTy()?"floating":t->isPointerTy()?"pointer":t->isVoidTy()?"void":"other";
   if(t->isIntegerTy())k.scalarBits=t->getIntegerBitWidth();
   else if(t->isFloatingPointTy())k.scalarBits=t->getPrimitiveSizeInBits().getFixedSize();
@@ -281,7 +290,11 @@ unsigned cleanup(Module &m,const std::string &function,unsigned level,CleanupMod
     changed=false;
     if(mode==CleanupMode::StructuralCFG&&foldProvenBranch(*f)){changed=true;continue;}
     for(auto&b:make_range(f->begin(),f->end())){
-      if(simplifyCFG(&b,tti,SimplifyCFGOptions().setSimplifyCondBranch(false).sinkCommonInsts(false).hoistCommonInsts(false))){
+      if(simplifyCFG(&b,tti,
+#ifdef FUSION_PACKAGED_LLVM12
+          nullptr,
+#endif
+          SimplifyCFGOptions().setSimplifyCondBranch(false).sinkCommonInsts(false).hoistCommonInsts(false))){
         changed=true;break;
       }
     }
@@ -482,6 +495,36 @@ static bool supportedLoopScope(BasicBlock *split,BasicBlock *join,
   }
   return visited==scope.size();
 }
+// Pair sibling single-block loops only when the region mapping preserves
+// both the backedge and the exit edge. The ordinary acyclic gate still
+// handles all other candidate shapes.
+static bool supportedSingleBlockLoopPair(BasicBlock *split, BasicBlock *join,
+                                        const Unit &left, const Unit &right,
+                                        const std::set<BasicBlock*> &scope,
+                                        LoopInfo &loops) {
+  if(!left.region || !right.region || scope.size()!=2 ||
+     left.blocks.size()!=1 || right.blocks.size()!=1 ||
+     left.exit!=join || right.exit!=join)return false;
+  auto *dispatch=cast<BranchInst>(split->getTerminator());
+  if(dispatch->getSuccessor(0)!=left.entry || dispatch->getSuccessor(1)!=right.entry)
+    return false;
+  auto backedge=[&](BasicBlock *block)->int {
+    auto *loop=loops.getLoopFor(block);
+    auto *branch=dyn_cast<BranchInst>(block->getTerminator());
+    if(!loop || loop->getHeader()!=block || loop->getNumBlocks()!=1 ||
+       loop->getParentLoop()!=loops.getLoopFor(split) ||
+       loops.getLoopFor(join)!=loops.getLoopFor(split) ||
+       !branch || !branch->isConditional())return -1;
+    for(auto *pred:predecessors(block))
+      if(pred!=split && pred!=block)return -1;
+    for(unsigned index=0;index<2;++index)
+      if(branch->getSuccessor(index)==block && branch->getSuccessor(1-index)==join)
+        return index;
+    return -1;
+  };
+  const int leftEdge=backedge(left.entry);
+  return leftEdge>=0 && leftEdge==backedge(right.entry);
+}
 static Boundary boundary(const Unit&u,Function&f) {
   Boundary v;v.entry=name(u.entry);v.exit=name(u.exit);std::set<std::string> ins,outs;
   for(auto&b:f)if(u.blocks.count(&b)){v.blocks.push_back(name(&b));for(auto&i:b){
@@ -500,6 +543,40 @@ std::vector<Candidate> enumerate(Function&f,unsigned version,bool crossDecisionL
   for(auto&b:f){auto*br=dyn_cast<BranchInst>(b.getTerminator());auto*node=a.pdt.getNode(&b);
     if(!br||!br->isConditional()||!node||!node->getIDom()||!node->getIDom()->getBlock()||!Utils::isValidMergeLocation(b,a.pdt))continue;
     auto*join=node->getIDom()->getBlock();auto l=reachable(br->getSuccessor(0),join),r=reachable(br->getSuccessor(1),join);
+    // Record DARM choices before trial legality checks so coverage reports
+    // can distinguish an unsupported transform from a missing candidate.
+    // DARM's list matcher requires each side's child regions to be a chain
+    // under dominance. Parallel siblings are legal IR but unsupported by it.
+    auto* container=a.regions.getRegionFor(&b);
+    bool darmOrdered=container!=nullptr;
+    if(container) {
+      std::vector<BasicBlock*> entries[2];
+      for(auto &child:*container) for(unsigned side=0;side<2;++side)
+        if(a.dt.dominates(br->getSuccessor(side),child->getEntry()))
+          entries[side].push_back(child->getEntry());
+      // Block-to-region matching uses a block traversal, so its region list
+      // can contain incomparable entries. Region-to-region alignment needs chains.
+      if(!entries[0].empty()&&!entries[1].empty())
+        for(const auto &side:entries)
+          for(size_t i=0;i<side.size();++i)for(size_t j=i+1;j<side.size();++j)
+            if(!a.dt.dominates(side[i],side[j])&&!a.dt.dominates(side[j],side[i]))
+              darmOrdered=false;
+    }
+    if(darmOrdered) {
+      RegionAnalyzer darm(&b,a.dt,a.pdt);
+      darm.computeRegionMatch();
+      auto unitId=[&](BasicBlock*entry,BasicBlock*exit)->std::string {
+        if(!exit)return inv.ids.at(entry);
+        for(auto&kv:inv.units)if(kv.first[0]!='E' && kv.second.region && kv.second.entry==entry && kv.second.exit==exit)return kv.first;
+        return {};
+      };
+      for(unsigned i=0;i<darm.regionMatchSize();++i) {
+        // Similarity is diagnostic; the search scorer decides profitability.
+        auto entries=darm.getRegionMatchEntryBlocks(i),exits=darm.getRegionMatchExitBlocks(i);
+        auto li=unitId(entries.first,exits.first),ri=unitId(entries.second,exits.second);
+        if(!li.empty()&&!ri.empty())result.push_back({f.getName().str(),inv.ids.at(&b),li,ri,version});
+      }
+    } // Original DARM matcher is optional; retain our other candidate families.
     // Same conservative scope as tryPair; do not spend trials on known rejects.
     auto scope=l;scope.insert(r.begin(),r.end());bool unsupported=!supportedLoopScope(&b,join,scope,a.loops);
     for(auto*x:scope){for(auto&i:*x)unsupported|=i.mayHaveSideEffects()||i.mayWriteToMemory();}
@@ -525,34 +602,6 @@ std::vector<Candidate> enumerate(Function&f,unsigned version,bool crossDecisionL
       if(!a.pdt.dominates(lb,br->getSuccessor(0))&&!a.pdt.dominates(rb,br->getSuccessor(1)))continue;
       result.push_back({f.getName().str(),inv.ids.at(&b),inv.ids.at(lb),inv.ids.at(rb),version});
     }
-    // Keep the original DARM policy's supported choices in our candidate set.
-    // A selected computation block may have a conditional terminator, so the
-    // single-successor computation frontier above is not a complete superset.
-    // DARM's list matcher requires each side's child regions to be a chain
-    // under dominance. Parallel siblings are legal IR but unsupported by it.
-    bool darmOrdered=true;
-    auto* container=a.regions.getRegionFor(&b);
-    for(unsigned side=0;side<2;++side) {
-      std::vector<BasicBlock*> entries;
-      for(auto& child:*container)if(a.dt.dominates(br->getSuccessor(side),child->getEntry()))entries.push_back(child->getEntry());
-      for(size_t i=0;i<entries.size();++i)for(size_t j=i+1;j<entries.size();++j)
-        if(!a.dt.dominates(entries[i],entries[j])&&!a.dt.dominates(entries[j],entries[i]))darmOrdered=false;
-    }
-    if(darmOrdered) {
-    RegionAnalyzer darm(&b,a.dt,a.pdt);
-    darm.computeRegionMatch();
-    auto unitId=[&](BasicBlock*entry,BasicBlock*exit)->std::string {
-      if(!exit)return inv.ids.at(entry);
-      for(auto&kv:inv.units)if(kv.first[0]!='E' && kv.second.region && kv.second.entry==entry && kv.second.exit==exit)return kv.first;
-      return {};
-    };
-    for(unsigned i=0;i<darm.regionMatchSize();++i) {
-      if(!darm.isRegionMatchProfitable(i))continue;
-      auto entries=darm.getRegionMatchEntryBlocks(i),exits=darm.getRegionMatchExitBlocks(i);
-      auto li=unitId(entries.first,exits.first),ri=unitId(entries.second,exits.second);
-      if(!li.empty()&&!ri.empty())result.push_back({f.getName().str(),inv.ids.at(&b),li,ri,version});
-    }
-    } // Original DARM matcher is optional; retain our other candidate families.
     auto left=frontier(l,r),right=frontier(r,l);
     for(auto&li:left)for(auto&ri:right){auto&lu=inv.units.at(li);auto&ru=inv.units.at(ri);
       if(bool(lu.region)!=bool(ru.region))continue;
@@ -1022,8 +1071,59 @@ static Trial tryPairImpl(const Module&parent,const Candidate&c,unsigned version,
   auto*join=node->getIDom()->getBlock();auto ls=reachable(br->getSuccessor(0),join),rs=reachable(br->getSuccessor(1),join);
   if(belongs(l,rs,ls)&&belongs(r,ls,rs)){std::swap(l,r);t.swapped=true;}
   else if(!belongs(l,ls,rs)||!belongs(r,rs,ls))return reject("pair_not_exclusive_on_opposite_sides");
-  auto scope=ls;scope.insert(rs.begin(),rs.end());if(!supportedLoopScope(split,join,scope,a.loops))return reject("loop_in_trial_scope_not_supported");for(auto*b:scope){for(auto&i:*b)if(i.mayHaveSideEffects()||i.mayWriteToMemory())return reject("side_effect_in_trial_scope_not_supported");}
-  if(!l.region&&!a.pdt.dominates(l.entry,br->getSuccessor(0))&&!a.pdt.dominates(r.entry,br->getSuccessor(1)))return reject("both_selected_blocks_optional_replication_not_supported");
+  t.left=boundary(l,*f);
+  t.right=boundary(r,*f);
+  auto scope=ls;
+  scope.insert(rs.begin(),rs.end());
+  if(!supportedLoopScope(split,join,scope,a.loops) &&
+     !supportedSingleBlockLoopPair(split,join,l,r,scope,a.loops)) {
+    auto *enclosing=a.loops.getLoopFor(split);
+    if(a.loops.getLoopFor(join)!=enclosing)
+      t.localRejectReason="split_and_join_in_different_loops";
+    else {
+      t.localRejectReason="scope_has_backedge_or_external_edge";
+      for(auto *block:scope)if(a.loops.getLoopFor(block)!=enclosing) {
+        t.localRejectReason="scope_contains_different_loop";
+        break;
+      }
+    }
+    return reject("loop_in_trial_scope_not_supported");
+  }
+  const bool leftRequired=a.pdt.dominates(l.entry,br->getSuccessor(0));
+  const bool rightRequired=a.pdt.dominates(r.entry,br->getSuccessor(1));
+  const bool guardedAnchors=!l.region && leftRequired && rightRequired &&
+      !logical && !c.localCopysign && c.speculation==SpeculationMode::None;
+  struct ProtectedWrite {
+    WeakVH instruction;
+    BasicBlock *block;
+    Value *value;
+    Value *address;
+    bool leftSide;
+  };
+  std::vector<ProtectedWrite> protectedWrites;
+  for(auto *block:scope) for(auto &instruction:*block) {
+    if(auto *call=dyn_cast<CallBase>(&instruction))
+      if(call->isConvergent()) return reject("convergent_call_in_trial_scope");
+    if(!instruction.mayHaveSideEffects()&&!instruction.mayWriteToMemory())continue;
+    if(guardedAnchors) {
+      if(auto *intrinsic=dyn_cast<IntrinsicInst>(&instruction))
+        if(intrinsic->getIntrinsicID()==Intrinsic::lifetime_start ||
+           intrinsic->getIntrinsicID()==Intrinsic::lifetime_end)continue;
+      if(auto *store=dyn_cast<StoreInst>(&instruction)) {
+        auto *object=dyn_cast<AllocaInst>(getUnderlyingObject(store->getPointerOperand()));
+        if(block!=l.entry && block!=r.entry && ls.count(block)!=rs.count(block) &&
+           store->isSimple() &&
+           object && object->getFunction()==f && !PointerMayBeCaptured(object,true,true)) {
+          protectedWrites.push_back({store,block,store->getValueOperand(),
+                                     store->getPointerOperand(),ls.count(block)!=0});
+          continue;
+        }
+      }
+    }
+    return reject("side_effect_in_trial_scope_not_supported");
+  }
+  if(!l.region&&!leftRequired&&!rightRequired)
+    return reject("both_selected_blocks_optional_replication_not_supported");
   RegionAnalyzer ma(split,a.dt,a.pdt);
   if(l.region){if(!l.exit||!r.exit)return reject("region_without_exit");
     RegionComparator cmp(l.region,r.region);if(!cmp.compare())return reject("region_structure_mismatch");
@@ -1097,7 +1197,7 @@ static Trial tryPairImpl(const Module&parent,const Candidate&c,unsigned version,
       return reject("b2r_replicates_same_decision_chain_requires_opt_in");
   }
   t.originalSimilarity=ma.explicitSimilarity();t.originalProfitable=ma.isRegionMatchProfitable(0);
-  auto ft=Clock::now();t.before=features(*f);t.featuresMs+=millis(ft);t.left=boundary(l,*f);t.right=boundary(r,*f);t.replication=ma.requireRegionReplication();
+  auto ft=Clock::now();t.before=features(*f);t.featuresMs+=millis(ft);t.replication=ma.requireRegionReplication();
   if(t.replication&&!l.region){
     // Only the expanded block needs one successor. The matched block inside
     // the opposite region may branch; RegionReplicator copies that topology.
@@ -1109,9 +1209,12 @@ static Trial tryPairImpl(const Module&parent,const Candidate&c,unsigned version,
   auto localBefore=scoped?snapshotLocal(*f):std::vector<LocalSnapshot>{};
   std::vector<WeakVH> priorBlocks; if(mode==CleanupMode::ScopedCFG||mode==CleanupMode::ScopedCFGTriangles)for(auto &b:*f)priorBlocks.emplace_back(&b);
   auto mt=Clock::now();
+  WeakVH originalSplit(split), originalJoin(join);
+  WeakVH originalCondition(br->getCondition());
   std::unique_ptr<Analysis> leafAnalysis;
   std::unique_ptr<RegionAnalyzer> leafAnalyzer;
   std::unique_ptr<Region> leftLogicalRegion,rightLogicalRegion;
+  t.rewriteStarted=true;
   if(directLeaves){
     auto *gate=leafEntry.apply();
     BasicBlock *leftExit=l.exit,*rightExit=r.exit;
@@ -1140,7 +1243,32 @@ static Trial tryPairImpl(const Module&parent,const Candidate&c,unsigned version,
     std::string why;
     if(!fuseLocalComputations(l.entry,r.entry,melder.onValueMapping,why,c.localUnion||c.hybrid)){t.reason=why;t.totalMs=millis(started);return t;}
     t.replication=false;
-  }else melder.merge(0);t.coalescedGapGroups=melder.CoalescedGapGroups;canonicalPhiOrder(*t.raw,c.function);t.mergeMs=millis(mt);
+  }else {
+    try { melder.merge(0); }
+    catch(const std::exception &error) { return reject(error.what()); }
+  }
+  t.coalescedGapGroups=melder.CoalescedGapGroups;canonicalPhiOrder(*t.raw,c.function);t.mergeMs=millis(mt);
+  if(!protectedWrites.empty()) {
+    auto *savedSplit=dyn_cast_or_null<BasicBlock>((Value*)originalSplit);
+    auto *savedJoin=dyn_cast_or_null<BasicBlock>((Value*)originalJoin);
+    if(!savedSplit || !savedJoin) return reject("protected_write_boundary_lost");
+    auto *guard=dyn_cast<BranchInst>(savedSplit->getTerminator());
+    if(!guard || !guard->isConditional() || guard->getCondition()!=(Value*)originalCondition)
+      return reject("protected_write_guard_lost");
+    auto leftAfter=reachable(guard->getSuccessor(0),savedJoin);
+    auto rightAfter=reachable(guard->getSuccessor(1),savedJoin);
+    for(const auto &write:protectedWrites) {
+      if(leftAfter.count(write.block)!=unsigned(write.leftSide) ||
+         rightAfter.count(write.block)==unsigned(write.leftSide))
+        return reject("protected_write_guard_changed");
+    }
+  }
+  for(const auto &write:protectedWrites) {
+    auto *store=dyn_cast_or_null<StoreInst>((Value*)write.instruction);
+    if(!store || store->getParent()!=write.block ||
+       store->getValueOperand()!=write.value || store->getPointerOperand()!=write.address)
+      return reject("protected_write_changed");
+  }
   if(verifyModule(*t.raw,&errs()))return reject("raw_verifier_failed");
   for(auto&g:*t.raw)if(&g!=f)if(!others.count(g.getName().str())||others.at(g.getName().str())!=text(g))return reject("other_function_changed");
   ft=Clock::now();t.afterRaw=features(*f);t.featuresMs+=millis(ft);if(t.afterRaw.loops>t.before.loops)return reject("new_raw_loop");

@@ -7,6 +7,8 @@
 #include "scoped_cfg_cleanup.h"
 #include "ir_pressure.h"
 #include "decision_speculation_tti.h"
+#include "vllm_throughput_tti.h"
+#include "llvm/ADT/StringMap.h"
 #include "llvm/IR/ModuleSlotTracker.h"
 #include "decision_side_metrics.h"
 #include <darm_pair_engine/RegionMelder.h>
@@ -50,34 +52,72 @@ static unsigned foldEmptyDiamonds(BasicBlock *entry, BasicBlock *exit) {
   if(!changed)return count;
  }
 }
-int main(int argc,char **argv){
- if(std::getenv("DECISION_CFG_CLEANUP")&&std::getenv("DECISION_DISABLE_SIMPLIFYCFG")){errs()<<"DECISION_CFG_CLEANUP conflicts with legacy DECISION_DISABLE_SIMPLIFYCFG\n";return 2;}
- std::string cleanup="structural";
- if(const char *v=std::getenv("DECISION_CFG_CLEANUP")){cleanup=v;if(cleanup!="full"&&cleanup!="structural")return 2;}
- int mode=0;unsigned budget=4,conditionBudget=4,costThreshold=4;
- if(const char *v=std::getenv("DECISION_SPECULATION")){std::string m=v;if(m=="cost")mode=3;else if(m=="budget")mode=2;else if(m=="legacy")mode=1;else if(m!="none")return 2;}
- if(const char *v=std::getenv("DECISION_SPECULATION_BUDGET")){char *end=nullptr;long n=std::strtol(v,&end,10);if(!*v||*end||n<0||n>100000)return 2;budget=n;}
- if(const char *v=std::getenv("DECISION_CONDITION_BUDGET")){char *end=nullptr;long n=std::strtol(v,&end,10);if(!*v||*end||n<0||n>100000)return 2;conditionBudget=n;}
- if(const char *v=std::getenv("DECISION_COST_THRESHOLD")){char *end=nullptr;long n=std::strtol(v,&end,10);if(!*v||*end||n<0||n>100000)return 2;costThreshold=n;}
- if(argc!=6&&argc!=7&&argc!=8){errs()<<"usage: decision-fuse input.ll function decision-index left-index NEW_DIR [ORDER_JSON [PAIR_JSON]]\n";return 2;}
- if(std::getenv("DECISION_GAP_SEARCH")&&!std::getenv("DECISION_GAP_STATE"))return decision::searchGapPlans(argc,argv,mode);
- if(sys::fs::exists(argv[5])){errs()<<"output directory already exists\n";return 2;}
- LLVMContext ctx;SMDiagnostic error;auto parent=parseIRFile(argv[1],error,ctx);
- if(!parent){error.print(argv[0],errs());return 2;}
- if(verifyModule(*parent,&errs()))return 2;
- auto trial=CloneModule(*parent);auto *f=trial->getFunction(argv[2]);if(!f)return 2;
- if(sys::fs::create_directories(argv[5]))return 2;
+// Structural gap trials share one normalized parent. The winner is replayed
+// from the original input to generate the complete diagnostics.
+struct PreparedDecision {
+ std::unique_ptr<Module> module;
+ BasicBlock *dispatch=nullptr;
+ BasicBlock *binding=nullptr;
+ BasicBlock *join=nullptr;
+ std::vector<BasicBlock*> originalBlocks;
+ std::string decision, left, right;
+ unsigned armCount=0;
+};
+static int runDecisionTrial(int argc,char **argv,Module &parent,
+                            StringRef cleanup,int mode,unsigned budget,
+                            unsigned conditionBudget,unsigned costThreshold,
+                            const decision::GapSearchState *explicitState=nullptr,
+                            decision::GapTrialResult *memory=nullptr,
+                            bool publish=false,llvm::TargetMachine *throughputMachine=nullptr,
+                            PreparedDecision *prepared=nullptr,
+                            Optional<int64_t> scoreLimit=None){
+ auto &ctx=parent.getContext();
+ const bool reuse=prepared&&prepared->module;
+ ValueToValueMapTy mapping;
+ auto trial=reuse?CloneModule(*prepared->module,mapping):CloneModule(parent);auto *f=trial->getFunction(argv[2]);if(!f)return 2;
+ if(!memory&&sys::fs::create_directories(argv[5]))return 2;
  std::string dir=argv[5];json::Object report{{"schema","decision-fuse-trial-v1"},{"engine","RegionMelder"},{"speculation","none"},{"extra_cleanup","arm-local linear folding and identical-value empty diamonds"},{"status","started"}};
  report["speculation"]=mode==0?"none":mode==1?"legacy":mode==2?"budget":"cost";report["speculation_budget"]=budget;report["condition_budget"]=conditionBudget;report["tti_source"]=cleanup=="full"?"LLVM12_target_TTI":"cleanup_structural_no_tti";
  report["speculation_cost_kind"]="LLVM12_TCK_SizeAndLatency";report["speculation_cost_threshold"]=costThreshold;
  report["cfg_cleanup"]=cleanup;report["implicit_speculation_allowed"]=cleanup=="full";
- auto finish=[&](StringRef reason,int code){report["status"]=code?"rejected":"verified";report["reason"]=reason.str();std::error_code ec;raw_fd_ostream out(dir+"/trial.json",ec,sys::fs::OF_None);out<<formatv("{0:2}\n",json::Value(std::move(report)));return code;};
+ auto finish=[&](StringRef reason,int code){report["status"]=code?"rejected":"verified";report["reason"]=reason.str();if(memory){memory->Report=json::Value(std::move(report));return code;}std::error_code ec;raw_fd_ostream out(dir+"/trial.json",ec,sys::fs::OF_None);out<<formatv("{0:2}\n",json::Value(std::move(report)));return code;};
+ const bool diagnostics=!memory||publish||cleanup=="full";
+ WeakTrackingVH sideCondition;
+ std::vector<unsigned> sidesBefore[2],sidesAfter[2];std::string sideReason;
+ bool sideBeforeOK=false;
+ std::vector<WeakVH> originalBlocks;
+ BasicBlock *dispatch=nullptr,*bindingEntry=nullptr,*decisionJoin=nullptr;
+ std::string decisionID,reason;
+ unsigned armCount=0;
+ if(reuse){
+   auto mapBlock=[&](BasicBlock *block){return cast<BasicBlock>(mapping.lookup(block));};
+   dispatch=mapBlock(prepared->dispatch);bindingEntry=mapBlock(prepared->binding);
+   decisionJoin=mapBlock(prepared->join);armCount=prepared->armCount;decisionID=prepared->decision;
+   for(auto *block:prepared->originalBlocks)originalBlocks.emplace_back(mapBlock(block));
+   report["decision"]=decisionID;report["left"]=prepared->left;report["right"]=prepared->right;
+ }else{
  if(cleanup=="full")for(auto &bb:*f)for(auto &i:bb)if(auto *cb=dyn_cast<CallBase>(&i))if(cb->isConvergent())return finish("full_cleanup_function_contains_convergent",3);
- writeIR(*trial,dir+"/parent.ll");
- for(auto &bb:*f)if(!bb.getTerminator()->getMetadata("decision.origin"))bb.getTerminator()->setMetadata("decision.origin",MDNode::get(ctx,MDString::get(ctx,f->getName().str()+":"+label(&bb))));
- if(argc>=7){auto buf=MemoryBuffer::getFile(argv[6]);if(!buf)return finish("order_file_unreadable",3);auto parsed=json::parse((*buf)->getBuffer());if(!parsed){consumeError(parsed.takeError());return finish("invalid_order_json",3);}auto *array=parsed->getAsArray();if(!array)return finish("order_array_required",3);
-  for(auto &v:*array){auto *o=v.getAsObject();if(!o)return finish("invalid_order_entry",3);auto entry=o->getString("entry"),family=o->getString("family");auto index=o->getInteger("index");if(!entry||!family||!index)return finish("invalid_order_entry",3);for(auto &b:*f)if(label(&b)==*entry&&!b.getTerminator()->getMetadata("decision.order")){auto *n=ConstantAsMetadata::get(ConstantInt::get(Type::getInt32Ty(ctx),*index));b.getTerminator()->setMetadata("decision.order",MDNode::get(ctx,{MDString::get(ctx,*family),n,n}));}}
+ if(!memory)writeIR(*trial,dir+"/parent.ll");
+ ModuleSlotTracker slots(trial.get());slots.incorporateFunction(*f);
+ StringMap<BasicBlock*> blocksByLabel;
+ for(auto &bb:*f){
+   std::string name;raw_string_ostream os(name);bb.printAsOperand(os,false,slots);os.flush();
+   if(argc>=7)blocksByLabel.try_emplace(name,&bb);
+   if(!bb.getTerminator()->getMetadata("decision.origin"))
+     bb.getTerminator()->setMetadata("decision.origin",MDNode::get(ctx,MDString::get(ctx,(f->getName()+":"+name).str())));
  }
+ if(argc>=7){auto buf=MemoryBuffer::getFile(argv[6]);if(!buf)return finish("order_file_unreadable",3);auto parsed=json::parse((*buf)->getBuffer());if(!parsed){consumeError(parsed.takeError());return finish("invalid_order_json",3);}auto *array=parsed->getAsArray();if(!array)return finish("order_array_required",3);
+  for(auto &v:*array){
+    auto *o=v.getAsObject();if(!o)return finish("invalid_order_entry",3);
+    auto entry=o->getString("entry"),family=o->getString("family");auto index=o->getInteger("index");
+    if(!entry||!family||!index)return finish("invalid_order_entry",3);
+    auto *bb=blocksByLabel.lookup(*entry);
+    if(!bb||bb->getTerminator()->getMetadata("decision.order"))continue;
+    auto *n=ConstantAsMetadata::get(ConstantInt::get(Type::getInt32Ty(ctx),*index));
+    bb->getTerminator()->setMetadata("decision.order",MDNode::get(ctx,{MDString::get(ctx,*family),n,n}));
+  }
+ }
+
  auto ds=decision::discover(*f);unsigned di=0,li=0;
  if(argc==8){
   auto buf=MemoryBuffer::getFile(argv[7]);if(!buf)return finish("pair_file_unreadable",3);
@@ -93,18 +133,17 @@ int main(int argc,char **argv){
  }else{di=std::stoul(argv[3]);li=std::stoul(argv[4]);}
  if(di>=ds.size()||li+1>=ds[di].arms.size())return finish("pair_out_of_range",3);
  report["decision"]=ds[di].id;report["left"]=ds[di].arms[li].id;report["right"]=ds[di].arms[li+1].id;
- auto beforePressure=fusion::irPressure(*f);
- report["ir_pressure_before"]=json::Object{{"peak_slots32",int64_t(beforePressure.peakSlots32)},{"complete",beforePressure.complete}};
- auto *sideBranch=dyn_cast<BranchInst>(ds[di].arms[li].predicate.back().test->getTerminator());
- WeakTrackingVH sideCondition(sideBranch&&sideBranch->isConditional()?sideBranch->getCondition():nullptr);
- std::vector<unsigned> sidesBefore[2],sidesAfter[2];std::string sideReason;
- bool sideBeforeOK=decision_side::sideBlocksBoth(*f,sideCondition,sidesBefore,sideReason);
- std::vector<WeakVH> originalBlocks;for(auto &b:*f)originalBlocks.emplace_back(&b);
- BasicBlock *dispatch=nullptr;std::string reason;
+ if(diagnostics){
+   auto beforePressure=fusion::irPressure(*f);
+   report["ir_pressure_before"]=json::Object{{"peak_slots32",int64_t(beforePressure.peakSlots32)},{"complete",beforePressure.complete}};
+   auto *sideBranch=dyn_cast<BranchInst>(ds[di].arms[li].predicate.back().test->getTerminator());
+   sideCondition=sideBranch&&sideBranch->isConditional()?sideBranch->getCondition():nullptr;
+   sideBeforeOK=decision_side::sideBlocksBoth(*f,sideCondition,sidesBefore,sideReason);
+ }
+ decisionID=ds[di].id;armCount=ds[di].arms.size();decisionJoin=ds[di].join;
+ for(auto &b:*f)originalBlocks.emplace_back(&b);
  if(!decision::normalize(*f,ds[di],li,reason,&dispatch,conditionBudget))return finish(reason,3);
- auto *order=dispatch->getTerminator()->getMetadata("decision.order");
- auto *origins=dispatch->getTerminator()->getMetadata("decision.merged_from");auto *identity=dispatch->getTerminator()->getMetadata("decision.origin");
- BasicBlock *bindingEntry=dispatch;
+ bindingEntry=dispatch;
  // When the last arms of an already-normalized subdecision are fused, the
  // opaque arm must include its short-circuit evaluation prefix as well.
  {PostDominatorTree beforePDT(*f);std::set<BasicBlock*> visited;
@@ -114,7 +153,21 @@ int main(int argc,char **argv){
    if(!owner)break;bindingEntry=owner;
   }
  }
- writeIR(*trial,dir+"/normalized.ll");
+  if(prepared){
+    ValueToValueMapTy snapshot;
+    prepared->module=CloneModule(*trial,snapshot);
+    auto mapBlock=[&](BasicBlock *block){return cast<BasicBlock>(snapshot.lookup(block));};
+    prepared->dispatch=mapBlock(dispatch);prepared->binding=mapBlock(bindingEntry);
+    prepared->join=mapBlock(decisionJoin);prepared->armCount=armCount;
+    prepared->decision=decisionID;prepared->left=ds[di].arms[li].id;prepared->right=ds[di].arms[li+1].id;
+    for(auto &handle:originalBlocks)if(auto *block=dyn_cast_or_null<BasicBlock>((Value*)handle))
+      prepared->originalBlocks.push_back(mapBlock(block));
+  }
+ }
+ auto *order=dispatch->getTerminator()->getMetadata("decision.order");
+ auto *origins=dispatch->getTerminator()->getMetadata("decision.merged_from");
+ auto *identity=dispatch->getTerminator()->getMetadata("decision.origin");
+ if(!memory)writeIR(*trial,dir+"/normalized.ll");
  auto normalized=decision::discover(*f);const decision::Decision *pair=nullptr;for(auto &d:normalized)if(d.root==dispatch)pair=&d;
  if(!pair||pair->arms.size()!=2)return finish("normalized_pair_not_found",3);
  if(pair->arms[0].kind==decision::ArmKind::Unsupported||pair->arms[1].kind==decision::ArmKind::Unsupported)return finish("unsupported_normalized_arm",3);
@@ -159,10 +212,9 @@ int main(int argc,char **argv){
  std::unique_ptr<decision::SpeculationTTI> speculationTTI;
  if(mode==3){try{speculationTTI=std::make_unique<decision::SpeculationTTI>(*f);}catch(const std::exception&e){return finish(e.what(),3);}}
  RegionMelder melder(analyzer,true);melder.SpeculationMode=mode;melder.SpeculationBudget=budget;melder.SpeculationTTI=speculationTTI?speculationTTI->info.get():nullptr;melder.SpeculationCostThreshold=costThreshold;
- if(const char *Path=std::getenv("DECISION_GAP_STATE")){
-  try{auto State=decision::readGapState(Path);melder.SplitMatchIDs=std::move(State.Split);melder.SpeculateGapIDs=std::move(State.Speculate);melder.ExplicitGapPlan=true;
-   if(mode!=3&&!melder.SpeculateGapIDs.empty())return finish("explicit_speculation_requires_cost_mode",3);
-  }catch(const std::exception&E){return finish(E.what(),3);}
+ if(explicitState){
+  melder.SplitMatchIDs=explicitState->Split;melder.SpeculateGapIDs=explicitState->Speculate;melder.ExplicitGapPlan=true;
+  if(mode!=3&&!melder.SpeculateGapIDs.empty())return finish("explicit_speculation_requires_cost_mode",3);
  }
  melder.CoalesceGaps=std::getenv("DECISION_COALESCE_GAPS")!=nullptr;
  WeakVH dispatchHandle(dispatch);
@@ -177,7 +229,15 @@ int main(int argc,char **argv){
  dispatch->getTerminator()->setMetadata("decision.origin",identity);
  if(order)dispatch->getTerminator()->setMetadata("decision.order",order);
  if(verifyModule(*trial,&errs()))return finish("post_meld_verifier_failed",3);
- writeIR(*trial,dir+"/meld-raw.ll");
+ if(memory){
+   if(throughputMachine)memory->LocalCost=decision::scoreVllmThroughput(*f,*throughputMachine);
+   if(scoreLimit&&memory->LocalCost&&*memory->LocalCost>=*scoreLimit){
+     memory->ScoredOnly=true;
+     return 0;
+   }
+   if(!memory->LocalCost||publish){raw_string_ostream raw(memory->RawIR);trial->print(raw,nullptr);}
+ }
+ else writeIR(*trial,dir+"/meld-raw.ll");
  report["empty_diamonds_folded"]=foldEmptyDiamonds(dispatch,join);
  // Finish only this trial's trivial PHIs now; otherwise the native global
  // post-pass would delete them during the next, unrelated trial.
@@ -208,24 +268,28 @@ int main(int argc,char **argv){
    if(cleanup=="full"){
     std::vector<unsigned> before[2],after[2];std::string why;
     bool beforeOK=decision_side::sideBlocksBoth(*f,sideCondition,before,why);
-    writeIR(*trial,dir+"/pre-full-cleanup.ll");
+    std::string preCleanup,postCleanup;
+    if(memory){raw_string_ostream raw(preCleanup);trial->print(raw,nullptr);}
+    else writeIR(*trial,dir+"/pre-full-cleanup.ll");
     decision::SpeculationTTI fullProvider(*f);
     DominatorTree fullDT(*f);PostDominatorTree fullPDT(*f);
     std::map<BasicBlock*,std::set<BasicBlock*>> conditionalHoists;
     for(auto &bb:*f)for(auto *node=fullDT.getNode(&bb);node;node=node->getIDom())if(node->getBlock()!=&bb&&!fullPDT.dominates(&bb,node->getBlock()))conditionalHoists[&bb].insert(node->getBlock());
     struct Prior{WeakVH inst;BasicBlock*block;};std::vector<Prior> prior;
     for(auto &bb:*f)for(auto &i:bb)if(!i.isTerminator()&&!isa<PHINode>(i))prior.push_back({WeakVH(&i),&bb});
-    report["simplifycfg_changes"]=decision::simplifyTrialCFGFull(*f,bindingEntry,ds[di].join,fullProvider.info.get());
+    report["simplifycfg_changes"]=decision::simplifyTrialCFGFull(*f,bindingEntry,decisionJoin,fullProvider.info.get());
     bool afterOK=decision_side::sideBlocksBoth(*f,sideCondition,after,why);
-    writeIR(*trial,dir+"/post-full-cleanup.ll");
+    if(memory){raw_string_ostream raw(postCleanup);trial->print(raw,nullptr);}
+    else writeIR(*trial,dir+"/post-full-cleanup.ll");
     json::Array moved;for(auto &p:prior)if(auto*i=dyn_cast_or_null<Instruction>((Value*)p.inst))if(i->getParent()!=p.block){std::string text;raw_string_ostream os(text);i->print(os);moved.push_back(json::Object{{"opcode",i->getOpcodeName()},{"weight",speculationWeight(*i)},{"tti_size_latency",fullProvider.info->getInstructionCost(i,TargetTransformInfo::TCK_SizeAndLatency)},{"movement",conditionalHoists[p.block].count(i->getParent())?"conditional_hoist":"structural_or_unclassified_move"},{"ir",os.str()}});}
     report["full_cleanup_moved_instructions"]=std::move(moved);
-    decision::recordImplicitMetrics(report,argv[0],*f,dir,before,after,beforeOK&&afterOK,why);
-   }else report["simplifycfg_changes"]=decision::simplifyTrialCFG(*f,bindingEntry,ds[di].join);
+    decision::recordImplicitMetrics(report,argv[0],*f,dir,before,after,beforeOK&&afterOK,why,preCleanup,postCleanup);
+   }else report["simplifycfg_changes"]=decision::simplifyTrialCFG(*f,bindingEntry,decisionJoin);
   }
   catch(const std::exception &e){return finish(e.what(),3);}
   bindingEntry->getTerminator()->setMetadata("decision.merged_from",origins);bindingEntry->getTerminator()->setMetadata("decision.origin",identity);if(order)bindingEntry->getTerminator()->setMetadata("decision.order",order);
  }
+ if(diagnostics){
  auto pressure=fusion::irPressure(*f);report["ir_pressure"]=json::Object{{"peak_slots32",int64_t(pressure.peakSlots32)},{"peak_values",int64_t(pressure.peakValues)},{"complete",pressure.complete}};
  bool sideAfterOK=decision_side::sideBlocksBoth(*f,sideCondition,sidesAfter,sideReason);
  report["side_metrics_available"]=sideBeforeOK&&sideAfterOK;
@@ -235,17 +299,63 @@ int main(int argc,char **argv){
  json::Array segments;
  for(auto &D:melder.SegmentDecisions){json::Array inst;for(auto &I:D.Instructions)inst.push_back(json::Object{{"opcode",I.Opcode},{"weight",I.Weight},{"tti",I.TTI},{"safe",I.Safe}});segments.push_back(json::Object{{"count",D.Count},{"weight",D.Weight},{"tti",D.TTI},{"safe",D.Safe},{"operands_available",D.Available},{"decision",D.Speculate?"speculate":"protect"},{"reason",D.Reason},{"instructions",std::move(inst)}});}
  report["segments"]=std::move(segments);
+ }
  report["binding_entry"]=label(bindingEntry);
- writeIR(*trial,dir+"/fused.ll");
+ if(publish){raw_string_ostream raw(memory->FinalIR);trial->print(raw,nullptr);}
+ else if(!memory)writeIR(*trial,dir+"/fused.ll");
  auto rebound=decision::discover(*f);unsigned bindings=0;std::string kind;
- for(auto &d:rebound)if(d.id==ds[di].id)for(auto &a:d.arms)if(a.entry==bindingEntry&&a.kind!=decision::ArmKind::Unsupported){++bindings;kind=a.kind==decision::ArmKind::Linear?"Linear":"SESE";}
- if(bindings==0&&ds[di].arms.size()==2){
-  DominatorTree dtAfter(*f);PostDominatorTree pdtAfter(*f);auto *exit=ds[di].join;bool owned=pdtAfter.dominates(exit,bindingEntry);std::set<BasicBlock*> visited;std::vector<BasicBlock*> todo{bindingEntry};bool linear=true;
+ for(auto &d:rebound)if(d.id==decisionID)for(auto &a:d.arms)if(a.entry==bindingEntry&&a.kind!=decision::ArmKind::Unsupported){++bindings;kind=a.kind==decision::ArmKind::Linear?"Linear":"SESE";}
+ if(bindings==0&&armCount==2){
+  DominatorTree dtAfter(*f);PostDominatorTree pdtAfter(*f);auto *exit=decisionJoin;bool owned=pdtAfter.dominates(exit,bindingEntry);std::set<BasicBlock*> visited;std::vector<BasicBlock*> todo{bindingEntry};bool linear=true;
   while(!todo.empty()){auto *b=todo.back();todo.pop_back();if(b==exit||!visited.insert(b).second)continue;if(!dtAfter.dominates(bindingEntry,b))owned=false;if(b->getTerminator()->getNumSuccessors()!=1)linear=false;for(auto *next:successors(b))todo.push_back(next);}
   if(owned){bindings=1;kind=linear?"Linear":"SESE";report["completed_decision"]=true;}
  }
  report["rebound_bindings"]=bindings;report["rebound_kind"]=kind;report["speculated_gap_ranges"]=melder.SpeculatedRanges;report["outside_audit"]="preserved instructions and SSA-tracked operands";
- {std::error_code ec;raw_fd_ostream out(dir+"/decisions.json",ec,sys::fs::OF_None);out<<formatv("{0:2}\n",json::Value(decision::describe(rebound)));}
+ if(publish){
+   if(decision::gapKeepCatalog())memory->Catalog=json::Value(decision::describe(rebound));
+   if(decision::gapRootsStdout())for(const auto &d:rebound)memory->Roots.push_back(label(d.root));
+ }
+ else if(!memory){std::error_code ec;raw_fd_ostream out(dir+"/decisions.json",ec,sys::fs::OF_None);out<<formatv("{0:2}\n",json::Value(decision::describe(rebound)));}
  if(bindings!=1)return finish("merged_arm_binding_not_unique",3);
  return finish("fused_and_rebound",0);
+}
+
+int main(int argc,char **argv){
+ if(std::getenv("DECISION_CFG_CLEANUP")&&std::getenv("DECISION_DISABLE_SIMPLIFYCFG")){errs()<<"DECISION_CFG_CLEANUP conflicts with legacy DECISION_DISABLE_SIMPLIFYCFG\n";return 2;}
+ std::string cleanup="structural";
+ if(const char *v=std::getenv("DECISION_CFG_CLEANUP")){cleanup=v;if(cleanup!="full"&&cleanup!="structural")return 2;}
+ int mode=0;unsigned budget=4,conditionBudget=4,costThreshold=4;
+ if(const char *v=std::getenv("DECISION_SPECULATION")){std::string m=v;if(m=="cost")mode=3;else if(m=="budget")mode=2;else if(m=="legacy")mode=1;else if(m!="none")return 2;}
+ if(const char *v=std::getenv("DECISION_SPECULATION_BUDGET")){char *end=nullptr;long n=std::strtol(v,&end,10);if(!*v||*end||n<0||n>100000)return 2;budget=n;}
+ if(const char *v=std::getenv("DECISION_CONDITION_BUDGET")){char *end=nullptr;long n=std::strtol(v,&end,10);if(!*v||*end||n<0||n>100000)return 2;conditionBudget=n;}
+ if(const char *v=std::getenv("DECISION_COST_THRESHOLD")){char *end=nullptr;long n=std::strtol(v,&end,10);if(!*v||*end||n<0||n>100000)return 2;costThreshold=n;}
+ if(argc!=6&&argc!=7&&argc!=8){errs()<<"usage: decision-fuse input.ll function decision-index left-index NEW_DIR [ORDER_JSON [PAIR_JSON]]\n";return 2;}
+ if(sys::fs::exists(argv[5])){errs()<<"output directory already exists\n";return 2;}
+ LLVMContext ctx;SMDiagnostic error;auto parent=parseIRFile(argv[1],error,ctx);
+ if(!parent){error.print(argv[0],errs());return 2;}
+ if(verifyModule(*parent,&errs()))return 2;
+ const char *statePath=std::getenv("DECISION_GAP_STATE");
+ PreparedDecision prepared;
+ std::unique_ptr<decision::SpeculationTTI> throughputProvider;
+ const char *earlyScore=std::getenv("DECISION_GAP_EARLY_SCORE");
+ const bool useEarlyScore=earlyScore&&StringRef(earlyScore)=="1"&&cleanup=="structural";
+ auto run=[&](const decision::GapSearchState *state,decision::GapTrialResult *memory,
+              bool publish=false,Optional<int64_t> upperBound=None){
+   if(memory&&std::getenv("DECISION_VLLM_LLVM24_TTI")&&!throughputProvider){
+     auto *function=parent->getFunction(argv[2]);
+     if(!function||function->empty())throw std::runtime_error("vLLM scoring function missing");
+     throughputProvider=std::make_unique<decision::SpeculationTTI>(*function);
+   }
+   return runDecisionTrial(argc,argv,*parent,cleanup,mode,budget,conditionBudget,costThreshold,
+                           state,memory,publish,throughputProvider?throughputProvider->machine.get():nullptr,
+                           memory&&!publish&&cleanup=="structural"?&prepared:nullptr,
+                           useEarlyScore?upperBound:None);
+ };
+ if(std::getenv("DECISION_GAP_SEARCH")&&!statePath)
+   return decision::searchGapPlans(argc,argv,mode,[&](const decision::GapSearchState &state,decision::GapTrialResult &result,bool publish,Optional<int64_t> upperBound){
+     return run(&state,&result,publish,upperBound);
+   });
+ if(!statePath)return run(nullptr,nullptr);
+ try{auto state=decision::readGapState(statePath);return run(&state,nullptr);}
+ catch(const std::exception &e){errs()<<e.what()<<"\n";return 3;}
 }

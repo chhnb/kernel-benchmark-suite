@@ -76,7 +76,11 @@ PostOptFeatures postOptFeatures(const Function&f,int staticAllocaCost,bool depen
       // Arbitrary calls have no reliable whole-call static throughput cost.
       if(auto*c=dyn_cast<CallBase>(&i))
         if(!c->getCalledFunction()||!c->getCalledFunction()->isIntrinsic()){++x.unknown;++block.unknown;x.categories["unknown_call_count"]++;continue;}
+#ifdef FUSION_PACKAGED_LLVM12
+      int cost=tti.getInstructionCost(&i,TargetTransformInfo::TCK_RecipThroughput).getValue().getValueOr(-1);
+#else
       int cost=tti.getInstructionCost(&i,TargetTransformInfo::TCK_RecipThroughput);
+#endif
       // LLVM12 target TTI leaves freeze unsupported. An explicit conservative
       // 32-bit-slot fallback prevents silently assigning zero work. This is an
       // uncalibrated IR cost, not a claimed machine instruction count.

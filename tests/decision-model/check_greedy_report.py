@@ -1,9 +1,22 @@
 import json,sys
 from pathlib import Path
 p=Path(sys.argv[1]);s=json.loads(p.read_text());assert s['status']=='completed';cost=s['initial_cost'];commits=0;trials=0
+structural_attempts=set()
 for row in s['rounds']:
  assert row['parent_cost']==cost
  for a in row['attempts']:
+  if a.get('kind')=='structural':
+   key=(row['parent'],a['candidate'])
+   assert key not in structural_attempts, ('duplicate structural trial',key)
+   structural_attempts.add(key)
+   trial=Path(a['directory'])/'structural'/'trial-0'/'trial.json'
+   if 'cost' in a:
+    actual=json.loads(trial.read_text())
+    assert actual['valid'] and actual['candidate']==a['candidate']
+    assert actual['score_result']['status']=='scored'
+    metrics=actual['score_result']['metrics']
+    assert metrics['work_before']==cost and metrics['work_after']==a['cost']
+   continue
   trial=Path(a['directory'])/'trial.json'
   if trial.exists():
    actual=json.loads(trial.read_text())

@@ -1,4 +1,5 @@
 #include "fusion_search.h"
+#include "ir_pressure.h"
 #include "logical_region_state.h"
 #include "postopt_scorer.h"
 #include "llvm24_scorer.h"
@@ -66,6 +67,15 @@ struct DebugObserver final:Observer {
   }
   void trial(const Trial&t,const RoundContext&r,const ScoreResult&score,bool eligible)override {
     auto path=dir+"/trial-"+std::to_string(n++);auto ec=sys::fs::create_directory(path);if(ec)throw std::runtime_error(ec.message());
+    if(t.valid) {
+      auto pressure = [](const Function &function) {
+        auto value = irPressure(function);
+        return json::Object{{"complete",value.complete},{"peak_slots32",int64_t(value.peakSlots32)}};
+      };
+      jsonFile(path+"/pressure.json",json::Object{
+        {"before",pressure(*r.control->getFunction(r.function))},
+        {"after",pressure(*t.normalized->getFunction(r.function))}});
+    }
     if(t.raw)writeIR(*t.raw,path+"/after-raw.ll");if(t.normalized)writeIR(*t.normalized,path+"/after.ll");
     if(t.logicalState){std::error_code ec;raw_fd_ostream out(path+"/logical-state.json",ec);if(ec)throw std::runtime_error(ec.message());out<<t.logicalState->json();}
     json::Array Origins;for(auto &P:t.blockProvenance)Origins.push_back(json::Object{
@@ -76,7 +86,7 @@ struct DebugObserver final:Observer {
     jsonFile(path+"/block-provenance.json",json::Object{{"schema","melding-block-provenance-v1"},
       {"logical_decision",t.candidate.logicalDecision},{"logical_left",t.candidate.logicalLeft},{"logical_right",t.candidate.logicalRight},{"candidate",t.candidate.key()},{"parent_hash",r.parentHash},
       {"cleaned_hash",t.normalized?moduleHash(*t.normalized):""},{"blocks",std::move(Origins)}});
-    jsonFile(path+"/trial.json",json::Object{{"schema","incremental-score-trial-v1"},{"logical_decision",t.candidate.logicalDecision},{"logical_left",t.candidate.logicalLeft},{"logical_right",t.candidate.logicalRight},{"candidate",t.candidate.key()},{"version",int64_t(t.candidate.version)},{"parent_hash",r.parentHash},{"control_hash",r.controlHash},{"round_context","../round-"+std::to_string(r.parentVersion)+".json"},{"valid",t.valid},{"decision",!t.valid?"reject":score.status!=ScoreStatus::Scored?"unsupported":eligible?"accept":"reject"},{"reason",t.reason},{"merge_path",t.mergePath},{"cross_decision_leaves",t.candidate.crossDecisionLeaves},{"complete_leaf_plan",t.candidate.completeLeafPlan},{"moved_leaf_instructions",int64_t(t.movedLeafInstructions)},{"leaf_anchors",int64_t(t.leafAnchors)},{"leaf_anchor_pairs",[&](){json::Array a;for(auto &p:t.leafAnchorPairs)a.push_back(p);return a;}()},{"coalesce_gaps",t.candidate.coalesceGaps},{"coalesced_gap_groups",int64_t(t.coalescedGapGroups)},{"fusion_plan",json::Object{{"kind",t.planKind},{"matched_left",t.matchedLeft},{"matched_right",t.matchedRight},{"left_context",bound(t.leftContext)},{"right_context",bound(t.rightContext)},{"split_is_loop_header",t.loopHeaderSplit},{"replication_required",t.replication}}},{"local_reject_reason",t.localRejectReason},{"score_result",scoreJson(score)},{"eligible",eligible},{"cleanup_iterations",int64_t(t.cleanupIterations)},{"alignment_order","function_order_v1"},{"original_darm_similarity",t.originalSimilarity},{"original_darm_profitable",t.originalProfitable},{"replication_required",t.replication},{"orientation_swapped",t.swapped},{"left",bound(t.left)},{"right",bound(t.right)},{"after_raw",stats(t.afterRaw)},{"after",stats(t.after)},{"cleaned_hash",t.normalized?moduleHash(*t.normalized):""},{"parent_ir","../state-"+std::to_string(t.candidate.version)+".ll"},{"timings_ms",json::Object{{"merge",t.mergeMs},{"normalization",t.normalizeMs},{"features",t.featuresMs},{"trial_total",t.totalMs},{"score_with_analysis",t.scoreMs}}},{"semantic_validation","not_run"}});
+    jsonFile(path+"/trial.json",json::Object{{"schema","incremental-score-trial-v1"},{"logical_decision",t.candidate.logicalDecision},{"logical_left",t.candidate.logicalLeft},{"logical_right",t.candidate.logicalRight},{"candidate",t.candidate.key()},{"version",int64_t(t.candidate.version)},{"parent_hash",r.parentHash},{"control_hash",r.controlHash},{"round_context","../round-"+std::to_string(r.parentVersion)+".json"},{"valid",t.valid},{"rewrite_started",t.rewriteStarted},{"decision",!t.valid?"reject":score.status!=ScoreStatus::Scored?"unsupported":eligible?"accept":"reject"},{"reason",t.reason},{"merge_path",t.mergePath},{"cross_decision_leaves",t.candidate.crossDecisionLeaves},{"complete_leaf_plan",t.candidate.completeLeafPlan},{"moved_leaf_instructions",int64_t(t.movedLeafInstructions)},{"leaf_anchors",int64_t(t.leafAnchors)},{"leaf_anchor_pairs",[&](){json::Array a;for(auto &p:t.leafAnchorPairs)a.push_back(p);return a;}()},{"coalesce_gaps",t.candidate.coalesceGaps},{"coalesced_gap_groups",int64_t(t.coalescedGapGroups)},{"fusion_plan",json::Object{{"kind",t.planKind},{"matched_left",t.matchedLeft},{"matched_right",t.matchedRight},{"left_context",bound(t.leftContext)},{"right_context",bound(t.rightContext)},{"split_is_loop_header",t.loopHeaderSplit},{"replication_required",t.replication}}},{"local_reject_reason",t.localRejectReason},{"score_result",scoreJson(score)},{"eligible",eligible},{"cleanup_iterations",int64_t(t.cleanupIterations)},{"alignment_order","function_order_v1"},{"original_darm_similarity",t.originalSimilarity},{"original_darm_profitable",t.originalProfitable},{"replication_required",t.replication},{"orientation_swapped",t.swapped},{"left",bound(t.left)},{"right",bound(t.right)},{"after_raw",stats(t.afterRaw)},{"after",stats(t.after)},{"cleaned_hash",t.normalized?moduleHash(*t.normalized):""},{"parent_ir","../state-"+std::to_string(t.candidate.version)+".ll"},{"timings_ms",json::Object{{"merge",t.mergeMs},{"normalization",t.normalizeMs},{"features",t.featuresMs},{"trial_total",t.totalMs},{"score_with_analysis",t.scoreMs}}},{"semantic_validation","not_run"}});
   }
   void commit(unsigned version,const Candidate&c,const ScoreResult&score,const Module&m)override {
     writeIR(m,dir+"/state-"+std::to_string(version)+".ll");

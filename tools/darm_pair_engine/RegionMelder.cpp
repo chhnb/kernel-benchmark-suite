@@ -575,26 +575,24 @@ void RegionMelder::runPostMergeCleanup() {
 }
 
 Region* RegionMelder::getRegionToReplicate(BasicBlock * MatchedBlock, BasicBlock* PathEntry) {
-  BasicBlock* Curr = MatchedBlock;
-  Region* R = nullptr;
-  do {
-    Region* Candidate = MA.getRI()->getRegionFor(Curr);
-    BasicBlock* Entry = Candidate->getEntry();
-    if (MA.getPDT()->dominates(Entry, PathEntry)){
-      R = Candidate;
-    }
-    else {
-      for(auto* Pred : make_range(pred_begin(Entry), pred_end(Entry))) {
-        if (!Candidate->contains(Pred)){
-          Curr = Pred;
-          break;
-        }
-      }
-    }
+  SmallPtrSet<BasicBlock *, 16> visited;
+  auto *current = MatchedBlock;
+  while (current && visited.insert(current).second) {
+    auto *candidate = MA.getRI()->getRegionFor(current);
+    if (!candidate || candidate->isTopLevelRegion())
+      return nullptr;
+    auto *entry = candidate->getEntry();
+    if (MA.getPDT()->dominates(entry, PathEntry))
+      return candidate;
 
-  } while (!R);
-  assert(R != nullptr && "can not find region to replicate!"); 
-  return R;
+    current = nullptr;
+    for (auto *pred : predecessors(entry))
+      if (!candidate->contains(pred)) {
+        current = pred;
+        break;
+      }
+  }
+  return nullptr;
 }
 
 
@@ -630,6 +628,9 @@ void RegionMelder::merge(unsigned Index) {
       MatchedBlock = Left;
       RToReplicate = getRegionToReplicate(MatchedBlock, LeftPathEntry);
     }
+
+    if (!RToReplicate)
+      throw std::runtime_error("replication_region_boundary_not_found");
 
     // simplify the replicated region
     BasicBlock *ExitToReplicate = RToReplicate->getExit();
@@ -822,11 +823,11 @@ void RegionMelder::runUnpredicationPass() {
     if (!Guard.Second.empty()) {
       GapRange Other(Guard.Second.front(), Guard.Second.back(), !Range.Left);
         auto *Head = Range.getStart()->getParent();
-        auto *First = SplitBlock(Head, Range.getStart(), nullptr, nullptr,
+        auto *First = SplitBlock(Head, Range.getStart(), static_cast<DominatorTree *>(nullptr), nullptr,
                                  nullptr, "predication.first");
-        auto *Second = SplitBlock(First, Other.getStart(), nullptr, nullptr,
+        auto *Second = SplitBlock(First, Other.getStart(), static_cast<DominatorTree *>(nullptr), nullptr,
                                   nullptr, "predication.second");
-        auto *Tail = SplitBlock(Second, Other.getEnd()->getNextNode(), nullptr,
+        auto *Tail = SplitBlock(Second, Other.getEnd()->getNextNode(), static_cast<DominatorTree *>(nullptr),
                                 nullptr, nullptr, "predication.join");
         auto *TrueArm = Range.splitToTrue() ? First : Second;
         auto *FalseArm = Range.splitToTrue() ? Second : First;
@@ -885,10 +886,10 @@ void RegionMelder::runUnpredicationPass() {
         continue;
     }
     BasicBlock *BB = Range.getStart()->getParent();
-    BasicBlock *SplitBb = SplitBlock(BB, Range.getStart(), nullptr, nullptr,
+    BasicBlock *SplitBb = SplitBlock(BB, Range.getStart(), static_cast<DominatorTree *>(nullptr), nullptr,
                                      nullptr, "predication.split");
     BasicBlock *TailBlock =
-        SplitBlock(SplitBb, Range.getEnd()->getNextNode(), nullptr, nullptr,
+        SplitBlock(SplitBb, Range.getEnd()->getNextNode(), static_cast<DominatorTree *>(nullptr), nullptr,
                    nullptr, "predication.tail");
     // now only execute the splitBlock conditionally
     Instruction *OldBr = BB->getTerminator();

@@ -1,6 +1,7 @@
 #pragma once
 #include "fusion_search.h"
 #include "llvm/IR/IntrinsicInst.h"
+#include "llvm/Transforms/Utils/Cloning.h"
 #include "llvm/Support/FileSystem.h"
 #include "llvm/Support/Program.h"
 #include "llvm/Support/JSON.h"
@@ -23,6 +24,17 @@ class LLVM24Scorer final:public Scorer {
   static bool sideCost(const Cost&c,const std::vector<unsigned>&blocks,double&out){
     out=0;for(auto b:blocks){if(b>=c.blockCost.size()||c.blockUnknown[b])return false;out+=c.blockCost[b];}return true;
   }
+  // LLVM 24 cannot represent legacy lifetime markers with a PHI or select
+  // as their underlying object. Normalize those markers in the scoring copy.
+  static bool legacyLifetimeMarker(const llvm::Instruction &instruction) {
+    using namespace llvm;
+    const auto *intrinsic = dyn_cast<IntrinsicInst>(&instruction);
+    if (!intrinsic || (intrinsic->getIntrinsicID() != Intrinsic::lifetime_start &&
+                       intrinsic->getIntrinsicID() != Intrinsic::lifetime_end))
+      return false;
+    const auto *object = intrinsic->getArgOperand(1)->stripPointerCasts();
+    return isa<PHINode>(object) || isa<SelectInst>(object);
+  }
   Cost query(const llvm::Function&f)const {
     using namespace llvm;
     SmallString<128> directory;
@@ -30,7 +42,26 @@ class LLVM24Scorer final:public Scorer {
     struct Remove {std::string dir;~Remove(){sys::fs::remove_directories(dir);}} remove{directory.str().str()};
     const std::string input=remove.dir+"/input.ll",output=remove.dir+"/cost.json",error=remove.dir+"/error.txt";
     std::error_code ec;
-    {raw_fd_ostream stream(input,ec);if(ec)throw std::runtime_error(ec.message());f.getParent()->print(stream,nullptr);}
+    bool needsNormalization = false;
+    for (const auto &block : f)
+      for (const auto &instruction : block)
+        needsNormalization |= legacyLifetimeMarker(instruction);
+    {
+      raw_fd_ostream stream(input, ec);
+      if (ec) throw std::runtime_error(ec.message());
+      if (needsNormalization) {
+        auto scoringModule = CloneModule(*f.getParent());
+        auto &scoringFunction = *scoringModule->getFunction(f.getName());
+        for (auto &block : scoringFunction)
+          for (auto it = block.begin(); it != block.end();) {
+            auto &instruction = *it++;
+            if (legacyLifetimeMarker(instruction)) instruction.eraseFromParent();
+          }
+        scoringModule->print(stream, nullptr);
+      } else {
+        f.getParent()->print(stream, nullptr);
+      }
+    }
     std::string name=f.getName().str(),message;
     std::array<StringRef,3> args{{worker,input,name}};
     std::array<Optional<StringRef>,3> redirects{{StringRef(""),StringRef(output),StringRef(error)}};
@@ -48,7 +79,7 @@ class LLVM24Scorer final:public Scorer {
     if(!n||!u||!z||!v)throw std::runtime_error("worker cost fields missing");
     int64_t count=0;std::set<const BasicBlock*> seen;std::vector<const BasicBlock*> pending{&f.getEntryBlock()};
     while(!pending.empty()){auto*b=pending.back();pending.pop_back();if(!seen.insert(b).second)continue;
-      for(auto*s:successors(b))pending.push_back(s);for(auto&i:*b)if(!isa<DbgInfoIntrinsic>(i))++count;}
+      for(auto*s:successors(b))pending.push_back(s);for(auto&i:*b)if(!isa<DbgInfoIntrinsic>(i)&&!legacyLifetimeMarker(i))++count;}
     if(count!=*n)throw std::runtime_error("IR_upgrade_changed_instruction_count");
     Cost c;c.value=*v;c.count=*n;c.unknown=*u;c.zero=*z;
     auto adjustment=o->getString("compatibility_adjustment");c.adjusted=adjustment&&!adjustment->empty();

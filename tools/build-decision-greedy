@@ -1,6 +1,11 @@
 #!/usr/bin/env bash
 set -euo pipefail
 r=$(cd "$(dirname "$0")/.." && pwd)
+case ${1:-} in
+  --with-structural) bash "$r/tools/build-llvm24-tti" --search-only ;;
+  "") ;;
+  *) echo "usage: $0 [--with-structural]" >&2; exit 2 ;;
+esac
 lc=${LLVM_CONFIG:-/home/chh/darm-artifacts-repro/build/bin/llvm-config}
 [[ $($lc --version) == 12.* ]] || { echo 'LLVM12 required' >&2; exit 2; }
 read -r -a cf <<< "$($lc --cxxflags)"

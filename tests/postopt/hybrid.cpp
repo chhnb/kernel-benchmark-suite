@@ -104,6 +104,8 @@ j:
 }
 )",diag,ctx);check(bool(cyclic),"parse cycle");Candidate cycle{"f","B0","B1","B2",0};cycle.hybrid=true;
  auto bad=tryPair(*cyclic,cycle,0,3,CleanupMode::StructuralCFG);check(!bad.valid&&bad.reason=="loop_in_trial_scope_not_supported","cyclic scope guard lost");
+ check(!bad.rewriteStarted&&bad.localRejectReason=="scope_contains_different_loop",
+       "cyclic scope should be rejected before rewriting with a loop diagnostic");
  auto unsafe=parseAssemblyString(R"(
 @g = global float 0.0
 define float @f(i1 %p, float %x) {

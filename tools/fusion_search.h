@@ -106,7 +106,7 @@ struct Trial {
   Features before, afterRaw, after;
   Boundary left, right;
   std::vector<BlockProvenance> blockProvenance;
-  bool valid=false, replication=false, swapped=false;
+  bool valid=false, replication=false, swapped=false, rewriteStarted=false;
   double originalSimilarity=0;
   bool originalProfitable=false;
   unsigned cleanupIterations=0;
