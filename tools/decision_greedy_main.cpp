@@ -90,8 +90,15 @@ int main(int argc,char**argv){try{
    outs()<<"usage: decision-greedy INPUT FUNCTION [TOOL_ROOT] NEW_OUTPUT\n";
    return 0;
  }
+ std::string b2rStrategy="darm";
+ if(argc>=3 && StringRef(argv[argc-2])=="--b2r-strategy"){
+   b2rStrategy=argv[argc-1];
+   argc-=2;
+   if(b2rStrategy!="darm"&&b2rStrategy!="guarded")
+     throw std::runtime_error("b2r-strategy must be darm or guarded");
+ }
  if(argc!=4&&argc!=5)
-   throw std::runtime_error("usage: decision-greedy INPUT FUNCTION [TOOL_ROOT] NEW_OUTPUT");
+   throw std::runtime_error("usage: decision-greedy INPUT FUNCTION [TOOL_ROOT] NEW_OUTPUT [--b2r-strategy darm|guarded]");
  const bool implicitRoot=argc==4;
  std::string root;
  if(implicitRoot){
@@ -341,6 +348,7 @@ int main(int argc,char**argv){try{
       // replay. Replay adds --gap-replay, a fresh debug directory and output.
       if (implicitRoot)
         trialArgs.insert(trialArgs.end(), {"--single-branch-b2b", "1"});
+      trialArgs.insert(trialArgs.end(), {"--b2r-strategy", b2rStrategy});
       json::Array replayArgs;
       for(const auto &argument:trialArgs)replayArgs.push_back(argument);
       trialArgs.insert(trialArgs.end(),{"--gap-trials","4","--debug-dir",dir+"/structural","--out",dir+"/fused.ll"});

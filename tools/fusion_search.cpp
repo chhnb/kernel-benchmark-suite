@@ -393,6 +393,33 @@ struct Inventory {
   Inventory(Function&f,Analysis&a) {
     unsigned n=0;for(auto&b:f){auto id="B"+std::to_string(n++);blocks[id]=&b;ids[&b]=id;units[id]={&b,b.getSingleSuccessor(),nullptr,{&b}};}
     n=0;std::function<void(Region*)> visit=[&](Region*r){std::set<BasicBlock*>bs;for(auto*b:r->blocks())bs.insert(b);units["R"+std::to_string(n++)]={r->getEntry(),r->getExit(),r,bs};for(auto&c:*r)visit(c.get());};visit(a.regions.getTopLevelRegion());
+    // DARM can pair single-block loops whose exit includes a trailing
+    // edge block. RegionInfo may canonicalize that boundary differently.
+    for (auto &split : f) {
+      auto *branch = dyn_cast<BranchInst>(split.getTerminator());
+      auto *node = a.pdt.getNode(&split);
+      if (!branch || !branch->isConditional() || !node || !node->getIDom()) continue;
+      auto *exit = node->getIDom()->getBlock();
+      if (!exit) continue;
+      for (auto *entry : successors(&split)) {
+        auto *loop = a.loops.getLoopFor(entry);
+        if (!loop || loop->getHeader() != entry || loop->getNumBlocks() != 1) continue;
+        auto *edge = loop->getUniqueExitBlock();
+        if (!edge) continue;
+        std::set<BasicBlock *> members{entry};
+        if (edge != exit) {
+          if (edge->getSinglePredecessor() != entry || edge->getSingleSuccessor() != exit)
+            continue;
+          members.insert(edge);
+        }
+        auto id = "H" + ids.at(entry).substr(1) + "_" + ids.at(exit).substr(1);
+        if (units.count(id)) continue;
+        auto region = std::make_unique<Region>(entry, exit, &a.regions, &a.dt,
+                                               a.regions.getTopLevelRegion());
+        units[id] = {entry, exit, region.get(), members};
+        logicalRegions.push_back(std::move(region));
+      }
+    }
     // A logical fusion arm includes its non-canonical trailing computation,
     // not merely the canonical RegionInfo prefix ending at an internal join.
     for(auto &b:f){
@@ -1210,7 +1237,7 @@ static Trial tryPairImpl(const Module&parent,const Candidate&c,unsigned version,
     // Disable local dispatch: this is a complete-region scoped trial.
     inner.coalesceGaps=c.coalesceGaps;
     // The outer complete-leaf boundary already decided cross-level admission.
-    inner.crossLevelB2R=c.crossLevelB2R||c.crossDecisionLeaves;inner.speculation=c.speculation;inner.speculationBudget=c.speculationBudget;
+    inner.crossLevelB2R=c.crossLevelB2R||c.crossDecisionLeaves;inner.darmB2R=c.darmB2R;inner.speculation=c.speculation;inner.speculationBudget=c.speculationBudget;
     auto out=tryPair(*t.raw,inner,version,level,mode,nullptr);
     out.candidate=c;out.before=before;
     out.left=leftBoundary;out.right=rightBoundary;
@@ -1235,7 +1262,7 @@ static Trial tryPairImpl(const Module&parent,const Candidate&c,unsigned version,
   // Merge only the two entry blocks. A downstream loop on one arm can
   // stay on that arm when neither entry needs replication.
   auto loopEntryPair=[&](const Unit &loopSide,const Unit &bypass) {
-    if(l.region||r.region||c.speculation!=SpeculationMode::None||
+    if(l.region||r.region||
        loopSide.entry->getSinglePredecessor()!=split||
        bypass.entry->getSinglePredecessor()!=split||
        a.loops.getLoopFor(loopSide.entry)!=a.loops.getLoopFor(split)||
@@ -1329,9 +1356,9 @@ static Trial tryPairImpl(const Module&parent,const Candidate&c,unsigned version,
       (leftRequired ? l.entry : r.entry) ==
           br->getSuccessor(leftRequired ? 0 : 1) &&
       (leftRequired ? l.entry : r.entry)->getSingleSuccessor() == join;
-  const bool guardedReplication = replicationWithMemory && guardsUnsafeWork;
+  const bool guardedReplication = replicationWithMemory && guardsUnsafeWork && !c.darmB2R;
   const bool legacyReplication = replicationWithMemory &&
-      c.speculation == SpeculationMode::Legacy;
+      (c.darmB2R || c.speculation == SpeculationMode::Legacy);
   std::map<BasicBlock *, SmallVector<Instruction *, 8>> replicatedMemory;
   std::set<StoreInst*> regionStores;
   std::vector<std::vector<std::pair<Instruction*,Instruction*>>> matchedMemory;
@@ -1621,7 +1648,7 @@ static Trial tryPairImpl(const Module&parent,const Candidate&c,unsigned version,
     t.mergePath = "shared-anchor-" + t.planKind;
     t.replication = false;
   }
-  RegionMelder melder(directLeaves?*leafAnalyzer:ma,!sharedAnchor);melder.CoalesceGaps=c.coalesceGaps;melder.SpeculationMode=int(c.speculation);melder.SpeculationBudget=c.speculationBudget;melder.SpeculationTTI=speculationTTI?speculationTTI->info.get():nullptr;if(t.logicalState)melder.onValueMapping=[&](const ValueToValueMapTy &m){t.logicalState->transfer(m);};if(useLocal){
+  RegionMelder melder(directLeaves?*leafAnalyzer:ma,!sharedAnchor);melder.CoalesceGaps=c.coalesceGaps;melder.SpeculationMode=int(t.replication && legacyReplication && c.darmB2R ? SpeculationMode::Legacy : c.speculation);melder.SpeculationBudget=c.speculationBudget;melder.SpeculationTTI=speculationTTI?speculationTTI->info.get():nullptr;if(t.logicalState)melder.onValueMapping=[&](const ValueToValueMapTy &m){t.logicalState->transfer(m);};if(useLocal){
     if(l.region||r.region)return reject("local_requires_basic_blocks");
     std::string why;
     if(!fuseLocalComputations(l.entry,r.entry,melder.onValueMapping,why,c.localUnion||c.hybrid)){t.reason=why;t.totalMs=millis(started);return t;}
@@ -2808,7 +2835,7 @@ Result greedy(const Module&input,const std::string&function,const Options&o,cons
     if(candidates.size()>o.maxTrials-result.trials){result.stop="trial_budget_before_complete_round";return result;}
     const auto round=makeRound(*result.module,function,version,o.optLevel,o.cleanupMode);if(observer)observer->round(round);
     Trial best;ScoreResult bestResult;double bestScore=o.threshold;bool anyScored=false;
-    for(auto&candidate:candidates){candidate.localCopysign=o.localCopysign;candidate.localUnion=o.localUnion;candidate.hybrid=o.hybrid;candidate.coalesceGaps=o.coalesceGaps;candidate.completeLeafPlan=o.completeLeafPlan;candidate.crossDecisionLeaves=o.crossDecisionLeaves;candidate.crossLevelB2R=o.crossLevelB2R;candidate.speculation=o.speculation;candidate.speculationBudget=o.speculationBudget;Trial t;++result.trials;
+    for(auto&candidate:candidates){candidate.localCopysign=o.localCopysign;candidate.localUnion=o.localUnion;candidate.hybrid=o.hybrid;candidate.coalesceGaps=o.coalesceGaps;candidate.completeLeafPlan=o.completeLeafPlan;candidate.crossDecisionLeaves=o.crossDecisionLeaves;candidate.crossLevelB2R=o.crossLevelB2R;candidate.darmB2R=o.darmB2R;candidate.speculation=o.speculation;candidate.speculationBudget=o.speculationBudget;Trial t;++result.trials;
       // A failing candidate (cleanup non-convergence, audit, invalid IR) is a
       // rejected trial, not a failed search. The parent module is never mutated.
       try{t=tryPair(*result.module,candidate,version,o.optLevel,o.cleanupMode,logical.get());}

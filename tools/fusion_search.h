@@ -35,6 +35,7 @@ struct Candidate {
   bool completeLeafPlan=false;
   bool crossDecisionLeaves=false;
   bool crossLevelB2R=false;
+  bool darmB2R=true;
   // Library default is Legacy so existing tools/tests reproduce; the
   // fusion-search CLI defaults to None.
   SpeculationMode speculation=SpeculationMode::Legacy;
@@ -166,6 +167,7 @@ struct Options {
   // Allow B2R/R2B whose optional block sits behind further tests of the split's
   // own discriminator (DARM would replicate that decision chain). Default off.
   bool crossLevelB2R=false;
+  bool darmB2R=true;
   SpeculationMode speculation=SpeculationMode::Legacy;
   int speculationBudget=4; // weight units, used only by SpeculationMode::Budget
 };
