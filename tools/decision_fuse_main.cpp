@@ -1,5 +1,7 @@
 // Opt-in single-pair bridge to the existing RegionMelder. No ranking or fallback.
 #include "decision_model.h"
+#include <cstdio>
+#include <ctime>
 #include "decision_gap_search.h"
 #include "trial_simplify_cfg.h"
 #include "trial_full_cfg.h"
@@ -30,7 +32,7 @@ static std::string label(Value *v){std::string s;raw_string_ostream o(s);v->prin
 struct OutsideInstruction {
  WeakVH instruction;
  std::string original;
- std::vector<WeakTrackingVH> operands;
+ SmallVector<WeakTrackingVH, 4> operands;
 };
 // Fold only empty diamonds whose outgoing values are identical. No code
 // motion, new select, speculation, or generic SimplifyCFG invocation.
@@ -54,11 +56,36 @@ static unsigned foldEmptyDiamonds(BasicBlock *entry, BasicBlock *exit) {
 }
 // Structural gap trials share one normalized parent. The winner is replayed
 // from the original input to generate the complete diagnostics.
+struct TrialTimings {
+  enum Phase { Clone, Discover, Trees, Scope, Meld, Verify, Cleanup, Serialize, OtherFunctions, Rebound, Count };
+  double Seconds[Count]{};
+  unsigned Calls[Count]{};
+  bool Enabled=std::getenv("DECISION_FUSE_TIMINGS")!=nullptr;
+  ~TrialTimings(){
+    if(!Enabled)return;
+    const char *Names[]={"clone","discover","trees","scope","meld","verify","cleanup","serialize","other-functions","rebound"};
+    for(unsigned I=0;I<Count;++I)
+      std::fprintf(stderr,"trial-timing %s %u %.6f\n",Names[I],Calls[I],Seconds[I]);
+  }
+  template<class F> auto measure(Phase P,F Work){
+    if(!Enabled)return Work();
+    auto Start=std::clock();
+    auto Result=Work();
+    Seconds[P]+=double(std::clock()-Start)/CLOCKS_PER_SEC;
+    ++Calls[P];
+    return Result;
+  }
+};
+static TrialTimings Timings;
+
 struct PreparedDecision {
  std::unique_ptr<Module> module;
  BasicBlock *dispatch=nullptr;
  BasicBlock *binding=nullptr;
  BasicBlock *join=nullptr;
+ ValueToValueMapTy normalizedToPrepared;
+ Optional<decision::Decision> normalizedPair;
+ std::vector<Instruction*> outsideInstructions;
  std::vector<BasicBlock*> originalBlocks;
  std::string decision, left, right;
  unsigned armCount=0;
@@ -74,7 +101,7 @@ static int runDecisionTrial(int argc,char **argv,Module &parent,
  auto &ctx=parent.getContext();
  const bool reuse=prepared&&prepared->module;
  ValueToValueMapTy mapping;
- auto trial=reuse?CloneModule(*prepared->module,mapping):CloneModule(parent);auto *f=trial->getFunction(argv[2]);if(!f)return 2;
+ auto trial=Timings.measure(TrialTimings::Clone,[&]{return reuse?CloneModule(*prepared->module,mapping):CloneModule(parent);});auto *f=trial->getFunction(argv[2]);if(!f)return 2;
  if(!memory&&sys::fs::create_directories(argv[5]))return 2;
  std::string dir=argv[5];json::Object report{{"schema","decision-fuse-trial-v1"},{"engine","RegionMelder"},{"speculation","none"},{"extra_cleanup","arm-local linear folding and identical-value empty diamonds"},{"status","started"}};
  report["speculation"]=mode==0?"none":mode==1?"legacy":mode==2?"budget":"cost";report["speculation_budget"]=budget;report["condition_budget"]=conditionBudget;report["tti_source"]=cleanup=="full"?"LLVM12_target_TTI":"cleanup_structural_no_tti";
@@ -154,7 +181,7 @@ static int runDecisionTrial(int argc,char **argv,Module &parent,
   }
  }
   if(prepared){
-    ValueToValueMapTy snapshot;
+    auto &snapshot=prepared->normalizedToPrepared;
     prepared->module=CloneModule(*trial,snapshot);
     auto mapBlock=[&](BasicBlock *block){return cast<BasicBlock>(snapshot.lookup(block));};
     prepared->dispatch=mapBlock(dispatch);prepared->binding=mapBlock(bindingEntry);
@@ -168,16 +195,78 @@ static int runDecisionTrial(int argc,char **argv,Module &parent,
  auto *origins=dispatch->getTerminator()->getMetadata("decision.merged_from");
  auto *identity=dispatch->getTerminator()->getMetadata("decision.origin");
  if(!memory)writeIR(*trial,dir+"/normalized.ll");
- auto normalized=decision::discover(*f);const decision::Decision *pair=nullptr;for(auto &d:normalized)if(d.root==dispatch)pair=&d;
- if(!pair||pair->arms.size()!=2)return finish("normalized_pair_not_found",3);
+ auto normalized=Timings.measure(TrialTimings::Discover,[&]{
+   if(reuse&&prepared->normalizedPair){
+     auto pair=*prepared->normalizedPair;
+     auto remap=[&](BasicBlock *block){return cast<BasicBlock>(mapping.lookup(block));};
+     pair.root=dispatch;
+     pair.join=remap(pair.join);
+     for(auto &arm:pair.arms){
+       arm.entry=remap(arm.entry);
+       for(auto *&block:arm.blocks)block=remap(block);
+     }
+     return std::vector<decision::Decision>{std::move(pair)};
+   }
+   return decision::discover(*f);
+ });
+ const decision::Decision *pair=nullptr;
+ for(auto &d:normalized)if(d.root==dispatch)pair=&d;
+ if(!pair||pair->arms.size()!=2||!pair->join)return finish("normalized_pair_not_found",3);
  if(pair->arms[0].kind==decision::ArmKind::Unsupported||pair->arms[1].kind==decision::ArmKind::Unsupported)return finish("unsupported_normalized_arm",3);
+ if(prepared&&!reuse&&pair->join){
+   // Cache only the arm fields consumed by this trial, in snapshot coordinates.
+   auto remap=[&](BasicBlock *block){
+     return cast<BasicBlock>(prepared->normalizedToPrepared.lookup(block));
+   };
+   prepared->normalizedPair.emplace();
+   auto &cached=*prepared->normalizedPair;
+   cached.join=remap(pair->join);
+   for(const auto &arm:pair->arms){
+     auto &copy=cached.arms.emplace_back();
+     copy.kind=arm.kind;
+     copy.entry=remap(arm.entry);
+     for(auto *block:arm.blocks)copy.blocks.push_back(remap(block));
+   }
+ }
  bool bothLinear=pair->arms[0].kind==decision::ArmKind::Linear&&pair->arms[1].kind==decision::ArmKind::Linear;
  auto *join=pair->join;std::set<BasicBlock*> scope{dispatch,join};for(auto &a:pair->arms)scope.insert(a.blocks.begin(),a.blocks.end());
- ModuleSlotTracker auditSlots(trial.get());auditSlots.incorporateFunction(*f);
- std::vector<OutsideInstruction> audit;
- for(auto &bb:*f)if(!scope.count(&bb))for(auto &i:bb){OutsideInstruction x;x.instruction=&i;{raw_string_ostream text(x.original);i.print(text,auditSlots);text.flush();}for(auto &op:i.operands())x.operands.emplace_back(op.get());audit.push_back(std::move(x));}
- std::map<std::string,std::string> others;
- for(auto &g:*trial)if(&g!=f){std::string s;raw_string_ostream o(s);g.print(o);others[g.getName().str()]=o.str();}
+ ModuleSlotTracker auditSlots(trial.get());if(diagnostics)auditSlots.incorporateFunction(*f);
+ auto audit=Timings.measure(TrialTimings::Scope,[&]{
+   std::vector<OutsideInstruction> audit;
+   auto record=[&](Instruction &instruction){
+     auto &entry=audit.emplace_back();
+     entry.instruction=&instruction;
+     if(diagnostics){
+       raw_string_ostream text(entry.original);
+       instruction.print(text,auditSlots);
+     }
+     for(auto &operand:instruction.operands())entry.operands.emplace_back(operand.get());
+   };
+   if(reuse&&prepared->normalizedPair){
+     audit.reserve(prepared->outsideInstructions.size());
+     for(auto *instruction:prepared->outsideInstructions)
+       record(*cast<Instruction>(mapping.lookup(instruction)));
+   }else{
+     for(auto &block:*f){
+       if(scope.count(&block))continue;
+       for(auto &instruction:block){
+         record(instruction);
+         if(prepared&&prepared->normalizedPair)
+           prepared->outsideInstructions.push_back(
+               cast<Instruction>(prepared->normalizedToPrepared.lookup(&instruction)));
+       }
+     }
+   }
+   return audit;
+ });
+ auto others=Timings.measure(TrialTimings::OtherFunctions,[&]{
+   std::map<std::string,std::string> snapshot;
+   for(auto &g:*trial)if(&g!=f){
+     raw_string_ostream stream(snapshot[g.getName().str()]);
+     g.print(stream);
+   }
+   return snapshot;
+ });
  // Canonicalize a complete Linear arm to one block without touching its join.
  unsigned folded=0;
  for(auto &a:pair->arms){if(a.kind!=decision::ArmKind::Linear)continue;auto *entry=a.entry;std::set<BasicBlock*> blocks(a.blocks.begin(),a.blocks.end());
@@ -191,7 +280,9 @@ static int runDecisionTrial(int argc,char **argv,Module &parent,
  auto *branch=dyn_cast<BranchInst>(dispatch->getTerminator());if(!branch||!branch->isConditional())return finish("dispatch_lost",3);
  auto *left=branch->getSuccessor(0),*right=branch->getSuccessor(1);
  if(bothLinear&&(left->getSingleSuccessor()!=join||right->getSingleSuccessor()!=join))return finish("B2B_exit_mismatch",3);
- DominatorTree dt(*f);PostDominatorTree pdt(*f);RegionAnalyzer analyzer(dispatch,dt,pdt);
+ DominatorTree dt;PostDominatorTree pdt;
+ Timings.measure(TrialTimings::Trees,[&]{dt.recalculate(*f);pdt.recalculate(*f);return true;});
+ RegionAnalyzer analyzer(dispatch,dt,pdt);
  if(bothLinear)analyzer.selectExplicitBlocks(left,right);else {
   // Reuse the native similarity, but do not call a match of empty plumbing
   // a computation fusion. Restrict anchors to must-execute blocks in each arm.
@@ -218,7 +309,7 @@ static int runDecisionTrial(int argc,char **argv,Module &parent,
  }
  melder.CoalesceGaps=std::getenv("DECISION_COALESCE_GAPS")!=nullptr;
  WeakVH dispatchHandle(dispatch);
- try{melder.merge(0);}catch(const std::exception&E){return finish(E.what(),3);}
+ try{Timings.measure(TrialTimings::Meld,[&]{melder.merge(0);return true;});}catch(const std::exception&E){return finish(E.what(),3);}
  report["alignment_choices"]=std::move(melder.AlignmentChoices);
  report["gap_choices"]=std::move(melder.GapChoices);
  if(!dispatchHandle)return finish("dispatch_deleted_identity_unknown",3);
@@ -228,26 +319,48 @@ static int runDecisionTrial(int argc,char **argv,Module &parent,
  dispatch->getTerminator()->setMetadata("decision.merged_from",origins);
  dispatch->getTerminator()->setMetadata("decision.origin",identity);
  if(order)dispatch->getTerminator()->setMetadata("decision.order",order);
- if(verifyModule(*trial,&errs()))return finish("post_meld_verifier_failed",3);
+ if(Timings.measure(TrialTimings::Verify,[&]{return verifyModule(*trial,&errs());}))return finish("post_meld_verifier_failed",3);
  if(memory){
    if(throughputMachine)memory->LocalCost=decision::scoreVllmThroughput(*f,*throughputMachine);
+   if(!memory->LocalCost||publish)Timings.measure(TrialTimings::Serialize,[&]{
+     raw_string_ostream raw(memory->RawIR);
+     trial->print(raw,nullptr);
+     return true;
+   });
+#ifdef __linux__
+   // Keep raw IR for the replay check when using the external scorer.
+   if(scoreLimit&&!memory->LocalCost){
+     try{
+       memory->LocalCost=decision::scoreGapIR(decision::gapTTIWorker(argv[0]),memory->RawIR,argv[2]);
+     }catch(const std::runtime_error &){
+       // Let the normal path validate the trial before reporting a scoring failure.
+     }
+   }
+#endif
    if(scoreLimit&&memory->LocalCost&&*memory->LocalCost>=*scoreLimit){
      memory->ScoredOnly=true;
      return 0;
    }
-   if(!memory->LocalCost||publish){raw_string_ostream raw(memory->RawIR);trial->print(raw,nullptr);}
  }
  else writeIR(*trial,dir+"/meld-raw.ll");
- report["empty_diamonds_folded"]=foldEmptyDiamonds(dispatch,join);
+ report["empty_diamonds_folded"]=Timings.measure(TrialTimings::Cleanup,[&]{return foldEmptyDiamonds(dispatch,join);});
  // Finish only this trial's trivial PHIs now; otherwise the native global
  // post-pass would delete them during the next, unrelated trial.
  std::set<BasicBlock*> local;std::vector<BasicBlock*> todo{dispatch};
  while(!todo.empty()){auto *b=todo.back();todo.pop_back();if(!local.insert(b).second)continue;if(b!=join)for(auto *s:successors(b))todo.push_back(s);}
  unsigned trivialPhis=0;for(auto *b:local)for(auto it=b->begin();it!=b->end();){auto *p=dyn_cast<PHINode>(&*it++);if(p&&p->getNumIncomingValues()==1&&p->getIncomingValue(0)!=p){p->replaceAllUsesWith(p->getIncomingValue(0));p->eraseFromParent();++trivialPhis;}}
  report["single_input_phis_folded"]=trivialPhis;
- if(verifyModule(*trial,&errs()))return finish("local_cleanup_verifier_failed",3);
- for(auto &x:audit){auto *i=dyn_cast_or_null<Instruction>((Value*)x.instruction);if(!i||i->getNumOperands()!=x.operands.size()){report["outside_failure"]=x.original;return finish("outside_instruction_deleted_or_reshaped",3);}for(unsigned n=0;n<x.operands.size();++n)if(i->getOperand(n)!=(Value*)x.operands[n])return finish("outside_operand_changed_without_RAUW",3);}
- for(auto &g:*trial)if(&g!=f){std::string s;raw_string_ostream o(s);g.print(o);if(others[g.getName().str()]!=o.str())return finish("other_function_changed",3);}
+ if(Timings.measure(TrialTimings::Verify,[&]{return verifyModule(*trial,&errs());}))return finish("local_cleanup_verifier_failed",3);
+ for(auto &x:audit){auto *i=dyn_cast_or_null<Instruction>((Value*)x.instruction);if(!i||i->getNumOperands()!=x.operands.size()){if(diagnostics)report["outside_failure"]=x.original;return finish("outside_instruction_deleted_or_reshaped",3);}for(unsigned n=0;n<x.operands.size();++n)if(i->getOperand(n)!=(Value*)x.operands[n])return finish("outside_operand_changed_without_RAUW",3);}
+ if(!Timings.measure(TrialTimings::OtherFunctions,[&]{
+   for(auto &g:*trial)if(&g!=f){
+     std::string text;
+     raw_string_ostream stream(text);
+     g.print(stream);
+     if(others[g.getName().str()]!=stream.str())return false;
+   }
+   return true;
+ }))return finish("other_function_changed",3);
  if(bindingEntry!=dispatch){
   dispatch->getTerminator()->setMetadata("decision.merged_from",nullptr);dispatch->getTerminator()->setMetadata("decision.order",nullptr);dispatch->getTerminator()->setMetadata("decision.origin",nullptr);
   bindingEntry->getTerminator()->setMetadata("decision.merged_from",origins);bindingEntry->getTerminator()->setMetadata("decision.origin",identity);if(order)bindingEntry->getTerminator()->setMetadata("decision.order",order);
@@ -303,7 +416,7 @@ static int runDecisionTrial(int argc,char **argv,Module &parent,
  report["binding_entry"]=label(bindingEntry);
  if(publish){raw_string_ostream raw(memory->FinalIR);trial->print(raw,nullptr);}
  else if(!memory)writeIR(*trial,dir+"/fused.ll");
- auto rebound=decision::discover(*f);unsigned bindings=0;std::string kind;
+ auto rebound=Timings.measure(TrialTimings::Rebound,[&]{return decision::discover(*f);});unsigned bindings=0;std::string kind;
  for(auto &d:rebound)if(d.id==decisionID)for(auto &a:d.arms)if(a.entry==bindingEntry&&a.kind!=decision::ArmKind::Unsupported){++bindings;kind=a.kind==decision::ArmKind::Linear?"Linear":"SESE";}
  if(bindings==0&&armCount==2){
   DominatorTree dtAfter(*f);PostDominatorTree pdtAfter(*f);auto *exit=decisionJoin;bool owned=pdtAfter.dominates(exit,bindingEntry);std::set<BasicBlock*> visited;std::vector<BasicBlock*> todo{bindingEntry};bool linear=true;

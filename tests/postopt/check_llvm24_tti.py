@@ -44,6 +44,25 @@ ret i32 %v }
 attributes #0 = { "target-cpu"="gfx906" }
 ''')
 j=query(unknown,'f',out/'unknown.json');assert j['unknown']==1 and j['cost'] is None
+other_target=out/'gfx900.ll'
+other_target.write_text(fixture.read_text().replace('"gfx906"', '"gfx900"'))
+bad=out/'invalid.ll'
+bad.write_text('this is not LLVM IR')
+paths=[fixture,other_target,unknown,bad,fixture]
+for mode in ('full','summary'):
+    flags=['--summary-only'] if mode=='summary' else []
+    expected=[
+        json.loads(subprocess.check_output([str(worker),str(path),'f',*flags]))
+        if path!=bad else None
+        for path in paths
+    ]
+    result=subprocess.run(
+        [str(worker),'--serve-'+mode,'f'],
+        input=''.join(str(path.resolve())+'\n' for path in paths),
+        capture_output=True,text=True,check=True,timeout=30,
+    )
+    assert [json.loads(line) for line in result.stdout.splitlines()]==expected
+
 base=root/'experiments/postopt-suite-comparison-v2'
 summary=[]
 for case in ['boost-landau','boost-mapairy','boost-saspoint5']:

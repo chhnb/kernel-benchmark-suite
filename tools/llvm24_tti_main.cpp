@@ -14,21 +14,40 @@
 #include "llvm/Support/FormatVariadic.h"
 #include "llvm/Support/SourceMgr.h"
 #include "llvm/Target/TargetMachine.h"
+#include <iostream>
 #include <map>
 #include <set>
 #include <stdexcept>
 using namespace llvm;
-int main(int argc,char**argv) {
+struct TargetCache {
+  std::string triple, cpu, features;
+  std::unique_ptr<TargetMachine> machine;
+
+  TargetMachine &get(const Triple &targetTriple, StringRef targetCPU, StringRef targetFeatures) {
+    if(machine&&triple==targetTriple.str()&&cpu==targetCPU&&features==targetFeatures)
+      return *machine;
+    std::string error;
+    auto *target=TargetRegistry::lookupTarget(targetTriple,error);
+    if(!target)throw std::runtime_error(error);
+    std::unique_ptr<TargetMachine> replacement(
+        target->createTargetMachine(targetTriple,targetCPU,targetFeatures,TargetOptions(),std::nullopt));
+    if(!replacement)throw std::runtime_error("target machine unavailable");
+    triple=targetTriple.str();
+    cpu=targetCPU.str();
+    features=targetFeatures.str();
+    machine=std::move(replacement);
+    return *machine;
+  }
+};
+static int score(StringRef input,StringRef function,bool summaryOnly,bool compact,
+                 TargetCache &targets) {
  try {
-  bool summaryOnly=argc==4&&StringRef(argv[3])=="--summary-only";
-  if(argc!=3&&!summaryOnly)throw std::runtime_error("usage: llvm24-tti IR FUNCTION [--summary-only]");
   LLVMContext ctx;SMDiagnostic diagnostic;
-  auto m=parseIRFile(argv[1],diagnostic,ctx);
-  if(!m){diagnostic.print(argv[0],errs());return 2;}
+  auto m=parseIRFile(input,diagnostic,ctx);
+  if(!m){diagnostic.print("llvm24-tti",errs());return 2;}
   if(verifyModule(*m,&errs()))return 2;
-  auto *f=m->getFunction(argv[2]);if(!f||f->isDeclaration())throw std::runtime_error("function missing");
-  InitializeAllTargetInfos();InitializeAllTargets();InitializeAllTargetMCs();
-  std::string error;auto triple=m->getTargetTriple();
+  auto *f=m->getFunction(function);if(!f||f->isDeclaration())throw std::runtime_error("function missing");
+  auto triple=m->getTargetTriple();
   auto cpu=f->getFnAttribute("target-cpu").getValueAsString();
   std::string originalFeatures=f->getFnAttribute("target-features").getValueAsString().str();
   std::string features=originalFeatures,compatibility;
@@ -46,11 +65,9 @@ int main(int argc,char**argv) {
     if(!compatibility.empty())f->addFnAttr("target-features",features);
   }
   if(cpu.empty())throw std::runtime_error("target-cpu required; generic cost forbidden");
-  auto*t=TargetRegistry::lookupTarget(triple,error);
-  if(!t)throw std::runtime_error(error);
-  std::unique_ptr<TargetMachine> tm(t->createTargetMachine(triple,cpu,features,TargetOptions(),std::nullopt));
-  if(!tm)throw std::runtime_error("target machine unavailable");
-  FunctionAnalysisManager fam;auto tti=tm->getTargetIRAnalysis().run(*f,fam);
+  auto &target=targets.get(triple,cpu,features);
+  FunctionAnalysisManager fam;
+  auto tti=target.getTargetIRAnalysis().run(*f,fam);
   int64_t total=0,count=0,unknown=0,zero=0;
   json::Array instructions;std::map<std::string,int64_t> histogram;
   std::set<const BasicBlock*> reachable;std::vector<const BasicBlock*> pending{&f->getEntryBlock()};
@@ -92,6 +109,27 @@ int main(int argc,char**argv) {
     output["histogram"]=std::move(hist);
     output["instruction_costs"]=std::move(instructions);
   }
-  outs()<<formatv("{0:2}\n",json::Value(std::move(output)));return 0;
+  json::Value result(std::move(output));
+  if(compact)outs()<<result<<'\n';
+  else outs()<<formatv("{0:2}\n",result);
+  return 0;
  }catch(const std::exception&e){errs()<<e.what()<<"\n";return 2;}
+}
+int main(int argc,char **argv) {
+  const bool fullServer=argc==3&&StringRef(argv[1])=="--serve-full";
+  const bool server=fullServer||(argc==3&&StringRef(argv[1])=="--serve-summary");
+  const bool summaryOnly=argc==4&&StringRef(argv[3])=="--summary-only";
+  if(argc!=3&&!summaryOnly){
+    errs()<<"usage: llvm24-tti IR FUNCTION [--summary-only] or llvm24-tti (--serve-summary|--serve-full) FUNCTION\n";
+    return 2;
+  }
+  InitializeAllTargetInfos();InitializeAllTargets();InitializeAllTargetMCs();
+  TargetCache targets;
+  if(!server)return score(argv[1],argv[2],summaryOnly,false,targets);
+  std::string input;
+  while(std::getline(std::cin,input)){
+    if(score(input,argv[2],!fullServer,true,targets))outs()<<"null\n";
+    outs().flush();
+  }
+  return 0;
 }

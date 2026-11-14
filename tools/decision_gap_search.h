@@ -61,6 +61,47 @@ inline bool gapKeepCatalog() {
   const char *Mode=std::getenv("DECISION_GAP_KEEP_CATALOG");
   return !gapRootsStdout()||(Mode&&StringRef(Mode)=="1");
 }
+inline std::string gapTTIWorker(StringRef Executable) {
+  if(const char *Worker=std::getenv("DECISION_TTI_WORKER"))return Worker;
+  SmallString<256> Root(Executable);
+  sys::fs::make_absolute(Root);
+  for(unsigned I=0;I<3;++I)sys::path::remove_filename(Root);
+  return (Root.str()+"/tools/run-llvm24-tti").str();
+}
+inline int64_t gapTTICost(const json::Value &Result) {
+  auto *C=Result.getAsObject();
+  if(!C||C->getInteger("unknown")!=Optional<int64_t>(0)||
+     C->getString("source_revision")!=Optional<StringRef>("6be16f356d3e")||
+     !C->getInteger("cost"))
+    throw std::runtime_error("gap TTI cost unknown or revision mismatch");
+  return *C->getInteger("cost");
+}
+#ifdef __linux__
+inline int64_t scoreGapIR(StringRef Worker,StringRef IR,StringRef Function) {
+  const bool customWorker=std::getenv("DECISION_TTI_WORKER");
+  const char *persistent=std::getenv("DECISION_PERSISTENT_TTI");
+  if(!customWorker&&(!persistent||StringRef(persistent)!="0")){
+    // Each decision-fuse process evaluates one function and one block pair.
+    static std::unique_ptr<PersistentTTI> Session;
+    static bool Disabled=false;
+    if(!Disabled){
+      try{
+        if(!Session)Session=std::make_unique<PersistentTTI>(Worker,Function);
+        auto Result=json::parse(Session->score(IR));
+        if(!Result)throw std::runtime_error(toString(Result.takeError()));
+        return gapTTICost(*Result);
+      }catch(const std::runtime_error &){
+        Session.reset();
+        Disabled=true;
+        errs()<<"persistent TTI worker unavailable, using one-shot scoring\n";
+      }
+    }
+  }
+  auto Parsed=json::parse(runMemoryTTI(Worker,IR,Function,!customWorker,120));
+  if(!Parsed)throw std::runtime_error(toString(Parsed.takeError()));
+  return gapTTICost(*Parsed);
+}
+#endif
 struct GapTrialResult {
   json::Value Report=nullptr;
   std::string RawIR,FinalIR;
@@ -76,10 +117,7 @@ inline int searchGapPlans(int Argc,char **Argv,int Mode,
   std::string Out=Argv[5];if(sys::fs::exists(Out))throw std::runtime_error("output directory exists");
   if(auto E=sys::fs::create_directories(Out))throw std::runtime_error(E.message());
   SmallString<256> Exe(Argv[0]);sys::fs::make_absolute(Exe);
-  SmallString<256> Root(Exe);for(unsigned I=0;I<3;++I)sys::path::remove_filename(Root);
-  std::string Worker=std::string(Root.str())+"/tools/run-llvm24-tti";
-  const char *CustomWorker=std::getenv("DECISION_TTI_WORKER");
-  if(CustomWorker)Worker=CustomWorker;
+  const std::string Worker=gapTTIWorker(Exe);
   const char *KeepTrials=std::getenv("DECISION_GAP_KEEP_TRIALS");
 #ifdef __linux__
   bool InMemory=!KeepTrials||StringRef(KeepTrials)!="1";
@@ -132,22 +170,18 @@ inline int searchGapPlans(int Argc,char **Argv,int Mode,
       return std::make_unique<Candidate>(Candidate{S,Dir,*Result.LocalCost,
           std::move(Result.Report),std::move(Result.RawIR)});
     }
-    json::Value CostJSON=nullptr;
+    int64_t Cost;
 #ifdef __linux__
-    if(InMemory){
-      auto Parsed=json::parse(runMemoryTTI(Worker,Result.RawIR,Argv[2],!CustomWorker,120));
-      if(!Parsed)throw std::runtime_error(toString(Parsed.takeError()));
-      CostJSON=std::move(*Parsed);
-    }else
+    if(InMemory)
+      Cost=scoreGapIR(Worker,Result.RawIR,Argv[2]);
+    else
 #endif
     {
       RC=gapCommand({Worker,Dir+"/meld-raw.ll",Argv[2]},Dir+"/gap-tti.json",Dir+"/gap-tti.stderr");
       if(RC)throw std::runtime_error("gap TTI worker failed");
-      CostJSON=readGapJSON(Dir+"/gap-tti.json");
+      Cost=gapTTICost(readGapJSON(Dir+"/gap-tti.json"));
     }
-    auto *C=CostJSON.getAsObject();
-    if(!C||C->getInteger("unknown")!=Optional<int64_t>(0)||C->getString("source_revision")!=Optional<StringRef>("6be16f356d3e")||!C->getInteger("cost"))throw std::runtime_error("gap TTI cost unknown or revision mismatch");
-    int64_t Cost=*C->getInteger("cost");Row["cost"]=Cost;Trace.push_back(std::move(Row));
+    Row["cost"]=Cost;Trace.push_back(std::move(Row));
     return std::unique_ptr<Candidate>(new Candidate{S,Dir,Cost,std::move(Result.Report),std::move(Result.RawIR)});
   };
   auto Current=Evaluate(GapSearchState{},"all-gaps-protected");

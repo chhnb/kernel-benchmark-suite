@@ -5,8 +5,15 @@
 #include "llvm/Support/raw_ostream.h"
 #include <array>
 #include <cerrno>
+#include <chrono>
 #include <stdexcept>
 #ifdef __linux__
+#include <fcntl.h>
+#include <poll.h>
+#include <signal.h>
+#include <spawn.h>
+#include <sys/socket.h>
+#include <sys/wait.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -58,6 +65,80 @@ public:
       Offset += Count;
     }
     return Text;
+  }
+};
+
+class PersistentTTI {
+  TTIFile Input;
+  TTIFile Error;
+  int Socket=-1;
+  pid_t Child=-1;
+
+public:
+  PersistentTTI(llvm::StringRef Worker, llvm::StringRef Function, bool SummaryOnly=true) {
+    int Pair[2];
+    if(::socketpair(AF_UNIX,SOCK_STREAM|SOCK_CLOEXEC,0,Pair)!=0)
+      throw std::runtime_error("cannot create TTI worker socket");
+    posix_spawn_file_actions_t Actions;
+    int RC=::posix_spawn_file_actions_init(&Actions);
+    if(!RC){
+      RC=::posix_spawn_file_actions_adddup2(&Actions,Pair[1],STDIN_FILENO);
+      if(!RC)RC=::posix_spawn_file_actions_adddup2(&Actions,Pair[1],STDOUT_FILENO);
+      if(!RC)RC=::posix_spawn_file_actions_addopen(&Actions,STDERR_FILENO,Error.path().c_str(),O_WRONLY,0);
+      std::string Path=Worker.str(), Name=Function.str();
+      std::string Mode=SummaryOnly?"--serve-summary":"--serve-full";
+      char *Args[]={Path.data(),Mode.data(),Name.data(),nullptr};
+      if(!RC)RC=::posix_spawn(&Child,Path.c_str(),&Actions,nullptr,Args,::environ);
+      ::posix_spawn_file_actions_destroy(&Actions);
+    }
+    ::close(Pair[1]);
+    if(RC){
+      ::close(Pair[0]);
+      throw std::runtime_error("cannot start persistent TTI worker");
+    }
+    Socket=Pair[0];
+  }
+  PersistentTTI(const PersistentTTI &)=delete;
+  PersistentTTI &operator=(const PersistentTTI &)=delete;
+  ~PersistentTTI() {
+    ::close(Socket);
+    ::kill(Child,SIGKILL);
+    while(::waitpid(Child,nullptr,0)<0&&errno==EINTR){}
+  }
+  std::string score(llvm::StringRef IR) {
+    Input.write(IR);
+    // procfs descriptors are reused. Opening the file in TTIFile::write
+    // truncates the previous request before the worker receives the path.
+    const std::string Request=Input.path()+"\n";
+    size_t Sent=0;
+    while(Sent<Request.size()){
+      auto N=::send(Socket,Request.data()+Sent,Request.size()-Sent,MSG_NOSIGNAL);
+      if(N<0&&errno==EINTR)continue;
+      if(N<=0)throw std::runtime_error("cannot send TTI request");
+      Sent+=N;
+    }
+    std::string Response;
+    const size_t maxResponseSize=32*1024*1024;
+    const auto deadline=std::chrono::steady_clock::now()+std::chrono::seconds(120);
+    while(Response.size()<maxResponseSize){
+      pollfd FD{Socket,POLLIN,0};
+      int Ready;
+      do {
+        auto remaining=std::chrono::duration_cast<std::chrono::milliseconds>(
+            deadline-std::chrono::steady_clock::now()).count();
+        if(remaining<=0)throw std::runtime_error("persistent TTI response timed out");
+        Ready=::poll(&FD,1,int(remaining));
+      } while(Ready<0&&errno==EINTR);
+      if(Ready<=0)throw std::runtime_error("persistent TTI response unavailable");
+      char Buffer[4096];
+      auto N=::read(Socket,Buffer,sizeof Buffer);
+      if(N<0&&errno==EINTR)continue;
+      if(N<=0)throw std::runtime_error("persistent TTI worker exited");
+      Response.append(Buffer,N);
+      if(Response.size()>maxResponseSize)break;
+      if(Response.back()=='\n')return Response;
+    }
+    throw std::runtime_error("persistent TTI response exceeds size limit");
   }
 };
 

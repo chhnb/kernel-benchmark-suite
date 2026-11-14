@@ -222,7 +222,9 @@ void RegionMelder::cloneInstructions() {
         assert(ClonedRightParentIt != MergedValuesToRightValues.end() &&
                "Cloned left BB not found for right value!");
         // if (cast<BasicBlock>(ClonedRightParentIt->second)->size() > 1)
-        if(requireUnpredication(LeftI->getParent(), cast<BasicBlock>(ClonedRightParentIt->second), SpeculationMode, SpeculationBudget))
+        auto *corresponding = cast<BasicBlock>(ClonedRightParentIt->second);
+        if (NativeReplicationPredication ? corresponding->size() > 1 :
+            requireUnpredication(LeftI->getParent(), corresponding, SpeculationMode, SpeculationBudget))
           updateSplitRangeMap(true, NewI);
       }
 
@@ -242,7 +244,9 @@ void RegionMelder::cloneInstructions() {
         assert(ClonedLeftParentIt != MergedValuesToLeftValues.end() &&
                "Cloned left BB not found for right value!");
         // if (cast<BasicBlock>(ClonedLeftParentIt->second)->size() > 1)
-        if(requireUnpredication(RightI->getParent(), cast<BasicBlock>(ClonedLeftParentIt->second), SpeculationMode, SpeculationBudget))
+        auto *corresponding = cast<BasicBlock>(ClonedLeftParentIt->second);
+        if (NativeReplicationPredication ? corresponding->size() > 1 :
+            requireUnpredication(RightI->getParent(), corresponding, SpeculationMode, SpeculationBudget))
           updateSplitRangeMap(false, NewI);
       }
     }
@@ -658,7 +662,8 @@ void RegionMelder::merge(unsigned Index) {
     // replicate the region
     RegionReplicator RR(MA, ExpandingLeft);
     Region *ReplicatedR =
-        RR.replicate(ExpandedBlock, MatchedBlock, RToReplicate);
+        RR.replicate(ExpandedBlock, MatchedBlock, RToReplicate,
+                     !GuardReplicatedMemory);
 
     // prepare for melding
     if (ExpandingLeft) {
@@ -800,6 +805,24 @@ Instruction *RegionMelder::cloneInstruction(Instruction *OrigI,
 // Each side keeps its original instruction/memory order and remains guarded.
 // Cross-side SSA dependencies, calls, volatile/atomic accesses and barriers
 // stop grouping. This is scheduling within one block, not speculation.
+bool RegionMelder::hasGuardedGap(const Instruction *instruction, bool left) const {
+  if (EnableFullPredication ||
+      (SpeculationMode != 0 &&
+       (SpeculationMode != 3 || safeToSpeculate(*instruction))))
+    return false;
+  for (const auto &range : SplitRanges) {
+    if (range.splitToTrue() != left)
+      continue;
+    for (auto *current = range.getStart(); current; current = current->getNextNode()) {
+      if (current == instruction)
+        return true;
+      if (current == range.getEnd())
+        break;
+    }
+  }
+  return false;
+}
+
 void RegionMelder::runUnpredicationPass() {
   DenseMap<Instruction *, bool> Choices;
   for (auto &Pair : EmittedGapIDs) Choices[Pair.first] = SpeculateGapIDs.count(Pair.second);
@@ -811,7 +834,7 @@ void RegionMelder::runUnpredicationPass() {
     for(auto *I:Segment.Instructions){auto It=EmittedGapIDs.find(I);if(It==EmittedGapIDs.end())throw std::runtime_error("gap_origin_missing");IDs.push_back(int64_t(It->second));}
     auto &D=Plan.Decisions[N];
     GapChoices.push_back(json::Object{{"ids",std::move(IDs)},{"left",Segment.Left},
-      {"speculated",D.Speculate},{"safe",D.Safe&&D.Available}});
+      {"speculated",D.Speculate},{"safe",D.Safe&&D.Available&&D.TTI>=0}});
   }
   SegmentDecisions.insert(SegmentDecisions.end(),Plan.Decisions.begin(),Plan.Decisions.end());
   if(SpeculationMode==3)for(auto &Segment:Plan.Speculated)for(auto *I:Segment.Instructions)speculation_policy::sanitize(*I);

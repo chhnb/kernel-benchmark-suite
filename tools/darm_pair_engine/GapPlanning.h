@@ -259,7 +259,7 @@ inline GapPlan planGaps(Function &F, ArrayRef<GapRange> Ranges, int Mode,
   for(auto &S:Segments)Plan.Decisions.push_back(speculation_policy::decide(S.Instructions,Mode,Budget,TTI,CostThreshold,DT,Position));
   if(Explicit)for(unsigned N=0;N<Segments.size();++N){
     auto &D=Plan.Decisions[N];bool Want=Explicit->lookup(Segments[N].Instructions.front());
-    if(Want&&(Mode!=3||!D.Safe||!D.Available))throw std::runtime_error("unsafe_or_unavailable_gap_request");
+    if(Want&&(Mode!=3||!D.Safe||!D.Available||D.TTI<0))throw std::runtime_error("unsafe_or_unavailable_gap_request");
     D.Speculate=Want;D.Reason=Want?"explicit_safe_speculation":"explicit_protection";
   }
   if(Mode==3){

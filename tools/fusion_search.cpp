@@ -1,3 +1,4 @@
+#include "decision_speculation_tti.h"
 #include "scoped_cfg_cleanup.h"
 #include "fusion_search.h"
 #include "darm_pair_engine/LocalComputationFusion.h"
@@ -299,10 +300,11 @@ unsigned cleanup(Module &m,const std::string &function,unsigned level,CleanupMod
       }
     }
   }while(changed);
-  if(mode==CleanupMode::DarmCFGEarlyCSE){
+  if(mode==CleanupMode::DarmCFGEarlyCSE||mode==CleanupMode::DarmCFGRedundancy){
     legacy::FunctionPassManager pm(&m);
     pm.add(createTargetTransformInfoWrapperPass(tm?tm->getTargetIRAnalysis():TargetIRAnalysis()));
     pm.add(createEarlyCSEPass(false));
+    if(mode==CleanupMode::DarmCFGRedundancy)pm.add(createDeadCodeEliminationPass());
     pm.doInitialization();pm.run(*f);pm.doFinalization();
     return 1;
   }
@@ -532,6 +534,12 @@ static Boundary boundary(const Unit&u,Function&f) {
     for(auto*x:i.users())if(auto*use=dyn_cast<Instruction>(x))if(!u.blocks.count(use->getParent()))outs.insert(name(&i));
   }}v.liveIns.assign(ins.begin(),ins.end());v.liveOuts.assign(outs.begin(),outs.end());return v;
 }
+static bool blocksAnchorDiscovery(const Instruction &instruction) {
+  if (const auto *store = dyn_cast<StoreInst>(&instruction))
+    return !store->isSimple();
+  return instruction.mayHaveSideEffects() || instruction.mayWriteToMemory();
+}
+
 std::vector<Candidate> enumerate(Function&f,unsigned version,bool crossDecisionLeaves) {
   Analysis a(f); Inventory inv(f,a);std::vector<Candidate> result;
   auto frontier=[&](const std::set<BasicBlock*>&side,const std::set<BasicBlock*>&opposite){
@@ -577,9 +585,12 @@ std::vector<Candidate> enumerate(Function&f,unsigned version,bool crossDecisionL
         if(!li.empty()&&!ri.empty())result.push_back({f.getName().str(),inv.ids.at(&b),li,ri,version});
       }
     } // Original DARM matcher is optional; retain our other candidate families.
-    // Same conservative scope as tryPair; do not spend trials on known rejects.
+    // An ordinary store elsewhere on an arm may stay on its original path.
+    // Trial legality depends on the selected anchors and the emitted CFG.
     auto scope=l;scope.insert(r.begin(),r.end());bool unsupported=!supportedLoopScope(&b,join,scope,a.loops);
-    for(auto*x:scope){for(auto&i:*x)unsupported|=i.mayHaveSideEffects()||i.mayWriteToMemory();}
+    for (auto *block : scope)
+      for (const auto &instruction : *block)
+        unsupported |= blocksAnchorDiscovery(instruction);
     if(unsupported)continue;
     // Canonical frontiers can hide a previously fused computation behind
     // PHI/select join blocks. Also enumerate exclusive computation blocks,
@@ -685,7 +696,7 @@ struct AdjacentLeafEntry {
       }
     }
     if(auto *C=dyn_cast<Instruction>(B->getCondition()))if(C->getParent()!=Q&&!DT.dominates(C,A))return false;
-    if(mode==SpeculationMode::None&&hoisted>0)return false;
+    if((mode==SpeculationMode::None||mode==SpeculationMode::Cost)&&hoisted>0)return false;
     if(mode==SpeculationMode::Budget&&hoisted>unsigned(budget))return false;
     first=P;second=Q;left=L;right=R;tail=Tail;a=A;b=B;hitA=HA;hitB=HB;return true;
   }
@@ -712,6 +723,37 @@ struct AdjacentLeafEntry {
     second->eraseFromParent();return Gate;
   }
 };
+std::set<std::string> crossLevelCatalogRejections(Function &f,
+    const std::vector<Candidate> &candidates,const Options &options) {
+  std::set<std::string> rejected;
+  if(options.crossLevelB2R||!options.hybrid||options.adjacentOnly)return rejected;
+  Analysis analysis(f);
+  Inventory inventory(f,analysis);
+  for(const auto &candidate:candidates){
+    if(!StringRef(candidate.left).startswith("B")||
+       !StringRef(candidate.right).startswith("B"))continue;
+    auto *split=inventory.blocks.at(candidate.split);
+    auto *branch=dyn_cast<BranchInst>(split->getTerminator());
+    auto *node=analysis.pdt.getNode(split);
+    if(!branch||!branch->isConditional()||!node||!node->getIDom()||
+       !node->getIDom()->getBlock())continue;
+    auto *discriminator=decisionDiscriminator(split);
+    if(!discriminator)continue;
+    auto left=inventory.units.at(candidate.left),right=inventory.units.at(candidate.right);
+    auto *join=node->getIDom()->getBlock();
+    const auto ls=reachable(branch->getSuccessor(0),join);
+    const auto rs=reachable(branch->getSuccessor(1),join);
+    if(belongs(left,rs,ls)&&belongs(right,ls,rs))std::swap(left,right);
+    if(!belongs(left,ls,rs)||!belongs(right,rs,ls))continue;
+    if(!optionalBehindSameDecision(left.entry,branch->getSuccessor(0),discriminator,analysis)&&
+       !optionalBehindSameDecision(right.entry,branch->getSuccessor(1),discriminator,analysis))continue;
+    AdjacentLeafEntry direct;
+    if(left.exit&&left.exit==right.exit&&direct.prepare(left.entry,right.entry,analysis.dt,
+        analysis.loops,false,options.speculation,options.speculationBudget))continue;
+    rejected.insert(candidate.key());
+  }
+  return rejected;
+}
 // Move only mandatory, simple-load dependency cones to a dedicated leaf
 // prefix. Acyclic read-only leaves with speculatable calls cannot change the
 // memory state or prevent the original mandatory loads from executing.
@@ -942,6 +984,119 @@ static bool sideBlocksBoth(Function &f,Value *cond,std::vector<unsigned> (&sides
   return sideBlocks(f,cond,false,sides[0],why)&&sideBlocks(f,cond,true,sides[1],why);
 }
 
+// Share identical trailing arithmetic by redirecting the short arm to
+// the existing anchor. All other edges, including the long arm's memory
+// paths, keep their original execution conditions.
+static bool shareReplicatedAnchor(BasicBlock *split, BasicBlock *shortArm,
+                                  BasicBlock *anchor, BasicBlock *join,
+                                  DominatorTree &dt) {
+  auto *branch = cast<BranchInst>(split->getTerminator());
+  auto *shortExit = dyn_cast<BranchInst>(shortArm->getTerminator());
+  auto *anchorExit = dyn_cast<BranchInst>(anchor->getTerminator());
+  if (!shortExit || !shortExit->isUnconditional() ||
+      !anchorExit || !anchorExit->isUnconditional() ||
+      shortArm->getSinglePredecessor() != split ||
+      shortExit->getSuccessor(0) != join ||
+      anchorExit->getSuccessor(0) != join || anchor->hasAddressTaken() ||
+      shortArm->hasAddressTaken() || shortArm->size() != anchor->size())
+    return false;
+
+  DenseMap<Value *, Value *> matches;
+  auto other = anchor->begin();
+  for (auto &inst : *shortArm) {
+    if (inst.isTerminator()) break;
+    auto *match = &*other++;
+    if (!isa<BinaryOperator>(inst) || !inst.isIdenticalTo(match) ||
+        inst.hasMetadataOtherThanDebugLoc() ||
+        match->hasMetadataOtherThanDebugLoc())
+      return false;
+    for (auto &operand : inst.operands())
+      if (auto *def = dyn_cast<Instruction>(operand.get()))
+        if (!dt.dominates(def, branch)) return false;
+    for (auto *value : {&inst, match}) {
+      for (const auto &use : value->uses()) {
+        auto *phi = dyn_cast<PHINode>(use.getUser());
+        if (!phi || phi->getParent() != join ||
+            phi->getIncomingBlock(use.getOperandNo()) != value->getParent())
+          return false;
+      }
+    }
+    matches[&inst] = match;
+  }
+  if (matches.empty()) return false;
+  for (auto &phi : join->phis()) {
+    auto *shortValue = phi.getIncomingValueForBlock(shortArm);
+    auto *anchorValue = phi.getIncomingValueForBlock(anchor);
+    if (shortValue != anchorValue && matches.lookup(shortValue) != anchorValue)
+      return false;
+  }
+  for (auto &phi : join->phis()) phi.removeIncomingValue(shortArm, false);
+  branch->setSuccessor(branch->getSuccessor(0) == shortArm ? 0 : 1, anchor);
+  shortArm->eraseFromParent();
+  return true;
+}
+
+// Extract identical integer computations from two tails without changing
+// any incoming edge. Each old result must be used only on its own exit edge.
+static bool hoistCommonTailArithmetic(BasicBlock &left, BasicBlock &right,
+                                      BasicBlock &split, BasicBlock &join,
+                                      Analysis &analysis) {
+  auto *loop = analysis.loops.getLoopFor(&split);
+  auto *dominator = analysis.dt.findNearestCommonDominator(&left, &right);
+  if (!loop || !dominator || dominator == &left || dominator == &right ||
+      analysis.loops.getLoopFor(dominator) != loop ||
+      !analysis.dt.dominates(dominator, &split) ||
+      analysis.loops.getLoopFor(&left) != loop ||
+      analysis.loops.getLoopFor(&right) != loop ||
+      analysis.loops.getLoopFor(&join) != loop)
+    return false;
+
+  auto tail = [&](BasicBlock &block) {
+    auto *branch = dyn_cast<BranchInst>(block.getTerminator());
+    return branch && branch->isUnconditional() &&
+        branch->getSuccessor(0) == &join;
+  };
+  if (!tail(left) || !tail(right)) return false;
+
+  auto *insert = dominator->getTerminator();
+  auto movable = [&](const Instruction &inst) {
+    switch (inst.getOpcode()) {
+    case Instruction::Add: case Instruction::Sub: case Instruction::Mul:
+    case Instruction::And: case Instruction::Or: case Instruction::Xor:
+      break;
+    default:
+      return false;
+    }
+    if (inst.use_empty() || inst.hasMetadataOtherThanDebugLoc()) return false;
+    for (const auto &operand : inst.operands())
+      if (auto *def = dyn_cast<Instruction>(operand.get()))
+        if (!analysis.dt.dominates(def, insert)) return false;
+    for (const auto &use : inst.uses()) {
+      auto *phi = dyn_cast<PHINode>(use.getUser());
+      if (!phi || phi->getParent() != &join ||
+          phi->getIncomingBlock(use) != inst.getParent())
+        return false;
+    }
+    return true;
+  };
+
+  bool changed = false;
+  for (auto &inst : make_early_inc_range(left)) {
+    if (!movable(inst)) continue;
+    auto match = llvm::find_if(right, [&](Instruction &other) {
+      return inst.isIdenticalTo(&other) && movable(other);
+    });
+    if (match == right.end()) continue;
+    inst.moveBefore(insert);
+    // The shared instruction now executes on additional source paths.
+    inst.setDebugLoc(DebugLoc());
+    match->replaceAllUsesWith(&inst);
+    match->eraseFromParent();
+    changed = true;
+  }
+  return changed;
+}
+
 static Trial tryPairImpl(const Module&parent,const Candidate&c,unsigned version,unsigned level,CleanupMode mode,const LogicalRegionState *logical,bool nested);
 // Public entry. The outermost call owns the side tag and removes it from every
 // IR it returns, so committed modules, debug dumps and hashes never carry it.
@@ -1075,8 +1230,72 @@ static Trial tryPairImpl(const Module&parent,const Candidate&c,unsigned version,
   t.right=boundary(r,*f);
   auto scope=ls;
   scope.insert(rs.begin(),rs.end());
-  if(!supportedLoopScope(split,join,scope,a.loops) &&
-     !supportedSingleBlockLoopPair(split,join,l,r,scope,a.loops)) {
+  // Merge only the two entry blocks. A downstream loop on one arm can
+  // stay on that arm when neither entry needs replication.
+  auto loopEntryPair=[&](const Unit &loopSide,const Unit &bypass) {
+    if(l.region||r.region||c.speculation!=SpeculationMode::None||
+       loopSide.entry->getSinglePredecessor()!=split||
+       bypass.entry->getSinglePredecessor()!=split||
+       a.loops.getLoopFor(loopSide.entry)!=a.loops.getLoopFor(split)||
+       a.loops.getLoopFor(bypass.entry)!=a.loops.getLoopFor(split)||
+       bypass.entry->getSingleSuccessor()!=join)return false;
+    auto *header=loopSide.entry->getSingleSuccessor();
+    if(!header)return false;
+    auto *loop=a.loops.getLoopFor(header);
+    if(!loop||loop->getHeader()!=header||loop->getLoopPreheader()!=loopSide.entry||
+       loop->getParentLoop()!=a.loops.getLoopFor(split)||
+       loop->getUniqueExitBlock()!=join||loop->getNumBlocks()+2!=scope.size())
+      return false;
+    for(auto *block:loop->blocks())if(!scope.count(block))return false;
+    for(auto *entry:{loopSide.entry,bypass.entry})
+      for(auto &instruction:*entry)
+        if(!instruction.isTerminator()&&
+           (instruction.mayReadOrWriteMemory()||instruction.mayHaveSideEffects()||
+            isa<CallBase>(instruction)))return false;
+    return true;
+  };
+  const bool preservedLoop=loopEntryPair(l,r)||loopEntryPair(r,l);
+  const bool siblingLoops=supportedSingleBlockLoopPair(split,join,l,r,scope,a.loops);
+  if(!preservedLoop && !supportedLoopScope(split,join,scope,a.loops) && !siblingLoops) {
+    // A shared tail left by an earlier fusion may have a bypass edge.
+    // Match pure computations without giving RegionMelder that shared block.
+    auto externalPredecessor = [&](BasicBlock *block) {
+      return llvm::any_of(predecessors(block), [&](BasicBlock *pred) {
+        return pred != split && !scope.count(pred);
+      });
+    };
+    if (!l.region && !logical && !nested && c.hybrid &&
+        c.speculation == SpeculationMode::Cost &&
+        mode == CleanupMode::DarmCFGRedundancy &&
+        c.splitMatches.empty() && !c.explicitGapPlan &&
+        (externalPredecessor(l.entry) || externalPredecessor(r.entry))) {
+      t.before = features(*f);
+      if (hoistCommonTailArithmetic(*l.entry, *r.entry, *split, *join, a)) {
+        t.rewriteStarted = true;
+        t.mergePath = "common-tail-arithmetic";
+        const bool leftRequired = a.pdt.dominates(l.entry, br->getSuccessor(0));
+        const bool rightRequired = a.pdt.dominates(r.entry, br->getSuccessor(1));
+        t.planKind = !rightRequired ? "B2R" : !leftRequired ? "R2B" : "B2B";
+        t.matchedLeft = t.left.entry;
+        t.matchedRight = t.right.entry;
+        t.leftContext = t.left;
+        t.rightContext = t.right;
+        t.loopHeaderSplit = a.loops.isLoopHeader(split);
+        if (verifyModule(*t.raw, &errs())) return reject("raw_verifier_failed");
+        t.afterRaw = features(*f);
+        t.normalized = CloneModule(*t.raw);
+        t.cleanupIterations = cleanup(*t.normalized, c.function, level, mode);
+        if (verifyModule(*t.normalized, &errs()))
+          return reject("normalized_verifier_failed");
+        auto *after = t.normalized->getFunction(c.function);
+        t.after = features(*after);
+        finishSides(after);
+        t.valid = true;
+        t.reason = "verified_ir_only";
+        t.totalMs = millis(started);
+        return t;
+      }
+    }
     auto *enclosing=a.loops.getLoopFor(split);
     if(a.loops.getLoopFor(join)!=enclosing)
       t.localRejectReason="split_and_join_in_different_loops";
@@ -1091,8 +1310,44 @@ static Trial tryPairImpl(const Module&parent,const Candidate&c,unsigned version,
   }
   const bool leftRequired=a.pdt.dominates(l.entry,br->getSuccessor(0));
   const bool rightRequired=a.pdt.dominates(r.entry,br->getSuccessor(1));
+  const bool guardsUnsafeWork=c.speculation==SpeculationMode::None||c.speculation==SpeculationMode::Cost;
   const bool guardedAnchors=!l.region && leftRequired && rightRequired &&
-      !logical && !c.localCopysign && c.speculation==SpeculationMode::None;
+      !logical && !c.localCopysign && guardsUnsafeWork;
+  const bool matchedStorePair=(l.region ||
+      (l.entry==br->getSuccessor(0) && r.entry==br->getSuccessor(1) &&
+       l.entry->getSingleSuccessor()==join && r.entry->getSingleSuccessor()==join)) &&
+      leftRequired &&
+      rightRequired && !logical && !c.localCopysign &&
+      guardsUnsafeWork;
+  // Only admit ordinary accesses on the side whose CFG is replicated.
+  // Cost/none verify guarded emission; explicit legacy mode reproduces
+  // DARM's read/select/write predication for the same structural match.
+  const bool replicationWithMemory = !l.region && !logical &&
+      !c.localCopysign && leftRequired != rightRequired &&
+      (leftRequired ? l.entry : r.entry) ==
+          br->getSuccessor(leftRequired ? 0 : 1) &&
+      (leftRequired ? l.entry : r.entry)->getSingleSuccessor() == join;
+  const bool guardedReplication = replicationWithMemory && guardsUnsafeWork;
+  const bool legacyReplication = replicationWithMemory &&
+      c.speculation == SpeculationMode::Legacy;
+  std::map<BasicBlock *, SmallVector<Instruction *, 8>> replicatedMemory;
+  std::set<StoreInst*> regionStores;
+  std::vector<std::vector<std::pair<Instruction*,Instruction*>>> matchedMemory;
+  size_t matchedStoreCount=0;
+  const bool auditDownstream=guardedAnchors&&!preservedLoop&&
+      l.entry==br->getSuccessor(0)&&r.entry==br->getSuccessor(1);
+  struct DownstreamAccess {
+    WeakVH instruction;
+    BasicBlock *block;
+    SmallVector<WeakTrackingVH,4> operands;
+  };
+  std::vector<DownstreamAccess> downstream;
+  struct DownstreamPath {
+    std::vector<std::pair<WeakTrackingVH,bool>> conditions;
+    std::vector<unsigned> accesses;
+  };
+  std::vector<DownstreamPath> paths;
+  bool downstreamWrite=false;
   struct ProtectedWrite {
     WeakVH instruction;
     BasicBlock *block;
@@ -1102,8 +1357,32 @@ static Trial tryPairImpl(const Module&parent,const Candidate&c,unsigned version,
   };
   std::vector<ProtectedWrite> protectedWrites;
   for(auto *block:scope) for(auto &instruction:*block) {
+    if(preservedLoop&&block!=l.entry&&block!=r.entry)continue;
     if(auto *call=dyn_cast<CallBase>(&instruction))
       if(call->isConvergent()) return reject("convergent_call_in_trial_scope");
+    if ((guardedReplication || legacyReplication) && instruction.mayReadOrWriteMemory()) {
+      auto *load = dyn_cast<LoadInst>(&instruction);
+      auto *store = dyn_cast<StoreInst>(&instruction);
+      if (!(leftRequired ? rs : ls).count(block) ||
+          block == (leftRequired ? r.entry : l.entry) ||
+          !((load && load->isSimple()) || (store && store->isSimple())))
+        return reject("unsupported_replicated_memory_access");
+      if (guardedReplication)
+        replicatedMemory[block].push_back(&instruction);
+      continue;
+    }
+    if(auditDownstream&&block!=l.entry&&block!=r.entry&&instruction.mayReadOrWriteMemory()){
+      auto *load=dyn_cast<LoadInst>(&instruction);
+      auto *store=dyn_cast<StoreInst>(&instruction);
+      if((load&&load->isSimple())||(store&&store->isSimple())){
+        DownstreamAccess access{&instruction,block,{}};
+        for(auto &operand:instruction.operands())access.operands.emplace_back(operand.get());
+        downstream.push_back(std::move(access));
+        downstreamWrite|=store!=nullptr;
+        continue;
+      }
+      return reject("unsupported_downstream_memory_access");
+    }
     if(!instruction.mayHaveSideEffects()&&!instruction.mayWriteToMemory())continue;
     if(guardedAnchors) {
       if(auto *intrinsic=dyn_cast<IntrinsicInst>(&instruction))
@@ -1120,18 +1399,100 @@ static Trial tryPairImpl(const Module&parent,const Candidate&c,unsigned version,
         }
       }
     }
+    if(matchedStorePair)
+      if(auto *store=dyn_cast<StoreInst>(&instruction))
+        if(store->isSimple() &&
+           (!l.region || store->getPointerAddressSpace()==3) &&
+           (l.blocks.count(block)||r.blocks.count(block))){
+          regionStores.insert(store);
+          continue;
+        }
     return reject("side_effect_in_trial_scope_not_supported");
+  }
+  if(downstreamWrite){
+    // Enumerate the original acyclic paths. Record the decisions and the
+    // sequence of untouched accesses, including accesses at shared tails.
+    std::function<bool(BasicBlock*,DownstreamPath,unsigned)> capture=
+      [&](BasicBlock *block,DownstreamPath path,unsigned depth){
+        if(paths.size()>=64||depth>64)return false;
+        if(block==join){paths.push_back(std::move(path));return true;}
+        for(unsigned i=0;i<downstream.size();++i)
+          if(downstream[i].block==block)path.accesses.push_back(i);
+        auto *branch=dyn_cast<BranchInst>(block->getTerminator());
+        if(!branch)return false;
+        if(!branch->isConditional())return capture(branch->getSuccessor(0),std::move(path),depth+1);
+        auto *condition=branch->getCondition();
+        for(const auto &known:path.conditions)
+          if((Value*)known.first==condition)
+            return capture(branch->getSuccessor(known.second?0:1),std::move(path),depth+1);
+        if(auto *constant=dyn_cast<ConstantInt>(condition))
+          return capture(branch->getSuccessor(constant->isOne()?0:1),std::move(path),depth+1);
+        path.conditions.emplace_back(condition,true);
+        if(!capture(branch->getSuccessor(0),path,depth+1))return false;
+        path.conditions.back().second=false;
+        return capture(branch->getSuccessor(1),std::move(path),depth+1);
+      };
+    if(!capture(split,{},0))return reject("downstream_paths_not_supported");
   }
   if(!l.region&&!leftRequired&&!rightRequired)
     return reject("both_selected_blocks_optional_replication_not_supported");
+  SmallVector<std::pair<BasicBlock*,BasicBlock*>,8> memoryBlocks;
   RegionAnalyzer ma(split,a.dt,a.pdt);
   if(l.region){if(!l.exit||!r.exit)return reject("region_without_exit");
     RegionComparator cmp(l.region,r.region);if(!cmp.compare())return reject("region_structure_mismatch");
     DenseMap<BasicBlock*,BasicBlock*>mapping;cmp.getMapping(mapping);std::set<BasicBlock*>values;
     for(auto&kv:mapping){if(!l.blocks.count(kv.first)||!r.blocks.count(kv.second))return reject("non_bijective_region_mapping");values.insert(kv.second);}
     if(mapping.size()!=l.blocks.size()||values.size()!=r.blocks.size()||l.blocks.size()!=r.blocks.size())return reject("non_bijective_region_mapping");
+    for(const auto &blocks:mapping)
+      memoryBlocks.emplace_back(blocks.first,blocks.second);
     if(!ma.selectExplicitRegions(l.region,r.region))return reject("region_structure_mismatch");
-  }else ma.selectExplicitBlocks(l.entry,r.entry);
+  }else{
+    ma.selectExplicitBlocks(l.entry,r.entry);
+    memoryBlocks.emplace_back(l.entry,r.entry);
+  }
+  // A direct diamond can retain unmatched accesses in guarded gaps. Verify
+  // their original order and the emitted guard before accepting the rewrite.
+  const bool directGuardedMemory = !l.region && matchedStorePair &&
+      !regionStores.empty() && !siblingLoops;
+  if (!regionStores.empty() && (siblingLoops || directGuardedMemory)) {
+    for(const auto &blocks:memoryBlocks)
+      for(auto *block:{blocks.first,blocks.second})
+        for(auto &instruction:*block)
+          if(instruction.mayReadOrWriteMemory() &&
+             !regionStores.count(dyn_cast<StoreInst>(&instruction)) &&
+             !(isa<LoadInst>(instruction)&&cast<LoadInst>(instruction).isSimple()))
+            return reject("region_store_memory_sequence_mismatch");
+  }else if(!regionStores.empty()){
+    // Match the complete memory sequence in each corresponding block.
+    // Loads and stores must remain in their original per-path order.
+    for(const auto &blocks:memoryBlocks){
+      SmallVector<Instruction*,8> leftMemory,rightMemory;
+      for(auto &instruction:*blocks.first)
+        if(instruction.mayReadOrWriteMemory())leftMemory.push_back(&instruction);
+      for(auto &instruction:*blocks.second)
+        if(instruction.mayReadOrWriteMemory())rightMemory.push_back(&instruction);
+      if(leftMemory.size()!=rightMemory.size())
+        return reject("region_store_memory_sequence_mismatch");
+      std::vector<std::pair<Instruction*,Instruction*>> sequence;
+      for(unsigned index=0;index<leftMemory.size();++index){
+        auto *left=leftMemory[index],*right=rightMemory[index];
+        if(!InstructionMatch::match(left,right))
+          return reject("region_store_memory_sequence_mismatch");
+        if(auto *store=dyn_cast<StoreInst>(left)){
+          auto *other=cast<StoreInst>(right);
+          if(!regionStores.count(store)||!regionStores.count(other))
+            return reject("region_store_memory_sequence_mismatch");
+          ++matchedStoreCount;
+        }else if(!isa<LoadInst>(left)||!cast<LoadInst>(left)->isSimple()||
+                 !cast<LoadInst>(right)->isSimple())
+          return reject("region_store_memory_sequence_mismatch");
+        sequence.emplace_back(left,right);
+      }
+      if(!sequence.empty())matchedMemory.push_back(std::move(sequence));
+    }
+    if(matchedStoreCount*2!=regionStores.size())
+      return reject("region_store_memory_sequence_mismatch");
+  }
   // Classify from path structure, not the B/R spelling of the matched IDs.
   // A block inside an optional arm is a B2R/R2B match even when both IDs are B.
   t.planKind=l.region?"R2R":"B2B";
@@ -1180,7 +1541,7 @@ static Trial tryPairImpl(const Module&parent,const Candidate&c,unsigned version,
       // The local engine is if-conversion: both operand trees run on every
       // lane and only the root is shared. With a budget, hand heavy trees to
       // RegionMelder, which guards unmatched instructions instead.
-      if(useLocal&&c.speculation==SpeculationMode::None)useLocal=false;
+      if(useLocal&&guardsUnsafeWork)useLocal=false;
       if(useLocal&&c.speculation==SpeculationMode::Budget){
         auto weight=[](BasicBlock *b){unsigned w=0;for(auto &i:*b)if(!i.isTerminator()&&!isa<PHINode>(i))w+=speculationWeight(i);return w;};
         unsigned extra=std::max(weight(l.entry),weight(r.entry))-speculationWeight(*leftLocal.root);
@@ -1189,7 +1550,7 @@ static Trial tryPairImpl(const Module&parent,const Candidate&c,unsigned version,
     }
   }
   AdjacentLeafEntry leafEntry;
-  bool directLeaves=c.hybrid&&!useLocal&&bool(l.region)==bool(r.region)&&l.exit&&l.exit==r.exit&&leafEntry.prepare(l.entry,r.entry,a.dt,a.loops,bool(l.region),c.speculation,c.speculationBudget);
+  bool directLeaves=!downstreamWrite&&regionStores.empty()&&c.hybrid&&!useLocal&&bool(l.region)==bool(r.region)&&l.exit&&l.exit==r.exit&&leafEntry.prepare(l.entry,r.entry,a.dt,a.loops,bool(l.region),c.speculation,c.speculationBudget);
   t.mergePath=directLeaves?(l.region?"darm-adjacent-R2R":"darm-adjacent-B2B"):useLocal?"local-compute":"darm-"+t.planKind;
   if(!directLeaves&&!useLocal&&!c.crossLevelB2R&&(t.planKind=="B2R"||t.planKind=="R2B")){
     auto *d=decisionDiscriminator(split);
@@ -1198,6 +1559,10 @@ static Trial tryPairImpl(const Module&parent,const Candidate&c,unsigned version,
   }
   t.originalSimilarity=ma.explicitSimilarity();t.originalProfitable=ma.isRegionMatchProfitable(0);
   auto ft=Clock::now();t.before=features(*f);t.featuresMs+=millis(ft);t.replication=ma.requireRegionReplication();
+  if(t.replication&&downstreamWrite)return reject("downstream_write_replication_not_supported");
+  if(t.replication&&preservedLoop)return reject("loop_entry_replication_not_supported");
+  if(t.replication&&!regionStores.empty())
+    return reject("region_store_replication_not_supported");
   if(t.replication&&!l.region){
     // Only the expanded block needs one successor. The matched block inside
     // the opposite region may branch; RegionReplicator copies that topology.
@@ -1238,16 +1603,162 @@ static Trial tryPairImpl(const Module&parent,const Candidate&c,unsigned version,
     t.planKind=l.region?"R2R":"B2B";t.replication=false;
     t.leftContext=t.left;t.rightContext=t.right;
   }
-  RegionMelder melder(directLeaves?*leafAnalyzer:ma,true);melder.CoalesceGaps=c.coalesceGaps;melder.SpeculationMode=int(c.speculation);melder.SpeculationBudget=c.speculationBudget;if(t.logicalState)melder.onValueMapping=[&](const ValueToValueMapTy &m){t.logicalState->transfer(m);};if(useLocal){
+  std::unique_ptr<decision::SpeculationTTI> speculationTTI;
+  if(c.speculation==SpeculationMode::Cost){
+    try {
+      speculationTTI=std::make_unique<decision::SpeculationTTI>(*f);
+    } catch(const std::runtime_error &) {
+      // With no target cost, the gap planner keeps conditional execution.
+    }
+  }
+  const bool sharedAnchor = t.replication && guardedReplication &&
+      !replicatedMemory.empty() && c.splitMatches.empty() && !c.explicitGapPlan &&
+      shareReplicatedAnchor(split, leftRequired ? l.entry : r.entry,
+                           leftRequired ? r.entry : l.entry, join, a.dt);
+  if (sharedAnchor) {
+    t.mergePath = "shared-anchor-" + t.planKind;
+    t.replication = false;
+  }
+  RegionMelder melder(directLeaves?*leafAnalyzer:ma,!sharedAnchor);melder.CoalesceGaps=c.coalesceGaps;melder.SpeculationMode=int(c.speculation);melder.SpeculationBudget=c.speculationBudget;melder.SpeculationTTI=speculationTTI?speculationTTI->info.get():nullptr;if(t.logicalState)melder.onValueMapping=[&](const ValueToValueMapTy &m){t.logicalState->transfer(m);};if(useLocal){
     if(l.region||r.region)return reject("local_requires_basic_blocks");
     std::string why;
     if(!fuseLocalComputations(l.entry,r.entry,melder.onValueMapping,why,c.localUnion||c.hybrid)){t.reason=why;t.totalMs=millis(started);return t;}
     t.replication=false;
-  }else {
+  }else if (!sharedAnchor) {
+    if (!replicatedMemory.empty()) {
+      melder.GuardReplicatedMemory = true;
+      melder.onValueMapping = [&](const ValueToValueMapTy &mapping) {
+        SmallPtrSet<Instruction *, 16> emitted;
+        for (const auto &block : replicatedMemory) {
+          Instruction *previous = nullptr;
+          for (auto *original : block.second) {
+            auto *memory = dyn_cast_or_null<Instruction>((Value *)mapping.lookup(original));
+            if (!memory || memory->getOpcode() != original->getOpcode() ||
+                !emitted.insert(memory).second ||
+                !melder.hasGuardedGap(memory, !leftRequired))
+              throw std::runtime_error("replicated_memory_not_guarded");
+            if (previous && (previous->getParent() != memory->getParent() ||
+                             !previous->comesBefore(memory)))
+              throw std::runtime_error("replicated_memory_order_changed");
+            previous = memory;
+          }
+        }
+      };
+    } else if(!regionStores.empty() && (siblingLoops || directGuardedMemory)){
+      melder.onValueMapping=[&](const ValueToValueMapTy &mapping){
+        for(const auto &blocks:memoryBlocks){
+          std::set<Instruction*> emitted[2];
+          for(unsigned side=0;side<2;++side){
+            Instruction *previous=nullptr;
+            for(auto &original:*(side==0?blocks.first:blocks.second)){
+              if(!original.mayReadOrWriteMemory())continue;
+              auto *memory=dyn_cast_or_null<Instruction>((Value*)mapping.lookup(&original));
+              if(!memory||memory->getOpcode()!=original.getOpcode()||
+                 !emitted[side].insert(memory).second)
+                throw std::runtime_error("guarded_memory_mapping_invalid");
+              if(previous&&(previous->getParent()!=memory->getParent()||
+                            !previous->comesBefore(memory)))
+                throw std::runtime_error("region_memory_meld_order_changed");
+              previous=memory;
+            }
+          }
+          for(unsigned side=0;side<2;++side)
+            for(auto *memory:emitted[side])
+              if(!emitted[1-side].count(memory)&&!melder.hasGuardedGap(memory,side==0))
+                throw std::runtime_error("unmatched_memory_not_guarded");
+        }
+      };
+    }else if(!matchedMemory.empty()){
+      melder.onValueMapping=[&](const ValueToValueMapTy &mapping){
+        std::set<Instruction*> emitted;
+        for(const auto &sequence:matchedMemory){
+          Instruction *previous=nullptr;
+          for(const auto &pair:sequence){
+            Value *left=mapping.lookup(pair.first);
+            Value *right=mapping.lookup(pair.second);
+            auto *memory=dyn_cast_or_null<Instruction>(left);
+            if(!memory||left!=right||memory->getOpcode()!=pair.first->getOpcode()||
+               !emitted.insert(memory).second)
+              throw std::runtime_error("region_memory_not_melded_in_pairs");
+            if(previous&&(previous->getParent()!=memory->getParent()||
+                          !previous->comesBefore(memory)))
+              throw std::runtime_error("region_memory_meld_order_changed");
+            previous=memory;
+          }
+        }
+      };
+    }
+    melder.NativeReplicationPredication = legacyReplication && t.replication;
+    melder.SplitMatchIDs=c.splitMatches;
+    melder.SpeculateGapIDs=c.speculateGaps;
+    melder.ExplicitGapPlan=c.explicitGapPlan;
     try { melder.merge(0); }
     catch(const std::exception &error) { return reject(error.what()); }
   }
+  t.alignmentChoices=std::move(melder.AlignmentChoices);
+  t.gapChoices=std::move(melder.GapChoices);
   t.coalescedGapGroups=melder.CoalescedGapGroups;canonicalPhiOrder(*t.raw,c.function);t.mergeMs=millis(mt);
+  if(downstreamWrite){
+    auto *start=dyn_cast_or_null<BasicBlock>((Value*)originalSplit);
+    auto *end=dyn_cast_or_null<BasicBlock>((Value*)originalJoin);
+    if(!start||!end)return reject("downstream_boundary_lost");
+    DenseMap<Instruction*,unsigned> accessIds;
+    for(unsigned i=0;i<downstream.size();++i){
+      const auto &saved=downstream[i];
+      auto *inst=dyn_cast_or_null<Instruction>((Value*)saved.instruction);
+      if(!inst||inst->getParent()!=saved.block||inst->getNumOperands()!=saved.operands.size())
+        return reject("downstream_access_changed");
+      for(unsigned op=0;op<saved.operands.size();++op)
+        if(inst->getOperand(op)!=(Value*)saved.operands[op])
+          return reject("downstream_access_operand_changed");
+      accessIds[inst]=i;
+    }
+    for(const auto &path:paths){
+      DenseMap<Value*,bool> conditions;
+      for(const auto &entry:path.conditions){
+        Value *condition=entry.first;
+        if(!condition||(conditions.count(condition)&&conditions.lookup(condition)!=entry.second))
+          return reject("downstream_condition_changed");
+        conditions[condition]=entry.second;
+      }
+      BasicBlock *block=start,*pred=nullptr;
+      std::vector<unsigned> accesses;
+      for(unsigned depth=0;block!=end&&depth<128;++depth){
+        for(auto &inst:*block){
+          if(auto *phi=dyn_cast<PHINode>(&inst)){
+            if(pred&&phi->getBasicBlockIndex(pred)>=0){
+              auto *value=phi->getIncomingValueForBlock(pred);
+              if(auto *constant=dyn_cast<ConstantInt>(value))conditions[phi]=constant->isOne();
+              else if(conditions.count(value))conditions[phi]=conditions.lookup(value);
+            }
+          }
+          auto access=accessIds.find(&inst);
+          if(access!=accessIds.end())accesses.push_back(access->second);
+          else if (!inst.isTerminator() &&
+                   (inst.mayHaveSideEffects() || inst.mayWriteToMemory())) {
+            raw_string_ostream detail(t.localRejectReason);
+            block->printAsOperand(detail, false);
+            detail << ": ";
+            inst.print(detail);
+            detail.flush();
+            return reject("unexpected_downstream_effect");
+          }
+        }
+        auto *branch=dyn_cast<BranchInst>(block->getTerminator());
+        if(!branch)return reject("downstream_branch_changed");
+        unsigned edge=0;
+        if(branch->isConditional()){
+          auto *condition=branch->getCondition();
+          if(auto *constant=dyn_cast<ConstantInt>(condition))edge=!constant->isOne();
+          else if(conditions.count(condition))edge=!conditions.lookup(condition);
+          else return reject("downstream_condition_unresolved");
+        }
+        pred=block;
+        block=branch->getSuccessor(edge);
+      }
+      if(block!=end||accesses!=path.accesses)return reject("downstream_access_path_changed");
+    }
+  }
   if(!protectedWrites.empty()) {
     auto *savedSplit=dyn_cast_or_null<BasicBlock>((Value*)originalSplit);
     auto *savedJoin=dyn_cast_or_null<BasicBlock>((Value*)originalJoin);
@@ -1303,12 +1814,348 @@ static Trial tryPairImpl(const Module&parent,const Candidate&c,unsigned version,
   finishSides(after);
   t.valid=true;t.reason="verified_ir_only";t.totalMs=millis(started);return t;
 }
+// A direct diamond can share arithmetic before the original split or after
+// both arms. Keeping the arm blocks intact preserves their execution domains
+// and the order of all memory accesses.
+using B2BMatch = std::pair<Instruction *, Instruction *>;
+
+static bool compatibleB2BArithmetic(Instruction &left, Instruction &right) {
+  return isa<BinaryOperator>(left) && left.isSameOperationAs(&right) &&
+      left.getRawSubclassOptionalData() == right.getRawSubclassOptionalData() &&
+      !left.hasMetadataOtherThanDebugLoc() && !right.hasMetadataOtherThanDebugLoc() &&
+      safeToSpeculate(left) && safeToSpeculate(right);
+}
+
+// Align independently hoistable computations. Skipping an instruction
+// leaves it in its original arm, including all memory accesses.
+static SmallVector<B2BMatch, 8> alignHoistableB2B(
+    BasicBlock &left, BasicBlock &right, BranchInst &split, DominatorTree &dt) {
+  auto collect = [&](BasicBlock &arm) {
+    SmallVector<Instruction *, 16> result;
+    for (auto &inst : arm) {
+      if (!isa<BinaryOperator>(inst) || inst.use_empty() ||
+          inst.hasMetadataOtherThanDebugLoc() || !safeToSpeculate(inst))
+        continue;
+      if (llvm::all_of(inst.operands(), [&](const Use &operand) {
+            auto *def = dyn_cast<Instruction>(operand.get());
+            return !def || dt.dominates(def, &split);
+          }))
+        result.push_back(&inst);
+    }
+    return result;
+  };
+  const auto l = collect(left), r = collect(right);
+  constexpr size_t maxCells = 16384;
+  const size_t columns = r.size() + 1;
+  if (l.empty() || r.empty() || l.size() + 1 > maxCells / columns)
+    return {};
+  std::vector<unsigned> scores((l.size() + 1) * columns);
+  auto at = [&](size_t i, size_t j) -> unsigned & {
+    return scores[i * columns + j];
+  };
+  auto match = [&](size_t i, size_t j) {
+    return r[j]->isIdenticalTo(l[i]);
+  };
+  for (size_t i = l.size(); i-- > 0;)
+    for (size_t j = r.size(); j-- > 0;)
+      at(i, j) = match(i, j) ? 1 + at(i + 1, j + 1)
+                             : std::max(at(i + 1, j), at(i, j + 1));
+
+  SmallVector<B2BMatch, 8> result;
+  for (size_t i = 0, j = 0; i < l.size() && j < r.size();) {
+    if (match(i, j)) {
+      result.emplace_back(l[i++], r[j++]);
+    } else if (at(i + 1, j) >= at(i, j + 1)) {
+      ++i;
+    } else {
+      ++j;
+    }
+  }
+  return result;
+}
+
+static SmallVector<B2BMatch, 8> commonB2BPrefix(BasicBlock &left, BasicBlock &right,
+                                                BranchInst &split, DominatorTree &dt) {
+  SmallVector<B2BMatch, 8> result;
+  DenseMap<Value *, Value *> earlier;
+  auto l = left.begin(), r = right.begin();
+  while (compatibleB2BArithmetic(*l, *r)) {
+    bool available = true;
+    for (unsigned n = 0; n < l->getNumOperands(); ++n) {
+      auto *lv = l->getOperand(n), *rv = r->getOperand(n);
+      if (earlier.lookup(lv) == rv) continue;
+      for (auto *value : {lv, rv})
+        if (auto *def = dyn_cast<Instruction>(value))
+          available &= dt.dominates(def, &split);
+    }
+    if (!available) break;
+    result.emplace_back(&*l, &*r);
+    earlier[&*l] = &*r;
+    ++l;
+    ++r;
+  }
+  return result;
+}
+
+static SmallVector<B2BMatch, 8> commonB2BSuffix(BasicBlock &left, BasicBlock &right,
+                                                BasicBlock &join) {
+  SmallVector<B2BMatch, 8> result;
+  DenseMap<Value *, Value *> later;
+  auto l = left.rbegin(), r = right.rbegin();
+  while (++l != left.rend() && ++r != right.rend() &&
+         compatibleB2BArithmetic(*l, *r)) {
+    bool usable = true;
+    for (auto *inst : {&*l, &*r})
+      for (const auto &use : inst->uses()) {
+        if (later.count(use.getUser())) continue;
+        auto *phi = dyn_cast<PHINode>(use.getUser());
+        usable &= phi && phi->getParent() == &join &&
+            phi->getIncomingBlock(use) == inst->getParent();
+      }
+    // A suffix value has no definition on an incoming edge of the new merge.
+    // Every such use must resolve to the same shared value on both sides.
+    for (const auto &match : result)
+      for (unsigned n = 0; n < match.first->getNumOperands(); ++n)
+        usable &= (match.first->getOperand(n) == &*l) ==
+                  (match.second->getOperand(n) == &*r);
+    for (auto &phi : join.phis())
+      usable &= (phi.getIncomingValueForBlock(&left) == &*l) ==
+                (phi.getIncomingValueForBlock(&right) == &*r);
+    if (!usable) break;
+    result.emplace_back(&*l, &*r);
+    later[&*l] = &*r;
+    later[&*r] = &*l;
+  }
+  std::reverse(result.begin(), result.end());
+  return result;
+}
+
+std::vector<Trial> planSingleBranchB2B(const Module &parent, const Candidate &c,
+                                       unsigned level, CleanupMode mode,
+                                       StringRef replay) {
+  std::vector<Trial> trials;
+  if (!c.hybrid || c.speculation != SpeculationMode::Cost || c.localCopysign ||
+      c.explicitGapPlan || !c.splitMatches.empty() || c.coalesceGaps ||
+      mode != CleanupMode::DarmCFGRedundancy)
+    return trials;
+
+  // Reject other candidate shapes before cloning or building analyses.
+  unsigned splitIndex, leftIndex, rightIndex;
+  if (!StringRef(c.split).startswith("B") ||
+      !StringRef(c.left).startswith("B") || !StringRef(c.right).startswith("B"))
+    return trials;
+  if (StringRef(c.split).drop_front().getAsInteger(10, splitIndex) ||
+      StringRef(c.left).drop_front().getAsInteger(10, leftIndex) ||
+      StringRef(c.right).drop_front().getAsInteger(10, rightIndex) ||
+      splitIndex == leftIndex || splitIndex == rightIndex || leftIndex == rightIndex)
+    return trials;
+
+  const auto *source = parent.getFunction(c.function);
+  if (!source) return trials;
+  const BasicBlock *blocks[3] = {};
+  unsigned index = 0;
+  for (const auto &bb : *source) {
+    if (index == splitIndex) blocks[0] = &bb;
+    if (index == leftIndex) blocks[1] = &bb;
+    if (index == rightIndex) blocks[2] = &bb;
+    ++index;
+  }
+  if (!blocks[0] || !blocks[1] || !blocks[2]) return trials;
+  const auto *originalBranch = dyn_cast<BranchInst>(blocks[0]->getTerminator());
+  if (!originalBranch || !originalBranch->isConditional()) return trials;
+  const bool swapped = originalBranch->getSuccessor(0) == blocks[2];
+  if (swapped) std::swap(blocks[1], blocks[2]);
+  if (originalBranch->getSuccessor(0) != blocks[1] ||
+      originalBranch->getSuccessor(1) != blocks[2])
+    return trials;
+  const auto *originalJoin = blocks[1]->getSingleSuccessor();
+  if (!originalJoin || originalJoin == blocks[0] || originalJoin == blocks[1] ||
+      originalJoin == blocks[2] || blocks[2]->getSingleSuccessor() != originalJoin)
+    return trials;
+
+  Trial trial;
+  trial.candidate = c;
+  trial.cleanupMode = mode;
+  ValueToValueMapTy inputMap;
+  trial.raw = CloneModule(parent, inputMap);
+  auto *f = trial.raw->getFunction(c.function);
+  if (verifyModule(*trial.raw, &errs())) return trials;
+  auto *split = cast<BasicBlock>(inputMap[blocks[0]]);
+  auto *left = cast<BasicBlock>(inputMap[blocks[1]]);
+  auto *right = cast<BasicBlock>(inputMap[blocks[2]]);
+  auto *join = cast<BasicBlock>(inputMap[originalJoin]);
+  auto *branch = cast<BranchInst>(split->getTerminator());
+  inputMap.clear();
+  trial.swapped = swapped;
+  DominatorTree dt(*f);
+  if (dt.dominates(join, split)) return trials;
+  LoopInfo loops(dt);
+  for (auto *arm : {left, right}) {
+    auto *exit = dyn_cast<BranchInst>(arm->getTerminator());
+    if (!exit || !exit->isUnconditional() || arm->getSinglePredecessor() != split ||
+        arm->hasAddressTaken() || !arm->phis().empty() ||
+        loops.getLoopFor(arm) != loops.getLoopFor(split))
+      return trials;
+    for (auto &inst : *arm) {
+      if (inst.isTerminator()) continue;
+      if (auto *load = dyn_cast<LoadInst>(&inst)) {
+        if (!load->isSimple()) return trials;
+      } else if (auto *store = dyn_cast<StoreInst>(&inst)) {
+        if (!store->isSimple()) return trials;
+      } else if (inst.mayHaveSideEffects() || inst.mayReadOrWriteMemory() ||
+                 isa<CallBase>(inst) || isa<AllocaInst>(inst) ||
+                 inst.getType()->isTokenTy()) {
+        return trials;
+      }
+    }
+  }
+  auto prefix = commonB2BPrefix(*left, *right, *branch, dt);
+  auto suffix = commonB2BSuffix(*left, *right, *join);
+  auto aligned = alignHoistableB2B(*left, *right, *branch, dt);
+  if (aligned == prefix) aligned.clear();
+
+  trial.before = features(*f);
+  trial.left = trial.leftContext = boundary({left, join, nullptr, {left}}, *f);
+  trial.right = trial.rightContext = boundary({right, join, nullptr, {right}}, *f);
+  trial.matchedLeft = name(left);
+  trial.matchedRight = name(right);
+  trial.planKind = "B2B";
+  trial.loopHeaderSplit = loops.isLoopHeader(split);
+  const bool tagged = tagSideCondition(*f, branch->getCondition());
+  if (tagged)
+    trial.sideBeforeOk = sideBlocksBoth(*f, branch->getCondition(), trial.sideBefore, trial.sideReason);
+
+  // The no-sharing layout is the unchanged diamond. Only emit it when there
+  // is no sharing opportunity, so it consumes no competing plan slot.
+  for (unsigned layout : {1u, 2u, 3u, 4u, 0u}) {
+    const bool usePrefix = layout & 1;
+    const bool useSuffix = layout & 2;
+    if ((usePrefix && prefix.empty()) || (useSuffix && suffix.empty()) ||
+        (layout == 4 && aligned.empty()) ||
+        (!layout && (!prefix.empty() || !suffix.empty() || !aligned.empty())))
+      continue;
+    if (layout == 3 &&
+        prefix.size() + suffix.size() > std::min(left->size(), right->size()) - 1)
+      continue;
+    StringRef label = layout == 3 ? "single-branch-prefix-suffix" :
+                      usePrefix ? "single-branch-prefix" :
+                      useSuffix ? "single-branch-suffix" :
+                      layout == 4 ? "single-branch-aligned-hoist" : "single-branch-separate";
+    if (!replay.empty() && replay != label) continue;
+
+    Trial t;
+    t.candidate = c;
+    t.cleanupMode = mode;
+    t.before = trial.before;
+    t.left = t.leftContext = trial.left;
+    t.right = t.rightContext = trial.right;
+    t.matchedLeft = trial.matchedLeft;
+    t.matchedRight = trial.matchedRight;
+    t.planKind = trial.planKind;
+    t.mergePath = label.str();
+    t.swapped = trial.swapped;
+    t.loopHeaderSplit = trial.loopHeaderSplit;
+    t.sideBeforeOk = trial.sideBeforeOk;
+    t.sideReason = trial.sideReason;
+    for (unsigned side = 0; side < 2; ++side) t.sideBefore[side] = trial.sideBefore[side];
+    ValueToValueMapTy clone;
+    t.raw = CloneModule(*trial.raw, clone);
+    auto *raw = t.raw->getFunction(c.function);
+    auto *rawBranch = cast<BranchInst>(clone[branch]);
+    auto *rawLeft = cast<BasicBlock>(clone[left]);
+    auto *rawRight = cast<BasicBlock>(clone[right]);
+    auto *rawJoin = cast<BasicBlock>(clone[join]);
+    t.rewriteStarted = layout != 0;
+
+    if (usePrefix || layout == 4) {
+      IRBuilder<> builder(rawBranch);
+      std::map<std::pair<Value *, Value *>, Value *> selects;
+      for (auto [l, r] : (usePrefix ? prefix : aligned)) {
+        auto *lc = cast<Instruction>(clone[l]), *rc = cast<Instruction>(clone[r]);
+        auto *shared = lc->clone();
+        for (unsigned n = 0; n < shared->getNumOperands(); ++n) {
+          auto *lv = lc->getOperand(n), *rv = rc->getOperand(n);
+          if (lv != rv) {
+            auto &choice = selects[{lv, rv}];
+            if (!choice) choice = builder.CreateSelect(rawBranch->getCondition(), lv, rv);
+            shared->setOperand(n, choice);
+          }
+        }
+        builder.Insert(shared);
+        lc->replaceAllUsesWith(shared);
+        rc->replaceAllUsesWith(shared);
+        lc->eraseFromParent();
+        rc->eraseFromParent();
+      }
+    }
+
+    if (useSuffix) {
+      auto *merge = BasicBlock::Create(raw->getContext(), "fusion.suffix", raw, rawJoin);
+      auto *exit = BranchInst::Create(rawJoin, merge);
+      std::map<std::pair<Value *, Value *>, Value *> choices;
+      auto mergeValue = [&](Value *lv, Value *rv) -> Value * {
+        if (lv == rv) return lv;
+        auto &value = choices[{lv, rv}];
+        if (!value) {
+          auto *phi = PHINode::Create(lv->getType(), 2, "", &merge->front());
+          phi->addIncoming(lv, rawLeft);
+          phi->addIncoming(rv, rawRight);
+          value = phi;
+        }
+        return value;
+      };
+      for (auto [l, r] : suffix) {
+        auto *lc = cast<Instruction>(clone[l]), *rc = cast<Instruction>(clone[r]);
+        auto *shared = lc->clone();
+        for (unsigned n = 0; n < shared->getNumOperands(); ++n)
+          shared->setOperand(n, mergeValue(lc->getOperand(n), rc->getOperand(n)));
+        shared->insertBefore(exit);
+        lc->replaceAllUsesWith(shared);
+        rc->replaceAllUsesWith(shared);
+        lc->eraseFromParent();
+        rc->eraseFromParent();
+      }
+      for (auto &phi : rawJoin->phis()) {
+        auto *value = mergeValue(phi.getIncomingValueForBlock(rawLeft),
+                                 phi.getIncomingValueForBlock(rawRight));
+        phi.removeIncomingValue(rawLeft, false);
+        phi.removeIncomingValue(rawRight, false);
+        phi.addIncoming(value, merge);
+      }
+      rawLeft->getTerminator()->setSuccessor(0, merge);
+      rawRight->getTerminator()->setSuccessor(0, merge);
+    }
+    clone.clear();
+    if (verifyModule(*t.raw, &errs())) {
+      t.reason = "raw_verifier_failed";
+      trials.push_back(std::move(t));
+      continue;
+    }
+    t.afterRaw = features(*raw);
+    t.normalized = CloneModule(*t.raw);
+    t.cleanupIterations = cleanup(*t.normalized, c.function, level, mode);
+    auto *after = t.normalized->getFunction(c.function);
+    if (!verifyModule(*t.normalized, &errs())) {
+      t.after = features(*after);
+      if (auto *cond = findSideCondition(*after, t.sideReason))
+        t.sideAfterOk = sideBlocksBoth(*after, cond, t.sideAfter, t.sideReason);
+      t.valid = t.after.loops <= t.before.loops;
+    }
+    stripSideTag(t.raw.get());
+    stripSideTag(t.normalized.get());
+    t.reason = t.valid ? "verified_ir_only" : "single_branch_cleanup_failed";
+    trials.push_back(std::move(t));
+  }
+  return trials;
+}
+
 RoundContext makeRound(const Module&parent,const std::string&function,unsigned version,unsigned level,CleanupMode mode) {
   RoundContext r;r.cleanupMode=mode;r.parentVersion=version;r.function=function;r.parentHash=moduleHash(parent);
   r.targetTriple=parent.getTargetTriple();r.dataLayout=parent.getDataLayoutStr();r.llvmVersion=LLVM_VERSION_STRING;
   r.cleanup=mode==CleanupMode::O3?"legacy-PassManagerBuilder-O"+std::to_string(level)+"-loopvec1-slpvec1":"darm-simplifycfg-fixedpoint-condbranch0-sink0-hoist0-targettti";
   r.cleanup+=";phi-edge-function-order-v1";
   if(mode==CleanupMode::StructuralCFG)r.cleanup+=";dominating-edge-boolean-guard-fold-v1";
+  if(mode==CleanupMode::DarmCFGRedundancy)r.cleanup+="-earlycse-memoryssa0-dce";
   if(mode==CleanupMode::DarmCFGEarlyCSE)r.cleanup+="-earlycse-memoryssa0";
   if(mode==CleanupMode::PostOptFixedPoint)r.cleanup="phi-edge-function-order-v1;earlycse-memoryssa0-instcombine-simplifycfg-default-dce-earlycse-pure-scalar-phi-triangle-v1-fixedpoint-sha1-cap32";
   if(mode==CleanupMode::ScopedLocal)r.cleanup="changed-instructions-only;simplify-local-cse-dce;no-cfg-motion;protected-outside-audit;control-noop";

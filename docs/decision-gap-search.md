@@ -1,4 +1,40 @@
-# Experimental matching and gap search
+# Auto Greedy gap search
+
+The normal entry point is:
+
+```
+build/decision-fuse/decision-greedy INPUT FUNCTION NEW_OUTPUT
+```
+
+With the structural engine and LLVM24 worker built, Auto Greedy prepares
+adjacent arms and submits explicit block or region pairs to the shared
+`fusion-search` trial. It defaults to cost-based speculation and
+`darm-cfg-dce` cleanup. For supported direct B2B diamonds, the trial plans
+a shared arithmetic prefix, a shared arithmetic suffix, or both. A bounded sequence alignment also
+finds identical arithmetic with operands available before the split. The
+original branch controls the arm bodies and their memory accesses. A
+diamond with no supported arithmetic
+match retains its two exit edges. These plans do not run gap search.
+
+Other candidates use the general trial, which compares its default with
+up to four alternative alignment or guard plans. Both paths rank legal
+plans by LLVM24 whole-function score against the same cleaned control.
+Unknown local costs keep work guarded. Pressure and uniform-wave metrics
+are diagnostic only.
+
+The three-argument entry uses these settings even if the environment contains
+legacy experiment flags. Pass an explicit tool root as the third argument
+(with the output directory fourth) when reproducing an experiment that uses
+those flags. Both entries accept the optional backend checkpoint for diagnostics.
+
+Each shared trial directory contains a `request.json` with the parent IR,
+candidate ID and `replay_args`. To replay, append `--gap-replay` with the
+path to `structural/trial-0/trial.json`, then provide new `--out` and
+`--debug-dir` paths. Use the same tool build and scoring worker. The report
+contains the selected layout or alignment and speculation IDs, along with the
+cleaned IR hash.
+
+## Legacy decision-fuse experiments
 
 Based on checkpoint `38565fe`. Enable explicitly with `DECISION_GAP_SEARCH=1`
 on the decision-fuse / decision-greedy path. Supported speculation configurations
@@ -43,8 +79,7 @@ Only strict improvements are accepted, with deterministic alignment/segment
 order for ties. Visited states are retained and each split is irreversible.
 `gap-search.json` records every attempted state, rejection, cost and accepted
 step. The selected IR and reports use the ordinary trial output paths so outer
-greedy search continues to apply its final TTI, pressure and configured
-side-loss acceptance checks.
+greedy search can apply its final TTI acceptance check and report resource diagnostics.
 
 On Linux, the default search parses the parent module once, clones it in process
 for each candidate, and passes raw IR and aggregate TTI through anonymous memory
@@ -74,11 +109,17 @@ concurrently. Each batch shares the current parent IR. Candidate numbering,
 ranking and tie-breaking still follow adjacency order. The default is one
 worker, and each new round starts after the previous decision is committed.
 
-Set `DECISION_GAP_EARLY_SCORE=1` with the in-process vLLM scorer and structural
-cleanup to stop an inner trial after raw IR verification if its throughput
+Set `DECISION_GAP_EARLY_SCORE=1` with structural cleanup and in-memory gap search to stop an inner trial after raw IR verification if its throughput
 score cannot beat the incumbent. These attempts are marked `score-only` in
-the trace. Improving candidates still pass the full cleanup, scope audit,
+the trace. The default LLVM24 worker and the optional in-process vLLM scorer
+both support this path. Improving candidates still pass the full cleanup, scope audit,
 and binding checks before they can become incumbents.
+
+On Linux, in-memory gap search reuses a summary-only LLVM24 worker across
+the gap plans for one block pair. Set `DECISION_PERSISTENT_TTI=0` to disable reuse. Custom TTI workers and
+file-based trial execution use the existing one-shot protocol. Set
+`DECISION_FUSE_TIMINGS=1` to report process CPU time for module cloning,
+meld, the two trial verifier calls, and empty-diamond folding.
 
 Limitations: this is single-match / single-segment greedy search, with small
 joint plans only for the two newly split instructions. It does not exhaustively

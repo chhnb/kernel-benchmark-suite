@@ -32,11 +32,19 @@ join: %v = phi float [%l,%left], [%r,%right]
 }
 attributes #0 = { "target-cpu"="gfx906" }
 '''
-def run(src,out,mode):
+def run(src,out,mode,early=None,persistent=None):
  env=dict(os.environ,DECISION_SPECULATION=mode,DECISION_GAP_SEARCH='1',DECISION_CFG_CLEANUP='structural')
  env.pop('DECISION_GAP_KEEP_TRIALS',None)
+ if early is not None:
+  env.pop('DECISION_VLLM_LLVM24_TTI',None)
+  env['DECISION_GAP_EARLY_SCORE']=early
+ if persistent is not None:
+  env.pop('DECISION_PERSISTENT_TTI',None)
+  if not persistent:env['DECISION_PERSISTENT_TTI']='0'
  p=subprocess.run([str(exe),str(src),'case','0','0',str(out)],env=env,capture_output=True)
  assert p.returncode==0,p.stderr.decode()
+ if persistent and not env.get('DECISION_TTI_WORKER'):
+  assert b'persistent TTI worker unavailable' not in p.stderr,p.stderr.decode()
  if sys.platform.startswith('linux'):
   assert {path.name for path in out.iterdir()}=={'meld-raw.ll','fused.ll','trial.json','decisions.json','gap-search.json'}
  s=json.loads((out/'gap-search.json').read_text());cost=s['initial_cost']
@@ -71,6 +79,15 @@ with tempfile.TemporaryDirectory() as tmp:
  a=run(src,d/'repeat','cost');assert (d/'cost/fused.ll').read_bytes()==(d/'repeat/fused.ll').read_bytes()
  first=json.loads((d/'cost/gap-search.json').read_text());assert [x['state'] for x in first['accepted']]==[x['state'] for x in a['accepted']]
  if sys.platform.startswith('linux'):
+  reference=run(src,d/'reference','cost',early='0')
+  early=run(src,d/'early','cost',early='1',persistent=False)
+  persistent=run(src,d/'persistent','cost',early='1',persistent=True)
+  assert persistent['trace'] and [r.get('cost') for r in persistent['trace']]==[r.get('cost') for r in early['trace']]
+  assert (d/'persistent/fused.ll').read_bytes()==(d/'early/fused.ll').read_bytes()
+  assert any(row.get('validation')=='score-only' for row in early['trace'])
+  assert early['final_cost']==reference['final_cost']
+  assert [row['state'] for row in early['accepted']]==[row['state'] for row in reference['accepted']]
+  assert (d/'early/fused.ll').read_bytes()==(d/'reference/fused.ll').read_bytes()
   expected=[row['root'] for row in json.loads((d/'cost/decisions.json').read_text())]
   env=dict(os.environ,DECISION_SPECULATION='cost',DECISION_GAP_SEARCH='1',
            DECISION_CFG_CLEANUP='structural',DECISION_GAP_ROOTS_STDOUT='1')

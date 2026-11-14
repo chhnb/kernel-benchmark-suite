@@ -1,3 +1,4 @@
+#include <limits>
 #include "fusion_search.h"
 #include "ir_pressure.h"
 #include "logical_region_state.h"
@@ -86,7 +87,13 @@ struct DebugObserver final:Observer {
     jsonFile(path+"/block-provenance.json",json::Object{{"schema","melding-block-provenance-v1"},
       {"logical_decision",t.candidate.logicalDecision},{"logical_left",t.candidate.logicalLeft},{"logical_right",t.candidate.logicalRight},{"candidate",t.candidate.key()},{"parent_hash",r.parentHash},
       {"cleaned_hash",t.normalized?moduleHash(*t.normalized):""},{"blocks",std::move(Origins)}});
-    jsonFile(path+"/trial.json",json::Object{{"schema","incremental-score-trial-v1"},{"logical_decision",t.candidate.logicalDecision},{"logical_left",t.candidate.logicalLeft},{"logical_right",t.candidate.logicalRight},{"candidate",t.candidate.key()},{"version",int64_t(t.candidate.version)},{"parent_hash",r.parentHash},{"control_hash",r.controlHash},{"round_context","../round-"+std::to_string(r.parentVersion)+".json"},{"valid",t.valid},{"rewrite_started",t.rewriteStarted},{"decision",!t.valid?"reject":score.status!=ScoreStatus::Scored?"unsupported":eligible?"accept":"reject"},{"reason",t.reason},{"merge_path",t.mergePath},{"cross_decision_leaves",t.candidate.crossDecisionLeaves},{"complete_leaf_plan",t.candidate.completeLeafPlan},{"moved_leaf_instructions",int64_t(t.movedLeafInstructions)},{"leaf_anchors",int64_t(t.leafAnchors)},{"leaf_anchor_pairs",[&](){json::Array a;for(auto &p:t.leafAnchorPairs)a.push_back(p);return a;}()},{"coalesce_gaps",t.candidate.coalesceGaps},{"coalesced_gap_groups",int64_t(t.coalescedGapGroups)},{"fusion_plan",json::Object{{"kind",t.planKind},{"matched_left",t.matchedLeft},{"matched_right",t.matchedRight},{"left_context",bound(t.leftContext)},{"right_context",bound(t.rightContext)},{"split_is_loop_header",t.loopHeaderSplit},{"replication_required",t.replication}}},{"local_reject_reason",t.localRejectReason},{"score_result",scoreJson(score)},{"eligible",eligible},{"cleanup_iterations",int64_t(t.cleanupIterations)},{"alignment_order","function_order_v1"},{"original_darm_similarity",t.originalSimilarity},{"original_darm_profitable",t.originalProfitable},{"replication_required",t.replication},{"orientation_swapped",t.swapped},{"left",bound(t.left)},{"right",bound(t.right)},{"after_raw",stats(t.afterRaw)},{"after",stats(t.after)},{"cleaned_hash",t.normalized?moduleHash(*t.normalized):""},{"parent_ir","../state-"+std::to_string(t.candidate.version)+".ll"},{"timings_ms",json::Object{{"merge",t.mergeMs},{"normalization",t.normalizeMs},{"features",t.featuresMs},{"trial_total",t.totalMs},{"score_with_analysis",t.scoreMs}}},{"semantic_validation","not_run"}});
+    jsonFile(path+"/trial.json",json::Object{{"schema","incremental-score-trial-v1"},{"logical_decision",t.candidate.logicalDecision},{"logical_left",t.candidate.logicalLeft},{"logical_right",t.candidate.logicalRight},{"candidate",t.candidate.key()},{"version",int64_t(t.candidate.version)},{"parent_hash",r.parentHash},{"control_hash",r.controlHash},{"round_context","../round-"+std::to_string(r.parentVersion)+".json"},{"valid",t.valid},{"rewrite_started",t.rewriteStarted},{"decision",!t.valid?"reject":score.status!=ScoreStatus::Scored?"unsupported":eligible?"accept":"reject"},{"reason",t.reason},{"merge_path",t.mergePath},{"cross_decision_leaves",t.candidate.crossDecisionLeaves},{"complete_leaf_plan",t.candidate.completeLeafPlan},{"moved_leaf_instructions",int64_t(t.movedLeafInstructions)},{"leaf_anchors",int64_t(t.leafAnchors)},{"leaf_anchor_pairs",[&](){json::Array a;for(auto &p:t.leafAnchorPairs)a.push_back(p);return a;}()},{"alignment_choices",json::Array(t.alignmentChoices)},{"gap_choices",json::Array(t.gapChoices)},{"gap_plan",[&](){
+      json::Array split,speculate;
+      for(auto id:t.candidate.splitMatches)split.push_back(int64_t(id));
+      for(auto id:t.candidate.speculateGaps)speculate.push_back(int64_t(id));
+      return json::Object{{"split",std::move(split)},{"speculate",std::move(speculate)},
+                          {"explicit",t.candidate.explicitGapPlan}};
+    }()},{"coalesce_gaps",t.candidate.coalesceGaps},{"coalesced_gap_groups",int64_t(t.coalescedGapGroups)},{"fusion_plan",json::Object{{"kind",t.planKind},{"matched_left",t.matchedLeft},{"matched_right",t.matchedRight},{"left_context",bound(t.leftContext)},{"right_context",bound(t.rightContext)},{"split_is_loop_header",t.loopHeaderSplit},{"replication_required",t.replication}}},{"local_reject_reason",t.localRejectReason},{"score_result",scoreJson(score)},{"eligible",eligible},{"cleanup_iterations",int64_t(t.cleanupIterations)},{"alignment_order","function_order_v1"},{"original_darm_similarity",t.originalSimilarity},{"original_darm_profitable",t.originalProfitable},{"replication_required",t.replication},{"orientation_swapped",t.swapped},{"left",bound(t.left)},{"right",bound(t.right)},{"after_raw",stats(t.afterRaw)},{"after",stats(t.after)},{"cleaned_hash",t.normalized?moduleHash(*t.normalized):""},{"parent_ir","../state-"+std::to_string(t.candidate.version)+".ll"},{"timings_ms",json::Object{{"merge",t.mergeMs},{"normalization",t.normalizeMs},{"features",t.featuresMs},{"trial_total",t.totalMs},{"score_with_analysis",t.scoreMs}}},{"semantic_validation","not_run"}});
   }
   void commit(unsigned version,const Candidate&c,const ScoreResult&score,const Module&m)override {
     writeIR(m,dir+"/state-"+std::to_string(version)+".ll");
@@ -96,10 +103,10 @@ struct DebugObserver final:Observer {
 int main(int argc,char**argv) {
   sys::PrintStackTraceOnErrorSignal(argv[0]);
   try {
-    std::string input,function,output,debug,split,left,right,replayParentHash,profileBundle,policy="llvm24";Options options;bool speculationGiven=false,budgetGiven=false;
-    options.speculation=SpeculationMode::None; /* CLI default: no speculation of work */ PostOptConfig config;bool controlOnly=false,catalogOnly=false;std::string ttiWorker="/home/chh/kernel-benchmark-suite/tools/run-llvm24-tti";
+    std::string input,function,output,debug,split,left,right,replayParentHash,profileBundle,policy="llvm24";Options options;bool speculationGiven=false,budgetGiven=false,singleBranchB2B=false;
+    options.speculation=SpeculationMode::None; /* CLI default: no speculation of work */ PostOptConfig config;bool controlOnly=false,catalogOnly=false; unsigned gapTrials=0; std::string gapReplay;std::string ttiWorker="/home/chh/kernel-benchmark-suite/tools/run-llvm24-tti";
     for(int i=1;i<argc;++i){std::string k=argv[i];
-      if(k=="--help"){outs()<<"fusion-search --ir FILE --function NAME --out FILE [--control-only 0|1] [--catalog-only 0|1 (requires debug-dir)] [--replay-parent-hash SHA1 (explicit snapshot pair only)] [--cross-decision-leaves 0|1 (default 0; permits complete leaves with different or unknown SSA discriminator, or a sub-decision of the same discriminator)] [--cross-level-b2r 0|1 (default 0; allow B2R/R2B that replicates a same-discriminator decision chain)] [--speculation none|legacy|budget (default none: unmatched work is always guarded, only a decision's own condition may be evaluated early, structural dispatch never picks local if-conversion; legacy: historical behaviour, required to reproduce results before this option; budget: speculate safe work up to --speculation-budget)] [--speculation-budget N (default 4; div/rem=8 call=4 other=1)] [--max-uniform-loss TTI (default off; llvm24 scorer only; reject if a one-sided wave gets more than this much costlier)] [--complete-leaf-plan 0|1 (experimental mandatory-load motion and multiple guarded anchors)] [--structural 0|1 (B2B/R2R/B2R dispatch; adjacent-only 0; hybrid is a compatibility alias)] [--adjacent-only 0|1] [--local-union 0|1] [--local-compute 0|1 (alias of local-copysign)] [--local-copysign 0|1 (requires adjacent-only 1, cleanup none or scoped-local)] [--scorer llvm24|legacy|v1|v2|v5] [--tti-worker EXECUTABLE] [--profile-bundle FILE (experimental v5 only)] [--work-absolute 0] [--work-relative 0] [--pressure-weight 0] [--dependency-features 0|1] [--static-alloca-cost POSITIVE_INT (disabled by default)] [--rounds 8] [--trials 256] [--threshold 0] [--opt-level 3] [--debug-dir DIR] [--require-parent-gain 1] [--cleanup none|scoped-local|scoped-cfg|scoped-cfg-triangles|structural-cfg|postopt-fp|darm-cfg-scalar-fp|darm-cfg-earlycse|darm-cfg|o3]\nExplicit pair: add --split B# --left B#/R#/Eentry_exit --right B#/R#/Eentry_exit. Complete E leaves require --structural 1. Optional --coalesce-gaps 0|1 (default 0) groups adjacent unmatched runs before unpredication. IDs refer to the input state (O3-normalized only in o3 mode). Default cleanup: darm-cfg-earlycse. Final codegen O3 is separate.\n";return 0;}
+      if(k=="--help"){outs()<<"fusion-search --ir FILE --function NAME --out FILE [--control-only 0|1] [--catalog-only 0|1 (requires debug-dir)] [--replay-parent-hash SHA1 (explicit snapshot pair only)] [--cross-decision-leaves 0|1 (default 0; permits complete leaves with different or unknown SSA discriminator, or a sub-decision of the same discriminator)] [--cross-level-b2r 0|1 (default 0; allow B2R/R2B that replicates a same-discriminator decision chain)] [--speculation none|legacy|budget|cost (default none: unmatched work is always guarded, only a decision's own condition may be evaluated early, structural dispatch never picks local if-conversion; legacy: historical behaviour, required to reproduce results before this option; budget: speculate safe work up to --speculation-budget)] [--speculation-budget N (default 4; div/rem=8 call=4 other=1)] [--max-uniform-loss TTI (default off; llvm24 scorer only; reject if a one-sided wave gets more than this much costlier)] [--complete-leaf-plan 0|1 (experimental mandatory-load motion and multiple guarded anchors)] [--single-branch-b2b 0|1 (explicit cost-mode pair)] [--structural 0|1 (B2B/R2R/B2R dispatch; adjacent-only 0; hybrid is a compatibility alias)] [--adjacent-only 0|1] [--local-union 0|1] [--local-compute 0|1 (alias of local-copysign)] [--local-copysign 0|1 (requires adjacent-only 1, cleanup none or scoped-local)] [--scorer llvm24|legacy|v1|v2|v5] [--tti-worker EXECUTABLE] [--profile-bundle FILE (experimental v5 only)] [--work-absolute 0] [--work-relative 0] [--pressure-weight 0] [--dependency-features 0|1] [--static-alloca-cost POSITIVE_INT (disabled by default)] [--rounds 8] [--trials 256] [--threshold 0] [--opt-level 3] [--debug-dir DIR] [--require-parent-gain 1] [--cleanup none|scoped-local|scoped-cfg|scoped-cfg-triangles|structural-cfg|postopt-fp|darm-cfg-scalar-fp|darm-cfg-earlycse|darm-cfg-dce|darm-cfg|o3]\nExplicit pair: add --split B# --left B#/R#/Eentry_exit --right B#/R#/Eentry_exit. Complete E leaves require --structural 1. Optional --coalesce-gaps 0|1 (default 0) groups adjacent unmatched runs before unpredication. IDs refer to the input state (O3-normalized only in o3 mode). Default cleanup: darm-cfg-earlycse. Final codegen O3 is separate.\n";return 0;}
       if(i+1==argc)throw std::runtime_error("missing option value");std::string v=argv[++i];
       if(k=="--control-only"){if(v!="0"&&v!="1")throw std::runtime_error("control-only must be 0 or 1");controlOnly=v=="1";}
       else if(k=="--catalog-only"){if(v!="0"&&v!="1")throw std::runtime_error("catalog-only must be 0 or 1");catalogOnly=v=="1";}
@@ -110,7 +117,12 @@ int main(int argc,char**argv) {
       else if(k=="--adjacent-only"){if(v!="0"&&v!="1")throw std::runtime_error("adjacent-only must be 0 or 1");options.adjacentOnly=v=="1";}
       else if(k=="--tti-worker")ttiWorker=v;
       else if(k=="--cross-level-b2r"){if(v!="0"&&v!="1")throw std::runtime_error("cross-level-b2r must be 0 or 1");options.crossLevelB2R=v=="1";}
-      else if(k=="--speculation"){if(v=="none")options.speculation=SpeculationMode::None;else if(v=="legacy")options.speculation=SpeculationMode::Legacy;else if(v=="budget")options.speculation=SpeculationMode::Budget;else throw std::runtime_error("speculation must be none, legacy or budget");speculationGiven=true;}
+      else if(k=="--gap-replay")gapReplay=v;
+      else if(k=="--gap-trials"){
+        if(StringRef(v).getAsInteger(10,gapTrials)||gapTrials>64)
+          throw std::runtime_error("--gap-trials requires a count between 0 and 64");
+      }
+      else if(k=="--speculation"){if(v=="none")options.speculation=SpeculationMode::None;else if(v=="legacy")options.speculation=SpeculationMode::Legacy;else if(v=="budget")options.speculation=SpeculationMode::Budget;else if(v=="cost")options.speculation=SpeculationMode::Cost;else throw std::runtime_error("speculation must be none, legacy, budget or cost");speculationGiven=true;}
       else if(k=="--speculation-budget"){size_t pos=0;int n=std::stoi(v,&pos);if(pos!=v.size()||n<0)throw std::runtime_error("speculation-budget must be a nonnegative integer");options.speculationBudget=n;budgetGiven=true;}
       else if(k=="--max-uniform-loss"){size_t pos=0;double n=std::stod(v,&pos);if(pos!=v.size()||!std::isfinite(n)||n<0)throw std::runtime_error("max-uniform-loss must be finite and nonnegative");options.maxUniformLoss=n;}
       else if(k=="--profile-bundle")profileBundle=v;
@@ -118,11 +130,15 @@ int main(int argc,char**argv) {
       else if(k=="--replay-parent-hash")replayParentHash=v;
       else if(k=="--ir")input=v;else if(k=="--function")function=v;else if(k=="--out")output=v;
       else if(k=="--complete-leaf-plan"){if(v!="0"&&v!="1")throw std::runtime_error("complete-leaf-plan must be 0 or 1");options.completeLeafPlan=v=="1";}
+      else if(k=="--single-branch-b2b"){
+        if(v!="0"&&v!="1")throw std::runtime_error("single-branch-b2b must be 0 or 1");
+        singleBranchB2B=v=="1";
+      }
       else if(k=="--coalesce-gaps"){if(v!="0"&&v!="1")throw std::runtime_error("coalesce-gaps must be 0 or 1");options.coalesceGaps=v=="1";}
       else if(k=="--structural"||k=="--hybrid"){if(v!="0"&&v!="1")throw std::runtime_error("hybrid must be 0 or 1");options.hybrid=v=="1";}
       else if(k=="--local-union"){if(v!="0"&&v!="1")throw std::runtime_error("local-union must be 0 or 1");options.localUnion=v=="1";}
       else if(k=="--local-copysign"||k=="--local-compute"){if(v!="0"&&v!="1")throw std::runtime_error("local-copysign must be 0 or 1");options.localCopysign=v=="1";}
-      else if(k=="--cleanup"){if(v=="scoped-cfg-triangles")options.cleanupMode=CleanupMode::ScopedCFGTriangles;else if(v=="scoped-cfg")options.cleanupMode=CleanupMode::ScopedCFG;else if(v=="scoped-local")options.cleanupMode=CleanupMode::ScopedLocal;else if(v=="structural-cfg")options.cleanupMode=CleanupMode::StructuralCFG;else if(v=="none")options.cleanupMode=CleanupMode::None;else if(v=="postopt-fp")options.cleanupMode=CleanupMode::PostOptFixedPoint;else if(v=="darm-cfg-scalar-fp")options.cleanupMode=CleanupMode::DarmCFGScalarFixedPoint;else if(v=="darm-cfg-earlycse")options.cleanupMode=CleanupMode::DarmCFGEarlyCSE;else if(v=="darm-cfg")options.cleanupMode=CleanupMode::DarmCFG;else if(v=="o3")options.cleanupMode=CleanupMode::O3;else throw std::runtime_error("cleanup must be none, scoped-local, scoped-cfg, scoped-cfg-triangles, structural-cfg, postopt-fp, darm-cfg-scalar-fp, darm-cfg-earlycse, darm-cfg or o3");}
+      else if(k=="--cleanup"){if(v=="scoped-cfg-triangles")options.cleanupMode=CleanupMode::ScopedCFGTriangles;else if(v=="scoped-cfg")options.cleanupMode=CleanupMode::ScopedCFG;else if(v=="scoped-local")options.cleanupMode=CleanupMode::ScopedLocal;else if(v=="structural-cfg")options.cleanupMode=CleanupMode::StructuralCFG;else if(v=="none")options.cleanupMode=CleanupMode::None;else if(v=="postopt-fp")options.cleanupMode=CleanupMode::PostOptFixedPoint;else if(v=="darm-cfg-scalar-fp")options.cleanupMode=CleanupMode::DarmCFGScalarFixedPoint;else if(v=="darm-cfg-earlycse")options.cleanupMode=CleanupMode::DarmCFGEarlyCSE;else if(v=="darm-cfg-dce")options.cleanupMode=CleanupMode::DarmCFGRedundancy;else if(v=="darm-cfg")options.cleanupMode=CleanupMode::DarmCFG;else if(v=="o3")options.cleanupMode=CleanupMode::O3;else throw std::runtime_error("cleanup must be none, scoped-local, scoped-cfg, scoped-cfg-triangles, structural-cfg, postopt-fp, darm-cfg-scalar-fp, darm-cfg-earlycse, darm-cfg-dce, darm-cfg or o3");}
       else if(k=="--debug-dir")debug=v;else if(k=="--split")split=v;else if(k=="--left")left=v;else if(k=="--right")right=v;
       else if(k=="--rounds"||k=="--trials"||k=="--opt-level"){
         size_t pos=0;auto n=std::stoul(v,&pos);if(v.empty()||v[0]=='-'||pos!=v.size()||n>1000000)throw std::runtime_error("invalid integer option");
@@ -134,7 +150,22 @@ int main(int argc,char**argv) {
     if(options.optLevel!=2&&options.optLevel!=3)throw std::runtime_error("opt-level must be 2 or 3");
     if(sys::fs::exists(output))throw std::runtime_error("output already exists");
     bool pair=!split.empty()||!left.empty()||!right.empty();if(pair&&(split.empty()||left.empty()||right.empty()))throw std::runtime_error("explicit pair requires all three IDs");
+    if(!gapReplay.empty()&&(!pair||gapTrials))
+      throw std::runtime_error("--gap-replay requires an explicit pair and no gap search");
     LLVMContext context;SMDiagnostic error;auto buffer=MemoryBuffer::getFile(input);if(!buffer)throw std::runtime_error("cannot read input IR");auto module=parseIR(buffer.get()->getMemBufferRef(),error,context);if(!module){error.print(argv[0],errs());return 2;}
+    json::Value gapReport(nullptr);
+    if(!gapReplay.empty()){
+      auto file=MemoryBuffer::getFile(gapReplay);
+      if(!file)throw std::runtime_error("cannot read gap replay file");
+      auto parsed=json::parse((*file)->getBuffer());
+      if(!parsed)throw std::runtime_error(toString(parsed.takeError()));
+      gapReport=std::move(*parsed);
+      const auto *report=gapReport.getAsObject();
+      const auto parent=report?report->getString("parent_hash"):None;
+      if(!parent)throw std::runtime_error("missing gap replay parent hash");
+      if(replayParentHash.empty()&&moduleHash(*module)!=*parent)
+        replayParentHash=parent->str();
+    }
     if(!replayParentHash.empty()) {
       if(!pair||catalogOnly||controlOnly)throw std::runtime_error("snapshot replay requires explicit pair only");
       if(replayParentHash.size()!=40||replayParentHash.find_first_not_of("0123456789abcdef")!=std::string::npos)
@@ -162,10 +193,11 @@ int main(int argc,char**argv) {
       if(options.cleanupMode==CleanupMode::O3)normalize(*module,options.optLevel);
       if(verifyModule(*module,&errs()))return 2;
       observer->initial(*module);
-      const char*cleanupName=options.cleanupMode==CleanupMode::ScopedCFGTriangles?"scoped-cfg-triangles":options.cleanupMode==CleanupMode::ScopedCFG?"scoped-cfg":options.cleanupMode==CleanupMode::ScopedLocal?"scoped-local":options.cleanupMode==CleanupMode::None?"none":options.cleanupMode==CleanupMode::PostOptFixedPoint?"postopt-fp":options.cleanupMode==CleanupMode::O3?"o3":options.cleanupMode==CleanupMode::DarmCFGEarlyCSE?"darm-cfg-earlycse":options.cleanupMode==CleanupMode::DarmCFGScalarFixedPoint?"darm-cfg-scalar-fp":"darm-cfg";
+      const char*cleanupName=options.cleanupMode==CleanupMode::ScopedCFGTriangles?"scoped-cfg-triangles":options.cleanupMode==CleanupMode::ScopedCFG?"scoped-cfg":options.cleanupMode==CleanupMode::ScopedLocal?"scoped-local":options.cleanupMode==CleanupMode::None?"none":options.cleanupMode==CleanupMode::PostOptFixedPoint?"postopt-fp":options.cleanupMode==CleanupMode::O3?"o3":options.cleanupMode==CleanupMode::DarmCFGEarlyCSE?"darm-cfg-earlycse":options.cleanupMode==CleanupMode::DarmCFGRedundancy?"darm-cfg-dce":options.cleanupMode==CleanupMode::DarmCFGScalarFixedPoint?"darm-cfg-scalar-fp":"darm-cfg";
       if(options.adjacentOnly){auto st=LogicalRegionState::initialize(*module->getFunction(function));observer->logical(0,st->json());}
       auto candidates=options.adjacentOnly?enumerateAdjacent(*module->getFunction(function),0):enumerate(*module->getFunction(function),0,options.crossDecisionLeaves);json::Array entries;
-      for(const auto&c:candidates)entries.push_back(json::Object{{"logical_decision",c.logicalDecision},{"logical_left",c.logicalLeft},{"logical_right",c.logicalRight},{"candidate",c.key()},{"function",c.function},{"split",c.split},{"left",c.left},{"right",c.right}});
+      const auto rejected=crossLevelCatalogRejections(*f,candidates,options);
+      for(const auto&c:candidates)entries.push_back(json::Object{{"logical_decision",c.logicalDecision},{"logical_left",c.logicalLeft},{"logical_right",c.logicalRight},{"candidate",c.key()},{"function",c.function},{"split",c.split},{"left",c.left},{"right",c.right},{"preflight_rejection",rejected.count(c.key())?"b2r_replicates_same_decision_chain_requires_opt_in":""}});
       jsonFile(debug+"/catalog.json",json::Object{{"schema","postopt-candidate-catalog-v1"},{"adjacent_only",options.adjacentOnly},{"cross_decision_leaves",options.crossDecisionLeaves},{"source_ir",input},{"function",function},
         {"parent_hash",moduleHash(*module)},{"cleanup",cleanupName},{"opt_level",int64_t(options.optLevel)},{"count",int64_t(candidates.size())},{"candidates",std::move(entries)},
         {"legality","not_tested"},{"score","not_evaluated"},{"semantic_validation","not_run"}});
@@ -202,15 +234,129 @@ int main(int argc,char**argv) {
     if(policy=="v1")config.pressureWeight=0;
     if(observer)jsonFile(debug+"/run.json",json::Object{
       {"schema","postopt-scoring-run-v1"},{"adjacent_only",options.adjacentOnly},{"mode",pair?"explicit_pair":"greedy"},
-      {"cross_decision_leaves",options.crossDecisionLeaves},{"complete_leaf_boundary_policy","same_ssa_constant_compare_no_sub_decision_or_explicit_opt_in"},{"max_uniform_loss",options.maxUniformLoss},{"cross_level_b2r",options.crossLevelB2R},{"speculation",options.speculation==SpeculationMode::None?"none":options.speculation==SpeculationMode::Legacy?"legacy":"budget"},{"speculation_budget",int64_t(options.speculationBudget)},{"hybrid",options.hybrid},{"complete_leaf_plan",options.completeLeafPlan},{"local_union",options.localUnion},{"local_copysign",options.localCopysign},{"policy",policy},{"profile_bundle",profileBundle},{"profile_bundle_sha1",toHex(SHA1::hash(ArrayRef<uint8_t>(reinterpret_cast<const uint8_t*>(config.profileBundleText.data()),config.profileBundleText.size())),true)},{"function",function},{"initial_parent_hash",moduleHash(*module)},{"replay_parent_hash",replayParentHash},
+      {"cross_decision_leaves",options.crossDecisionLeaves},{"complete_leaf_boundary_policy","same_ssa_constant_compare_no_sub_decision_or_explicit_opt_in"},{"max_uniform_loss",options.maxUniformLoss},{"cross_level_b2r",options.crossLevelB2R},{"speculation",options.speculation==SpeculationMode::None?"none":options.speculation==SpeculationMode::Legacy?"legacy":options.speculation==SpeculationMode::Budget?"budget":"cost"},{"speculation_budget",int64_t(options.speculationBudget)},{"hybrid",options.hybrid},{"complete_leaf_plan",options.completeLeafPlan},{"local_union",options.localUnion},{"local_copysign",options.localCopysign},{"policy",policy},{"profile_bundle",profileBundle},{"profile_bundle_sha1",toHex(SHA1::hash(ArrayRef<uint8_t>(reinterpret_cast<const uint8_t*>(config.profileBundleText.data()),config.profileBundleText.size())),true)},{"function",function},{"initial_parent_hash",moduleHash(*module)},{"replay_parent_hash",replayParentHash},
       {"work_absolute",config.absoluteThreshold},{"work_relative",config.relativeThreshold},
       {"dependency_features",config.dependencyFeatures},{"pressure_weight",config.pressureWeight},{"static_alloca_cost",int64_t(config.staticAllocaCost)},{"threshold",options.threshold},
       {"require_parent_gain",options.requireParentGain},{"opt_level",int64_t(options.optLevel)},
       {"semantic_validation","not_run"}});
     PostOptScorer postScorer(config);
     const Scorer&scorer=policy=="llvm24"?static_cast<const Scorer&>(llvm24Scorer):policy=="legacy"?static_cast<const Scorer&>(legacyScorer):static_cast<const Scorer&>(postScorer);
-    if(pair){Candidate c{function,split,left,right,0};std::shared_ptr<LogicalRegionState> logical;if(options.adjacentOnly){logical=LogicalRegionState::initialize(*module->getFunction(function));if(observer)observer->logical(0,logical->json());auto adjacent=logical->filter(*module->getFunction(function),enumerate(*module->getFunction(function),0));bool found=false;for(auto &a:adjacent)if(a.key()==c.key()){found=true;c=a;}if(!found)throw std::runtime_error("explicit_pair_not_adjacent");}const auto round=makeRound(*module,function,0,options.optLevel,options.cleanupMode);if(observer)observer->round(round);
-      c.localCopysign=options.localCopysign;c.localUnion=options.localUnion;c.hybrid=options.hybrid;c.coalesceGaps=options.coalesceGaps;c.completeLeafPlan=options.completeLeafPlan;c.crossDecisionLeaves=options.crossDecisionLeaves;c.crossLevelB2R=options.crossLevelB2R;c.speculation=options.speculation;c.speculationBudget=options.speculationBudget;auto t=tryPair(*module,c,0,options.optLevel,options.cleanupMode,logical.get());auto score=evaluateTrial(*module,t,round,scorer);
+    if(pair){Candidate c{function,split,left,right,0};std::shared_ptr<LogicalRegionState> logical;if(options.adjacentOnly){logical=LogicalRegionState::initialize(*module->getFunction(function));if(observer)observer->logical(0,logical->json());auto adjacent=logical->filter(*module->getFunction(function),enumerate(*module->getFunction(function),0));bool found=false;for(auto &a:adjacent)if(a.key()==c.key()){found=true;c=a;}if(!found)throw std::runtime_error("explicit_pair_not_adjacent");}      const auto round=makeRound(*module,function,0,options.optLevel,options.cleanupMode);if(observer)observer->round(round);
+      c.localCopysign=options.localCopysign;c.localUnion=options.localUnion;c.hybrid=options.hybrid;c.coalesceGaps=options.coalesceGaps;c.completeLeafPlan=options.completeLeafPlan;c.crossDecisionLeaves=options.crossDecisionLeaves;c.crossLevelB2R=options.crossLevelB2R;c.speculation=options.speculation;c.speculationBudget=options.speculationBudget;
+      if(!gapReplay.empty()){
+        const auto *report=gapReport.getAsObject();
+        if(!report||report->getString("candidate")!=Optional<StringRef>(c.key())||
+           report->getString("parent_hash")!=Optional<StringRef>(round.parentHash))
+          throw std::runtime_error("gap replay identity mismatch");
+        auto *plan=report->getObject("gap_plan");
+        if(!plan||!plan->getBoolean("explicit"))
+          throw std::runtime_error("invalid gap replay plan");
+        c.explicitGapPlan=*plan->getBoolean("explicit");
+        for(auto field:{std::make_pair("split",&c.splitMatches),
+                        std::make_pair("speculate",&c.speculateGaps)}){
+          auto *ids=plan->getArray(field.first);
+          if(!ids)throw std::runtime_error("missing gap replay IDs");
+          for(auto &value:*ids){
+            auto id=value.getAsInteger();
+            if(!id||*id<0||uint64_t(*id)>std::numeric_limits<unsigned>::max())
+              throw std::runtime_error("invalid gap replay ID");
+            field.second->insert(unsigned(*id));
+          }
+        }
+      }
+      StringRef replayLayout;
+      if (!gapReplay.empty())
+        if (auto path = gapReport.getAsObject()->getString("merge_path"))
+          if (path->startswith("single-branch-")) replayLayout = *path;
+      auto plans = !logical && (singleBranchB2B || !replayLayout.empty()) &&
+          (gapReplay.empty() || !replayLayout.empty())
+          ? planSingleBranchB2B(*module, c, options.optLevel, options.cleanupMode, replayLayout)
+          : std::vector<Trial>{};
+      if (!replayLayout.empty() && plans.empty())
+        throw std::runtime_error("single-branch B2B replay layout unavailable");
+      const bool plannedB2B = !plans.empty();
+      Trial t;
+      ScoreResult score;
+      if (plannedB2B) {
+        std::set<std::string> seen;
+        for (auto &plan : plans) {
+          if (plan.valid && !seen.insert(moduleHash(*plan.normalized)).second)
+            continue;
+          auto result = evaluateTrial(*module, plan, round, scorer);
+          if (t.mergePath.empty() ||
+              (plan.valid && !t.valid) ||
+              (result.status == ScoreStatus::Scored &&
+               (score.status != ScoreStatus::Scored ||
+                result.total > score.total))) {
+            t = std::move(plan);
+            score = std::move(result);
+          }
+        }
+      } else {
+        t = tryPair(*module, c, 0, options.optLevel, options.cleanupMode, logical.get());
+        score = evaluateTrial(*module, t, round, scorer);
+      }
+      if(!plannedB2B&&gapTrials&&t.valid&&c.speculation==SpeculationMode::Cost){
+        using GapState=std::tuple<std::set<unsigned>,std::set<unsigned>,bool>;
+        std::set<GapState> visited;
+        while(gapTrials){
+          const auto base=t.candidate;
+          auto protectedPlan=base;
+          protectedPlan.explicitGapPlan=true;
+          protectedPlan.speculateGaps.clear();
+          for(const auto &value:t.gapChoices){
+            const auto &gap=*value.getAsObject();
+            if(*gap.getBoolean("speculated"))
+              for(const auto &id:*gap.getArray("ids"))
+                protectedPlan.speculateGaps.insert(unsigned(*id.getAsInteger()));
+          }
+          std::vector<Candidate> neighbors;
+          for(const auto &value:t.alignmentChoices){
+            const auto &match=*value.getAsObject();
+            auto alternative=base;
+            alternative.splitMatches.insert(unsigned(*match.getInteger("id")));
+            neighbors.push_back(std::move(alternative));
+          }
+          // Interleave gap policy changes with alignment changes so both are
+          // considered even when the trial budget is small.
+          size_t position=0;
+          for(const auto &value:t.gapChoices){
+            const auto &gap=*value.getAsObject();
+            const bool wasSpeculated=*gap.getBoolean("speculated");
+            if(!wasSpeculated&&!*gap.getBoolean("safe"))continue;
+            auto alternative=protectedPlan;
+            for(const auto &id:*gap.getArray("ids")){
+              const auto number=unsigned(*id.getAsInteger());
+              if(wasSpeculated)alternative.speculateGaps.erase(number);
+              else alternative.speculateGaps.insert(number);
+            }
+            position=std::min(position+1,neighbors.size());
+            neighbors.insert(neighbors.begin()+position,std::move(alternative));
+            ++position;
+          }
+          bool improved=false;
+          for(const auto &alternative:neighbors){
+            if(!gapTrials)break;
+            if(!visited.emplace(alternative.splitMatches,alternative.speculateGaps,
+                                alternative.explicitGapPlan).second)continue;
+            --gapTrials;
+            auto trial=tryPair(*module,alternative,0,options.optLevel,options.cleanupMode,logical.get());
+            if(!trial.valid)continue;
+            auto ranked=evaluateTrial(*module,trial,round,scorer);
+            if(ranked.status!=ScoreStatus::Scored)continue;
+            const auto after=ranked.metrics.find("work_after");
+            const auto best=score.metrics.find("work_after");
+            if(after!=ranked.metrics.end()&&
+               (best==score.metrics.end()||after->second<best->second)){
+              t=std::move(trial);
+              score=std::move(ranked);
+              improved=true;
+              break;
+            }
+          }
+          if(!improved)break;
+        }
+      }
       if(observer)observer->trial(t,round,score,eligible(t,score,options));
       if(!t.valid){errs()<<"rejected: "<<t.reason<<"\n";return 4;}
       if(score.status!=ScoreStatus::Scored)errs()<<"score unsupported; exporting legal trial: "<<score.reason<<"\n";

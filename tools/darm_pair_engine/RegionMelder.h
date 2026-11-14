@@ -140,6 +140,8 @@ public:
   bool ExplicitGapPlan=false;
   json::Array AlignmentChoices, GapChoices;
   bool CoalesceGaps=false;
+  bool GuardReplicatedMemory=false;
+  bool NativeReplicationPredication=false;
   // 0 none, 1 legacy (default), 2 budget. See requireUnpredication().
   int SpeculationMode=1;
   int SpeculationBudget=4;
@@ -148,6 +150,7 @@ public:
   std::vector<llvm::GapDecision> SegmentDecisions;
   unsigned SpeculatedRanges=0;
   unsigned CoalescedGapGroups=0;
+  bool hasGuardedGap(const Instruction *instruction, bool left) const;
   std::function<void(const ValueToValueMapTy&)> onValueMapping;
   const std::vector<BlockOrigin>& blockOrigins() const { return BlockOrigins; }
   // meld I'th region pair

@@ -1,4 +1,5 @@
 #pragma once
+#include "llvm/Support/JSON.h"
 #include "llvm/IR/Module.h"
 #include "llvm/Analysis/RegionInfo.h"
 #include "llvm/Analysis/DominanceFrontier.h"
@@ -21,8 +22,8 @@ class LogicalRegionState;
 //          rest; also speculates cheap unmatched ranges of ordinary pairs.
 // Explicit engines (--local-compute/--local-union, full predication, triangle
 // cleanups) remain explicit commands and are not changed by this mode.
-enum class SpeculationMode { None, Legacy, Budget };
-enum class CleanupMode { None, O3, DarmCFG, DarmCFGEarlyCSE, DarmCFGScalarFixedPoint, PostOptFixedPoint, StructuralCFG, ScopedLocal, ScopedCFG, ScopedCFGTriangles };
+enum class SpeculationMode { None, Legacy, Budget, Cost };
+enum class CleanupMode { None, O3, DarmCFG, DarmCFGEarlyCSE, DarmCFGScalarFixedPoint, PostOptFixedPoint, StructuralCFG, ScopedLocal, ScopedCFG, ScopedCFGTriangles, DarmCFGRedundancy };
 struct Candidate {
   std::string function, split, left, right;
   unsigned version = 0;
@@ -38,6 +39,8 @@ struct Candidate {
   // fusion-search CLI defaults to None.
   SpeculationMode speculation=SpeculationMode::Legacy;
   int speculationBudget=4;
+  std::set<unsigned> splitMatches, speculateGaps;
+  bool explicitGapPlan=false;
   std::string key() const { return function+":"+split+":"+left+":"+right; }
 };
 struct OperationKey {
@@ -99,6 +102,7 @@ struct BlockProvenance {
   std::string leftID,rightID,leftLabel,rightLabel,rawBlock,cleanedBlock;
 };
 struct Trial {
+  llvm::json::Array alignmentChoices, gapChoices;
   std::shared_ptr<LogicalRegionState> logicalState;
   CleanupMode cleanupMode=CleanupMode::O3;
   Candidate candidate;
@@ -188,10 +192,14 @@ bool eligible(const Trial &, const ScoreResult &, const Options &);
 void normalize(llvm::Module &, unsigned optLevel);
 unsigned cleanup(llvm::Module &, const std::string &function, unsigned level, CleanupMode);
 // Complete E-leaves require same-SSA constant predicates unless explicitly enabled.
+std::set<std::string> crossLevelCatalogRejections(llvm::Function &,
+    const std::vector<Candidate> &, const Options &);
 std::vector<Candidate> enumerate(llvm::Function &, unsigned version, bool crossDecisionLeaves=false);
 std::vector<Candidate> enumerateAdjacent(llvm::Function &, unsigned version);
 Trial tryPair(const llvm::Module &, const Candidate &, unsigned currentVersion,
               unsigned optLevel, CleanupMode mode=CleanupMode::O3, const LogicalRegionState *logical=nullptr);
+std::vector<Trial> planSingleBranchB2B(const llvm::Module &, const Candidate &,
+                                       unsigned optLevel, CleanupMode, llvm::StringRef replay);
 Result greedy(const llvm::Module &, const std::string &function,
               const Options &, const Scorer &, Observer *observer=nullptr);
 }

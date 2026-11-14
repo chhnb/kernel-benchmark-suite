@@ -1,5 +1,6 @@
 #pragma once
 #include "fusion_search.h"
+#include "tti_memory_io.h"
 #include "llvm/IR/IntrinsicInst.h"
 #include "llvm/Transforms/Utils/Cloning.h"
 #include "llvm/Support/FileSystem.h"
@@ -19,6 +20,12 @@ class LLVM24Scorer final:public Scorer {
   mutable Cost cachedControl;
   mutable std::string cachedParentHash;
   mutable Cost cachedParent;
+#ifdef __linux__
+  mutable std::unique_ptr<decision::PersistentTTI> session;
+  mutable std::string sessionFunction;
+  mutable bool persistentUnavailable=false;
+#endif
+
   // Sum of accepted per-instruction costs over the given blocks; false if any
   // listed block has an unknown cost or lies outside the worker's block range.
   static bool sideCost(const Cost&c,const std::vector<unsigned>&blocks,double&out){
@@ -37,38 +44,59 @@ class LLVM24Scorer final:public Scorer {
   }
   Cost query(const llvm::Function&f)const {
     using namespace llvm;
+    std::unique_ptr<Module> scoringModule;
+    for(const auto &block:f)
+      for(const auto &instruction:block)
+        if(legacyLifetimeMarker(instruction)&&!scoringModule)
+          scoringModule=CloneModule(*f.getParent());
+    if(scoringModule)
+      for(auto &block:*scoringModule->getFunction(f.getName()))
+        for(auto it=block.begin();it!=block.end();){
+          auto &instruction=*it++;
+          if(legacyLifetimeMarker(instruction))instruction.eraseFromParent();
+        }
+    const auto &module=scoringModule?*scoringModule:*f.getParent();
+    std::string result;
+#ifdef __linux__
+    std::string ir;
+    raw_string_ostream stream(ir);
+    module.print(stream,nullptr);
+    stream.flush();
+    if(!persistentUnavailable){
+      try {
+        if(!session||sessionFunction!=f.getName()){
+          session=std::make_unique<decision::PersistentTTI>(worker,f.getName(),false);
+          sessionFunction=f.getName().str();
+        }
+        result=session->score(ir);
+        if(StringRef(result).trim()=="null")
+          throw std::runtime_error("persistent worker rejected IR");
+      }catch(const std::runtime_error &){
+        session.reset();
+        persistentUnavailable=true;
+        result.clear();
+      }
+    }
+    if(result.empty())result=decision::runMemoryTTI(worker,ir,f.getName(),false,60);
+#else
     SmallString<128> directory;
     if(auto e=sys::fs::createUniqueDirectory("fusion-llvm24-tti",directory))throw std::runtime_error(e.message());
     struct Remove {std::string dir;~Remove(){sys::fs::remove_directories(dir);}} remove{directory.str().str()};
     const std::string input=remove.dir+"/input.ll",output=remove.dir+"/cost.json",error=remove.dir+"/error.txt";
-    std::error_code ec;
-    bool needsNormalization = false;
-    for (const auto &block : f)
-      for (const auto &instruction : block)
-        needsNormalization |= legacyLifetimeMarker(instruction);
     {
-      raw_fd_ostream stream(input, ec);
-      if (ec) throw std::runtime_error(ec.message());
-      if (needsNormalization) {
-        auto scoringModule = CloneModule(*f.getParent());
-        auto &scoringFunction = *scoringModule->getFunction(f.getName());
-        for (auto &block : scoringFunction)
-          for (auto it = block.begin(); it != block.end();) {
-            auto &instruction = *it++;
-            if (legacyLifetimeMarker(instruction)) instruction.eraseFromParent();
-          }
-        scoringModule->print(stream, nullptr);
-      } else {
-        f.getParent()->print(stream, nullptr);
-      }
+      std::error_code ec;
+      raw_fd_ostream stream(input,ec);
+      if(ec)throw std::runtime_error(ec.message());
+      module.print(stream,nullptr);
     }
-    std::string name=f.getName().str(),message;
-    std::array<StringRef,3> args{{worker,input,name}};
+    std::array<StringRef,3> args{{worker,input,f.getName()}};
     std::array<Optional<StringRef>,3> redirects{{StringRef(""),StringRef(output),StringRef(error)}};
-    int code=sys::ExecuteAndWait(worker,args,None,redirects,60,0,&message);
-    if(code!=0){auto b=MemoryBuffer::getFile(error);throw std::runtime_error("llvm24_worker_failed:"+message+":"+(b?b.get()->getBuffer().take_front(800).str():""));}
-    auto buffer=MemoryBuffer::getFile(output);if(!buffer)throw std::runtime_error("missing LLVM24 output");
-    auto j=json::parse(buffer.get()->getBuffer());if(!j)throw std::runtime_error(toString(j.takeError()));
+    if(sys::ExecuteAndWait(worker,args,None,redirects,60))throw std::runtime_error("llvm24_worker_failed");
+    auto buffer=MemoryBuffer::getFile(output);
+    if(!buffer)throw std::runtime_error("missing LLVM24 output");
+    result=(*buffer)->getBuffer().str();
+#endif
+    auto j=json::parse(result);if(!j)throw std::runtime_error(toString(j.takeError()));
     auto*o=j->getAsObject();if(!o)throw std::runtime_error("invalid worker JSON");
     if(o->getString("schema")!=Optional<StringRef>("llvm24-tti-v1")||
        o->getString("source_revision")!=Optional<StringRef>("6be16f356d3e"))throw std::runtime_error("worker identity mismatch");

@@ -91,7 +91,14 @@ std::vector<Decision> discover(Function &f) {
   if(!dt.dominates(b,x))a.reason="multiple_entry_or_shared_suffix";
   if(x==&root||li.getLoopFor(x)!=li.getLoopFor(&root))a.reason="unsupported_loop_scope";
   if(x->getTerminator()->getNumSuccessors()==0)a.reason="early_exit";
-  for(auto &i:*x){if(i.mayHaveSideEffects())a.reason="side_effects";if(auto *c=dyn_cast<CallBase>(&i))if(c->isConvergent())a.reason="convergent_call";}
+  for (auto &i : *x) {
+    // Normalization redirects arm edges and leaves ordinary stores in place.
+    auto *store = dyn_cast<StoreInst>(&i);
+    if (i.mayHaveSideEffects() && !(store && store->isSimple()))
+      a.reason = "side_effects";
+    if (auto *call = dyn_cast<CallBase>(&i))
+      if (call->isConvergent()) a.reason = "convergent_call";
+  }
   for(auto *s:successors(x)){if(s==d.join)a.exitSources.push_back(x);else if(dt.dominates(s,x))a.reason="backedge";else pending.push_back(s);}
  }
  if(a.blocks.empty())a.reason="empty_arm";
