@@ -8,7 +8,6 @@
 
 ```sh
 python3 tools/run_generated_regression.py vllm --candidate /absolute/current-vllm.hsaco --out /absolute/new-vllm-run
-python3 tools/run_generated_regression.py mapairy --candidate /absolute/current-mapairy.hsaco --out /absolute/new-mapairy-run
 ```
 
 输入和 CPU 参考由 `regression/generators/generated_fixtures.cpp` 临时生成；GPU 验证和 event 计时使用 C++ runner，Python 只负责调度、设备准入与汇总。每个版本先验证完整输出，再进行3批、每批3次预热＋15次测量。各输入分别对冻结 reference 检查默认2%退化阈值；相同二进制记录为别名，不重复测量并声称独立对比。
@@ -32,6 +31,24 @@ python3 tools/run_cpu.py UNIQUE_LABEL python3 /home/chh/kernel-benchmark-suite/r
 ```sh
 python3 tools/run_cpu.py UNIQUE_LABEL python3 /home/chh/kernel-benchmark-suite/regression/prepare_current_generated.py /absolute/new-current-build
 ```
+
+## Map-Airy 共同父 IR 回归
+
+`mapairy-v2.json` 固定输入、参考输出、父 IR 和原版 DARM 工具的 SHA-256。
+三条路径从同一份父 IR 开始，随后统一执行 LLVM12 O3 和 gfx906 codegen。
+Auto Greedy 使用当前构建的三参数入口，启用默认 B2B DP。
+GPU 上轮换测三批，每批验证完整输出并记录 15 次计时。
+输出目录保留工具命令、IR、二进制哈希和计时。首次结果见 `records/mapairy-v2-first.json`。
+相对性能门槛使用同批 Greedy/DARM 中位耗时比，允许比首次记录相对退化 2%。
+
+```sh
+python3 tools/run_mapairy_regression.py --out /absolute/new-mapairy-run \
+  --darm-opt /absolute/native-darm/bin/opt --greedy /absolute/current/decision-greedy \
+  --llvm-bin /absolute/llvm12/bin --rocm /opt/rocm-6.3.3 \
+  --runner /absolute/bench_hip
+```
+
+近期曾作为对照的 25 次融合产物属于历史融合版本，不用于共同父 IR 回归。
 
 ## TIGRE 和历史记录
 

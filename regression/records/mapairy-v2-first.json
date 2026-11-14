@@ -1,0 +1,41 @@
+{
+  "protocol": "mapairy-shared-parent-v2",
+  "input_sha256": "0018705f2b9c28db1fcc20f4fd6356db8e2ae19972c910029e8978b4baa51125",
+  "parent_sha256": "130d89d31e175129c35386aa68f040556a3addb5c0615a26948b75ee7963dce2",
+  "compiler_sha256": {
+    "darm-opt": "99fcb66d33562b1506a6a1bebaab8de9902f816a2aec9c04ef033c855f888324",
+    "decision-greedy": "16a63ee73059e5535890fec77acee8f1acebb87cdabf6211502b73d77b91081b",
+    "llc": "83242fe5b2e14402bae46dce47f8a7ae287da787e5387c06375f13bd5c44f891",
+    "opt": "bf209ade6854e03637414290a3242aeed86b7269fd025c6b73a2ada6dca588a7"
+  },
+  "binary_sha256": {
+    "baseline": "be310a890bc62b7a5a37621540725627e5ddcae23edf3067835842d2976b13c0",
+    "auto-darm": "ab0a22d95d36ccb76d8dd0c85cb5aedfb6e79dd602990987a914a648591c7a63",
+    "auto-greedy": "7ce711ac71aac38787219bde0b97e006a4c51a382f72796f61e7b84430927015"
+  },
+  "darm_commits": 30,
+  "greedy_commits": 42,
+  "batch_medians_us": {
+    "baseline": [
+      86.08000183,
+      85.44000244,
+      85.44000244
+    ],
+    "auto-darm": [
+      46.72000122,
+      46.72000122,
+      47.36000061
+    ],
+    "auto-greedy": [
+      32.0,
+      32.0,
+      31.6799984
+    ]
+  },
+  "median_us": {
+    "baseline": 85.44000244,
+    "auto-darm": 46.72000122,
+    "auto-greedy": 32.0
+  },
+  "correctness_passed": true
+}

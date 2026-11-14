@@ -9,7 +9,7 @@ def sha(p):
   for b in iter(lambda:f.read(8<<20),b''):h.update(b)
  return h.hexdigest()
 def main():
- ap=argparse.ArgumentParser();ap.add_argument('case',choices=['vllm','mapairy']);ap.add_argument('--candidate',type=Path,required=True);ap.add_argument('--out',type=Path,required=True);ap.add_argument('--keep-generated',action='store_true');ap.add_argument('--max-slowdown-pct',type=float,default=2);a=ap.parse_args()
+ ap=argparse.ArgumentParser();ap.add_argument('case',choices=['vllm']);ap.add_argument('--candidate',type=Path,required=True);ap.add_argument('--out',type=Path,required=True);ap.add_argument('--keep-generated',action='store_true');ap.add_argument('--max-slowdown-pct',type=float,default=2);a=ap.parse_args()
  if not math.isfinite(a.max_slowdown_pct) or a.max_slowdown_pct<0:ap.error('invalid slowdown limit')
  root=S/'regression/golden/20261110-generated-gfx906-v1';m=json.loads((root/'manifest.json').read_text());cfg=m['cases'][a.case]
  for rel,h in m['sha256'].items():assert sha(root/rel)==h,'reference hash changed: '+rel

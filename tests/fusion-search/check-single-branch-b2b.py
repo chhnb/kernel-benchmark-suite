@@ -54,6 +54,61 @@ cases = {
         "  %b = load i32, i32* %mem, align 4\n  %rm = mul i32 %x, %y\n"
         "  %r = xor i32 %b, %rm\n  store i32 %r, i32* %mem, align 4",
     ),
+    "join-dp": (
+        "  %lv = add i32 %x, 7\n  %lm = mul i32 %lv, %y\n"
+        "  %l = mul i32 %lm, %x",
+        "  %rv = load i32, i32* %mem, align 4\n  %rm = mul i32 %rv, %y\n"
+        "  store i32 %rv, i32* %mem, align 4\n  %r = mul i32 %rm, %x",
+    ),
+    "prefix-join-dp": (
+        "  %lp = mul i32 %x, %y\n  %lv = add i32 %lp, 7\n"
+        "  %lm = mul i32 %lv, %y\n  %l = mul i32 %lm, %x",
+        "  %rp = mul i32 %x, %y\n  %loaded = load i32, i32* %mem, align 4\n"
+        "  %rv = xor i32 %loaded, %rp\n  %rm = mul i32 %rv, %y\n"
+        "  store i32 %rv, i32* %mem, align 4\n  %r = mul i32 %rm, %x",
+    ),
+    "paired-prefix": (
+        "  %l = mul i32 %x, %y\n  store i32 %l, i32* %mem, align 4",
+        "  %r = mul i32 %x, %x\n  store i32 %r, i32* %mem, align 4",
+    ),
+    "paired-common-dp": (
+        "  %a = xor i32 %x, 73\n  store i32 %a, i32* %mem, align 4\n"
+        "  %lm = mul i32 %a, %y\n  %ln = mul i32 %lm, %y\n"
+        "  %l = mul i32 %ln, %y\n  store i32 %l, i32* %mem, align 4",
+        "  %rm = mul i32 %x, %y\n  %rn = mul i32 %rm, %y\n"
+        "  %r = mul i32 %rn, %y\n  store i32 %r, i32* %mem, align 4",
+    ),
+    "paired-segment-dp": (
+        "  store i32 %x, i32* %mem, align 4\n"
+        "  %a = load i32, i32* %mem, align 4\n"
+        "  %lm = mul i32 %a, %y\n  %ln = mul i32 %lm, %y\n"
+        "  %lo = mul i32 %ln, %x\n  %l = mul i32 %lo, %y\n  store i32 %l, i32* %mem, align 4",
+        "  %b = load i32, i32* %mem, align 4\n"
+        "  %rm = mul i32 %b, %y\n  %rn = mul i32 %rm, %y\n"
+        "  %ro = mul i32 %rn, %x\n  %r = mul i32 %ro, %y",
+    ),
+    "paired-join-spec": (
+        "  store i32 %x, i32* %mem, align 4\n"
+        "  %a = load i32, i32* %mem, align 4\n"
+        "  %odd = xor i32 %a, 73\n  %lm = mul i32 %odd, %y\n  %ln = mul i32 %lm, %y\n"
+        "  %lo = mul i32 %ln, %x\n  %l = mul i32 %lo, %y\n  store i32 %l, i32* %mem, align 4",
+        "  %b = load i32, i32* %mem, align 4\n"
+        "  %rm = mul i32 %b, %y\n  %rn = mul i32 %rm, %y\n"
+        "  %ro = mul i32 %rn, %x\n  %r = mul i32 %ro, %y",
+    ),
+    "paired-resplit": (
+        "  store i32 %x, i32* %mem, align 4\n"
+        "  %a = load i32, i32* %mem, align 4\n"
+        "  %odd = xor i32 %a, 73\n  %lm = mul i32 %odd, %y\n  %ln = mul i32 %lm, %y\n"
+        "  %lo = mul i32 %ln, %x\n  %lt = mul i32 %lo, %y\n  store i32 %lt, i32* %mem, align 4\n  %l = mul i32 %lt, %x",
+        "  %b = load i32, i32* %mem, align 4\n"
+        "  %rm = mul i32 %b, %y\n  %rn = mul i32 %rm, %y\n"
+        "  %ro = mul i32 %rn, %x\n  %rt = mul i32 %ro, %y\n  %r = mul i32 %rt, %x",
+    ),
+    "complete-common-dp": (
+        "  %l = mul i32 %x, %y",
+        "  %r = xor i32 %x, %y",
+    ),
     "separate": (
         "  %l = add i32 %x, 7",
         "  %r = xor i32 %x, %y\n  store i32 %r, i32* %mem, align 4",
@@ -101,14 +156,63 @@ with tempfile.TemporaryDirectory() as directory:
             run(*args, "--gap-trials", "4", "--out", fused, "--debug-dir", out / "reports")
             report = out / "reports/trial-0/trial.json"
             trial = json.loads(report.read_text())
-            assert trial["merge_path"] == f"single-branch-{shape.removeprefix('pure-').removeprefix('paired-')}", trial["merge_path"]
+            expected = f"single-branch-{shape.removeprefix('pure-').removeprefix('paired-')}"
+            merged_exit = trial["merge_path"] == "single-branch-prefix-merged-exit"
+            segmented = trial["merge_path"].startswith("single-branch-segment-dp")
+            complete_common = trial["merge_path"].startswith("single-branch-complete-common-dp")
+            assert (trial["merge_path"] == expected or segmented or merged_exit or
+                    (shape == "pure-aligned-hoist" and complete_common) or
+                    (shape.startswith("paired-") and trial["merge_path"] == "single-branch-prefix")), (shape, trial["merge_path"])
             assert trial["eligible"] == (shape != "separate"), trial["score_result"]
             assert not trial["gap_choices"] and not trial["alignment_choices"]
             raw = report.with_name("after-raw.ll").read_text()
-            assert raw.count("br i1 %p") == 1 and "[ 77, %external ]" in raw
+            assert "[ 77, %external ]" in raw
+            if shape == "paired-join-spec":
+                assert segmented and re.search(r"^fusion\.common[^\n]*:\s*[^\n]*\n(?:  .*\n)*?  .*xor i32", raw, re.M), raw
+            if shape == "paired-segment-dp":
+                assert raw.count("br i1 %") == 3  # Outside edge and two protection segments.
+                assert raw.count("mul i32") == 4
+                assert raw.count("store i32") == 2
+            elif merged_exit:
+                assert raw.count("br i1 %") == 1 and "br i1 %outside" in raw
+            elif not segmented and not complete_common:
+                assert raw.count("br i1 %") == 2
+            if shape == "paired-prefix":
+                assert raw.count("store i32") == 1
+                if not merged_exit:
+                    assert raw.index("store i32") < raw.index("br i1 %", raw.index("split:"))
+            if shape == "complete-common-dp":
+                assert raw.count("mul i32") == raw.count("xor i32") == 1
+                assert raw.index("xor i32") < raw.index("br i1 %", raw.index("split:"))
+            if shape == "paired-common-dp" and not segmented:
+                assert "xor i32 %x, 73" in raw.split("br i1 %p")[0]
+                assert raw.count("mul i32") == 3
+                assert raw.count("store i32") == 3
             run(opt, "-verify", "-disable-output", fused)
             run(*args, "--gap-replay", report, "--out", replay)
             assert fused.read_bytes() == replay.read_bytes()
+            if shape == "paired-resplit":
+                resplit = out / "resplit.json"
+                replay = out / "resplit.ll"
+                for rank in ("", "-2", "-3", "-4"):
+                    path = f"single-branch-segment-dp{rank}-resplit"
+                    resplit.write_text(json.dumps(dict(trial, merge_path=path)))
+                    cmd = [*args, "--gap-replay", resplit, "--out", replay,
+                           "--debug-dir", out / "resplit"]
+                    attempt = subprocess.run(list(map(str, cmd)), capture_output=True, text=True)
+                    if attempt.returncode == 0:
+                        break
+                    assert "replay layout unavailable" in attempt.stderr, attempt.stderr
+                else:
+                    raise AssertionError("no resplit plan for fixture")
+                resplit_report = out / "resplit/trial-0/trial.json"
+                raw = resplit_report.with_name("after-raw.ll").read_text()
+                assert "fusion.exit:" in raw and "[ 77, %external ]" in raw
+                run(opt, "-verify", "-disable-output", replay)
+                second_replay = out / "resplit-replay.ll"
+                run(*args, "--gap-replay", resplit_report, "--out", second_replay)
+                assert replay.read_bytes() == second_replay.read_bytes()
+                fused = replay
             for variant, path in (("before", source), ("after", fused)):
                 cpu = out / f"{variant}.ll"
                 text = path.read_text().replace("amdgcn-amd-amdhsa", "x86_64-unknown-linux-gnu")

@@ -10,9 +10,9 @@
       "input": "generated synthetic BF16 64K/128K"
     },
     "mapairy": {
-      "snapshot": "golden/20261110-generated-gfx906-v1",
-      "runner": "tools/run_generated_regression.py",
-      "input": "generated interval-mixture only"
+      "snapshot": "mapairy-v2.json",
+      "runner": "tools/run_mapairy_regression.py",
+      "input": "fixed shuffled interval-mixture, shared parent IR"
     },
     "tigre": {
       "snapshot": "golden/20261109-gfx906-v1",
