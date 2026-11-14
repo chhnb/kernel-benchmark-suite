@@ -103,10 +103,10 @@ struct DebugObserver final:Observer {
 int main(int argc,char**argv) {
   sys::PrintStackTraceOnErrorSignal(argv[0]);
   try {
-    std::string input,function,output,debug,split,left,right,replayParentHash,profileBundle,policy="llvm24";Options options;bool speculationGiven=false,budgetGiven=false,singleBranchB2B=false;
+    std::string input,function,output,debug,split,left,right,replayParentHash,profileBundle,policy="llvm24";Options options;bool speculationGiven=false,budgetGiven=false,singleBranchB2B=false, useDP2=false, strategyGiven=false;
     options.speculation=SpeculationMode::None; /* CLI default: no speculation of work */ PostOptConfig config;bool controlOnly=false,catalogOnly=false; unsigned gapTrials=0; std::string gapReplay;std::string ttiWorker="/home/chh/kernel-benchmark-suite/tools/run-llvm24-tti";
     for(int i=1;i<argc;++i){std::string k=argv[i];
-      if(k=="--help"){outs()<<"fusion-search --ir FILE --function NAME --out FILE [--control-only 0|1] [--catalog-only 0|1 (requires debug-dir)] [--replay-parent-hash SHA1 (explicit snapshot pair only)] [--cross-decision-leaves 0|1 (default 0; permits complete leaves with different or unknown SSA discriminator, or a sub-decision of the same discriminator)] [--b2r-strategy darm|guarded] [--cross-level-b2r 0|1 (default 0; allow B2R/R2B that replicates a same-discriminator decision chain)] [--speculation none|legacy|budget|cost (default none: unmatched work is always guarded, only a decision's own condition may be evaluated early, structural dispatch never picks local if-conversion; legacy: historical behaviour, required to reproduce results before this option; budget: speculate safe work up to --speculation-budget)] [--speculation-budget N (default 4; div/rem=8 call=4 other=1)] [--max-uniform-loss TTI (default off; llvm24 scorer only; reject if a one-sided wave gets more than this much costlier)] [--complete-leaf-plan 0|1 (experimental mandatory-load motion and multiple guarded anchors)] [--single-branch-b2b 0|1 (explicit cost-mode pair)] [--structural 0|1 (B2B/R2R/B2R dispatch; adjacent-only 0; hybrid is a compatibility alias)] [--adjacent-only 0|1] [--local-union 0|1] [--local-compute 0|1 (alias of local-copysign)] [--local-copysign 0|1 (requires adjacent-only 1, cleanup none or scoped-local)] [--scorer llvm24|legacy|v1|v2|v5] [--tti-worker EXECUTABLE] [--profile-bundle FILE (experimental v5 only)] [--work-absolute 0] [--work-relative 0] [--pressure-weight 0] [--dependency-features 0|1] [--static-alloca-cost POSITIVE_INT (disabled by default)] [--rounds 8] [--trials 256] [--threshold 0] [--opt-level 3] [--debug-dir DIR] [--require-parent-gain 1] [--cleanup none|scoped-local|scoped-cfg|scoped-cfg-triangles|structural-cfg|postopt-fp|darm-cfg-scalar-fp|darm-cfg-earlycse|darm-cfg-dce|darm-cfg|o3]\nExplicit pair: add --split B# --left B#/R#/Eentry_exit --right B#/R#/Eentry_exit. Complete E leaves require --structural 1. Optional --coalesce-gaps 0|1 (default 0) groups adjacent unmatched runs before unpredication. IDs refer to the input state (O3-normalized only in o3 mode). Default cleanup: darm-cfg-earlycse. Final codegen O3 is separate.\n";return 0;}
+      if(k=="--help"){outs()<<"fusion-search --ir FILE --function NAME --out FILE [--control-only 0|1] [--catalog-only 0|1 (requires debug-dir)] [--replay-parent-hash SHA1 (explicit snapshot pair only)] [--cross-decision-leaves 0|1 (default 0; permits complete leaves with different or unknown SSA discriminator, or a sub-decision of the same discriminator)] [--b2r-strategy darm|guarded] [--cross-level-b2r 0|1 (default 0; allow B2R/R2B that replicates a same-discriminator decision chain)] [--speculation none|legacy|budget|cost (default none: unmatched work is always guarded, only a decision's own condition may be evaluated early, structural dispatch never picks local if-conversion; legacy: historical behaviour, required to reproduce results before this option; budget: speculate safe work up to --speculation-budget)] [--speculation-budget N (default 4; div/rem=8 call=4 other=1)] [--max-uniform-loss TTI (default off; llvm24 scorer only; reject if a one-sided wave gets more than this much costlier)] [--complete-leaf-plan 0|1 (experimental mandatory-load motion and multiple guarded anchors)] [--b2b-strategy dp1|dp2] [--single-branch-b2b 0|1 (explicit cost-mode pair)] [--structural 0|1 (B2B/R2R/B2R dispatch; adjacent-only 0; hybrid is a compatibility alias)] [--adjacent-only 0|1] [--local-union 0|1] [--local-compute 0|1 (alias of local-copysign)] [--local-copysign 0|1 (requires adjacent-only 1, cleanup none or scoped-local)] [--scorer llvm24|legacy|v1|v2|v5] [--tti-worker EXECUTABLE] [--profile-bundle FILE (experimental v5 only)] [--work-absolute 0] [--work-relative 0] [--pressure-weight 0] [--dependency-features 0|1] [--static-alloca-cost POSITIVE_INT (disabled by default)] [--rounds 8] [--trials 256] [--threshold 0] [--opt-level 3] [--debug-dir DIR] [--require-parent-gain 1] [--cleanup none|scoped-local|scoped-cfg|scoped-cfg-triangles|structural-cfg|postopt-fp|darm-cfg-scalar-fp|darm-cfg-earlycse|darm-cfg-dce|darm-cfg|o3]\nExplicit pair: add --split B# --left B#/R#/Eentry_exit --right B#/R#/Eentry_exit. Complete E leaves require --structural 1. Optional --coalesce-gaps 0|1 (default 0) groups adjacent unmatched runs before unpredication. IDs refer to the input state (O3-normalized only in o3 mode). Default cleanup: darm-cfg-earlycse. Final codegen O3 is separate.\n";return 0;}
       if(i+1==argc)throw std::runtime_error("missing option value");std::string v=argv[++i];
       if(k=="--control-only"){if(v!="0"&&v!="1")throw std::runtime_error("control-only must be 0 or 1");controlOnly=v=="1";}
       else if(k=="--catalog-only"){if(v!="0"&&v!="1")throw std::runtime_error("catalog-only must be 0 or 1");catalogOnly=v=="1";}
@@ -131,6 +131,12 @@ int main(int argc,char**argv) {
       else if(k=="--replay-parent-hash")replayParentHash=v;
       else if(k=="--ir")input=v;else if(k=="--function")function=v;else if(k=="--out")output=v;
       else if(k=="--complete-leaf-plan"){if(v!="0"&&v!="1")throw std::runtime_error("complete-leaf-plan must be 0 or 1");options.completeLeafPlan=v=="1";}
+      else if(k=="--b2b-strategy"){
+        if(v!="dp1" && v!="dp2") throw std::runtime_error("b2b-strategy must be dp1 or dp2");
+        strategyGiven=true;
+        useDP2=v=="dp2";
+        singleBranchB2B=true;
+      }
       else if(k=="--single-branch-b2b"){
         if(v!="0"&&v!="1")throw std::runtime_error("single-branch-b2b must be 0 or 1");
         singleBranchB2B=v=="1";
@@ -269,9 +275,13 @@ int main(int argc,char**argv) {
       if (!gapReplay.empty())
         if (auto path = gapReport.getAsObject()->getString("merge_path"))
           if (path->startswith("single-branch-")) replayLayout = *path;
+      if (!replayLayout.empty() && strategyGiven &&
+          useDP2 != replayLayout.startswith("single-branch-dp2-"))
+        throw std::runtime_error("B2B replay strategy mismatch");
       auto plans = !logical && (singleBranchB2B || !replayLayout.empty()) &&
           (gapReplay.empty() || !replayLayout.empty())
-          ? planSingleBranchB2B(*module, c, options.optLevel, options.cleanupMode, replayLayout)
+          ? planSingleBranchB2B(*module, c, options.optLevel, options.cleanupMode, replayLayout,
+                                useDP2 || replayLayout.startswith("single-branch-dp2-"))
           : std::vector<Trial>{};
       if (!replayLayout.empty() && plans.empty())
         throw std::runtime_error("single-branch B2B replay layout unavailable");

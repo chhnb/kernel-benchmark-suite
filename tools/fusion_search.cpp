@@ -1,3 +1,4 @@
+#include "b2b_dp2.h"
 #include "decision_speculation_tti.h"
 #include "scoped_cfg_cleanup.h"
 #include "fusion_search.h"
@@ -2193,6 +2194,11 @@ static SmallVector<SmallVector<B2BMatch, 8>, 4> searchB2BJoin(
 struct B2BSegmentMatch {
   unsigned left, right;
   bool consumeLeft = true, consumeRight = true;
+  SmallVector<unsigned, 4> rightOperands;
+  bool beforeFork = false;
+  SmallVector<unsigned, 4> selectorIds;
+  SmallVector<std::pair<unsigned, unsigned>, 4> liveThroughJoin;
+  SmallVector<bool, 4> pairedPhi;
   bool operator==(const B2BSegmentMatch &other) const {
     return left == other.left && right == other.right &&
         consumeLeft == other.consumeLeft && consumeRight == other.consumeRight;
@@ -2292,7 +2298,10 @@ searchB2BSegments(ArrayRef<Instruction *> left, ArrayRef<Instruction *> right) {
 
 static void emitB2BSegments(BranchInst &split, BasicBlock &left,
                             BasicBlock &right, BasicBlock &join,
-                            ArrayRef<B2BSegmentMatch> matches, bool resplit) {
+                            ArrayRef<B2BSegmentMatch> matches, bool resplit,
+                            std::optional<dp2::Exit> terminal = std::nullopt,
+                            ArrayRef<unsigned> exitSelectorIds = {},
+                            ArrayRef<uint8_t> exitPairedPhi = {}) {
   auto *function = split.getFunction();
   auto &context = function->getContext();
   SmallVector<Instruction *, 16> work[2];
@@ -2300,7 +2309,9 @@ static void emitB2BSegments(BranchInst &split, BasicBlock &left,
   for (auto &inst : right) if (!inst.isTerminator()) work[1].push_back(&inst);
   IRBuilder<> builder(&split);
   // All protection segments must make the same choice, even for undef.
-  auto *condition = builder.CreateFreeze(split.getCondition());
+  Value *condition = split.getCondition();
+  if (!terminal || !isa<FreezeInst>(condition))
+    condition = builder.CreateFreeze(condition);
   split.eraseFromParent();
   auto *common = builder.GetInsertBlock();
   builder.SetInsertPoint(common);
@@ -2316,8 +2327,37 @@ static void emitB2BSegments(BranchInst &split, BasicBlock &left,
     if (!choice) choice = builder.CreateSelect(condition, lv, rv);
     return choice;
   };
+  struct PlannedSelector {
+    Value *left;
+    Value *right;
+    Value *result;
+  };
+  DenseMap<unsigned, PlannedSelector> plannedSelectors;
+  auto plannedSelect = [&](unsigned id, Value *lv, Value *rv) -> Value * {
+    if (!id) {
+      if (lv != rv) throw std::runtime_error("DP2 shared operand mismatch");
+      return lv;
+    }
+    auto found = plannedSelectors.find(id);
+    if (found != plannedSelectors.end()) {
+      if (found->second.left != lv || found->second.right != rv)
+        throw std::runtime_error("DP2 selector operand mismatch");
+      return found->second.result;
+    }
+    auto *result = builder.CreateSelect(condition, lv, rv);
+    plannedSelectors.try_emplace(id, PlannedSelector{lv, rv, result});
+    return result;
+  };
   unsigned cursor[2] = {};
-  auto preserve = [&](unsigned l, unsigned r, bool directExit) {
+  SmallPtrSet<Instruction *, 16> hoisted;
+  auto skipHoisted = [&](unsigned side) {
+    while (cursor[side] < work[side].size() && hoisted.count(work[side][cursor[side]]))
+      ++cursor[side];
+  };
+  BasicBlock *joinedPaths[2] = {};
+  DenseMap<Value *, Value *> edgeValues[2];
+  auto preserve = [&](unsigned l, unsigned r, bool directExit,
+                      ArrayRef<std::pair<unsigned, unsigned>> transfers = {}) {
     auto *next = directExit ? &join :
         BasicBlock::Create(context, "fusion.common", function, &join);
     unsigned end[] = {l, r};
@@ -2333,6 +2373,7 @@ static void emitB2BSegments(BranchInst &split, BasicBlock &left,
       builder.SetInsertPoint(paths[side]);
       for (; cursor[side] < end[side]; ++cursor[side]) {
         auto *inst = work[side][cursor[side]];
+        if (hoisted.count(inst)) continue;
         auto *copy = inst->clone();
         for (unsigned n = 0; n < inst->getNumOperands(); ++n)
           copy->setOperand(n, value(side, inst->getOperand(n)));
@@ -2352,15 +2393,22 @@ static void emitB2BSegments(BranchInst &split, BasicBlock &left,
       }
       return;
     }
+    if (terminal)
+      for (unsigned side = 0; side < 2; ++side) {
+        joinedPaths[side] = paths[side];
+        edgeValues[side] = values[side];
+      }
     builder.SetInsertPoint(next);
     for (unsigned side = 0; side < 2; ++side)
       for (unsigned n = begin[side]; n < end[side]; ++n) {
         auto *inst = work[side][n];
-        if (inst->getType()->isVoidTy() || llvm::all_of(inst->users(), [&](User *user) {
+        if (terminal && !llvm::is_contained(transfers, std::make_pair(side, n)))
+          continue;
+        if (!terminal && (hoisted.count(inst) || inst->getType()->isVoidTy() || llvm::all_of(inst->users(), [&](User *user) {
               return llvm::is_contained(
                   ArrayRef<Instruction *>(work[side]).slice(begin[side], end[side] - begin[side]),
                   user);
-            }))
+            })))
           continue;
         auto *phi = builder.CreatePHI(inst->getType(), 2);
         phi->addIncoming(values[side].lookup(inst), paths[side]);
@@ -2369,12 +2417,28 @@ static void emitB2BSegments(BranchInst &split, BasicBlock &left,
       }
     common = next;
   };
+  auto emitPairedPhi = [&](unsigned id, Value *lo, Value *ro, Value *lv, Value *rv) {
+    auto *phi = common->empty() ? PHINode::Create(lv->getType(), 2, "", common) :
+        PHINode::Create(lv->getType(), 2, "", &common->front());
+    auto *leftEdge = edgeValues[0].lookup(lo);
+    auto *rightEdge = edgeValues[1].lookup(ro);
+    phi->addIncoming(leftEdge ? leftEdge : lv, joinedPaths[0]);
+    phi->addIncoming(rightEdge ? rightEdge : rv, joinedPaths[1]);
+    plannedSelectors.try_emplace(id, PlannedSelector{lv, rv, phi});
+  };
   for (auto match : matches) {
-    if (cursor[0] != match.left || cursor[1] != match.right)
-      preserve(match.left, match.right, false);
+    if (!match.beforeFork && (cursor[0] != match.left || cursor[1] != match.right))
+      preserve(match.left, match.right, false, match.liveThroughJoin);
+    auto consume = [&](unsigned side, unsigned index) {
+      auto *inst = work[side][index];
+      if (match.beforeFork) hoisted.insert(inst);
+      else ++cursor[side];
+      skipHoisted(side);
+      return inst;
+    };
     if (!match.consumeLeft || !match.consumeRight) {
       const unsigned side = match.consumeLeft ? 0 : 1;
-      auto *inst = work[side][cursor[side]++];
+      auto *inst = consume(side, side ? match.right : match.left);
       auto *copy = inst->clone();
       for (unsigned n = 0; n < copy->getNumOperands(); ++n)
         copy->setOperand(n, value(side, inst->getOperand(n)));
@@ -2382,17 +2446,31 @@ static void emitB2BSegments(BranchInst &split, BasicBlock &left,
       values[side][inst] = copy;
       continue;
     }
-    auto *l = work[0][cursor[0]++];
-    auto *r = work[1][cursor[1]++];
+    auto *l = consume(0, match.left);
+    auto *r = consume(1, match.right);
     auto *shared = l->clone();
-    for (unsigned n = 0; n < shared->getNumOperands(); ++n)
-      shared->setOperand(n, select(value(0, l->getOperand(n)), value(1, r->getOperand(n))));
+    for (unsigned n = 0; n < shared->getNumOperands(); ++n) {
+      auto *lv = value(0, l->getOperand(n));
+      auto *rv = value(1, r->getOperand(match.rightOperands.empty() ? n : match.rightOperands[n]));
+      if (n < match.pairedPhi.size() && match.pairedPhi[n])
+        emitPairedPhi(match.selectorIds[n], l->getOperand(n),
+                      r->getOperand(match.rightOperands[n]), lv, rv);
+      shared->setOperand(n, match.selectorIds.empty() ? select(lv, rv) :
+                         plannedSelect(match.selectorIds[n], lv, rv));
+    }
     builder.Insert(shared);
     values[0][l] = values[1][r] = shared;
   }
-  if (cursor[0] != work[0].size() || cursor[1] != work[1].size()) {
+  const bool pending = cursor[0] != work[0].size() || cursor[1] != work[1].size();
+  const auto exit = terminal.value_or(pending ? dp2::Exit::DirectEdges :
+                                       resplit ? dp2::Exit::Resplit : dp2::Exit::MergedValues);
+  assert(pending == (exit == dp2::Exit::DirectEdges ||
+                     exit == dp2::Exit::CloseAndMergeValues));
+  if (exit == dp2::Exit::CloseAndMergeValues)
+    preserve(work[0].size(), work[1].size(), false);
+  if (exit == dp2::Exit::DirectEdges) {
     preserve(work[0].size(), work[1].size(), true);
-  } else if (resplit) {
+  } else if (exit == dp2::Exit::Resplit) {
     auto *rightExit = BasicBlock::Create(context, "fusion.exit", function, &join);
     builder.CreateCondBr(condition, &join, rightExit);
     BranchInst::Create(&join, rightExit);
@@ -2405,9 +2483,17 @@ static void emitB2BSegments(BranchInst &split, BasicBlock &left,
       phi.addIncoming(rv, rightExit);
     }
   } else {
+    unsigned index = 0;
     for (auto &phi : join.phis()) {
-      auto *incoming = select(value(0, phi.getIncomingValueForBlock(&left)),
-                              value(1, phi.getIncomingValueForBlock(&right)));
+      auto *lo = phi.getIncomingValueForBlock(&left);
+      auto *ro = phi.getIncomingValueForBlock(&right);
+      auto *lv = value(0, lo);
+      auto *rv = value(1, ro);
+      if (index < exitPairedPhi.size() && exitPairedPhi[index])
+        emitPairedPhi(exitSelectorIds[index], lo, ro, lv, rv);
+      auto *incoming = exitSelectorIds.empty() ? select(lv, rv) :
+                       plannedSelect(exitSelectorIds[index], lv, rv);
+      ++index;
       phi.removeIncomingValue(&left, false);
       phi.removeIncomingValue(&right, false);
       phi.addIncoming(incoming, common);
@@ -2422,7 +2508,7 @@ static void emitB2BSegments(BranchInst &split, BasicBlock &left,
 
 std::vector<Trial> planSingleBranchB2B(const Module &parent, const Candidate &c,
                                        unsigned level, CleanupMode mode,
-                                       StringRef replay) {
+                                       StringRef replay, bool useDP2) {
   std::vector<Trial> trials;
   if (!c.hybrid || c.speculation != SpeculationMode::Cost || c.localCopysign ||
       c.explicitGapPlan || !c.splitMatches.empty() || c.coalesceGaps ||
@@ -2515,8 +2601,109 @@ std::vector<Trial> planSingleBranchB2B(const Module &parent, const Candidate &c,
     }
     ++sideIndex;
   }
-  auto segments = segmentUsesValid ? searchB2BSegments(segmentWork[0], segmentWork[1])
+  SmallVector<B2BSegmentedPlan, 4> dp2Plans;
+  SmallVector<std::string, 8> dp2Labels;
+  SmallVector<dp2::Exit, 8> dp2Exits;
+  SmallVector<SmallVector<uint8_t, 4>, 8> dp2ExitPairedPhi;
+  SmallVector<SmallVector<unsigned, 8>, 8> dp2ExitChoices;
+  if (useDP2) {
+    if (!segmentUsesValid || (segmentWork[0].size() + 1) *
+                             (segmentWork[1].size() + 1) > 4096)
+      return trials;
+    SmallVector<dp2::Demand, 8> outgoing;
+    for (auto &phi : join->phis())
+      outgoing.emplace_back(phi.getIncomingValueForBlock(left),
+                            phi.getIncomingValueForBlock(right));
+    DenseMap<const Value *, unsigned> externalIds;
+    auto available = [&](const Value *value) -> std::optional<dp2::Definition> {
+      if (auto *inst = dyn_cast<Instruction>(value))
+        if (!dt.dominates(inst, branch)) return std::nullopt;
+      auto id = externalIds.try_emplace(value, externalIds.size()).first->second;
+      return dp2::Definition{~id, 0, dp2::Place::Common};
+    };
+    auto terminals = dp2::plan(segmentWork[0], segmentWork[1], outgoing,
+        compatibleB2BPrefix, [](Instruction &i) {
+          return isB2BPureOperation(i) && !i.isIntDivRem();
+        }, available, [](Instruction &i) { return speculationWeight(i); });
+    unsigned rank = 0;
+    for (const auto &terminal : terminals) {
+      B2BSegmentedPlan plan;
+      SmallVector<const dp2::Recipe *, 16> actions;
+      for (auto action = terminal.label.plan; action; action = action->previous)
+        actions.push_back(action.get());
+      for (auto *action : llvm::reverse(actions)) {
+        for (auto [side, index] : action->dependencies)
+          plan.push_back({side ? 0u : index, side ? index : 0u,
+                          side == 0, side == 1, {}, true});
+        using A = dp2::Action;
+        switch (action->action) {
+        case A::KeepLeft: case A::KeepRight: break;
+        case A::SpecLeft: case A::JoinSpecLeft:
+          plan.push_back({action->left, action->right, true, false}); break;
+        case A::SpecRight: case A::JoinSpecRight:
+          plan.push_back({action->left, action->right, false, true}); break;
+        case A::MatchCommon: case A::MatchJoin:
+          plan.push_back({action->left, action->right, true, true, {action->rightOperands.begin(), action->rightOperands.end()},
+                          false, {action->selectorIds.begin(), action->selectorIds.end()}}); break;
+        case A::HoistLeft:
+          plan.push_back({action->left, action->right, true, false, {}, true}); break;
+        case A::HoistRight:
+          plan.push_back({action->left, action->right, false, true, {}, true}); break;
+        case A::MatchHoist:
+          plan.push_back({action->left, action->right, true, true, {action->rightOperands.begin(), action->rightOperands.end()}, true,
+                          {action->selectorIds.begin(), action->selectorIds.end()}}); break;
+        }
+        if (!action->pairedPhi.empty())
+          plan.back().pairedPhi.assign(action->pairedPhi.begin(), action->pairedPhi.end());
+        if (!action->liveThroughJoin.empty())
+          plan.back().liveThroughJoin.assign(action->liveThroughJoin.begin(),
+                                            action->liveThroughJoin.end());
+      }
+      std::string label = "single-branch-dp2-" + std::to_string(++rank);
+      if (terminal.exit == dp2::Exit::Resplit) label += "-resplit";
+      if (terminal.exit == dp2::Exit::DirectEdges) label += "-direct";
+      dp2Plans.push_back(std::move(plan));
+      dp2Labels.push_back(std::move(label));
+      if (terminal.exit == dp2::Exit::CloseAndMergeValues) dp2Labels.back() += "-close";
+      dp2Exits.push_back(terminal.exit);
+      dp2ExitPairedPhi.emplace_back(terminal.exitPairedPhi.begin(), terminal.exitPairedPhi.end());
+      dp2ExitChoices.emplace_back(terminal.exitSelectorIds.begin(), terminal.exitSelectorIds.end());
+    }
+  }
+  auto segments = !useDP2 && segmentUsesValid ? searchB2BSegments(segmentWork[0], segmentWork[1])
                                     : SmallVector<B2BSegmentedPlan, 4>();
+  trial.before = features(*f);
+  trial.left = trial.leftContext = boundary({left, join, nullptr, {left}}, *f);
+  trial.right = trial.rightContext = boundary({right, join, nullptr, {right}}, *f);
+  trial.matchedLeft = name(left);
+  trial.matchedRight = name(right);
+  trial.planKind = "B2B";
+  trial.loopHeaderSplit = loops.isLoopHeader(split);
+  const bool tagged = tagSideCondition(*f, branch->getCondition());
+  if (tagged)
+    trial.sideBeforeOk = sideBlocksBoth(*f, branch->getCondition(), trial.sideBefore, trial.sideReason);
+
+  struct Layout {
+    std::string label;
+    SmallVector<B2BMatch, 8> beforeSplit, afterJoin;
+    ArrayRef<B2BSegmentMatch> segments;
+    std::optional<dp2::Exit> exit;
+    ArrayRef<unsigned> exitSelectorIds;
+    ArrayRef<uint8_t> exitPairedPhi;
+  };
+  SmallVector<Layout, 12> layouts;
+  auto add = [&](StringRef label, ArrayRef<B2BMatch> before,
+                 ArrayRef<B2BMatch> after) {
+    if (llvm::any_of(before, [&](const B2BMatch &first) {
+          return llvm::any_of(after, [&](const B2BMatch &last) {
+            return first.first == last.first || first.second == last.second;
+          });
+        }))
+      return;
+    layouts.push_back({label.str(), {before.begin(), before.end()},
+                       {after.begin(), after.end()}, {}});
+  };
+  if (!useDP2) {
   auto prefix = commonB2BPrefix(*left, *right, *branch, dt);
   auto suffix = commonB2BSuffix(*left, *right, *join);
   auto aligned = alignHoistableB2B(*left, *right, *branch, dt);
@@ -2542,33 +2729,6 @@ std::vector<Trial> planSingleBranchB2B(const Module &parent, const Candidate &c,
   auto joined = searchB2BJoin(*left, *right, *join);
 
 
-  trial.before = features(*f);
-  trial.left = trial.leftContext = boundary({left, join, nullptr, {left}}, *f);
-  trial.right = trial.rightContext = boundary({right, join, nullptr, {right}}, *f);
-  trial.matchedLeft = name(left);
-  trial.matchedRight = name(right);
-  trial.planKind = "B2B";
-  trial.loopHeaderSplit = loops.isLoopHeader(split);
-  const bool tagged = tagSideCondition(*f, branch->getCondition());
-  if (tagged)
-    trial.sideBeforeOk = sideBlocksBoth(*f, branch->getCondition(), trial.sideBefore, trial.sideReason);
-
-  struct Layout {
-    std::string label;
-    ArrayRef<B2BMatch> beforeSplit, afterJoin;
-    ArrayRef<B2BSegmentMatch> segments;
-  };
-  SmallVector<Layout, 12> layouts;
-  auto add = [&](StringRef label, ArrayRef<B2BMatch> before,
-                 ArrayRef<B2BMatch> after) {
-    if (llvm::any_of(before, [&](const B2BMatch &first) {
-          return llvm::any_of(after, [&](const B2BMatch &last) {
-            return first.first == last.first || first.second == last.second;
-          });
-        }))
-      return;
-    layouts.push_back({label.str(), before, after, {}});
-  };
   if (!prefix.empty()) add("single-branch-prefix", prefix, {});
   if (!prefix.empty() && prefix.size() + 1 == left->size() &&
       prefix.size() + 1 == right->size() &&
@@ -2613,6 +2773,10 @@ std::vector<Trial> planSingleBranchB2B(const Module &parent, const Candidate &c,
       layouts.push_back({label + "-resplit", {}, {}, plan});
   }
   if (layouts.empty()) add("single-branch-separate", {}, {});
+  } else {
+    for (unsigned i = 0; i < dp2Plans.size(); ++i)
+      layouts.push_back({dp2Labels[i], {}, {}, dp2Plans[i], dp2Exits[i], dp2ExitChoices[i], dp2ExitPairedPhi[i]});
+  }
 
   for (const auto &layout : layouts) {
     StringRef label = layout.label;
@@ -2640,10 +2804,19 @@ std::vector<Trial> planSingleBranchB2B(const Module &parent, const Candidate &c,
     auto *rawLeft = cast<BasicBlock>(clone[left]);
     auto *rawRight = cast<BasicBlock>(clone[right]);
     auto *rawJoin = cast<BasicBlock>(clone[join]);
-    const bool segmented = !layout.segments.empty();
+    const bool segmented = useDP2 || !layout.segments.empty();
     t.rewriteStarted = segmented || !layout.beforeSplit.empty() || !layout.afterJoin.empty();
-    if (segmented)
-      emitB2BSegments(*rawBranch, *rawLeft, *rawRight, *rawJoin, layout.segments, label.endswith("-resplit"));
+    if (segmented) {
+      try {
+        emitB2BSegments(*rawBranch, *rawLeft, *rawRight, *rawJoin, layout.segments,
+                        label.endswith("-resplit"), layout.exit, layout.exitSelectorIds,
+                        layout.exitPairedPhi);
+      } catch (const std::runtime_error &error) {
+        t.reason = error.what();
+        trials.push_back(std::move(t));
+        continue;
+      }
+    }
 
     if (!layout.beforeSplit.empty()) {
       IRBuilder<> builder(rawBranch);

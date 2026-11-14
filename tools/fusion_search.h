@@ -201,7 +201,7 @@ std::vector<Candidate> enumerateAdjacent(llvm::Function &, unsigned version);
 Trial tryPair(const llvm::Module &, const Candidate &, unsigned currentVersion,
               unsigned optLevel, CleanupMode mode=CleanupMode::O3, const LogicalRegionState *logical=nullptr);
 std::vector<Trial> planSingleBranchB2B(const llvm::Module &, const Candidate &,
-                                       unsigned optLevel, CleanupMode, llvm::StringRef replay);
+                                       unsigned optLevel, CleanupMode, llvm::StringRef replay, bool useDP2 = false);
 Result greedy(const llvm::Module &, const std::string &function,
               const Options &, const Scorer &, Observer *observer=nullptr);
 }

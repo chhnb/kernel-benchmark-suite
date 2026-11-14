@@ -224,6 +224,148 @@ with tempfile.TemporaryDirectory() as directory:
             score = trial["score_result"]["metrics"]
             print(shape, swapped, score["work_before"], "->", score["work_after"])
 
+    out = root / "dp2-paired-phi"
+    out.mkdir()
+    source = out / "input.ll"
+    source.write_text(template.replace(
+        "LEFT", "  %a = load i32, i32* %mem, align 4\n  %l = mul i32 %a, %x"
+    ).replace(
+        "RIGHT", "  %b = load i32, i32* %mem, align 8\n  %r = mul i32 %b, %x"
+    ))
+    args = [search, "--ir", source, "--function", "choose", "--split", "B2",
+            "--left", "B3", "--right", "B4", "--structural", "1", "--speculation", "cost",
+            "--cleanup", "darm-cfg-dce", "--b2b-strategy", "dp2", "--tti-worker", worker]
+    run(*args, "--out", out / "winner.ll", "--debug-dir", out / "report")
+    trial = json.loads((out / "report/trial-0/trial.json").read_text())
+    for rank in range(1, 13):
+        replay = out / "request.json"
+        replay.write_text(json.dumps(dict(trial, merge_path=f"single-branch-dp2-{rank}")))
+        cmd = [*args, "--gap-replay", replay, "--out", out / f"replay-{rank}.ll",
+               "--debug-dir", out / f"replay-{rank}"]
+        result = subprocess.run(list(map(str, cmd)), capture_output=True, text=True)
+        if result.returncode:
+            assert "replay layout unavailable" in result.stderr, result.stderr
+            continue
+        raw = (out / f"replay-{rank}/trial-0/after-raw.ll").read_text()
+        if raw.count("load i32") == 2 and raw.count("mul i32") == 1:
+            break
+    else:
+        raise AssertionError("no paired-PHI plan was generated")
+    common = raw.split("fusion.common:", 1)[1].split("\n\n", 1)[0]
+    assert common.count("phi i32") == 1 and "poison" not in common, common
+    assert "[ 77, %external ]" in raw
+    run(opt, "-verify", "-disable-output", out / f"replay-{rank}.ll")
+
+    # Leave the mismatched loads at the ends of the two guarded arms.
+    source = out / "exit-input.ll"
+    source.write_text(template.replace("LEFT", "  %l = load i32, i32* %mem, align 4")
+                      .replace("RIGHT", "  %r = load i32, i32* %mem, align 8"))
+    args[2] = source
+    run(*args, "--out", out / "exit-winner.ll", "--debug-dir", out / "exit-report")
+    trial = json.loads((out / "exit-report/trial-0/trial.json").read_text())
+    assert trial["merge_path"].endswith("-direct")
+    rank = int(trial["merge_path"].split("-")[3])
+    request = out / "exit-close.json"
+    request.write_text(json.dumps(dict(trial, merge_path=f"single-branch-dp2-{rank + 1}-close")))
+    run(*args, "--gap-replay", request, "--out", out / "exit-close.ll",
+        "--debug-dir", out / "exit-close-report")
+    raw = (out / "exit-close-report/trial-0/after-raw.ll").read_text()
+    common = raw.split("fusion.common:", 1)[1].split("\n\n", 1)[0]
+    assert common.count("phi i32") == 1 and "poison" not in raw, raw
+    assert "[ 77, %external ]" in raw
+    run(opt, "-verify", "-disable-output", out / "exit-close.ll")
+
+    # A condition frozen by an earlier transform must remain the single
+    # decision for the shared instructions and the replacement edges.
+    out = root / "dp2-existing-freeze"
+    out.mkdir()
+    source = out / "input.ll"
+    left, right = cases["paired-prefix"]
+    source.write_text(template.replace("LEFT", left).replace("RIGHT", right).replace(
+        "  br i1 %p,", "  %stable = freeze i1 %p\n  br i1 %stable,"))
+    args = [search, "--ir", source, "--function", "choose", "--split", "B2",
+            "--left", "B3", "--right", "B4", "--structural", "1", "--speculation", "cost",
+            "--cleanup", "darm-cfg-dce", "--b2b-strategy", "dp2", "--tti-worker", worker]
+    run(*args, "--out", out / "winner.ll", "--debug-dir", out / "report")
+    report = out / "report/trial-0/trial.json"
+    raw = report.with_name("after-raw.ll").read_text()
+    assert raw.count("freeze i1") == 1 and "%stable = freeze i1 %p" in raw
+    assert "select i1 %stable," in raw and "[ 77, %external ]" in raw
+    run(opt, "-verify", "-disable-output", out / "winner.ll")
+    run(*args, "--gap-replay", report, "--out", out / "replay.ll")
+    assert (out / "winner.ll").read_bytes() == (out / "replay.ll").read_bytes()
+
+    # DP2 has a different search budget and may choose a different legal
+    # layout. Exercise every fixture in both orientations through its CLI.
+    for shape in cases:
+        for swapped in (False, True):
+            out = root / f"{shape}-{int(swapped)}"
+            source = out / "source.ll"
+            fused, replay = out / "dp2.ll", out / "dp2-replay.ll"
+            args = [search, "--ir", source, "--function", "choose", "--split", "B2",
+                    "--left", "B4" if swapped else "B3", "--right", "B3" if swapped else "B4",
+                    "--structural", "1", "--speculation", "cost", "--cleanup", "darm-cfg-dce",
+                    "--b2b-strategy", "dp2", "--tti-worker", worker]
+            run(*args, "--out", fused, "--debug-dir", out / "dp2-report")
+            report = out / "dp2-report/trial-0/trial.json"
+            trial = json.loads(report.read_text())
+            assert trial["merge_path"].startswith("single-branch-dp2-"), trial["merge_path"]
+            raw = report.with_name("after-raw.ll").read_text()
+            assert "[ 77, %external ]" in raw
+            assert raw.count("freeze i1") == 1
+            if shape == "separate":
+                assert "fusion.side:" in raw
+                assert trial["merge_path"].endswith("-direct")
+            if shape == "paired-prefix":
+                assert raw.count("br i1") == 1
+                assert raw.count("store i32") == 1
+                rank = int(trial["merge_path"].rsplit("-", 1)[1])
+                resplit_request = out / "dp2-resplit.json"
+                resplit_request.write_text(json.dumps(dict(
+                    trial, merge_path=f"single-branch-dp2-{rank + 1}-resplit")))
+                run(*args, "--gap-replay", resplit_request, "--out", out / "dp2-resplit.ll",
+                    "--debug-dir", out / "dp2-resplit-report")
+                resplit_raw = (out / "dp2-resplit-report/trial-0/after-raw.ll").read_text()
+                assert "fusion.exit:" in resplit_raw and "[ 77, %external ]" in resplit_raw
+                run(opt, "-verify", "-disable-output", out / "dp2-resplit.ll")
+
+            run(opt, "-verify", "-disable-output", fused)
+            run(*args, "--gap-replay", report, "--out", replay)
+            assert fused.read_bytes() == replay.read_bytes()
+
+            programs = [fused]
+            if shape == "separate":
+                rank = int(trial["merge_path"].split("-")[3])
+                close_request = out / "dp2-close.json"
+                close_request.write_text(json.dumps(dict(
+                    trial, merge_path=f"single-branch-dp2-{rank + 1}-close")))
+                close = out / "dp2-close.ll"
+                run(*args, "--gap-replay", close_request, "--out", close,
+                    "--debug-dir", out / "dp2-close-report")
+                close_report = out / "dp2-close-report/trial-0/trial.json"
+                close_raw = close_report.with_name("after-raw.ll").read_text()
+                assert "fusion.common:" in close_raw and "[ 77, %external ]" in close_raw
+                assert "poison" not in close_raw
+                run(opt, "-verify", "-disable-output", close)
+                repeat = out / "dp2-close-replay.ll"
+                run(*args, "--gap-replay", close_report, "--out", repeat)
+                assert close.read_bytes() == repeat.read_bytes()
+                programs.append(close)
+            if shape == "paired-prefix":
+                programs.append(out / "dp2-resplit.ll")
+            # The original object was compiled during the DP1 pass above.
+            guard = "if (outside)" if shape.startswith("paired-") else "if (outside || p)"
+            (root / "check.c").write_text(driver.replace("if (outside || p)", guard))
+            for program in programs:
+                cpu = out / "dp2-cpu.ll"
+                ir = program.read_text().replace("amdgcn-amd-amdhsa", "x86_64-unknown-linux-gnu")
+                ir = re.sub(r"^attributes #0 = .*\n", "", ir, flags=re.M)
+                cpu.write_text(ir.replace(" #0 {", " {").replace("@choose(", "@after("))
+                run(clang, "-O2", "-c", cpu, "-o", out / "dp2.o")
+                run(clang, out / "before.o", out / "dp2.o", root / "check.c", "-o", out / "check-dp2")
+                run(out / "check-dp2")
+
+
     for shape in cases:
         out = root / f"{shape}-0"
         run(greedy, out / "source.ll", "choose", out / "auto")
@@ -231,6 +373,6 @@ with tempfile.TemporaryDirectory() as directory:
         assert bool(summary["commits"]) == (shape != "separate"), summary
         assert summary["shared_arm_trials"]
         assert any(
-            "--single-branch-b2b" in json.loads(request.read_text())["argv"]
+            "--b2b-strategy" in json.loads(request.read_text())["argv"]
             for request in (out / "auto").glob("trial-*/request.json")
         )

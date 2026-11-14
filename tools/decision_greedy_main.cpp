@@ -90,15 +90,20 @@ int main(int argc,char**argv){try{
    outs()<<"usage: decision-greedy INPUT FUNCTION [TOOL_ROOT] NEW_OUTPUT\n";
    return 0;
  }
- std::string b2rStrategy="darm";
- if(argc>=3 && StringRef(argv[argc-2])=="--b2r-strategy"){
-   b2rStrategy=argv[argc-1];
-   argc-=2;
-   if(b2rStrategy!="darm"&&b2rStrategy!="guarded")
-     throw std::runtime_error("b2r-strategy must be darm or guarded");
+ std::string b2rStrategy="darm", b2bStrategy;
+ while (argc >= 3) {
+   StringRef option(argv[argc-2]), value(argv[argc-1]);
+   if (option == "--b2r-strategy" && (value == "darm" || value == "guarded"))
+     b2rStrategy = value.str();
+   else if (option == "--b2b-strategy" && (value == "dp1" || value == "dp2"))
+     b2bStrategy = value.str();
+   else if (option == "--b2r-strategy" || option == "--b2b-strategy")
+     throw std::runtime_error("invalid value for " + option.str());
+   else break;
+   argc -= 2;
  }
  if(argc!=4&&argc!=5)
-   throw std::runtime_error("usage: decision-greedy INPUT FUNCTION [TOOL_ROOT] NEW_OUTPUT [--b2r-strategy darm|guarded]");
+   throw std::runtime_error("usage: decision-greedy INPUT FUNCTION [TOOL_ROOT] NEW_OUTPUT [--b2r-strategy darm|guarded] [--b2b-strategy dp1|dp2]");
  const bool implicitRoot=argc==4;
  std::string root;
  if(implicitRoot){
@@ -164,7 +169,7 @@ int main(int argc,char**argv){try{
      record["backend_resources_error"]=std::string(error.what());
    }
  };
- auto report=[&](StringRef status){save(out+"/summary.json",json::Value(json::Object{{"status",status.str()},{"search",structuralAvailable?"per-decision greedy; best positive adjacent or structural candidate":"per-decision greedy; best positive adjacent candidate; initial decision order"},{"cfg_cleanup",cleanup},{"structural_cleanup",structuralCleanup},{"structural_candidates_enabled",structuralAvailable},{"shared_arm_trials",useSharedTrial},{"cross_level_b2r",bool(crossLevelB2R)},{"backend_resource_gate_enabled",false},{"uniform_loss_guard_enabled",false},{"max_uniform_loss",-1},{"max_pressure_growth",-1},{"max_pressure",-1},{"initial_cost",initialCost},{"final_cost",parentCost},{"commits",int64_t(commits)},{"trials",int64_t(trials)},{"final_ir",current},{"rounds",json::Value(json::Array(rounds))},{"stops",json::Value(json::Array(stops))}}));};
+ auto report=[&](StringRef status){save(out+"/summary.json",json::Value(json::Object{{"status",status.str()},{"search",structuralAvailable?"per-decision greedy; best positive adjacent or structural candidate":"per-decision greedy; best positive adjacent candidate; initial decision order"},{"cfg_cleanup",cleanup},{"structural_cleanup",structuralCleanup},{"structural_candidates_enabled",structuralAvailable},{"shared_arm_trials",useSharedTrial},{"cross_level_b2r",bool(crossLevelB2R)},{"b2b_strategy",b2bStrategy.empty()?"dp1":b2bStrategy},{"backend_resource_gate_enabled",false},{"uniform_loss_guard_enabled",false},{"max_uniform_loss",-1},{"max_pressure_growth",-1},{"max_pressure",-1},{"initial_cost",initialCost},{"final_cost",parentCost},{"commits",int64_t(commits)},{"trials",int64_t(trials)},{"final_ir",current},{"rounds",json::Value(json::Array(rounds))},{"stops",json::Value(json::Array(stops))}}));};
  report("running");
  std::set<std::string> attemptedStructural;
  std::string catalogParent;
@@ -346,8 +351,8 @@ int main(int argc,char**argv){try{
       }
       // Keep the exact invocation and the arguments common to search and
       // replay. Replay adds --gap-replay, a fresh debug directory and output.
-      if (implicitRoot)
-        trialArgs.insert(trialArgs.end(), {"--single-branch-b2b", "1"});
+      if (implicitRoot || !b2bStrategy.empty())
+        trialArgs.insert(trialArgs.end(), {"--b2b-strategy", b2bStrategy.empty() ? "dp1" : b2bStrategy});
       trialArgs.insert(trialArgs.end(), {"--b2r-strategy", b2rStrategy});
       json::Array replayArgs;
       for(const auto &argument:trialArgs)replayArgs.push_back(argument);
