@@ -59,3 +59,23 @@ TIGRE 沿用 `tools/run_golden_regression.py tigre --candidate /absolute/current
 ## 完整叶子候选边界
 
 搜索默认 `--cross-decision-leaves 0`。不同或无法识别的SSA判别值的完整叶子候选需要显式启用1；Hypersonic的指定多锚点入口已显式设置。Map-Airy默认搜索已恢复冻结二进制并通过混合输入回归。详见 `../docs/complete-leaf-decision-boundary.md`。
+
+## Cholla HLLD 四组 GPU 回归
+
+固定 `gfx906`、完整 FP64 HLLD kernel、共同父 IR 和 65,536 个
+交错排列的合成界面。输入生成器和 CPU 解析通量参考由种子 20261115
+复现。冻结清单在 `golden/20261115-hlld-gfx906-v1/manifest.json`，
+父 IR、四个二进制及 runner 保存在 epyc 的本机构建目录
+`build/hlld-golden-gfx906-v1`。
+
+```sh
+python3 tools/run_hlld_regression.py --out /absolute/new-hlld-run
+```
+
+可用 `--dp1 /absolute/current-dp1.hsaco --dp2 /absolute/current-dp2.hsaco`
+对比新产物。回归按 12 轮交错运行，逐次校验七个通量分量。两组 Greedy
+各自的逐轮耗时比中位数必须不超过同轮 Baseline 的 0.95。
+Auto DARM 同轮测量并保留结果。两份冻结 Greedy 二进制相同；
+分开计时用于观察波动。门槛适用于此冻结输入和设备。
+
+规模扫描（65,536、262,144、1,048,576、4,194,304 个界面）见 `records/hlld-v1-scaling.json`。
