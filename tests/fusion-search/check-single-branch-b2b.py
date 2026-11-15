@@ -310,6 +310,15 @@ with tempfile.TemporaryDirectory() as directory:
             report = out / "dp2-report/trial-0/trial.json"
             trial = json.loads(report.read_text())
             assert trial["merge_path"].startswith("single-branch-dp2-"), trial["merge_path"]
+            layouts = trial["layout_profitability"]
+            selected, = (row for row in layouts if row["layout"] == trial["merge_path"])
+            assert selected["eligible"] == trial["eligible"]
+            if any(row["eligible"] for row in layouts):
+                assert selected["eligible"]
+            for row in layouts:
+                if row["total_gain"] is not None:
+                    assert row["total_gain"] == row["work_gain"] + row["cfg_phi_gain"]
+
             raw = report.with_name("after-raw.ll").read_text()
             assert "[ 77, %external ]" in raw
             assert raw.count("freeze i1") == 1

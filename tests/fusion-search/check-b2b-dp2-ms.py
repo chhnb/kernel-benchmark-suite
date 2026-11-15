@@ -8,6 +8,12 @@ import sys
 trial = Path(sys.argv[1])
 report = json.loads((trial / "trial.json").read_text())
 assert report["merge_path"].startswith("single-branch-dp2-")
+layout, = (row for row in report["layout_profitability"]
+           if row["layout"] == report["merge_path"])
+assert layout["inside_loop"] and layout["eligible"]
+assert layout["matched_memory_pairs"] == 3
+assert layout["speculated_single_side_ops"] == 0
+
 raw = (trial / "after-raw.ll").read_text()
 condition, = re.findall(r"^  (%\w+) = freeze i1 ", raw, re.M)
 start = raw.index(f"  {condition} = freeze")

@@ -33,7 +33,7 @@ static json::Object stats(const Features&f) {
 static json::Object scoreJson(const ScoreResult&s) {
  json::Array cs;for(auto&c:s.contributions){auto o=op(c.operation);o["control_count"]=c.controlCount;o["after_count"]=c.afterCount;o["gain"]=c.gain;cs.push_back(std::move(o));}
  bool scored=s.status==ScoreStatus::Scored;
- json::Object o{{"status",scored?"scored":"not_evaluable"},{"reason",s.reason},{"contributions",std::move(cs)},
+ json::Object o{{"status",scored?"scored":"not_evaluable"},{"reason",s.reason},{"profitability_rejection",s.profitabilityRejection},{"contributions",std::move(cs)},
  {"coverage",json::Object{{"dependency",s.coverage.dependency},{"liveness",s.coverage.liveness},{"divergence",s.coverage.divergence},{"provenance",s.coverage.provenance},{"hardware_costs",s.coverage.hardwareCosts},{"legacy_counts_complete",s.coverage.legacyCountsComplete},{"operand_context_model","not_modeled; inspect retained IR"}}}};
  for(auto&kv:std::vector<std::pair<std::string,double>>{{"static_gain",s.staticGain},{"cleanup_gain",s.cleanupGain},{"parent_gain",s.parentGain},{"static_score",s.staticScore},{"dependency_penalty_applied",s.dependencyPenalty},{"liveness_penalty_applied",s.livenessPenalty},{"total",s.total}})
   o[kv.first]=scored?json::Value(kv.second):json::Value(nullptr);
@@ -87,7 +87,7 @@ struct DebugObserver final:Observer {
     jsonFile(path+"/block-provenance.json",json::Object{{"schema","melding-block-provenance-v1"},
       {"logical_decision",t.candidate.logicalDecision},{"logical_left",t.candidate.logicalLeft},{"logical_right",t.candidate.logicalRight},{"candidate",t.candidate.key()},{"parent_hash",r.parentHash},
       {"cleaned_hash",t.normalized?moduleHash(*t.normalized):""},{"blocks",std::move(Origins)}});
-    jsonFile(path+"/trial.json",json::Object{{"schema","incremental-score-trial-v1"},{"logical_decision",t.candidate.logicalDecision},{"logical_left",t.candidate.logicalLeft},{"logical_right",t.candidate.logicalRight},{"candidate",t.candidate.key()},{"version",int64_t(t.candidate.version)},{"parent_hash",r.parentHash},{"control_hash",r.controlHash},{"round_context","../round-"+std::to_string(r.parentVersion)+".json"},{"valid",t.valid},{"rewrite_started",t.rewriteStarted},{"decision",!t.valid?"reject":score.status!=ScoreStatus::Scored?"unsupported":eligible?"accept":"reject"},{"reason",t.reason},{"merge_path",t.mergePath},{"cross_decision_leaves",t.candidate.crossDecisionLeaves},{"complete_leaf_plan",t.candidate.completeLeafPlan},{"moved_leaf_instructions",int64_t(t.movedLeafInstructions)},{"leaf_anchors",int64_t(t.leafAnchors)},{"leaf_anchor_pairs",[&](){json::Array a;for(auto &p:t.leafAnchorPairs)a.push_back(p);return a;}()},{"alignment_choices",json::Array(t.alignmentChoices)},{"gap_choices",json::Array(t.gapChoices)},{"gap_plan",[&](){
+    jsonFile(path+"/trial.json",json::Object{{"schema","incremental-score-trial-v1"},{"logical_decision",t.candidate.logicalDecision},{"logical_left",t.candidate.logicalLeft},{"logical_right",t.candidate.logicalRight},{"candidate",t.candidate.key()},{"version",int64_t(t.candidate.version)},{"parent_hash",r.parentHash},{"control_hash",r.controlHash},{"round_context","../round-"+std::to_string(r.parentVersion)+".json"},{"valid",t.valid},{"rewrite_started",t.rewriteStarted},{"decision",!t.valid?"reject":score.status!=ScoreStatus::Scored?"unsupported":eligible?"accept":"reject"},{"reason",t.reason},{"merge_path",t.mergePath},{"layout_profitability",json::Array(t.layoutProfitability)},{"cross_decision_leaves",t.candidate.crossDecisionLeaves},{"complete_leaf_plan",t.candidate.completeLeafPlan},{"moved_leaf_instructions",int64_t(t.movedLeafInstructions)},{"leaf_anchors",int64_t(t.leafAnchors)},{"leaf_anchor_pairs",[&](){json::Array a;for(auto &p:t.leafAnchorPairs)a.push_back(p);return a;}()},{"alignment_choices",json::Array(t.alignmentChoices)},{"gap_choices",json::Array(t.gapChoices)},{"gap_plan",[&](){
       json::Array split,speculate;
       for(auto id:t.candidate.splitMatches)split.push_back(int64_t(id));
       for(auto id:t.candidate.speculateGaps)speculate.push_back(int64_t(id));
@@ -289,20 +289,41 @@ int main(int argc,char**argv) {
       Trial t;
       ScoreResult score;
       if (plannedB2B) {
-        std::set<std::string> seen;
+        json::Array profitability;
+        std::set<std::string> seenDP1;
+        const bool dp2 = StringRef(plans.front().mergePath).startswith("single-branch-dp2-");
         for (auto &plan : plans) {
-          if (plan.valid && !seen.insert(moduleHash(*plan.normalized)).second)
+          if (!dp2 && plan.valid && !seenDP1.insert(moduleHash(*plan.normalized)).second)
             continue;
           auto result = evaluateTrial(*module, plan, round, scorer);
-          if (t.mergePath.empty() ||
-              (plan.valid && !t.valid) ||
-              (result.status == ScoreStatus::Scored &&
-               (score.status != ScoreStatus::Scored ||
-                result.total > score.total))) {
+          const bool allowed = eligible(plan, result, options);
+          auto metric = [&](StringRef name) -> json::Value {
+            auto it = result.metrics.find(name.str());
+            return it == result.metrics.end() ? json::Value(nullptr) : json::Value(it->second);
+          };
+          if (dp2) profitability.push_back(json::Object{
+              {"layout", plan.mergePath}, {"inside_loop", plan.insideLoop},
+              {"speculated_single_side_ops", int64_t(plan.speculatedSingleSideOps)},
+              {"matched_compute_pairs", int64_t(plan.matchedComputePairs)},
+              {"matched_memory_pairs", int64_t(plan.matchedMemoryPairs)},
+              {"work_gain", metric("non_cfg_work_gain")}, {"cfg_phi_gain", metric("cfg_phi_gain")},
+              {"total_gain", metric("total_tti_gain")}, {"eligible", allowed},
+              {"reason", !result.profitabilityRejection.empty() ? result.profitabilityRejection :
+                         !plan.valid ? plan.reason :
+                         result.status != ScoreStatus::Scored ? result.reason :
+                         !allowed ? "score_below_eligibility_threshold" : ""}});
+          const bool candidateAllowed = dp2 && allowed;
+          const bool currentAllowed = dp2 && eligible(t, score, options);
+          if (t.mergePath.empty() || (candidateAllowed && !currentAllowed) ||
+              (candidateAllowed == currentAllowed &&
+               ((plan.valid && !t.valid) ||
+                (result.status == ScoreStatus::Scored &&
+                 (score.status != ScoreStatus::Scored || result.total > score.total))))) {
             t = std::move(plan);
             score = std::move(result);
           }
         }
+        t.layoutProfitability = std::move(profitability);
       } else {
         t = tryPair(*module, c, 0, options.optLevel, options.cleanupMode, logical.get());
         score = evaluateTrial(*module, t, round, scorer);

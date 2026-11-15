@@ -143,6 +143,26 @@ public:
       for(auto&kv:before.counts)s.metrics["tti24_before_count:"+kv.first]=kv.second;
       for(auto&kv:after.counts)s.metrics["tti24_after_count:"+kv.first]=kv.second;
       if(before.unknown||after.unknown){s.reason="llvm24_unknown_cost_rejection";return s;}
+      auto cfgPhiCost = [](const Cost &cost) {
+        double total = 0;
+        for (const auto &entry : cost.counts) {
+          llvm::StringRef key(entry.first);
+          if (!key.startswith("br.") && !key.startswith("phi:")) continue;
+          int64_t unit = 0;
+          if (!key.rsplit(":cost").second.getAsInteger(10, unit))
+            total += unit * entry.second;
+        }
+        return total;
+      };
+      const double cfgGain = cfgPhiCost(before) - cfgPhiCost(after);
+      const double totalGain = before.value - after.value;
+      const double workGain = totalGain - cfgGain;
+      s.metrics["non_cfg_work_gain"] = workGain;
+      s.metrics["cfg_phi_gain"] = cfgGain;
+      s.metrics["total_tti_gain"] = totalGain;
+      if (i.trial && i.trial->insideLoop && i.trial->speculatedSingleSideOps &&
+          totalGain > 0 && workGain <= 0)
+        s.profitabilityRejection = "loop-speculation-with-only-cfg-phi-gain";
       s.staticGain=before.value-after.value;s.staticScore=s.staticGain/std::max(1.0,before.value);s.total=s.staticScore;
       s.parentGain=s.staticGain; // Preserve v1 acceptance semantics, not diagnostic S-A.
       // staticGain equals the gain of a wave in which both sides execute every

@@ -1349,9 +1349,9 @@ static Trial tryPairImpl(const Module&parent,const Candidate&c,unsigned version,
       leftRequired &&
       rightRequired && !logical && !c.localCopysign &&
       guardsUnsafeWork;
-  // Only admit ordinary accesses on the side whose CFG is replicated.
-  // Cost/none verify guarded emission; explicit legacy mode reproduces
-  // DARM's read/select/write predication for the same structural match.
+  // DARM aligns the original single block's accesses with the selected
+  // block in the opposite region. The guarded strategy audits accesses
+  // from the region side separately.
   const bool replicationWithMemory = !l.region && !logical &&
       !c.localCopysign && leftRequired != rightRequired &&
       (leftRequired ? l.entry : r.entry) ==
@@ -1362,8 +1362,6 @@ static Trial tryPairImpl(const Module&parent,const Candidate&c,unsigned version,
       (c.darmB2R || c.speculation == SpeculationMode::Legacy);
   std::map<BasicBlock *, SmallVector<Instruction *, 8>> replicatedMemory;
   std::set<StoreInst*> regionStores;
-  std::vector<std::vector<std::pair<Instruction*,Instruction*>>> matchedMemory;
-  size_t matchedStoreCount=0;
   const bool auditDownstream=guardedAnchors&&!preservedLoop&&
       l.entry==br->getSuccessor(0)&&r.entry==br->getSuccessor(1);
   struct DownstreamAccess {
@@ -1386,6 +1384,9 @@ static Trial tryPairImpl(const Module&parent,const Candidate&c,unsigned version,
     bool leftSide;
   };
   std::vector<ProtectedWrite> protectedWrites;
+  // RegionMelder isolates the selected exits before melding. Ordinary
+  // stores in the continuation stay in their original blocks.
+  std::map<BasicBlock *, SmallVector<WeakVH, 4>> continuationStores;
   for(auto *block:scope) for(auto &instruction:*block) {
     if(preservedLoop&&block!=l.entry&&block!=r.entry)continue;
     if(auto *call=dyn_cast<CallBase>(&instruction))
@@ -1393,10 +1394,17 @@ static Trial tryPairImpl(const Module&parent,const Candidate&c,unsigned version,
     if ((guardedReplication || legacyReplication) && instruction.mayReadOrWriteMemory()) {
       auto *load = dyn_cast<LoadInst>(&instruction);
       auto *store = dyn_cast<StoreInst>(&instruction);
-      if (!(leftRequired ? rs : ls).count(block) ||
-          block == (leftRequired ? r.entry : l.entry) ||
-          !((load && load->isSimple()) || (store && store->isSimple())))
+      const bool darmBlockSide = c.darmB2R &&
+          block == (leftRequired ? l.entry : r.entry);
+      const bool regionSide = (leftRequired ? rs : ls).count(block) &&
+          (c.darmB2R || block != (leftRequired ? r.entry : l.entry));
+      if ((!darmBlockSide && !regionSide) ||
+          !((load && load->isSimple()) || (store && store->isSimple()))) {
+        raw_string_ostream detail(t.localRejectReason);
+        block->printAsOperand(detail, false);
+        detail << ": " << instruction;
         return reject("unsupported_replicated_memory_access");
+      }
       if (guardedReplication)
         replicatedMemory[block].push_back(&instruction);
       continue;
@@ -1414,6 +1422,12 @@ static Trial tryPairImpl(const Module&parent,const Candidate&c,unsigned version,
       return reject("unsupported_downstream_memory_access");
     }
     if(!instruction.mayHaveSideEffects()&&!instruction.mayWriteToMemory())continue;
+    if(l.region && !l.blocks.count(block) && !r.blocks.count(block))
+      if(auto *store=dyn_cast<StoreInst>(&instruction))
+        if(store->isSimple()){
+          continuationStores[block].emplace_back(store);
+          continue;
+        }
     if(guardedAnchors) {
       if(auto *intrinsic=dyn_cast<IntrinsicInst>(&instruction))
         if(intrinsic->getIntrinsicID()==Intrinsic::lifetime_start ||
@@ -1437,6 +1451,11 @@ static Trial tryPairImpl(const Module&parent,const Candidate&c,unsigned version,
           regionStores.insert(store);
           continue;
         }
+    raw_string_ostream detail(t.localRejectReason);
+    block->printAsOperand(detail, false);
+    detail << ": ";
+    instruction.print(detail);
+    detail.flush();
     return reject("side_effect_in_trial_scope_not_supported");
   }
   if(downstreamWrite){
@@ -1480,49 +1499,16 @@ static Trial tryPairImpl(const Module&parent,const Candidate&c,unsigned version,
     ma.selectExplicitBlocks(l.entry,r.entry);
     memoryBlocks.emplace_back(l.entry,r.entry);
   }
-  // A direct diamond can retain unmatched accesses in guarded gaps. Verify
-  // their original order and the emitted guard before accepting the rewrite.
-  const bool directGuardedMemory = !l.region && matchedStorePair &&
-      !regionStores.empty() && !siblingLoops;
-  if (!regionStores.empty() && (siblingLoops || directGuardedMemory)) {
-    for(const auto &blocks:memoryBlocks)
-      for(auto *block:{blocks.first,blocks.second})
-        for(auto &instruction:*block)
-          if(instruction.mayReadOrWriteMemory() &&
-             !regionStores.count(dyn_cast<StoreInst>(&instruction)) &&
-             !(isa<LoadInst>(instruction)&&cast<LoadInst>(instruction).isSimple()))
+  // Validate ordinary accesses in the matched blocks. The emitter can
+  // preserve unmatched accesses in guarded gaps, including within an R2R.
+  if (!regionStores.empty())
+    for (const auto &blocks : memoryBlocks)
+      for (auto *block : {blocks.first, blocks.second})
+        for (auto &instruction : *block)
+          if (instruction.mayReadOrWriteMemory() &&
+              !regionStores.count(dyn_cast<StoreInst>(&instruction)) &&
+              !(isa<LoadInst>(instruction) && cast<LoadInst>(instruction).isSimple()))
             return reject("region_store_memory_sequence_mismatch");
-  }else if(!regionStores.empty()){
-    // Match the complete memory sequence in each corresponding block.
-    // Loads and stores must remain in their original per-path order.
-    for(const auto &blocks:memoryBlocks){
-      SmallVector<Instruction*,8> leftMemory,rightMemory;
-      for(auto &instruction:*blocks.first)
-        if(instruction.mayReadOrWriteMemory())leftMemory.push_back(&instruction);
-      for(auto &instruction:*blocks.second)
-        if(instruction.mayReadOrWriteMemory())rightMemory.push_back(&instruction);
-      if(leftMemory.size()!=rightMemory.size())
-        return reject("region_store_memory_sequence_mismatch");
-      std::vector<std::pair<Instruction*,Instruction*>> sequence;
-      for(unsigned index=0;index<leftMemory.size();++index){
-        auto *left=leftMemory[index],*right=rightMemory[index];
-        if(!InstructionMatch::match(left,right))
-          return reject("region_store_memory_sequence_mismatch");
-        if(auto *store=dyn_cast<StoreInst>(left)){
-          auto *other=cast<StoreInst>(right);
-          if(!regionStores.count(store)||!regionStores.count(other))
-            return reject("region_store_memory_sequence_mismatch");
-          ++matchedStoreCount;
-        }else if(!isa<LoadInst>(left)||!cast<LoadInst>(left)->isSimple()||
-                 !cast<LoadInst>(right)->isSimple())
-          return reject("region_store_memory_sequence_mismatch");
-        sequence.emplace_back(left,right);
-      }
-      if(!sequence.empty())matchedMemory.push_back(std::move(sequence));
-    }
-    if(matchedStoreCount*2!=regionStores.size())
-      return reject("region_store_memory_sequence_mismatch");
-  }
   // Classify from path structure, not the B/R spelling of the matched IDs.
   // A block inside an optional arm is a B2R/R2B match even when both IDs are B.
   t.planKind=l.region?"R2R":"B2B";
@@ -1674,7 +1660,7 @@ static Trial tryPairImpl(const Module&parent,const Candidate&c,unsigned version,
           }
         }
       };
-    } else if(!regionStores.empty() && (siblingLoops || directGuardedMemory)){
+    } else if(!regionStores.empty()){
       melder.onValueMapping=[&](const ValueToValueMapTy &mapping){
         for(const auto &blocks:memoryBlocks){
           std::set<Instruction*> emitted[2];
@@ -1698,25 +1684,6 @@ static Trial tryPairImpl(const Module&parent,const Candidate&c,unsigned version,
                 throw std::runtime_error("unmatched_memory_not_guarded");
         }
       };
-    }else if(!matchedMemory.empty()){
-      melder.onValueMapping=[&](const ValueToValueMapTy &mapping){
-        std::set<Instruction*> emitted;
-        for(const auto &sequence:matchedMemory){
-          Instruction *previous=nullptr;
-          for(const auto &pair:sequence){
-            Value *left=mapping.lookup(pair.first);
-            Value *right=mapping.lookup(pair.second);
-            auto *memory=dyn_cast_or_null<Instruction>(left);
-            if(!memory||left!=right||memory->getOpcode()!=pair.first->getOpcode()||
-               !emitted.insert(memory).second)
-              throw std::runtime_error("region_memory_not_melded_in_pairs");
-            if(previous&&(previous->getParent()!=memory->getParent()||
-                          !previous->comesBefore(memory)))
-              throw std::runtime_error("region_memory_meld_order_changed");
-            previous=memory;
-          }
-        }
-      };
     }
     melder.NativeReplicationPredication = legacyReplication && t.replication;
     melder.SplitMatchIDs=c.splitMatches;
@@ -1728,6 +1695,16 @@ static Trial tryPairImpl(const Module&parent,const Candidate&c,unsigned version,
   t.alignmentChoices=std::move(melder.AlignmentChoices);
   t.gapChoices=std::move(melder.GapChoices);
   t.coalescedGapGroups=melder.CoalescedGapGroups;canonicalPhiOrder(*t.raw,c.function);t.mergeMs=millis(mt);
+  for(const auto &entry:continuationStores){
+    Instruction *previous=nullptr;
+    for(const auto &saved:entry.second){
+      auto *store=dyn_cast_or_null<StoreInst>((Value*)saved);
+      if(!store||store->getParent()!=entry.first||
+         (previous&&!previous->comesBefore(store)))
+        return reject("region_continuation_store_changed");
+      previous=store;
+    }
+  }
   if(downstreamWrite){
     auto *start=dyn_cast_or_null<BasicBlock>((Value*)originalSplit);
     auto *end=dyn_cast_or_null<BasicBlock>((Value*)originalJoin);
@@ -2794,6 +2771,16 @@ std::vector<Trial> planSingleBranchB2B(const Module &parent, const Candidate &c,
     t.mergePath = label.str();
     t.swapped = trial.swapped;
     t.loopHeaderSplit = trial.loopHeaderSplit;
+    t.insideLoop = loops.getLoopFor(split) != nullptr;
+    if (useDP2)
+      for (const auto &step : layout.segments) {
+        if (!step.consumeLeft || !step.consumeRight)
+          ++t.speculatedSingleSideOps;
+        else if (segmentWork[0][step.left]->mayReadOrWriteMemory())
+          ++t.matchedMemoryPairs;
+        else
+          ++t.matchedComputePairs;
+      }
     t.sideBeforeOk = trial.sideBeforeOk;
     t.sideReason = trial.sideReason;
     for (unsigned side = 0; side < 2; ++side) t.sideBefore[side] = trial.sideBefore[side];
@@ -2986,6 +2973,7 @@ ScoreResult evaluateTrial(const Module&parent,Trial&t,const RoundContext&r,const
 }
 bool eligible(const Trial&t,const ScoreResult&s,const Options&o) {
   if(!(t.valid&&s.status==ScoreStatus::Scored&&std::isfinite(s.total)&&s.total>o.threshold&&(!o.requireParentGain||s.parentGain>0)))return false;
+  if(!s.profitabilityRejection.empty())return false;
   if(o.maxUniformLoss>=0){
     // Conservative: without side metrics the guard cannot be checked.
     auto ok=s.metrics.find("side_metrics_available");

@@ -407,7 +407,10 @@ int main(int argc,char**argv){try{
             attempt["ir_pressure"]=read(details+"/pressure.json");
           for(auto key:{"uniform_gain_false","uniform_gain_true"})
             if(auto value=metrics.getNumber(key))attempt[key]=*value;
-          if(trialCost<*before&&trialCost<parentCost){
+          const auto rejection=score->getString("profitability_rejection");
+          if(rejection&&!rejection->empty())
+            attempt["reason"]=rejection->str();
+          else if(trialCost<*before&&trialCost<parentCost){
             attempt["eligible"]=true;
             if(trialCost<bestCost){bestCost=trialCost;best=dir;}
           }else attempt["reason"]="nonpositive_gain";

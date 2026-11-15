@@ -98,6 +98,7 @@ struct ScoreResult {
   std::vector<CostContribution> contributions;
   ModelCoverage coverage;
   std::map<std::string,double> metrics;
+  std::string profitabilityRejection;
 };
 struct BlockProvenance {
   std::string leftID,rightID,leftLabel,rightLabel,rawBlock,cleanedBlock;
@@ -128,6 +129,9 @@ struct Trial {
   std::string planKind, matchedLeft, matchedRight;
   Boundary leftContext, rightContext;
   bool loopHeaderSplit=false;
+  bool insideLoop=false;
+  unsigned speculatedSingleSideOps=0, matchedComputePairs=0, matchedMemoryPairs=0;
+  llvm::json::Array layoutProfitability;
   double mergeMs=0, normalizeMs=0, featuresMs=0, totalMs=0, scoreMs=0;
 };
 struct ScoreInput {
