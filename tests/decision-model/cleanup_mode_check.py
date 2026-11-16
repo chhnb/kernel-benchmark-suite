@@ -35,6 +35,5 @@ with tempfile.TemporaryDirectory() as td:
  invalid=d/'unknown.ll';invalid.write_text(base.replace('x86_64-pc-linux-gnu','unknown-unknown-unknown'))
  p,t,_=run('full',invalid,'unknown');assert p.returncode!=0 and 'tti_target_unavailable' in t['reason'],t
  p,t,_=run('full',source,'legacy-conflict',DECISION_DISABLE_SIMPLIFYCFG='1');assert p.returncode==2 and 'conflicts' in p.stderr and not t
- env=dict(os.environ,DECISION_CFG_CLEANUP='full',DECISION_DISABLE_SIMPLIFYCFG='1');p=subprocess.run(list(map(str,[r/'build/decision-fuse/decision-greedy',source,'case',r,d/'greedy-conflict'])),env=env,capture_output=True,text=True);assert p.returncode!=0 and 'conflicts' in p.stderr
  p,t,_=run('bad-option',source,'invalid');assert p.returncode==2 and not t
 print('cleanup modes: raw parity, explicit implicit-hoist trace, diagnostic-only failure, convergent and target checks passed')

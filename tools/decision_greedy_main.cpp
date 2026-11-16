@@ -86,15 +86,17 @@ static bool prepareArmPairs(Module &module, StringRef function, unsigned decisio
 
 int main(int argc,char**argv){try{
  if(argc==2&&StringRef(argv[1])=="--help"){
-   outs()<<"usage: decision-greedy INPUT FUNCTION [TOOL_ROOT] NEW_OUTPUT\n";
+   outs()<<"usage: decision-greedy INPUT FUNCTION [TOOL_ROOT] NEW_OUTPUT [--b2b-strategy dp1|darm]\n";
    return 0;
  }
- std::string b2rStrategy="darm", b2bStrategy;
+ std::string b2bStrategy="dp1";
  while (argc >= 3) {
    StringRef option(argv[argc-2]), value(argv[argc-1]);
-   if (option == "--b2r-strategy" && (value == "darm" || value == "guarded"))
-     b2rStrategy = value.str();
-   else if (option == "--b2b-strategy" && (value == "dp1" || value == "dp2" || value == "dp3"))
+   if (option == "--b2r-strategy" && value == "darm") {
+     argc -= 2;
+     continue;
+   }
+   if (option == "--b2b-strategy" && (value == "dp1" || value == "darm"))
      b2bStrategy = value.str();
    else if (option == "--b2r-strategy" || option == "--b2b-strategy")
      throw std::runtime_error("invalid value for " + option.str());
@@ -102,7 +104,7 @@ int main(int argc,char**argv){try{
    argc -= 2;
  }
  if(argc!=4&&argc!=5)
-   throw std::runtime_error("usage: decision-greedy INPUT FUNCTION [TOOL_ROOT] NEW_OUTPUT [--b2r-strategy darm|guarded] [--b2b-strategy dp1|dp2|dp3]");
+   throw std::runtime_error("usage: decision-greedy INPUT FUNCTION [TOOL_ROOT] NEW_OUTPUT [--b2b-strategy dp1|darm]");
  const bool implicitRoot=argc==4;
  std::string root;
  if(implicitRoot){
@@ -118,44 +120,21 @@ int main(int argc,char**argv){try{
  std::string current=argv[1],fn=argv[2],out=argv[argc-1];
  if(sys::fs::exists(out))throw std::runtime_error("output exists");
  if(auto e=sys::fs::create_directories(out))throw std::runtime_error(e.message());
- // The three-argument entry uses the shared pipeline independently of
- // legacy experiment settings inherited from the caller.
- auto experimentSetting=[&](const char *name)->const char * {
-   return implicitRoot?nullptr:std::getenv(name);
- };
- auto limit=[&](const char *name,int64_t fallback){const char*v=experimentSetting(name);if(!v)return fallback;char*end=nullptr;auto n=std::strtoll(v,&end,10);if(!*v||*end||n<0||n>1000000)throw std::runtime_error(std::string("invalid ")+name);return int64_t(n);};
- const auto crossLevelB2R=limit("DECISION_CROSS_LEVEL_B2R",0);
- if(crossLevelB2R>1)throw std::runtime_error("DECISION_CROSS_LEVEL_B2R must be 0 or 1");
- const auto jobs=limit("DECISION_GREEDY_JOBS",1);
- if(jobs<1||jobs>64)throw std::runtime_error("DECISION_GREEDY_JOBS must be between 1 and 64");
- const auto structuralJobs=experimentSetting("DECISION_GREEDY_JOBS")?jobs:8;
- if(experimentSetting("DECISION_CFG_CLEANUP")&&experimentSetting("DECISION_DISABLE_SIMPLIFYCFG"))throw std::runtime_error("DECISION_CFG_CLEANUP conflicts with legacy DECISION_DISABLE_SIMPLIFYCFG");
- std::string cleanup=experimentSetting("DECISION_CFG_CLEANUP")?experimentSetting("DECISION_CFG_CLEANUP"):"structural";
- if(cleanup!="full"&&cleanup!="structural")throw std::runtime_error("invalid DECISION_CFG_CLEANUP");
+ int64_t structuralJobs=8;
+ if (const char *value=std::getenv("DECISION_GREEDY_JOBS")) {
+   if (StringRef(value).getAsInteger(10,structuralJobs) || structuralJobs<1 || structuralJobs>64)
+     throw std::runtime_error("DECISION_GREEDY_JOBS must be between 1 and 64");
+ }
+ constexpr unsigned conditionBudget=4;
  LLVMContext ctx;SMDiagnostic error;auto initial=parseIRFile(current,error,ctx);if(!initial||!initial->getFunction(fn)||verifyModule(*initial,&errs()))throw std::runtime_error("invalid input");
  auto ds=decision::discover(*initial->getFunction(fn));std::vector<std::string> targets;std::set<BasicBlock*> covered,tagged;json::Array order;
  for(auto &d:ds){bool yes=false;for(unsigned i=0;i+1<d.arms.size();++i)yes|=eligible(d.arms[i],d.arms[i+1]);if(!yes||covered.count(d.root))continue;targets.push_back(d.id);for(auto*b:d.tests)covered.insert(b);for(unsigned i=0;i<d.arms.size();++i){auto&a=d.arms[i];if(!tagged.insert(a.entry).second)continue;std::string label;raw_string_ostream stream(label);a.entry->printAsOperand(stream,false);stream.flush();order.push_back(json::Object{{"entry",label},{"family",d.id},{"index",int64_t(i)}});}}
  save(out+"/order.json",json::Value(std::move(order)));json::Array targetJSON;for(auto&t:targets)targetJSON.push_back(t);save(out+"/targets.json",json::Value(std::move(targetJSON)));
  const std::string structural=root+"/build/llvm24-tti/fusion-search-llvm24";
- const char *structuralCleanupEnv=experimentSetting("DECISION_STRUCTURAL_CLEANUP");
- const std::string structuralCleanup=structuralCleanupEnv?structuralCleanupEnv:"darm-cfg-dce";
- if(structuralCleanup!="darm-cfg-dce"&&structuralCleanup!="scoped-cfg")
-   throw std::runtime_error("DECISION_STRUCTURAL_CLEANUP must be darm-cfg-dce or scoped-cfg");
- const bool structuralAvailable=sys::fs::can_execute(structural);
- // Keep explicit legacy trial settings effective until their implementation
- // is available in the shared structural trial.
- const char *speculation=experimentSetting("DECISION_SPECULATION");
- const bool useSharedTrial=structuralAvailable&&cleanup=="structural"&&
-   (!speculation||StringRef(speculation)=="none"||StringRef(speculation)=="cost")&&
-   !experimentSetting("DECISION_DISABLE_SIMPLIFYCFG")&&
-   !experimentSetting("DECISION_GAP_SEARCH")&&!experimentSetting("DECISION_GAP_STATE")&&
-   !experimentSetting("DECISION_COALESCE_GAPS");
- const auto conditionBudget=useSharedTrial?limit("DECISION_CONDITION_BUDGET",4):4;
- if(conditionBudget>100000)throw std::runtime_error("invalid DECISION_CONDITION_BUDGET");
- if(!structuralAvailable&&experimentSetting("DECISION_REQUIRE_STRUCTURAL"))
-   throw std::runtime_error("structural candidate engine unavailable; build with tools/build-decision-greedy --with-structural");
- if(structuralAvailable)targets.emplace_back();
- else errs()<<"structural candidate engine unavailable: "<<structural<<"\n";
+ const std::string structuralCleanup="darm-cfg-dce-instcombine";
+ if(!sys::fs::can_execute(structural))
+   throw std::runtime_error("structural candidate engine unavailable: "+structural);
+ targets.emplace_back();
  auto cost=[&](const std::string&input,const std::string&prefix){if(run({root+"/tools/run-llvm24-tti",input,fn},prefix+".json",prefix+".stderr"))throw std::runtime_error("TTI worker failed: "+prefix);auto v=read(prefix+".json");auto*o=v.getAsObject();if(!o||o->getInteger("unknown")!=Optional<int64_t>(0)||o->getString("source_revision")!=Optional<StringRef>("6be16f356d3e"))throw std::runtime_error("TTI unknown cost or revision mismatch");auto n=o->getInteger("cost");if(!n)throw std::runtime_error("missing cost");return *n;};
  int64_t parentCost=cost(current,out+"/initial-tti"),initialCost=parentCost;unsigned commits=0,trials=0;json::Array rounds,stops;
  const char *checkpoint=std::getenv("DECISION_CHECKPOINT_TOOL");
@@ -169,7 +148,7 @@ int main(int argc,char**argv){try{
      record["backend_resources_error"]=std::string(error.what());
    }
  };
- auto report=[&](StringRef status){save(out+"/summary.json",json::Value(json::Object{{"status",status.str()},{"search",structuralAvailable?"per-decision greedy; best positive adjacent or structural candidate":"per-decision greedy; best positive adjacent candidate; initial decision order"},{"cfg_cleanup",cleanup},{"structural_cleanup",structuralCleanup},{"structural_candidates_enabled",structuralAvailable},{"shared_arm_trials",useSharedTrial},{"cross_level_b2r",bool(crossLevelB2R)},{"b2b_strategy",b2bStrategy.empty()?"dp1":b2bStrategy},{"backend_resource_gate_enabled",false},{"uniform_loss_guard_enabled",false},{"max_uniform_loss",-1},{"max_pressure_growth",-1},{"max_pressure",-1},{"initial_cost",initialCost},{"final_cost",parentCost},{"commits",int64_t(commits)},{"trials",int64_t(trials)},{"final_ir",current},{"rounds",json::Value(json::Array(rounds))},{"stops",json::Value(json::Array(stops))}}));};
+ auto report=[&](StringRef status){save(out+"/summary.json",json::Value(json::Object{{"status",status.str()},{"search","per-decision greedy; best positive adjacent or structural candidate"},{"cfg_cleanup","structural"},{"structural_cleanup",structuralCleanup},{"structural_candidates_enabled",true},{"shared_arm_trials",true},{"cross_level_b2r",false},{"pipeline_version","v1"},{"condition_budget",conditionBudget},{"phi_fold_threshold",7},{"r2r_enumeration","darm-alignment"},{"b2b_strategy",b2bStrategy},{"backend_resource_gate_enabled",false},{"uniform_loss_guard_enabled",false},{"max_uniform_loss",-1},{"max_pressure_growth",-1},{"max_pressure",-1},{"initial_cost",initialCost},{"final_cost",parentCost},{"commits",int64_t(commits)},{"trials",int64_t(trials)},{"final_ir",current},{"rounds",json::Value(json::Array(rounds))},{"stops",json::Value(json::Array(stops))}}));};
  report("running");
  std::set<std::string> attemptedStructural;
  std::string catalogParent;
@@ -190,8 +169,6 @@ int main(int argc,char**argv){try{
   int64_t bestCost=parentCost;
   std::string best;
   json::Array attempts, preparationRejections;
-  struct Trial { unsigned left; std::string dir; int rc; };
-  std::vector<Trial> evaluated;
   struct PreparedPair {
     unsigned left;
     std::string input;
@@ -199,90 +176,35 @@ int main(int argc,char**argv){try{
     bool containsRegion;
   };
   std::vector<PreparedPair> preparedPairs;
-  unsigned next=0;
-  while(next+1<d.arms.size()){
-   std::vector<sys::ProcessInfo> running;
-   const size_t start=evaluated.size();
-   while(next+1<d.arms.size()&&evaluated.size()-start<size_t(jobs)){
-    unsigned left=next++;
+  for (unsigned left=0; left+1<d.arms.size(); ++left) {
     if(!eligible(d.arms[left],d.arms[left+1]))continue;
-    if(useSharedTrial){
-      auto prepared=CloneModule(*m);
-      std::string reason;
-      std::vector<std::array<std::string,3>> coordinates;
-      if(prepareArmPairs(*prepared,fn,di,left,conditionBudget,reason,coordinates)){
-        const auto input=out+"/prepared-"+std::to_string(rounds.size())+"-"+std::to_string(left)+".ll";
-        std::error_code ec;
-        raw_fd_ostream stream(input,ec);
-        if(ec)throw std::runtime_error(ec.message());
-        prepared->print(stream,nullptr);
-        stream.close();
-        const bool containsRegion=d.arms[left].kind==decision::ArmKind::SESE||
-                                  d.arms[left+1].kind==decision::ArmKind::SESE;
-        preparedPairs.push_back({left,input,std::move(coordinates),containsRegion});
-        continue;
-      }
-      preparationRejections.push_back(json::Object{
-        {"left",d.arms[left].id},{"right",d.arms[left+1].id},
-        {"stage","preparation_rejected"},{"reason",std::move(reason)}});
+    auto prepared=CloneModule(*m);
+    std::string reason;
+    std::vector<std::array<std::string,3>> coordinates;
+    if(prepareArmPairs(*prepared,fn,di,left,conditionBudget,reason,coordinates)){
+      const auto input=out+"/prepared-"+std::to_string(rounds.size())+"-"+std::to_string(left)+".ll";
+      std::error_code ec;
+      raw_fd_ostream stream(input,ec);
+      if(ec)throw std::runtime_error(ec.message());
+      prepared->print(stream,nullptr);
+      stream.close();
+      const bool containsRegion=d.arms[left].kind==decision::ArmKind::SESE||
+                                d.arms[left+1].kind==decision::ArmKind::SESE;
+      preparedPairs.push_back({left,input,std::move(coordinates),containsRegion});
       continue;
     }
-    if(trials>=100000)throw std::runtime_error("trial budget exceeded");
-    std::string dir=out+"/trial-"+std::to_string(trials++);
-    save(dir+".request.json",json::Value(json::Object{
-         {"decision",target},{"left",d.arms[left].id},{"right",d.arms[left+1].id}}));
-    std::vector<std::string> args{root+"/build/decision-fuse/decision-fuse",current,fn,
-        std::to_string(di),std::to_string(left),dir,out+"/order.json",dir+".request.json"};
-    if(jobs==1){
-      int rc=run(std::move(args),dir+".stdout",dir+".stderr");
-      evaluated.push_back({left,std::move(dir),rc});
-    }else{
-      running.push_back(startTrial(args,dir+".stdout",dir+".stderr"));
-      evaluated.push_back({left,std::move(dir),-1});
-    }
-   }
-   for(size_t i=0;i<running.size();++i)
-    if(running[i].Pid)
-      evaluated[start+i].rc=sys::Wait(running[i],120,false).ReturnCode;
+    preparationRejections.push_back(json::Object{
+      {"left",d.arms[left].id},{"right",d.arms[left+1].id},
+      {"stage","preparation_rejected"},{"reason",std::move(reason)}});
   }
-  // Rank in the original adjacency order so ties select the same trial.
-  for(const auto &trial:evaluated){
-   const auto left=trial.left;
-   const auto &dir=trial.dir;
-   const int rc=trial.rc;
-   json::Object attempt{{"directory",dir},{"left",d.arms[left].id},
-                        {"right",d.arms[left+1].id},{"exit_code",rc}};
-   if(rc){attempt["stage"]="trial_failed";if(sys::fs::exists(dir+"/trial.json")){auto v=read(dir+"/trial.json");auto*r=v.getAsObject();if(r)if(auto reason=r->getString("reason"))attempt["reason"]=reason->str();}else attempt["reason"]="trial_process_failed";}
-   else{auto verified=read(dir+"/trial.json");auto *actual=verified.getAsObject();
-    if(!actual||actual->getString("decision")!=Optional<StringRef>(target)||actual->getString("left")!=Optional<StringRef>(d.arms[left].id)||actual->getString("right")!=Optional<StringRef>(d.arms[left+1].id))throw std::runtime_error("trial identity mismatch: "+dir);
-    int64_t c;
-    try {
-      c=cost(dir+"/fused.ll",dir+"/tti");
-    } catch(const std::runtime_error &error) {
-      attempt["stage"]="score_rejected";
-      attempt["reason"]=std::string(error.what());
-      attempt["eligible"]=false;
-      attempts.push_back(std::move(attempt));
-      continue;
-    }
-    attempt["stage"]="scored";
-    attempt["cost"]=c;
-    attempt["gain"]=parentCost-c;
-    for(auto key:{"ir_pressure_before","ir_pressure"})
-      if(auto *pressure=actual->getObject(key))attempt[key]=json::Value(json::Object(*pressure));
-    attempt["eligible"]=c<parentCost;
-    if(c<bestCost){bestCost=c;best=dir;}
-   }
-   attempts.push_back(std::move(attempt));
-  }
-  if(structuralAvailable) {
+  {
     const std::string scan=out+"/structural-"+std::to_string(rounds.size());
     std::vector<std::string> args{structural,"--ir",current,"--function",fn,
-      "--structural","1","--speculation",speculation?speculation:"cost","--cross-level-b2r",std::to_string(crossLevelB2R),
+      "--structural","1",
       "--cleanup",structuralCleanup,"--tti-worker",root+"/tools/run-llvm24-tti"};
     if(catalogParent!=current){
       auto catalogArgs=args;
-      catalogArgs.insert(catalogArgs.end(),{"--catalog-only","1","--debug-dir",scan,"--out",scan+".ll"});
+      catalogArgs.insert(catalogArgs.end(),{"--catalog-only","1","--darm-region-candidates","1","--debug-dir",scan,"--out",scan+".ll"});
       if(int rc=run(std::move(catalogArgs),scan+".stdout",scan+".stderr"))
         throw std::runtime_error("structural candidate enumeration failed ("+std::to_string(rc)+"): "+scan+".stderr");
       catalogParent=current;
@@ -296,7 +218,7 @@ int main(int argc,char**argv){try{
         const auto scan=pair.input+".catalog";
         auto catalogArgs=args;
         catalogArgs[2]=pair.input;
-        catalogArgs.insert(catalogArgs.end(),{"--catalog-only","1","--debug-dir",scan,"--out",scan+".ll"});
+        catalogArgs.insert(catalogArgs.end(),{"--catalog-only","1","--darm-region-candidates","1","--debug-dir",scan,"--out",scan+".ll"});
         if(int rc=run(std::move(catalogArgs),scan+".stdout",scan+".stderr"))
           throw std::runtime_error("prepared candidate enumeration failed ("+std::to_string(rc)+"): "+scan+".stderr");
         auto inventory=read(scan+"/catalog.json");
@@ -357,14 +279,11 @@ int main(int argc,char**argv){try{
         trialArgs.push_back(std::string("--")+key);
         trialArgs.push_back(candidate.getString(key)->str());
       }
-      // Keep the exact invocation and the arguments common to search and
-      // replay. Replay adds --gap-replay, a fresh debug directory and output.
-      if (implicitRoot || !b2bStrategy.empty())
-        trialArgs.insert(trialArgs.end(), {"--b2b-strategy", b2bStrategy.empty() ? "dp1" : b2bStrategy});
-      trialArgs.insert(trialArgs.end(), {"--b2r-strategy", b2rStrategy});
+      // Keep the exact invocation and the arguments needed for trial replay.
+      trialArgs.insert(trialArgs.end(), {"--b2b-strategy", b2bStrategy});
       json::Array replayArgs;
       for(const auto &argument:trialArgs)replayArgs.push_back(argument);
-      trialArgs.insert(trialArgs.end(),{"--gap-trials","4","--debug-dir",dir+"/structural","--out",dir+"/fused.ll"});
+      trialArgs.insert(trialArgs.end(),{"--debug-dir",dir+"/structural","--out",dir+"/fused.ll"});
       json::Array invocation;
       for(const auto &argument:trialArgs)invocation.push_back(argument);
       json::Object request{{"decision",target},{"parent",current},
@@ -484,7 +403,7 @@ int main(int argc,char**argv){try{
           const auto &metrics=*score->getObject("metrics");
           const auto after=metrics.getNumber("work_after");
           const auto before=metrics.getNumber("work_before");
-          if(!after||!before||(!attempt.get("prepared_input")&&structuralCleanup=="scoped-cfg"&&*before!=parentCost))
+          if(!after||!before)
             throw std::runtime_error("structural control cost mismatch: "+dir);
           const int64_t trialCost=*after;
           attempt["stage"]="scored";

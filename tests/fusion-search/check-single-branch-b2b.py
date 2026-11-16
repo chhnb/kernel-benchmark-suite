@@ -165,7 +165,12 @@ with tempfile.TemporaryDirectory() as directory:
             assert (trial["merge_path"] == expected or segmented or merged_exit or
                     (shape == "pure-aligned-hoist" and complete_common) or
                     (shape.startswith("paired-") and trial["merge_path"] == "single-branch-prefix")), (shape, trial["merge_path"])
-            assert trial["eligible"] == (shape not in {"separate", "complete-common-dp", "paired-common-dp"}), trial["score_result"]
+            if shape == "paired-common-dp":
+                score = trial["score_result"]
+                assert score["status"] == "scored", score
+                assert trial["eligible"] == (score["total"] > 0 and not score["profitability_rejection"]), score
+            else:
+                assert trial["eligible"] == (shape not in {"separate", "complete-common-dp"}), trial["score_result"]
             assert not trial["gap_choices"] and not trial["alignment_choices"]
             raw = report.with_name("after-raw.ll").read_text()
             assert "[ 77, %external ]" in raw
@@ -386,12 +391,27 @@ with tempfile.TemporaryDirectory() as directory:
         out = root / f"{shape}-0"
         run(greedy, out / "source.ll", "choose", out / "auto")
         summary = json.loads((out / "auto/summary.json").read_text())
-        assert bool(summary["commits"]) == (shape not in {"separate", "complete-common-dp", "paired-common-dp"}), summary
-        assert summary["shared_arm_trials"]
-        assert any(
-            "--b2b-strategy" in json.loads(request.read_text())["argv"]
-            for request in (out / "auto").glob("trial-*/request.json")
-        )
+        assert summary["shared_arm_trials"] and summary["b2b_strategy"] == "dp1"
+        assert summary["pipeline_version"] == "v1"
+        assert summary["condition_budget"] == 4 and summary["phi_fold_threshold"] == 7
+        assert summary["structural_cleanup"] == "darm-cfg-dce-instcombine"
+        for request in (out / "auto").glob("trial-*/request.json"):
+            argv = json.loads(request.read_text())["argv"]
+            assert "--speculation" not in argv
+            assert "--gap-trials" not in argv
+        if shape == "prefix":
+            assert summary["commits"] > 0, summary
+        final_ir = out / "auto/final.ll"
+        run(opt, "-verify", "-disable-output", final_ir)
+        null_guard = "if (outside)" if shape.startswith("paired-") else "if (outside || p)"
+        (root / "check.c").write_text(driver.replace("if (outside || p)", null_guard))
+        cpu = out / "auto-cpu.ll"
+        ir = final_ir.read_text().replace("amdgcn-amd-amdhsa", "x86_64-unknown-linux-gnu")
+        ir = re.sub(r"^attributes #0 = .*\n", "", ir, flags=re.M)
+        cpu.write_text(ir.replace(" #0 {", " {").replace("@choose(", "@after("))
+        run(clang, "-O2", "-c", cpu, "-o", out / "auto.o")
+        run(clang, out / "before.o", out / "auto.o", root / "check.c", "-o", out / "check-auto")
+        run(out / "check-auto")
 
     # DP3 can emit a segmented finalist beyond DP1's fourth slot. Check
     # replay, the exit PHI with its external edge, and memory on both arms.
@@ -421,9 +441,16 @@ with tempfile.TemporaryDirectory() as directory:
     run(clang, "-O2", "-c", cpu, "-o", out / "dp3.o")
     run(clang, out / "before.o", out / "dp3.o", root / "check.c", "-o", out / "check-dp3")
     run(out / "check-dp3")
-    run(greedy, source, "choose", out / "auto-dp3", "--b2b-strategy", "dp3")
-    summary = json.loads((out / "auto-dp3/summary.json").read_text())
-    assert summary["b2b_strategy"] == "dp3" and summary["commits"] > 0, summary
+    rejected = subprocess.run([greedy, source, "choose", out / "auto-dp3",
+                               "--b2b-strategy", "dp3"], capture_output=True, text=True)
+    assert rejected.returncode != 0 and "invalid value" in rejected.stderr
+    run(greedy, source, "choose", out / "auto-darm", "--b2b-strategy", "darm")
+    summary = json.loads((out / "auto-darm/summary.json").read_text())
+    assert summary["b2b_strategy"] == "darm"
+    trials = [json.loads(path.read_text()) for path in
+              (out / "auto-darm").glob("trial-*/structural/trial-0/trial.json")]
+    assert any(trial["merge_path"] in {"darm-B2B", "darm-adjacent-B2B"} for trial in trials)
+    run(opt, "-verify", "-disable-output", out / "auto-darm/final.ll")
 
     # Preserve a conditional exit with a live value while sharing arm work.
     out = root / "independent-exits"

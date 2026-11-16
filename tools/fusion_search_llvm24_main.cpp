@@ -9,6 +9,7 @@
 #include "llvm/IRReader/IRReader.h"
 #include "llvm/IR/Verifier.h"
 #include "llvm/Support/SourceMgr.h"
+#include "llvm/Support/CommandLine.h"
 #include "llvm/Support/Signals.h"
 #include "llvm/Support/FileSystem.h"
 #include "llvm/Support/Path.h"
@@ -114,13 +115,17 @@ struct R2RBatch {
 
 static int runSearch(int argc, const char *const *argv, R2RBatch *batch = nullptr) {
   try {
-    std::string input,function,output,debug,split,left,right,replayParentHash,profileBundle,policy="llvm24";Options options;bool speculationGiven=false,budgetGiven=false,singleBranchB2B=false, useDP2=false, useDP3=false, strategyGiven=false;
+    std::string input,function,output,debug,split,left,right,replayParentHash,profileBundle,policy="llvm24";Options options;bool speculationGiven=false,budgetGiven=false,singleBranchB2B=false, useDP2=false, useDP3=false, strategyGiven=false, useDarmB2B=false, darmRegionCandidates=false;
     options.speculation=SpeculationMode::None; /* CLI default: no speculation of work */ PostOptConfig config;bool controlOnly=false,catalogOnly=false; unsigned gapTrials=0; std::string gapReplay;std::string ttiWorker="/home/chh/kernel-benchmark-suite/tools/run-llvm24-tti";
     for(int i=1;i<argc;++i){std::string k=argv[i];
-      if(k=="--help"){outs()<<"fusion-search --ir FILE --function NAME --out FILE [--control-only 0|1] [--catalog-only 0|1 (requires debug-dir)] [--replay-parent-hash SHA1 (explicit snapshot pair only)] [--cross-decision-leaves 0|1 (default 0; permits complete leaves with different or unknown SSA discriminator, or a sub-decision of the same discriminator)] [--b2r-strategy darm|guarded] [--cross-level-b2r 0|1 (default 0; allow B2R/R2B that replicates a same-discriminator decision chain)] [--speculation none|legacy|budget|cost (default none: unmatched work is always guarded, only a decision's own condition may be evaluated early, structural dispatch never picks local if-conversion; legacy: historical behaviour, required to reproduce results before this option; budget: speculate safe work up to --speculation-budget)] [--speculation-budget N (default 4; div/rem=8 call=4 other=1)] [--max-uniform-loss TTI (default off; llvm24 scorer only; reject if a one-sided wave gets more than this much costlier)] [--complete-leaf-plan 0|1 (experimental mandatory-load motion and multiple guarded anchors)] [--b2b-strategy dp1|dp2|dp3] [--single-branch-b2b 0|1 (explicit cost-mode pair)] [--structural 0|1 (B2B/R2R/B2R dispatch; adjacent-only 0; hybrid is a compatibility alias)] [--adjacent-only 0|1] [--local-union 0|1] [--local-compute 0|1 (alias of local-copysign)] [--local-copysign 0|1 (requires adjacent-only 1, cleanup none or scoped-local)] [--scorer llvm24|legacy|v1|v2|v5] [--tti-worker EXECUTABLE] [--profile-bundle FILE (experimental v5 only)] [--work-absolute 0] [--work-relative 0] [--pressure-weight 0] [--dependency-features 0|1] [--static-alloca-cost POSITIVE_INT (disabled by default)] [--rounds 8] [--trials 256] [--threshold 0] [--opt-level 3] [--debug-dir DIR] [--require-parent-gain 1] [--cleanup none|scoped-local|scoped-cfg|scoped-cfg-triangles|structural-cfg|postopt-fp|darm-cfg-scalar-fp|darm-cfg-earlycse|darm-cfg-dce|darm-cfg|o3]\nExplicit pair: add --split B# --left B#/R#/Eentry_exit --right B#/R#/Eentry_exit. Complete E leaves require --structural 1. Optional --coalesce-gaps 0|1 (default 0) groups adjacent unmatched runs before unpredication. IDs refer to the input state (O3-normalized only in o3 mode). Default cleanup: darm-cfg-earlycse. Final codegen O3 is separate.\n";return 0;}
+      if(k=="--help"){outs()<<"fusion-search --ir FILE --function NAME --out FILE [--control-only 0|1] [--catalog-only 0|1 (requires debug-dir)] [--replay-parent-hash SHA1 (explicit snapshot pair only)] [--cross-decision-leaves 0|1 (default 0; permits complete leaves with different or unknown SSA discriminator, or a sub-decision of the same discriminator)] [--b2r-strategy darm|guarded] [--cross-level-b2r 0|1 (default 0; allow B2R/R2B that replicates a same-discriminator decision chain)] [--speculation none|legacy|budget|cost (default none: unmatched work is always guarded, only a decision's own condition may be evaluated early, structural dispatch never picks local if-conversion; legacy: historical behaviour, required to reproduce results before this option; budget: speculate safe work up to --speculation-budget)] [--speculation-budget N (default 4; div/rem=8 call=4 other=1)] [--max-uniform-loss TTI (default off; llvm24 scorer only; reject if a one-sided wave gets more than this much costlier)] [--complete-leaf-plan 0|1 (experimental mandatory-load motion and multiple guarded anchors)] [--b2b-strategy darm|dp1|dp2|dp3] [--single-branch-b2b 0|1 (explicit cost-mode pair)] [--structural 0|1 (B2B/R2R/B2R dispatch; adjacent-only 0; hybrid is a compatibility alias)] [--adjacent-only 0|1] [--local-union 0|1] [--local-compute 0|1 (alias of local-copysign)] [--local-copysign 0|1 (requires adjacent-only 1, cleanup none or scoped-local)] [--scorer llvm24|legacy|v1|v2|v5] [--tti-worker EXECUTABLE] [--profile-bundle FILE (experimental v5 only)] [--work-absolute 0] [--work-relative 0] [--pressure-weight 0] [--dependency-features 0|1] [--static-alloca-cost POSITIVE_INT (disabled by default)] [--rounds 8] [--trials 256] [--threshold 0] [--opt-level 3] [--debug-dir DIR] [--require-parent-gain 1] [--cleanup none|scoped-local|scoped-cfg|scoped-cfg-triangles|structural-cfg|postopt-fp|darm-cfg-scalar-fp|darm-cfg-earlycse|darm-cfg-dce|darm-cfg-dce-instcombine|darm-cfg|o3]\nExplicit pair: add --split B# --left B#/R#/Eentry_exit --right B#/R#/Eentry_exit. Complete E leaves require --structural 1. Optional --coalesce-gaps 0|1 (default 0) groups adjacent unmatched runs before unpredication. IDs refer to the input state (O3-normalized only in o3 mode). Default cleanup: darm-cfg-earlycse. Final codegen O3 is separate.\n";return 0;}
       if(i+1==argc)throw std::runtime_error("missing option value");std::string v=argv[++i];
       if(k=="--control-only"){if(v!="0"&&v!="1")throw std::runtime_error("control-only must be 0 or 1");controlOnly=v=="1";}
       else if(k=="--catalog-only"){if(v!="0"&&v!="1")throw std::runtime_error("catalog-only must be 0 or 1");catalogOnly=v=="1";}
+      else if(k=="--darm-region-candidates"){
+        if(v!="0"&&v!="1")throw std::runtime_error("darm-region-candidates must be 0 or 1");
+        darmRegionCandidates=v=="1";
+      }
       else if(k=="--scorer"){if(v!="llvm24"&&v!="legacy"&&v!="v1"&&v!="v2"&&v!="v5")throw std::runtime_error("scorer must be llvm24, legacy, v1, v2 or experimental v5");policy=v;}
       else if(k=="--work-absolute"||k=="--work-relative"||k=="--pressure-weight"){size_t pos=0;double n=std::stod(v,&pos);if(pos!=v.size()||!std::isfinite(n)||n<0)throw std::runtime_error("invalid postopt parameter");if(k=="--work-absolute")config.absoluteThreshold=n;else if(k=="--work-relative")config.relativeThreshold=n;else config.pressureWeight=n;}
       else if(k=="--dependency-features"){if(v!="0"&&v!="1")throw std::runtime_error("dependency-features must be 0 or 1");config.dependencyFeatures=v=="1";}
@@ -143,11 +148,13 @@ static int runSearch(int argc, const char *const *argv, R2RBatch *batch = nullpt
       else if(k=="--ir")input=v;else if(k=="--function")function=v;else if(k=="--out")output=v;
       else if(k=="--complete-leaf-plan"){if(v!="0"&&v!="1")throw std::runtime_error("complete-leaf-plan must be 0 or 1");options.completeLeafPlan=v=="1";}
       else if(k=="--b2b-strategy"){
-        if(v!="dp1" && v!="dp2" && v!="dp3") throw std::runtime_error("b2b-strategy must be dp1, dp2, or dp3");
+        if(v!="darm" && v!="dp1" && v!="dp2" && v!="dp3")
+          throw std::runtime_error("b2b-strategy must be darm, dp1, dp2, or dp3");
         strategyGiven=true;
         useDP2=v=="dp2";
         useDP3=v=="dp3";
-        singleBranchB2B=true;
+        useDarmB2B=v=="darm";
+        singleBranchB2B=!useDarmB2B;
       }
       else if(k=="--single-branch-b2b"){
         if(v!="0"&&v!="1")throw std::runtime_error("single-branch-b2b must be 0 or 1");
@@ -157,7 +164,7 @@ static int runSearch(int argc, const char *const *argv, R2RBatch *batch = nullpt
       else if(k=="--structural"||k=="--hybrid"){if(v!="0"&&v!="1")throw std::runtime_error("hybrid must be 0 or 1");options.hybrid=v=="1";}
       else if(k=="--local-union"){if(v!="0"&&v!="1")throw std::runtime_error("local-union must be 0 or 1");options.localUnion=v=="1";}
       else if(k=="--local-copysign"||k=="--local-compute"){if(v!="0"&&v!="1")throw std::runtime_error("local-copysign must be 0 or 1");options.localCopysign=v=="1";}
-      else if(k=="--cleanup"){if(v=="scoped-cfg-triangles")options.cleanupMode=CleanupMode::ScopedCFGTriangles;else if(v=="scoped-cfg")options.cleanupMode=CleanupMode::ScopedCFG;else if(v=="scoped-local")options.cleanupMode=CleanupMode::ScopedLocal;else if(v=="structural-cfg")options.cleanupMode=CleanupMode::StructuralCFG;else if(v=="none")options.cleanupMode=CleanupMode::None;else if(v=="postopt-fp")options.cleanupMode=CleanupMode::PostOptFixedPoint;else if(v=="darm-cfg-scalar-fp")options.cleanupMode=CleanupMode::DarmCFGScalarFixedPoint;else if(v=="darm-cfg-earlycse")options.cleanupMode=CleanupMode::DarmCFGEarlyCSE;else if(v=="darm-cfg-dce")options.cleanupMode=CleanupMode::DarmCFGRedundancy;else if(v=="darm-cfg")options.cleanupMode=CleanupMode::DarmCFG;else if(v=="o3")options.cleanupMode=CleanupMode::O3;else throw std::runtime_error("cleanup must be none, scoped-local, scoped-cfg, scoped-cfg-triangles, structural-cfg, postopt-fp, darm-cfg-scalar-fp, darm-cfg-earlycse, darm-cfg-dce, darm-cfg or o3");}
+      else if(k=="--cleanup"){if(v=="scoped-cfg-triangles")options.cleanupMode=CleanupMode::ScopedCFGTriangles;else if(v=="scoped-cfg")options.cleanupMode=CleanupMode::ScopedCFG;else if(v=="scoped-local")options.cleanupMode=CleanupMode::ScopedLocal;else if(v=="structural-cfg")options.cleanupMode=CleanupMode::StructuralCFG;else if(v=="none")options.cleanupMode=CleanupMode::None;else if(v=="postopt-fp")options.cleanupMode=CleanupMode::PostOptFixedPoint;else if(v=="darm-cfg-scalar-fp")options.cleanupMode=CleanupMode::DarmCFGScalarFixedPoint;else if(v=="darm-cfg-earlycse")options.cleanupMode=CleanupMode::DarmCFGEarlyCSE;else if(v=="darm-cfg-dce")options.cleanupMode=CleanupMode::DarmCFGRedundancy;else if(v=="darm-cfg-dce-instcombine")options.cleanupMode=CleanupMode::DarmCFGInstCombine;else if(v=="darm-cfg")options.cleanupMode=CleanupMode::DarmCFG;else if(v=="o3")options.cleanupMode=CleanupMode::O3;else throw std::runtime_error("cleanup must be none, scoped-local, scoped-cfg, scoped-cfg-triangles, structural-cfg, postopt-fp, darm-cfg-scalar-fp, darm-cfg-earlycse, darm-cfg-dce, darm-cfg-dce-instcombine, darm-cfg or o3");}
       else if(k=="--debug-dir")debug=v;else if(k=="--split")split=v;else if(k=="--left")left=v;else if(k=="--right")right=v;
       else if(k=="--rounds"||k=="--trials"||k=="--opt-level"){
         size_t pos=0;auto n=std::stoul(v,&pos);if(v.empty()||v[0]=='-'||pos!=v.size()||n>1000000)throw std::runtime_error("invalid integer option");
@@ -171,6 +178,19 @@ static int runSearch(int argc, const char *const *argv, R2RBatch *batch = nullpt
     bool pair=!split.empty()||!left.empty()||!right.empty();if(pair&&(split.empty()||left.empty()||right.empty()))throw std::runtime_error("explicit pair requires all three IDs");
     if(!gapReplay.empty()&&(!pair||gapTrials))
       throw std::runtime_error("--gap-replay requires an explicit pair and no gap search");
+    if (options.cleanupMode == CleanupMode::DarmCFGInstCombine) {
+      if (options.speculation != SpeculationMode::None || gapTrials || !gapReplay.empty())
+        throw std::runtime_error("v1 cleanup requires guarded fusion without gap search");
+      // LLVM 12 reads this registered option inside SimplifyCFG. Initialize it
+      // once per process, including when a worker evaluates a batch of pairs.
+      static const bool configured = [] {
+        const StringRef name = "two-entry-phi-node-folding-threshold";
+        auto &registered = cl::getRegisteredOptions();
+        auto entry = registered.find(name);
+        return entry != registered.end() && !entry->second->addOccurrence(0, name, "7");
+      }();
+      if (!configured) throw std::runtime_error("cannot configure v1 PHI fold threshold");
+    }
     LLVMContext context;
     std::unique_ptr<MemoryBuffer> buffer;
     std::unique_ptr<Module> parsedModule;
@@ -245,9 +265,9 @@ static int runSearch(int argc, const char *const *argv, R2RBatch *batch = nullpt
       if(options.cleanupMode==CleanupMode::O3)normalize(*module,options.optLevel);
       if(verifyModule(*module,&errs()))return 2;
       observer->initial(*module);
-      const char*cleanupName=options.cleanupMode==CleanupMode::ScopedCFGTriangles?"scoped-cfg-triangles":options.cleanupMode==CleanupMode::ScopedCFG?"scoped-cfg":options.cleanupMode==CleanupMode::ScopedLocal?"scoped-local":options.cleanupMode==CleanupMode::None?"none":options.cleanupMode==CleanupMode::PostOptFixedPoint?"postopt-fp":options.cleanupMode==CleanupMode::O3?"o3":options.cleanupMode==CleanupMode::DarmCFGEarlyCSE?"darm-cfg-earlycse":options.cleanupMode==CleanupMode::DarmCFGRedundancy?"darm-cfg-dce":options.cleanupMode==CleanupMode::DarmCFGScalarFixedPoint?"darm-cfg-scalar-fp":"darm-cfg";
+      const char*cleanupName=options.cleanupMode==CleanupMode::ScopedCFGTriangles?"scoped-cfg-triangles":options.cleanupMode==CleanupMode::ScopedCFG?"scoped-cfg":options.cleanupMode==CleanupMode::ScopedLocal?"scoped-local":options.cleanupMode==CleanupMode::None?"none":options.cleanupMode==CleanupMode::PostOptFixedPoint?"postopt-fp":options.cleanupMode==CleanupMode::O3?"o3":options.cleanupMode==CleanupMode::DarmCFGEarlyCSE?"darm-cfg-earlycse":options.cleanupMode==CleanupMode::DarmCFGRedundancy?"darm-cfg-dce":options.cleanupMode==CleanupMode::DarmCFGInstCombine?"darm-cfg-dce-instcombine":options.cleanupMode==CleanupMode::DarmCFGScalarFixedPoint?"darm-cfg-scalar-fp":"darm-cfg";
       if(options.adjacentOnly){auto st=LogicalRegionState::initialize(*module->getFunction(function));observer->logical(0,st->json());}
-      auto candidates=options.adjacentOnly?enumerateAdjacent(*module->getFunction(function),0):enumerate(*module->getFunction(function),0,options.crossDecisionLeaves);json::Array entries;
+      auto candidates=options.adjacentOnly?enumerateAdjacent(*module->getFunction(function),0):enumerate(*module->getFunction(function),0,options.crossDecisionLeaves,darmRegionCandidates);json::Array entries;
       const auto rejected=crossLevelCatalogRejections(*f,candidates,options);
       for(const auto&c:candidates)entries.push_back(json::Object{{"logical_decision",c.logicalDecision},{"logical_left",c.logicalLeft},{"logical_right",c.logicalRight},{"candidate",c.key()},{"function",c.function},{"split",c.split},{"left",c.left},{"right",c.right},{"preflight_rejection",rejected.count(c.key())?"b2r_replicates_same_decision_chain_requires_opt_in":""}});
       jsonFile(debug+"/catalog.json",json::Object{{"schema","postopt-candidate-catalog-v1"},{"adjacent_only",options.adjacentOnly},{"cross_decision_leaves",options.crossDecisionLeaves},{"source_ir",input},{"function",function},
@@ -327,7 +347,7 @@ static int runSearch(int argc, const char *const *argv, R2RBatch *batch = nullpt
         if (auto path = gapReport.getAsObject()->getString("merge_path"))
           if (path->startswith("single-branch-")) replayLayout = *path;
       if (!replayLayout.empty() && strategyGiven &&
-          (useDP2 != replayLayout.startswith("single-branch-dp2-") ||
+          (useDarmB2B || useDP2 != replayLayout.startswith("single-branch-dp2-") ||
            (useDP3 && replayLayout.startswith("single-branch-segment-dp")) ||
            (!useDP3 && replayLayout.startswith("single-branch-dp3-"))))
         throw std::runtime_error("B2B replay strategy mismatch");
@@ -396,7 +416,7 @@ static int runSearch(int argc, const char *const *argv, R2RBatch *batch = nullpt
         }
         t.layoutProfitability = std::move(profitability);
       }
-      const bool allowDarmB2B = !strategyGiven || useDP2 || useDP3;
+      const bool allowDarmB2B = !strategyGiven || useDarmB2B || useDP2 || useDP3;
       if (!plannedB2B) {
         t = tryPair(*module, c, 0, options.optLevel, options.cleanupMode,
                     logical.get(), allowDarmB2B);

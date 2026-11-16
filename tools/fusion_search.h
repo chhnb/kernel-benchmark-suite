@@ -23,7 +23,7 @@ class LogicalRegionState;
 // Explicit engines (--local-compute/--local-union, full predication, triangle
 // cleanups) remain explicit commands and are not changed by this mode.
 enum class SpeculationMode { None, Legacy, Budget, Cost };
-enum class CleanupMode { None, O3, DarmCFG, DarmCFGEarlyCSE, DarmCFGScalarFixedPoint, PostOptFixedPoint, StructuralCFG, ScopedLocal, ScopedCFG, ScopedCFGTriangles, DarmCFGRedundancy };
+enum class CleanupMode { None, O3, DarmCFG, DarmCFGEarlyCSE, DarmCFGScalarFixedPoint, PostOptFixedPoint, StructuralCFG, ScopedLocal, ScopedCFG, ScopedCFGTriangles, DarmCFGRedundancy, DarmCFGInstCombine };
 struct Candidate {
   std::string function, split, left, right;
   unsigned version = 0;
@@ -200,7 +200,8 @@ unsigned cleanup(llvm::Module &, const std::string &function, unsigned level, Cl
 // Complete E-leaves require same-SSA constant predicates unless explicitly enabled.
 std::set<std::string> crossLevelCatalogRejections(llvm::Function &,
     const std::vector<Candidate> &, const Options &);
-std::vector<Candidate> enumerate(llvm::Function &, unsigned version, bool crossDecisionLeaves=false);
+std::vector<Candidate> enumerate(llvm::Function &, unsigned version, bool crossDecisionLeaves=false,
+                                 bool darmRegionCandidates=false);
 std::vector<Candidate> enumerateAdjacent(llvm::Function &, unsigned version);
 Trial tryPair(const llvm::Module &, const Candidate &, unsigned currentVersion,
               unsigned optLevel, CleanupMode mode=CleanupMode::O3, const LogicalRegionState *logical=nullptr);

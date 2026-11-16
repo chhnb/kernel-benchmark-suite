@@ -297,6 +297,10 @@ static bool foldEmptyPhiTriangle(Function &f) {
 // Fold only branch predicates proven by dominating edges. No instruction is
 // speculated, and arbitrary arithmetic, memory and call predicates are opaque.
 
+static bool usesDarmDCE(CleanupMode mode) {
+  return mode == CleanupMode::DarmCFGRedundancy || mode == CleanupMode::DarmCFGInstCombine;
+}
+
 unsigned cleanup(Module &m,const std::string &function,unsigned level,CleanupMode mode) {
   if(mode==CleanupMode::None||mode==CleanupMode::ScopedLocal||mode==CleanupMode::ScopedCFG||mode==CleanupMode::ScopedCFGTriangles)return 0;
   canonicalPhiOrder(m,function);
@@ -347,11 +351,12 @@ unsigned cleanup(Module &m,const std::string &function,unsigned level,CleanupMod
       }
     }
   }while(changed);
-  if(mode==CleanupMode::DarmCFGEarlyCSE||mode==CleanupMode::DarmCFGRedundancy){
+  if(mode==CleanupMode::DarmCFGEarlyCSE||usesDarmDCE(mode)){
     legacy::FunctionPassManager pm(&m);
     pm.add(createTargetTransformInfoWrapperPass(tm?tm->getTargetIRAnalysis():TargetIRAnalysis()));
     pm.add(createEarlyCSEPass(false));
-    if(mode==CleanupMode::DarmCFGRedundancy)pm.add(createDeadCodeEliminationPass());
+    if (usesDarmDCE(mode)) pm.add(createDeadCodeEliminationPass());
+    if (mode==CleanupMode::DarmCFGInstCombine) pm.add(createInstructionCombiningPass());
     pm.doInitialization();pm.run(*f);pm.doFinalization();
     return 1;
   }
@@ -614,7 +619,8 @@ static bool blocksAnchorDiscovery(const Instruction &instruction) {
   return instruction.mayHaveSideEffects() || instruction.mayWriteToMemory();
 }
 
-std::vector<Candidate> enumerate(Function&f,unsigned version,bool crossDecisionLeaves) {
+std::vector<Candidate> enumerate(Function&f,unsigned version,bool crossDecisionLeaves,
+                                 bool darmRegionCandidates) {
   Analysis a(f); Inventory inv(f,a);std::vector<Candidate> result;
   auto frontier=[&](const std::set<BasicBlock*>&side,const std::set<BasicBlock*>&opposite){
     std::vector<std::string> rs,out;std::set<BasicBlock*>covered;
@@ -689,7 +695,7 @@ std::vector<Candidate> enumerate(Function&f,unsigned version,bool crossDecisionL
     }
     auto left=frontier(l,r),right=frontier(r,l);
     for(auto&li:left)for(auto&ri:right){auto&lu=inv.units.at(li);auto&ru=inv.units.at(ri);
-      if(bool(lu.region)!=bool(ru.region))continue;
+      if(bool(lu.region)!=bool(ru.region)||(darmRegionCandidates&&lu.region))continue;
       if(!lu.region&&!a.pdt.dominates(lu.entry,br->getSuccessor(0))&&!a.pdt.dominates(ru.entry,br->getSuccessor(1)))continue;
       result.push_back({f.getName().str(),inv.ids.at(&b),li,ri,version});
     }
@@ -713,9 +719,11 @@ std::vector<Candidate> enumerate(Function&f,unsigned version,bool crossDecisionL
     if(next.count(child)&&later==next.at(child))later=cb->getSuccessor(1);
     auto ls=reachable(earlier,joins[&b]),rs=reachable(later,joins[&b]);
     for(auto&li:frontier(ls,rs))for(auto&ri:frontier(rs,ls))
-      if(bool(inv.units.at(li).region)==bool(inv.units.at(ri).region))result.push_back({f.getName().str(),inv.ids.at(&b),li,ri,version});
+      if(bool(inv.units.at(li).region)==bool(inv.units.at(ri).region)&&
+         !(darmRegionCandidates&&inv.units.at(li).region))result.push_back({f.getName().str(),inv.ids.at(&b),li,ri,version});
   }
-  for(auto &pair:inv.leafPairs)if(crossDecisionLeaves||inv.sameDecisionLeafPairs.count(pair))result.push_back({f.getName().str(),std::get<0>(pair),std::get<1>(pair),std::get<2>(pair),version});
+  for(auto &pair:inv.leafPairs)if(!darmRegionCandidates &&
+      (crossDecisionLeaves||inv.sameDecisionLeafPairs.count(pair)))result.push_back({f.getName().str(),std::get<0>(pair),std::get<1>(pair),std::get<2>(pair),version});
   std::sort(result.begin(),result.end(),[](const Candidate&a,const Candidate&b){return a.key()<b.key();});
   result.erase(std::unique(result.begin(),result.end(),[](const Candidate&a,const Candidate&b){return a.key()==b.key();}),result.end());return result;
 }
@@ -1344,7 +1352,7 @@ static Trial tryPairImpl(const Module&parent,const Candidate&c,unsigned version,
     };
     if (!l.region && !logical && !nested && c.hybrid &&
         c.speculation == SpeculationMode::Cost &&
-        mode == CleanupMode::DarmCFGRedundancy &&
+        usesDarmDCE(mode) &&
         c.splitMatches.empty() && !c.explicitGapPlan &&
         (externalPredecessor(l.entry) || externalPredecessor(r.entry))) {
       const bool leftRequired = a.pdt.dominates(l.entry, br->getSuccessor(0));
@@ -1730,7 +1738,8 @@ static Trial tryPairImpl(const Module&parent,const Candidate&c,unsigned version,
     t.mergePath = "shared-anchor-" + t.planKind;
     t.replication = false;
   }
-  RegionMelder melder(directLeaves?*leafAnalyzer:ma,!sharedAnchor);melder.CoalesceGaps=c.coalesceGaps;melder.SpeculationMode=int(t.replication && legacyReplication && c.darmB2R ? SpeculationMode::Legacy : c.speculation);melder.SpeculationBudget=c.speculationBudget;melder.SpeculationTTI=speculationTTI?speculationTTI->info.get():nullptr;if(t.logicalState)melder.onValueMapping=[&](const ValueToValueMapTy &m){t.logicalState->transfer(m);};if(useLocal){
+  RegionMelder melder(directLeaves?*leafAnalyzer:ma,!sharedAnchor);melder.CoalesceGaps=c.coalesceGaps;melder.SpeculationMode=int(t.replication && legacyReplication && c.darmB2R &&
+      c.speculation != SpeculationMode::None ? SpeculationMode::Legacy : c.speculation);melder.SpeculationBudget=c.speculationBudget;melder.SpeculationTTI=speculationTTI?speculationTTI->info.get():nullptr;if(t.logicalState)melder.onValueMapping=[&](const ValueToValueMapTy &m){t.logicalState->transfer(m);};if(useLocal){
     if(l.region||r.region)return reject("local_requires_basic_blocks");
     std::string why;
     if(!fuseLocalComputations(l.entry,r.entry,melder.onValueMapping,why,c.localUnion||c.hybrid)){t.reason=why;t.totalMs=millis(started);return t;}
@@ -2328,7 +2337,7 @@ using B2BSegmentedPlan = SmallVector<B2BSegmentMatch, 8>;
 
 static SmallVector<B2BSegmentedPlan, 4>
 searchB2BSegments(ArrayRef<Instruction *> left, ArrayRef<Instruction *> right,
-                  bool useLiveness, bool independentExits,
+                  bool useLiveness, bool independentExits, unsigned minSegments,
                   function_ref<int(const Instruction &)> intrinsicCost) {
   const size_t columns = right.size() + 1;
   if (left.empty() || right.empty() || left.size() + 1 > 4096 / columns)
@@ -2476,7 +2485,7 @@ searchB2BSegments(ArrayRef<Instruction *> left, ArrayRef<Instruction *> right,
         j = match.right + match.consumeRight;
       }
       segments += (i != left.size() || j != right.size());
-      if (!independentExits && segments < 2) continue;
+      if (!independentExits && segments < minSegments) continue;
       finalists.push_back(&state);
     }
   llvm::stable_sort(finalists, [](const State *a, const State *b) {
@@ -2783,9 +2792,11 @@ std::vector<Trial> planSingleBranchB2B(const Module &parent, const Candidate &c,
                                        StringRef replay, bool useDP2, bool useDP3,
                                        function_ref<int(const Instruction &)> intrinsicCost) {
   std::vector<Trial> trials;
-  if (!c.hybrid || c.speculation != SpeculationMode::Cost || c.localCopysign ||
+  const bool noSpeculation = c.speculation == SpeculationMode::None;
+  if (!c.hybrid || (!noSpeculation && c.speculation != SpeculationMode::Cost) ||
+      (noSpeculation && (useDP2 || useDP3)) || c.localCopysign ||
       c.explicitGapPlan || !c.splitMatches.empty() || c.coalesceGaps ||
-      mode != CleanupMode::DarmCFGRedundancy)
+      !usesDarmDCE(mode))
     return trials;
 
   // Reject other candidate shapes before cloning or building analyses.
@@ -2959,10 +2970,10 @@ std::vector<Trial> planSingleBranchB2B(const Module &parent, const Candidate &c,
     }
   }
   auto segments = !useDP2 && (segmentUsesValid || independentExits)
-                      ? searchB2BSegments(segmentWork[0], segmentWork[1], useDP3, independentExits, intrinsicCost)
+                      ? searchB2BSegments(segmentWork[0], segmentWork[1], useDP3, independentExits, noSpeculation ? 1 : 2, intrinsicCost)
                                     : SmallVector<B2BSegmentedPlan, 4>();
   SmallVector<B2BSegmentedPlan, 4> speculativeSegments(segments.size());
-  if (!useDP2 && !useDP3)
+  if (!noSpeculation && !useDP2 && !useDP3)
     for (unsigned i = 0; i < segments.size(); ++i)
       speculativeSegments[i] = speculateB2BGuardedArms(
           segmentWork[0], segmentWork[1], segments[i]);
@@ -3252,7 +3263,8 @@ RoundContext makeRound(const Module&parent,const std::string&function,unsigned v
   r.cleanup=mode==CleanupMode::O3?"legacy-PassManagerBuilder-O"+std::to_string(level)+"-loopvec1-slpvec1":"darm-simplifycfg-fixedpoint-condbranch0-sink0-hoist0-targettti";
   r.cleanup+=";phi-edge-function-order-v1";
   if(mode==CleanupMode::StructuralCFG)r.cleanup+=";dominating-edge-boolean-guard-fold-v1";
-  if(mode==CleanupMode::DarmCFGRedundancy)r.cleanup+="-earlycse-memoryssa0-dce";
+  if(usesDarmDCE(mode))r.cleanup+="-earlycse-memoryssa0-dce";
+  if(mode==CleanupMode::DarmCFGInstCombine)r.cleanup+="-instcombine";
   if(mode==CleanupMode::DarmCFGEarlyCSE)r.cleanup+="-earlycse-memoryssa0";
   if(mode==CleanupMode::PostOptFixedPoint)r.cleanup="phi-edge-function-order-v1;earlycse-memoryssa0-instcombine-simplifycfg-default-dce-earlycse-pure-scalar-phi-triangle-v1-fixedpoint-sha1-cap32";
   if(mode==CleanupMode::ScopedLocal)r.cleanup="changed-instructions-only;simplify-local-cse-dce;no-cfg-motion;protected-outside-audit;control-noop";
