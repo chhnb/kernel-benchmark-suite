@@ -13,12 +13,7 @@ import sys
 ROOT = Path(__file__).resolve().parents[1]
 MANIFEST = ROOT / "regression/golden/20261115-hlld-gfx906-v1/manifest.json"
 GENERATOR = ROOT / "regression/generators/hlld.py"
-ORDERS = (
-    ("baseline", "darm", "dp2", "dp1"),
-    ("darm", "dp1", "baseline", "dp2"),
-    ("dp1", "dp2", "darm", "baseline"),
-    ("dp2", "baseline", "dp1", "darm"),
-)
+ORDERS = (("baseline", "darm", "dp1"), ("darm", "dp1", "baseline"), ("dp1", "baseline", "darm"))
 
 
 def sha(path):
@@ -41,7 +36,6 @@ def main():
     parser.add_argument("--golden", type=Path, default=ROOT / "build/hlld-golden-gfx906-v1")
     parser.add_argument("--rocm", type=Path, default=Path("/opt/rocm-6.3.3"))
     parser.add_argument("--dp1", type=Path)
-    parser.add_argument("--dp2", type=Path)
     args = parser.parse_args()
     config = json.loads(MANIFEST.read_text())
     verify(args.golden, config["artifact_sha256"])
@@ -57,7 +51,7 @@ def main():
     env["ROCR_VISIBLE_DEVICES"] = str(config["device"])
     env["HIP_VISIBLE_DEVICES"] = "0"
     binaries = {role: args.golden / f"{role}.hsaco" for role in ORDERS[0]}
-    for role in ("dp1", "dp2"):
+    for role in ("dp1",):
         candidate = getattr(args, role)
         if candidate is not None:
             binaries[role] = candidate
@@ -84,10 +78,10 @@ def main():
     ratios = {
         role: median(candidate / baseline for candidate, baseline
                      in zip(round_medians[role], round_medians["baseline"]))
-        for role in ("darm", "dp1", "dp2")
+        for role in ("darm", "dp1")
     }
     limit = config["max_candidate_to_baseline_ratio"]
-    passed = all(ratios[role] <= limit for role in ("dp1", "dp2"))
+    passed = all(ratios[role] <= limit for role in ("dp1",))
     summary = {
         "schema": config["schema"],
         "binary_sha256": {role: sha(path) for role, path in binaries.items()},

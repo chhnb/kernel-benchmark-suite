@@ -20,9 +20,9 @@ if printf '%s\n' '#include "llvm/Support/InstructionCost.h"' |     ${CXX:-g++} "
   read -r -a libs <<< "$("$lc" --ldflags --link-shared --libs --system-libs | tr '\n' ' ')"
 fi
 objects=()
-for source in postopt_profile_policy postopt_scorer ir_pressure ir_dependency fusion_search logical_region_state darm_pair_engine/RegionAnalyzer darm_pair_engine/RegionMelder darm_pair_engine/RegionReplicator darm_pair_engine/CFMelderUtils darm_pair_engine/InstructionMatch; do
+for source in ir_pressure fusion_search logical_region_state darm_pair_engine/RegionAnalyzer darm_pair_engine/RegionMelder darm_pair_engine/RegionReplicator darm_pair_engine/CFMelderUtils darm_pair_engine/InstructionMatch; do
   obj="$build/$(basename "$source").o"
   ${CXX:-g++} ${CPPFLAGS:-} "${flags[@]}" -std=c++17 -fexceptions -O2 -DFUSION_DETERMINISTIC_REGION_ORDER -I"$root/tools" -I"$root/tools/darm_pair_engine" -c "$root/tools/$source.cpp" -o "$obj"
   objects+=("$obj")
 done
-${CXX:-g++} ${CPPFLAGS:-} "${flags[@]}" -std=c++17 -fexceptions -O2 -DFUSION_DETERMINISTIC_REGION_ORDER -I"$root/tools" -I"$root/tools/darm_pair_engine" "$root/tools/fusion_search_llvm24_main.cpp" "${objects[@]}" "${libs[@]}" ${LDFLAGS:-} ${CRYPTO_LIBS:--lcrypto} -o "$build/fusion-search-llvm24"
+${CXX:-g++} ${CPPFLAGS:-} "${flags[@]}" -std=c++17 -fexceptions -O2 -DFUSION_DETERMINISTIC_REGION_ORDER -I"$root/tools" -I"$root/tools/darm_pair_engine" "$root/tools/fusion_search_llvm24_main.cpp" "${objects[@]}" "${libs[@]}" ${LDFLAGS:-} -o "$build/fusion-search-llvm24"

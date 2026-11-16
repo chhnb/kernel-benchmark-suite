@@ -174,9 +174,6 @@ public:
       s.metrics["non_cfg_work_gain"] = workGain;
       s.metrics["cfg_phi_gain"] = cfgGain;
       s.metrics["total_tti_gain"] = totalGain;
-      if (i.trial && i.trial->insideLoop && i.trial->speculatedSingleSideOps &&
-          totalGain > 0 && workGain <= 0)
-        s.profitabilityRejection = "loop-speculation-with-only-cfg-phi-gain";
       s.staticGain=before.value-after.value;s.staticScore=s.staticGain/std::max(1.0,before.value);s.total=s.staticScore;
       s.parentGain=s.staticGain; // Preserve v1 acceptance semantics, not diagnostic S-A.
       // staticGain equals the gain of a wave in which both sides execute every

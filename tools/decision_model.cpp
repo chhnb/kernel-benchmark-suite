@@ -1,6 +1,6 @@
 #include "decision_model.h"
 #include "condition_simplify.h"
-#include "darm_pair_engine/SpeculationSafety.h"
+#include "darm_pair_engine/InstructionPolicy.h"
 #include "llvm/Analysis/PostDominators.h"
 #include "llvm/Analysis/LoopInfo.h"
 #include "llvm/IR/Dominators.h"
@@ -203,8 +203,8 @@ bool normalize(Function &f,const Decision &d,unsigned left,std::string &reason,B
    &&!bx->getMetadata("decision.short_gate");
  unsigned weight=0;
  for(auto &i:*y)if(!i.isTerminator()){
-  eager &= !isa<PHINode>(i)&&safeToSpeculate(i);
-  weight += speculationWeight(i);
+  eager &= !isa<PHINode>(i)&&safeToExecuteUnconditionally(i);
+  weight += fusionInstructionWeight(i);
   for(auto &op:i.operands())if(auto *def=dyn_cast<Instruction>(op.get()))
    if(def->getParent()!=y&&!currentDT.dominates(def,bx))eager=false;
  }

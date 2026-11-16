@@ -1,5 +1,5 @@
-#include "GapPlanning.h"
-#include "SpeculationSafety.h"
+#include "GuardedRanges.h"
+#include "InstructionPolicy.h"
 #include <functional>
 #ifndef LLVM_LIB_TRANSFORMS_REGION_MELDER_H
 #define LLVM_LIB_TRANSFORMS_REGION_MELDER_H
@@ -46,9 +46,9 @@ public:
 };
 
 // Weight of executing I on a path that did not originally run it (div/rem 8, call 4, other 1).
-unsigned speculationWeight(const llvm::Instruction &I);
+unsigned fusionInstructionWeight(const llvm::Instruction &I);
 // Safe to run on a path that did not execute it: no trap, memory, side effect or convergence.
-bool safeToSpeculate(const llvm::Instruction &I);
+bool safeToExecuteUnconditionally(const llvm::Instruction &I);
 
 class RegionMelder {
 public:
@@ -75,9 +75,6 @@ private:
   DenseMap<BasicBlock *, BasicBlock *> CurrMapping;
 
   AlignedSeq<Value *> RegionInstrAlignement;
-  DenseMap<const Value *, unsigned> OriginalAlignmentIDs;
-  DenseMap<Instruction *, unsigned> EmittedGapIDs;
-  void prepareGapChoices();
   using ValueToValueMapTy = ValueMap<const Value *, WeakTrackingVH>;
 
   // value maps
@@ -112,7 +109,6 @@ private:
   Instruction *cloneInstruction(Instruction *OrigI, IRBuilder<> &Builder);
   void fixPhiNode(PHINode *Orig);
   void runPostOptimizations();
-  void setOprendsForNonMatchingStore(StoreInst *SI, bool IsLeft);
   void runPreMergePasses(bool RegionAlreadySimplified);
   void mergeOutsideDefsAtEntry();
 
@@ -136,20 +132,8 @@ public:
     if(RecordOrigins){unsigned I=0;for(auto &BB:*MA.getParentFunction())
       SourceBlocks.push_back({WeakVH(&BB),"B"+std::to_string(I++)});}
   }
-  std::set<unsigned> SplitMatchIDs, SpeculateGapIDs;
-  bool ExplicitGapPlan=false;
-  json::Array AlignmentChoices, GapChoices;
-  bool CoalesceGaps=false;
   bool GuardReplicatedMemory=false;
   bool NativeReplicationPredication=false;
-  // 0 none, 1 legacy (default), 2 budget. See requireUnpredication().
-  int SpeculationMode=1;
-  int SpeculationBudget=4;
-  const llvm::TargetTransformInfo *SpeculationTTI=nullptr;
-  unsigned SpeculationCostThreshold=4;
-  std::vector<llvm::GapDecision> SegmentDecisions;
-  unsigned SpeculatedRanges=0;
-  unsigned CoalescedGapGroups=0;
   bool hasGuardedGap(const Instruction *instruction, bool left) const;
   std::function<void(const ValueToValueMapTy&)> onValueMapping;
   const std::vector<BlockOrigin>& blockOrigins() const { return BlockOrigins; }

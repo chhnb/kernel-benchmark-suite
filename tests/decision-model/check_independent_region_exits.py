@@ -32,7 +32,8 @@ def run(*command):
 with tempfile.TemporaryDirectory() as temp:
     out = Path(temp)
     command = [args.search.resolve(), "--ir", fixture, "--function", "choose",
-               "--structural", "1", "--cleanup", "scoped-cfg", "--scorer", "legacy"]
+               "--structural", "1", "--cleanup", "darm-cfg-dce-instcombine", "--b2b-strategy", "darm",
+               "--tti-worker", str(fixture.parents[2] / "tools/run-llvm24-tti")]
     run(*command, "--catalog-only", "1", "--debug-dir", out / "catalog",
         "--out", out / "catalog.ll")
     catalog = json.loads((out / "catalog/catalog.json").read_text())

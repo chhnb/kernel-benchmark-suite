@@ -1,4 +1,4 @@
-#include "SpeculationSafety.h"
+#include "InstructionPolicy.h"
 #include "RegionMelder.h"
 #include "CFMelderUtils.h"
 #include "RegionReplicator.h"
@@ -18,14 +18,6 @@ using namespace llvm;
 #define ENABLE_TIMING 1
 
 #define DEBUG_TYPE "cfmelder"
-
-static cl::opt<bool> DisableMelding(
-    "disable-melding", cl::init(false), cl::Hidden,
-    cl::desc("Disables melding step, runs region simplification if required"));
-
-static cl::opt<bool> EnableFullPredication(
-    "enable-full-predication", cl::init(false), cl::Hidden,
-    cl::desc("Enable full predication for merged blocks"));
 
 static cl::opt<bool>
     DumpSeqAlignStats("dump-seq-align-stats", cl::init(false), cl::Hidden,
@@ -91,18 +83,6 @@ void RegionMelder::computeRegionSeqAlignment(
   }
 }
 
-// Speculation weight of one instruction executed on the other path. Division
-// and remainder are the expensive scalar operations; calls are speculatable
-// intrinsics here (anything else already failed isSafeToSpeculativelyExecute).
-// Mode 0 none: a block paired with a branch-only replication placeholder is
-// always guarded. Mode 1 legacy: it runs on both paths whenever every
-// instruction is speculatable (historical DARM). Mode 2 budget: legacy, but
-// guarded when its speculation weight exceeds the budget.
-bool requireUnpredication(BasicBlock* Current, BasicBlock* Corresponding,
-                          int Mode, int Budget) {
- return speculation_policy::guardOriginalBlock(Current,Corresponding,Mode,Budget);
-}
-
 std::string RegionMelder::sourceBlockID(BasicBlock *BB) const {
   for(auto &Source:SourceBlocks)if(Source.block==BB)return Source.id;
   return "generated_before_alignment";
@@ -111,33 +91,6 @@ void RegionMelder::recordBlockOrigin(BasicBlock *Left,BasicBlock *Right,BasicBlo
   if(!RecordOrigins)return;
   auto label=[](BasicBlock *BB){std::string S;raw_string_ostream O(S);BB->printAsOperand(O,false);O.flush();return S;};
   BlockOrigins.push_back({sourceBlockID(Left),sourceBlockID(Right),label(Left),label(Right),WeakVH(Merged)});
-}
-
-void RegionMelder::prepareGapChoices() {
-  AlignedSeq<Value *> Rewritten;
-  unsigned Index = 0;
-  std::set<unsigned> Resolved;
-  for (auto &Entry : RegionInstrAlignement) {
-    auto *L = Entry.getLeft(), *R = Entry.getRight();
-    if (L) OriginalAlignmentIDs[L] = 2 * Index;
-    if (R) OriginalAlignmentIDs[R] = 2 * Index + 1;
-    auto *LI = dyn_cast_or_null<Instruction>(L);
-    bool Eligible = Entry.match() && LI && !isa<PHINode>(LI) &&
-                    !LI->isTerminator() && !LI->isEHPad() && !isa<AllocaInst>(LI);
-    if (Eligible && !SplitMatchIDs.count(Index))
-      AlignmentChoices.push_back(json::Object{{"id",int64_t(Index)},
-        {"opcode",LI->getOpcodeName()}, {"left_gap",int64_t(2 * Index)},
-        {"right_gap",int64_t(2 * Index + 1)}});
-    if (SplitMatchIDs.count(Index)) {
-      if (!Eligible) throw std::runtime_error("cannot_split_structural_alignment_entry");
-      Resolved.insert(Index);
-      Rewritten.push_back(AlignedPair<Value *>(L, nullptr));
-      Rewritten.push_back(AlignedPair<Value *>(nullptr, R));
-    } else Rewritten.push_back(Entry);
-    ++Index;
-  }
-  if (Resolved != SplitMatchIDs) throw std::runtime_error("split_match_id_not_found");
-  RegionInstrAlignement = std::move(Rewritten);
 }
 
 void RegionMelder::cloneInstructions() {
@@ -223,8 +176,7 @@ void RegionMelder::cloneInstructions() {
                "Cloned left BB not found for right value!");
         // if (cast<BasicBlock>(ClonedRightParentIt->second)->size() > 1)
         auto *corresponding = cast<BasicBlock>(ClonedRightParentIt->second);
-        if (NativeReplicationPredication ? corresponding->size() > 1 :
-            requireUnpredication(LeftI->getParent(), corresponding, SpeculationMode, SpeculationBudget))
+        if (!NativeReplicationPredication || corresponding->size() > 1)
           updateSplitRangeMap(true, NewI);
       }
 
@@ -245,8 +197,7 @@ void RegionMelder::cloneInstructions() {
                "Cloned left BB not found for right value!");
         // if (cast<BasicBlock>(ClonedLeftParentIt->second)->size() > 1)
         auto *corresponding = cast<BasicBlock>(ClonedLeftParentIt->second);
-        if (NativeReplicationPredication ? corresponding->size() > 1 :
-            requireUnpredication(RightI->getParent(), corresponding, SpeculationMode, SpeculationBudget))
+        if (!NativeReplicationPredication || corresponding->size() > 1)
           updateSplitRangeMap(false, NewI);
       }
     }
@@ -346,9 +297,6 @@ void RegionMelder::fixOperends() {
         assert(!isa<BranchInst>(L) && "unmatched branch found!");
         if (isa<PHINode>(L)) {
           fixPhiNode(dyn_cast<PHINode>(L));
-        } else if (isa<StoreInst>(L) && EnableFullPredication) {
-          StoreInst *MergedSi = dyn_cast<StoreInst>(OrigToMergedValues[L]);
-          setOprendsForNonMatchingStore(MergedSi, true);
         } else {
           assert(!isa<BasicBlock>(L) &&
                  "non matching value can not be a basicblock");
@@ -363,9 +311,6 @@ void RegionMelder::fixOperends() {
         assert(!isa<BranchInst>(R) && "unmatched branch found!");
         if (isa<PHINode>(R)) {
           fixPhiNode(dyn_cast<PHINode>(R));
-        } else if (isa<StoreInst>(R) && EnableFullPredication) {
-          StoreInst *MergedSi = dyn_cast<StoreInst>(OrigToMergedValues[R]);
-          setOprendsForNonMatchingStore(MergedSi, false);
         } else {
           assert(!isa<BasicBlock>(R) &&
                  "non matching value can not be a basicblock");
@@ -452,42 +397,7 @@ void RegionMelder::setOperendsForBr(BranchInst *LeftBr, BranchInst *RightBr,
   }
 }
 
-void RegionMelder::setOprendsForNonMatchingStore(StoreInst *SI, bool IsLeft) {
-  // non matching store instructions causes invalid memory write in
-  // L or R path. To avoid this we have to add a redundant load that reads the
-  // curent value of the address. and depending on the path we pick the correct
-  // to value to write. i.e. current value in the non-matching path or intended
-  // value in the matching path
-  Value *Addr = SI->getPointerOperand();
-  Value *Val = SI->getValueOperand();
 
-  // find the merged operends
-  if (OrigToMergedValues.find(Addr) != OrigToMergedValues.end())
-    Addr = OrigToMergedValues[Addr];
-  if (OrigToMergedValues.find(Val) != OrigToMergedValues.end())
-    Val = OrigToMergedValues[Val];
-
-  // create a load for the addr (gets current value)
-  IRBuilder<> Builder(SI);
-  Builder.SetInsertPoint(SI);
-  LoadInst *RedunLoad = Builder.CreateLoad(Addr, "redun.load");
-  // create a switch to pick the right value
-  Value *ValueL = nullptr, *ValueR = nullptr;
-  if (IsLeft) {
-    ValueL = Val;
-    ValueR = RedunLoad;
-  } else {
-    ValueL = RedunLoad;
-    ValueR = Val;
-  }
-  Value *ValToStore =
-      Builder.CreateSelect(MA.getDivergentCondition(), ValueL, ValueR);
-
-  // set the value
-  SI->setOperand(0, ValToStore);
-  // set the addr
-  SI->setOperand(1, Addr);
-}
 
 void RegionMelder::setOperends(Instruction *LeftI, Instruction *RightI,
                                Instruction *MergedI) {
@@ -744,7 +654,7 @@ void RegionMelder::merge(unsigned Index) {
   // run pre merge passes
   runPreMergePasses(RegionAlreadySimplified);
 
-  if (!DisableMelding) {
+  {
 
     // parentFunc->print(errs());
 
@@ -753,7 +663,6 @@ void RegionMelder::merge(unsigned Index) {
     auto T1 = std::chrono::high_resolution_clock::now();
 #endif
     computeRegionSeqAlignment(CurrMapping);
-    prepareGapChoices();
 #if ENABLE_TIMING == 1
     auto T2 = std::chrono::high_resolution_clock::now();
     auto micros = std::chrono::duration_cast<std::chrono::microseconds>(T2-T1).count();
@@ -791,7 +700,6 @@ void RegionMelder::merge(unsigned Index) {
     // parentFunc->print(errs());
     runPostOptimizations();
 
-    if (!EnableFullPredication)
       runUnpredicationPass();
   }
   NumMeldings++;
@@ -822,9 +730,6 @@ Instruction *RegionMelder::cloneInstruction(Instruction *OrigI,
   // insertion
   Builder.SetInsertPoint(InsertAt);
   Builder.Insert(NewI);
-  auto It = OriginalAlignmentIDs.find(OrigI);
-  if (It != OriginalAlignmentIDs.end() && !isa<PHINode>(OrigI))
-    EmittedGapIDs[NewI] = It->second;
   return NewI;
 }
 
@@ -833,10 +738,6 @@ Instruction *RegionMelder::cloneInstruction(Instruction *OrigI,
 // Cross-side SSA dependencies, calls, volatile/atomic accesses and barriers
 // stop grouping. This is scheduling within one block, not speculation.
 bool RegionMelder::hasGuardedGap(const Instruction *instruction, bool left) const {
-  if (EnableFullPredication ||
-      (SpeculationMode != 0 &&
-       (SpeculationMode != 3 || safeToSpeculate(*instruction))))
-    return false;
   for (const auto &range : SplitRanges) {
     if (range.splitToTrue() != left)
       continue;
@@ -851,23 +752,7 @@ bool RegionMelder::hasGuardedGap(const Instruction *instruction, bool left) cons
 }
 
 void RegionMelder::runUnpredicationPass() {
-  DenseMap<Instruction *, bool> Choices;
-  for (auto &Pair : EmittedGapIDs) Choices[Pair.first] = SpeculateGapIDs.count(Pair.second);
-  auto Plan = planGaps(*MA.getParentFunction(), SplitRanges, SpeculationMode,
-                       SpeculationBudget, CoalesceGaps,SpeculationTTI,SpeculationCostThreshold,
-                       ExplicitGapPlan ? &Choices : nullptr);
-  for (unsigned N=0; N<Plan.Segments.size(); ++N) {
-    auto &Segment=Plan.Segments[N]; json::Array IDs;
-    for(auto *I:Segment.Instructions){auto It=EmittedGapIDs.find(I);if(It==EmittedGapIDs.end())throw std::runtime_error("gap_origin_missing");IDs.push_back(int64_t(It->second));}
-    auto &D=Plan.Decisions[N];
-    GapChoices.push_back(json::Object{{"ids",std::move(IDs)},{"left",Segment.Left},
-      {"speculated",D.Speculate},{"safe",D.Safe&&D.Available&&D.TTI>=0}});
-  }
-  SegmentDecisions.insert(SegmentDecisions.end(),Plan.Decisions.begin(),Plan.Decisions.end());
-  if(SpeculationMode==3)for(auto &Segment:Plan.Speculated)for(auto *I:Segment.Instructions)speculation_policy::sanitize(*I);
-  applyGapSchedule(Plan);
-  CoalescedGapGroups += Plan.CoalescedGroups;
-  SpeculatedRanges += Plan.Speculated.size();
+  auto Plan = planGaps(SplitRanges);
   for (auto &Guard : Plan.Guards) {
     auto Range = Guard.First.range();
     auto *End = Guard.Second.empty() ? Range.getEnd() : Guard.Second.back();

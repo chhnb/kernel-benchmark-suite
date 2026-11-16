@@ -59,7 +59,6 @@ int main(int argc,char**argv){
  std::unique_ptr<Module> rewritten;
  if (effectful) {
    fusion::Candidate candidate{get("function"), get("split"), get("left"), get("right")};
-   candidate.speculation = fusion::SpeculationMode::None;
    auto trial = fusion::tryPair(*M, candidate, 0, 0, fusion::CleanupMode::None);
    if (!trial.valid) return reject(trial.reason);
    rewritten = std::move(trial.raw);

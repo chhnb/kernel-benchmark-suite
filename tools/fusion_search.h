@@ -12,36 +12,11 @@
 #include <vector>
 namespace fusion {
 class LogicalRegionState;
-// How work is executed on a path that did not originally run it.
-//  None:   never speculate work. Unmatched instructions are always guarded;
-//          only a decision's own condition slice may be evaluated early;
-//          structural dispatch does not choose local if-conversion.
-//  Legacy: historical behaviour (replication shells and else-if entries
-//          speculate whenever safe; structural local if-conversion).
-//  Budget: speculate safe work whose weight <= speculationBudget, guard the
-//          rest; also speculates cheap unmatched ranges of ordinary pairs.
-// Explicit engines (--local-compute/--local-union, full predication, triangle
-// cleanups) remain explicit commands and are not changed by this mode.
-enum class SpeculationMode { None, Legacy, Budget, Cost };
-enum class CleanupMode { None, O3, DarmCFG, DarmCFGEarlyCSE, DarmCFGScalarFixedPoint, PostOptFixedPoint, StructuralCFG, ScopedLocal, ScopedCFG, ScopedCFGTriangles, DarmCFGRedundancy, DarmCFGInstCombine };
+enum class CleanupMode { None, DarmCFGInstCombine };
 struct Candidate {
   std::string function, split, left, right;
   unsigned version = 0;
   std::string logicalDecision, logicalLeft, logicalRight;
-  bool localCopysign=false;
-  bool localUnion=false;
-  bool hybrid=false;
-  bool coalesceGaps=false;
-  bool completeLeafPlan=false;
-  bool crossDecisionLeaves=false;
-  bool crossLevelB2R=false;
-  bool darmB2R=true;
-  // Library default is Legacy so existing tools/tests reproduce; the
-  // fusion-search CLI defaults to None.
-  SpeculationMode speculation=SpeculationMode::Legacy;
-  int speculationBudget=4;
-  std::set<unsigned> splitMatches, speculateGaps;
-  bool explicitGapPlan=false;
   std::string key() const { return function+":"+split+":"+left+":"+right; }
 };
 struct OperationKey {
@@ -70,7 +45,7 @@ struct Analysis {
   explicit Analysis(llvm::Function &);
 };
 struct RoundContext {
-  CleanupMode cleanupMode=CleanupMode::O3;
+  CleanupMode cleanupMode=CleanupMode::DarmCFGInstCombine;
   unsigned parentVersion=0;
   std::string function, parentHash, controlHash, targetTriple, dataLayout;
   std::string targetAttributes, llvmVersion, cleanup;
@@ -104,9 +79,8 @@ struct BlockProvenance {
   std::string leftID,rightID,leftLabel,rightLabel,rawBlock,cleanedBlock;
 };
 struct Trial {
-  llvm::json::Array alignmentChoices, gapChoices;
   std::shared_ptr<LogicalRegionState> logicalState;
-  CleanupMode cleanupMode=CleanupMode::O3;
+  CleanupMode cleanupMode=CleanupMode::DarmCFGInstCombine;
   Candidate candidate;
   std::unique_ptr<llvm::Module> raw, normalized;
   Features before, afterRaw, after;
@@ -116,7 +90,6 @@ struct Trial {
   double originalSimilarity=0;
   bool originalProfitable=false;
   unsigned cleanupIterations=0;
-  unsigned coalescedGapGroups=0;
   unsigned movedLeafInstructions=0, leafAnchors=0;
   std::vector<std::string> leafAnchorPairs;
   // Blocks reachable when the split condition is fixed to false ([0]) / true
@@ -130,7 +103,6 @@ struct Trial {
   Boundary leftContext, rightContext;
   bool loopHeaderSplit=false;
   bool insideLoop=false;
-  unsigned speculatedSingleSideOps=0, matchedComputePairs=0, matchedMemoryPairs=0;
   llvm::json::Array layoutProfitability;
   double mergeMs=0, normalizeMs=0, featuresMs=0, totalMs=0, scoreMs=0;
 };
@@ -148,32 +120,13 @@ public:
   virtual ~Scorer() = default;
   virtual ScoreResult evaluate(const ScoreInput &, const RoundContext &) const = 0;
 };
-// Temporary policy, replace this class without changing search or transformation.
-class StaticCostScorer final : public Scorer {
-public:
-  ScoreResult evaluate(const ScoreInput &, const RoundContext &) const override;
-};
 struct Options {
-  CleanupMode cleanupMode=CleanupMode::DarmCFGEarlyCSE;
+  CleanupMode cleanupMode=CleanupMode::DarmCFGInstCombine;
   unsigned maxRounds=8, maxTrials=256, optLevel=3;
   double threshold=0;
   bool requireParentGain=true;
   bool adjacentOnly=false;
-  bool localCopysign=false;
-  bool localUnion=false;
-  bool hybrid=false;
-  bool coalesceGaps=false;
-  bool completeLeafPlan=false;
-  bool crossDecisionLeaves=false;
-  // <0 disables. Otherwise reject a candidate whose uniform-wave gain on either
-  // side is below -maxUniformLoss (TTI units). Needs side metrics (llvm24 scorer).
-  double maxUniformLoss=-1;
-  // Allow B2R/R2B whose optional block sits behind further tests of the split's
-  // own discriminator (DARM would replicate that decision chain). Default off.
-  bool crossLevelB2R=false;
-  bool darmB2R=true;
-  SpeculationMode speculation=SpeculationMode::Legacy;
-  int speculationBudget=4; // weight units, used only by SpeculationMode::Budget
+
 };
 struct Observer {
   virtual ~Observer() = default;
@@ -184,15 +137,10 @@ struct Observer {
   virtual void commit(unsigned version, const Candidate &, const ScoreResult &,
                       const llvm::Module &) {}
 };
-struct Result {
-  std::unique_ptr<llvm::Module> module;
-  unsigned commits=0, trials=0;
-  std::string stop;
-};
 std::string moduleHash(const llvm::Module &);
 Features features(llvm::Function &);
 RoundContext makeRound(const llvm::Module &, const std::string &function,
-                       unsigned version, unsigned optLevel, CleanupMode mode=CleanupMode::O3);
+                       unsigned version, unsigned optLevel, CleanupMode mode=CleanupMode::DarmCFGInstCombine);
 ScoreResult evaluateTrial(const llvm::Module &, Trial &, const RoundContext &, const Scorer &);
 bool eligible(const Trial &, const ScoreResult &, const Options &);
 void normalize(llvm::Module &, unsigned optLevel);
@@ -200,16 +148,13 @@ unsigned cleanup(llvm::Module &, const std::string &function, unsigned level, Cl
 // Complete E-leaves require same-SSA constant predicates unless explicitly enabled.
 std::set<std::string> crossLevelCatalogRejections(llvm::Function &,
     const std::vector<Candidate> &, const Options &);
-std::vector<Candidate> enumerate(llvm::Function &, unsigned version, bool crossDecisionLeaves=false,
-                                 bool darmRegionCandidates=false);
+std::vector<Candidate> enumerate(llvm::Function &, unsigned version);
 std::vector<Candidate> enumerateAdjacent(llvm::Function &, unsigned version);
 Trial tryPair(const llvm::Module &, const Candidate &, unsigned currentVersion,
-              unsigned optLevel, CleanupMode mode=CleanupMode::O3, const LogicalRegionState *logical=nullptr);
+              unsigned optLevel, CleanupMode mode=CleanupMode::DarmCFGInstCombine, const LogicalRegionState *logical=nullptr);
 Trial tryPair(const llvm::Module &, const Candidate &, unsigned currentVersion,
               unsigned optLevel, CleanupMode, const LogicalRegionState *, bool allowB2B);
 std::vector<Trial> planSingleBranchB2B(const llvm::Module &, const Candidate &,
-                                       unsigned optLevel, CleanupMode, llvm::StringRef replay, bool useDP2 = false, bool useDP3 = false,
+                                       unsigned optLevel, CleanupMode, llvm::StringRef replay,
                                        llvm::function_ref<int(const llvm::Instruction &)> intrinsicCost = nullptr);
-Result greedy(const llvm::Module &, const std::string &function,
-              const Options &, const Scorer &, Observer *observer=nullptr);
 }
