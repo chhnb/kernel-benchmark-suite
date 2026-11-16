@@ -7,6 +7,7 @@
 #include "darm_pair_engine/RegionMelder.h"
 #include "llvm/IR/Verifier.h"
 #include "llvm/IR/IRBuilder.h"
+#include "llvm/IR/ModuleSlotTracker.h"
 #include "llvm/Analysis/ValueTracking.h"
 #include "llvm/Analysis/CaptureTracking.h"
 #include "llvm/Analysis/InstructionSimplify.h"
@@ -19,6 +20,7 @@
 #include "llvm/Support/SHA1.h"
 #include "llvm/Config/llvm-config.h"
 #include "llvm/IR/Operator.h"
+#include "llvm/IR/PatternMatch.h"
 #include "llvm/Analysis/TargetTransformInfo.h"
 #include "llvm/Support/TargetRegistry.h"
 #include "llvm/Support/TargetSelect.h"
@@ -37,12 +39,54 @@
 #include <stdexcept>
 using namespace llvm;
 namespace fusion {
+// Arm normalization may invert a predicate to place the left arm on true.
+static Value *emitB2BSelect(IRBuilder<> &builder, Value *condition,
+                            Value *left, Value *right) {
+  using namespace PatternMatch;
+  Value *original = nullptr;
+  if (match(condition, m_Not(m_Value(original))))
+    return builder.CreateSelect(original, right, left);
+  return builder.CreateSelect(condition, left, right);
+}
 static std::string name(const Value *v) {
   if(!v) return "<exit>";
   std::string s; raw_string_ostream out(s); v->printAsOperand(out,false); return out.str();
 }
 static std::string text(const Value &v) {
   std::string s; raw_string_ostream out(s); v.print(out); return out.str();
+}
+// Give each comparison its own function metadata slots. Include the node
+// definitions so equal slot numbers cannot hide changes to the attachments.
+static std::string isolatedFunctionText(const Function &f) {
+  ModuleSlotTracker slots(f.getParent(), false);
+  slots.incorporateFunction(f);
+  std::string result;
+  raw_string_ostream out(result);
+  static_cast<const Value &>(f).print(out, slots);
+  SmallPtrSet<const MDNode *, 16> seen;
+  auto emit = [&](auto &&self, const Metadata *metadata) -> void {
+    auto *node = dyn_cast_or_null<MDNode>(metadata);
+    if (!node || !seen.insert(node).second) return;
+    out << '\n';
+    node->print(out, slots, f.getParent());
+    for (const auto &operand : node->operands())
+      self(self, operand.get());
+  };
+  SmallVector<std::pair<unsigned, MDNode *>, 4> attachments;
+  f.getAllMetadata(attachments);
+  for (const auto &attachment : attachments)
+    emit(emit, attachment.second);
+  for (const auto &block : f)
+    for (const auto &inst : block) {
+      for (const auto &operand : inst.operands())
+        if (auto *metadata = dyn_cast<MetadataAsValue>(operand.get()))
+          emit(emit, metadata->getMetadata());
+      attachments.clear();
+      inst.getAllMetadata(attachments);
+      for (const auto &attachment : attachments)
+        emit(emit, attachment.second);
+    }
+  return out.str();
 }
 // PHI edge ordering is semantically irrelevant, but pointer-map insertion
 // order must not leak into reproducibility IDs or downstream pass traversal.
@@ -1127,16 +1171,19 @@ static bool hoistCommonTailArithmetic(BasicBlock &left, BasicBlock &right,
   return changed;
 }
 
-static Trial tryPairImpl(const Module&parent,const Candidate&c,unsigned version,unsigned level,CleanupMode mode,const LogicalRegionState *logical,bool nested);
+static Trial tryPairImpl(const Module&parent,const Candidate&c,unsigned version,unsigned level,CleanupMode mode,const LogicalRegionState *logical,bool nested,bool allowB2B);
 // Public entry. The outermost call owns the side tag and removes it from every
 // IR it returns, so committed modules, debug dumps and hashes never carry it.
 Trial tryPair(const Module&parent,const Candidate&c,unsigned version,unsigned level,CleanupMode mode,const LogicalRegionState *logical) {
+  return tryPair(parent,c,version,level,mode,logical,true);
+}
+Trial tryPair(const Module&parent,const Candidate&c,unsigned version,unsigned level,CleanupMode mode,const LogicalRegionState *logical,bool allowB2B) {
   bool nested=hasSideTag(parent.getFunction(c.function));
-  Trial t=tryPairImpl(parent,c,version,level,mode,logical,nested);
+  Trial t=tryPairImpl(parent,c,version,level,mode,logical,nested,allowB2B);
   if(!nested){stripSideTag(t.raw.get());stripSideTag(t.normalized.get());}
   return t;
 }
-static Trial tryPairImpl(const Module&parent,const Candidate&c,unsigned version,unsigned level,CleanupMode mode,const LogicalRegionState *logical,bool nested) {
+static Trial tryPairImpl(const Module&parent,const Candidate&c,unsigned version,unsigned level,CleanupMode mode,const LogicalRegionState *logical,bool nested,bool allowB2B) {
   auto started=Clock::now();Trial t;t.candidate=c;t.cleanupMode=mode;auto reject=[&](const char*reason){t.reason=reason;t.totalMs=millis(started);return std::move(t);};
   // After-side reachability on the final cleaned IR, before the tag is stripped.
   auto finishSides=[&](Function *after){
@@ -1182,6 +1229,7 @@ static Trial tryPairImpl(const Module&parent,const Candidate&c,unsigned version,
     auto before=features(*f);
     auto localBefore=snapshotLocal(*f);
     std::vector<WeakVH> priorBlocks;for(auto &b:*f)priorBlocks.emplace_back(&b);
+    if (!allowB2B && c.completeLeafPlan) return reject("dp1_b2b_layout_unavailable");
     auto *gate=entry.apply();
     if(c.completeLeafPlan){
       t.before=before;t.left=leftBoundary;t.right=rightBoundary;
@@ -1208,7 +1256,7 @@ static Trial tryPairImpl(const Module&parent,const Candidate&c,unsigned version,
       t.after=features(*t.normalized->getFunction(c.function));if(t.after.loops>t.before.loops)return reject("new_normalized_loop");
       for(auto &g:parent)if(g.getName()!=c.function){
         auto *raw=t.raw->getFunction(g.getName()),*after=t.normalized->getFunction(g.getName());
-        if(!raw||!after||text(g)!=text(*raw)||text(g)!=text(*after))return reject("other_function_changed");
+        if(!raw||!after||isolatedFunctionText(g)!=isolatedFunctionText(*raw)||isolatedFunctionText(g)!=isolatedFunctionText(*after))return reject("other_function_changed");
       }
       finishSides(t.normalized->getFunction(c.function));
       t.valid=true;t.reason="verified_ir_only";t.totalMs=millis(started);return t;
@@ -1299,12 +1347,13 @@ static Trial tryPairImpl(const Module&parent,const Candidate&c,unsigned version,
         mode == CleanupMode::DarmCFGRedundancy &&
         c.splitMatches.empty() && !c.explicitGapPlan &&
         (externalPredecessor(l.entry) || externalPredecessor(r.entry))) {
+      const bool leftRequired = a.pdt.dominates(l.entry, br->getSuccessor(0));
+      const bool rightRequired = a.pdt.dominates(r.entry, br->getSuccessor(1));
+      if (!allowB2B && leftRequired && rightRequired) return reject("dp1_b2b_layout_unavailable");
       t.before = features(*f);
       if (hoistCommonTailArithmetic(*l.entry, *r.entry, *split, *join, a)) {
         t.rewriteStarted = true;
         t.mergePath = "common-tail-arithmetic";
-        const bool leftRequired = a.pdt.dominates(l.entry, br->getSuccessor(0));
-        const bool rightRequired = a.pdt.dominates(r.entry, br->getSuccessor(1));
         t.planKind = !rightRequired ? "B2R" : !leftRequired ? "R2B" : "B2B";
         t.matchedLeft = t.left.entry;
         t.matchedRight = t.right.entry;
@@ -1376,6 +1425,17 @@ static Trial tryPairImpl(const Module&parent,const Candidate&c,unsigned version,
   };
   std::vector<DownstreamPath> paths;
   bool downstreamWrite=false;
+  bool auditRetainedEffects=false;
+  auto matchedBlock = [&](BasicBlock *block) {
+    return l.blocks.count(block) || r.blocks.count(block);
+  };
+  auto recordEffect = [&](Instruction &instruction, const char *reason) {
+    raw_string_ostream detail(t.localRejectReason);
+    instruction.getParent()->printAsOperand(detail, false);
+    detail << ": " << instruction;
+    detail.flush();
+    return reject(reason);
+  };
   struct ProtectedWrite {
     WeakVH instruction;
     BasicBlock *block;
@@ -1451,12 +1511,46 @@ static Trial tryPairImpl(const Module&parent,const Candidate&c,unsigned version,
           regionStores.insert(store);
           continue;
         }
-    raw_string_ostream detail(t.localRejectReason);
-    block->printAsOperand(detail, false);
-    detail << ": ";
-    instruction.print(detail);
-    detail.flush();
-    return reject("side_effect_in_trial_scope_not_supported");
+    if (!matchedBlock(block) && !logical && !c.localCopysign &&
+        guardsUnsafeWork && !preservedLoop && !instruction.isTerminator()) {
+      if (auto *store = dyn_cast<StoreInst>(&instruction)) {
+        if (store->isSimple()) {
+          auditRetainedEffects = true;
+          continue;
+        }
+        return recordEffect(instruction, "nonordinary_store_cannot_be_preserved");
+      }
+      auditRetainedEffects = true;
+      continue;
+    }
+    return recordEffect(instruction, "matched_effect_has_no_guarded_lowering");
+  }
+  if (auditRetainedEffects) {
+    // The path audit tracks retained accesses by instruction identity. It
+    // cannot prove their order relative to a load that the melder replaces.
+    for (auto *block : scope)
+      if (matchedBlock(block))
+        for (auto &instruction : *block)
+          if (instruction.mayReadOrWriteMemory())
+            return recordEffect(instruction, "retained_effect_memory_order_unproven");
+    // Include reads so the audit checks relative access order as well as the
+    // execution condition of each retained effect.
+    downstream.clear();
+    auto retainedScope = scope;
+    retainedScope.insert(split);
+    for (auto *block : retainedScope) {
+      if (matchedBlock(block)) continue;
+      for (auto &instruction : *block) {
+        if (instruction.isTerminator() ||
+            !(instruction.mayReadOrWriteMemory() || instruction.mayHaveSideEffects()))
+          continue;
+        DownstreamAccess access{&instruction, block, {}};
+        for (auto &operand : instruction.operands())
+          access.operands.emplace_back(operand.get());
+        downstream.push_back(std::move(access));
+      }
+    }
+    downstreamWrite = true;
   }
   if(downstreamWrite){
     // Enumerate the original acyclic paths. Record the decisions and the
@@ -1585,7 +1679,7 @@ static Trial tryPairImpl(const Module&parent,const Candidate&c,unsigned version,
     auto *expanded=a.pdt.dominates(l.entry,br->getSuccessor(0))?l.entry:r.entry;
     if(!expanded->getUniqueSuccessor())return reject("replication_requires_unique_successor");
   }
-  std::map<std::string,std::string> others;for(auto&g:*t.raw)if(&g!=f)others[g.getName().str()]=text(g);
+  std::map<std::string,std::string> others;for(auto&g:*t.raw)if(&g!=f)others[g.getName().str()]=isolatedFunctionText(g);
   bool scoped=mode==CleanupMode::ScopedLocal||mode==CleanupMode::ScopedCFG||mode==CleanupMode::ScopedCFGTriangles;
   auto localBefore=scoped?snapshotLocal(*f):std::vector<LocalSnapshot>{};
   std::vector<WeakVH> priorBlocks; if(mode==CleanupMode::ScopedCFG||mode==CleanupMode::ScopedCFGTriangles)for(auto &b:*f)priorBlocks.emplace_back(&b);
@@ -1619,6 +1713,7 @@ static Trial tryPairImpl(const Module&parent,const Candidate&c,unsigned version,
     t.planKind=l.region?"R2R":"B2B";t.replication=false;
     t.leftContext=t.left;t.rightContext=t.right;
   }
+  if (!allowB2B && t.planKind == "B2B") return reject("dp1_b2b_layout_unavailable");
   std::unique_ptr<decision::SpeculationTTI> speculationTTI;
   if(c.speculation==SpeculationMode::Cost){
     try {
@@ -1788,7 +1883,7 @@ static Trial tryPairImpl(const Module&parent,const Candidate&c,unsigned version,
       return reject("protected_write_changed");
   }
   if(verifyModule(*t.raw,&errs()))return reject("raw_verifier_failed");
-  for(auto&g:*t.raw)if(&g!=f)if(!others.count(g.getName().str())||others.at(g.getName().str())!=text(g))return reject("other_function_changed");
+  for(auto&g:*t.raw)if(&g!=f)if(!others.count(g.getName().str())||others.at(g.getName().str())!=isolatedFunctionText(g))return reject("other_function_changed");
   ft=Clock::now();t.afterRaw=features(*f);t.featuresMs+=millis(ft);if(t.afterRaw.loops>t.before.loops)return reject("new_raw_loop");
   auto blockLabel=[](const Value *V){std::string S;raw_string_ostream O(S);V->printAsOperand(O,false);O.flush();return S;};
   auto rawLocalScope=scoped?changedLocal(*f,localBefore):std::set<Instruction*>{};
@@ -1887,8 +1982,45 @@ static SmallVector<B2BMatch, 8> alignHoistableB2B(
   return result;
 }
 
+// These direct intrinsics support ordered B2B pairing and guarded emission.
+static bool isB2BPairableIntrinsic(const Instruction &inst) {
+  const auto *call = dyn_cast<CallInst>(&inst);
+  if (!call || call->hasOperandBundles() || call->isConvergent() ||
+      call->isMustTailCall() || !call->doesNotThrow())
+    return false;
+  const auto *callee = call->getCalledFunction();
+  if (!callee || !callee->isIntrinsic()) return false;
+  StringRef name = callee->getName();
+  if (name == "llvm.amdgcn.image.sample.lz.3d.f32.f32")
+    return call->onlyReadsMemory();
+  return !call->getType()->isVoidTy() && !call->getType()->isTokenTy() &&
+         call->doesNotAccessMemory() && call->hasFnAttr(Attribute::WillReturn) &&
+         callee->hasFnAttribute(Attribute::Speculatable);
+}
+
+static int b2bWeight(const Instruction &inst,
+                     function_ref<int(const Instruction &)> intrinsicCost) {
+  if (isB2BPairableIntrinsic(inst)) return intrinsicCost ? intrinsicCost(inst) : 1;
+  return speculationWeight(inst);
+}
+
 static bool compatibleB2BPrefix(Instruction &left, Instruction &right) {
     if (compatibleB2BArithmetic(left, right)) return true;
+    if (isB2BPairableIntrinsic(left) && isB2BPairableIntrinsic(right)) {
+      const auto &l = cast<CallInst>(left);
+      const auto &r = cast<CallInst>(right);
+      if (l.getCalledFunction() != r.getCalledFunction() ||
+          !left.isSameOperationAs(&right) ||
+          left.getRawSubclassOptionalData() != right.getRawSubclassOptionalData() ||
+          l.getAttributes() != r.getAttributes() ||
+          left.hasMetadataOtherThanDebugLoc() || right.hasMetadataOtherThanDebugLoc())
+        return false;
+      for (unsigned i = 0; i < l.arg_size(); ++i)
+        if (l.paramHasAttr(i, Attribute::ImmArg) &&
+            l.getArgOperand(i) != r.getArgOperand(i))
+          return false;
+      return true;
+    }
     const auto simpleMemory = [](const Instruction &inst) {
       if (auto *load = dyn_cast<LoadInst>(&inst)) return load->isSimple();
       if (auto *store = dyn_cast<StoreInst>(&inst)) return store->isSimple();
@@ -1909,17 +2041,27 @@ static SmallVector<B2BMatch, 8> searchB2BCommon(
     BasicBlock &left, BasicBlock &right, BranchInst &split, DominatorTree &dt,
     bool completeCommon = false,
     SmallVectorImpl<SmallVector<B2BMatch, 8>> *finalists = nullptr,
-    bool prioritizeMatches = false, bool binaryOnly = false) {
+    bool prioritizeMatches = false, bool binaryOnly = false,
+    function_ref<int(const Instruction &)> intrinsicCost = nullptr,
+    bool allowSingleSideSpeculation = false) {
   SmallVector<Instruction *, 16> l, r;
   for (auto &inst : left) if (!inst.isTerminator()) l.push_back(&inst);
   for (auto &inst : right) if (!inst.isTerminator()) r.push_back(&inst);
   const size_t columns = r.size() + 1;
   if (l.empty() || r.empty() || l.size() + 1 > 4096 / columns) return {};
 
+  if (completeCommon && !allowSingleSideSpeculation && l.size() != r.size()) return {};
   auto canSpeculate = [binaryOnly](Instruction *inst) {
     return (!binaryOnly || isa<BinaryOperator>(inst)) && isB2BPureOperation(*inst);
   };
-  if (completeCommon && (!llvm::all_of(l, canSpeculate) || !llvm::all_of(r, canSpeculate)))
+  auto canMakeCommon = [&](Instruction *inst) {
+    // An intrinsic can require Match even when it cannot take a Spec edge.
+    // The DP only consumes both cursors if the actual pair is compatible.
+    return (allowSingleSideSpeculation ? canSpeculate(inst)
+                                       : compatibleB2BArithmetic(*inst, *inst)) ||
+           (intrinsicCost && isB2BPairableIntrinsic(*inst) && !inst->mayReadOrWriteMemory());
+  };
+  if (completeCommon && (!llvm::all_of(l, canMakeCommon) || !llvm::all_of(r, canMakeCommon)))
     return {};
 
   struct State {
@@ -1975,11 +2117,11 @@ static SmallVector<B2BMatch, 8> searchB2BCommon(
         side.forked = true;
         if (i < l.size()) {
           if (!completeCommon) insert(at(i + 1, j), side);
-          speculate(state, l[i], true, at(i + 1, j));
+          if (allowSingleSideSpeculation) speculate(state, l[i], true, at(i + 1, j));
         }
         if (j < r.size()) {
           if (!completeCommon) insert(at(i, j + 1), std::move(side));
-          speculate(state, r[j], false, at(i, j + 1));
+          if (allowSingleSideSpeculation) speculate(state, r[j], false, at(i, j + 1));
         }
         if (i == l.size() || j == r.size()) continue;
         auto *li = l[i], *ri = r[j];
@@ -1988,7 +2130,7 @@ static SmallVector<B2BMatch, 8> searchB2BCommon(
             (state.forked && li->mayReadOrWriteMemory()))
           continue;
         State shared = state;
-        int benefit = prioritizeMatches ? 1 : speculationWeight(*li);
+        int benefit = prioritizeMatches ? 1 : b2bWeight(*li, intrinsicCost);
         bool legal = true;
         for (unsigned n = 0; n < li->getNumOperands(); ++n) {
           auto *lv = li->getOperand(n), *rv = ri->getOperand(n);
@@ -2185,13 +2327,17 @@ struct B2BSegmentMatch {
 using B2BSegmentedPlan = SmallVector<B2BSegmentMatch, 8>;
 
 static SmallVector<B2BSegmentedPlan, 4>
-searchB2BSegments(ArrayRef<Instruction *> left, ArrayRef<Instruction *> right) {
+searchB2BSegments(ArrayRef<Instruction *> left, ArrayRef<Instruction *> right,
+                  bool useLiveness, bool independentExits,
+                  function_ref<int(const Instruction &)> intrinsicCost) {
   const size_t columns = right.size() + 1;
   if (left.empty() || right.empty() || left.size() + 1 > 4096 / columns)
     return {};
   struct State {
     SmallVector<B2BSegmentMatch, 8> matches;
     int benefit = 0;
+    unsigned commonEndLeft = 0, commonEndRight = 0;
+    unsigned closedSegments = 0;
   };
   using Beam = SmallVector<State, 4>;
   std::vector<std::array<Beam, 2>> table((left.size() + 1) * columns);
@@ -2199,14 +2345,82 @@ searchB2BSegments(ArrayRef<Instruction *> left, ArrayRef<Instruction *> right) {
     return table[i * columns + j][forked];
   };
   at(0, 0, false).emplace_back();
-  auto insert = [](Beam &beam, State state) {
+  // A definition is live until its last use is consumed. Uses on the
+  // original exit edge remain live at the terminal cell.
+  auto lastUses = [](ArrayRef<Instruction *> work) {
+    DenseMap<const User *, unsigned> positions;
+    for (unsigned i = 0; i < work.size(); ++i)
+      positions[work[i]] = i;
+    std::vector<unsigned> last(work.size(), 0);
+    for (unsigned i = 0; i < work.size(); ++i)
+      for (const User *user : work[i]->users()) {
+        auto found = positions.find(user);
+        last[i] = std::max(last[i], found == positions.end()
+                                       ? unsigned(work.size()) : found->second);
+      }
+    return last;
+  };
+  using Key = std::vector<unsigned>;
+  constexpr size_t liveLabelLimit = 16;
+  constexpr size_t dp1LabelLimit = 32;
+  using Index = std::map<Key, size_t>;
+  std::vector<std::array<Index, 2>> indices(useLiveness ? table.size() : 0);
+  const auto leftLastUse = useLiveness ? lastUses(left) : std::vector<unsigned>{};
+  const auto rightLastUse = useLiveness ? lastUses(right) : std::vector<unsigned>{};
+  auto insert = [&](unsigned i, unsigned j, bool forked, State state) {
+    auto &beam = at(i, j, forked);
+    if (useLiveness) {
+      // Keep the start of any open protected range and the information
+      // used by the terminal filter. Earlier closed ranges are in the recipe.
+      Key key{forked ? state.commonEndLeft : 0,
+              forked ? state.commonEndRight : 0,
+              state.closedSegments, unsigned(!state.matches.empty())};
+      for (const auto &match : state.matches) {
+        const bool liveLeft = match.consumeLeft && leftLastUse[match.left] >= i;
+        const bool liveRight = match.consumeRight && rightLastUse[match.right] >= j;
+        if (liveLeft || liveRight) {
+          key.push_back(liveLeft ? match.left + 1 : 0);
+          key.push_back(liveRight ? match.right + 1 : 0);
+        }
+      }
+      auto &index = indices[i * columns + j][forked];
+      auto found = index.find(key);
+      if (found != index.end()) {
+        if (state.benefit > beam[found->second].benefit)
+          beam[found->second] = std::move(state);
+        return;
+      }
+      if (beam.size() < liveLabelLimit) {
+        index.emplace(std::move(key), beam.size());
+        beam.push_back(std::move(state));
+        return;
+      }
+      // Evict the lowest-benefit label, using slot order to break ties.
+      size_t worst = 0;
+      for (size_t slot = 1; slot < beam.size(); ++slot)
+        if (beam[slot].benefit <= beam[worst].benefit)
+          worst = slot;
+      if (state.benefit <= beam[worst].benefit) return;
+      auto evicted = llvm::find_if(index, [&](const auto &entry) {
+        return entry.second == worst;
+      });
+      index.erase(evicted);
+      index.emplace(std::move(key), worst);
+      beam[worst] = std::move(state);
+      return;
+    }
     if (llvm::any_of(beam, [&](const State &old) { return old.matches == state.matches; }))
       return;
     auto pos = llvm::find_if(beam, [&](const State &old) {
       return state.benefit > old.benefit;
     });
     beam.insert(pos, std::move(state));
-    if (beam.size() > 4) beam.pop_back();
+    if (beam.size() > dp1LabelLimit) beam.pop_back();
+  };
+  auto advanceCommon = [](State &state, unsigned i, unsigned j, bool forked) {
+    state.commonEndLeft = i;
+    state.commonEndRight = j;
+    if (forked && state.closedSegments < 2) ++state.closedSegments;
   };
   for (unsigned i = 0; i <= left.size(); ++i)
     for (unsigned j = 0; j <= right.size(); ++j)
@@ -2215,8 +2429,8 @@ searchB2BSegments(ArrayRef<Instruction *> left, ArrayRef<Instruction *> right) {
           if (i < left.size() || j < right.size()) {
             State side = state;
             side.benefit -= !forked ? 2 : 0;
-            if (i < left.size()) insert(at(i + 1, j, true), side);
-            if (j < right.size()) insert(at(i, j + 1, true), std::move(side));
+            if (i < left.size()) insert(i + 1, j, true, side);
+            if (j < right.size()) insert(i, j + 1, true, std::move(side));
           }
           auto speculate = [&](Instruction &inst, bool isLeft) {
             // Values arriving from one guarded arm may be poison on the
@@ -2226,15 +2440,18 @@ searchB2BSegments(ArrayRef<Instruction *> left, ArrayRef<Instruction *> right) {
             State shared = state;
             shared.benefit -= speculationWeight(inst);
             shared.matches.push_back({i, j, isLeft, !isLeft});
-            insert(at(i + isLeft, j + !isLeft, false), std::move(shared));
+            if (useLiveness) advanceCommon(shared, i + isLeft, j + !isLeft, forked);
+            insert(i + isLeft, j + !isLeft, false, std::move(shared));
           };
-          if (i < left.size()) speculate(*left[i], true);
-          if (j < right.size()) speculate(*right[j], false);
+          if (useLiveness) {
+            if (i < left.size()) speculate(*left[i], true);
+            if (j < right.size()) speculate(*right[j], false);
+          }
           if (i == left.size() || j == right.size() ||
               !compatibleB2BPrefix(*left[i], *right[j]))
             continue;
           State shared = state;
-          shared.benefit += speculationWeight(*left[i]);
+          shared.benefit += b2bWeight(*left[i], intrinsicCost);
           for (unsigned n = 0; n < left[i]->getNumOperands(); ++n) {
             auto *lv = left[i]->getOperand(n);
             auto *rv = right[j]->getOperand(n);
@@ -2245,7 +2462,8 @@ searchB2BSegments(ArrayRef<Instruction *> left, ArrayRef<Instruction *> right) {
               --shared.benefit;
           }
           shared.matches.push_back({i, j});
-          insert(at(i + 1, j + 1, false), std::move(shared));
+          if (useLiveness) advanceCommon(shared, i + 1, j + 1, forked);
+          insert(i + 1, j + 1, false, std::move(shared));
         }
   SmallVector<const State *, 8> finalists;
   for (bool forked : {false, true})
@@ -2258,7 +2476,7 @@ searchB2BSegments(ArrayRef<Instruction *> left, ArrayRef<Instruction *> right) {
         j = match.right + match.consumeRight;
       }
       segments += (i != left.size() || j != right.size());
-      if (segments < 2) continue;
+      if (!independentExits && segments < 2) continue;
       finalists.push_back(&state);
     }
   llvm::stable_sort(finalists, [](const State *a, const State *b) {
@@ -2268,9 +2486,50 @@ searchB2BSegments(ArrayRef<Instruction *> left, ArrayRef<Instruction *> right) {
   for (const auto *state : finalists) {
     if (llvm::is_contained(plans, state->matches)) continue;
     plans.push_back(state->matches);
-    if (plans.size() == 4) break;
+    if (!useLiveness && plans.size() == dp1LabelLimit) break;
   }
   return plans;
+}
+
+// Replay the same alignment with inexpensive guarded arms in common code.
+static B2BSegmentedPlan speculateB2BGuardedArms(
+    ArrayRef<Instruction *> left, ArrayRef<Instruction *> right,
+    ArrayRef<B2BSegmentMatch> matches) {
+  constexpr unsigned armBudget = 7;
+  B2BSegmentedPlan result;
+  unsigned i = 0, j = 0;
+  auto affordable = [&](ArrayRef<Instruction *> arm) {
+    unsigned cost = 0;
+    for (auto *inst : arm) {
+      if (!isB2BPureOperation(*inst) || inst->isIntDivRem()) return false;
+      cost += speculationWeight(*inst);
+      if (cost >= armBudget) return false;
+    }
+    return !arm.empty();
+  };
+  auto appendGap = [&](unsigned endLeft, unsigned endRight) {
+    // Emit both hoisted arms before any remaining guard. Each arm reads only
+    // its own preceding definitions or values already available at entry.
+    if (affordable(left.slice(i, endLeft - i)))
+      while (i < endLeft) {
+        result.push_back({i, j, true, false});
+        ++i;
+      }
+    if (affordable(right.slice(j, endRight - j)))
+      while (j < endRight) {
+        result.push_back({i, j, false, true});
+        ++j;
+      }
+  };
+  for (const auto &match : matches) {
+    appendGap(match.left, match.right);
+    result.push_back(match);
+    i = match.left + match.consumeLeft;
+    j = match.right + match.consumeRight;
+  }
+  appendGap(left.size(), right.size());
+  if (result.size() == matches.size()) return {};
+  return result;
 }
 
 static void emitB2BSegments(BranchInst &split, BasicBlock &left,
@@ -2278,16 +2537,18 @@ static void emitB2BSegments(BranchInst &split, BasicBlock &left,
                             ArrayRef<B2BSegmentMatch> matches, bool resplit,
                             std::optional<dp2::Exit> terminal = std::nullopt,
                             ArrayRef<unsigned> exitSelectorIds = {},
-                            ArrayRef<uint8_t> exitPairedPhi = {}) {
+                            ArrayRef<uint8_t> exitPairedPhi = {},
+                            bool independentExits = false, bool compactGuardedPhi = false) {
   auto *function = split.getFunction();
   auto &context = function->getContext();
   SmallVector<Instruction *, 16> work[2];
   for (auto &inst : left) if (!inst.isTerminator()) work[0].push_back(&inst);
   for (auto &inst : right) if (!inst.isTerminator()) work[1].push_back(&inst);
   IRBuilder<> builder(&split);
-  // All protection segments must make the same choice, even for undef.
   Value *condition = split.getCondition();
-  if (!terminal || !isa<FreezeInst>(condition))
+  // DP1's segmented rewrite stays within the execution domain of the
+  // original conditional branch, where its condition must be defined.
+  if (!compactGuardedPhi && (!terminal || !isa<FreezeInst>(condition)))
     condition = builder.CreateFreeze(condition);
   split.eraseFromParent();
   auto *common = builder.GetInsertBlock();
@@ -2298,10 +2559,32 @@ static void emitB2BSegments(BranchInst &split, BasicBlock &left,
     if (auto *mapped = values[side].lookup(original)) return mapped;
     return original;
   };
+  BasicBlock *joinedPaths[2] = {};
   auto select = [&](Value *lv, Value *rv) -> Value * {
     if (lv == rv) return lv;
     auto &choice = selects[{lv, rv}];
-    if (!choice) choice = builder.CreateSelect(condition, lv, rv);
+    if (!choice && compactGuardedPhi && joinedPaths[0] && joinedPaths[1]) {
+      auto *leftPhi = dyn_cast<PHINode>(lv);
+      auto *rightPhi = dyn_cast<PHINode>(rv);
+      if (leftPhi && rightPhi && leftPhi->getParent() == common &&
+          rightPhi->getParent() == common &&
+          leftPhi->getNumIncomingValues() == 2 && rightPhi->getNumIncomingValues() == 2 &&
+          leftPhi->getBasicBlockIndex(joinedPaths[0]) >= 0 &&
+          leftPhi->getBasicBlockIndex(joinedPaths[1]) >= 0 &&
+          rightPhi->getBasicBlockIndex(joinedPaths[0]) >= 0 &&
+          rightPhi->getBasicBlockIndex(joinedPaths[1]) >= 0 &&
+          isa<PoisonValue>(leftPhi->getIncomingValueForBlock(joinedPaths[1])) &&
+          isa<PoisonValue>(rightPhi->getIncomingValueForBlock(joinedPaths[0]))) {
+        auto *insertBefore = common->getFirstNonPHI();
+        auto *phi = insertBefore
+            ? PHINode::Create(lv->getType(), 2, "fusion.paired", insertBefore)
+            : PHINode::Create(lv->getType(), 2, "fusion.paired", common);
+        phi->addIncoming(leftPhi->getIncomingValueForBlock(joinedPaths[0]), joinedPaths[0]);
+        phi->addIncoming(rightPhi->getIncomingValueForBlock(joinedPaths[1]), joinedPaths[1]);
+        choice = phi;
+      }
+    }
+    if (!choice) choice = emitB2BSelect(builder, condition, lv, rv);
     return choice;
   };
   struct PlannedSelector {
@@ -2321,7 +2604,7 @@ static void emitB2BSegments(BranchInst &split, BasicBlock &left,
         throw std::runtime_error("DP2 selector operand mismatch");
       return found->second.result;
     }
-    auto *result = builder.CreateSelect(condition, lv, rv);
+    auto *result = emitB2BSelect(builder, condition, lv, rv);
     plannedSelectors.try_emplace(id, PlannedSelector{lv, rv, result});
     return result;
   };
@@ -2331,7 +2614,6 @@ static void emitB2BSegments(BranchInst &split, BasicBlock &left,
     while (cursor[side] < work[side].size() && hoisted.count(work[side][cursor[side]]))
       ++cursor[side];
   };
-  BasicBlock *joinedPaths[2] = {};
   DenseMap<Value *, Value *> edgeValues[2];
   auto preserve = [&](unsigned l, unsigned r, bool directExit,
                       ArrayRef<std::pair<unsigned, unsigned>> transfers = {}) {
@@ -2370,11 +2652,10 @@ static void emitB2BSegments(BranchInst &split, BasicBlock &left,
       }
       return;
     }
-    if (terminal)
-      for (unsigned side = 0; side < 2; ++side) {
-        joinedPaths[side] = paths[side];
-        edgeValues[side] = values[side];
-      }
+    for (unsigned side = 0; side < 2; ++side) {
+      joinedPaths[side] = paths[side];
+      if (terminal) edgeValues[side] = values[side];
+    }
     builder.SetInsertPoint(next);
     for (unsigned side = 0; side < 2; ++side)
       for (unsigned n = begin[side]; n < end[side]; ++n) {
@@ -2439,6 +2720,20 @@ static void emitB2BSegments(BranchInst &split, BasicBlock &left,
     values[0][l] = values[1][r] = shared;
   }
   const bool pending = cursor[0] != work[0].size() || cursor[1] != work[1].size();
+  if (independentExits) {
+    if (pending) preserve(work[0].size(), work[1].size(), false);
+    builder.CreateCondBr(condition, &left, &right);
+    // The original terminators and outgoing edges remain in place, including
+    // the incoming labels of successor PHIs.
+    for (unsigned side = 0; side < 2; ++side) {
+      for (auto *inst : work[side])
+        if (!inst->use_empty())
+          inst->replaceAllUsesWith(values[side].lookup(inst));
+      for (auto *inst : llvm::reverse(work[side]))
+        inst->eraseFromParent();
+    }
+    return;
+  }
   const auto exit = terminal.value_or(pending ? dp2::Exit::DirectEdges :
                                        resplit ? dp2::Exit::Resplit : dp2::Exit::MergedValues);
   assert(pending == (exit == dp2::Exit::DirectEdges ||
@@ -2485,7 +2780,8 @@ static void emitB2BSegments(BranchInst &split, BasicBlock &left,
 
 std::vector<Trial> planSingleBranchB2B(const Module &parent, const Candidate &c,
                                        unsigned level, CleanupMode mode,
-                                       StringRef replay, bool useDP2) {
+                                       StringRef replay, bool useDP2, bool useDP3,
+                                       function_ref<int(const Instruction &)> intrinsicCost) {
   std::vector<Trial> trials;
   if (!c.hybrid || c.speculation != SpeculationMode::Cost || c.localCopysign ||
       c.explicitGapPlan || !c.splitMatches.empty() || c.coalesceGaps ||
@@ -2518,13 +2814,14 @@ std::vector<Trial> planSingleBranchB2B(const Module &parent, const Candidate &c,
   if (!originalBranch || !originalBranch->isConditional()) return trials;
   const bool swapped = originalBranch->getSuccessor(0) == blocks[2];
   if (swapped) std::swap(blocks[1], blocks[2]);
-  if (originalBranch->getSuccessor(0) != blocks[1] ||
-      originalBranch->getSuccessor(1) != blocks[2])
-    return trials;
+  const bool siblingArms = originalBranch->getSuccessor(0) == blocks[1] &&
+                           originalBranch->getSuccessor(1) == blocks[2];
+  if (!siblingArms && (useDP2 || useDP3)) return trials;
   const auto *originalJoin = blocks[1]->getSingleSuccessor();
-  if (!originalJoin || originalJoin == blocks[0] || originalJoin == blocks[1] ||
-      originalJoin == blocks[2] || blocks[2]->getSingleSuccessor() != originalJoin)
-    return trials;
+  const bool independentExits =
+      !originalJoin || originalJoin == blocks[0] || originalJoin == blocks[1] ||
+      originalJoin == blocks[2] || blocks[2]->getSingleSuccessor() != originalJoin;
+  if (independentExits && (useDP2 || useDP3)) return trials;
 
   Trial trial;
   trial.candidate = c;
@@ -2536,21 +2833,35 @@ std::vector<Trial> planSingleBranchB2B(const Module &parent, const Candidate &c,
   auto *split = cast<BasicBlock>(inputMap[blocks[0]]);
   auto *left = cast<BasicBlock>(inputMap[blocks[1]]);
   auto *right = cast<BasicBlock>(inputMap[blocks[2]]);
-  auto *join = cast<BasicBlock>(inputMap[originalJoin]);
+  auto *join = independentExits ? nullptr : cast<BasicBlock>(inputMap[originalJoin]);
+  trial.swapped = swapped;
+  if (!siblingArms) {
+    DominatorTree entryDT(*f);
+    LoopInfo entryLoops(entryDT);
+    AdjacentLeafEntry entry;
+    if (!entry.prepare(left, right, entryDT, entryLoops, false,
+                       c.speculation, c.speculationBudget) || entry.first != split)
+      return trials;
+    trial.swapped ^= left != entry.left;
+    left = entry.left;
+    right = entry.right;
+    split = entry.apply();
+    if (verifyFunction(*f, &errs())) return trials;
+  }
   auto *branch = cast<BranchInst>(split->getTerminator());
   inputMap.clear();
-  trial.swapped = swapped;
   DominatorTree dt(*f);
-  if (dt.dominates(join, split)) return trials;
+  if (join && dt.dominates(join, split)) return trials;
   LoopInfo loops(dt);
   for (auto *arm : {left, right}) {
     auto *exit = dyn_cast<BranchInst>(arm->getTerminator());
-    if (!exit || !exit->isUnconditional() || arm->getSinglePredecessor() != split ||
+    if (!exit || (!independentExits && !exit->isUnconditional()) ||
+        arm->getSinglePredecessor() != split ||
         arm->hasAddressTaken() || !arm->phis().empty() ||
         loops.getLoopFor(arm) != loops.getLoopFor(split))
       return trials;
     for (auto &inst : *arm) {
-      if (inst.isTerminator()) continue;
+      if (inst.isTerminator() || (!useDP2 && !useDP3 && isB2BPairableIntrinsic(inst))) continue;
       if (auto *load = dyn_cast<LoadInst>(&inst)) {
         if (!load->isSimple()) return trials;
       } else if (auto *store = dyn_cast<StoreInst>(&inst)) {
@@ -2647,11 +2958,17 @@ std::vector<Trial> planSingleBranchB2B(const Module &parent, const Candidate &c,
       dp2ExitChoices.emplace_back(terminal.exitSelectorIds.begin(), terminal.exitSelectorIds.end());
     }
   }
-  auto segments = !useDP2 && segmentUsesValid ? searchB2BSegments(segmentWork[0], segmentWork[1])
+  auto segments = !useDP2 && (segmentUsesValid || independentExits)
+                      ? searchB2BSegments(segmentWork[0], segmentWork[1], useDP3, independentExits, intrinsicCost)
                                     : SmallVector<B2BSegmentedPlan, 4>();
+  SmallVector<B2BSegmentedPlan, 4> speculativeSegments(segments.size());
+  if (!useDP2 && !useDP3)
+    for (unsigned i = 0; i < segments.size(); ++i)
+      speculativeSegments[i] = speculateB2BGuardedArms(
+          segmentWork[0], segmentWork[1], segments[i]);
   trial.before = features(*f);
-  trial.left = trial.leftContext = boundary({left, join, nullptr, {left}}, *f);
-  trial.right = trial.rightContext = boundary({right, join, nullptr, {right}}, *f);
+  trial.left = trial.leftContext = boundary({left, independentExits ? left->getSingleSuccessor() : join, nullptr, {left}}, *f);
+  trial.right = trial.rightContext = boundary({right, independentExits ? right->getSingleSuccessor() : join, nullptr, {right}}, *f);
   trial.matchedLeft = name(left);
   trial.matchedRight = name(right);
   trial.planKind = "B2B";
@@ -2682,32 +2999,37 @@ std::vector<Trial> planSingleBranchB2B(const Module &parent, const Candidate &c,
   };
   if (!useDP2) {
   auto prefix = commonB2BPrefix(*left, *right, *branch, dt);
-  auto suffix = commonB2BSuffix(*left, *right, *join);
+  auto suffix = join ? commonB2BSuffix(*left, *right, *join)
+                     : SmallVector<B2BMatch, 8>{};
   auto aligned = alignHoistableB2B(*left, *right, *branch, dt);
   if (aligned == prefix) aligned.clear();
-  auto common = searchB2BCommon(*left, *right, *branch, dt);
+  auto common = searchB2BCommon(*left, *right, *branch, dt,
+                                false, nullptr, false, false, intrinsicCost, useDP3);
   if (common == prefix || common == aligned) common.clear();
   // Retain a binary-operation alignment as a separate finalist. Small-cost
   // casts and compares can occupy the beam and hide useful arithmetic plans.
   auto binaryCommon = searchB2BCommon(*left, *right, *branch, dt,
-                                      false, nullptr, false, true);
+                                      false, nullptr, false, true, nullptr, useDP3);
   if (binaryCommon == prefix || binaryCommon == aligned || binaryCommon == common)
     binaryCommon.clear();
 
   SmallVector<SmallVector<B2BMatch, 8>, 4> completeCommon;
-  searchB2BCommon(*left, *right, *branch, dt, true, &completeCommon);
+  searchB2BCommon(*left, *right, *branch, dt, true, &completeCommon,
+                  false, false, intrinsicCost, useDP3);
   // Also retain the maximum-coverage alignment. Estimated transfer costs
   // can hide it because cleanup can fold several selects together.
   SmallVector<SmallVector<B2BMatch, 8>, 1> coverage;
   if (!completeCommon.empty())
-    searchB2BCommon(*left, *right, *branch, dt, true, &coverage, true);
+    searchB2BCommon(*left, *right, *branch, dt, true, &coverage, true,
+                    false, intrinsicCost, useDP3);
   if (!coverage.empty() && !llvm::is_contained(completeCommon, coverage.front()))
     completeCommon.push_back(std::move(coverage.front()));
-  auto joined = searchB2BJoin(*left, *right, *join);
+  auto joined = join ? searchB2BJoin(*left, *right, *join)
+                     : SmallVector<SmallVector<B2BMatch, 8>, 4>{};
 
 
   if (!prefix.empty()) add("single-branch-prefix", prefix, {});
-  if (!prefix.empty() && prefix.size() + 1 == left->size() &&
+  if (join && !prefix.empty() && prefix.size() + 1 == left->size() &&
       prefix.size() + 1 == right->size() &&
       llvm::all_of(join->phis(), [&](const PHINode &phi) {
         return phi.getType()->isFirstClassType() && !phi.getType()->isTokenTy();
@@ -2739,12 +3061,14 @@ std::vector<Trial> planSingleBranchB2B(const Module &parent, const Candidate &c,
       add("single-branch-common-join-dp" + variant, common, tail);
   }
   for (unsigned i = 0; i < segments.size(); ++i) {
-    const auto label = "single-branch-segment-dp" +
+    const auto label = std::string(useDP3 ? "single-branch-dp3-segment" : "single-branch-segment-dp") +
         (i ? "-" + std::to_string(i + 1) : std::string());
     const auto &plan = segments[i];
     layouts.push_back({label, {}, {}, plan});
+    if (!speculativeSegments[i].empty())
+      layouts.push_back({label + "-speculate-arms", {}, {}, speculativeSegments[i]});
     const auto &last = plan.back();
-    if (!join->phis().empty() &&
+    if (join && !join->phis().empty() &&
         last.left + last.consumeLeft == segmentWork[0].size() &&
         last.right + last.consumeRight == segmentWork[1].size())
       layouts.push_back({label + "-resplit", {}, {}, plan});
@@ -2790,14 +3114,14 @@ std::vector<Trial> planSingleBranchB2B(const Module &parent, const Candidate &c,
     auto *rawBranch = cast<BranchInst>(clone[branch]);
     auto *rawLeft = cast<BasicBlock>(clone[left]);
     auto *rawRight = cast<BasicBlock>(clone[right]);
-    auto *rawJoin = cast<BasicBlock>(clone[join]);
+    auto *rawJoin = join ? cast<BasicBlock>(clone[join]) : rawRight;
     const bool segmented = useDP2 || !layout.segments.empty();
     t.rewriteStarted = segmented || !layout.beforeSplit.empty() || !layout.afterJoin.empty();
     if (segmented) {
       try {
         emitB2BSegments(*rawBranch, *rawLeft, *rawRight, *rawJoin, layout.segments,
                         label.endswith("-resplit"), layout.exit, layout.exitSelectorIds,
-                        layout.exitPairedPhi);
+                        layout.exitPairedPhi, independentExits, !useDP2 && !useDP3);
       } catch (const std::runtime_error &error) {
         t.reason = error.what();
         trials.push_back(std::move(t));
@@ -2830,7 +3154,7 @@ std::vector<Trial> planSingleBranchB2B(const Module &parent, const Candidate &c,
           auto *lv = lc->getOperand(n), *rv = rc->getOperand(n);
           if (lv != rv) {
             auto &choice = selects[{lv, rv}];
-            if (!choice) choice = builder.CreateSelect(condition, lv, rv);
+            if (!choice) choice = emitB2BSelect(builder, condition, lv, rv);
             shared->setOperand(n, choice);
           }
         }
@@ -2848,7 +3172,7 @@ std::vector<Trial> planSingleBranchB2B(const Module &parent, const Candidate &c,
           Value *merged = lv;
           if (lv != rv) {
             auto &choice = selects[{lv, rv}];
-            if (!choice) choice = builder.CreateSelect(condition, lv, rv);
+            if (!choice) choice = emitB2BSelect(builder, condition, lv, rv);
             merged = choice;
           }
           phi.removeIncomingValue(rawLeft, false);

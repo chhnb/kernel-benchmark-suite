@@ -129,6 +129,20 @@ class LLVM24Scorer final:public Scorer {
     return c;
   }
 public:
+  std::map<std::string, int64_t> intrinsicCosts(const llvm::Function &f) const {
+    std::map<std::string, int64_t> costs;
+    for (const auto &entry : query(f).counts) {
+      llvm::StringRef key(entry.first);
+      if (!key.consume_front("call:llvm.")) continue;
+      auto [name, rest] = key.split(':');
+      llvm::StringRef cost = rest.rsplit(':').second;
+      int64_t value;
+      if (cost.consume_front("cost") && !cost.getAsInteger(10, value))
+        costs.emplace(("llvm." + name).str(), value);
+    }
+    return costs;
+  }
+
   explicit LLVM24Scorer(std::string executable):worker(std::move(executable)){}
   ScoreResult evaluate(const ScoreInput&i,const RoundContext&r)const override {
     ScoreResult s;s.coverage.hardwareCosts="LLVM24_TTI_6be16f356d3e_reciprocal_throughput_uncalibrated";

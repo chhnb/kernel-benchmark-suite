@@ -71,6 +71,21 @@ with tempfile.TemporaryDirectory() as temp:
         executable = out / "guarded-check"
         run(args.clang.resolve(), "-O0", source, variant, "-o", executable)
         run(executable)
+    global_store = out / "guarded-global.ll"
+    global_store.write_text("@scratch = global i32 0, align 4\n\n" + fixture.read_text()
+                            .replace("  %scratch = alloca i32, align 4\n", "")
+                            .replace("%scratch", "@scratch"))
+    command[2] = global_store
+    fused_global = out / "guarded-global-fused.ll"
+    run(*command, *pair_args, "--debug-dir", out / "global", "--out", fused_global)
+    trial = json.loads((out / "global/trial-0/trial.json").read_text())
+    assert trial["valid"] and not trial["replication_required"]
+    run(args.opt.resolve(), "-verify", "-disable-output", fused_global)
+    for variant in (global_store, fused_global):
+        executable = out / "global-check"
+        run(args.clang.resolve(), "-O0", source, variant, "-o", executable)
+        run(executable)
+
     negative = out / "volatile.ll"
     negative.write_text(fixture.read_text().replace("store i32 %x", "store volatile i32 %x"))
     command[2] = negative
@@ -79,5 +94,5 @@ with tempfile.TemporaryDirectory() as temp:
                              "--out", output], capture_output=True)
     trial = json.loads((out / "negative/trial-0/trial.json").read_text())
     assert result.returncode == 4 and not output.exists()
-    assert not trial["rewrite_started"] and trial["reason"] == "side_effect_in_trial_scope_not_supported"
+    assert not trial["rewrite_started"] and trial["reason"] == "nonordinary_store_cannot_be_preserved"
 print("Guarded private store verified on 804 inputs, volatile store rejected before rewriting")

@@ -318,7 +318,25 @@ void RegionMelder::fixOperends() {
       if (isa<BranchInst>(L))
         setOperendsForBr(dyn_cast<BranchInst>(L), dyn_cast<BranchInst>(R),
                          dyn_cast<BranchInst>(MergedI));
-      else
+      else if (auto *LeftSwitch = dyn_cast<SwitchInst>(LeftI)) {
+        auto *RightSwitch = cast<SwitchInst>(RightI);
+        for (unsigned N = 0; N < LeftSwitch->getNumSuccessors(); ++N) {
+          auto *LeftTarget = LeftBbToMergedBb.lookup(LeftSwitch->getSuccessor(N));
+          auto *RightTarget = RightBbToMergedBb.lookup(RightSwitch->getSuccessor(N));
+          if (!LeftTarget || LeftTarget != RightTarget)
+            throw std::runtime_error("switch_successor_mapping_mismatch");
+        }
+        auto *LeftCondition = LeftSwitch->getCondition();
+        auto *RightCondition = RightSwitch->getCondition();
+        if (Value *Mapped = OrigToMergedValues.lookup(LeftCondition))
+          LeftCondition = Mapped;
+        if (Value *Mapped = OrigToMergedValues.lookup(RightCondition))
+          RightCondition = Mapped;
+        IRBuilder<> Builder(MergedI);
+        cast<SwitchInst>(MergedI)->setCondition(LeftCondition == RightCondition
+            ? LeftCondition
+            : Builder.CreateSelect(MA.getDivergentCondition(), LeftCondition, RightCondition));
+      } else
         setOperends(LeftI, RightI, MergedI);
 
     } else {
@@ -755,6 +773,15 @@ void RegionMelder::merge(unsigned Index) {
     // }
     // while(true);
 
+    // An unmatched terminator needs its own CFG rewrite. Gap protection
+    // cannot split after a terminator or clone it into an existing block.
+    for (auto &Entry : RegionInstrAlignement)
+      if (!Entry.match())
+        for (unsigned Side : {0u, 1u})
+          if (auto *I = dyn_cast_or_null<Instruction>(Entry.get(Side)))
+            if (I->isTerminator())
+              throw std::runtime_error("unmatched_terminator_in_meld");
+
     // merge
     cloneInstructions();
     fixOperends();
@@ -843,6 +870,16 @@ void RegionMelder::runUnpredicationPass() {
   SpeculatedRanges += Plan.Speculated.size();
   for (auto &Guard : Plan.Guards) {
     auto Range = Guard.First.range();
+    auto *End = Guard.Second.empty() ? Range.getEnd() : Guard.Second.back();
+    auto *Start = Range.getStart();
+    if (!Start->getParent() || Start->getParent() != End->getParent() ||
+        !End->getNextNode() || isa<PHINode>(Start)) {
+      throw std::runtime_error("invalid_guarded_range");
+    }
+    if (!Guard.Second.empty() &&
+        Range.getEnd()->getNextNode() != Guard.Second.front())
+      throw std::runtime_error("nonadjacent_guarded_ranges");
+
     if (!Guard.Second.empty()) {
       GapRange Other(Guard.Second.front(), Guard.Second.back(), !Range.Left);
         auto *Head = Range.getStart()->getParent();

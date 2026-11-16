@@ -55,7 +55,7 @@ negative.write_text(head + "@" + kernel + "(" + target + "\n}" + tail)
 _, volatile = replay(negative, "volatile")
 trial = volatile["B5:B6:B20"]
 assert trial["stage"] == "legality_rejected", trial
-assert trial["reason"] == "side_effect_in_trial_scope_not_supported", trial
+assert trial["reason"] == "nonordinary_store_cannot_be_preserved", trial
 print("PeleC anchored and independent-exit candidates scored, volatile-write candidate rejected")
 
 for input_name, selected_pair in (("common", "B8:R11:R13"), ("darm-once", "B7:R11:R13")):

@@ -204,8 +204,11 @@ std::vector<Candidate> enumerate(llvm::Function &, unsigned version, bool crossD
 std::vector<Candidate> enumerateAdjacent(llvm::Function &, unsigned version);
 Trial tryPair(const llvm::Module &, const Candidate &, unsigned currentVersion,
               unsigned optLevel, CleanupMode mode=CleanupMode::O3, const LogicalRegionState *logical=nullptr);
+Trial tryPair(const llvm::Module &, const Candidate &, unsigned currentVersion,
+              unsigned optLevel, CleanupMode, const LogicalRegionState *, bool allowB2B);
 std::vector<Trial> planSingleBranchB2B(const llvm::Module &, const Candidate &,
-                                       unsigned optLevel, CleanupMode, llvm::StringRef replay, bool useDP2 = false);
+                                       unsigned optLevel, CleanupMode, llvm::StringRef replay, bool useDP2 = false, bool useDP3 = false,
+                                       llvm::function_ref<int(const llvm::Instruction &)> intrinsicCost = nullptr);
 Result greedy(const llvm::Module &, const std::string &function,
               const Options &, const Scorer &, Observer *observer=nullptr);
 }

@@ -128,6 +128,25 @@ std::vector<Decision> discover(Function &f) {
  return result;
 }
 json::Array describe(const std::vector<Decision>&ds){json::Array out;for(auto &d:ds){json::Array arms,tests;for(auto *b:d.tests)tests.push_back(name(b));for(auto &a:d.arms){json::Array blocks,exits,path,alternatives,origins;for(auto &id:a.mergedFrom)origins.push_back(id);for(auto &p:a.alternatives){json::Array edges;for(auto e:p)edges.push_back(json::Object{{"test",name(e.test)},{"successor",e.successor}});alternatives.push_back(std::move(edges));}for(auto *b:a.blocks)blocks.push_back(name(b));for(auto *b:a.exitSources)exits.push_back(name(b));for(auto e:a.predicate)path.push_back(json::Object{{"test",name(e.test)},{"successor",e.successor}});arms.push_back(json::Object{{"id",a.id},{"entry",name(a.entry)},{"kind",a.kind==ArmKind::Linear?"Linear":a.kind==ArmKind::SESE?"SESE":"Unsupported"},{"reason",a.reason},{"blocks",std::move(blocks)},{"exit_sources",std::move(exits)},{"ordered_predicate",std::move(path)},{"predicate_alternatives",std::move(alternatives)},{"merged_from",std::move(origins)},{"order_family",a.orderFamily},{"order_first",a.orderFirst},{"order_last",a.orderLast}});}out.push_back(json::Object{{"id",d.id},{"root",name(d.root)},{"join",name(d.join)},{"tests",std::move(tests)},{"arms",std::move(arms)},{"identity_scope","persistent_origin_if_tagged_else_snapshot"}});}return out;}
+// Keep a selector inside the group when the entry guard no longer needs it.
+static void sinkDispatchCondition(Value *value, BasicBlock *entry,
+                                  BasicBlock *dispatch) {
+ auto *inst = dyn_cast<Instruction>(value);
+ if (!inst || inst->getParent() != entry || !inst->getType()->isIntegerTy(1))
+  return;
+ unsigned opcode = inst->getOpcode();
+ if (!isa<CmpInst>(inst) && opcode != Instruction::And &&
+     opcode != Instruction::Or && opcode != Instruction::Xor)
+  return;
+ for (auto *user : inst->users()) {
+  auto *use = dyn_cast<Instruction>(user);
+  if (!use || isa<PHINode>(use) || use->getParent() != dispatch)
+   return;
+ }
+ inst->moveBefore(&*dispatch->getFirstInsertionPt());
+ for (auto &operand : inst->operands())
+  sinkDispatchCondition(operand.get(), entry, dispatch);
+}
 bool normalize(Function &f,const Decision &d,unsigned left,std::string &reason,BasicBlock **dispatchOut,unsigned conditionBudget){
  auto fail=[&](const char*s){reason=s;return false;};
  if(left+1>=d.arms.size())return fail("pair_out_of_range");
@@ -200,13 +219,14 @@ bool normalize(Function &f,const Decision &d,unsigned left,std::string &reason,B
   auto *dispatch=BasicBlock::Create(ctx,"decision.dispatch",&f,y);
   bx->setCondition(take);bx->setSuccessor(0,dispatch);bx->setSuccessor(1,rest);
   for(auto &p:rest->phis()){int n=p.getBasicBlockIndex(y);if(n>=0)p.setIncomingBlock(n,x);}
-  BranchInst::Create(a.entry,b.entry,selected,dispatch);
+  auto *dispatchBranch = BranchInst::Create(a.entry,b.entry,selected,dispatch);
   bx->setMetadata("decision.condition_prefix",MDNode::get(ctx,{}));
   // Retire the old branch before simplifying its condition DAG: otherwise
   // that branch keeps the superseded comparison live during scoped DCE.
   // The new entry and dispatch already retain every still-needed condition.
   y->eraseFromParent();
   simplifyCondition(take);
+  sinkDispatchCondition(dispatchBranch->getCondition(), x, dispatch);
   attachIdentity(dispatch);
   if(dispatchOut)*dispatchOut=dispatch;
   reason="normalized_value_condition";

@@ -121,6 +121,6 @@ j:
  %r = phi float [ %u, %a ], [ %v, %b ]
  ret float %r
 }
-)",diag,ctx);check(bool(unsafe),"parse unsafe");hash=moduleHash(*unsafe);Candidate c{"f","B0","B1","B2",0};c.hybrid=true;auto rejected=tryPair(*unsafe,c,0,3,CleanupMode::None);check(!rejected.valid&&rejected.reason=="side_effect_in_trial_scope_not_supported","side effect guard");check(moduleHash(*unsafe)==hash,"rejected parent mutation");
+)",diag,ctx);check(bool(unsafe),"parse unsafe");hash=moduleHash(*unsafe);Candidate c{"f","B0","B1","B2",0};c.hybrid=true;auto rejected=tryPair(*unsafe,c,0,3,CleanupMode::None);check(!rejected.valid&&rejected.reason=="matched_effect_has_no_guarded_lowering","side effect guard");check(moduleHash(*unsafe)==hash,"rejected parent mutation");
  outs()<<"PASS structural dispatch; R2R; loop-header B2R and recursive replication; proven guards; cyclic scope and side-effect rejection; verifier; parent immutability\n";
 }catch(const std::exception&e){errs()<<e.what()<<"\n";return 1;}}

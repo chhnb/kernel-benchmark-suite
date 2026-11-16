@@ -1,3 +1,4 @@
+#include <optional>
 #include <limits>
 #include "fusion_search.h"
 #include "ir_pressure.h"
@@ -100,13 +101,23 @@ struct DebugObserver final:Observer {
     jsonFile(dir+"/commit-"+std::to_string(version)+".json",json::Object{{"logical_decision",c.logicalDecision},{"logical_left",c.logicalLeft},{"logical_right",c.logicalRight},{"candidate",c.key()},{"parent_version",int64_t(c.version)},{"version",int64_t(version)},{"score_result",scoreJson(score)},{"committed_hash",moduleHash(m)}});
   }
 };
-int main(int argc,char**argv) {
-  sys::PrintStackTraceOnErrorSignal(argv[0]);
+// A worker handles one immutable parent and one scoring configuration.
+struct R2RBatch {
+  LLVMContext context;
+  std::unique_ptr<Module> parent;
+  std::optional<RoundContext> round;
+  std::unique_ptr<LLVM24Scorer> scorer;
+  std::string input, function, worker;
+  unsigned level = 0;
+  CleanupMode cleanup = CleanupMode::None;
+};
+
+static int runSearch(int argc, const char *const *argv, R2RBatch *batch = nullptr) {
   try {
-    std::string input,function,output,debug,split,left,right,replayParentHash,profileBundle,policy="llvm24";Options options;bool speculationGiven=false,budgetGiven=false,singleBranchB2B=false, useDP2=false, strategyGiven=false;
+    std::string input,function,output,debug,split,left,right,replayParentHash,profileBundle,policy="llvm24";Options options;bool speculationGiven=false,budgetGiven=false,singleBranchB2B=false, useDP2=false, useDP3=false, strategyGiven=false;
     options.speculation=SpeculationMode::None; /* CLI default: no speculation of work */ PostOptConfig config;bool controlOnly=false,catalogOnly=false; unsigned gapTrials=0; std::string gapReplay;std::string ttiWorker="/home/chh/kernel-benchmark-suite/tools/run-llvm24-tti";
     for(int i=1;i<argc;++i){std::string k=argv[i];
-      if(k=="--help"){outs()<<"fusion-search --ir FILE --function NAME --out FILE [--control-only 0|1] [--catalog-only 0|1 (requires debug-dir)] [--replay-parent-hash SHA1 (explicit snapshot pair only)] [--cross-decision-leaves 0|1 (default 0; permits complete leaves with different or unknown SSA discriminator, or a sub-decision of the same discriminator)] [--b2r-strategy darm|guarded] [--cross-level-b2r 0|1 (default 0; allow B2R/R2B that replicates a same-discriminator decision chain)] [--speculation none|legacy|budget|cost (default none: unmatched work is always guarded, only a decision's own condition may be evaluated early, structural dispatch never picks local if-conversion; legacy: historical behaviour, required to reproduce results before this option; budget: speculate safe work up to --speculation-budget)] [--speculation-budget N (default 4; div/rem=8 call=4 other=1)] [--max-uniform-loss TTI (default off; llvm24 scorer only; reject if a one-sided wave gets more than this much costlier)] [--complete-leaf-plan 0|1 (experimental mandatory-load motion and multiple guarded anchors)] [--b2b-strategy dp1|dp2] [--single-branch-b2b 0|1 (explicit cost-mode pair)] [--structural 0|1 (B2B/R2R/B2R dispatch; adjacent-only 0; hybrid is a compatibility alias)] [--adjacent-only 0|1] [--local-union 0|1] [--local-compute 0|1 (alias of local-copysign)] [--local-copysign 0|1 (requires adjacent-only 1, cleanup none or scoped-local)] [--scorer llvm24|legacy|v1|v2|v5] [--tti-worker EXECUTABLE] [--profile-bundle FILE (experimental v5 only)] [--work-absolute 0] [--work-relative 0] [--pressure-weight 0] [--dependency-features 0|1] [--static-alloca-cost POSITIVE_INT (disabled by default)] [--rounds 8] [--trials 256] [--threshold 0] [--opt-level 3] [--debug-dir DIR] [--require-parent-gain 1] [--cleanup none|scoped-local|scoped-cfg|scoped-cfg-triangles|structural-cfg|postopt-fp|darm-cfg-scalar-fp|darm-cfg-earlycse|darm-cfg-dce|darm-cfg|o3]\nExplicit pair: add --split B# --left B#/R#/Eentry_exit --right B#/R#/Eentry_exit. Complete E leaves require --structural 1. Optional --coalesce-gaps 0|1 (default 0) groups adjacent unmatched runs before unpredication. IDs refer to the input state (O3-normalized only in o3 mode). Default cleanup: darm-cfg-earlycse. Final codegen O3 is separate.\n";return 0;}
+      if(k=="--help"){outs()<<"fusion-search --ir FILE --function NAME --out FILE [--control-only 0|1] [--catalog-only 0|1 (requires debug-dir)] [--replay-parent-hash SHA1 (explicit snapshot pair only)] [--cross-decision-leaves 0|1 (default 0; permits complete leaves with different or unknown SSA discriminator, or a sub-decision of the same discriminator)] [--b2r-strategy darm|guarded] [--cross-level-b2r 0|1 (default 0; allow B2R/R2B that replicates a same-discriminator decision chain)] [--speculation none|legacy|budget|cost (default none: unmatched work is always guarded, only a decision's own condition may be evaluated early, structural dispatch never picks local if-conversion; legacy: historical behaviour, required to reproduce results before this option; budget: speculate safe work up to --speculation-budget)] [--speculation-budget N (default 4; div/rem=8 call=4 other=1)] [--max-uniform-loss TTI (default off; llvm24 scorer only; reject if a one-sided wave gets more than this much costlier)] [--complete-leaf-plan 0|1 (experimental mandatory-load motion and multiple guarded anchors)] [--b2b-strategy dp1|dp2|dp3] [--single-branch-b2b 0|1 (explicit cost-mode pair)] [--structural 0|1 (B2B/R2R/B2R dispatch; adjacent-only 0; hybrid is a compatibility alias)] [--adjacent-only 0|1] [--local-union 0|1] [--local-compute 0|1 (alias of local-copysign)] [--local-copysign 0|1 (requires adjacent-only 1, cleanup none or scoped-local)] [--scorer llvm24|legacy|v1|v2|v5] [--tti-worker EXECUTABLE] [--profile-bundle FILE (experimental v5 only)] [--work-absolute 0] [--work-relative 0] [--pressure-weight 0] [--dependency-features 0|1] [--static-alloca-cost POSITIVE_INT (disabled by default)] [--rounds 8] [--trials 256] [--threshold 0] [--opt-level 3] [--debug-dir DIR] [--require-parent-gain 1] [--cleanup none|scoped-local|scoped-cfg|scoped-cfg-triangles|structural-cfg|postopt-fp|darm-cfg-scalar-fp|darm-cfg-earlycse|darm-cfg-dce|darm-cfg|o3]\nExplicit pair: add --split B# --left B#/R#/Eentry_exit --right B#/R#/Eentry_exit. Complete E leaves require --structural 1. Optional --coalesce-gaps 0|1 (default 0) groups adjacent unmatched runs before unpredication. IDs refer to the input state (O3-normalized only in o3 mode). Default cleanup: darm-cfg-earlycse. Final codegen O3 is separate.\n";return 0;}
       if(i+1==argc)throw std::runtime_error("missing option value");std::string v=argv[++i];
       if(k=="--control-only"){if(v!="0"&&v!="1")throw std::runtime_error("control-only must be 0 or 1");controlOnly=v=="1";}
       else if(k=="--catalog-only"){if(v!="0"&&v!="1")throw std::runtime_error("catalog-only must be 0 or 1");catalogOnly=v=="1";}
@@ -132,9 +143,10 @@ int main(int argc,char**argv) {
       else if(k=="--ir")input=v;else if(k=="--function")function=v;else if(k=="--out")output=v;
       else if(k=="--complete-leaf-plan"){if(v!="0"&&v!="1")throw std::runtime_error("complete-leaf-plan must be 0 or 1");options.completeLeafPlan=v=="1";}
       else if(k=="--b2b-strategy"){
-        if(v!="dp1" && v!="dp2") throw std::runtime_error("b2b-strategy must be dp1 or dp2");
+        if(v!="dp1" && v!="dp2" && v!="dp3") throw std::runtime_error("b2b-strategy must be dp1, dp2, or dp3");
         strategyGiven=true;
         useDP2=v=="dp2";
+        useDP3=v=="dp3";
         singleBranchB2B=true;
       }
       else if(k=="--single-branch-b2b"){
@@ -159,7 +171,40 @@ int main(int argc,char**argv) {
     bool pair=!split.empty()||!left.empty()||!right.empty();if(pair&&(split.empty()||left.empty()||right.empty()))throw std::runtime_error("explicit pair requires all three IDs");
     if(!gapReplay.empty()&&(!pair||gapTrials))
       throw std::runtime_error("--gap-replay requires an explicit pair and no gap search");
-    LLVMContext context;SMDiagnostic error;auto buffer=MemoryBuffer::getFile(input);if(!buffer)throw std::runtime_error("cannot read input IR");auto module=parseIR(buffer.get()->getMemBufferRef(),error,context);if(!module){error.print(argv[0],errs());return 2;}
+    LLVMContext context;
+    std::unique_ptr<MemoryBuffer> buffer;
+    std::unique_ptr<Module> parsedModule;
+    if (batch) {
+      if (!pair || !StringRef(left).startswith("R") || !StringRef(right).startswith("R") ||
+          !options.hybrid || options.adjacentOnly || policy != "llvm24" ||
+          catalogOnly || controlOnly || options.cleanupMode == CleanupMode::O3 ||
+          !gapReplay.empty() || !replayParentHash.empty())
+        throw std::runtime_error("batch requires explicit structural R2R with LLVM24 scoring");
+      if (batch->parent && (batch->input != input || batch->function != function ||
+          batch->worker != ttiWorker || batch->level != options.optLevel ||
+          batch->cleanup != options.cleanupMode))
+        throw std::runtime_error("R2R batch parent or scoring configuration changed");
+    }
+    const bool reuseParent = batch && batch->parent;
+    if (!reuseParent) {
+      auto file = MemoryBuffer::getFile(input);
+      if (!file) throw std::runtime_error("cannot read input IR");
+      buffer = std::move(*file);
+      SMDiagnostic error;
+      parsedModule = parseIR(buffer->getMemBufferRef(), error, batch ? batch->context : context);
+      if (!parsedModule) { error.print(argv[0], errs()); return 2; }
+      if (batch) {
+        if (verifyModule(*parsedModule, &errs())) return 2;
+        batch->input = input;
+        batch->function = function;
+        batch->worker = ttiWorker;
+        batch->level = options.optLevel;
+        batch->cleanup = options.cleanupMode;
+        batch->parent = std::move(parsedModule);
+        batch->scorer = std::make_unique<LLVM24Scorer>(ttiWorker);
+      }
+    }
+    auto *module = batch ? batch->parent.get() : parsedModule.get();
     json::Value gapReport(nullptr);
     if(!gapReplay.empty()){
       auto file=MemoryBuffer::getFile(gapReplay);
@@ -192,7 +237,7 @@ int main(int argc,char**argv) {
     if(options.hybrid&&(options.adjacentOnly||options.localCopysign||options.localUnion))throw std::runtime_error("hybrid requires general CFG enumeration and no local-only switches");
     if(options.localUnion&&!options.localCopysign)throw std::runtime_error("local-union requires local-copysign 1");
     if(options.localCopysign&&(!options.adjacentOnly||(options.cleanupMode!=CleanupMode::None&&options.cleanupMode!=CleanupMode::ScopedLocal)))throw std::runtime_error("local-copysign requires adjacent-only 1 and cleanup none or scoped-local");
-    if(verifyModule(*module,&errs()))return 2;
+    if(!batch && verifyModule(*module,&errs()))return 2;
     auto*f=module->getFunction(function);if(!f||f->isDeclaration())throw std::runtime_error("function missing");
     std::unique_ptr<DebugObserver> observer;if(!debug.empty())observer=std::make_unique<DebugObserver>(debug);
     if(catalogOnly){
@@ -217,7 +262,7 @@ int main(int argc,char**argv) {
       writeIR(*round.control,output);outs()<<"verified no-meld control exported\n";return 0;
     }
     // All scoring compares equally normalized parent/candidate states.
-    if(pair){if(options.cleanupMode==CleanupMode::O3&&replayParentHash.empty())normalize(*module,options.optLevel);if(verifyModule(*module,&errs()))return 2;
+    if(pair){if(options.cleanupMode==CleanupMode::O3&&replayParentHash.empty())normalize(*module,options.optLevel);if(!batch && verifyModule(*module,&errs()))return 2;
       if(observer)observer->initial(*module);
     }
     if(!profileBundle.empty()&&policy!="v5")throw std::runtime_error("profile-bundle requires experimental v5 scorer");
@@ -236,7 +281,8 @@ int main(int argc,char**argv) {
     if(policy=="llvm24"&&(config.absoluteThreshold!=0||config.relativeThreshold!=0||config.pressureWeight!=0||config.staticAllocaCost!=-1||config.dependencyFeatures))throw std::runtime_error("llvm24 scorer does not accept legacy/postopt penalties or fallback options");
     if(budgetGiven&&options.speculation!=SpeculationMode::Budget)throw std::runtime_error("--speculation-budget requires --speculation budget");
     if(options.maxUniformLoss>=0&&policy!="llvm24")throw std::runtime_error("max-uniform-loss requires the llvm24 scorer");
-    LLVM24Scorer llvm24Scorer(ttiWorker);
+    LLVM24Scorer standaloneScorer(ttiWorker);
+    auto &llvm24Scorer = batch ? *batch->scorer : standaloneScorer;
     StaticCostScorer legacyScorer;
     if(policy=="v1")config.pressureWeight=0;
     if(observer)jsonFile(debug+"/run.json",json::Object{
@@ -248,7 +294,12 @@ int main(int argc,char**argv) {
       {"semantic_validation","not_run"}});
     PostOptScorer postScorer(config);
     const Scorer&scorer=policy=="llvm24"?static_cast<const Scorer&>(llvm24Scorer):policy=="legacy"?static_cast<const Scorer&>(legacyScorer):static_cast<const Scorer&>(postScorer);
-    if(pair){Candidate c{function,split,left,right,0};std::shared_ptr<LogicalRegionState> logical;if(options.adjacentOnly){logical=LogicalRegionState::initialize(*module->getFunction(function));if(observer)observer->logical(0,logical->json());auto adjacent=logical->filter(*module->getFunction(function),enumerate(*module->getFunction(function),0));bool found=false;for(auto &a:adjacent)if(a.key()==c.key()){found=true;c=a;}if(!found)throw std::runtime_error("explicit_pair_not_adjacent");}      const auto round=makeRound(*module,function,0,options.optLevel,options.cleanupMode);if(observer)observer->round(round);
+    if(pair){Candidate c{function,split,left,right,0};std::shared_ptr<LogicalRegionState> logical;if(options.adjacentOnly){logical=LogicalRegionState::initialize(*module->getFunction(function));if(observer)observer->logical(0,logical->json());auto adjacent=logical->filter(*module->getFunction(function),enumerate(*module->getFunction(function),0));bool found=false;for(auto &a:adjacent)if(a.key()==c.key()){found=true;c=a;}if(!found)throw std::runtime_error("explicit_pair_not_adjacent");}      std::optional<RoundContext> standaloneRound;
+      auto &roundStorage = batch ? batch->round : standaloneRound;
+      if (!roundStorage)
+        roundStorage.emplace(makeRound(*module,function,0,options.optLevel,options.cleanupMode));
+      const auto &round = *roundStorage;
+      if(observer)observer->round(round);
       c.localCopysign=options.localCopysign;c.localUnion=options.localUnion;c.hybrid=options.hybrid;c.coalesceGaps=options.coalesceGaps;c.completeLeafPlan=options.completeLeafPlan;c.crossDecisionLeaves=options.crossDecisionLeaves;c.crossLevelB2R=options.crossLevelB2R;c.darmB2R=options.darmB2R;c.speculation=options.speculation;c.speculationBudget=options.speculationBudget;
       if(!gapReplay.empty()){
         const auto *report=gapReport.getAsObject();
@@ -276,12 +327,32 @@ int main(int argc,char**argv) {
         if (auto path = gapReport.getAsObject()->getString("merge_path"))
           if (path->startswith("single-branch-")) replayLayout = *path;
       if (!replayLayout.empty() && strategyGiven &&
-          useDP2 != replayLayout.startswith("single-branch-dp2-"))
+          (useDP2 != replayLayout.startswith("single-branch-dp2-") ||
+           (useDP3 && replayLayout.startswith("single-branch-segment-dp")) ||
+           (!useDP3 && replayLayout.startswith("single-branch-dp3-"))))
         throw std::runtime_error("B2B replay strategy mismatch");
+      std::optional<std::map<std::string, int64_t>> intrinsicQuotes;
+      std::set<std::string> unquotedIntrinsics;
+      auto intrinsicCost = [&](const Instruction &inst) -> int {
+        if (!intrinsicQuotes) {
+          intrinsicQuotes.emplace();
+          if (policy == "llvm24")
+            *intrinsicQuotes = llvm24Scorer.intrinsicCosts(*module->getFunction(function));
+        }
+        StringRef name = cast<CallInst>(inst).getCalledFunction()->getName();
+        auto found = intrinsicQuotes->lower_bound(name.str());
+        if (found != intrinsicQuotes->end() &&
+            (found->first == name || StringRef(found->first).startswith((name + ".").str())))
+          return found->second;
+        if (unquotedIntrinsics.insert(name.str()).second)
+          errs() << "DP1 intrinsic cost fallback (1): " << name << "\n";
+        return 1;
+      };
       auto plans = !logical && (singleBranchB2B || !replayLayout.empty()) &&
           (gapReplay.empty() || !replayLayout.empty())
           ? planSingleBranchB2B(*module, c, options.optLevel, options.cleanupMode, replayLayout,
-                                useDP2 || replayLayout.startswith("single-branch-dp2-"))
+                                useDP2 || replayLayout.startswith("single-branch-dp2-"),
+                                useDP3 || replayLayout.startswith("single-branch-dp3-"), intrinsicCost)
           : std::vector<Trial>{};
       if (!replayLayout.empty() && plans.empty())
         throw std::runtime_error("single-branch B2B replay layout unavailable");
@@ -324,9 +395,12 @@ int main(int argc,char**argv) {
           }
         }
         t.layoutProfitability = std::move(profitability);
-      } else {
-        t = tryPair(*module, c, 0, options.optLevel, options.cleanupMode, logical.get());
-        score = evaluateTrial(*module, t, round, scorer);
+      }
+      const bool allowDarmB2B = !strategyGiven || useDP2 || useDP3;
+      if (!plannedB2B) {
+        t = tryPair(*module, c, 0, options.optLevel, options.cleanupMode,
+                    logical.get(), allowDarmB2B);
+        if (t.valid) score = evaluateTrial(*module, t, round, scorer);
       }
       if(!plannedB2B&&gapTrials&&t.valid&&c.speculation==SpeculationMode::Cost){
         using GapState=std::tuple<std::set<unsigned>,std::set<unsigned>,bool>;
@@ -372,7 +446,7 @@ int main(int argc,char**argv) {
             if(!visited.emplace(alternative.splitMatches,alternative.speculateGaps,
                                 alternative.explicitGapPlan).second)continue;
             --gapTrials;
-            auto trial=tryPair(*module,alternative,0,options.optLevel,options.cleanupMode,logical.get());
+            auto trial=tryPair(*module,alternative,0,options.optLevel,options.cleanupMode,logical.get(),allowDarmB2B);
             if(!trial.valid)continue;
             auto ranked=evaluateTrial(*module,trial,round,scorer);
             if(ranked.status!=ScoreStatus::Scored)continue;
@@ -399,4 +473,40 @@ int main(int argc,char**argv) {
     if(observer)jsonFile(debug+"/result.json",json::Object{{"commits",int64_t(result.commits)},{"trials",int64_t(result.trials)},{"stop",result.stop},{"policy",policy},{"require_parent_gain",options.requireParentGain},{"output_on_stop","last_committed_parent_or_initial_normalized_state"},{"semantic_validation","not_run"}});
     return 0;
   }catch(const std::exception&e){errs()<<"error: "<<e.what()<<"\n";return 2;}
+}
+
+
+int main(int argc, char **argv) {
+  sys::PrintStackTraceOnErrorSignal(argv[0]);
+  if (argc != 3 || StringRef(argv[1]) != "--r2r-batch")
+    return runSearch(argc, argv);
+  try {
+    auto file = MemoryBuffer::getFile(argv[2]);
+    if (!file) throw std::runtime_error("cannot read R2R batch manifest");
+    auto manifest = json::parse((*file)->getBuffer());
+    if (!manifest) throw std::runtime_error(toString(manifest.takeError()));
+    auto *requests = manifest->getAsArray();
+    if (!requests) throw std::runtime_error("invalid R2R batch manifest");
+    R2RBatch batch;
+    for (const auto &entry : *requests) {
+      const auto *request = entry.getAsObject();
+      const auto *args = request ? request->getArray("argv") : nullptr;
+      const auto status = request ? request->getString("status") : None;
+      if (!args || args->empty() || !status) throw std::runtime_error("invalid R2R batch request");
+      std::vector<std::string> arguments;
+      for (const auto &arg : *args) {
+        const auto value = arg.getAsString();
+        if (!value) throw std::runtime_error("invalid R2R batch argument");
+        arguments.push_back(value->str());
+      }
+      std::vector<const char *> refs;
+      for (const auto &arg : arguments) refs.push_back(arg.c_str());
+      const int code = runSearch(refs.size(), refs.data(), &batch);
+      jsonFile(status->str(), json::Object{{"exit_code", code}});
+    }
+    return 0;
+  } catch (const std::exception &error) {
+    errs() << "R2R batch: " << error.what() << "\n";
+    return 2;
+  }
 }

@@ -20,9 +20,8 @@ static void save(const std::string&p,const json::Value&v){std::error_code e;raw_
 static json::Value read(const std::string&p){auto b=MemoryBuffer::getFile(p);if(!b)throw std::runtime_error("missing "+p);auto v=json::parse((*b)->getBuffer());if(!v)throw std::runtime_error(toString(v.takeError()));return std::move(*v);}
 static int run(std::vector<std::string> a,const std::string&out,const std::string&err){for(const auto&p:{out,err})if(auto e=sys::fs::remove(p))throw std::runtime_error("cannot reset child output: "+p+": "+e.message());std::vector<StringRef> refs;for(auto&s:a)refs.push_back(s);std::array<Optional<StringRef>,3> red{{StringRef(""),StringRef(out),StringRef(err)}};return sys::ExecuteAndWait(a[0],refs,None,red,120);}
 static sys::ProcessInfo startTrial(const std::vector<std::string> &args,
-                                   const std::string &dir) {
+                                   StringRef output, StringRef error) {
   std::vector<StringRef> refs(args.begin(),args.end());
-  const std::string output=dir+".stdout",error=dir+".stderr";
   std::array<Optional<StringRef>,3> redirects{
       StringRef(""),StringRef(output),StringRef(error)};
   bool failed=false;
@@ -95,7 +94,7 @@ int main(int argc,char**argv){try{
    StringRef option(argv[argc-2]), value(argv[argc-1]);
    if (option == "--b2r-strategy" && (value == "darm" || value == "guarded"))
      b2rStrategy = value.str();
-   else if (option == "--b2b-strategy" && (value == "dp1" || value == "dp2"))
+   else if (option == "--b2b-strategy" && (value == "dp1" || value == "dp2" || value == "dp3"))
      b2bStrategy = value.str();
    else if (option == "--b2r-strategy" || option == "--b2b-strategy")
      throw std::runtime_error("invalid value for " + option.str());
@@ -103,7 +102,7 @@ int main(int argc,char**argv){try{
    argc -= 2;
  }
  if(argc!=4&&argc!=5)
-   throw std::runtime_error("usage: decision-greedy INPUT FUNCTION [TOOL_ROOT] NEW_OUTPUT [--b2r-strategy darm|guarded] [--b2b-strategy dp1|dp2]");
+   throw std::runtime_error("usage: decision-greedy INPUT FUNCTION [TOOL_ROOT] NEW_OUTPUT [--b2r-strategy darm|guarded] [--b2b-strategy dp1|dp2|dp3]");
  const bool implicitRoot=argc==4;
  std::string root;
  if(implicitRoot){
@@ -129,6 +128,7 @@ int main(int argc,char**argv){try{
  if(crossLevelB2R>1)throw std::runtime_error("DECISION_CROSS_LEVEL_B2R must be 0 or 1");
  const auto jobs=limit("DECISION_GREEDY_JOBS",1);
  if(jobs<1||jobs>64)throw std::runtime_error("DECISION_GREEDY_JOBS must be between 1 and 64");
+ const auto structuralJobs=experimentSetting("DECISION_GREEDY_JOBS")?jobs:8;
  if(experimentSetting("DECISION_CFG_CLEANUP")&&experimentSetting("DECISION_DISABLE_SIMPLIFYCFG"))throw std::runtime_error("DECISION_CFG_CLEANUP conflicts with legacy DECISION_DISABLE_SIMPLIFYCFG");
  std::string cleanup=experimentSetting("DECISION_CFG_CLEANUP")?experimentSetting("DECISION_CFG_CLEANUP"):"structural";
  if(cleanup!="full"&&cleanup!="structural")throw std::runtime_error("invalid DECISION_CFG_CLEANUP");
@@ -237,7 +237,7 @@ int main(int argc,char**argv){try{
       int rc=run(std::move(args),dir+".stdout",dir+".stderr");
       evaluated.push_back({left,std::move(dir),rc});
     }else{
-      running.push_back(startTrial(args,dir));
+      running.push_back(startTrial(args,dir+".stdout",dir+".stderr"));
       evaluated.push_back({left,std::move(dir),-1});
     }
    }
@@ -329,6 +329,14 @@ int main(int argc,char**argv){try{
       }
       decisionSplit="B"+std::to_string(index);
     }
+    struct StructuralTrial {
+      std::vector<std::string> args;
+      std::string directory;
+      json::Object attempt;
+      int exitCode = -1;
+      bool batchR2R = false;
+    };
+    std::vector<StructuralTrial> structuralTrials;
     for(const auto *list:{&candidates, static_cast<const json::Array*>(&normalizedCandidates)})
     for(const auto &entry:*list) {
       const auto &candidate=*entry.getAsObject();
@@ -367,14 +375,94 @@ int main(int argc,char**argv){try{
         request["logical_right"]=candidate.getString("logical_right")->str();
       }
       save(dir+"/request.json",std::move(request));
-      const int rc=run(std::move(trialArgs),dir+"/stdout",dir+"/stderr");
       json::Object attempt{{"directory",dir},{"kind","structural"},
-        {"candidate",candidateKey},{"exit_code",rc},{"eligible",false},{"stage","enumerated"}};
+        {"candidate",candidateKey},{"eligible",false},{"stage","enumerated"}};
       if(preparedInput){
         attempt["prepared_input"]=preparedInput->str();
         attempt["left"]=candidate.getString("logical_left")->str();
         attempt["right"]=candidate.getString("logical_right")->str();
       }
+      const bool batchR2R = !preparedInput &&
+          candidate.getString("left")->startswith("R") &&
+          candidate.getString("right")->startswith("R");
+      structuralTrials.push_back({std::move(trialArgs),dir,std::move(attempt),-1,batchR2R});
+    }
+    std::vector<size_t> regionTrials, individualTrials;
+    for (size_t i = 0; i < structuralTrials.size(); ++i)
+      (structuralTrials[i].batchR2R ? regionTrials : individualTrials).push_back(i);
+    // Bound the work lost if a child crashes or times out. Completed requests
+    // retain their artifacts and status; unfinished requests use the old path.
+    constexpr size_t trialsPerWorker = 32;
+    const size_t workers = structuralJobs;
+    if (regionTrials.size() > workers) {
+      for (size_t begin = 0; begin < regionTrials.size(); begin += workers * trialsPerWorker) {
+        const size_t end = std::min(begin + workers * trialsPerWorker, regionTrials.size());
+        std::vector<sys::ProcessInfo> running;
+        for (size_t slot = 0; slot < workers && begin + slot < end; ++slot) {
+          const auto base = out + "/r2r-batch-" + std::to_string(rounds.size()) +
+                            "-" + std::to_string(begin + slot);
+          json::Array requests;
+          for (size_t i = begin + slot; i < end; i += workers) {
+            auto &trial = structuralTrials[regionTrials[i]];
+            json::Array argv;
+            for (const auto &arg : trial.args) argv.push_back(arg);
+            requests.push_back(json::Object{{"argv", std::move(argv)},
+                                            {"status", trial.directory + "/batch-exit.json"}});
+          }
+          save(base + ".json", json::Value(std::move(requests)));
+          running.push_back(startTrial({structural, "--r2r-batch", base + ".json"},
+                                       base + ".stdout", base + ".stderr"));
+        }
+        for (const auto &process : running)
+          if (process.Pid) sys::Wait(process, 120, false);
+        for (size_t i = begin; i < end; ++i) {
+          auto &trial = structuralTrials[regionTrials[i]];
+          const auto status = trial.directory + "/batch-exit.json";
+          if (sys::fs::exists(status)) {
+            auto file = MemoryBuffer::getFile(status);
+            auto result = file ? json::parse((*file)->getBuffer()) : json::parse("");
+            const auto *record = result ? result->getAsObject() : nullptr;
+            if (!result) consumeError(result.takeError());
+            const auto code = record ? record->getInteger("exit_code") : None;
+            if (code && (*code == 0 || *code == 4) &&
+                sys::fs::exists(trial.directory + "/structural/trial-0/trial.json") &&
+                (*code == 4 || sys::fs::exists(trial.directory + "/fused.ll"))) {
+              trial.exitCode = *code;
+              continue;
+            }
+          }
+          if (auto ec = sys::fs::remove_directories(trial.directory + "/structural", false))
+            if (ec != std::errc::no_such_file_or_directory) throw std::runtime_error(ec.message());
+          if (auto ec = sys::fs::remove(trial.directory + "/fused.ll"))
+            throw std::runtime_error(ec.message());
+          individualTrials.push_back(regionTrials[i]);
+        }
+      }
+    } else {
+      individualTrials.insert(individualTrials.end(), regionTrials.begin(), regionTrials.end());
+    }
+    for (size_t begin = 0; begin < individualTrials.size(); begin += workers) {
+      const size_t end = std::min(begin + workers, individualTrials.size());
+      if (workers == 1) {
+        auto &trial = structuralTrials[individualTrials[begin]];
+        trial.exitCode=run(std::move(trial.args),trial.directory+"/stdout",trial.directory+"/stderr");
+        continue;
+      }
+      std::vector<sys::ProcessInfo> running;
+      for (size_t i = begin; i < end; ++i) {
+        const auto &trial = structuralTrials[individualTrials[i]];
+        running.push_back(startTrial(trial.args,trial.directory+"/stdout",trial.directory+"/stderr"));
+      }
+      for (size_t i = begin; i < end; ++i)
+        if (const auto &process = running[i-begin]; process.Pid)
+          structuralTrials[individualTrials[i]].exitCode=sys::Wait(process,120,false).ReturnCode;
+    }
+    // Candidate order breaks score ties, independently of process completion.
+    for (auto &trial : structuralTrials) {
+      const auto &dir = trial.directory;
+      auto &attempt = trial.attempt;
+      const int rc = trial.exitCode;
+      attempt["exit_code"] = rc;
       const std::string details=dir+"/structural/trial-0";
       if(!sys::fs::exists(details+"/trial.json")) {
         attempt["reason"]="trial_process_failed";
@@ -382,7 +470,7 @@ int main(int argc,char**argv){try{
       } else {
         auto result=read(details+"/trial.json");
         const auto &actual=*result.getAsObject();
-        if(actual.getString("candidate")!=candidate.getString("candidate"))
+        if(actual.getString("candidate")!=attempt.getString("candidate"))
           throw std::runtime_error("structural trial identity mismatch: "+dir);
         const auto *score=actual.getObject("score_result");
         if(rc) {
@@ -396,7 +484,7 @@ int main(int argc,char**argv){try{
           const auto &metrics=*score->getObject("metrics");
           const auto after=metrics.getNumber("work_after");
           const auto before=metrics.getNumber("work_before");
-          if(!after||!before||(!preparedInput&&structuralCleanup=="scoped-cfg"&&*before!=parentCost))
+          if(!after||!before||(!attempt.get("prepared_input")&&structuralCleanup=="scoped-cfg"&&*before!=parentCost))
             throw std::runtime_error("structural control cost mismatch: "+dir);
           const int64_t trialCost=*after;
           attempt["stage"]="scored";

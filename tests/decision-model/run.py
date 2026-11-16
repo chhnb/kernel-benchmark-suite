@@ -46,6 +46,11 @@ with tempfile.TemporaryDirectory() as tmp:
   assert len(catalog[0]['arms'])==4,(label,catalog)
   run(binary,before,'case',0,0,after)
   text=after.read_text()
+  if label in ("chain", "inverse-second-predicate"):
+   entry=text.split("entry:", 1)[1].split("\n\n", 1)[0]
+   dispatch=text.split("decision.dispatch:", 1)[1].split("\n\n", 1)[0]
+   assert "%c0 =" not in entry and "%c0 =" in dispatch, label
+   assert "label %decision.dispatch" in entry, label
   if label == "inverse-second-predicate":
    assert "%c1 =" not in text, "superseded comparison survived condition cleanup"
    assert "%c0 =" in text, "live dispatch selector was incorrectly deleted"

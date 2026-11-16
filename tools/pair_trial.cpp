@@ -1,4 +1,5 @@
 #include "darm_pair_engine/RegionMelder.h"
+#include "fusion_search.h"
 #include "llvm/IR/LLVMContext.h"
 #include "llvm/IR/Module.h"
 #include "llvm/IR/Verifier.h"
@@ -46,11 +47,28 @@ int main(int argc,char**argv){
  if(belongs(L,b,a)&&belongs(R,a,b)){std::swap(L,R);swapped=true;}else if(!(belongs(L,a,b)&&belongs(R,b,a)))return reject("pair_not_exclusive_on_opposite_sides");
  auto affected=a;affected.insert(b.begin(),b.end());for(auto*B:affected)if(LI.getLoopFor(B))return reject("loop_in_trial_scope_not_supported");
  bool lp=PDT.dominates(L.entry,br->getSuccessor(0)),rp=PDT.dominates(R.entry,br->getSuccessor(1));if(!L.region&&!lp&&!rp)return reject("both_selected_blocks_optional_replication_not_supported");
- // Initial supported subset: avoid replication/reordering of observable effects.
- for(auto*B:affected)for(auto&I:*B)if(I.mayHaveSideEffects()||I.mayWriteToMemory())return reject("side_effect_in_trial_scope_not_supported");
+ // Effectful requests use the same guarded rewrite and audits as fusion-search.
+ const bool effectful = llvm::any_of(affected, [](BasicBlock *block) {
+   return llvm::any_of(*block, [](Instruction &inst) {
+     return inst.mayHaveSideEffects() || inst.mayWriteToMemory();
+   });
+ });
  RegionAnalyzer MA(split,DT,PDT);if(L.region){if(!L.exit||!R.exit||!MA.selectExplicitRegions(L.region,R.region))return reject("region_structure_mismatch");}else MA.selectExplicitBlocks(L.entry,R.entry);
  jsonwrite(out+"/selection.json",json::Object{{"function",F->getName().str()},{"split_name",name(split)},{"requested_left",get("left")},{"requested_right",get("right")},{"engine_left_entry",name(L.entry)},{"engine_right_entry",name(R.entry)},{"engine_left_boundary",boundary(L)},{"engine_right_boundary",boundary(R)},{"orientation_swapped",swapped},{"region_pair",bool(L.region)},{"replication_required",MA.requireRegionReplication()},{"engine_calls",1},{"proof_scope","structural prechecks only; semantic tests required"}});
  jsonwrite(out+"/before-features.json",facts(*F));write(out+"/before-canonical.ll",text(*M));std::map<std::string,std::string> untouched;for(auto&other:*M)if(&other!=F)untouched[other.getName().str()]=text(other);
- RegionMelder melder(MA);melder.merge(0);write(out+"/after-raw.ll",text(*M));jsonwrite(out+"/after-raw-features.json",facts(*F));bool verifier=!verifyModule(*M,&errs());bool otherSame=true;for(auto&other:*M)if(&other!=F)otherSame&=untouched.count(other.getName().str())&&untouched[other.getName().str()]==text(other);
+ std::unique_ptr<Module> rewritten;
+ if (effectful) {
+   fusion::Candidate candidate{get("function"), get("split"), get("left"), get("right")};
+   candidate.speculation = fusion::SpeculationMode::None;
+   auto trial = fusion::tryPair(*M, candidate, 0, 0, fusion::CleanupMode::None);
+   if (!trial.valid) return reject(trial.reason);
+   rewritten = std::move(trial.raw);
+   F = rewritten->getFunction(get("function"));
+ } else {
+   RegionMelder melder(MA);
+   melder.merge(0);
+ }
+ Module &result = rewritten ? *rewritten : *M;
+ write(out+"/after-raw.ll",text(result));jsonwrite(out+"/after-raw-features.json",facts(*F));bool verifier=!verifyModule(result,&errs());bool otherSame=true;for(auto&other:result)if(&other!=F)otherSame&=untouched.count(other.getName().str())&&untouched[other.getName().str()]==text(other);
  jsonwrite(out+"/engine-result.json",json::Object{{"status",verifier&&otherSame?"transformed_ir_verified":"failed_postcheck"},{"transformation_applied",true},{"llvm_verifier_passed",verifier},{"other_functions_unchanged",otherSame},{"semantic_equivalence","not_proved_by_verifier"},{"engine_calls",1}});return verifier&&otherSame?0:5;
 }

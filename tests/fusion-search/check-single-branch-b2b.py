@@ -157,18 +157,25 @@ with tempfile.TemporaryDirectory() as directory:
             report = out / "reports/trial-0/trial.json"
             trial = json.loads(report.read_text())
             expected = f"single-branch-{shape.removeprefix('pure-').removeprefix('paired-')}"
+            if shape == "complete-common-dp":
+                expected = "single-branch-separate"
             merged_exit = trial["merge_path"] == "single-branch-prefix-merged-exit"
             segmented = trial["merge_path"].startswith("single-branch-segment-dp")
             complete_common = trial["merge_path"].startswith("single-branch-complete-common-dp")
             assert (trial["merge_path"] == expected or segmented or merged_exit or
                     (shape == "pure-aligned-hoist" and complete_common) or
                     (shape.startswith("paired-") and trial["merge_path"] == "single-branch-prefix")), (shape, trial["merge_path"])
-            assert trial["eligible"] == (shape != "separate"), trial["score_result"]
+            assert trial["eligible"] == (shape not in {"separate", "complete-common-dp", "paired-common-dp"}), trial["score_result"]
             assert not trial["gap_choices"] and not trial["alignment_choices"]
             raw = report.with_name("after-raw.ll").read_text()
             assert "[ 77, %external ]" in raw
             if shape == "paired-join-spec":
-                assert segmented and re.search(r"^fusion\.common[^\n]*:\s*[^\n]*\n(?:  .*\n)*?  .*xor i32", raw, re.M), raw
+                assert segmented
+                xor_block = r"^fusion\.%s[^\n]*:\s*[^\n]*\n(?:  .*\n)*?  .*xor i32 .*73"
+                raw_block = "common" if trial["merge_path"].endswith("-speculate-arms") else "side"
+                assert re.search(xor_block % raw_block, raw, re.M), raw
+                cleaned = report.with_name("after.ll").read_text()
+                assert re.search(xor_block % "common", cleaned, re.M), cleaned
             if shape == "paired-segment-dp":
                 assert raw.count("br i1 %") == 3  # Outside edge and two protection segments.
                 assert raw.count("mul i32") == 4
@@ -182,8 +189,8 @@ with tempfile.TemporaryDirectory() as directory:
                 if not merged_exit:
                     assert raw.index("store i32") < raw.index("br i1 %", raw.index("split:"))
             if shape == "complete-common-dp":
-                assert raw.count("mul i32") == raw.count("xor i32") == 1
-                assert raw.index("xor i32") < raw.index("br i1 %", raw.index("split:"))
+                assert re.search(r"^left:[^\n]*\n  .*mul i32", raw, re.M)
+                assert re.search(r"^right:[^\n]*\n  .*xor i32", raw, re.M)
             if shape == "paired-common-dp" and not segmented:
                 assert "xor i32 %x, 73" in raw.split("br i1 %p")[0]
                 assert raw.count("mul i32") == 3
@@ -379,9 +386,74 @@ with tempfile.TemporaryDirectory() as directory:
         out = root / f"{shape}-0"
         run(greedy, out / "source.ll", "choose", out / "auto")
         summary = json.loads((out / "auto/summary.json").read_text())
-        assert bool(summary["commits"]) == (shape != "separate"), summary
+        assert bool(summary["commits"]) == (shape not in {"separate", "complete-common-dp", "paired-common-dp"}), summary
         assert summary["shared_arm_trials"]
         assert any(
             "--b2b-strategy" in json.loads(request.read_text())["argv"]
             for request in (out / "auto").glob("trial-*/request.json")
         )
+
+    # DP3 can emit a segmented finalist beyond DP1's fourth slot. Check
+    # replay, the exit PHI with its external edge, and memory on both arms.
+    out = root / "paired-segment-dp-0"
+    source = out / "source.ll"
+    args = [search, "--ir", source, "--function", "choose", "--split", "B2",
+            "--left", "B3", "--right", "B4", "--structural", "1", "--speculation", "cost",
+            "--cleanup", "darm-cfg-dce", "--b2b-strategy", "dp3", "--tti-worker", worker]
+    run(*args, "--out", out / "dp3.ll", "--debug-dir", out / "dp3-report")
+    trial = json.loads((out / "dp3-report/trial-0/trial.json").read_text())
+    request = out / "dp3-fifth.json"
+    request.write_text(json.dumps(dict(trial, merge_path="single-branch-dp3-segment-5")))
+    fifth, repeat = out / "dp3-fifth.ll", out / "dp3-fifth-replay.ll"
+    run(*args, "--gap-replay", request, "--out", fifth, "--debug-dir", out / "dp3-fifth-report")
+    report = out / "dp3-fifth-report/trial-0/trial.json"
+    run(*args, "--gap-replay", report, "--out", repeat)
+    assert fifth.read_bytes() == repeat.read_bytes()
+    raw = report.with_name("after-raw.ll")
+    assert "[ 77, %external ]" in raw.read_text()
+    for program in (raw, fifth):
+        run(opt, "-verify", "-disable-output", program)
+    cpu = out / "dp3-cpu.ll"
+    ir = fifth.read_text().replace("amdgcn-amd-amdhsa", "x86_64-unknown-linux-gnu")
+    ir = re.sub(r"^attributes #0 = .*\n", "", ir, flags=re.M)
+    cpu.write_text(ir.replace(" #0 {", " {").replace("@choose(", "@after("))
+    (root / "check.c").write_text(driver.replace("if (outside || p)", "if (outside)"))
+    run(clang, "-O2", "-c", cpu, "-o", out / "dp3.o")
+    run(clang, out / "before.o", out / "dp3.o", root / "check.c", "-o", out / "check-dp3")
+    run(out / "check-dp3")
+    run(greedy, source, "choose", out / "auto-dp3", "--b2b-strategy", "dp3")
+    summary = json.loads((out / "auto-dp3/summary.json").read_text())
+    assert summary["b2b_strategy"] == "dp3" and summary["commits"] > 0, summary
+
+    # Preserve a conditional exit with a live value while sharing arm work.
+    out = root / "independent-exits"
+    out.mkdir()
+    left, right = cases["paired-segment-dp"]
+    source = out / "source.ll"
+    ir = template.replace("LEFT", left).replace("RIGHT", right)
+    ir = ir.replace("right:\n" + right + "\n  br label %join",
+                    "right:\n" + right + "\n  %leave = icmp eq i32 %x, 0"
+                    "\n  br i1 %leave, label %other, label %join\n"
+                    "other:\n  ret i32 %r")
+    source.write_text(ir)
+    args = [search, "--ir", source, "--function", "choose", "--split", "B2",
+            "--left", "B3", "--right", "B4", "--structural", "1", "--speculation", "cost",
+            "--b2b-strategy", "dp1", "--cleanup", "darm-cfg-dce", "--tti-worker", worker]
+    run(*args, "--out", out / "winner.ll", "--debug-dir", out / "winner")
+    trial = json.loads((out / "winner/trial-0/trial.json").read_text())
+    request = out / "segment.json"
+    request.write_text(json.dumps(dict(trial, merge_path="single-branch-segment-dp")))
+    run(*args, "--gap-replay", request, "--out", out / "fused.ll", "--debug-dir", out / "segment")
+    raw = out / "segment/trial-0/after-raw.ll"
+    assert re.search(r"br i1 .*label %other, label %join", raw.read_text())
+    run(opt, "-verify", "-disable-output", raw)
+    run(opt, "-verify", "-disable-output", out / "fused.ll")
+    (root / "check.c").write_text(driver.replace("if (outside || p)", "if (outside)"))
+    for variant, path in (("before", source), ("after", out / "fused.ll")):
+        cpu = out / f"{variant}.ll"
+        text = path.read_text().replace("amdgcn-amd-amdhsa", "x86_64-unknown-linux-gnu")
+        text = re.sub(r"^attributes #0 = .*\n", "", text, flags=re.M)
+        cpu.write_text(text.replace(" #0 {", " {").replace("@choose(", f"@{variant}("))
+        run(clang, "-O2", "-c", cpu, "-o", cpu.with_suffix(".o"))
+    run(clang, out / "before.o", out / "after.o", root / "check.c", "-o", out / "check")
+    run(out / "check")
