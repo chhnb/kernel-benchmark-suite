@@ -22,3 +22,4 @@ python3 "$root/tests/fusion-search/check-commit-score-invalidation.py"
 python3 "$root/tests/fusion-search/check-incremental-ir.py"
 python3 "$root/tests/fusion-search/check-b2b-capsule.py"
 python3 "$root/tests/fusion-search/check-isolated-greedy.py"
+python3 "$root/tests/fusion-search/check-isolated-greedy.py" --external

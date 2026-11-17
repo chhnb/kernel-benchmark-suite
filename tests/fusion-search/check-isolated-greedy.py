@@ -3,7 +3,7 @@
 import argparse,contextlib,json,os,shlex,subprocess,tempfile
 from pathlib import Path
 root=Path(__file__).resolve().parents[2]
-ap=argparse.ArgumentParser(description=__doc__);ap.add_argument('--out',type=Path);args=ap.parse_args()
+ap=argparse.ArgumentParser(description=__doc__);ap.add_argument('--out',type=Path);ap.add_argument('--external',action='store_true');args=ap.parse_args()
 env=dict(os.environ)
 env['LD_LIBRARY_PATH']=str(root/'build/llvm12-jammy/usr/lib/x86_64-linux-gnu')+':'+env.get('LD_LIBRARY_PATH','')
 env.setdefault('LLVM24_LIBDIR',str(root/'build/llvm24-pinned/lib'))
@@ -17,7 +17,7 @@ with contextlib.ExitStack() as stack:
  command=[env.get('CXX','c++'),*flags('--cxxflags'),'-std=c++17','-fexceptions','-UNDEBUG','-O1','-Wno-deprecated-declarations','-I'+str(root/'tools'),str(root/'tests/fusion-search/check-isolated-greedy.cpp'),*[str(root/'build/llvm24-tti'/f'{o}.o') for o in objects],*flags('--ldflags','--link-shared','--libs','--system-libs'),'-o',str(exe)]
  subprocess.run(command,env=env,check=True)
  worker=root/'tools/run-llvm24-tti'
- output=subprocess.check_output([str(exe),str(tmp),str(worker),str(root/'tests/fusion-search/commit-score-context.ll')],env=env,text=True)
+ output=subprocess.check_output([str(exe),str(tmp),str(worker),str(root/'tests/fusion-search/commit-score-context.ll')]+(['external'] if args.external else []),env=env,text=True)
  (tmp/'run.log').write_text(output);print(output,end='')
  def cost(ir):
   result=json.loads(subprocess.check_output([str(worker),str(ir),'f'],env=env,text=True))
@@ -25,7 +25,7 @@ with contextlib.ExitStack() as stack:
   return result['cost']
  full=[cost(tmp/'baseline.ll')]+[cost(tmp/f'full-{i}.ll') for i in range(2)]
  cached=[cost(tmp/'baseline.ll')]+[cost(tmp/f'cached-{i}.ll') for i in range(2)]
- assert full==cached==[63,43,23],(full,cached)
+ assert full==cached==([65,45,25] if args.external else [63,43,23]),(full,cached)
  clang=Path(subprocess.check_output([lc,'--bindir'],text=True,env=env).strip())/'clang'
  harness=tmp/'main.c';harness.write_text('''#include <stdio.h>
 #include <stdint.h>
@@ -57,7 +57,7 @@ printf("%d\\n",f(p,q,x,y));return 0;}
   out=subprocess.check_output([str(opt),'-strip','-S',str(clean),'-o','-'],env=env,text=True)
   return '\n'.join(line for line in out.splitlines() if not line.startswith('; ModuleID'))
  sameLegacy=canonical(tmp/'legacy-second.ll')==canonical(tmp/'cached-1.ll')
- report=dict(legacy_second_trial=legacySecond['metrics'],legacy_final_alpha_equal=sameLegacy,isolated_full_costs=full,isolated_cached_costs=cached,cpu_inputs=6724,quote_cache='off',legacy_cleanup_first_trial=legacy['metrics'],legacy_status=legacy['status'],default_driver_changed=False)
+ report=dict(external_ssa_inputs=args.external,legacy_second_trial=legacySecond['metrics'],legacy_final_alpha_equal=sameLegacy,isolated_full_costs=full,isolated_cached_costs=cached,cpu_inputs=6724,quote_cache='off',legacy_cleanup_first_trial=legacy['metrics'],legacy_status=legacy['status'],default_driver_changed=False)
  (tmp/'report.json').write_text(json.dumps(report,indent=2)+'\n')
  print('PASS isolated full/cached TTI:',full,'and 6724 CPU inputs')
  print('Separate legacy cleanup steps:',legacy['metrics']['work_before'],legacy['metrics']['work_after'],legacySecond['metrics']['work_after'],'final alpha-equal:',sameLegacy)

@@ -28,12 +28,14 @@ public:
     ir=std::make_unique<llvm::Module>("isolated-b2b",source.getContext());
     ir->setDataLayout(source.getDataLayout());ir->setTargetTriple(source.getTargetTriple());
     std::vector<llvm::Type*> types;for(auto &a:f->args())types.push_back(a.getType());
+    for(auto id:unit.inputs)types.push_back(ids.lookup(id)->getType());
     auto *cf=llvm::Function::Create(llvm::FunctionType::get(output->getType(),types,false),
        llvm::GlobalValue::ExternalLinkage,"unit",ir.get());
     // Input attributes are intentionally not imported as hidden facts. This
     // may change optimization; isolated cleanup remains a separate path.
     llvm::ValueToValueMapTy map;unsigned index=0;
     for(auto &a:f->args()){auto *arg=cf->getArg(index++);arg->setName(a.getName());map[&a]=arg;}
+    for(auto id:unit.inputs){auto *arg=cf->getArg(index++);arg->setName("input"+std::to_string(id));map[ids.lookup(id)]=arg;}
     auto *entry=llvm::BasicBlock::Create(source.getContext(),"entry",cf);
     auto *cl=llvm::BasicBlock::Create(source.getContext(),"left",cf);
     auto *cr=llvm::BasicBlock::Create(source.getContext(),"right",cf);
@@ -53,14 +55,14 @@ public:
   std::unique_ptr<llvm::Module> apply(llvm::Module &current,const llvm::Module &product) const {
     auto result=llvm::CloneModule(current);
     auto currentFacts=IRDependencySnapshot::capture(*result);
-    if(!parent.sameReads(currentFacts,unit.reads,{unit.entry}))
+    if(!parent.sameReads(currentFacts,unit.reads,unit.placementIndependentReads()))
       throw std::runtime_error("capsule dependencies changed");
     IRIdentity ids(*result);
     auto *rootTerm=ids.lookup(unit.entry);if(!rootTerm)throw std::runtime_error("capsule root disappeared");
     auto *root=rootTerm->getParent();auto now=B2BOptimizationUnit::discover(*root,ids);
-    if(!now.eligible()||now.identity!=unit.identity)throw std::runtime_error("capsule boundary changed");
+    if(!now.eligible()||now.identity!=unit.identity||now.inputs!=unit.inputs)throw std::runtime_error("capsule boundary changed");
     auto *f=result->getFunction(function),*cf=product.getFunction("unit");
-    if(!f||!cf||cf->isDeclaration()||cf->arg_size()!=f->arg_size())
+    if(!f||!cf||cf->isDeclaration()||cf->arg_size()!=f->arg_size()+unit.inputs.size())
       throw std::runtime_error("invalid capsule signature");
     auto *l=ids.lookup(unit.left)->getParent(),*r=ids.lookup(unit.right)->getParent();
     auto *join=ids.lookup(unit.exit)->getParent();auto *output=llvm::dyn_cast<llvm::PHINode>(&join->front());
@@ -89,9 +91,15 @@ public:
     for(auto &b:*cf)visit(&b);
     if(llvm::verifyModule(product,&llvm::errs()))throw std::runtime_error("invalid capsule product");
     llvm::ValueToValueMapTy map;unsigned index=0;
-    for(auto &a:cf->args()){
-      if(a.getType()!=f->getArg(index)->getType())throw std::runtime_error("capsule argument type changed");
-      map[&a]=f->getArg(index++);
+    for(auto &a:f->args()){
+      auto *formal=cf->getArg(index++);
+      if(formal->getType()!=a.getType())throw std::runtime_error("capsule argument type changed");
+      map[formal]=&a;
+    }
+    for(auto id:unit.inputs){
+      auto *value=ids.lookup(id);auto *formal=cf->getArg(index++);
+      if(!value||value->getType()!=formal->getType())throw std::runtime_error("capsule external input changed");
+      map[formal]=value;
     }
     std::vector<llvm::BasicBlock*> blocks;
     for(auto &b:*cf){auto *copy=llvm::BasicBlock::Create(result->getContext(),"unit."+std::to_string(unit.entry)+"."+b.getName().str(),f,join);map[&b]=copy;blocks.push_back(copy);}

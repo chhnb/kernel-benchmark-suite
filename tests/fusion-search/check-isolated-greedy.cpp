@@ -8,7 +8,7 @@
 using namespace llvm;
 static void save(const Module &m,const std::string &path){std::error_code e;raw_fd_ostream s(path,e);assert(!e);m.print(s,nullptr);}
 int main(int argc,char **argv){
- assert(argc==4);
+ assert(argc==4||argc==5);const bool external=argc==5;
  const StringRef option="two-entry-phi-node-folding-threshold";
  auto &registered=cl::getRegisteredOptions();auto found=registered.find(option);
  assert(found!=registered.end());assert(!found->second->addOccurrence(0,option,"7"));
@@ -35,6 +35,13 @@ int main(int argc,char **argv){
  ret i32 %sum
  })",err,ctx);assert(parent);
 
+ if(external){
+   auto *f=parent->getFunction("f");auto *a=cast<BranchInst>(f->getEntryBlock().getTerminator());
+   auto *b=cast<BranchInst>(a->getSuccessor(0)->getSingleSuccessor()->getTerminator());
+   auto *pc=new ICmpInst(a,ICmpInst::ICMP_NE,f->getArg(2),ConstantInt::get(Type::getInt32Ty(ctx),0),"pc");
+   auto *qc=new ICmpInst(a,ICmpInst::ICMP_SLT,f->getArg(3),ConstantInt::get(Type::getInt32Ty(ctx),3),"qc");
+   a->setCondition(pc);b->setCondition(qc);
+ }
  parent->setTargetTriple("amdgcn-amd-amdhsa");
  parent->setDataLayout("e-p:64:64-i64:64-n32:64");
  parent->getFunction("f")->addFnAttr("target-cpu","gfx906");
@@ -43,7 +50,7 @@ int main(int argc,char **argv){
  auto full=fusion::runIsolatedB2BGreedy(*parent,"f",fullScorer,false,[&](const Module &m,unsigned n){save(m,std::string(argv[1])+"/full-"+std::to_string(n)+".ll");});
  auto cached=fusion::runIsolatedB2BGreedy(*parent,"f",cacheScorer,true,[&](const Module &m,unsigned n){save(m,std::string(argv[1])+"/cached-"+std::to_string(n)+".ll");});
  assert(full.stats.commits==2);assert(cached.stats.commits==2);
- assert(full.costs==cached.costs);assert(full.costs==std::vector<int64_t>({43,23}));
+ assert(full.costs==cached.costs);assert(full.costs==(external?std::vector<int64_t>({45,25}):std::vector<int64_t>({43,23})));
  assert(full.identities==cached.identities);assert(full.gains==cached.gains);assert(full.hashes==cached.hashes);
  assert(fusion::moduleHash(*full.module)==fusion::moduleHash(*cached.module));
  assert(full.stats.trials==3);assert(cached.stats.trials==2);assert(cached.stats.reusedTrials==1);
@@ -62,6 +69,18 @@ int main(int argc,char **argv){
  for(auto entry:{std::make_pair("cpu-baseline.ll",parent.get()),std::make_pair("cpu-final.ll",cached.module.get())}){
    auto cpu=CloneModule(*entry.second);cpu->setTargetTriple("x86_64-unknown-linux-gnu");cpu->setDataLayout("");
    cpu->getFunction("f")->removeFnAttr("target-cpu");save(*cpu,std::string(argv[1])+"/"+entry.first);
+ }
+ if(external){
+   auto changed=CloneModule(*parent);auto *f=changed->getFunction("f");
+   auto *root=f->getEntryBlock().getTerminator()->getSuccessor(0)->getSingleSuccessor();
+   auto *condition=cast<ICmpInst>(cast<BranchInst>(root->getTerminator())->getCondition());
+   auto *base=BinaryOperator::CreateAdd(f->getArg(3),ConstantInt::get(Type::getInt32Ty(ctx),1),"condition.base",condition);
+   condition->setOperand(0,base);
+   fusion::B2BUnitCapsule capsule(*changed,*root);
+   base->setOperand(1,ConstantInt::get(Type::getInt32Ty(ctx),2));
+   auto before=fusion::moduleHash(*changed);bool invalidated=false;
+   try{capsule.apply(*changed,*capsule.ir);}catch(const std::runtime_error&){invalidated=true;}
+   assert(invalidated);assert(fusion::moduleHash(*changed)==before);
  }
  auto memory=parseIRFile(argv[3],err,ctx);assert(memory);
  assert(!fusion::isolatedScalarTTIDomain(*memory->getFunction("choose")));

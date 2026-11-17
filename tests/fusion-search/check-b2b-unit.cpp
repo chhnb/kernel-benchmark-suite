@@ -31,9 +31,12 @@ int main(){
  auto after=fusion::IRDependencySnapshot::capture(*m);
  assert(!before.sameReads(after,au.reads));assert(before.sameReads(after,bu.reads));
  assert(before.changesTo(after).within(au.writes,au.writes));
- // A value supplied by an external instruction is not silently treated as an
- // independent opaque input. The full-context path remains necessary.
+ // An external SSA value available at entry becomes an explicit input with
+ // a recorded definition dependency.
  auto *bl=b->getTerminator()->getSuccessor(0);bl->front().setOperand(0,&b->front());
+ {fusion::IRIdentity ids(*m);auto rejected=fusion::B2BOptimizationUnit::discover(*b,ids);assert(rejected.eligible() && !rejected.inputs.empty());}
+ // A value from only one predecessor is not available at the unit entry.
+ bl->front().setOperand(0,&al->front());
  {fusion::IRIdentity ids(*m);auto rejected=fusion::B2BOptimizationUnit::discover(*b,ids);assert(rejected.rejection=="external_operand_definition");}
- outs()<<"PASS B2B boundary discovery: independent unit reads and external SSA fallback (not end-to-end reuse)\n";
+ outs()<<"PASS B2B boundary discovery: independent reads, explicit SSA inputs, unavailable SSA rejection (not end-to-end reuse)\n";
 }

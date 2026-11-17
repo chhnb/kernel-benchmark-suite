@@ -14,6 +14,11 @@ int main(int argc,char **argv){
   if(std::distance(exit->phis().begin(),exit->phis().end())!=1){++reasons["single_output_required"];continue;}
   ++admitted;
  }
+ std::string snapshotError;
+ if(admitted)try{fusion::IRDependencySnapshot::capture(*m);}catch(const std::runtime_error &e){snapshotError=e.what();}
+ llvm::json::Object unknown;std::map<std::string,unsigned> opcodes;
+ for(auto &b:*f)for(auto &i:b)if(!fusion::gcnQuoteKey(i))++opcodes[i.getOpcodeName()];
+ for(auto &p:opcodes)unknown[p.first]=int64_t(p.second);
  llvm::json::Object why;for(auto &p:reasons)why[p.first]=int64_t(p.second);
- llvm::outs()<<llvm::formatv("{0:2}\n",llvm::json::Value(llvm::json::Object{{"function",f->getName().str()},{"conditional_roots",int64_t(roots)},{"isolatable_units",int64_t(admitted)},{"whole_function_tti_domain",fusion::isolatedScalarTTIDomain(*f)},{"rejections",std::move(why)}}));
+ llvm::outs()<<llvm::formatv("{0:2}\n",llvm::json::Value(llvm::json::Object{{"function",f->getName().str()},{"conditional_roots",int64_t(roots)},{"isolatable_units",int64_t(admitted)},{"whole_function_tti_domain",fusion::isolatedScalarTTIDomain(*f)},{"rejections",std::move(why)},{"snapshot_error",snapshotError},{"unknown_quote_opcodes",std::move(unknown)}}));
 }

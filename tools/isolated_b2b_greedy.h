@@ -37,10 +37,10 @@ struct IsolatedGreedyResult {
 inline IncrementalCandidateQueue::ReadSet isolatedReads(
     const IRDependencySnapshot &snapshot,const B2BOptimizationUnit &unit) {
   IncrementalCandidateQueue::ReadSet reads{{"context",snapshot.context},
-    {"policy","isolated-pure-integer-gfx906-v2;fold-output-boundary;no-global-cleanup"}};
+    {"policy","isolated-pure-integer-gfx906-v3;opaque-ssa-inputs;fold-output-boundary;no-global-cleanup"}};
   for(auto id:unit.reads){
     const auto &record=snapshot.instructions.at(id);
-    reads["instruction:"+std::to_string(id)]=id==unit.entry?
+    reads["instruction:"+std::to_string(id)]=(id==unit.entry||unit.inputs.count(id))?
         IRDependencySnapshot::instructionBody(record):record;
     std::string uses;
     auto found=snapshot.users.find(id);
