@@ -1131,5 +1131,247 @@
       "final_ir_equal": false,
       "scope": "Verifier and terminal candidate coverage; execution correctness requires separate tests"
     }
+  ],
+  "trees_terminal_fresh_discovery": [
+    {
+      "case": "tigre",
+      "additional": 0,
+      "trials": 1,
+      "status": "completed"
+    },
+    {
+      "case": "LUD32-lud_diagonal",
+      "additional": 0,
+      "trials": 1,
+      "status": "completed"
+    },
+    {
+      "case": "LUD32-lud_perimeter",
+      "additional": 0,
+      "trials": 3,
+      "status": "completed"
+    },
+    {
+      "case": "LUD32-lud_internal",
+      "additional": 0,
+      "trials": 0,
+      "status": "completed"
+    },
+    {
+      "case": "BIT64",
+      "additional": 0,
+      "trials": 0,
+      "status": "completed"
+    },
+    {
+      "case": "DCT8",
+      "additional": 0,
+      "trials": 1,
+      "status": "completed"
+    },
+    {
+      "case": "MS128",
+      "additional": 0,
+      "trials": 0,
+      "status": "completed"
+    },
+    {
+      "case": "BIT128",
+      "additional": 0,
+      "trials": 0,
+      "status": "completed"
+    },
+    {
+      "case": "PCM256",
+      "additional": 0,
+      "trials": 1,
+      "status": "completed"
+    },
+    {
+      "case": "MS32",
+      "additional": 0,
+      "trials": 0,
+      "status": "completed"
+    },
+    {
+      "case": "BIT256",
+      "additional": 0,
+      "trials": 0,
+      "status": "completed"
+    },
+    {
+      "case": "LUD64-lud_diagonal",
+      "additional": 0,
+      "trials": 1,
+      "status": "completed"
+    },
+    {
+      "case": "LUD64-lud_perimeter",
+      "additional": 0,
+      "trials": 4,
+      "status": "completed"
+    },
+    {
+      "case": "LUD64-lud_internal",
+      "additional": 0,
+      "trials": 0,
+      "status": "completed"
+    },
+    {
+      "case": "NQU64",
+      "additional": 0,
+      "trials": 7,
+      "status": "completed"
+    },
+    {
+      "case": "DCT4",
+      "additional": 0,
+      "trials": 1,
+      "status": "completed"
+    },
+    {
+      "case": "NQU128",
+      "additional": 0,
+      "trials": 7,
+      "status": "completed"
+    },
+    {
+      "case": "PCM32",
+      "additional": 0,
+      "trials": 1,
+      "status": "completed"
+    },
+    {
+      "case": "SRAD16",
+      "additional": 0,
+      "trials": 3,
+      "status": "completed"
+    },
+    {
+      "case": "NQU256",
+      "additional": 0,
+      "trials": 7,
+      "status": "completed"
+    },
+    {
+      "case": "DCT16",
+      "additional": 0,
+      "trials": 1,
+      "status": "completed"
+    },
+    {
+      "case": "LUD8-lud_diagonal",
+      "additional": 0,
+      "trials": 0,
+      "status": "completed"
+    },
+    {
+      "case": "LUD8-lud_perimeter",
+      "additional": 0,
+      "trials": 3,
+      "status": "completed"
+    },
+    {
+      "case": "LUD8-lud_internal",
+      "additional": 0,
+      "trials": 0,
+      "status": "completed"
+    },
+    {
+      "case": "hypersonic",
+      "additional": 0,
+      "trials": 36,
+      "status": "completed"
+    },
+    {
+      "case": "landau",
+      "additional": 0,
+      "trials": 27,
+      "status": "completed"
+    },
+    {
+      "case": "LUD16-lud_diagonal",
+      "additional": 0,
+      "trials": 0,
+      "status": "completed"
+    },
+    {
+      "case": "LUD16-lud_perimeter",
+      "additional": 0,
+      "trials": 3,
+      "status": "completed"
+    },
+    {
+      "case": "LUD16-lud_internal",
+      "additional": 0,
+      "trials": 0,
+      "status": "completed"
+    },
+    {
+      "case": "PCM64",
+      "additional": 0,
+      "trials": 1,
+      "status": "completed"
+    },
+    {
+      "case": "SRAD32",
+      "additional": 0,
+      "trials": 3,
+      "status": "completed"
+    },
+    {
+      "case": "BIT32",
+      "additional": 0,
+      "trials": 0,
+      "status": "completed"
+    },
+    {
+      "case": "MS256",
+      "additional": 0,
+      "trials": 0,
+      "status": "completed"
+    },
+    {
+      "case": "MS64",
+      "additional": 0,
+      "trials": 0,
+      "status": "completed"
+    },
+    {
+      "case": "NQU96",
+      "additional": 0,
+      "trials": 7,
+      "status": "completed"
+    },
+    {
+      "case": "MapAiry",
+      "additional": 0,
+      "trials": 43,
+      "status": "completed"
+    },
+    {
+      "case": "SW2D",
+      "additional": 0,
+      "trials": 8,
+      "status": "completed"
+    },
+    {
+      "case": "HLLD",
+      "additional": 0,
+      "trials": 1,
+      "status": "completed"
+    },
+    {
+      "case": "vllm",
+      "additional": 0,
+      "trials": 14,
+      "status": "completed"
+    },
+    {
+      "case": "PCM128",
+      "additional": 0,
+      "trials": 1,
+      "status": "completed"
+    }
   ]
 }

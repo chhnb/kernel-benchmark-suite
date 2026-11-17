@@ -60,3 +60,5 @@ GPU 使用 32768 个 block、每个 block 256 个线程，固定 seed 42，每�
 | worker | verify | 446593 | 7230 | 187.203 | 2.516 |
 
 明细和二进制散列见同目录 tree-domain-validation.json。该终态审计覆盖原始结构 catalog；prepared 候选仍跟随初始决策及其规范化，尚缺对提交后新增 prepared-only 决策的独立终态证明。
+
+对 40 个冻结条目的 trees 最终 IR 分别重新启动同一驱动，从决策发现、相邻 arm 准备走到完整结构扫尾。40 个均为零新增提交。完整 vLLM 重启试跑 14 个候选，PCM128 和 PCM256 各 1 个。此结果验证这批具体终态达到固定点。
