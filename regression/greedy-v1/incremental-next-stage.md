@@ -191,3 +191,25 @@ PCM256 完整轨迹：122 次提交，13,254 次候选记录；7,883 次成功�
 - 原全函数清理与局部策略最终 IR 仍存在差异；没有修改期望值，也未切换默认路径。
 
 证据：`build/incremental-unit-audit/coverage-metadata-replay.json`。完整 TTI 证明域仍覆盖 0 个冻结函数，真实 benchmark 的跨提交整次 trial 跳过仍未启用。接下来必须证明未改动外部指令的评分上下文依赖，不能仅移除过滤条件。
+
+## 真实单元完整评分探针（仍不缓存整体收益）
+
+新增 `tests/fusion-search/probe-isolated-real.cpp/.py`。脚本校验冻结输入 SHA256；提取单元后先原样回放作为边界拼接对照，再执行实际 DP1 与局部清理，回放到完整当前模块，逐布局调用 LLVM24 评分（报价缓存 off）。回放自带 LLVM verifier。输出 plan_kind、merge_path、原样回放成本及每个完整模块产物；没有启用真实输入的跨提交收益复用。
+
+| 输入 | 父模块 | 原样提取/回放 | DP1 与局部清理后 | 生成路径 |
+|---|---:|---:|---:|---|
+| DCT8 | 62 | 62 | 62 | single-branch-segment-dp |
+| MS32 | 370 | 370 | 355 | single-branch-separate |
+
+MS32 的 15 分不是原样边界拼接产生的，也不能标记为匹配指令的共享收益：生成路径是 separate，经局部清理后降低成本。这说明接入默认提交策略前，还需保留其原有共享/收益准入条件，不能仅看到整体正分就提交。该探针仅检查 IR 生成与完整评分，不宣称 GPU 正确性或加速，也不证明其与全函数清理等价。
+
+评分源码审核定位（固定 LLVM24 6be16f356d3e）：
+
+- `TargetTransformInfoImpl.h:1526` 的 GEP 报价读取唯一使用者访问类型；不能只比较 GEP 自身。
+- `AMDGPUTargetTransformInfo.cpp:578` 的 FMul 分支读取唯一使用者及融合条件；浮点域不能沿用纯整数的局部证明。
+- 同函数整数 add/sub/mul/移位分支只读取类型合法化和子目标；整数 div/rem 进入 `BasicTTIImpl.h:1079`，后续扩展需单独覆盖其类型/操作合法化路径。
+- `BasicTTIImpl.h:1244` 的 cast 路径含 extending-load 检查；外部 SSA 正文不变不意味着相关 TTI 依赖未变。
+
+因此本轮没有放宽 `isolatedScalarTTIDomain`，也没有修改默认报价 key。后续应建立外部评分依赖证书，并用真实上下文变化反例检验；不能把上述探针的单次成功作为跨提交复用依据。
+
+证据目录：`build/incremental-unit-audit/dct8-real-control/`、`ms32-real-control/`。重放入口：`python3 tests/fusion-search/probe-isolated-real.py --case DCT8 --tool build/incremental-unit-audit/probe-real --out <新目录>`。
