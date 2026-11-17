@@ -36,6 +36,9 @@ int main(int argc,char **argv){
  })",err,ctx);assert(parent);
  auto *a=&parent->getFunction("f")->getEntryBlock();auto *b=a->getTerminator()->getSuccessor(0)->getSingleSuccessor();
  fusion::B2BUnitCapsule ca(*parent,*a),cb(*parent,*b);
+ auto prepared=fusion::B2BReplayContext::capture(*parent);
+ fusion::B2BUnitCapsule preparedA(*parent,*a,&prepared);
+ assert(fusion::moduleHash(*preparedA.ir)==fusion::moduleHash(*ca.ir));
  save(*parent,std::string(argv[1])+"/baseline.ll");
  fusion::Candidate candidate{"unit","B0","B1","B2"};
  auto plansA=fusion::planSingleBranchB2B(*ca.ir,candidate,1,fusion::CleanupMode::DarmCFGInstCombine,"");
@@ -43,10 +46,20 @@ int main(int argc,char **argv){
  unsigned count=0;std::unique_ptr<Module> first;
  for(auto &plan:plansA){if(!plan.valid||!plan.normalized)continue;
   auto current=ca.apply(*parent,*plan.normalized);assert(!verifyModule(*current,&errs()));
+  auto fast=ca.apply(*parent,*plan.normalized,&prepared);
+  assert(fusion::moduleHash(*fast)==fusion::moduleHash(*current));
+  auto currentFacts=fusion::B2BReplayContext::capture(*current);
+  // The old exact-parent snapshots must not authorize a current-parent replay,
+  // even where B's actual transformation dependencies remain valid.
+  bool stale=false;auto before=fusion::moduleHash(*current);
+  try{cb.apply(*current,*cb.ir,&prepared);}catch(const std::runtime_error&){stale=true;}
+  assert(stale&&before==fusion::moduleHash(*current));
   if(!first)first=CloneModule(*current);
   for(auto &bp:plansB){if(!bp.valid||!bp.normalized)continue;
     // B's product was built from the old parent, before A was applied.
     auto both=cb.apply(*current,*bp.normalized);assert(!verifyModule(*both,&errs()));
+    auto reusedFacts=cb.apply(*current,*bp.normalized,&currentFacts);
+    assert(fusion::moduleHash(*reusedFacts)==fusion::moduleHash(*both));
     // Recompute B on current and require exact final IR parity.
     fusion::IRIdentity currentIDs(*current);
     auto *currentB=currentIDs.lookup(cb.boundary().entry)->getParent();

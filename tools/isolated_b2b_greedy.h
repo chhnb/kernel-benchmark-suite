@@ -107,7 +107,8 @@ inline IsolatedGreedyResult runIsolatedB2BGreedy(
   for(unsigned round=0;round<256;++round){
     auto &current=*result.module;auto *f=current.getFunction(function);
     if(!f||!isolatedScalarTTIDomain(*f))throw std::runtime_error("outside isolated TTI proof domain");
-    auto snapshot=IRDependencySnapshot::isolatedPlanning(current);IRIdentity ids(current);
+    auto replayContext=B2BReplayContext::capture(current);
+    const auto &snapshot=replayContext.planning;IRIdentity ids(current);
     std::set<llvm::BasicBlock*> reachable;std::vector<llvm::BasicBlock*> pendingBlocks{&f->getEntryBlock()};
     while(!pendingBlocks.empty()){
       auto *b=pendingBlocks.back();pendingBlocks.pop_back();if(!reachable.insert(b).second)continue;
@@ -135,7 +136,7 @@ inline IsolatedGreedyResult runIsolatedB2BGreedy(
     auto context=makeRound(current,function,round,0,CleanupMode::None);
     for(auto &ticket:pending){
       const auto &unit=units.at(ticket.id);auto *root=ids.lookup(unit.entry)->getParent();
-      auto capsule=std::make_unique<B2BUnitCapsule>(current,*root);
+      auto capsule=std::make_unique<B2BUnitCapsule>(current,*root,&replayContext);
       ++result.stats.trials;++result.stats.generations;
       Candidate candidate{"unit","B0","B1","B2"};
       auto layouts=planSingleBranchB2B(*capsule->ir,candidate,1,CleanupMode::DarmCFGInstCombine,"");
@@ -146,7 +147,7 @@ inline IsolatedGreedyResult runIsolatedB2BGreedy(
         if(!layout.valid||!layout.normalized)continue;
         Trial trial;trial.valid=true;trial.cleanupMode=CleanupMode::None;
         trial.candidate={function,"","", "",round};
-        trial.normalized=capsule->apply(current,*layout.normalized);
+        trial.normalized=capsule->apply(current,*layout.normalized,&replayContext);
         if(!isolatedScalarTTIDomain(*trial.normalized->getFunction(function)))
         {
           std::string unknown;
@@ -174,7 +175,7 @@ inline IsolatedGreedyResult runIsolatedB2BGreedy(
     auto winner=queue.best();if(!winner)return result;
     auto &chosen=saved.at(winner->first.id);if(!chosen.product)throw std::runtime_error("missing isolated product");
     // This is commit materialization, not another trial or cleanup/score.
-    result.module=chosen.capsule->apply(current,*chosen.product);
+    result.module=chosen.capsule->apply(current,*chosen.product,&replayContext);
     ++result.stats.commits;result.identities.push_back(winner->first.id);
     if(!currentCost)throw std::runtime_error("isolated baseline cost unavailable");
     *currentCost-=winner->second.gain;result.costs.push_back(*currentCost);

@@ -6,19 +6,39 @@
 #include "llvm/Transforms/Utils/BasicBlockUtils.h"
 #include "llvm/Transforms/Utils/ValueMapper.h"
 #include <functional>
+#include <optional>
 
 namespace fusion {
 // Disposable isolated IR for a pure-integer unit with scalar or tuple outputs.
 // Cleanup of this module cannot read or mutate the rest of the parent function.
 // Its score is NOT automatically the parent-function score: scoring integration
 // must account for boundary branches/returns and validate the relevant TTI keys.
+// Immutable facts for one EXACT current parent. This avoids repeated full
+// snapshots within a round; it is NOT a cross-commit gain certificate.
+struct B2BReplayContext {
+  std::string exactIR;
+  IRDependencySnapshot full,planning;
+  static std::string serialize(const llvm::Module &m) {
+    std::string text;llvm::raw_string_ostream out(text);m.print(out,nullptr);out.flush();return text;
+  }
+  static B2BReplayContext capture(llvm::Module &m) {
+    B2BReplayContext context;
+    context.full=IRDependencySnapshot::capture(m);
+    context.planning=IRDependencySnapshot::isolatedPlanning(m);
+    context.exactIR=serialize(m);return context;
+  }
+  void requireCurrent(const llvm::Module &m) const {
+    if(exactIR!=serialize(m))throw std::runtime_error("stale exact-parent replay context");
+  }
+};
 class B2BUnitCapsule {
   B2BOptimizationUnit unit;
   IRDependencySnapshot parent;
   std::string function;
 public:
   std::unique_ptr<llvm::Module> ir;
-  B2BUnitCapsule(llvm::Module &source,llvm::BasicBlock &root) {
+  B2BUnitCapsule(llvm::Module &source,llvm::BasicBlock &root,
+      const B2BReplayContext *context=nullptr) {
     IRIdentity ids(source);unit=B2BOptimizationUnit::discover(root,ids);
     if(!unit.eligible())throw std::runtime_error("capsule: "+unit.rejection);
     auto *f=root.getParent();function=f->getName().str();
@@ -28,7 +48,8 @@ public:
     for(auto &phi:join->phis()){outputs.push_back(&phi);outputTypes.push_back(phi.getType());}
     if(outputs.empty())throw std::runtime_error("capsule: output_required");
     auto *returnType=outputs.size()==1?outputTypes.front():llvm::StructType::get(source.getContext(),outputTypes);
-    parent=IRDependencySnapshot::isolatedPlanning(source);
+    if(context)context->requireCurrent(source);
+    parent=context?context->planning:IRDependencySnapshot::isolatedPlanning(source);
     ir=std::make_unique<llvm::Module>("isolated-b2b",source.getContext());
     ir->setDataLayout(source.getDataLayout());ir->setTargetTriple(source.getTargetTriple());
     std::vector<llvm::Type*> types;for(auto &a:f->args())types.push_back(a.getType());
@@ -61,10 +82,15 @@ public:
   const B2BOptimizationUnit &boundary() const {return unit;}
   // Apply to a CLONE OF CURRENT, never restore a cached old parent module.
   // Failure is transactional: the caller retains current unchanged.
-  std::unique_ptr<llvm::Module> apply(llvm::Module &current,const llvm::Module &product) const {
+  std::unique_ptr<llvm::Module> apply(llvm::Module &current,const llvm::Module &product,
+      const B2BReplayContext *context=nullptr) const {
+    if(context)context->requireCurrent(current);
     auto result=llvm::CloneModule(current);
-    auto currentFacts=IRDependencySnapshot::capture(*result);
-    if(!parent.sameReads(IRDependencySnapshot::isolatedPlanning(*result),unit.reads,unit.placementIndependentReads()))
+    std::optional<IRDependencySnapshot> uncachedFull,uncachedPlanning;
+    if(!context){uncachedFull=IRDependencySnapshot::capture(*result);uncachedPlanning=IRDependencySnapshot::isolatedPlanning(*result);}
+    const auto &currentFacts=context?context->full:*uncachedFull;
+    const auto &currentPlanning=context?context->planning:*uncachedPlanning;
+    if(!parent.sameReads(currentPlanning,unit.reads,unit.placementIndependentReads()))
       throw std::runtime_error("capsule dependencies changed");
     IRIdentity ids(*result);
     auto *rootTerm=ids.lookup(unit.entry);if(!rootTerm)throw std::runtime_error("capsule root disappeared");
