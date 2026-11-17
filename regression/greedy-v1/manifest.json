@@ -85,9 +85,17 @@
       "input_sha256": "c66eb0d6c7b5948d6f31e3d78b4ba50e452a1b57b772ca1084061b71a29b063f",
       "function": "_Z3pcmPi",
       "source": "/data/home/chh/kernel-benchmark-suite/build/full-regression-rerun/snapshot.TxCJ3u/artifact-repro.XpJFTn/PCM128/shared.ll",
-      "expected_commits": 8,
-      "expected_tti": 8620,
-      "reference_exit": 124
+      "expected_commits": 250,
+      "expected_tti": 4251,
+      "reference_exit": 0,
+      "historical_timeout": {
+        "reference_exit": 124,
+        "expected_commits": 8,
+        "expected_tti": 8620
+      },
+      "expected_ir_sha256": "f937e8875db3b28623537ecae47229d259b7064a9e21d5e15df7799e0b8e0248",
+      "slow": true,
+      "reference_evidence": "incremental-audit.json: instruction_quote_experiment.pcm128_complete_comparison"
     },
     {
       "case": "MS128",
