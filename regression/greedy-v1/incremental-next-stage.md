@@ -307,3 +307,20 @@ PCM32 顺序执行 full 后 cached，报价缓存 off，单线程实验入口：
 PCM256 原始输入及默认首步后的父 IR，当前实验入口均枚举 0 个候选；这两次毫秒级短跑不是有效性能回测。定位默认第二步 B101:B103:B102：两臂是 add/add/GEP/load，出口 5 个 PHI。当前内部 load/GEP 和全局数组指针输入尚不支持，因此不能进入目标的 PCM128/256 完整对照。下一步应补这类访存输入与回放，而不是调整并行或超时。
 
 持久结果：`incremental-pcm32-timing-fallback.json`。详细目录：`pcm32-scoped-timed/`、`pcm32-local-fallback/`、`pcm256-scoped-timed/`、`pcm256-after-step1-scoped-timed/`，均在 `build/incremental-unit-audit/`。上述任务均已终止完成，没有需保留的在途进程。默认 driver 未改，Goal 尚未完成。
+
+## v6：普通 load/GEP 与全局数组输入
+
+单元支持普通整数 load 和 GEP；volatile/atomic load 与原 store 一样拒绝。直接引用的 GlobalVariable 去重后作为额外 opaque 指针参数传入隔离函数，不导入 constant/noalias/readonly 等额外假设，不复制旧模块的全局对象。回放按当前模块的全局名称重新绑定并验证类型/集合，原完整模块 context 继续覆盖全局定义及初始化内容。内部调用与复杂指针常量表达式仍不支持。
+
+新增 isolated-only 指针 select/PHI 报价键：固定 LLVM24 `GCNTTIImpl::getCmpSelInstrCost` 经 `BasicTTIImpl.h:1441` 的标量分支只读取指针类型合法化及 i1 条件类型；PHI 使用通用 CF 成本。仍由 LLVM24 提供实际报价，没有猜测成本，默认 gcnQuoteKey 未改。这解决了共享 load 地址后产生的 pointer select 被实验评分域拒绝的问题；首个失败运行完整保留。
+
+测试：全局数组、两侧动态 GEP 与 load 的 `--loads` 回归为 **75 → 55 → 35**，全量/增量每步 IR 与 TTI 相同，6,724 个 CPU 输入一致。volatile/atomic 负例拒绝；改变全局初始化内容后旧 capsule 拒绝回放且当前模块不变。当前测试因边界报价依赖仍重算 3 次，未声称此合成例已复用。原 store 顺序测试、真实全函数 18 → 21 反例、snapshot/metadata/身份测试以及 49 种布局回放和每组 6,724 CPU 输入均通过。
+
+PCM256 默认首步后的父 IR：**120 个单元全部通过提取、原样回放和 verifier**，整函数在实验报价支持域内。已启动真实 full/cached 完整对照：
+
+- 二进制：`build/incremental-unit-audit/probe-real-loads-v2`，独立构建，运行期间不覆盖。
+- 输出：`build/incremental-unit-audit/pcm256-loads-v2-after-step1/`。
+- 进程 PID 3799792，工具 session 42668；checkpoint 时经 ps 确认运行约 4 分半，CPU 约 71%，仍在第一轮全量评分，尚未保存第一步。
+- `run-checkpoint.json` 保存二进制 SHA256 和起点。后续先检查现有进程/会话，不得因等待超时重启。
+
+这不是从冻结原始 IR 开始的完整默认流水线，也未得到 PCM256 性能结论。默认 driver 和自动回退尚未接入，PCM128 未启动；原 Goal 继续。

@@ -4,10 +4,23 @@
 #include "llvm24_scorer.h"
 #include <functional>
 namespace fusion {
-// Experimental local cleanup only. Units allow pure integer work and ordinary
-// integer stores; loads, calls, atomics and volatile accesses remain excluded.
+// Experimental local cleanup only. Units allow integer/address work and ordinary
+// integer memory operations; calls, atomics and volatile accesses remain excluded.
 // Outside units admit only the audited pinned-GCN quote-key domain.
 // External quote dependencies invalidate gains, never supply guessed prices.
+// Pinned GCN/BasicTTI scalar pointer selects depend only on the legalized
+// pointer type and i1 condition type; scalar PHI uses generic CF cost.
+// This extension is isolated-only: default instruction quote cache unchanged.
+inline std::optional<std::string> isolatedQuoteKey(const llvm::Instruction &i) {
+  if(auto key=gcnQuoteKey(i))return key;
+  if(i.getType()->isPointerTy()&&
+     (llvm::isa<llvm::PHINode>(i)||(llvm::isa<llvm::SelectInst>(i)&&i.getOperand(0)->getType()->isIntegerTy(1)))){
+    std::string key;llvm::raw_string_ostream out(key);
+    out<<"gcn-throughput-6be16f356d3e-pointer:"<<i.getOpcodeName()<<":";
+    i.getType()->print(out);out.flush();return key;
+  }
+  return std::nullopt;
+}
 inline bool isolatedContextFreeOpcode(unsigned opcode) {
   switch(opcode){
   case llvm::Instruction::Add:case llvm::Instruction::Sub:case llvm::Instruction::Mul:
@@ -41,14 +54,14 @@ inline void addIsolatedScoringReads(IncrementalCandidateQueue::ReadSet &reads,
 inline bool isolatedScalarTTIDomain(const llvm::Function &f) {
   if(f.getParent()->getTargetTriple()!="amdgcn-amd-amdhsa" ||
      f.getFnAttribute("target-cpu").getValueAsString()!="gfx906")return false;
-  for(const auto &b:f)for(const auto &i:b)if(!gcnQuoteKey(i))return false;
+  for(const auto &b:f)for(const auto &i:b)if(!isolatedQuoteKey(i))return false;
   return true;
 }
 inline IncrementalCandidateQueue::ReadSet isolatedScoringReads(
     llvm::Function &f,IRIdentity &ids) {
   IncrementalCandidateQueue::ReadSet reads;
   for(auto &b:f)for(auto &i:b)if(!isolatedContextFreeOpcode(i.getOpcode())){
-    auto key=gcnQuoteKey(i);
+    auto key=isolatedQuoteKey(i);
     if(!key)throw std::runtime_error("unsupported isolated scoring dependency");
     reads["tti-context:"+std::to_string(ids.instruction(i))]=*key;
   }
@@ -67,7 +80,7 @@ struct IsolatedGreedyResult {
 inline IncrementalCandidateQueue::ReadSet isolatedReads(
     const IRDependencySnapshot &snapshot,const B2BOptimizationUnit &unit) {
   IncrementalCandidateQueue::ReadSet reads{{"context",snapshot.context},
-    {"policy","isolated-pure-integer-gfx906-v5;scoped-quote-dependencies;stripped-instruction-metadata;opaque-ssa-inputs;fold-output-boundary;no-global-cleanup"}};
+    {"policy","isolated-pure-integer-gfx906-v6;opaque-global-inputs;ordinary-loads;scoped-quote-dependencies;stripped-instruction-metadata;opaque-ssa-inputs;fold-output-boundary;no-global-cleanup"}};
   for(auto id:unit.reads){
     const auto &record=snapshot.instructions.at(id);
     reads["instruction:"+std::to_string(id)]=(id==unit.entry||unit.inputs.count(id))?
@@ -135,7 +148,12 @@ inline IsolatedGreedyResult runIsolatedB2BGreedy(
         trial.candidate={function,"","", "",round};
         trial.normalized=capsule->apply(current,*layout.normalized);
         if(!isolatedScalarTTIDomain(*trial.normalized->getFunction(function)))
-          throw std::runtime_error("isolated product outside TTI proof domain");
+        {
+          std::string unknown;
+          for(auto &b:*trial.normalized->getFunction(function))for(auto &i:b)
+            if(!isolatedQuoteKey(i))unknown+=std::string(i.getOpcodeName())+";";
+          throw std::runtime_error("isolated product outside TTI proof domain: "+unknown);
+        }
         trial.raw=llvm::CloneModule(*trial.normalized);
         trial.before=features(*f);trial.after=features(*trial.normalized->getFunction(function));trial.afterRaw=trial.after;
         ++result.stats.scores;

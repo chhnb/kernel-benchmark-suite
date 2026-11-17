@@ -33,6 +33,7 @@ public:
     ir->setDataLayout(source.getDataLayout());ir->setTargetTriple(source.getTargetTriple());
     std::vector<llvm::Type*> types;for(auto &a:f->args())types.push_back(a.getType());
     for(auto id:unit.inputs)types.push_back(ids.lookup(id)->getType());
+    for(auto &name:unit.globals)types.push_back(source.getNamedGlobal(name)->getType());
     auto *cf=llvm::Function::Create(llvm::FunctionType::get(returnType,types,false),
        llvm::GlobalValue::ExternalLinkage,"unit",ir.get());
     // Input attributes are intentionally not imported as hidden facts. This
@@ -40,6 +41,7 @@ public:
     llvm::ValueToValueMapTy map;unsigned index=0;
     for(auto &a:f->args()){auto *arg=cf->getArg(index++);arg->setName(a.getName());map[&a]=arg;}
     for(auto id:unit.inputs){auto *arg=cf->getArg(index++);arg->setName("input"+std::to_string(id));map[ids.lookup(id)]=arg;}
+    for(auto &name:unit.globals){auto *arg=cf->getArg(index++);arg->setName("global.input");map[source.getNamedGlobal(name)]=arg;}
     auto *entry=llvm::BasicBlock::Create(source.getContext(),"entry",cf);
     auto *cl=llvm::BasicBlock::Create(source.getContext(),"left",cf);
     auto *cr=llvm::BasicBlock::Create(source.getContext(),"right",cf);
@@ -67,9 +69,9 @@ public:
     IRIdentity ids(*result);
     auto *rootTerm=ids.lookup(unit.entry);if(!rootTerm)throw std::runtime_error("capsule root disappeared");
     auto *root=rootTerm->getParent();auto now=B2BOptimizationUnit::discover(*root,ids);
-    if(!now.eligible()||now.identity!=unit.identity||now.inputs!=unit.inputs)throw std::runtime_error("capsule boundary changed");
+    if(!now.eligible()||now.identity!=unit.identity||now.inputs!=unit.inputs||now.globals!=unit.globals)throw std::runtime_error("capsule boundary changed");
     auto *f=result->getFunction(function),*cf=product.getFunction("unit");
-    if(!f||!cf||cf->isDeclaration()||cf->arg_size()!=f->arg_size()+unit.inputs.size())
+    if(!f||!cf||cf->isDeclaration()||cf->arg_size()!=f->arg_size()+unit.inputs.size()+unit.globals.size())
       throw std::runtime_error("invalid capsule signature");
     auto *l=ids.lookup(unit.left)->getParent(),*r=ids.lookup(unit.right)->getParent();
     auto *join=ids.lookup(unit.exit)->getParent();
@@ -78,15 +80,18 @@ public:
     auto *returnType=outputs.size()==1?outputTypes.front():llvm::StructType::get(current.getContext(),outputTypes);
     if(outputs.empty() || cf->getReturnType()!=returnType || llvm::pred_size(&cf->getEntryBlock()))
       throw std::runtime_error("invalid capsule output");
-    // The artifact is allowed only the same pure operation language, plus
+    // The artifact is allowed only the same integer/address/ordinary-memory language, plus
     // internal PHIs, branches and returns. No references into another function.
     for(auto &b:*cf)for(auto &i:b){
       if(!(llvm::isa<llvm::BinaryOperator>(i)||llvm::isa<llvm::ICmpInst>(i)||
            llvm::isa<llvm::SelectInst>(i)||llvm::isa<llvm::CastInst>(i)||
-           llvm::isa<llvm::StoreInst>(i)||llvm::isa<llvm::InsertValueInst>(i)||llvm::isa<llvm::ExtractValueInst>(i)||
+           llvm::isa<llvm::LoadInst>(i)||llvm::isa<llvm::GetElementPtrInst>(i)||llvm::isa<llvm::StoreInst>(i)||llvm::isa<llvm::InsertValueInst>(i)||llvm::isa<llvm::ExtractValueInst>(i)||
            llvm::isa<llvm::FreezeInst>(i)||llvm::isa<llvm::PHINode>(i)||llvm::isa<llvm::BranchInst>(i)||llvm::isa<llvm::ReturnInst>(i)))
         throw std::runtime_error("unsupported capsule product instruction");
       if(!i.isTerminator()&&!i.getType()->isIntegerTy()&&!i.getType()->isPointerTy()&&!llvm::isa<llvm::InsertValueInst>(i)&&!llvm::isa<llvm::StoreInst>(i))throw std::runtime_error("unsupported capsule product type");
+      if(auto *load=llvm::dyn_cast<llvm::LoadInst>(&i))
+        if(!load->isSimple()||!load->getType()->isIntegerTy())
+          throw std::runtime_error("unsupported capsule load");
       if(auto *store=llvm::dyn_cast<llvm::StoreInst>(&i))
         if(!store->isSimple()||!store->getValueOperand()->getType()->isIntegerTy())
           throw std::runtime_error("unsupported capsule store");
@@ -114,6 +119,11 @@ public:
       auto *value=ids.lookup(id);auto *formal=cf->getArg(index++);
       if(!value||value->getType()!=formal->getType())throw std::runtime_error("capsule external input changed");
       map[formal]=value;
+    }
+    for(auto &name:unit.globals){
+      auto *global=result->getNamedGlobal(name);auto *formal=cf->getArg(index++);
+      if(!global||formal->getType()!=global->getType())throw std::runtime_error("capsule global input changed");
+      map[formal]=global;
     }
     std::vector<llvm::BasicBlock*> blocks;
     for(auto &b:*cf){auto *copy=llvm::BasicBlock::Create(result->getContext(),"unit."+std::to_string(unit.entry)+"."+b.getName().str(),f,join);map[&b]=copy;blocks.push_back(copy);}

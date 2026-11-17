@@ -11,6 +11,7 @@ namespace fusion {
 struct B2BOptimizationUnit {
   std::string identity, rejection;
   std::set<uint64_t> writes, reads, inputs;
+  std::set<std::string> globals;
   uint64_t entry=0, left=0, right=0, exit=0;
   std::set<uint64_t> placementIndependentReads() const {
     auto result=inputs;result.insert(entry);return result;
@@ -36,6 +37,7 @@ struct B2BOptimizationUnit {
     auto isInput=[&](llvm::Value *v){
       if(!v->getType()->isIntegerTy()&&!v->getType()->isPointerTy())return false;
       if(llvm::isa<llvm::Argument>(v)||llvm::isa<llvm::ConstantInt>(v))return true;
+      if(auto *global=llvm::dyn_cast<llvm::GlobalVariable>(v)){unit.globals.insert(global->getName().str());return true;}
       auto *def=llvm::dyn_cast<llvm::Instruction>(v);
       if(!def || def->getFunction()!=root.getParent() || !dominators.dominates(def,br))return false;
       unit.inputs.insert(ids.instruction(*def));return true;
@@ -45,10 +47,13 @@ struct B2BOptimizationUnit {
     for(auto *arm:{l,r})for(auto &i:*arm)if(!i.isTerminator()){
       const auto *store=llvm::dyn_cast<llvm::StoreInst>(&i);
       const bool ordinaryStore=store&&store->isSimple()&&store->getValueOperand()->getType()->isIntegerTy();
+      const auto *load=llvm::dyn_cast<llvm::LoadInst>(&i);
+      const bool ordinaryLoad=load&&load->isSimple()&&load->getType()->isIntegerTy();
+      const bool pointerAddress=llvm::isa<llvm::GetElementPtrInst>(i)&&i.getType()->isPointerTy();
       const bool computation=(llvm::isa<llvm::BinaryOperator>(i)||llvm::isa<llvm::ICmpInst>(i)||
            llvm::isa<llvm::SelectInst>(i)||llvm::isa<llvm::CastInst>(i))&&
            i.getType()->isIntegerTy()&&!i.mayReadOrWriteMemory()&&!i.mayHaveSideEffects();
-      if(!ordinaryStore&&!computation)return reject("unsupported_isolated_instruction");
+      if(!ordinaryStore&&!ordinaryLoad&&!pointerAddress&&!computation)return reject("unsupported_isolated_instruction");
       internal.insert(&i);
     }
     for(auto *i:internal) {

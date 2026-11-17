@@ -9,6 +9,7 @@ using namespace llvm;
 static void save(const Module &m,const std::string &path){std::error_code e;raw_fd_ostream s(path,e);assert(!e);m.print(s,nullptr);}
 int main(int argc,char **argv){
  assert(argc==4||argc==5);const bool external=argc==5&&StringRef(argv[4])=="external";
+ const bool loads=argc==5&&StringRef(argv[4])=="loads";
  const bool stores=argc==5&&StringRef(argv[4])=="stores";
  const bool multi=argc==5&&StringRef(argv[4])=="multi";
  const bool memoryContext=argc==5&&StringRef(argv[4])=="memory";
@@ -53,6 +54,38 @@ int main(int argc,char **argv){
    phi->addIncoming(left,cast<Instruction>(left)->getParent());phi->addIncoming(right,cast<Instruction>(right)->getParent());
    auto *ret=cast<ReturnInst>(join->getTerminator());
    auto *sum=BinaryOperator::CreateAdd(ret->getReturnValue(),phi,"tuple.sum",ret);ret->setOperand(0,sum);
+ }
+ if(loads){
+   auto *f=parent->getFunction("f");auto *term=f->getEntryBlock().getTerminator();
+   auto *type=ArrayType::get(Type::getInt32Ty(ctx),8);
+   std::vector<Constant*> values;for(int v:{11,-7,23,41,5,-17,19,31})values.push_back(ConstantInt::getSigned(Type::getInt32Ty(ctx),v));
+   auto *g=new GlobalVariable(*parent,type,false,GlobalValue::InternalLinkage,ConstantArray::get(type,values),
+       "array",nullptr,GlobalValue::NotThreadLocal,1);
+   auto *ix=BinaryOperator::CreateAnd(f->getArg(2),ConstantInt::get(Type::getInt32Ty(ctx),3),"ix",term);
+   auto *iy=BinaryOperator::CreateAnd(f->getArg(3),ConstantInt::get(Type::getInt32Ty(ctx),3),"iy",term);
+   LoadInst *sample=nullptr;
+   for(auto &b:*f)if(b.getName()=="AL"||b.getName()=="AR"||b.getName()=="BL"||b.getName()=="BR"){
+     auto *first=&b.front();Value *index=b.getName().startswith("A")?ix:iy;
+     if(b.getName().endswith("R"))index=BinaryOperator::CreateAdd(index,ConstantInt::get(Type::getInt32Ty(ctx),4),"right.index",first);
+     auto *ptr=GetElementPtrInst::Create(type,g,{ConstantInt::get(Type::getInt32Ty(ctx),0),index},"array.ptr",first);
+     auto *load=new LoadInst(Type::getInt32Ty(ctx),ptr,"array.value",first);
+     first->setOperand(0,load);sample=load;
+   }
+   fusion::IRIdentity ids(*parent);
+   auto *root=sample->getParent()->getSinglePredecessor();
+   assert(fusion::B2BOptimizationUnit::discover(*root,ids).eligible());
+   sample->setVolatile(true);assert(!fusion::B2BOptimizationUnit::discover(*root,ids).eligible());
+   sample->setVolatile(false);sample->setOrdering(AtomicOrdering::Monotonic);
+   assert(!fusion::B2BOptimizationUnit::discover(*root,ids).eligible());
+   sample->setOrdering(AtomicOrdering::NotAtomic);
+   fusion::B2BUnitCapsule capsule(*parent,*root);
+   auto *oldInitializer=g->getInitializer();
+   g->setInitializer(ConstantAggregateZero::get(type));
+   const auto changedHash=fusion::moduleHash(*parent);bool rejected=false;
+   try{capsule.apply(*parent,*capsule.ir);}catch(const std::runtime_error&){rejected=true;}
+   assert(rejected&&fusion::moduleHash(*parent)==changedHash);
+   g->setInitializer(oldInitializer);
+
  }
  if(stores){
    auto *f=parent->getFunction("f");auto *term=f->getEntryBlock().getTerminator();
@@ -121,11 +154,11 @@ int main(int argc,char **argv){
  auto full=fusion::runIsolatedB2BGreedy(*parent,"f",fullScorer,false,[&](const Module &m,unsigned n){save(m,std::string(argv[1])+"/full-"+std::to_string(n)+".ll");});
  auto cached=fusion::runIsolatedB2BGreedy(*parent,"f",cacheScorer,true,[&](const Module &m,unsigned n){save(m,std::string(argv[1])+"/cached-"+std::to_string(n)+".ll");});
  assert(full.stats.commits==2);assert(cached.stats.commits==2);
- assert(full.costs==cached.costs);if(!memoryContext&&!multi&&!stores)assert(full.costs==(external?std::vector<int64_t>({45,25}):std::vector<int64_t>({43,23})));
+ assert(full.costs==cached.costs);if(!memoryContext&&!multi&&!stores&&!loads)assert(full.costs==(external?std::vector<int64_t>({45,25}):std::vector<int64_t>({43,23})));
  assert(full.identities==cached.identities);assert(full.gains==cached.gains);assert(full.hashes==cached.hashes);
  assert(fusion::moduleHash(*full.module)==fusion::moduleHash(*cached.module));
  assert(full.stats.trials==3);
- if(multi||stores){
+ if(multi||stores||loads){
    // Metadata/quote changes in store plans conservatively invalidate peers.
    // B now has larger gain and commits first. Its rewrite changes A's exit
    // boundary, so A MUST be invalidated rather than counted as independent.
@@ -164,9 +197,10 @@ int main(int argc,char **argv){
  }
  auto memory=parseIRFile(argv[3],err,ctx);assert(memory);
  assert(fusion::isolatedScalarTTIDomain(*memory->getFunction("choose")));
- auto excluded=fusion::runIsolatedB2BGreedy(*memory,"choose",cacheScorer,true);
- assert(excluded.stats.trials==0 && excluded.stats.commits==0);
- // External memory is admitted, but the memory-bearing arms are not pure units.
- // This does not reuse the global-cleanup 18 -> 21 gain certificate.
+ auto memoryFull=fusion::runIsolatedB2BGreedy(*memory,"choose",fullScorer,false);
+ auto memoryCached=fusion::runIsolatedB2BGreedy(*memory,"choose",cacheScorer,true);
+ assert(memoryFull.hashes==memoryCached.hashes&&memoryFull.costs==memoryCached.costs);
+ // This uses only isolated cleanup. The original whole-function 18 -> 21
+ // counterexample still has its separate regression; never import its scores.
  outs()<<"PASS isolated greedy parity and expected dependency reuse/invalidation with real LLVM24 TTI\n";
 }
