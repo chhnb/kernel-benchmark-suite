@@ -21,7 +21,7 @@ int main(int argc,char **argv){
      auto result=runIsolatedB2BGreedy(*m,argv[2],scorer,reuse,[&](const Module &ir,unsigned n){
        std::string path=std::string(argv[4])+(reuse?"/cached-":"/full-")+std::to_string(n)+".ll";
        std::error_code ec;raw_fd_ostream out(path,ec);if(ec)throw std::runtime_error(ec.message());ir.print(out,nullptr);
-     });
+     },StringRef(argv[5])=="hybrid");
      auto ms=std::chrono::duration<double,std::milli>(std::chrono::steady_clock::now()-start).count();
      (reuse?cachedMs:fullMs)=ms;
      std::error_code ec;raw_fd_ostream phase(std::string(argv[4])+(reuse?"/cached-phase.json":"/full-phase.json"),ec);
@@ -32,10 +32,10 @@ int main(int argc,char **argv){
    auto full=run(false),cached=run(true);
    if(full.hashes!=cached.hashes||full.identities!=cached.identities||full.costs!=cached.costs||full.gains!=cached.gains)
      throw std::runtime_error("real incremental/full divergence");
-   json::Array costs;for(auto c:full.costs)costs.push_back(c);
+   json::Array costs,identities;for(auto c:full.costs)costs.push_back(c);for(auto &id:full.identities)identities.push_back(id);
    outs()<<formatv("{0:2}\n",json::Value(json::Object{
-     {"commits",int64_t(full.stats.commits)},{"costs",std::move(costs)},
-     {"full_trials",int64_t(full.stats.trials)},{"cached_trials",int64_t(cached.stats.trials)},
+     {"identities",std::move(identities)},{"commits",int64_t(full.stats.commits)},{"costs",std::move(costs)},
+     {"full_fallback_trials",int64_t(full.stats.fallbackTrials)},{"cached_fallback_trials",int64_t(cached.stats.fallbackTrials)},{"fallback_commits",int64_t(cached.stats.fallbackCommits)},{"full_trials",int64_t(full.stats.trials)},{"cached_trials",int64_t(cached.stats.trials)},
      {"reused_trials",int64_t(cached.stats.reusedTrials)},{"invalidated",int64_t(cached.stats.invalidated)},
      {"full_cleanups",int64_t(full.stats.layoutCleanups)},{"cached_cleanups",int64_t(cached.stats.layoutCleanups)},
      {"full_scores",int64_t(full.stats.scores)},{"cached_scores",int64_t(cached.stats.scores)},

@@ -334,3 +334,30 @@ PCM256 默认首步后的父 IR：**120 个单元全部通过提取、原样回�
 PCM32：完整 16 步与先前局部策略的产物逐字一致（只忽略 ModuleID 路径）；仍是 trial **136 → 72**、清理/评分 **680 → 360**、TTI **1392 → 1152**。本次顺序单线程计时 full **42.138 s**、cached **22.993 s**；同期 PCM256 原长测在运行，不能把它与之前不同负载的 48.014/26.156 s 直接相减来声称稳定优化幅度。摘要 `incremental-pcm32-parent-facts.json`。
 
 PCM256 原长测仍使用冻结的 `probe-real-loads-v2` 二进制，PID 3799792 / session 42668 未重启、未替换实现；本轮末已保存 full-0.ll，cached 阶段尚未开始。详细目录仍为 `pcm256-loads-v2-after-step1/`。后续继续轮询同一进程/会话。
+
+## 每轮竞争的直接兄弟 B2B 回退（实验入口）
+
+`runIsolatedB2BGreedy` 增加显式可选的 siblingFallback；探针 `--hybrid` 使用该模式，默认 v1 driver 未改。当前只加入不满足局部边界的直接兄弟 B2B，不声称覆盖 R2R、B2R 或原 decision-preparation 枚举。
+
+每轮先统一枚举局部/回退候选，再完成全部 new/invalid 评分，最后按 gain 和当轮枚举顺序选最佳。回退使用现有 DP1 和全函数 DarmCFG/EarlyCSE/DCE/InstCombine，收益按完整当前父 IR 相对完整产物计算，包含其非局部清理影响。它的 read-set 是完整父 IR 文本；任何提交后均重新试跑，绝不跨父 IR 复用其全模块产物。评分失败直接失败，不缓存成零收益。
+
+回退提交前再次逐字检查父 IR；产物从本轮完全相同父 IR 生成，不能覆盖其他新提交。由于无法证明旧 lineage，回退后从旧 next_identity 高水位以上给产物全部重新编号，保守使原候选失效并重新发现。局部候选仍可在依赖未变时跳过整个 trial。
+
+PCM32 完整实验结果：
+
+| 指标 | full | cached |
+|---|---:|---:|
+| 提交 | 17 | 17 |
+| 回退提交 | 1 | 1 |
+| trial | 304 | 240 |
+| 其中回退 trial | 168 | 168 |
+| 清理/评分 | 714 | 394 |
+| 完整 trial 复用 | 0 | 64 |
+| 最终 TTI | 1142 | 1142 |
+| 本次顺序单线程时间 | 43.353 s | 24.719 s |
+
+每步候选、gain、TTI 和 IR hash 在实验 full/cached 间完全一致。17 步与默认 PCM32 参考的 LLVM12 llvm-diff 也全部返回 0（不宣称 metadata/文本逐字一致）。原长测同期运行，计时仅作这次观测，不是默认 16-worker 流水线性能。
+
+新增 `hybrid-priority.ll` / `check-hybrid-priority.py`：一个高收益、不同出口的回退候选与局部候选同轮出现，必须先选回退，再从新身份 epoch 发现局部候选。得到 fallback → local，成本 43 → 23；full/cached 链一致，新 ID 不复用旧 epoch，6,724 组 CPU 输出与原 IR 一致。测试已加入 tests/run-v1。
+
+持久摘要：`incremental-pcm32-hybrid.json`；产物：`build/incremental-unit-audit/pcm32-hybrid/`。仍需覆盖其他候选形态、正式 driver、冻结 case 与 GPU 验证。PCM256 原进程 PID 3799792 / session 42668 保留，checkpoint 时运行约 23 分钟、full 已保存 2 步、cached 尚未开始，二进制未修改。

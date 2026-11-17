@@ -27,3 +27,4 @@ python3 "$root/tests/fusion-search/check-isolated-greedy.py" --memory
 python3 "$root/tests/fusion-search/check-isolated-greedy.py" --multi
 python3 "$root/tests/fusion-search/check-isolated-greedy.py" --stores
 python3 "$root/tests/fusion-search/check-isolated-greedy.py" --loads
+python3 "$root/tests/fusion-search/check-hybrid-priority.py"
