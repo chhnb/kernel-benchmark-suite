@@ -10,3 +10,12 @@ python3 "$root/tests/fusion-search/check-single-branch-b2b.py" "$search" "$root/
 python3 "$root/tests/decision-model/check_independent_region_exits.py" "$search" "$bindir/opt" "$bindir/clang"
 python3 "$root/tests/decision-model/check_sibling_loops.py" "$search" "$bindir/opt" "$bindir/clang"
 python3 "$root/tests/fusion-search/check-trial-queue.py"
+queue_test=$(mktemp -d)
+trap 'rm -rf -- "$queue_test"' EXIT
+"${CXX:-c++}" -std=c++17 -O2 -Wall -Wextra -I"$root/tools" \
+  "$root/tests/fusion-search/check-incremental-queue.cpp" -o "$queue_test/check"
+"$queue_test/check"
+python3 "$root/tests/fusion-search/check-b2b-recipe.py"
+python3 "$root/tests/fusion-search/check-score-fingerprints.py"
+python3 "$root/tests/fusion-search/check-tti-quotes.py"
+python3 "$root/tests/fusion-search/check-commit-score-invalidation.py"

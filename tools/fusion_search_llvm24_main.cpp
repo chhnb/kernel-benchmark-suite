@@ -109,11 +109,14 @@ struct TrialWorker {
   std::string input, function, worker;
   unsigned level = 0;
   CleanupMode cleanup = CleanupMode::None;
+  std::string quoteMode;
 };
 
 static int runSearch(int argc, const char *const *argv, TrialWorker *batch = nullptr) {
   try {
     std::string input,function,output,debug,split,left,right,replayParentHash,policy="llvm24";Options options;options.cleanupMode=CleanupMode::DarmCFGInstCombine;bool singleBranchB2B=true, strategyGiven=true, useDarmB2B=false;
+    std::string recipeInput, quoteMode="on";
+    bool recipeCache=false;
     bool controlOnly=false,catalogOnly=false;std::string ttiWorker="/home/chh/kernel-benchmark-suite/tools/run-llvm24-tti";
     for(int i=1;i<argc;++i){std::string k=argv[i];
       if(k=="--help"){outs()<<"fusion-search v1 --ir FILE --function NAME --out FILE [--b2b-strategy dp1|darm] [--structural 0|1] [--split ID --left ID --right ID] [--debug-dir DIR] [--tti-worker EXECUTABLE] [--catalog-only 0|1] [--control-only 0|1] [--rounds N] [--trials N]\n";return 0;}
@@ -122,6 +125,12 @@ static int runSearch(int argc, const char *const *argv, TrialWorker *batch = nul
       else if(k=="--catalog-only"){if(v!="0"&&v!="1")throw std::runtime_error("catalog-only must be 0 or 1");catalogOnly=v=="1";}
       else if(k=="--darm-region-candidates"){if(v!="1")throw std::runtime_error("v1 uses DARM region alignment");}
       else if(k=="--tti-worker")ttiWorker=v;
+      else if(k=="--b2b-recipe-in")recipeInput=v;
+      else if(k=="--b2b-recipe-cache") { recipeInput=v; recipeCache=true; }
+      else if(k=="--tti-quote-cache") {
+        if(v!="off" && v!="audit" && v!="on") throw std::runtime_error("invalid TTI quote cache mode");
+        quoteMode=v;
+      }
       else if(k=="--b2r-strategy"){if(v!="darm")throw std::runtime_error("v1 B2R strategy is darm");}
       else if(k=="--replay-parent-hash")replayParentHash=v;
       else if(k=="--ir")input=v;else if(k=="--function")function=v;else if(k=="--out")output=v;
@@ -144,6 +153,8 @@ static int runSearch(int argc, const char *const *argv, TrialWorker *batch = nul
     if(input.empty()||function.empty()||output.empty())throw std::runtime_error("--ir, --function, --out required");
     if(options.optLevel!=2&&options.optLevel!=3)throw std::runtime_error("opt-level must be 2 or 3");
     if(sys::fs::exists(output))throw std::runtime_error("output already exists");
+    if (!recipeInput.empty() && (split.empty() || left.empty() || right.empty() || !singleBranchB2B || catalogOnly || controlOnly))
+      throw std::runtime_error("recipe replay requires an explicit DP1 B2B pair");
     bool pair=!split.empty()||!left.empty()||!right.empty();if(pair&&(split.empty()||left.empty()||right.empty()))throw std::runtime_error("explicit pair requires all three IDs");
     if (options.cleanupMode == CleanupMode::DarmCFGInstCombine) {
       // LLVM 12 reads this registered option inside SimplifyCFG. Initialize it
@@ -165,12 +176,12 @@ static int runSearch(int argc, const char *const *argv, TrialWorker *batch = nul
         throw std::runtime_error("worker requires explicit pair with LLVM24 scoring");
       if (batch->parent && (batch->input != input || batch->function != function ||
           batch->worker != ttiWorker || batch->level != options.optLevel ||
-          batch->cleanup != options.cleanupMode))
+          batch->cleanup != options.cleanupMode || batch->quoteMode != quoteMode))
       {
         batch->round.reset();
         batch->parent.reset();
         batch->context = std::make_unique<LLVMContext>();
-        if (batch->function != function || batch->worker != ttiWorker)
+        if (batch->function != function || batch->worker != ttiWorker || batch->quoteMode != quoteMode)
           batch->scorer.reset();
       }
     }
@@ -189,8 +200,9 @@ static int runSearch(int argc, const char *const *argv, TrialWorker *batch = nul
         batch->worker = ttiWorker;
         batch->level = options.optLevel;
         batch->cleanup = options.cleanupMode;
+        batch->quoteMode = quoteMode;
         batch->parent = std::move(parsedModule);
-        if (!batch->scorer) batch->scorer = std::make_unique<LLVM24Scorer>(ttiWorker);
+        if (!batch->scorer) batch->scorer = std::make_unique<LLVM24Scorer>(ttiWorker, quoteMode);
       }
     }
     auto *module = batch ? batch->parent.get() : parsedModule.get();
@@ -237,7 +249,7 @@ static int runSearch(int argc, const char *const *argv, TrialWorker *batch = nul
     if(pair){if(!batch && verifyModule(*module,&errs()))return 2;
       if(observer)observer->initial(*module);
     }
-    LLVM24Scorer standaloneScorer(ttiWorker);
+    LLVM24Scorer standaloneScorer(ttiWorker, quoteMode);
     auto &llvm24Scorer = batch ? *batch->scorer : standaloneScorer;
     if(observer)jsonFile(debug+"/run.json",json::Object{
       {"schema","fusion-v1"},{"function",function},{"policy","llvm24"},
@@ -269,9 +281,34 @@ static int runSearch(int argc, const char *const *argv, TrialWorker *batch = nul
           errs() << "DP1 intrinsic cost fallback (1): " << name << "\n";
         return 1;
       };
-      auto plans = !logical && singleBranchB2B
-          ? planSingleBranchB2B(*module, c, options.optLevel, options.cleanupMode, "", intrinsicCost)
-          : std::vector<Trial>{};
+      std::optional<json::Value> recipe;
+      if (!recipeInput.empty()) {
+        auto buffer = MemoryBuffer::getFile(recipeInput);
+        if (!buffer) throw std::runtime_error("cannot_read_b2b_recipe");
+        auto parsed = json::parse((*buffer)->getBuffer());
+        if (!parsed) throw std::runtime_error(toString(parsed.takeError()));
+        recipe = std::move(*parsed);
+        if (!recipe->getAsObject()) throw std::runtime_error("invalid_b2b_recipe");
+      }
+      json::Object recipeOut;
+      std::string recipeCacheStatus=recipe ? "hit" : "miss";
+      std::vector<Trial> plans;
+      if (!logical && singleBranchB2B) {
+        try {
+          plans=planSingleBranchB2B(*module,c,options.optLevel,options.cleanupMode,"",intrinsicCost,
+                                   &recipeOut,recipe ? recipe->getAsObject() : nullptr);
+        } catch (const std::runtime_error &error) {
+          if (!recipeCache || StringRef(error.what())!="b2b_recipe_dependencies_changed") throw;
+          recipeCacheStatus="invalidated";
+          recipe.reset();recipeOut=json::Object{};
+          plans=planSingleBranchB2B(*module,c,options.optLevel,options.cleanupMode,"",intrinsicCost,&recipeOut);
+        }
+      }
+      if (recipeCache && plans.empty()) { recipe.reset(); recipeCacheStatus="ineligible"; }
+      if (observer) jsonFile(debug+"/b2b-recipe-cache.json",json::Object{
+          {"status",recipeCacheStatus},{"source",recipeInput},{"scores_reused",false}});
+      if (observer && !recipeOut.empty()) jsonFile(debug+"/b2b-recipe.json", std::move(recipeOut));
+      if (recipe && plans.empty()) throw std::runtime_error("b2b_recipe_dependencies_changed");
       const bool plannedB2B = !plans.empty();
       Trial t;
       ScoreResult score;
@@ -282,6 +319,7 @@ static int runSearch(int argc, const char *const *argv, TrialWorker *batch = nul
           if (plan.valid && !seenDP1.insert(moduleHash(*plan.normalized)).second)
             continue;
           auto result = evaluateTrial(*module, plan, round, scorer);
+          if (StringRef(result.reason).startswith("tti_quote_")) throw std::runtime_error(result.reason);
           const bool allowed = eligible(plan, result, options);
           if (t.mergePath.empty() ||
               ((plan.valid && !t.valid) ||
@@ -299,6 +337,8 @@ static int runSearch(int argc, const char *const *argv, TrialWorker *batch = nul
                     logical.get(), allowDarmB2B);
         if (t.valid) score = evaluateTrial(*module, t, round, scorer);
       }
+      if (StringRef(score.reason).startswith("tti_quote_")) throw std::runtime_error(score.reason);
+      if(observer)jsonFile(debug+"/tti-quote-cache.json",llvm24Scorer.quoteCacheStats());
       if(observer)observer->trial(t,round,score,eligible(t,score,options));
       if(!t.valid){errs()<<"rejected: "<<t.reason<<"\n";return 4;}
       if(score.status!=ScoreStatus::Scored)errs()<<"score unsupported; exporting legal trial: "<<score.reason<<"\n";

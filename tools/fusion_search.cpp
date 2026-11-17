@@ -1883,8 +1883,13 @@ static void emitB2BSegments(BranchInst &split, BasicBlock &left,
 std::vector<Trial> planSingleBranchB2B(const Module &parent, const Candidate &c,
                                        unsigned level, CleanupMode mode,
                                        StringRef replay,
-                                       function_ref<int(const Instruction &)> intrinsicCost) {
+                                       function_ref<int(const Instruction &)> intrinsicCost,
+                                       json::Object *recipeOut, const json::Object *recipeIn) {
   std::vector<Trial> trials;
+  const auto parentIdentity = moduleHash(parent);
+  if (recipeIn && (recipeIn->getString("schema") != Optional<StringRef>("b2b-recipe-v2") ||
+                   recipeIn->getInteger("opt_level") != Optional<int64_t>(level)))
+    throw std::runtime_error("b2b_recipe_certificate_mismatch");
   if (!usesDarmDCE(mode))
     return trials;
 
@@ -1986,9 +1991,63 @@ std::vector<Trial> planSingleBranchB2B(const Module &parent, const Candidate &c,
     }
     ++sideIndex;
   }
-  auto segments = (segmentUsesValid || independentExits)
-      ? searchB2BSegments(segmentWork[0], segmentWork[1], independentExits, 1, intrinsicCost)
-      : SmallVector<B2BSegmentedPlan, 4>();
+
+  // Complete inputs to the current deterministic layout planners. This is a
+  // planning certificate only: cleanup outcomes and TTI scores are NOT covered.
+  // Record predicate outcomes rather than guessing how far LLVM's safety or
+  // dominance queries inspect outside the arms. Recompute them on current IR.
+  std::string plannerFacts;
+  raw_string_ostream facts(plannerFacts);
+  facts << "dp1-layout-facts-v1 " << independentExits << ' ' << segmentUsesValid
+        << ' ' << bool(join) << ' ' << segmentWork[0].size() << ' '
+        << segmentWork[1].size() << '\n';
+  std::map<const Value *, unsigned> factIDs;
+  auto factID = [&](const Value *value) {
+    auto found = factIDs.find(value);
+    if (found != factIDs.end()) return found->second;
+    unsigned id = factIDs.size(); factIDs.emplace(value, id); return id;
+  };
+  for (auto &side : segmentWork) for (auto *inst : side) factID(inst);
+  for (unsigned side = 0; side != 2; ++side) {
+    auto *arm = side ? right : left;
+    for (auto *inst : segmentWork[side]) {
+      facts << "I " << factID(inst) << ' ' << isa<BinaryOperator>(inst) << ' '
+            << isa<StoreInst>(inst) << ' ' << inst->mayReadOrWriteMemory() << ' '
+            << inst->use_empty() << ' ' << inst->hasMetadataOtherThanDebugLoc() << ' '
+            << safeToExecuteUnconditionally(*inst) << ' '
+            << (compatibleB2BArithmetic(*inst,*inst) ||
+                (intrinsicCost && isB2BPairableIntrinsic(*inst) && !inst->mayReadOrWriteMemory()))
+            << ' ' << b2bWeight(*inst,intrinsicCost) << ' '
+            << fusionInstructionWeight(*inst) << ' ' << inst->getNumOperands() << ':';
+      for (auto &operand : inst->operands()) {
+        auto *def = dyn_cast<Instruction>(operand.get());
+        facts << factID(operand.get()) << '/' << (!def || dt.dominates(def,branch)) << ',';
+      }
+      facts << " uses:";
+      // Uses matter only through membership in a paired local instruction or
+      // a PHI at the join carrying this value on its original incoming edge.
+      for (const auto &use : inst->uses()) {
+        auto *user = dyn_cast<Instruction>(use.getUser());
+        const bool local = user && (user->getParent()==left || user->getParent()==right);
+        auto *phi = dyn_cast<PHINode>(use.getUser());
+        const bool exitUse = phi && join && phi->getParent()==join && phi->getIncomingBlock(use)==arm;
+        facts << (local ? int64_t(factID(user)) : -1) << '/' << exitUse << ',';
+      }
+      facts << '\n';
+    }
+  }
+  for (auto *li : segmentWork[0]) for (auto *ri : segmentWork[1])
+    facts << compatibleB2BPrefix(*li,*ri) << compatibleB2BArithmetic(*li,*ri)
+          << li->isIdenticalTo(ri) << ';';
+  facts << " PHI:";
+  if (join) for (auto &phi : join->phis())
+    facts << factID(phi.getIncomingValueForBlock(left)) << '/'
+          << factID(phi.getIncomingValueForBlock(right)) << '/'
+          << phi.getType()->isFirstClassType() << '/' << phi.getType()->isTokenTy() << ';';
+  facts.flush();
+  if (recipeIn && recipeIn->getString("planner_facts") != Optional<StringRef>(plannerFacts))
+    throw std::runtime_error("b2b_recipe_dependencies_changed");
+
   trial.before = features(*f);
   trial.left = trial.leftContext = boundary({left, independentExits ? left->getSingleSuccessor() : join, nullptr, {left}}, *f);
   trial.right = trial.rightContext = boundary({right, independentExits ? right->getSingleSuccessor() : join, nullptr, {right}}, *f);
@@ -2003,7 +2062,7 @@ std::vector<Trial> planSingleBranchB2B(const Module &parent, const Candidate &c,
   struct Layout {
     std::string label;
     SmallVector<B2BMatch, 8> beforeSplit, afterJoin;
-    ArrayRef<B2BSegmentMatch> segments;
+    SmallVector<B2BSegmentMatch, 8> segments;
   };
   SmallVector<Layout, 12> layouts;
   auto add = [&](StringRef label, ArrayRef<B2BMatch> before,
@@ -2017,6 +2076,10 @@ std::vector<Trial> planSingleBranchB2B(const Module &parent, const Candidate &c,
     layouts.push_back({label.str(), {before.begin(), before.end()},
                        {after.begin(), after.end()}, {}});
   };
+  if (!recipeIn) {
+  auto segments = (segmentUsesValid || independentExits)
+      ? searchB2BSegments(segmentWork[0], segmentWork[1], independentExits, 1, intrinsicCost)
+      : SmallVector<B2BSegmentedPlan, 4>();
   auto prefix = commonB2BPrefix(*left, *right, *branch, dt);
   auto suffix = join ? commonB2BSuffix(*left, *right, *join)
                      : SmallVector<B2BMatch, 8>{};
@@ -2091,6 +2154,65 @@ std::vector<Trial> planSingleBranchB2B(const Module &parent, const Candidate &c,
       layouts.push_back({label + "-resplit", {}, {}, plan});
   }
   if (layouts.empty()) add("single-branch-separate", {}, {});
+  } else {
+    auto *rows = recipeIn->getArray("layouts");
+    if (!rows || rows->empty()) throw std::runtime_error("empty_b2b_recipe");
+    auto index = [&](const json::Value &v, unsigned side) -> Instruction * {
+      auto n = v.getAsInteger();
+      if (!n || *n < -1 || *n >= int64_t(segmentWork[side].size()))
+        throw std::runtime_error("invalid_b2b_recipe_index");
+      return *n == -1 ? nullptr : segmentWork[side][*n];
+    };
+    for (const auto &row : *rows) {
+      auto *object = row.getAsObject();
+      if (!object || !object->getString("label")) throw std::runtime_error("invalid_b2b_recipe_layout");
+      Layout layout; layout.label = object->getString("label")->str();
+      auto decodePairs = [&](StringRef key, SmallVectorImpl<B2BMatch> &pairs) {
+        auto *array = object->getArray(key);
+        if (!array) throw std::runtime_error("missing_b2b_recipe_pairs");
+        for (const auto &entry : *array) {
+          auto *pair = entry.getAsArray();
+          if (!pair || pair->size() != 2) throw std::runtime_error("invalid_b2b_recipe_pair");
+          pairs.emplace_back(index((*pair)[0], 0), index((*pair)[1], 1));
+        }
+      };
+      decodePairs("before", layout.beforeSplit); decodePairs("after", layout.afterJoin);
+      auto *segments = object->getArray("segments");
+      if (!segments) throw std::runtime_error("missing_b2b_recipe_segments");
+      for (const auto &entry : *segments) {
+        auto *pair = entry.getAsArray();
+        if (!pair || pair->size() != 2 || !index((*pair)[0],0) || !index((*pair)[1],1))
+          throw std::runtime_error("invalid_b2b_recipe_segment");
+        layout.segments.push_back({unsigned(*(*pair)[0].getAsInteger()), unsigned(*(*pair)[1].getAsInteger())});
+      }
+      layouts.push_back(std::move(layout));
+    }
+  }
+  if (recipeOut) {
+    auto number = [&](Instruction *inst, unsigned side) -> int64_t {
+      if (!inst) return -1;
+      auto found = llvm::find(segmentWork[side], inst);
+      if (found == segmentWork[side].end()) throw std::runtime_error("nonlocal_b2b_recipe_instruction");
+      return found - segmentWork[side].begin();
+    };
+    json::Array rows;
+    for (const auto &layout : layouts) {
+      auto pairs = [&](ArrayRef<B2BMatch> matches) {
+        json::Array result;
+        for (auto match : matches) result.push_back(json::Array{number(match.first,0), number(match.second,1)});
+        return result;
+      };
+      json::Array segments;
+      for (auto step : layout.segments) {
+        if (!step.consumeLeft || !step.consumeRight) throw std::runtime_error("unsupported_recipe_action");
+        segments.push_back(json::Array{int64_t(step.left), int64_t(step.right)});
+      }
+      rows.push_back(json::Object{{"label",layout.label},{"before",pairs(layout.beforeSplit)},
+                                 {"after",pairs(layout.afterJoin)},{"segments",std::move(segments)}});
+    }
+    *recipeOut = json::Object{{"schema","b2b-recipe-v2"},{"parent_hash",parentIdentity},{"planner_facts",plannerFacts},
+        {"candidate",c.key()},{"opt_level",int64_t(level)},{"layouts",std::move(rows)}};
+  }
 
   for (const auto &layout : layouts) {
     StringRef label = layout.label;

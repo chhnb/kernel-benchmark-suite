@@ -1,0 +1,830 @@
+{
+  "status": "in_progress_not_a_score_reuse_certificate",
+  "reference_commit": "50a64fc",
+  "queue_unit_test": {
+    "random_updates": 10000,
+    "winner_matches_full_rescore": true,
+    "retained_results": 187359,
+    "evaluations": 30867
+  },
+  "runtime_queue": "connected; conservatively invalidates on parent change",
+  "fingerprint_audit": {
+    "PCM128": [
+      {
+        "radius": 0,
+        "scored": 2436,
+        "hits": 2293,
+        "mean_scope": 3.0,
+        "mismatch_count": 0
+      },
+      {
+        "radius": 1,
+        "scored": 2436,
+        "hits": 2284,
+        "mean_scope": 4.000821018062397,
+        "mismatch_count": 0
+      },
+      {
+        "radius": 2,
+        "scored": 2436,
+        "hits": 2275,
+        "mean_scope": 7.277093596059113,
+        "mismatch_count": 0
+      }
+    ],
+    "PCM256": [
+      {
+        "radius": 0,
+        "scored": 2008,
+        "hits": 1916,
+        "mean_scope": 3.0,
+        "mismatch_count": 0
+      },
+      {
+        "radius": 1,
+        "scored": 2008,
+        "hits": 1899,
+        "mean_scope": 4.000996015936255,
+        "mismatch_count": 0
+      },
+      {
+        "radius": 2,
+        "scored": 2008,
+        "hits": 1897,
+        "mean_scope": 7.11304780876494,
+        "mismatch_count": 0
+      }
+    ],
+    "vllm": [
+      {
+        "radius": 0,
+        "scored": 170,
+        "hits": 80,
+        "mean_scope": 3.0,
+        "mismatch_count": 0
+      },
+      {
+        "radius": 1,
+        "scored": 170,
+        "hits": 70,
+        "mean_scope": 10.0,
+        "mismatch_count": 0
+      },
+      {
+        "radius": 2,
+        "scored": 170,
+        "hits": 60,
+        "mean_scope": 31.11764705882353,
+        "mismatch_count": 0
+      }
+    ]
+  },
+  "pending": [
+    "sound scoped dependency certificate including cleanup and TTI context",
+    "retaining scores across commits",
+    "reapplying cached recipes to current IR",
+    "full regression including commit sequence",
+    "PCM128/256 compilation completion and timing"
+  ],
+  "foundation_regression": {
+    "passed": 38,
+    "commit_chains_checked": 37,
+    "vllm_final_ir_identical": true,
+    "source": "build/incremental-queue-foundation-regression/results.json"
+  },
+  "recipe": {
+    "schema": "b2b-recipe-v2",
+    "scope": "all DP1 finalist layouts, instruction indices only",
+    "validity": "current planner predicate outcomes, weights, operand identities, domination and use/PHI facts",
+    "tests_passed": [
+      "same-parent replay",
+      "unrelated function edit preserved",
+      "downstream edit preserved",
+      "changed operand emission preserved",
+      "equality/flags/shape invalidation",
+      "upstream store changes score despite identical planner facts"
+    ],
+    "score_reuse_enabled": false
+  },
+  "recipe_pcm_probe": [
+    {
+      "trial": "trial-1",
+      "mode": "fresh",
+      "seconds": 5.7095,
+      "exit": 0,
+      "identical_to_fresh": false,
+      "error": ""
+    },
+    {
+      "trial": "trial-1",
+      "mode": "replay",
+      "seconds": 5.6724,
+      "exit": 0,
+      "identical_to_fresh": true,
+      "error": ""
+    },
+    {
+      "trial": "trial-2",
+      "mode": "fresh",
+      "seconds": 5.7211,
+      "exit": 0,
+      "identical_to_fresh": false,
+      "error": ""
+    },
+    {
+      "trial": "trial-2",
+      "mode": "replay",
+      "seconds": 5.5793,
+      "exit": 0,
+      "identical_to_fresh": true,
+      "error": ""
+    },
+    {
+      "trial": "trial-312",
+      "mode": "fresh",
+      "seconds": 5.4649,
+      "exit": 0,
+      "identical_to_fresh": false,
+      "error": ""
+    },
+    {
+      "trial": "trial-312",
+      "mode": "replay",
+      "seconds": 5.4956,
+      "exit": 0,
+      "identical_to_fresh": true,
+      "error": ""
+    },
+    {
+      "trial": "trial-313",
+      "mode": "fresh",
+      "seconds": 5.4247,
+      "exit": 0,
+      "identical_to_fresh": false,
+      "error": ""
+    },
+    {
+      "trial": "trial-313",
+      "mode": "replay",
+      "seconds": 5.4633,
+      "exit": 0,
+      "identical_to_fresh": true,
+      "error": ""
+    }
+  ],
+  "counterexample": {
+    "same_candidate_arms": true,
+    "same_planner_facts": true,
+    "same_layouts": true,
+    "upstream_stores_to_load_addresses": {
+      "control_tti": 37,
+      "trial_tti": 18,
+      "gain": 19
+    },
+    "upstream_stores_to_other_addresses": {
+      "control_tti": 38,
+      "trial_tti": 20,
+      "gain": 18
+    },
+    "implication": "score dependencies include incoming memory/cleanup context; planner certificate is insufficient"
+  },
+  "recipe_regression": {
+    "passed": 38,
+    "entire_commit_chains_identical": 38,
+    "source": "build/incremental-recipe-regression/results.json"
+  },
+  "expanded_context_audit": {
+    "PCM128": [
+      {
+        "radius": 0,
+        "scored": 2436,
+        "hits": 1926,
+        "mismatches": 0
+      },
+      {
+        "radius": 1,
+        "scored": 2436,
+        "hits": 1917,
+        "mismatches": 0
+      },
+      {
+        "radius": 2,
+        "scored": 2436,
+        "hits": 1908,
+        "mismatches": 0
+      }
+    ],
+    "PCM256": [
+      {
+        "radius": 0,
+        "scored": 2008,
+        "hits": 1571,
+        "mismatches": 0
+      },
+      {
+        "radius": 1,
+        "scored": 2008,
+        "hits": 1554,
+        "mismatches": 0
+      },
+      {
+        "radius": 2,
+        "scored": 2008,
+        "hits": 1552,
+        "mismatches": 0
+      }
+    ]
+  },
+  "expanded_context_tests": [
+    "upstream store addresses change fingerprint",
+    "transitive scalar definitions change fingerprint"
+  ],
+  "expanded_context_certificate": false,
+  "alpha_dedup_probe": {
+    "evaluated": 33,
+    "duplicates_after_ignoring_local_names": 2,
+    "enabled": false,
+    "reason": "small opportunity; temporary audit code removed"
+  },
+  "instruction_quote_experiment": {
+    "default": "on for supported pinned LLVM24 gfx906 quotations; unsupported queries remain full worker calls",
+    "scope": "Restricted pinned LLVM24 gfx906 per-instruction quotations; not a candidate profitability certificate",
+    "synthetic_regression": "passed: scalar, unsupported target fallback, upstream forwarding and unrelated stores, alignments; 11 cache hits",
+    "probes": [
+      {
+        "directory": "build/incremental-quote-probe-1794905263554339857",
+        "score_result_equal": true,
+        "results": [
+          {
+            "mode": "off",
+            "seconds": 5.7294068329938455,
+            "exit": 0,
+            "scored": true,
+            "ir_sha256": "4daa4e0182cf8e5526c184fe78a057cf4c88a929638db376c90af9a7c53afdbe",
+            "quotes": {
+              "audited_hits": 0,
+              "hits": 0,
+              "mode": "off",
+              "quotes": 0,
+              "worker_queries": 35
+            }
+          },
+          {
+            "mode": "audit",
+            "seconds": 5.751123987996834,
+            "exit": 0,
+            "scored": true,
+            "ir_sha256": "4daa4e0182cf8e5526c184fe78a057cf4c88a929638db376c90af9a7c53afdbe",
+            "quotes": {
+              "audited_hits": 27,
+              "hits": 0,
+              "mode": "audit",
+              "quotes": 106,
+              "worker_queries": 35
+            }
+          },
+          {
+            "mode": "on",
+            "seconds": 2.873160753995762,
+            "exit": 0,
+            "scored": true,
+            "ir_sha256": "4daa4e0182cf8e5526c184fe78a057cf4c88a929638db376c90af9a7c53afdbe",
+            "quotes": {
+              "audited_hits": 0,
+              "hits": 27,
+              "mode": "on",
+              "quotes": 106,
+              "worker_queries": 8
+            }
+          }
+        ]
+      },
+      {
+        "directory": "build/incremental-quote-probe-1794905321934751641",
+        "score_result_equal": true,
+        "results": [
+          {
+            "mode": "off",
+            "seconds": 2.341018945007818,
+            "exit": 0,
+            "scored": true,
+            "ir_sha256": "57b5961181fdfe68a2d4fe8bc18704ad27ca27e99f55dced52347ad005c80c0b",
+            "quotes": {
+              "audited_hits": 0,
+              "hits": 0,
+              "mode": "off",
+              "quotes": 0,
+              "worker_queries": 27
+            }
+          },
+          {
+            "mode": "audit",
+            "seconds": 2.3493402800086187,
+            "exit": 0,
+            "scored": true,
+            "ir_sha256": "57b5961181fdfe68a2d4fe8bc18704ad27ca27e99f55dced52347ad005c80c0b",
+            "quotes": {
+              "audited_hits": 23,
+              "hits": 0,
+              "mode": "audit",
+              "quotes": 73,
+              "worker_queries": 27
+            }
+          },
+          {
+            "mode": "on",
+            "seconds": 1.2808934820059221,
+            "exit": 0,
+            "scored": true,
+            "ir_sha256": "57b5961181fdfe68a2d4fe8bc18704ad27ca27e99f55dced52347ad005c80c0b",
+            "quotes": {
+              "audited_hits": 0,
+              "hits": 23,
+              "mode": "on",
+              "quotes": 73,
+              "worker_queries": 4
+            }
+          }
+        ]
+      }
+    ],
+    "remaining": "Runtime cross-commit candidate score reuse and full PCM compile measurements remain incomplete",
+    "regressions": {
+      "audit": {
+        "directory": "/data/home/chh/kernel-benchmark-suite/build/incremental-quote-audit-regression",
+        "passed": 38,
+        "complete_commit_chains_identical": true
+      },
+      "on": {
+        "directory": "/data/home/chh/kernel-benchmark-suite/build/incremental-quote-on-regression",
+        "passed": 38,
+        "complete_commit_chains_identical": true
+      }
+    },
+    "default_unit_test": "tests/run-v1 passed after rebuilding default-on scorer and fail-closed driver; build/incremental-quote-default-unit.log",
+    "pcm256_completed_run": {
+      "case": "PCM256",
+      "exit": 0,
+      "seconds": 622.26,
+      "passed": false,
+      "commits": 122,
+      "tti": 2257,
+      "verified": true,
+      "ir_sha256": "f4394b2f6ea2ecd6a0c8dda78b70fa18472f2aaf4ca6083b581649123226b19a",
+      "identical_ir": false
+    },
+    "pcm256_interpretation": "Complete off/on comparison passed for all 122 commits and final IR; the frozen manifest only recorded a timeout and has no expected final IR.",
+    "fixed_timeout_pcm": {
+      "results": [
+        {
+          "case": "PCM128",
+          "exit": 124,
+          "seconds": 900.06,
+          "passed": false,
+          "commits": 23,
+          "tti": 8365,
+          "known_timeout": true
+        },
+        {
+          "case": "PCM256",
+          "exit": 0,
+          "seconds": 622.26,
+          "passed": false,
+          "commits": 122,
+          "tti": 2257,
+          "verified": true,
+          "ir_sha256": "f4394b2f6ea2ecd6a0c8dda78b70fa18472f2aaf4ca6083b581649123226b19a",
+          "identical_ir": false
+        }
+      ],
+      "prefix_comparison": [
+        {
+          "case": "PCM128",
+          "current_commits": 23,
+          "reference_commits": 11,
+          "identical_prefix": 11,
+          "current_tti": 8365,
+          "verifier": true
+        },
+        {
+          "case": "PCM256",
+          "current_commits": 122,
+          "reference_commits": 62,
+          "identical_prefix": 62,
+          "current_tti": 2257,
+          "verifier": true
+        }
+      ],
+      "complete_reference": "still running for PCM256; extended off/on runs started for PCM128"
+    },
+    "pcm256_complete_comparison": {
+      "case": "PCM256",
+      "identical_input": true,
+      "identical_complete_commit_chain": true,
+      "commits": 122,
+      "tti": 2257,
+      "verifier": true,
+      "final_ir_sha256": "f4394b2f6ea2ecd6a0c8dda78b70fa18472f2aaf4ca6083b581649123226b19a",
+      "quote_off_seconds": 1305.6,
+      "quote_on_seconds": 622.26,
+      "timing_limitation": "Single observations with concurrent benchmark activity; not isolated repeated timing",
+      "frozen_manifest_limitation": "Original manifest records timeout and no final IR, so its passed=false is not a detected semantic regression"
+    }
+  },
+  "runtime_plan_cache": {
+    "state": "enabled; regenerate on planner-fact changes; all candidate scores still recomputed",
+    "comparison_directory": "/data/home/chh/kernel-benchmark-suite/build/incremental-plan-cache-regression",
+    "completed_cases": 38,
+    "rows": [
+      {
+        "case": "vllm",
+        "commits": 224,
+        "tti": 2619,
+        "identical_commit_chain": true,
+        "plan_cache": {
+          "miss": 925,
+          "invalidated": 156,
+          "ineligible": 2
+        }
+      },
+      {
+        "case": "LUD32-lud_perimeter",
+        "commits": 0,
+        "tti": 6831,
+        "identical_commit_chain": true,
+        "plan_cache": {
+          "miss": 3
+        }
+      },
+      {
+        "case": "LUD8-lud_internal",
+        "commits": 0,
+        "tti": 128,
+        "identical_commit_chain": true,
+        "plan_cache": {}
+      },
+      {
+        "case": "tigre",
+        "commits": 6,
+        "tti": 946,
+        "identical_commit_chain": true,
+        "plan_cache": {
+          "miss": 18
+        }
+      },
+      {
+        "case": "BIT64",
+        "commits": 21,
+        "tti": 649,
+        "identical_commit_chain": true,
+        "plan_cache": {
+          "miss": 231
+        }
+      },
+      {
+        "case": "LUD16-lud_diagonal",
+        "commits": 0,
+        "tti": 2115,
+        "identical_commit_chain": true,
+        "plan_cache": {}
+      },
+      {
+        "case": "DCT8",
+        "commits": 0,
+        "tti": 62,
+        "identical_commit_chain": true,
+        "plan_cache": {
+          "miss": 1
+        }
+      },
+      {
+        "case": "MS128",
+        "commits": 1,
+        "tti": 212,
+        "identical_commit_chain": true,
+        "plan_cache": {
+          "miss": 6
+        }
+      },
+      {
+        "case": "BIT128",
+        "commits": 28,
+        "tti": 855,
+        "identical_commit_chain": true,
+        "plan_cache": {
+          "miss": 406
+        }
+      },
+      {
+        "case": "MS32",
+        "commits": 1,
+        "tti": 212,
+        "identical_commit_chain": true,
+        "plan_cache": {
+          "miss": 6
+        }
+      },
+      {
+        "case": "SW2D",
+        "commits": 1,
+        "tti": 1921,
+        "identical_commit_chain": true,
+        "plan_cache": {
+          "miss": 10
+        }
+      },
+      {
+        "case": "LUD16-lud_perimeter",
+        "commits": 0,
+        "tti": 2183,
+        "identical_commit_chain": true,
+        "plan_cache": {
+          "miss": 3
+        }
+      },
+      {
+        "case": "BIT256",
+        "commits": 36,
+        "tti": 1090,
+        "identical_commit_chain": true,
+        "plan_cache": {
+          "miss": 666
+        }
+      },
+      {
+        "case": "LUD32-lud_diagonal",
+        "commits": 0,
+        "tti": 796,
+        "identical_commit_chain": true,
+        "plan_cache": {
+          "miss": 1
+        }
+      },
+      {
+        "case": "NQU64",
+        "commits": 1,
+        "tti": 282,
+        "identical_commit_chain": true,
+        "plan_cache": {
+          "miss": 9
+        }
+      },
+      {
+        "case": "DCT4",
+        "commits": 0,
+        "tti": 62,
+        "identical_commit_chain": true,
+        "plan_cache": {
+          "miss": 1
+        }
+      },
+      {
+        "case": "LUD64-lud_perimeter",
+        "commits": 0,
+        "tti": 12795,
+        "identical_commit_chain": true,
+        "plan_cache": {
+          "miss": 4
+        }
+      },
+      {
+        "case": "LUD32-lud_internal",
+        "commits": 0,
+        "tti": 248,
+        "identical_commit_chain": true,
+        "plan_cache": {}
+      },
+      {
+        "case": "HLLD",
+        "commits": 4,
+        "tti": 1701,
+        "identical_commit_chain": true,
+        "plan_cache": {
+          "miss": 27,
+          "hit": 2
+        }
+      },
+      {
+        "case": "NQU128",
+        "commits": 1,
+        "tti": 300,
+        "identical_commit_chain": true,
+        "plan_cache": {
+          "miss": 9
+        }
+      },
+      {
+        "case": "PCM32",
+        "commits": 17,
+        "tti": 1142,
+        "identical_commit_chain": true,
+        "plan_cache": {
+          "miss": 31,
+          "hit": 40
+        }
+      },
+      {
+        "case": "LUD8-lud_diagonal",
+        "commits": 0,
+        "tti": 723,
+        "identical_commit_chain": true,
+        "plan_cache": {}
+      },
+      {
+        "case": "LUD64-lud_diagonal",
+        "commits": 0,
+        "tti": 1276,
+        "identical_commit_chain": true,
+        "plan_cache": {
+          "miss": 1
+        }
+      },
+      {
+        "case": "SRAD16",
+        "commits": 3,
+        "tti": 451,
+        "identical_commit_chain": true,
+        "plan_cache": {
+          "miss": 13,
+          "hit": 3
+        }
+      },
+      {
+        "case": "LUD16-lud_internal",
+        "commits": 0,
+        "tti": 168,
+        "identical_commit_chain": true,
+        "plan_cache": {}
+      },
+      {
+        "case": "MapAiry",
+        "commits": 32,
+        "tti": 4259,
+        "identical_commit_chain": true,
+        "plan_cache": {
+          "miss": 352,
+          "ineligible": 18,
+          "hit": 71,
+          "invalidated": 5
+        }
+      },
+      {
+        "case": "NQU256",
+        "commits": 1,
+        "tti": 300,
+        "identical_commit_chain": true,
+        "plan_cache": {
+          "miss": 9
+        }
+      },
+      {
+        "case": "DCT16",
+        "commits": 0,
+        "tti": 62,
+        "identical_commit_chain": true,
+        "plan_cache": {
+          "miss": 1
+        }
+      },
+      {
+        "case": "hypersonic",
+        "commits": 4,
+        "tti": 1867,
+        "identical_commit_chain": true,
+        "plan_cache": {
+          "miss": 47,
+          "hit": 4
+        }
+      },
+      {
+        "case": "LUD64-lud_internal",
+        "commits": 0,
+        "tti": 408,
+        "identical_commit_chain": true,
+        "plan_cache": {}
+      },
+      {
+        "case": "landau",
+        "commits": 29,
+        "tti": 1897,
+        "identical_commit_chain": true,
+        "plan_cache": {
+          "miss": 324,
+          "hit": 39,
+          "invalidated": 9
+        }
+      },
+      {
+        "case": "PCM64",
+        "commits": 17,
+        "tti": 1142,
+        "identical_commit_chain": true,
+        "plan_cache": {
+          "miss": 31,
+          "hit": 40
+        }
+      },
+      {
+        "case": "SRAD32",
+        "commits": 3,
+        "tti": 451,
+        "identical_commit_chain": true,
+        "plan_cache": {
+          "miss": 13,
+          "hit": 3
+        }
+      },
+      {
+        "case": "BIT32",
+        "commits": 15,
+        "tti": 472,
+        "identical_commit_chain": true,
+        "plan_cache": {
+          "miss": 120
+        }
+      },
+      {
+        "case": "MS256",
+        "commits": 1,
+        "tti": 212,
+        "identical_commit_chain": true,
+        "plan_cache": {
+          "miss": 6
+        }
+      },
+      {
+        "case": "LUD8-lud_perimeter",
+        "commits": 2,
+        "tti": 742,
+        "identical_commit_chain": true,
+        "plan_cache": {
+          "miss": 3,
+          "hit": 3,
+          "invalidated": 3
+        }
+      },
+      {
+        "case": "MS64",
+        "commits": 1,
+        "tti": 212,
+        "identical_commit_chain": true,
+        "plan_cache": {
+          "miss": 6
+        }
+      },
+      {
+        "case": "NQU96",
+        "commits": 1,
+        "tti": 299,
+        "identical_commit_chain": true,
+        "plan_cache": {
+          "miss": 9
+        }
+      }
+    ],
+    "frozen_results": "38/38 passed; full commit chains including intermediate IR identical",
+    "unit_tests": "tests/run-v1 exit 0; build/incremental-plan-cache-unit.log"
+  },
+  "whole_parent_score_certificate": {
+    "dependency": "SHA1 of complete current and prepared input contents, strategy and cleanup",
+    "reuse": "cached result lookup skips worker request; prior artifact usable only with identical entire input certificate",
+    "negative_results": "exit status retained",
+    "unit": "10000 randomized winner comparisons plus cached lookup, rejected result retention and same-path content invalidation passed",
+    "binary": "build/decision-fuse/decision-greedy",
+    "pending": "Local cross-commit profitability certificate remains absent; extended complete PCM comparisons pending",
+    "regression": "38/38 complete chains identical: build/incremental-content-cache-regression; last pending-worker-count adjustment still needs final build",
+    "final_build_validation": "Installed final content-cache driver atomically; final PCM32/BIT256 smoke passed; tests/run-v1 exit 0 in build/incremental-content-cache-final-unit.log",
+    "running_measurements": {
+      "PCM128_off": {
+        "pid": 156516,
+        "timeout": 10800
+      },
+      "PCM128_on": {
+        "pid": 157199,
+        "timeout": 7200
+      }
+    },
+    "installed_binary_sha256": "2d8c25fd52a73df0387e54b33087eb7c6a623406acefdb76d23fdcf6c9acd27a"
+  },
+  "implementation_boundary_document": "regression/greedy-v1/incremental-design.md",
+  "real_commit_context_counterexample": {
+    "test": "tests/fusion-search/check-commit-score-invalidation.py",
+    "fixture": "tests/fusion-search/commit-score-context.ll",
+    "artifact_directory": "build/incremental-real-commit-context-guarded",
+    "unchanged": "root/arms/exit instruction bodies, planner facts, layouts",
+    "first_commit_cost": [
+      71,
+      57
+    ],
+    "second_before": [
+      71,
+      53
+    ],
+    "second_after": [
+      57,
+      36
+    ],
+    "plan_cache": "hit; current score recomputed",
+    "status": "passed"
+  }
+}

@@ -1,5 +1,6 @@
 #pragma once
 #include "fusion_search.h"
+#include "tti_quote_key.h"
 #include "tti_memory_io.h"
 #include "llvm/IR/IntrinsicInst.h"
 #include "llvm/Transforms/Utils/Cloning.h"
@@ -20,6 +21,44 @@ class LLVM24Scorer final:public Scorer {
   mutable Cost cachedControl;
   mutable std::string cachedParentHash;
   mutable Cost cachedParent;
+  std::string quoteMode;
+  struct Quote { int64_t value; std::string histogramKey; };
+  mutable std::map<std::string, Quote> quotes;
+  mutable std::string quoteContext;
+  mutable uint64_t quoteHits=0, quoteAudits=0, quoteWorkerQueries=0;
+  using QuoteKeys = std::vector<std::vector<std::optional<std::string>>>;
+  QuoteKeys quoteKeys(const llvm::Function &f) const {
+    using namespace llvm;
+    if (quoteMode=="off" || f.getParent()->getTargetTriple()!="amdgcn-amd-amdhsa" ||
+        f.getFnAttribute("target-cpu").getValueAsString()!="gfx906" || f.hasMetadata()) return {};
+    std::string context; raw_string_ostream stream(context);
+    stream << f.getName() << ';' << f.getCallingConv() << ';' << f.getParent()->getDataLayoutStr() << ';';
+    for (unsigned index=0; index<=f.arg_size(); ++index)
+      stream << index << ":" << f.getAttributes().getAsString(index) << ";";
+    stream << f.getAttributes().getAsString(AttributeList::FunctionIndex); stream.flush();
+    if (context!=quoteContext) { quotes.clear(); quoteContext=std::move(context); }
+    std::set<const BasicBlock*> reachable; std::vector<const BasicBlock*> pending{&f.getEntryBlock()};
+    while(!pending.empty()) { auto *b=pending.back();pending.pop_back();if(!reachable.insert(b).second)continue;
+      for(auto *successor:successors(b))pending.push_back(successor); }
+    QuoteKeys keys(f.size()); unsigned block=0;
+    for (const auto &b:f) {
+      if (reachable.count(&b)) for (const auto &i:b)
+        if(!isa<DbgInfoIntrinsic>(i) && !legacyLifetimeMarker(i)) keys[block].push_back(gcnQuoteKey(i));
+      ++block;
+    }
+    return keys;
+  }
+  std::optional<Cost> quotedCost(const QuoteKeys &keys) const {
+    if(keys.empty())return std::nullopt;
+    Cost c;c.blockCost.assign(keys.size(),0);c.blockUnknown.assign(keys.size(),false);
+    for(unsigned block=0;block<keys.size();++block)for(const auto &key:keys[block]) {
+      if(!key)return std::nullopt;
+      auto found=quotes.find(*key);if(found==quotes.end())return std::nullopt;
+      const auto &q=found->second;c.value+=q.value;c.blockCost[block]+=q.value;
+      ++c.count;c.zero+=q.value==0;++c.counts[q.histogramKey];
+    }
+    return c;
+  }
 #ifdef __linux__
   mutable std::unique_ptr<decision::PersistentTTI> session;
   mutable std::string sessionFunction;
@@ -56,6 +95,10 @@ class LLVM24Scorer final:public Scorer {
           if(legacyLifetimeMarker(instruction))instruction.eraseFromParent();
         }
     const auto &module=scoringModule?*scoringModule:*f.getParent();
+    const auto keys=scoringModule?QuoteKeys{}:quoteKeys(f);
+    const auto predicted=quotedCost(keys);
+    if(predicted && quoteMode=="on") { ++quoteHits; return *predicted; }
+    ++quoteWorkerQueries;
     std::string result;
 #ifdef __linux__
     std::string ir;
@@ -126,6 +169,26 @@ class LLVM24Scorer final:public Scorer {
         if(v)c.blockCost[*bi]+=*v;else c.blockUnknown[*bi]=true;}
     }else rowsOk=false;
     if(!rowsOk){c.blockCost.clear();c.blockUnknown.clear();}
+    if(predicted) {
+      ++quoteAudits;
+      if(predicted->value!=c.value || predicted->count!=c.count || predicted->zero!=c.zero ||
+         c.unknown || predicted->counts!=c.counts || predicted->blockCost!=c.blockCost)
+        throw std::runtime_error("tti_quote_context_incomplete");
+    }
+    if(!keys.empty() && rowsOk) if(auto *rows=o->getArray("instruction_costs")) {
+      for(const auto &row:*rows) {
+        const auto *r=row.getAsObject();if(!r)continue;
+        auto block=r->getInteger("block_index"), index=r->getInteger("instruction_index");
+        auto value=r->getInteger("accepted_cost");auto reportKey=r->getString("key");
+        if(!block || !index || !value || *value<0 || !reportKey || *block<0 || *index<0 ||
+           size_t(*block)>=keys.size() || size_t(*index)>=keys[*block].size()) continue;
+        const auto &key=keys[*block][*index];if(!key)continue;
+        Quote q{*value,reportKey->str()+":cost"+std::to_string(*value)};
+        auto found=quotes.emplace(*key,q);
+        if(!found.second && (found.first->second.value!=q.value || found.first->second.histogramKey!=q.histogramKey))
+          throw std::runtime_error("tti_quote_key_conflict");
+      }
+    }
     return c;
   }
 public:
@@ -143,7 +206,13 @@ public:
     return costs;
   }
 
-  explicit LLVM24Scorer(std::string executable):worker(std::move(executable)){}
+  explicit LLVM24Scorer(std::string executable, std::string mode="on")
+      :worker(std::move(executable)),quoteMode(std::move(mode)){}
+  llvm::json::Object quoteCacheStats() const {
+    return llvm::json::Object{{"mode",quoteMode},{"hits",int64_t(quoteHits)},
+      {"audited_hits",int64_t(quoteAudits)},{"worker_queries",int64_t(quoteWorkerQueries)},
+      {"quotes",int64_t(quotes.size())}};
+  }
   ScoreResult evaluate(const ScoreInput&i,const RoundContext&r)const override {
     ScoreResult s;s.coverage.hardwareCosts="LLVM24_TTI_6be16f356d3e_reciprocal_throughput_uncalibrated";
     if(i.candidate.version!=r.parentVersion||i.candidate.function!=r.function){s.reason="round_identity_mismatch";return s;}
@@ -184,7 +253,7 @@ public:
       if(i.trial&&i.trial->sideBeforeOk&&i.trial->sideAfterOk){
         // A failing parent query only disables side metrics for this trial.
         if(cachedParentHash!=r.parentHash){
-          try{cachedParent=query(i.beforeIR);}catch(const std::exception&){cachedParent=Cost();}
+          try{cachedParent=query(i.beforeIR);}catch(const std::exception &error){if(llvm::StringRef(error.what()).startswith("tti_quote_"))throw;cachedParent=Cost();}
           cachedParentHash=r.parentHash;
         }
         double b0,b1,a0,a1;

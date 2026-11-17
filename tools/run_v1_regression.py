@@ -23,6 +23,7 @@ def main():
     parser.add_argument('--case', action='append', dest='cases')
     parser.add_argument('--jobs', type=int, default=4)
     parser.add_argument('--timeout', type=int, default=900)
+    parser.add_argument('--tti-quote-cache', choices=['off','audit','on'], default='on')
     parser.add_argument('--include-slow', action='store_true', help='include PCM128/256, which timed out in the checkpoint')
     args = parser.parse_args()
     if args.jobs < 1 or args.timeout < 1:
@@ -55,7 +56,7 @@ def main():
         with (out / (case + '.log')).open('w') as log:
             rc = subprocess.run(['timeout', '-k', '3s', str(args.timeout) + 's',
                                  ROOT / 'build/decision-fuse/decision-greedy', source,
-                                 row['function'], ROOT, dest, '--b2b-strategy', 'dp1'],
+                                 row['function'], ROOT, dest, '--b2b-strategy', 'dp1', '--tti-quote-cache', args.tti_quote_cache],
                                 stdout=log, stderr=subprocess.STDOUT, env=env).returncode
         result = dict(case=case, exit=rc, seconds=round(time.monotonic() - begin, 2), passed=False)
         summary = dest / 'summary.json'

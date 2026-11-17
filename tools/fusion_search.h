@@ -156,5 +156,7 @@ Trial tryPair(const llvm::Module &, const Candidate &, unsigned currentVersion,
               unsigned optLevel, CleanupMode, const LogicalRegionState *, bool allowB2B);
 std::vector<Trial> planSingleBranchB2B(const llvm::Module &, const Candidate &,
                                        unsigned optLevel, CleanupMode, llvm::StringRef replay,
-                                       llvm::function_ref<int(const llvm::Instruction &)> intrinsicCost = nullptr);
+                                       llvm::function_ref<int(const llvm::Instruction &)> intrinsicCost = nullptr,
+                                       llvm::json::Object *recipeOut = nullptr,
+                                       const llvm::json::Object *recipeIn = nullptr);
 }
