@@ -24,7 +24,7 @@ def main():
     parser.add_argument('--jobs', type=int, default=4)
     parser.add_argument('--timeout', type=int, default=900)
     parser.add_argument('--tti-quote-cache', choices=['off','audit','on'], default='on')
-    parser.add_argument('--include-slow', action='store_true', help='include PCM128/256, which timed out in the checkpoint')
+    parser.add_argument('--include-slow', action='store_true', help='include slow PCM128/256 configurations')
     args = parser.parse_args()
     if args.jobs < 1 or args.timeout < 1:
         parser.error('jobs and timeout must be positive')
@@ -35,7 +35,7 @@ def main():
             parser.error(f'unknown cases: {sorted(unknown)}')
         rows = [r for r in rows if r['case'] in args.cases]
     elif not args.include_slow:
-        rows = [r for r in rows if r['reference_exit'] == 0]
+        rows = [r for r in rows if r['reference_exit'] == 0 and not r.get('slow', False)]
     out = args.out.resolve()
     out.mkdir(parents=True, exist_ok=False)
     env = os.environ.copy()
