@@ -288,3 +288,22 @@ MS32 的 15 分不是原样边界拼接产生的，也不能标记为匹配指�
 回归：普通 store 顺序观测、相关外部 load 对齐改变、过期 ticket、两个 live-out 引起的出口依赖失效、真实全函数 18 → 21 反例均通过；49 种布局当前父模块回放与每组 6,724 个 CPU 输入通过。metadata 测试确认 isolatedPlanning 忽略附件，但保留 named 根内容变化的失效。原含外部访存的独立单元仍可跳过一次完整 trial。
 
 持久摘要：`incremental-pcm32-local-reuse.json`；详细证据：`build/incremental-unit-audit/pcm32-scoped-greedy/`。这是**局部策略**首次在真实冻结输入上跨提交复用完整收益并跳过 trial。尚未证明与默认全函数清理等价，默认 driver 未切换；GPU、BIT/vLLM、PCM128/256 完整对照及编译耗时验收仍未完成，原 Goal 保持 active。
+
+## PCM32 耗时与默认流程对照；PCM256 后续缺口
+
+探针增加 full/cached 独立计时及阶段 JSON；增加 `--seed-ir`，分别记录冻结原始输入 SHA256 和实际父 IR 路径/SHA256。不会把中间父 IR 的实验冒充从冻结输入开始的完整运行。
+
+PCM32 顺序执行 full 后 cached，报价缓存 off，单线程实验入口：
+
+- 全量 **48.014 s**，增量 **26.156 s**，下降 **45.5%**。
+- 仍是 16 次提交，136 → 72 个 trial，680 → 360 次清理/评分，逐步结果一致。
+- 此计时包含该入口的规划、回放、清理、完整评分和逐步 IR 保存；不是默认 16 路流水线的时间，也不是 GPU 加速。
+- 当前只有一次顺序测量，未消除先后执行和共享机器负载的影响，不宣称稳定倍数。
+
+与默认 v1 冻结参考 `build/incremental-identity-regression/PCM32/` 对比：前 16 次提交均是每次 -15 TTI，对应产物的 LLVM12 llvm-diff 全部返回 0。这里是指令结构比较，不宣称 metadata 或文本逐字相同。默认还有第 17 次 `_Z3pcmPi:B0:B2:B1`，把 1152 降到 1142：左侧入口分别计算 shl，但一侧去循环入口，另一侧去循环后汇合点，不满足当前隔离候选的共同直接出口要求。
+
+将局部第 16 步结果去掉内部 identity metadata 后，显式交给现有 DP1/full-cleanup 路径处理该候选，得到 **1152 → 1142**，最终与默认 final.ll 的 llvm-diff 也返回 0。这只证明此个案的手动回退可衔接；尚未实现自动混合队列，不允许先把全部局部候选提交完、再统一回退以冒充全局最佳贪心。未来必须把不支持的候选评分纳入每轮竞争，或给出合法上界。
+
+PCM256 原始输入及默认首步后的父 IR，当前实验入口均枚举 0 个候选；这两次毫秒级短跑不是有效性能回测。定位默认第二步 B101:B103:B102：两臂是 add/add/GEP/load，出口 5 个 PHI。当前内部 load/GEP 和全局数组指针输入尚不支持，因此不能进入目标的 PCM128/256 完整对照。下一步应补这类访存输入与回放，而不是调整并行或超时。
+
+持久结果：`incremental-pcm32-timing-fallback.json`。详细目录：`pcm32-scoped-timed/`、`pcm32-local-fallback/`、`pcm256-scoped-timed/`、`pcm256-after-step1-scoped-timed/`，均在 `build/incremental-unit-audit/`。上述任务均已终止完成，没有需保留的在途进程。默认 driver 未改，Goal 尚未完成。
