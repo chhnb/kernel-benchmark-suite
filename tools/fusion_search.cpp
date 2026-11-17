@@ -2091,6 +2091,7 @@ std::vector<Trial> planSingleBranchB2B(const Module &parent, const Candidate &c,
                        {after.begin(), after.end()}, {}});
   };
   if (!recipeIn) {
+    ProfileScope layoutSearch("plan_layouts");
   auto segments = (segmentUsesValid || independentExits)
       ? searchB2BSegments(segmentWork[0], segmentWork[1], independentExits, 1, intrinsicCost)
       : SmallVector<B2BSegmentedPlan, 4>();
@@ -2169,6 +2170,7 @@ std::vector<Trial> planSingleBranchB2B(const Module &parent, const Candidate &c,
   }
   if (layouts.empty()) add("single-branch-separate", {}, {});
   } else {
+    ProfileScope decode("decode_layout_recipe");
     auto *rows = recipeIn->getArray("layouts");
     if (!rows || rows->empty()) throw std::runtime_error("empty_b2b_recipe");
     auto index = [&](const json::Value &v, unsigned side) -> Instruction * {

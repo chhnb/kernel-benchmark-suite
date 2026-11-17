@@ -192,6 +192,7 @@ int main(int argc,char**argv){try{
  std::unique_ptr<Module> scopedParent;if(scoped)scopedParent=CloneModule(*initial);
  std::map<std::string,std::string> b2bRecipes;
  std::set<std::string> attemptedStructural;
+ std::set<unsigned> attemptedPreparation; // Decision indices in this parent snapshot.
  std::string catalogParent;
  Optional<json::Value> structuralCatalog;
 
@@ -214,57 +215,93 @@ int main(int argc,char**argv){try{
     if(identities!=1)throw std::runtime_error("ambiguous decision identity: "+target);
   }
   mark("parse_and_discover");
+  const std::string scan=out+"/structural-"+std::to_string(rounds.size());
+  std::vector<std::string> args{structural,"--ir",wholeTrialInput,"--function",fn,
+    "--structural","1",
+    "--cleanup",structuralCleanup,"--tti-worker",root+"/tools/run-llvm24-tti","--tti-quote-cache",quoteMode};
+  if(catalogParent!=current){
+    auto catalogArgs=args;
+    catalogArgs.insert(catalogArgs.end(),{"--catalog-only","1","--darm-region-candidates","1","--debug-dir",scan,"--out",scan+".ll"});
+    if(int rc=run(std::move(catalogArgs),scan+".stdout",scan+".stderr"))
+      throw std::runtime_error("structural candidate enumeration failed ("+std::to_string(rc)+"): "+scan+".stderr");
+    catalogParent=current;
+    structuralCatalog=read(scan+"/catalog.json");
+  }
+  const auto &candidates=*structuralCatalog->getAsObject()->getArray("candidates");
+  mark("enumerate_catalog");
+  fusion::FusionDomains domains(*m->getFunction(fn),catalog);
+  BasicBlock *activeDomain=nullptr;
+  if(domainSchedule=="trees" && target.empty()) {
+    for(const auto &entry:candidates) {
+      const auto &c=*entry.getAsObject();
+      if(auto reason=c.getString("preflight_rejection"))if(!reason->empty())continue;
+      if(attemptedStructural.count(c.getString("candidate")->str()))continue;
+      activeDomain=domains.root(c.getString("split")->str());break;
+    }
+  }
+  // Re-discover maximal preparation targets from the current parent, including
+  // decisions that appeared after the initial target list was built.
+  std::vector<unsigned> prepare;
+  if(domainSchedule=="trees") {
+    if(!target.empty())activeDomain=domains.root(catalog[di].root);
+    std::set<BasicBlock*> coveredTests;
+    for(unsigned i=0;i<catalog.size();++i){
+      auto &decision=catalog[i];
+      if(coveredTests.count(decision.root))continue;
+      if(std::adjacent_find(decision.arms.begin(),decision.arms.end(),eligible)==decision.arms.end())continue;
+      coveredTests.insert(decision.tests.begin(),decision.tests.end());
+      if(attemptedPreparation.count(i))continue;
+      auto *owner=domains.root(decision.root);
+      if(!activeDomain)activeDomain=owner;
+      if(owner==activeDomain)prepare.push_back(i);
+    }
+    if(!target.empty() && !attemptedPreparation.count(di) &&
+       std::find(prepare.begin(),prepare.end(),di)==prepare.end())prepare.insert(prepare.begin(),di);
+  }else if(!target.empty())prepare.push_back(di);
   decision::Decision emptyDecision;
   auto &d=target.empty()?emptyDecision:catalog[di];
   int64_t bestCost=parentCost;
   std::string best,bestLocalKey;
   json::Array attempts, preparationRejections;
   struct PreparedPair {
-    unsigned left;
+    unsigned owner, left;
     std::string input;
     std::vector<std::array<std::string,3>> coordinates;
     bool containsRegion;
   };
   std::vector<PreparedPair> preparedPairs;
-  for (unsigned left=0; left+1<d.arms.size(); ++left) {
-    if(!eligible(d.arms[left],d.arms[left+1]))continue;
-    auto prepared=CloneModule(*m);
-    std::string reason;
-    std::vector<std::array<std::string,3>> coordinates;
-    if(prepareArmPairs(*prepared,fn,di,left,conditionBudget,reason,coordinates)){
-      const auto input=out+"/prepared-"+std::to_string(rounds.size())+"-"+std::to_string(left)+".ll";
-      std::error_code ec;
-      raw_fd_ostream stream(input,ec);
-      if(ec)throw std::runtime_error(ec.message());
-      if(scoped)stripIncrementalTags(*prepared);
-      prepared->print(stream,nullptr);
-      stream.close();
-      const bool containsRegion=d.arms[left].kind==decision::ArmKind::SESE||
-                                d.arms[left+1].kind==decision::ArmKind::SESE;
-      preparedPairs.push_back({left,input,std::move(coordinates),containsRegion});
-      continue;
+  for(unsigned owner:prepare){
+    if(domainSchedule=="trees")attemptedPreparation.insert(owner);
+    auto &d=catalog[owner];
+    for (unsigned left=0; left+1<d.arms.size(); ++left) {
+      if(!eligible(d.arms[left],d.arms[left+1]))continue;
+      auto prepared=CloneModule(*m);
+      std::string reason;
+      std::vector<std::array<std::string,3>> coordinates;
+      if(prepareArmPairs(*prepared,fn,owner,left,conditionBudget,reason,coordinates)){
+        const std::string decisionSuffix=domainSchedule=="trees" ? "-"+std::to_string(owner) : "";
+        const auto input=out+"/prepared-"+std::to_string(rounds.size())+decisionSuffix+"-"+std::to_string(left)+".ll";
+        std::error_code ec;
+        raw_fd_ostream stream(input,ec);
+        if(ec)throw std::runtime_error(ec.message());
+        if(scoped)stripIncrementalTags(*prepared);
+        prepared->print(stream,nullptr);
+        stream.close();
+        const bool containsRegion=d.arms[left].kind==decision::ArmKind::SESE||
+                                  d.arms[left+1].kind==decision::ArmKind::SESE;
+        preparedPairs.push_back({owner,left,input,std::move(coordinates),containsRegion});
+        continue;
+      }
+      preparationRejections.push_back(json::Object{
+        {"left",d.arms[left].id},{"right",d.arms[left+1].id},
+        {"stage","preparation_rejected"},{"reason",std::move(reason)}});
     }
-    preparationRejections.push_back(json::Object{
-      {"left",d.arms[left].id},{"right",d.arms[left+1].id},
-      {"stage","preparation_rejected"},{"reason",std::move(reason)}});
   }
   {
     mark("prepare_arms");
-    const std::string scan=out+"/structural-"+std::to_string(rounds.size());
-    std::vector<std::string> args{structural,"--ir",wholeTrialInput,"--function",fn,
-      "--structural","1",
-      "--cleanup",structuralCleanup,"--tti-worker",root+"/tools/run-llvm24-tti","--tti-quote-cache",quoteMode};
-    if(catalogParent!=current){
-      auto catalogArgs=args;
-      catalogArgs.insert(catalogArgs.end(),{"--catalog-only","1","--darm-region-candidates","1","--debug-dir",scan,"--out",scan+".ll"});
-      if(int rc=run(std::move(catalogArgs),scan+".stdout",scan+".stderr"))
-        throw std::runtime_error("structural candidate enumeration failed ("+std::to_string(rc)+"): "+scan+".stderr");
-      catalogParent=current;
-      structuralCatalog=read(scan+"/catalog.json");
-    }
-    const auto &candidates=*structuralCatalog->getAsObject()->getArray("candidates");
     json::Array normalizedCandidates;
     for(const auto &pair:preparedPairs){
+      const auto &d=catalog[pair.owner];
       std::set<std::array<std::string,3>> coordinates(pair.coordinates.begin(),pair.coordinates.end());
       if(pair.containsRegion){
         const auto scan=pair.input+".catalog";
@@ -294,7 +331,7 @@ int main(int argc,char**argv){try{
           {"logical_right",d.arms[pair.left+1].id}});
     }
 
-    mark("enumerate_catalog");
+    mark("enumerate_prepared_catalog");
     std::string decisionSplit;
     if(d.root) {
       unsigned index=0;
@@ -315,16 +352,6 @@ int main(int argc,char**argv){try{
       std::optional<fusion::ScopedGreedyAdapter::Descriptor> local;
     };
     std::vector<StructuralTrial> structuralTrials;
-    fusion::FusionDomains domains(*m->getFunction(fn),catalog);
-    BasicBlock *activeDomain=nullptr;
-    if(domainSchedule=="trees" && target.empty()) {
-      for(const auto &entry:candidates) {
-        const auto &c=*entry.getAsObject();
-        if(auto reason=c.getString("preflight_rejection"))if(!reason->empty())continue;
-        if(attemptedStructural.count(c.getString("candidate")->str()))continue;
-        activeDomain=domains.root(c.getString("split")->str());break;
-      }
-    }
     json::Array originalRootCandidates, extendedTreeCandidates;
     std::vector<const json::Array*> candidateLists{&candidates,&normalizedCandidates};
     if(domainSchedule=="trees" && !decisionSplit.empty()) {
@@ -596,7 +623,18 @@ int main(int argc,char**argv){try{
   }
   mark("read_scores_and_select");
   json::Object record{{"decision",target},{"iteration",int64_t(iteration)},{"parent",current},{"parent_cost",parentCost},{"attempts",std::move(attempts)},{"preparation_rejections",std::move(preparationRejections)},{"selected",best}};
-  if(best.empty() && domainSchedule=="trees" && target.empty() && !record.getArray("attempts")->empty()) {
+  if(domainSchedule=="trees"){
+    json::Array preparedDecisions;
+    for(unsigned index:prepare)preparedDecisions.push_back(catalog[index].id);
+    record["prepared_decisions"]=std::move(preparedDecisions);
+    if(activeDomain){
+      std::string label;
+      raw_string_ostream name(label);
+      activeDomain->printAsOperand(name,false);
+      record["active_domain"]=name.str();
+    }
+  }
+  if(best.empty() && domainSchedule=="trees" && target.empty() && (!prepare.empty() || !record.getArray("attempts")->empty())) {
     record["domain_exhausted"]=true;
     rounds.push_back(std::move(record));report("running");mark("record_and_commit");
     if(scoped)scopedParent=std::move(m);
@@ -613,7 +651,7 @@ int main(int argc,char**argv){try{
     }
   }
   recordResources(best+"/fused.ll",best+"/resources",record);
-  record["selected_cost"]=bestCost;record["score"]=double(parentCost-bestCost)/std::max<int64_t>(parentCost,1);rounds.push_back(std::move(record));parentCost=bestCost;current=best+"/fused.ll";attemptedStructural.clear();++commits;report("running");outs()<<"commit="<<commits<<" cost="<<parentCost<<" decision="<<target<<"\n";outs().flush();mark("record_and_commit");
+  record["selected_cost"]=bestCost;record["score"]=double(parentCost-bestCost)/std::max<int64_t>(parentCost,1);rounds.push_back(std::move(record));parentCost=bestCost;current=best+"/fused.ll";attemptedStructural.clear();attemptedPreparation.clear();++commits;report("running");outs()<<"commit="<<commits<<" cost="<<parentCost<<" decision="<<target<<"\n";outs().flush();mark("record_and_commit");
   if(iteration==(domainSchedule=="trees"?99999u:255u))throw std::runtime_error("round budget exceeded");
  }}
  if(auto e=sys::fs::copy_file(current,out+"/final.ll"))throw std::runtime_error(e.message());current=out+"/final.ll";report("completed");return 0;
