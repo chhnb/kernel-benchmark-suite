@@ -1,12 +1,14 @@
 #pragma once
 #include "b2b_optimization_unit.h"
 #include "llvm/IR/Verifier.h"
+#include "llvm/Analysis/ValueTracking.h"
+#include "llvm/IR/IRBuilder.h"
 #include "llvm/Transforms/Utils/BasicBlockUtils.h"
 #include "llvm/Transforms/Utils/ValueMapper.h"
 #include <functional>
 
 namespace fusion {
-// Disposable isolated IR for the first single-output, pure-integer unit.
+// Disposable isolated IR for a pure-integer unit with scalar or tuple outputs.
 // Cleanup of this module cannot read or mutate the rest of the parent function.
 // Its score is NOT automatically the parent-function score: scoring integration
 // must account for boundary branches/returns and validate the relevant TTI keys.
@@ -22,14 +24,16 @@ public:
     auto *f=root.getParent();function=f->getName().str();
     auto *l=ids.lookup(unit.left)->getParent(),*r=ids.lookup(unit.right)->getParent();
     auto *join=ids.lookup(unit.exit)->getParent();
-    if(std::distance(join->phis().begin(),join->phis().end())!=1)
-      throw std::runtime_error("capsule: single_output_required");
-    auto *output=&join->front();parent=IRDependencySnapshot::capture(source);
+    std::vector<llvm::PHINode*> outputs;std::vector<llvm::Type*> outputTypes;
+    for(auto &phi:join->phis()){outputs.push_back(&phi);outputTypes.push_back(phi.getType());}
+    if(outputs.empty())throw std::runtime_error("capsule: output_required");
+    auto *returnType=outputs.size()==1?outputTypes.front():llvm::StructType::get(source.getContext(),outputTypes);
+    parent=IRDependencySnapshot::capture(source);
     ir=std::make_unique<llvm::Module>("isolated-b2b",source.getContext());
     ir->setDataLayout(source.getDataLayout());ir->setTargetTriple(source.getTargetTriple());
     std::vector<llvm::Type*> types;for(auto &a:f->args())types.push_back(a.getType());
     for(auto id:unit.inputs)types.push_back(ids.lookup(id)->getType());
-    auto *cf=llvm::Function::Create(llvm::FunctionType::get(output->getType(),types,false),
+    auto *cf=llvm::Function::Create(llvm::FunctionType::get(returnType,types,false),
        llvm::GlobalValue::ExternalLinkage,"unit",ir.get());
     // Input attributes are intentionally not imported as hidden facts. This
     // may change optimization; isolated cleanup remains a separate path.
@@ -44,9 +48,12 @@ public:
     auto copy=[&](llvm::Instruction &i,llvm::BasicBlock *to){auto *c=i.clone();c->setMetadata("fusion.incremental.identity",nullptr);to->getInstList().push_back(c);map[&i]=c;};
     copy(*root.getTerminator(),entry);
     for(auto &i:*l)copy(i,cl);for(auto &i:*r)copy(i,cr);
-    copy(*output,exit);
+    for(auto *output:outputs)copy(*output,exit);
     for(auto &b:*cf)for(auto &i:b)llvm::RemapInstruction(&i,map,llvm::RF_NoModuleLevelChanges|llvm::RF_IgnoreMissingLocals);
-    llvm::ReturnInst::Create(source.getContext(),map[output],exit);
+    llvm::IRBuilder<> builder(exit);llvm::Value *value=map[outputs.front()];
+    if(outputs.size()>1){value=llvm::UndefValue::get(returnType);
+      for(unsigned i=0;i<outputs.size();++i)value=builder.CreateInsertValue(value,map[outputs[i]],{i});}
+    builder.CreateRet(value);
     if(llvm::verifyModule(*ir,&llvm::errs()))throw std::runtime_error("invalid extracted capsule");
   }
   const B2BOptimizationUnit &boundary() const {return unit;}
@@ -65,17 +72,21 @@ public:
     if(!f||!cf||cf->isDeclaration()||cf->arg_size()!=f->arg_size()+unit.inputs.size())
       throw std::runtime_error("invalid capsule signature");
     auto *l=ids.lookup(unit.left)->getParent(),*r=ids.lookup(unit.right)->getParent();
-    auto *join=ids.lookup(unit.exit)->getParent();auto *output=llvm::dyn_cast<llvm::PHINode>(&join->front());
-    if(!output || cf->getReturnType()!=output->getType() || llvm::pred_size(&cf->getEntryBlock()))
+    auto *join=ids.lookup(unit.exit)->getParent();
+    std::vector<llvm::PHINode*> outputs;std::vector<llvm::Type*> outputTypes;
+    for(auto &phi:join->phis()){outputs.push_back(&phi);outputTypes.push_back(phi.getType());}
+    auto *returnType=outputs.size()==1?outputTypes.front():llvm::StructType::get(current.getContext(),outputTypes);
+    if(outputs.empty() || cf->getReturnType()!=returnType || llvm::pred_size(&cf->getEntryBlock()))
       throw std::runtime_error("invalid capsule output");
     // The artifact is allowed only the same pure operation language, plus
     // internal PHIs, branches and returns. No references into another function.
     for(auto &b:*cf)for(auto &i:b){
       if(!(llvm::isa<llvm::BinaryOperator>(i)||llvm::isa<llvm::ICmpInst>(i)||
            llvm::isa<llvm::SelectInst>(i)||llvm::isa<llvm::CastInst>(i)||
+           llvm::isa<llvm::InsertValueInst>(i)||llvm::isa<llvm::ExtractValueInst>(i)||
            llvm::isa<llvm::FreezeInst>(i)||llvm::isa<llvm::PHINode>(i)||llvm::isa<llvm::BranchInst>(i)||llvm::isa<llvm::ReturnInst>(i)))
         throw std::runtime_error("unsupported capsule product instruction");
-      if(!i.isTerminator()&&!i.getType()->isIntegerTy())throw std::runtime_error("unsupported capsule product type");
+      if(!i.isTerminator()&&!i.getType()->isIntegerTy()&&!llvm::isa<llvm::InsertValueInst>(i))throw std::runtime_error("unsupported capsule product type");
       llvm::SmallVector<std::pair<unsigned,llvm::MDNode*>,4> metadata;i.getAllMetadata(metadata);
       for(auto &md:metadata)if(md.first!=i.getContext().getMDKindID("fusion.incremental.identity"))
         throw std::runtime_error("unsupported capsule product metadata");
@@ -103,16 +114,25 @@ public:
     }
     std::vector<llvm::BasicBlock*> blocks;
     for(auto &b:*cf){auto *copy=llvm::BasicBlock::Create(result->getContext(),"unit."+std::to_string(unit.entry)+"."+b.getName().str(),f,join);map[&b]=copy;blocks.push_back(copy);}
+    llvm::SmallVector<llvm::Instruction*,8> tupleCopies;
     for(auto &b:*cf)for(auto &i:b){
-      auto *copy=i.clone();copy->setMetadata("fusion.incremental.identity",nullptr);
+      auto *copy=i.clone();
+      if(llvm::isa<llvm::InsertValueInst>(copy)||llvm::isa<llvm::ExtractValueInst>(copy))tupleCopies.push_back(copy);copy->setMetadata("fusion.incremental.identity",nullptr);
       llvm::cast<llvm::BasicBlock>(map[&b])->getInstList().push_back(copy);map[&i]=copy;
     }
     for(auto *b:blocks)for(auto &i:*b)llvm::RemapInstruction(&i,map,llvm::RF_NoModuleLevelChanges|llvm::RF_IgnoreMissingLocals);
-    while(output->getNumIncomingValues())output->removeIncomingValue(0u,false);
+    for(auto *output:outputs)while(output->getNumIncomingValues())output->removeIncomingValue(0u,false);
     unsigned returns=0;
     for(auto *b:blocks)if(auto *ret=llvm::dyn_cast<llvm::ReturnInst>(b->getTerminator())){
       auto *v=ret->getReturnValue();if(!v)throw std::runtime_error("void capsule return");
-      output->addIncoming(v,b);llvm::BranchInst::Create(join,ret);ret->eraseFromParent();++returns;
+      for(unsigned i=0;i<outputs.size();++i){
+        auto *part=outputs.size()==1?v:llvm::FindInsertedValue(v,{i});
+        // The planner must preserve the explicit return tuple. Do not leave
+        // aggregate operations in the parent or silently invent a new ABI.
+        if(!part)throw std::runtime_error("unresolved capsule output tuple");
+        outputs[i]->addIncoming(part,b);
+      }
+      llvm::BranchInst::Create(join,ret);ret->eraseFromParent();++returns;
     }
     if(!returns)throw std::runtime_error("capsule has no output");
     auto *identity=rootTerm->getMetadata("fusion.incremental.identity");
@@ -121,13 +141,18 @@ public:
     root->getTerminator()->setMetadata("fusion.incremental.identity",identity);
     l->dropAllReferences();r->dropAllReferences();l->eraseFromParent();r->eraseFromParent();
     // Deterministic boundary normalization, not full-function cleanup. The
-    // original exit has no other predecessor or PHI in this initial domain.
-    // Its one incoming output can be substituted without inspecting users.
-    if(output->getNumIncomingValues()==1) {
-      auto *value=output->getIncomingValue(0);
-      output->replaceAllUsesWith(value);output->eraseFromParent();
+    // original exit has only the two replaced predecessors.
+    // Each single-incoming output can be substituted without inspecting users.
+    if(outputs.front()->getNumIncomingValues()==1) {
+      for(auto *output:outputs){auto *value=output->getIncomingValue(0);
+        output->replaceAllUsesWith(value);output->eraseFromParent();}
       if(!llvm::MergeBlockIntoPredecessor(join))
-        throw std::runtime_error("single-output boundary fold failed");
+        throw std::runtime_error("output boundary fold failed");
+    }
+    // Only remove dead tuple plumbing copied from this capsule. Never run
+    // whole-function DCE as part of boundary materialization.
+    bool erased=true;while(erased){erased=false;
+      for(auto &i:tupleCopies)if(i&&i->use_empty()){i->eraseFromParent();i=nullptr;erased=true;}
     }
     if(llvm::verifyModule(*result,&llvm::errs()))throw std::runtime_error("invalid spliced capsule");
     auto after=IRDependencySnapshot::capture(*result);auto delta=currentFacts.changesTo(after);

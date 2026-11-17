@@ -11,7 +11,7 @@ int main(int argc,char **argv){
   auto unit=fusion::B2BOptimizationUnit::discover(b,ids);
   if(!unit.eligible()){++reasons[unit.rejection];continue;}
   auto *exit=ids.lookup(unit.exit)->getParent();
-  if(std::distance(exit->phis().begin(),exit->phis().end())!=1){++reasons["single_output_required"];continue;}
+  if(exit->phis().empty()){++reasons["output_required"];continue;}
   ++admitted;
   try {fusion::B2BUnitCapsule capsule(*m,b);auto replay=capsule.apply(*m,*capsule.ir);
    if(llvm::verifyModule(*replay,&llvm::errs()))throw std::runtime_error("roundtrip verifier failed");

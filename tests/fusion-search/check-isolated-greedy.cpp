@@ -9,6 +9,7 @@ using namespace llvm;
 static void save(const Module &m,const std::string &path){std::error_code e;raw_fd_ostream s(path,e);assert(!e);m.print(s,nullptr);}
 int main(int argc,char **argv){
  assert(argc==4||argc==5);const bool external=argc==5&&StringRef(argv[4])=="external";
+ const bool multi=argc==5&&StringRef(argv[4])=="multi";
  const bool memoryContext=argc==5&&StringRef(argv[4])=="memory";
  const StringRef option="two-entry-phi-node-folding-threshold";
  auto &registered=cl::getRegisteredOptions();auto found=registered.find(option);
@@ -43,6 +44,15 @@ int main(int argc,char **argv){
    auto *qc=new ICmpInst(a,ICmpInst::ICMP_SLT,f->getArg(3),ConstantInt::get(Type::getInt32Ty(ctx),3),"qc");
    a->setCondition(pc);b->setCondition(qc);
  }
+ if(multi){
+   auto *f=parent->getFunction("f");Value *left=nullptr,*right=nullptr;
+   for(auto &b:*f)for(auto &i:b){if(i.getName()=="c")left=&i;if(i.getName()=="d")right=&i;}
+   assert(left&&right);auto *join=&f->back();
+   auto *phi=PHINode::Create(Type::getInt32Ty(ctx),2,"second.output",&join->front());
+   phi->addIncoming(left,cast<Instruction>(left)->getParent());phi->addIncoming(right,cast<Instruction>(right)->getParent());
+   auto *ret=cast<ReturnInst>(join->getTerminator());
+   auto *sum=BinaryOperator::CreateAdd(ret->getReturnValue(),phi,"tuple.sum",ret);ret->setOperand(0,sum);
+ }
  if(memoryContext){
    auto *f=parent->getFunction("f");auto *term=f->getEntryBlock().getTerminator();
    auto *g=new GlobalVariable(*parent,Type::getInt32Ty(ctx),false,GlobalValue::InternalLinkage,
@@ -74,13 +84,21 @@ int main(int argc,char **argv){
  auto full=fusion::runIsolatedB2BGreedy(*parent,"f",fullScorer,false,[&](const Module &m,unsigned n){save(m,std::string(argv[1])+"/full-"+std::to_string(n)+".ll");});
  auto cached=fusion::runIsolatedB2BGreedy(*parent,"f",cacheScorer,true,[&](const Module &m,unsigned n){save(m,std::string(argv[1])+"/cached-"+std::to_string(n)+".ll");});
  assert(full.stats.commits==2);assert(cached.stats.commits==2);
- assert(full.costs==cached.costs);if(!memoryContext)assert(full.costs==(external?std::vector<int64_t>({45,25}):std::vector<int64_t>({43,23})));
+ assert(full.costs==cached.costs);if(!memoryContext&&!multi)assert(full.costs==(external?std::vector<int64_t>({45,25}):std::vector<int64_t>({43,23})));
  assert(full.identities==cached.identities);assert(full.gains==cached.gains);assert(full.hashes==cached.hashes);
  assert(fusion::moduleHash(*full.module)==fusion::moduleHash(*cached.module));
- assert(full.stats.trials==3);assert(cached.stats.trials==2);assert(cached.stats.reusedTrials==1);
- assert(full.stats.generations>cached.stats.generations);
- assert(full.stats.layoutCleanups>cached.stats.layoutCleanups);
- assert(full.stats.scores>cached.stats.scores);
+ assert(full.stats.trials==3);
+ if(multi){
+   // B now has larger gain and commits first. Its rewrite changes A's exit
+   // boundary, so A MUST be invalidated rather than counted as independent.
+   assert(cached.stats.trials==3&&cached.stats.reusedTrials==0);
+   assert(cached.stats.invalidated==1);
+ }else{
+   assert(cached.stats.trials==2&&cached.stats.reusedTrials==1);
+   assert(full.stats.generations>cached.stats.generations);
+   assert(full.stats.layoutCleanups>cached.stats.layoutCleanups);
+   assert(full.stats.scores>cached.stats.scores);
+ }
  auto emit=[&](StringRef name,const fusion::IsolatedGreedyResult &r){
    outs()<<name<<" trials="<<r.stats.trials<<" generations="<<r.stats.generations
      <<" cleanups="<<r.stats.layoutCleanups<<" scores="<<r.stats.scores
@@ -112,5 +130,5 @@ int main(int argc,char **argv){
  assert(excluded.stats.trials==0 && excluded.stats.commits==0);
  // External memory is admitted, but the memory-bearing arms are not pure units.
  // This does not reuse the global-cleanup 18 -> 21 gain certificate.
- outs()<<"PASS complete isolated trial reuse with real LLVM24 TTI and exact commit-chain parity\n";
+ outs()<<"PASS isolated greedy parity and expected dependency reuse/invalidation with real LLVM24 TTI\n";
 }

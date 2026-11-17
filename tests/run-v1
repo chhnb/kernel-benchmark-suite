@@ -24,3 +24,4 @@ python3 "$root/tests/fusion-search/check-b2b-capsule.py"
 python3 "$root/tests/fusion-search/check-isolated-greedy.py"
 python3 "$root/tests/fusion-search/check-isolated-greedy.py" --external
 python3 "$root/tests/fusion-search/check-isolated-greedy.py" --memory
+python3 "$root/tests/fusion-search/check-isolated-greedy.py" --multi

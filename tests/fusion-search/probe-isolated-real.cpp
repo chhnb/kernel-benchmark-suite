@@ -16,7 +16,7 @@ int main(int argc,char **argv){
  auto round=makeRound(*m,argv[2],0,0,CleanupMode::None);
  json::Array results;unsigned n=0;
  for(auto &b:*f){auto unit=B2BOptimizationUnit::discover(b,ids);if(!unit.eligible())continue;
-  auto *exit=ids.lookup(unit.exit)->getParent();if(std::distance(exit->phis().begin(),exit->phis().end())!=1)continue;
+  auto *exit=ids.lookup(unit.exit)->getParent();if(exit->phis().empty())continue;
   B2BUnitCapsule capsule(*m,b);
   Trial control;control.valid=true;control.cleanupMode=CleanupMode::None;control.candidate={argv[2],"","","",0};
   control.normalized=capsule.apply(*m,*capsule.ir);control.raw=CloneModule(*control.normalized);

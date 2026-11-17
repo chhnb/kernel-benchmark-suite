@@ -86,7 +86,7 @@ inline IsolatedGreedyResult runIsolatedB2BGreedy(
       if(!reachable.count(&b))continue;
       auto unit=B2BOptimizationUnit::discover(b,ids);if(!unit.eligible())continue;
       auto *exit=ids.lookup(unit.exit)->getParent();
-      if(std::distance(exit->phis().begin(),exit->phis().end())!=1)continue;
+      if(exit->phis().empty())continue;
       auto reads=isolatedReads(snapshot,unit);
       reads.insert(scoringReads.begin(),scoringReads.end());
       if(!reuse)reads["force_full_rescore"]=std::to_string(round);
