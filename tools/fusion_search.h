@@ -119,6 +119,12 @@ class Scorer {
 public:
   virtual ~Scorer() = default;
   virtual ScoreResult evaluate(const ScoreInput &, const RoundContext &) const = 0;
+  // Opt-in only for scorers whose complete input contract excludes CFG
+  // analyses. Other scorers retain the existing Analysis-backed path.
+  virtual bool evaluateWithoutAnalysis(const Candidate &,const llvm::Function &,
+      const llvm::Function &,const RoundContext &,const Trial *,ScoreResult &) const {
+    return false;
+  }
 };
 struct Options {
   CleanupMode cleanupMode=CleanupMode::DarmCFGInstCombine;

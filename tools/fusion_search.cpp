@@ -2402,8 +2402,10 @@ ScoreResult evaluateTrial(const Module&parent,Trial&t,const RoundContext&r,const
   if(t.cleanupMode!=r.cleanupMode){s.reason="cleanup_mode_mismatch";return s;}
   if(t.candidate.version!=r.parentVersion||t.candidate.function!=r.function||moduleHash(parent)!=r.parentHash){s.reason="round_identity_mismatch";return s;}
   auto start=Clock::now();auto*before=parent.getFunction(r.function);auto*raw=t.raw->getFunction(r.function);auto*after=t.normalized->getFunction(r.function);
-  Analysis ba(*before),aa(*after);
-  s=scorer.evaluate({t.candidate,*before,*raw,*after,ba,aa,t.before,t.afterRaw,t.after,t.left,t.right,t.replication,&t},r);
+  if(!scorer.evaluateWithoutAnalysis(t.candidate,*before,*after,r,&t,s)){
+    Analysis ba(*before),aa(*after);
+    s=scorer.evaluate({t.candidate,*before,*raw,*after,ba,aa,t.before,t.afterRaw,t.after,t.left,t.right,t.replication,&t},r);
+  }
   if(s.status==ScoreStatus::Scored&&(!std::isfinite(s.total)||!std::isfinite(s.staticGain)||!std::isfinite(s.staticScore)||!std::isfinite(s.cleanupGain)||!std::isfinite(s.parentGain)||!std::isfinite(s.dependencyPenalty)||!std::isfinite(s.livenessPenalty))){s.status=ScoreStatus::NotEvaluable;s.reason="nonfinite_score";}
   t.scoreMs=millis(start);return s;
 }

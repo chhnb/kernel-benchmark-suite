@@ -9,6 +9,7 @@
 #include "llvm/Support/JSON.h"
 #include "llvm/Support/MemoryBuffer.h"
 #include <array>
+#include <cmath>
 #include <set>
 #include <stdexcept>
 namespace fusion {
@@ -213,12 +214,15 @@ public:
       {"audited_hits",int64_t(quoteAudits)},{"worker_queries",int64_t(quoteWorkerQueries)},
       {"quotes",int64_t(quotes.size())}};
   }
-  ScoreResult evaluate(const ScoreInput&i,const RoundContext&r)const override {
+  // LLVM24 quotation reads IR and the round, not the legacy Analysis objects.
+  // This entry point lets bounded callers avoid rebuilding unused DT/PDT/RI.
+  ScoreResult evaluatePair(const Candidate &candidate,const llvm::Function &beforeIR,
+      const llvm::Function &afterIR,const RoundContext &r,const Trial *trial=nullptr) const {
     ScoreResult s;s.coverage.hardwareCosts="LLVM24_TTI_6be16f356d3e_reciprocal_throughput_uncalibrated";
-    if(i.candidate.version!=r.parentVersion||i.candidate.function!=r.function){s.reason="round_identity_mismatch";return s;}
+    if(candidate.version!=r.parentVersion||candidate.function!=r.function){s.reason="round_identity_mismatch";return s;}
     try {
       if(cachedHash!=r.controlHash){auto*f=r.control->getFunction(r.function);if(!f)throw std::runtime_error("control_missing");cachedControl=query(*f);cachedHash=r.controlHash;}
-      auto after=query(i.afterIR);auto &before=cachedControl;
+      auto after=query(afterIR);auto &before=cachedControl;
       s.metrics={{"work_before",before.value},{"work_after",after.value},{"unknown_before",double(before.unknown)},
         {"unknown_after",double(after.unknown)},{"zero_before",double(before.zero)},{"zero_after",double(after.zero)},
         {"instructions_before",double(before.count)},{"instructions_after",double(after.count)},{"tti_major",24},
@@ -250,15 +254,15 @@ public:
       // wave executes when all its lanes take one side, before vs after fusion.
       // "before" is the parent S (equal to control in scoped cleanup modes).
       s.metrics["side_metrics_available"]=0;
-      if(i.trial&&i.trial->sideBeforeOk&&i.trial->sideAfterOk){
+      if(trial&&trial->sideBeforeOk&&trial->sideAfterOk){
         // A failing parent query only disables side metrics for this trial.
         if(cachedParentHash!=r.parentHash){
-          try{cachedParent=query(i.beforeIR);}catch(const std::exception &error){if(llvm::StringRef(error.what()).startswith("tti_quote_"))throw;cachedParent=Cost();}
+          try{cachedParent=query(beforeIR);}catch(const std::exception &error){if(llvm::StringRef(error.what()).startswith("tti_quote_"))throw;cachedParent=Cost();}
           cachedParentHash=r.parentHash;
         }
         double b0,b1,a0,a1;
-        if(sideCost(cachedParent,i.trial->sideBefore[0],b0)&&sideCost(cachedParent,i.trial->sideBefore[1],b1)&&
-           sideCost(after,i.trial->sideAfter[0],a0)&&sideCost(after,i.trial->sideAfter[1],a1)){
+        if(sideCost(cachedParent,trial->sideBefore[0],b0)&&sideCost(cachedParent,trial->sideBefore[1],b1)&&
+           sideCost(after,trial->sideAfter[0],a0)&&sideCost(after,trial->sideAfter[1],a1)){
           s.metrics["side_false_before"]=b0;s.metrics["side_false_after"]=a0;
           s.metrics["side_true_before"]=b1;s.metrics["side_true_after"]=a1;
           s.metrics["uniform_gain_false"]=b0-a0;s.metrics["uniform_gain_true"]=b1-a1;
@@ -267,7 +271,20 @@ public:
       }
       s.status=ScoreStatus::Scored;s.reason="llvm24_static_control_delta";
     }catch(const std::exception&e){s.reason=e.what();}
+    if(s.status==ScoreStatus::Scored&&(!std::isfinite(s.total)||!std::isfinite(s.staticGain)||
+       !std::isfinite(s.staticScore)||!std::isfinite(s.cleanupGain)||!std::isfinite(s.parentGain)||
+       !std::isfinite(s.dependencyPenalty)||!std::isfinite(s.livenessPenalty))){
+      s.status=ScoreStatus::NotEvaluable;s.reason="nonfinite_score";
+    }
     return s;
   }
+  bool evaluateWithoutAnalysis(const Candidate &candidate,const llvm::Function &before,
+      const llvm::Function &after,const RoundContext &round,const Trial *trial,ScoreResult &out) const override {
+    out=evaluatePair(candidate,before,after,round,trial);return true;
+  }
+  ScoreResult evaluate(const ScoreInput&i,const RoundContext&r)const override {
+    return evaluatePair(i.candidate,i.beforeIR,i.afterIR,r,i.trial);
+  }
+
 };
 }
