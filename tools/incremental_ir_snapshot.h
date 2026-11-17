@@ -71,7 +71,9 @@ struct IRDependencySnapshot {
     for(auto &f:*m)for(auto &b:f)for(auto &i:b){
       auto id=keys.at(&i);std::string text;llvm::raw_string_ostream stream(text);
       // Include membership: a move with identical operands is still a write.
-      stream<<f.getName()<<":"<<b.getName()<<":";i.print(stream);stream.flush();
+      stream<<f.getName()<<":"<<b.getName()<<":prev="
+            <<(i.getPrevNode()?keys.at(i.getPrevNode()):0)<<":";
+      i.print(stream);stream.flush();
       result.instructions.emplace(id,std::move(text));
       for(auto &u:i.uses()) {
         auto *use=llvm::dyn_cast<llvm::Instruction>(u.getUser());

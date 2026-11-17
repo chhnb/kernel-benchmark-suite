@@ -36,11 +36,17 @@ int main(){
  assert(!extraUse.sameReads(used,{bi}));
  uint64_t added;{fusion::IRIdentity ids(*m);added=ids.instruction(*newUse);}
  auto writes=extraUse.changesTo(used);assert(writes.added==std::set<uint64_t>{added});
- assert(!writes.within({},{}));assert(writes.within({},{added}));
+ assert(!writes.within({},{}));assert(!writes.within({},{added}));
+ assert(writes.within({ci},{ci,added})); // C follows a new instruction.
  // Cosmetic renames are not dependency changes.
  a->setName("a-new");b->setName("b-new");block.setName("entry-new");
  auto renamed=fusion::IRDependencySnapshot::capture(*m);
  assert(used.sameReads(renamed,{ai,bi,ci,added}));
+ // Order matters even when operands remain unchanged.
+ b->moveBefore(a);
+ auto reordered=fusion::IRDependencySnapshot::capture(*m);
+ assert(!renamed.sameReads(reordered,{ai,bi}));
+ b->moveAfter(a);
  // Target/function context cannot be silently omitted.
  m->getFunction("f")->addFnAttr("target-cpu","gfx906");
  auto context=fusion::IRDependencySnapshot::capture(*m);
