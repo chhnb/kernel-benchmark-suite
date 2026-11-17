@@ -174,6 +174,7 @@ public:
       llvm::BranchInst::Create(join,ret);ret->eraseFromParent();++returns;
     }
     if(!returns)throw std::runtime_error("capsule has no output");
+    const auto originalRootName=root->getName().str();
     auto *identity=rootTerm->getMetadata("fusion.incremental.identity");
     llvm::BranchInst::Create(blocks.front(),rootTerm);rootTerm->eraseFromParent();
     if(!llvm::MergeBlockIntoPredecessor(blocks.front()))throw std::runtime_error("capsule entry splice failed");
@@ -188,6 +189,10 @@ public:
       if(!llvm::MergeBlockIntoPredecessor(join))
         throw std::runtime_error("output boundary fold failed");
     }
+    // MergeBlockIntoPredecessor may adopt the temporary capsule entry name
+    // when the original root was unnamed. Keep the caller's root spelling;
+    // otherwise the legacy decision schedule mistakes it for a new decision.
+    root->setName(originalRootName);
     // Only remove dead tuple plumbing copied from this capsule. Never run
     // whole-function DCE as part of boundary materialization.
     bool erased=true;while(erased){erased=false;

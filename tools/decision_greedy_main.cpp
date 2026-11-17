@@ -1,5 +1,6 @@
 #include "decision_model.h"
 #include "incremental_candidate_queue.h"
+#include "scoped_greedy_adapter.h"
 #include "llvm/Analysis/PostDominators.h"
 #include "decision_checkpoint.h"
 #include "llvm/IRReader/IRReader.h"
@@ -101,27 +102,30 @@ static bool prepareArmPairs(Module &module, StringRef function, unsigned decisio
 
 int main(int argc,char**argv){try{
  if(argc==2&&StringRef(argv[1])=="--help"){
-   outs()<<"usage: decision-greedy INPUT FUNCTION [TOOL_ROOT] NEW_OUTPUT [--b2b-strategy dp1|darm]\n";
+   outs()<<"usage: decision-greedy INPUT FUNCTION [TOOL_ROOT] NEW_OUTPUT [--b2b-strategy dp1|darm] [--trial-policy whole-function|scoped-full|scoped-reuse]\n";
    return 0;
  }
- std::string b2bStrategy="dp1", quoteMode="on";
+ std::string b2bStrategy="dp1", quoteMode="on", trialPolicy="whole-function";
  while (argc >= 3) {
    StringRef option(argv[argc-2]), value(argv[argc-1]);
    if (option == "--b2r-strategy" && value == "darm") {
      argc -= 2;
      continue;
    }
-   if (option == "--tti-quote-cache" && (value == "off" || value == "audit" || value == "on"))
+   if (option == "--trial-policy" && (value == "whole-function" || value == "scoped-full" || value == "scoped-reuse"))
+     trialPolicy = value.str();
+   else if (option == "--tti-quote-cache" && (value == "off" || value == "audit" || value == "on"))
      quoteMode = value.str();
    else if (option == "--b2b-strategy" && (value == "dp1" || value == "darm"))
      b2bStrategy = value.str();
-   else if (option == "--b2r-strategy" || option == "--b2b-strategy" || option == "--tti-quote-cache")
+   else if (option == "--b2r-strategy" || option == "--b2b-strategy" || option == "--tti-quote-cache" || option == "--trial-policy")
      throw std::runtime_error("invalid value for " + option.str());
    else break;
    argc -= 2;
  }
  if(argc!=4&&argc!=5)
    throw std::runtime_error("usage: decision-greedy INPUT FUNCTION [TOOL_ROOT] NEW_OUTPUT [--b2b-strategy dp1|darm]");
+ if(trialPolicy!="whole-function"&&b2bStrategy!="dp1")throw std::runtime_error("scoped trial policy requires dp1");
  const bool implicitRoot=argc==4;
  std::string root;
  if(implicitRoot){
@@ -144,6 +148,12 @@ int main(int argc,char**argv){try{
  }
  constexpr unsigned conditionBudget=4;
  LLVMContext ctx;SMDiagnostic error;auto initial=parseIRFile(current,error,ctx);if(!initial||!initial->getFunction(fn)||verifyModule(*initial,&errs()))throw std::runtime_error("invalid input");
+ auto writeModule=[&](const Module &module,const std::string &path){std::error_code ec;raw_fd_ostream stream(path,ec);if(ec)throw std::runtime_error(ec.message());module.print(stream,nullptr);};
+ std::unique_ptr<fusion::ScopedGreedyAdapter> scoped;
+ if(trialPolicy!="whole-function"){
+   scoped=std::make_unique<fusion::ScopedGreedyAdapter>(fn,root+"/tools/run-llvm24-tti",trialPolicy=="scoped-reuse");
+   fusion::IRIdentity initialIDs(*initial);current=out+"/identity-input.ll";writeModule(*initial,current);
+ }
  auto ds=decision::discover(*initial->getFunction(fn));std::vector<std::string> targets;std::set<BasicBlock*> covered,tagged;json::Array order;
  for(auto &d:ds){bool yes=false;for(unsigned i=0;i+1<d.arms.size();++i)yes|=eligible(d.arms[i],d.arms[i+1]);if(!yes||covered.count(d.root))continue;targets.push_back(d.id);for(auto*b:d.tests)covered.insert(b);for(unsigned i=0;i<d.arms.size();++i){auto&a=d.arms[i];if(!tagged.insert(a.entry).second)continue;std::string label;raw_string_ostream stream(label);a.entry->printAsOperand(stream,false);stream.flush();order.push_back(json::Object{{"entry",label},{"family",d.id},{"index",int64_t(i)}});}}
  save(out+"/order.json",json::Value(std::move(order)));json::Array targetJSON;for(auto&t:targets)targetJSON.push_back(t);save(out+"/targets.json",json::Value(std::move(targetJSON)));
@@ -165,20 +175,28 @@ int main(int argc,char**argv){try{
      record["backend_resources_error"]=std::string(error.what());
    }
  };
- auto report=[&](StringRef status){save(out+"/summary.json",json::Value(json::Object{{"status",status.str()},{"search","per-decision greedy; best positive adjacent or structural candidate"},{"cfg_cleanup","structural"},{"structural_cleanup",structuralCleanup},{"structural_candidates_enabled",true},{"shared_arm_trials",true},{"cross_level_b2r",false},{"pipeline_version","v1"},{"candidate_jobs",structuralJobs},{"candidate_scheduler","continuous-queue"},{"persistent_trial_workers",true},{"condition_budget",conditionBudget},{"phi_fold_threshold",7},{"r2r_enumeration","darm-alignment"},{"b2b_strategy",b2bStrategy},{"tti_quote_cache",quoteMode},{"backend_resource_gate_enabled",false},{"uniform_loss_guard_enabled",false},{"max_uniform_loss",-1},{"max_pressure_growth",-1},{"max_pressure",-1},{"initial_cost",initialCost},{"final_cost",parentCost},{"commits",int64_t(commits)},{"trials",int64_t(trials)},{"final_ir",current},{"rounds",json::Value(json::Array(rounds))},{"stops",json::Value(json::Array(stops))}}));};
+ auto report=[&](StringRef status){save(out+"/summary.json",json::Value(json::Object{{"status",status.str()},{"trial_policy",trialPolicy},{"scoped_trials",scoped?json::Value(scoped->report()):json::Value(nullptr)},{"search","per-decision greedy; best positive adjacent or structural candidate"},{"cfg_cleanup","structural"},{"structural_cleanup",structuralCleanup},{"structural_candidates_enabled",true},{"shared_arm_trials",true},{"cross_level_b2r",false},{"pipeline_version","v1"},{"candidate_jobs",structuralJobs},{"candidate_scheduler","continuous-queue"},{"persistent_trial_workers",true},{"condition_budget",conditionBudget},{"phi_fold_threshold",7},{"r2r_enumeration","darm-alignment"},{"b2b_strategy",b2bStrategy},{"tti_quote_cache",quoteMode},{"backend_resource_gate_enabled",false},{"uniform_loss_guard_enabled",false},{"max_uniform_loss",-1},{"max_pressure_growth",-1},{"max_pressure",-1},{"initial_cost",initialCost},{"final_cost",parentCost},{"commits",int64_t(commits)},{"trials",int64_t(trials)},{"final_ir",current},{"rounds",json::Value(json::Array(rounds))},{"stops",json::Value(json::Array(stops))}}));};
  report("running");
  fusion::IncrementalCandidateQueue candidateQueue;
+ std::unique_ptr<Module> scopedParent;if(scoped)scopedParent=CloneModule(*initial);
  std::map<std::string,std::string> b2bRecipes;
  std::set<std::string> attemptedStructural;
  std::string catalogParent;
  Optional<json::Value> structuralCatalog;
 
  for(auto &target:targets){for(unsigned iteration=0;iteration<256;++iteration){
-  auto m=parseIRFile(current,error,ctx);if(!m)throw std::runtime_error("cannot read parent");
+  auto m=scopedParent?std::move(scopedParent):parseIRFile(current,error,ctx);if(!m)throw std::runtime_error("cannot read parent");
+  if(scoped)scoped->begin(*m,rounds.size());
+  std::string wholeTrialInput=current;
+  auto stripIncrementalTags=[](Module &module){for(auto &f:module)for(auto &b:f)for(auto &i:b)i.setMetadata("fusion.incremental.identity",nullptr);};
+  if(scoped){
+    auto untracked=CloneModule(*m);stripIncrementalTags(*untracked);
+    wholeTrialInput=out+"/whole-parent-"+std::to_string(rounds.size())+".ll";writeModule(*untracked,wholeTrialInput);
+  }
   auto catalog=decision::discover(*m->getFunction(fn));
   unsigned di=0;
   while(di<catalog.size()&&catalog[di].id!=target)++di;
-  if(!target.empty()&&di==catalog.size()){stops.push_back(json::Object{{"decision",target},{"reason","decision_completed_or_absorbed"}});break;}
+  if(!target.empty()&&di==catalog.size()){stops.push_back(json::Object{{"decision",target},{"reason","decision_completed_or_absorbed"}});if(scoped)scopedParent=std::move(m);break;}
   if(!target.empty()) {
     unsigned identities=0;for(auto &candidate:catalog)identities+=candidate.id==target;
     if(identities!=1)throw std::runtime_error("ambiguous decision identity: "+target);
@@ -186,7 +204,7 @@ int main(int argc,char**argv){try{
   decision::Decision emptyDecision;
   auto &d=target.empty()?emptyDecision:catalog[di];
   int64_t bestCost=parentCost;
-  std::string best;
+  std::string best,bestLocalKey;
   json::Array attempts, preparationRejections;
   struct PreparedPair {
     unsigned left;
@@ -205,6 +223,7 @@ int main(int argc,char**argv){try{
       std::error_code ec;
       raw_fd_ostream stream(input,ec);
       if(ec)throw std::runtime_error(ec.message());
+      if(scoped)stripIncrementalTags(*prepared);
       prepared->print(stream,nullptr);
       stream.close();
       const bool containsRegion=d.arms[left].kind==decision::ArmKind::SESE||
@@ -218,7 +237,7 @@ int main(int argc,char**argv){try{
   }
   {
     const std::string scan=out+"/structural-"+std::to_string(rounds.size());
-    std::vector<std::string> args{structural,"--ir",current,"--function",fn,
+    std::vector<std::string> args{structural,"--ir",wholeTrialInput,"--function",fn,
       "--structural","1",
       "--cleanup",structuralCleanup,"--tti-worker",root+"/tools/run-llvm24-tti","--tti-quote-cache",quoteMode};
     if(catalogParent!=current){
@@ -277,6 +296,8 @@ int main(int argc,char**argv){try{
       int exitCode = -1;
       fusion::IncrementalCandidateQueue::Ticket ticket;
       bool scoreReused=false;
+      bool scopedFallback=false;
+      std::optional<fusion::ScopedGreedyAdapter::Descriptor> local;
     };
     std::vector<StructuralTrial> structuralTrials;
     for(const auto *list:{&candidates, static_cast<const json::Array*>(&normalizedCandidates)})
@@ -328,6 +349,8 @@ int main(int argc,char**argv){try{
         attempt["right"]=candidate.getString("logical_right")->str();
       }
       structuralTrials.push_back({std::move(trialArgs),dir,std::move(attempt),-1,{}});
+      if(scoped&&!preparedInput)structuralTrials.back().local=scoped->describe(
+          *candidate.getString("split"),*candidate.getString("left"),*candidate.getString("right"));
     }
     // Conservative certificate while scoped dependency proofs are audited:
     // changing the parent invalidates every score. The queue itself also handles
@@ -342,6 +365,7 @@ int main(int argc,char**argv){try{
     };
     for (size_t i = 0; i < structuralTrials.size(); ++i) {
       auto &trial = structuralTrials[i];
+      if(trial.local){inventory.push_back({trial.local->key,trial.local->reads,i});continue;}
       // Paths identify artifacts, not candidates. Content belongs to the read
       // set; keep a candidate identity across new trial directories.
       std::string key;
@@ -366,20 +390,35 @@ int main(int argc,char**argv){try{
         if(!cached)throw std::runtime_error("missing cached full-parent trial");
         auto &trial=structuralTrials[i];
         trial.attempt["score_cache_source"]=cached->recipe;
-        trial.directory=cached->recipe;
+        if(!trial.local)trial.directory=cached->recipe;
         trial.exitCode=cached->exitCode;trial.scoreReused=true;
       } else structuralTrials[i].ticket = found->second;
+    }
+
+    size_t externalPending=0;
+    for(auto &trial:structuralTrials){
+      if(trial.scoreReused)continue;
+      if(trial.local){
+        try {scoped->evaluate(trial.local->key,parentCost);trial.exitCode=0;}
+        catch(const std::exception &e){
+          // The local certificate did not cover this rewrite/score. Evaluate
+          // the existing whole-parent request and NEVER cache that result
+          // under the weaker local read set across a commit.
+          trial.attempt["scoped_fallback_reason"]=std::string(e.what());
+          trial.scopedFallback=true;trial.local.reset();++externalPending;
+        }
+      }else ++externalPending;
     }
 
     // All worker processes pull from the same immutable manifest. An atomic
     // per-request claim makes completion immediately release a slot, without
     // a batch barrier or a static partition. TTI and parent IR caches are local
     // to each worker; LLVM IR is never shared across threads or processes.
-    if (!pending.empty()) {
+    if (externalPending) {
       const auto base = out + "/trial-queue-" + std::to_string(rounds.size());
       json::Array requests;
       for (const auto &trial : structuralTrials) {
-        if(trial.scoreReused)continue;
+        if(trial.scoreReused||trial.local)continue;
         json::Array argv;
         for (const auto &arg : trial.args) argv.push_back(arg);
         requests.push_back(json::Object{{"argv", std::move(argv)},
@@ -389,7 +428,7 @@ int main(int argc,char**argv){try{
       }
       save(base + ".json", json::Value(std::move(requests)));
       std::vector<sys::ProcessInfo> running;
-      for (size_t slot = 0; slot < std::min(size_t(structuralJobs), pending.size()); ++slot) {
+      for (size_t slot = 0; slot < std::min(size_t(structuralJobs), externalPending); ++slot) {
         const auto log = base + "-" + std::to_string(slot);
         running.push_back(startTrial({structural, "--trial-queue", base + ".json"},
                                      log + ".stdout", log + ".stderr"));
@@ -399,7 +438,7 @@ int main(int argc,char**argv){try{
       for (const auto &process : running)
         if (process.Pid) sys::Wait(process, 0, true);
       for (auto &trial : structuralTrials) {
-        if(trial.scoreReused)continue;
+        if(trial.scoreReused||trial.local)continue;
         checkQuoteFailure(trial.directory + "/stderr");
         const auto status = trial.directory + "/queue-exit.json";
         if (sys::fs::exists(status)) {
@@ -429,6 +468,19 @@ int main(int argc,char**argv){try{
     }
     // Candidate order breaks score ties, independently of process completion.
     for (auto &trial : structuralTrials) {
+      if(trial.local){
+        const auto gain=scoped->gain(trial.local->key,trial.scoreReused);
+        auto &attempt=trial.attempt;
+        attempt["stage"]="scored";attempt["exit_code"]=0;attempt["eligible"]=gain>0;
+        attempt["cost"]=parentCost-gain;attempt["control_cost"]=parentCost;attempt["gain"]=gain;
+        attempt["trial_policy"]="isolated-b2b";attempt["stable_identity"]=trial.local->key;
+        attempt["whole_trial_reused"]=trial.scoreReused;
+        if(!trial.scoreReused&&!candidateQueue.publish(trial.ticket,{gain,trial.directory,0,true}))
+          throw std::runtime_error("stale scoped result");
+        // Cached queue entries retain their original recipe directory. Its
+        // artifact is NOT used; selected local plans are replayed below.
+        attempts.push_back(std::move(attempt));continue;
+      }
       const auto &dir = trial.directory;
       auto &attempt = trial.attempt;
       if(trial.scoreReused)attempt["directory"]=dir;
@@ -484,17 +536,29 @@ int main(int argc,char**argv){try{
       const auto cost = attempt.getInteger("cost");
       if(!trial.scoreReused) candidateQueue.publish(trial.ticket,
           {canCommit && cost ? parentCost - *cost : 0, dir, rc,
-           rc==0 && attempt.getString("stage")==Optional<StringRef>("scored")});
+           !trial.scopedFallback && rc==0 && attempt.getString("stage")==Optional<StringRef>("scored")});
       attempts.push_back(std::move(attempt));
     }
     if (!candidateQueue.ready()) throw std::runtime_error("unevaluated priority queue candidate");
     if (auto winner = candidateQueue.best()) {
       best = winner->second.recipe;
       bestCost = parentCost - winner->second.gain;
+      for(const auto &trial:structuralTrials)if(trial.local&&trial.local->key==winner->first.id){
+        bestLocalKey=trial.local->key;best=trial.directory;break;
+      }
     }
   }
   json::Object record{{"decision",target},{"iteration",int64_t(iteration)},{"parent",current},{"parent_cost",parentCost},{"attempts",std::move(attempts)},{"preparation_rejections",std::move(preparationRejections)},{"selected",best}};
-  if(best.empty()){rounds.push_back(std::move(record));stops.push_back(json::Object{{"decision",target},{"reason","no_positive_legal_candidate"}});report("running");break;}
+  if(best.empty()){rounds.push_back(std::move(record));stops.push_back(json::Object{{"decision",target},{"reason","no_positive_legal_candidate"}});report("running");if(scoped)scopedParent=std::move(m);break;}
+  if(scoped){
+    if(!bestLocalKey.empty()){
+      auto product=scoped->materialize(bestLocalKey);writeModule(*product,best+"/fused.ll");scopedParent=std::move(product);
+    }else{
+      auto product=parseIRFile(best+"/fused.ll",error,ctx);
+      if(!product)throw std::runtime_error("cannot parse whole-function commit");
+      scoped->restampWholeCommit(*product);writeModule(*product,best+"/fused.ll");scopedParent=std::move(product);
+    }
+  }
   recordResources(best+"/fused.ll",best+"/resources",record);
   record["selected_cost"]=bestCost;record["score"]=double(parentCost-bestCost)/std::max<int64_t>(parentCost,1);rounds.push_back(std::move(record));parentCost=bestCost;current=best+"/fused.ll";attemptedStructural.clear();++commits;report("running");outs()<<"commit="<<commits<<" cost="<<parentCost<<" decision="<<target<<"\n";outs().flush();
   if(iteration==255)throw std::runtime_error("round budget exceeded");

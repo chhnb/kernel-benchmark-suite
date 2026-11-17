@@ -1,0 +1,162 @@
+{
+  "steps": [
+    {
+      "step": 1,
+      "candidate": "_Z3pcmPi:B9:B10:B11",
+      "cost": 1377,
+      "reference_llvm_diff": 0,
+      "scoped_ir_equal": true
+    },
+    {
+      "step": 2,
+      "candidate": "_Z3pcmPi:B9:B25:B24",
+      "cost": 1362,
+      "reference_llvm_diff": 0,
+      "scoped_ir_equal": true
+    },
+    {
+      "step": 3,
+      "candidate": "_Z3pcmPi:B9:B25:B24",
+      "cost": 1347,
+      "reference_llvm_diff": 0,
+      "scoped_ir_equal": true
+    },
+    {
+      "step": 4,
+      "candidate": "_Z3pcmPi:B9:B25:B24",
+      "cost": 1332,
+      "reference_llvm_diff": 0,
+      "scoped_ir_equal": true
+    },
+    {
+      "step": 5,
+      "candidate": "_Z3pcmPi:B9:B25:B24",
+      "cost": 1317,
+      "reference_llvm_diff": 0,
+      "scoped_ir_equal": true
+    },
+    {
+      "step": 6,
+      "candidate": "_Z3pcmPi:B9:B25:B24",
+      "cost": 1302,
+      "reference_llvm_diff": 0,
+      "scoped_ir_equal": true
+    },
+    {
+      "step": 7,
+      "candidate": "_Z3pcmPi:B9:B25:B24",
+      "cost": 1287,
+      "reference_llvm_diff": 0,
+      "scoped_ir_equal": true
+    },
+    {
+      "step": 8,
+      "candidate": "_Z3pcmPi:B9:B25:B24",
+      "cost": 1272,
+      "reference_llvm_diff": 0,
+      "scoped_ir_equal": true
+    },
+    {
+      "step": 9,
+      "candidate": "_Z3pcmPi:B15:B16:B17",
+      "cost": 1257,
+      "reference_llvm_diff": 0,
+      "scoped_ir_equal": true
+    },
+    {
+      "step": 10,
+      "candidate": "_Z3pcmPi:B15:B22:B21",
+      "cost": 1242,
+      "reference_llvm_diff": 0,
+      "scoped_ir_equal": true
+    },
+    {
+      "step": 11,
+      "candidate": "_Z3pcmPi:B15:B22:B21",
+      "cost": 1227,
+      "reference_llvm_diff": 0,
+      "scoped_ir_equal": true
+    },
+    {
+      "step": 12,
+      "candidate": "_Z3pcmPi:B15:B22:B21",
+      "cost": 1212,
+      "reference_llvm_diff": 0,
+      "scoped_ir_equal": true
+    },
+    {
+      "step": 13,
+      "candidate": "_Z3pcmPi:B15:B22:B21",
+      "cost": 1197,
+      "reference_llvm_diff": 0,
+      "scoped_ir_equal": true
+    },
+    {
+      "step": 14,
+      "candidate": "_Z3pcmPi:B15:B22:B21",
+      "cost": 1182,
+      "reference_llvm_diff": 0,
+      "scoped_ir_equal": true
+    },
+    {
+      "step": 15,
+      "candidate": "_Z3pcmPi:B15:B22:B21",
+      "cost": 1167,
+      "reference_llvm_diff": 0,
+      "scoped_ir_equal": true
+    },
+    {
+      "step": 16,
+      "candidate": "_Z3pcmPi:B15:B22:B21",
+      "cost": 1152,
+      "reference_llvm_diff": 0,
+      "scoped_ir_equal": true
+    },
+    {
+      "step": 17,
+      "candidate": "_Z3pcmPi:B0:B2:B1",
+      "cost": 1142,
+      "reference_llvm_diff": 0,
+      "scoped_ir_equal": true
+    }
+  ],
+  "full": {
+    "invalidation_keys": {
+      "instruction": 1225,
+      "removed:instruction": 112,
+      "removed:uses": 112,
+      "tti-context": 140,
+      "uses": 392
+    },
+    "local_commits": 16,
+    "local_layout_cleanups": 220,
+    "local_layout_scores": 220,
+    "local_quote_cache": "off",
+    "local_trials": 44,
+    "local_unavailable": "",
+    "policy": "scoped-full",
+    "whole_function_commits": 1,
+    "whole_trials_reused": 0
+  },
+  "reuse": {
+    "invalidation_keys": {
+      "instruction": 1225,
+      "removed:instruction": 112,
+      "removed:uses": 112,
+      "tti-context": 140,
+      "uses": 392
+    },
+    "local_commits": 16,
+    "local_layout_cleanups": 220,
+    "local_layout_scores": 220,
+    "local_quote_cache": "off",
+    "local_trials": 44,
+    "local_unavailable": "",
+    "policy": "scoped-reuse",
+    "whole_function_commits": 1,
+    "whole_trials_reused": 0
+  },
+  "reused_local_candidates_not_dispatched": 0,
+  "default_driver_policy": "whole-function",
+  "scoped_policy_is_separate": true
+}

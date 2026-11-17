@@ -9,6 +9,12 @@ esac
 lc=${LLVM_CONFIG:-/home/chh/darm-artifacts-repro/build/bin/llvm-config}
 [[ $($lc --version) == 12.* ]] || { echo 'LLVM12 required' >&2; exit 2; }
 read -r -a cf <<< "$($lc --cxxflags)"
-read -r -a lf <<< "$($lc --ldflags --libs core irreader analysis transformutils --system-libs | tr '\n' ' ')"
+read -r -a lf <<< "$($lc --ldflags --libs --system-libs | tr '\n' ' ')"
+objects=()
+for object in ir_pressure fusion_search logical_region_state RegionAnalyzer RegionMelder RegionReplicator CFMelderUtils InstructionMatch; do
+  path="$r/build/llvm24-tti/$object.o"
+  [[ -f "$path" ]] || { echo "missing $path; build with --with-structural first" >&2; exit 2; }
+  objects+=("$path")
+done
 mkdir -p "$r/build/decision-fuse"
-${CXX:-g++} "${cf[@]}" -std=c++17 -fexceptions -O2 "$r/tools/decision_model.cpp" "$r/tools/decision_greedy_main.cpp" "${lf[@]}" -o "$r/build/decision-fuse/decision-greedy"
+${CXX:-g++} "${cf[@]}" -std=c++17 -fexceptions -O2 "$r/tools/decision_model.cpp" "$r/tools/decision_greedy_main.cpp" "${objects[@]}" "${lf[@]}" -o "$r/build/decision-fuse/decision-greedy"

@@ -45,6 +45,11 @@ int main(int argc,char **argv){
  auto plansB=fusion::planSingleBranchB2B(*cb.ir,candidate,1,fusion::CleanupMode::DarmCFGInstCombine,"");
  unsigned count=0;std::unique_ptr<Module> first;
  for(auto &plan:plansA){if(!plan.valid||!plan.normalized)continue;
+  // Temporary capsule names must not change an unnamed decision root.
+  auto anonymous=CloneModule(*parent);auto &anonymousRoot=anonymous->getFunction("f")->getEntryBlock();
+  anonymousRoot.setName("");fusion::B2BUnitCapsule anonymousCapsule(*anonymous,anonymousRoot);
+  auto anonymousResult=anonymousCapsule.apply(*anonymous,*plan.normalized);
+  assert(!anonymousResult->getFunction("f")->getEntryBlock().hasName());
   auto current=ca.apply(*parent,*plan.normalized);assert(!verifyModule(*current,&errs()));
   auto fast=ca.apply(*parent,*plan.normalized,&prepared);
   assert(fusion::moduleHash(*fast)==fusion::moduleHash(*current));

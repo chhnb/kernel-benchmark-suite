@@ -389,3 +389,22 @@ PCM32 完整实验结果：
 实验队列已改为调用此接口，队列本身仍负责失效、全量 pending 评分和原有同分比较。正式 driver 后续应在既有 raw catalog 条目上调用单候选接口，保留 per-decision/末尾 sweep 调度；prepared 候选须单独证明 normalization 的依赖和身份，初期继续全函数重算。局部清理属于单独策略，不能把该接口的 gain 冒充旧全函数清理 gain。
 
 接口抽取验证：PCM32 full/cached 两组各 17 步，与抽取前的 catalog 版本相比，所有非计时指标相同，34 份逐步 IR 仅去除 ModuleID 路径后逐字一致。记录 `incremental-trial-interface-check.json`。访存依赖合成例仍为 66 → 46 → 26，整次 trial 3 → 2，6,724 CPU 输入一致；区域身份/回退测试和真实全函数 18 → 21 反例通过。默认 driver 尚未调用新接口，不能把接口抽取算作正式接线完成。
+
+## 正式 decision-greedy 的可选接线（尚非默认）
+
+新增 `--trial-policy whole-function|scoped-full|scoped-reuse`。默认 whole-function 保持原路径；两个 scoped 模式共用原 per-decision、prepared arm 和最终 structural sweep 调度，仅对原父 IR 上可证明支持的直接 B2B 使用 `ScopedGreedyAdapter`。prepared/区域/评分域外候选继续调用原全函数 worker。局部模式自身仍是不同清理策略，不能默认认为等价。
+
+适配器为每轮候选提供稳定 lineage key 和完整 read certificate；原队列保留枚举同分顺序，先完成全部 pending 才选最佳。复用候选不入 worker manifest，也不调用局部生成/清理/评分。获选时 capsule 在当前内存模块上回放；全函数获选产物换 identity epoch。局部试跑发生边界或评分异常时，回退全函数且将结果标为不可跨提交复用，不能把全函数收益挂到弱的局部依赖证书上。
+
+正式接线中发现并修正了两类差异：
+
+1. 身份 metadata 进入全函数规划会改变可生成布局。v1 接线试跑 PCM32 停在 1152；所有全函数/准备输入现在先去掉 instruction identity 标记，driver 内仍保留 lineage，恢复最后一次全函数融合至 1142。旧失败目录 `pcm32-driver-full` / `pcm32-driver-reuse` 保留。
+2. 局部 `MergeBlockIntoPredecessor` 会让无名 root 继承临时 `unit.*` 名，原 driver 因找不到原 decision 提前扫尾。v3 接线虽有 56 次复用、最终仍 1142，但从第 2 步开始候选/IR 顺序不一致，**这 56 次不能算保持原流程的优化成果**。capsule 回放现保留原 root 名称，并新增无名 root 回归。保留内存中当前模块也避免反复解析导致类型重命名使证书保守失效。
+
+v4 结果：PCM32、PCM64 的 reference/scoped-full/scoped-reuse 均 17 次提交、TTI 1142；每一步 decision、候选坐标、成本相同，scoped full/reuse IR 去掉 ModuleID 路径后逐字一致，reference 与 scoped 的每步 LLVM12 llvm-diff 均通过，所有逐步 IR verifier 通过。两 case 的局部 trial 都是 44 次、220 次清理/评分，**正式路径整次 trial 复用为 0**。这是保持原调度后的真实结果，不以 v3 的改变调度数字代替。局部串行实现也不能据此声称编译加速；v3 的单次观测参考 3.830s、错误调度局部 full 40.489s/reuse 23.699s，反而提示局部审计/串行工作开销需要优化。
+
+验证器 `tests/fusion-search/compare-scoped-driver.py` 比较三组全提交链、verifier、IR，并检查复用候选未进入 worker manifest。`--require-reuse` 是单独的正复用验收，PCM32/64 本轮只通过一致性验收，没有通过正复用验收。记录 `incremental-pcm32-driver.json` / `incremental-pcm64-driver.json`。
+
+回归：49 组当前 IR 回放组合、每组 6,724 CPU 输入通过；无名 root 不被临时名替换；访存独立性合成仍跳过一次完整 trial；真实 18 → 21 全函数依赖反例通过。默认程序路径尚未切换，完整冻结回归、并行局部试跑和 PCM128/256 仍未完成。
+
+新 PCM256 正式入口长测从冻结原始输入开始，独立二进制 `build/incremental-unit-audit/decision-greedy-scoped-v4`，目录 `build/incremental-unit-audit/pcm256-driver-v4/`，full 后接 reuse；`provenance.json` 固定输入和二进制 SHA256，`active-process.json` 记录当前 PID，工具 session 13762。原 PID 3799792 / session 42668 的 isolated 长测继续保留，未重启、未覆盖二进制。后续须轮询实际进程，不以日志静默判定结束。
