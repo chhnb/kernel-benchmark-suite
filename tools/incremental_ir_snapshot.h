@@ -1,5 +1,6 @@
 #pragma once
 #include "incremental_ir_identity.h"
+#include "incremental_metadata.h"
 #include "llvm/Transforms/Utils/Cloning.h"
 #include "llvm/Support/raw_ostream.h"
 #include <vector>
@@ -7,8 +8,8 @@
 namespace fusion {
 // A conservative observation/patch-boundary checker, NOT a profitability
 // certificate. In particular, unchanged writes do not prove unchanged reads.
-// The initial scoped path admits metadata-free IR only. Fail closed for
-// semantic metadata until its complete dependencies have a representation.
+// Tuple metadata has a complete rooted-graph representation. Specialized
+// metadata remains unsupported; an observed graph does not certify pass reads.
 struct IRChangeSet {
   std::set<uint64_t> added, removed, changed;
   bool contextChanged=false;
@@ -34,7 +35,6 @@ struct IRDependencySnapshot {
     m->setModuleIdentifier("incremental-context"); // Artifact paths are not semantics.
     IRDependencySnapshot result;
     std::map<llvm::Instruction*,uint64_t> keys;
-    const auto identityKind=m->getContext().getMDKindID("fusion.incremental.identity");
     for(auto &f:*m) {
       unsigned arg=0;for(auto &a:f.args())a.setName("arg"+std::to_string(arg++));
       for(auto &b:f) {
@@ -43,14 +43,11 @@ struct IRDependencySnapshot {
         for(auto &i:b) {
           auto id=ids.instruction(i);keys[&i]=id;
           if(!i.getType()->isVoidTy())i.setName("value"+std::to_string(id));
-          llvm::SmallVector<std::pair<unsigned,llvm::MDNode*>,4> metadata;
-          i.getAllMetadata(metadata);
-          for(const auto &entry:metadata)
-            if(entry.first!=identityKind)
-              throw std::runtime_error("unsupported incremental snapshot metadata");
+
         }
       }
     }
+    IncrementalMetadataGraph metadataGraph;metadataGraph.capture(*m,keys);
     // Reserve canonical names in a separate phase: LLVM may suffix a name
     // while another instruction still has that name. Clear then assign again.
     for(auto &f:*m) {
@@ -64,7 +61,8 @@ struct IRDependencySnapshot {
         for(auto &i:b) {
           auto id=keys.at(&i);
           if(!i.getType()->isVoidTy())i.setName("value"+std::to_string(id));
-          i.setMetadata(identityKind,nullptr);
+          llvm::SmallVector<std::pair<unsigned,llvm::MDNode*>,4> metadata;
+          i.getAllMetadata(metadata);for(auto &md:metadata)i.setMetadata(md.first,nullptr);
         }
       }
     }
@@ -73,7 +71,10 @@ struct IRDependencySnapshot {
       // Include membership: a move with identical operands is still a write.
       stream<<f.getName()<<":"<<b.getName()<<":prev="
             <<(i.getPrevNode()?keys.at(i.getPrevNode()):0)<<":";
-      i.print(stream);stream.flush();
+      i.print(stream);
+      auto attachment=metadataGraph.instructionAttachments.find(id);
+      if(attachment!=metadataGraph.instructionAttachments.end())stream<<" |metadata="<<attachment->second;
+      stream.flush();
       result.instructions.emplace(id,std::move(text));
       for(auto &u:i.uses()) {
         auto *use=llvm::dyn_cast<llvm::Instruction>(u.getUser());
@@ -86,7 +87,7 @@ struct IRDependencySnapshot {
     // Preserve signatures, attributes, globals, target settings and all other
     // module context. Function bodies are accounted for instruction by instruction.
     for(auto &f:*m)if(!f.isDeclaration())f.deleteBody();
-    llvm::raw_string_ostream stream(result.context);m->print(stream,nullptr);stream.flush();
+    llvm::raw_string_ostream stream(result.context);m->print(stream,nullptr);stream<<"\n"<<metadataGraph.serialize();stream.flush();
     return result;
   }
   IRChangeSet changesTo(const IRDependencySnapshot &next) const {

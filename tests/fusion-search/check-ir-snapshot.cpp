@@ -51,10 +51,11 @@ int main(){
  m->getFunction("f")->addFnAttr("target-cpu","gfx906");
  auto context=fusion::IRDependencySnapshot::capture(*m);
  assert(!renamed.sameReads(context,{bi}));assert(renamed.changesTo(context).contextChanged);
- // Unmodelled semantic metadata is rejected, not ignored.
+ // Tuple metadata is recorded, never ignored.
  b->setMetadata("range",MDNode::get(ctx,{ConstantAsMetadata::get(ConstantInt::get(Type::getInt32Ty(ctx),0)),ConstantAsMetadata::get(ConstantInt::get(Type::getInt32Ty(ctx),10))}));
- bool rejected=false;try{fusion::IRDependencySnapshot::capture(*m);}catch(const std::runtime_error&){rejected=true;}
- assert(rejected);b->setMetadata("range",nullptr);
+ auto metadataSnapshot=fusion::IRDependencySnapshot::capture(*m);
+ assert(!context.sameReads(metadataSnapshot,{bi}));
+ b->setMetadata("range",nullptr);
  assert(!verifyModule(*m,&errs()));
- outs()<<"PASS snapshot: independent writes, external uses, boundary escape, renaming, target context, unsupported metadata\n";
+ outs()<<"PASS snapshot: independent writes, external uses, boundary escape, renaming, target context, tuple metadata\n";
 }

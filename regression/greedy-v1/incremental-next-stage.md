@@ -176,3 +176,18 @@ PCM256 完整轨迹：122 次提交，13,254 次候选记录；7,883 次成功�
 进一步诊断显示，这 7 个单元所在模块也都会被当前快照的未知 metadata 检查拒绝。DCT 的报价缺口包含 call/sdiv/trunc；MS 还有私有访存、alloca、addrspacecast 等。不能仅解除布尔过滤就启用评分缓存。后续需要支持明确的 metadata 依赖表示，并审核未改动外部指令的 TTI 上下文依赖。
 
 新增可重放审计脚本 `audit-isolated-coverage.py`，保留先前审计文件。证据：`external-input-verified/`、`ssa-base-control/`、`coverage-ssa-details.json`，均位于 `build/incremental-unit-audit/`。默认 v1 未变，真实 benchmark 的跨提交整次 trial 复用尚未启用。
+
+## Tuple metadata 依赖图与冻结输入回放验证
+
+新增 `incremental_metadata.h`，把 named/global/function/instruction metadata 放在同一个有根图中记录，支持 MDTuple、MDString 和整数 ConstantAsMetadata。保留 distinct/uniqued、共享关系、自引用和跨 named/指令附件的身份关系；不使用指针地址或打印编号作为持久身份。专用 metadata 节点（例如 DIExpression）、临时节点、非整数常量仍明确拒绝。
+
+快照中的指令正文去除 metadata 打印编号，另附图根引用；完整图进入保守模块上下文。任何图变化均使上下文失效，尚未尝试局部 metadata 依赖裁剪。原模块的 metadata 不会被删除。这是依赖表示能力，不能替代清理/TTI 读取范围的证明。
+
+验证结果：
+
+- 图测试覆盖 clone、IR 文本往返、自引用、相同结构的不同 distinct 节点、跨 named 根共享关系、内容修改和不支持节点拒绝。
+- 冻结 40 项、1,597 个分支根重新审计；DCT4/8/16 和 MS32/64/128/256 的 7 个结构单元全部通过快照，并完成隔离提取、原计划回放到当前模块、LLVM verifier。此项没有声称产生融合收益或 GPU 性能收益。
+- 外部 SSA 独立单元回归仍为 65 → 45 → 25；全量/缓存逐步 IR 相同，trial 3 → 2，清理/评分 21 → 14，6,724 组 CPU 输入一致。
+- 原全函数清理与局部策略最终 IR 仍存在差异；没有修改期望值，也未切换默认路径。
+
+证据：`build/incremental-unit-audit/coverage-metadata-replay.json`。完整 TTI 证明域仍覆盖 0 个冻结函数，真实 benchmark 的跨提交整次 trial 跳过仍未启用。接下来必须证明未改动外部指令的评分上下文依赖，不能仅移除过滤条件。
