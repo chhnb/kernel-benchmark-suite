@@ -43,7 +43,7 @@ int main(int argc,char **argv){
  auto full=fusion::runIsolatedB2BGreedy(*parent,"f",fullScorer,false,[&](const Module &m,unsigned n){save(m,std::string(argv[1])+"/full-"+std::to_string(n)+".ll");});
  auto cached=fusion::runIsolatedB2BGreedy(*parent,"f",cacheScorer,true,[&](const Module &m,unsigned n){save(m,std::string(argv[1])+"/cached-"+std::to_string(n)+".ll");});
  assert(full.stats.commits==2);assert(cached.stats.commits==2);
- assert(full.costs==cached.costs);assert(full.costs==std::vector<int64_t>({48,33}));
+ assert(full.costs==cached.costs);assert(full.costs==std::vector<int64_t>({43,23}));
  assert(full.identities==cached.identities);assert(full.gains==cached.gains);assert(full.hashes==cached.hashes);
  assert(fusion::moduleHash(*full.module)==fusion::moduleHash(*cached.module));
  assert(full.stats.trials==3);assert(cached.stats.trials==2);assert(cached.stats.reusedTrials==1);

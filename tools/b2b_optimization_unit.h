@@ -73,6 +73,19 @@ struct B2BOptimizationUnit {
     // The exit terminator is a read-only boundary. Changes to it invalidate,
     // rather than allowing cleanup to follow arbitrarily far downstream.
     unit.reads.insert(unit.exit);
+    // Boundary splicing may move the unchanged root prefix/exit body and
+    // substitute the single output PHI in its current users. These are writes,
+    // NOT extra inputs to the isolated planner. No arbitrary cleanup runs here.
+    for(auto &i:root)unit.writes.insert(ids.instruction(i));
+    // The block identity follows its terminator. Folding the exit retags the
+    // root, so its incoming branch references are an explicit boundary write.
+    for(auto *pred:llvm::predecessors(&root))unit.writes.insert(ids.block(*pred));
+    for(auto &i:*join)unit.writes.insert(ids.instruction(i));
+    for(auto &phi:join->phis())for(auto *user:phi.users()) {
+      auto *i=llvm::dyn_cast<llvm::Instruction>(user);
+      if(!i)return reject("noninstruction_output_user");
+      unit.writes.insert(ids.instruction(*i));
+    }
     return unit;
   }
 };

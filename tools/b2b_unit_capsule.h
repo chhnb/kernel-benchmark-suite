@@ -53,7 +53,7 @@ public:
   std::unique_ptr<llvm::Module> apply(llvm::Module &current,const llvm::Module &product) const {
     auto result=llvm::CloneModule(current);
     auto currentFacts=IRDependencySnapshot::capture(*result);
-    if(!parent.sameReads(currentFacts,unit.reads))
+    if(!parent.sameReads(currentFacts,unit.reads,{unit.entry}))
       throw std::runtime_error("capsule dependencies changed");
     IRIdentity ids(*result);
     auto *rootTerm=ids.lookup(unit.entry);if(!rootTerm)throw std::runtime_error("capsule root disappeared");
@@ -112,10 +112,25 @@ public:
     if(!llvm::MergeBlockIntoPredecessor(blocks.front()))throw std::runtime_error("capsule entry splice failed");
     root->getTerminator()->setMetadata("fusion.incremental.identity",identity);
     l->dropAllReferences();r->dropAllReferences();l->eraseFromParent();r->eraseFromParent();
+    // Deterministic boundary normalization, not full-function cleanup. The
+    // original exit has no other predecessor or PHI in this initial domain.
+    // Its one incoming output can be substituted without inspecting users.
+    if(output->getNumIncomingValues()==1) {
+      auto *value=output->getIncomingValue(0);
+      output->replaceAllUsesWith(value);output->eraseFromParent();
+      if(!llvm::MergeBlockIntoPredecessor(join))
+        throw std::runtime_error("single-output boundary fold failed");
+    }
     if(llvm::verifyModule(*result,&llvm::errs()))throw std::runtime_error("invalid spliced capsule");
     auto after=IRDependencySnapshot::capture(*result);auto delta=currentFacts.changesTo(after);
-    auto newWrites=unit.writes;newWrites.insert(delta.added.begin(),delta.added.end());
-    if(!delta.within(unit.writes,newWrites))throw std::runtime_error("capsule write escaped boundary");
+    auto newWrites=now.writes;newWrites.insert(delta.added.begin(),delta.added.end());
+    if(!delta.within(now.writes,newWrites)){
+      for(auto id:delta.changed)if(!now.writes.count(id))
+        throw std::runtime_error("capsule changed outside boundary: "+currentFacts.instructions.at(id)+" -> "+after.instructions.at(id));
+      for(auto id:delta.removed)if(!now.writes.count(id))
+        throw std::runtime_error("capsule removed outside boundary: "+currentFacts.instructions.at(id));
+      throw std::runtime_error("capsule context escaped boundary");
+    }
     return result;
   }
 };

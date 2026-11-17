@@ -102,11 +102,22 @@ struct IRDependencySnapshot {
   }
   // Explicit instruction reads AND use lists. This is suitable for a bounded
   // algorithm with a proven read contract, never for arbitrary LLVM passes.
-  bool sameReads(const IRDependencySnapshot &next,const std::set<uint64_t> &reads) const {
+  static std::string instructionBody(const std::string &record) {
+    auto position=record.find(":prev=");
+    if(position==std::string::npos)throw std::runtime_error("invalid instruction snapshot");
+    auto end=record.find(':',position+6);
+    if(end==std::string::npos)throw std::runtime_error("invalid instruction placement");
+    return record.substr(end+1);
+  }
+  bool sameReads(const IRDependencySnapshot &next,const std::set<uint64_t> &reads,
+                 const std::set<uint64_t> &placementIndependent={}) const {
     if(context!=next.context)return false;
     for(auto id:reads){
       auto a=instructions.find(id),b=next.instructions.find(id);
-      if(a==instructions.end()||b==next.instructions.end()||a->second!=b->second)return false;
+      if(a==instructions.end()||b==next.instructions.end())return false;
+      if(placementIndependent.count(id)){
+        if(instructionBody(a->second)!=instructionBody(b->second))return false;
+      }else if(a->second!=b->second)return false;
       auto x=users.find(id),y=next.users.find(id);
       static const std::set<UseSite> empty;
       if((x==users.end()?empty:x->second)!=(y==next.users.end()?empty:y->second))return false;

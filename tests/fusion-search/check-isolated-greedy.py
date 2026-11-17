@@ -25,7 +25,7 @@ with contextlib.ExitStack() as stack:
   return result['cost']
  full=[cost(tmp/'baseline.ll')]+[cost(tmp/f'full-{i}.ll') for i in range(2)]
  cached=[cost(tmp/'baseline.ll')]+[cost(tmp/f'cached-{i}.ll') for i in range(2)]
- assert full==cached==[63,48,33],(full,cached)
+ assert full==cached==[63,43,23],(full,cached)
  clang=Path(subprocess.check_output([lc,'--bindir'],text=True,env=env).strip())/'clang'
  harness=tmp/'main.c';harness.write_text('''#include <stdio.h>
 #include <stdint.h>
@@ -43,7 +43,21 @@ printf("%d\\n",f(p,q,x,y));return 0;}
  search=root/'build/llvm24-tti/fusion-search-llvm24'
  subprocess.run([str(search),'--ir',str(tmp/'baseline.ll'),'--function','f','--split','B0','--left','B1','--right','B2','--b2b-strategy','dp1','--cleanup','darm-cfg-dce-instcombine','--tti-worker',str(worker),'--debug-dir',str(tmp/'legacy'),'--out',str(tmp/'legacy.ll')],env=env,check=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
  legacy=json.loads((tmp/'legacy/trial-0/trial.json').read_text())['score_result']
- report=dict(isolated_full_costs=full,isolated_cached_costs=cached,cpu_inputs=6724,quote_cache='off',legacy_cleanup_first_trial=legacy['metrics'],legacy_status=legacy['status'],default_driver_changed=False)
+ subprocess.run([str(search),'--ir',str(tmp/'legacy.ll'),'--function','f','--split','B0','--left','B1','--right','B2','--b2b-strategy','dp1','--cleanup','darm-cfg-dce-instcombine','--tti-worker',str(worker),'--debug-dir',str(tmp/'legacy-second'),'--out',str(tmp/'legacy-second.ll')],env=env,check=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+ legacySecond=json.loads((tmp/'legacy-second/trial-0/trial.json').read_text())['score_result']
+ # Compare scalar IR after stripping only internal identity metadata and
+ # symbol names. A mismatch remains evidence, never a changed golden value.
+ import re
+ opt=Path(subprocess.check_output([lc,'--bindir'],text=True,env=env).strip())/'opt'
+ def canonical(path):
+  text=path.read_text()
+  text=re.sub(r', !fusion.incremental.identity ![0-9]+','',text)
+  text='\n'.join(line for line in text.splitlines() if not line.startswith('!'))+'\n'
+  clean=tmp/'canonical-input.ll';clean.write_text(text)
+  out=subprocess.check_output([str(opt),'-strip','-S',str(clean),'-o','-'],env=env,text=True)
+  return '\n'.join(line for line in out.splitlines() if not line.startswith('; ModuleID'))
+ sameLegacy=canonical(tmp/'legacy-second.ll')==canonical(tmp/'cached-1.ll')
+ report=dict(legacy_second_trial=legacySecond['metrics'],legacy_final_alpha_equal=sameLegacy,isolated_full_costs=full,isolated_cached_costs=cached,cpu_inputs=6724,quote_cache='off',legacy_cleanup_first_trial=legacy['metrics'],legacy_status=legacy['status'],default_driver_changed=False)
  (tmp/'report.json').write_text(json.dumps(report,indent=2)+'\n')
  print('PASS isolated full/cached TTI:',full,'and 6724 CPU inputs')
- print('Separate legacy cleanup control/trial:',legacy['metrics']['work_before'],legacy['metrics']['work_after'])
+ print('Separate legacy cleanup steps:',legacy['metrics']['work_before'],legacy['metrics']['work_after'],legacySecond['metrics']['work_after'],'final alpha-equal:',sameLegacy)
