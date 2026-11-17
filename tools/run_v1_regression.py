@@ -40,7 +40,7 @@ def main():
     env = os.environ.copy()
     env.setdefault('LLVM24_LIBDIR', str(ROOT / 'build/llvm24-pinned/lib'))
     env['LD_LIBRARY_PATH'] = str(ROOT / 'build/llvm12-jammy/usr/lib/x86_64-linux-gnu') + ':' + env.get('LD_LIBRARY_PATH', '')
-    env.setdefault('DECISION_GREEDY_JOBS', '8')
+    env.setdefault('DECISION_GREEDY_JOBS', '16')
     opt = Path(env.get('LLVM12_OPT', str(ROOT / 'build/llvm12-jammy/usr/lib/llvm-12/bin/opt')))
 
     def run(row):

@@ -1,3 +1,7 @@
+#include <fcntl.h>
+#include <unistd.h>
+#include <cerrno>
+#include <csignal>
 #include <optional>
 #include <limits>
 #include "fusion_search.h"
@@ -95,9 +99,10 @@ struct DebugObserver final:Observer {
     jsonFile(dir+"/commit-"+std::to_string(version)+".json",json::Object{{"logical_decision",c.logicalDecision},{"logical_left",c.logicalLeft},{"logical_right",c.logicalRight},{"candidate",c.key()},{"parent_version",int64_t(c.version)},{"version",int64_t(version)},{"score_result",scoreJson(score)},{"committed_hash",moduleHash(m)}});
   }
 };
-// A worker handles one immutable parent and one scoring configuration.
-struct R2RBatch {
-  LLVMContext context;
+// A worker caches one immutable parent at a time and retains its TTI process
+// across requests. Changing parent or cleanup invalidates the round cache.
+struct TrialWorker {
+  std::unique_ptr<LLVMContext> context = std::make_unique<LLVMContext>();
   std::unique_ptr<Module> parent;
   std::optional<RoundContext> round;
   std::unique_ptr<LLVM24Scorer> scorer;
@@ -106,7 +111,7 @@ struct R2RBatch {
   CleanupMode cleanup = CleanupMode::None;
 };
 
-static int runSearch(int argc, const char *const *argv, R2RBatch *batch = nullptr) {
+static int runSearch(int argc, const char *const *argv, TrialWorker *batch = nullptr) {
   try {
     std::string input,function,output,debug,split,left,right,replayParentHash,policy="llvm24";Options options;options.cleanupMode=CleanupMode::DarmCFGInstCombine;bool singleBranchB2B=true, strategyGiven=true, useDarmB2B=false;
     bool controlOnly=false,catalogOnly=false;std::string ttiWorker="/home/chh/kernel-benchmark-suite/tools/run-llvm24-tti";
@@ -151,18 +156,23 @@ static int runSearch(int argc, const char *const *argv, R2RBatch *batch = nullpt
       }();
       if (!configured) throw std::runtime_error("cannot configure v1 PHI fold threshold");
     }
-    LLVMContext context;
+    std::unique_ptr<LLVMContext> context = std::make_unique<LLVMContext>();
     std::unique_ptr<MemoryBuffer> buffer;
     std::unique_ptr<Module> parsedModule;
     if (batch) {
-      if (!pair || !StringRef(left).startswith("R") || !StringRef(right).startswith("R") ||
-          catalogOnly || controlOnly ||
+      if (!pair || catalogOnly || controlOnly ||
           !replayParentHash.empty())
-        throw std::runtime_error("batch requires explicit structural R2R with LLVM24 scoring");
+        throw std::runtime_error("worker requires explicit pair with LLVM24 scoring");
       if (batch->parent && (batch->input != input || batch->function != function ||
           batch->worker != ttiWorker || batch->level != options.optLevel ||
           batch->cleanup != options.cleanupMode))
-        throw std::runtime_error("R2R batch parent or scoring configuration changed");
+      {
+        batch->round.reset();
+        batch->parent.reset();
+        batch->context = std::make_unique<LLVMContext>();
+        if (batch->function != function || batch->worker != ttiWorker)
+          batch->scorer.reset();
+      }
     }
     const bool reuseParent = batch && batch->parent;
     if (!reuseParent) {
@@ -170,7 +180,7 @@ static int runSearch(int argc, const char *const *argv, R2RBatch *batch = nullpt
       if (!file) throw std::runtime_error("cannot read input IR");
       buffer = std::move(*file);
       SMDiagnostic error;
-      parsedModule = parseIR(buffer->getMemBufferRef(), error, batch ? batch->context : context);
+      parsedModule = parseIR(buffer->getMemBufferRef(), error, batch ? *batch->context : *context);
       if (!parsedModule) { error.print(argv[0], errs()); return 2; }
       if (batch) {
         if (verifyModule(*parsedModule, &errs())) return 2;
@@ -180,7 +190,7 @@ static int runSearch(int argc, const char *const *argv, R2RBatch *batch = nullpt
         batch->level = options.optLevel;
         batch->cleanup = options.cleanupMode;
         batch->parent = std::move(parsedModule);
-        batch->scorer = std::make_unique<LLVM24Scorer>(ttiWorker);
+        if (!batch->scorer) batch->scorer = std::make_unique<LLVM24Scorer>(ttiWorker);
       }
     }
     auto *module = batch ? batch->parent.get() : parsedModule.get();
@@ -301,7 +311,8 @@ static int runSearch(int argc, const char *const *argv, R2RBatch *batch = nullpt
 
 int main(int argc, char **argv) {
   sys::PrintStackTraceOnErrorSignal(argv[0]);
-  if (argc != 3 || StringRef(argv[1]) != "--r2r-batch")
+  const bool queue = argc == 3 && StringRef(argv[1]) == "--trial-queue";
+  if (!queue && (argc != 3 || StringRef(argv[1]) != "--r2r-batch"))
     return runSearch(argc, argv);
   try {
     auto file = MemoryBuffer::getFile(argv[2]);
@@ -310,12 +321,21 @@ int main(int argc, char **argv) {
     if (!manifest) throw std::runtime_error(toString(manifest.takeError()));
     auto *requests = manifest->getAsArray();
     if (!requests) throw std::runtime_error("invalid R2R batch manifest");
-    R2RBatch batch;
+    TrialWorker batch;
     for (const auto &entry : *requests) {
       const auto *request = entry.getAsObject();
       const auto *args = request ? request->getArray("argv") : nullptr;
       const auto status = request ? request->getString("status") : None;
       if (!args || args->empty() || !status) throw std::runtime_error("invalid R2R batch request");
+      if (queue) {
+        const std::string claim = status->str() + ".claim";
+        const int fd = ::open(claim.c_str(), O_CREAT | O_EXCL | O_WRONLY | O_CLOEXEC, 0600);
+        if (fd < 0) {
+          if (errno == EEXIST) continue;
+          throw std::runtime_error("cannot claim trial: " + claim);
+        }
+        ::close(fd);
+      }
       std::vector<std::string> arguments;
       for (const auto &arg : *args) {
         const auto value = arg.getAsString();
@@ -324,8 +344,32 @@ int main(int argc, char **argv) {
       }
       std::vector<const char *> refs;
       for (const auto &arg : arguments) refs.push_back(arg.c_str());
+      int savedOut = -1, savedErr = -1;
+      if (queue) {
+        auto output = request->getString("stdout"), error = request->getString("stderr");
+        if (!output || !error) throw std::runtime_error("missing trial log paths");
+        outs().flush(); errs().flush();
+        savedOut = ::dup(STDOUT_FILENO); savedErr = ::dup(STDERR_FILENO);
+        int out = ::open(output->str().c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0600);
+        int err = ::open(error->str().c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0600);
+        if (savedOut < 0 || savedErr < 0 || out < 0 || err < 0 ||
+            ::dup2(out, STDOUT_FILENO) < 0 || ::dup2(err, STDERR_FILENO) < 0)
+          throw std::runtime_error("cannot redirect trial logs");
+        ::close(out); ::close(err);
+        ::alarm(120);
+      }
       const int code = runSearch(refs.size(), refs.data(), &batch);
-      jsonFile(status->str(), json::Object{{"exit_code", code}});
+      if (queue) {
+        ::alarm(0);
+        outs().flush(); errs().flush();
+        ::dup2(savedOut, STDOUT_FILENO); ::dup2(savedErr, STDERR_FILENO);
+        ::close(savedOut); ::close(savedErr);
+      }
+      jsonFile(status->str(), json::Object{{"exit_code", code}, {"worker_pid", int64_t(::getpid())}});
+      if (code != 0 && code != 4) {
+        batch.round.reset(); batch.parent.reset();
+        batch.context = std::make_unique<LLVMContext>();
+      }
     }
     return 0;
   } catch (const std::exception &error) {

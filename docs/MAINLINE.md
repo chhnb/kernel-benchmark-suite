@@ -5,7 +5,7 @@
 ## 执行链
 
 1. 从固定 baseline IR 发现决策与 B/R 候选。条件规范化预算为 4；按条件等价规则整理入口。
-2. 同一父 IR 上并行试跑候选。B2B 默认 DP1，可显式选择 DARM；B2R/R2B/R2R 固定 DARM。R2R 使用 DARM 的区域对齐，不枚举全部交叉区域对。
+2. 默认 16 路进程从连续队列领取候选；每个进程在一轮内复用 LLVM24 worker，同父输入复用解析与清理结果。完成一个候选即领取下一个，最终仍按原候选顺序打破平局。B2B 默认 DP1，可显式选择 DARM；B2R/R2B/R2R 固定 DARM。R2R 使用 DARM 的区域对齐，不枚举全部交叉区域对。
 3. 克隆父模块并生成融合 IR。单侧未匹配指令保持分支保护；检查 SSA、访存、边界与 LLVM verifier。
 4. 执行 DARM SimplifyCFG（PHI folding threshold 7；关闭条件分支简化、公共指令 sink/hoist）→ EarlyCSE → DCE → InstCombine。
 5. LLVM24 常驻 worker 评价清理后的 IR。控制版本使用同样清理；选取满足正收益条件的候选。
@@ -18,7 +18,7 @@
 | `tools/decision_greedy_main.cpp` | 自动搜索、并行 trial、比较与提交 |
 | `tools/decision_model.cpp`、`condition_simplify.h` | 决策与条件规范化 |
 | `tools/fusion_search.cpp/.h` | B/R 枚举、DP1 方案、DARM 调用、固定清理与合法性 |
-| `tools/fusion_search_llvm24_main.cpp` | 显式 pair、catalog、控制版本、R2R 批处理 |
+| `tools/fusion_search_llvm24_main.cpp` | 显式 pair、catalog、控制版本、连续试跑队列 |
 | `tools/darm_pair_engine/RegionAnalyzer.cpp` | 原生 DARM 区域对齐 |
 | `RegionMelder.cpp`、`RegionReplicator.cpp` | DARM 融合与区域复制 |
 | `GuardedRanges.h` | 未匹配指令的固定分支保护；不是 Gap Search |

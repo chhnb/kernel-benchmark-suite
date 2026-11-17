@@ -120,7 +120,7 @@ int main(int argc,char**argv){try{
  std::string current=argv[1],fn=argv[2],out=argv[argc-1];
  if(sys::fs::exists(out))throw std::runtime_error("output exists");
  if(auto e=sys::fs::create_directories(out))throw std::runtime_error(e.message());
- int64_t structuralJobs=8;
+ int64_t structuralJobs=16;
  if (const char *value=std::getenv("DECISION_GREEDY_JOBS")) {
    if (StringRef(value).getAsInteger(10,structuralJobs) || structuralJobs<1 || structuralJobs>64)
      throw std::runtime_error("DECISION_GREEDY_JOBS must be between 1 and 64");
@@ -148,7 +148,7 @@ int main(int argc,char**argv){try{
      record["backend_resources_error"]=std::string(error.what());
    }
  };
- auto report=[&](StringRef status){save(out+"/summary.json",json::Value(json::Object{{"status",status.str()},{"search","per-decision greedy; best positive adjacent or structural candidate"},{"cfg_cleanup","structural"},{"structural_cleanup",structuralCleanup},{"structural_candidates_enabled",true},{"shared_arm_trials",true},{"cross_level_b2r",false},{"pipeline_version","v1"},{"condition_budget",conditionBudget},{"phi_fold_threshold",7},{"r2r_enumeration","darm-alignment"},{"b2b_strategy",b2bStrategy},{"backend_resource_gate_enabled",false},{"uniform_loss_guard_enabled",false},{"max_uniform_loss",-1},{"max_pressure_growth",-1},{"max_pressure",-1},{"initial_cost",initialCost},{"final_cost",parentCost},{"commits",int64_t(commits)},{"trials",int64_t(trials)},{"final_ir",current},{"rounds",json::Value(json::Array(rounds))},{"stops",json::Value(json::Array(stops))}}));};
+ auto report=[&](StringRef status){save(out+"/summary.json",json::Value(json::Object{{"status",status.str()},{"search","per-decision greedy; best positive adjacent or structural candidate"},{"cfg_cleanup","structural"},{"structural_cleanup",structuralCleanup},{"structural_candidates_enabled",true},{"shared_arm_trials",true},{"cross_level_b2r",false},{"pipeline_version","v1"},{"candidate_jobs",structuralJobs},{"candidate_scheduler","continuous-queue"},{"persistent_trial_workers",true},{"condition_budget",conditionBudget},{"phi_fold_threshold",7},{"r2r_enumeration","darm-alignment"},{"b2b_strategy",b2bStrategy},{"backend_resource_gate_enabled",false},{"uniform_loss_guard_enabled",false},{"max_uniform_loss",-1},{"max_pressure_growth",-1},{"max_pressure",-1},{"initial_cost",initialCost},{"final_cost",parentCost},{"commits",int64_t(commits)},{"trials",int64_t(trials)},{"final_ir",current},{"rounds",json::Value(json::Array(rounds))},{"stops",json::Value(json::Array(stops))}}));};
  report("running");
  std::set<std::string> attemptedStructural;
  std::string catalogParent;
@@ -256,7 +256,6 @@ int main(int argc,char**argv){try{
       std::string directory;
       json::Object attempt;
       int exitCode = -1;
-      bool batchR2R = false;
     };
     std::vector<StructuralTrial> structuralTrials;
     for(const auto *list:{&candidates, static_cast<const json::Array*>(&normalizedCandidates)})
@@ -301,80 +300,59 @@ int main(int argc,char**argv){try{
         attempt["left"]=candidate.getString("logical_left")->str();
         attempt["right"]=candidate.getString("logical_right")->str();
       }
-      const bool batchR2R = !preparedInput &&
-          candidate.getString("left")->startswith("R") &&
-          candidate.getString("right")->startswith("R");
-      structuralTrials.push_back({std::move(trialArgs),dir,std::move(attempt),-1,batchR2R});
+      structuralTrials.push_back({std::move(trialArgs),dir,std::move(attempt),-1});
     }
-    std::vector<size_t> regionTrials, individualTrials;
-    for (size_t i = 0; i < structuralTrials.size(); ++i)
-      (structuralTrials[i].batchR2R ? regionTrials : individualTrials).push_back(i);
-    // Bound the work lost if a child crashes or times out. Completed requests
-    // retain their artifacts and status; unfinished requests use the old path.
-    constexpr size_t trialsPerWorker = 32;
-    const size_t workers = structuralJobs;
-    if (regionTrials.size() > workers) {
-      for (size_t begin = 0; begin < regionTrials.size(); begin += workers * trialsPerWorker) {
-        const size_t end = std::min(begin + workers * trialsPerWorker, regionTrials.size());
-        std::vector<sys::ProcessInfo> running;
-        for (size_t slot = 0; slot < workers && begin + slot < end; ++slot) {
-          const auto base = out + "/r2r-batch-" + std::to_string(rounds.size()) +
-                            "-" + std::to_string(begin + slot);
-          json::Array requests;
-          for (size_t i = begin + slot; i < end; i += workers) {
-            auto &trial = structuralTrials[regionTrials[i]];
-            json::Array argv;
-            for (const auto &arg : trial.args) argv.push_back(arg);
-            requests.push_back(json::Object{{"argv", std::move(argv)},
-                                            {"status", trial.directory + "/batch-exit.json"}});
-          }
-          save(base + ".json", json::Value(std::move(requests)));
-          running.push_back(startTrial({structural, "--r2r-batch", base + ".json"},
-                                       base + ".stdout", base + ".stderr"));
-        }
-        for (const auto &process : running)
-          if (process.Pid) sys::Wait(process, 120, false);
-        for (size_t i = begin; i < end; ++i) {
-          auto &trial = structuralTrials[regionTrials[i]];
-          const auto status = trial.directory + "/batch-exit.json";
-          if (sys::fs::exists(status)) {
-            auto file = MemoryBuffer::getFile(status);
-            auto result = file ? json::parse((*file)->getBuffer()) : json::parse("");
-            const auto *record = result ? result->getAsObject() : nullptr;
-            if (!result) consumeError(result.takeError());
-            const auto code = record ? record->getInteger("exit_code") : None;
-            if (code && (*code == 0 || *code == 4) &&
-                sys::fs::exists(trial.directory + "/structural/trial-0/trial.json") &&
-                (*code == 4 || sys::fs::exists(trial.directory + "/fused.ll"))) {
-              trial.exitCode = *code;
-              continue;
-            }
-          }
-          if (auto ec = sys::fs::remove_directories(trial.directory + "/structural", false))
-            if (ec != std::errc::no_such_file_or_directory) throw std::runtime_error(ec.message());
-          if (auto ec = sys::fs::remove(trial.directory + "/fused.ll"))
-            throw std::runtime_error(ec.message());
-          individualTrials.push_back(regionTrials[i]);
-        }
+    // All worker processes pull from the same immutable manifest. An atomic
+    // per-request claim makes completion immediately release a slot, without
+    // a batch barrier or a static partition. TTI and parent IR caches are local
+    // to each worker; LLVM IR is never shared across threads or processes.
+    if (!structuralTrials.empty()) {
+      const auto base = out + "/trial-queue-" + std::to_string(rounds.size());
+      json::Array requests;
+      for (const auto &trial : structuralTrials) {
+        json::Array argv;
+        for (const auto &arg : trial.args) argv.push_back(arg);
+        requests.push_back(json::Object{{"argv", std::move(argv)},
+            {"status", trial.directory + "/queue-exit.json"},
+            {"stdout", trial.directory + "/stdout"},
+            {"stderr", trial.directory + "/stderr"}});
       }
-    } else {
-      individualTrials.insert(individualTrials.end(), regionTrials.begin(), regionTrials.end());
-    }
-    for (size_t begin = 0; begin < individualTrials.size(); begin += workers) {
-      const size_t end = std::min(begin + workers, individualTrials.size());
-      if (workers == 1) {
-        auto &trial = structuralTrials[individualTrials[begin]];
-        trial.exitCode=run(std::move(trial.args),trial.directory+"/stdout",trial.directory+"/stderr");
-        continue;
-      }
+      save(base + ".json", json::Value(std::move(requests)));
       std::vector<sys::ProcessInfo> running;
-      for (size_t i = begin; i < end; ++i) {
-        const auto &trial = structuralTrials[individualTrials[i]];
-        running.push_back(startTrial(trial.args,trial.directory+"/stdout",trial.directory+"/stderr"));
+      for (size_t slot = 0; slot < std::min(size_t(structuralJobs), structuralTrials.size()); ++slot) {
+        const auto log = base + "-" + std::to_string(slot);
+        running.push_back(startTrial({structural, "--trial-queue", base + ".json"},
+                                     log + ".stdout", log + ".stderr"));
       }
-      for (size_t i = begin; i < end; ++i)
-        if (const auto &process = running[i-begin]; process.Pid)
-          structuralTrials[individualTrials[i]].exitCode=sys::Wait(process,120,false).ReturnCode;
+      // Each request has its own timeout inside the worker. Waiting for one
+      // process here does not block other workers from taking more requests.
+      for (const auto &process : running)
+        if (process.Pid) sys::Wait(process, 0, true);
+      for (auto &trial : structuralTrials) {
+        const auto status = trial.directory + "/queue-exit.json";
+        if (sys::fs::exists(status)) {
+          auto file = MemoryBuffer::getFile(status);
+          auto result = file ? json::parse((*file)->getBuffer()) : json::parse("");
+          const auto *record = result ? result->getAsObject() : nullptr;
+          const auto code = record ? record->getInteger("exit_code") : None;
+          if (!result) consumeError(result.takeError());
+          if (code && (*code == 0 || *code == 4) &&
+              sys::fs::exists(trial.directory + "/structural/trial-0/trial.json") &&
+              (*code == 4 || sys::fs::exists(trial.directory + "/fused.ll"))) {
+            trial.exitCode = *code;
+            continue;
+          }
+        }
+        // A crashing/timed-out worker may leave a claimed request unfinished.
+        // Retry only that request in an isolated process, preserving completed
+        // results. This exceptional recovery path retains the 120s timeout.
+        if (auto ec = sys::fs::remove_directories(trial.directory + "/structural", false))
+          if (ec != std::errc::no_such_file_or_directory) throw std::runtime_error(ec.message());
+        if (auto ec = sys::fs::remove(trial.directory + "/fused.ll"))
+          throw std::runtime_error(ec.message());
+        trial.attempt["queue_recovery"] = true;
+        trial.exitCode = run(trial.args, trial.directory + "/stdout", trial.directory + "/stderr");
+      }
     }
     // Candidate order breaks score ties, independently of process completion.
     for (auto &trial : structuralTrials) {

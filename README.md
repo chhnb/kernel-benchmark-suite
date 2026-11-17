@@ -25,7 +25,7 @@ python3 tools/run_v1_regression.py --out build/v1-regression-new
 
 [冻结清单](regression/greedy-v1/manifest.json) 包含 40 个函数/尺寸配置及压缩输入、输入 SHA256、最终 IR SHA256、提交次数和 TTI。默认回归 38 个已完成配置；`--include-slow` 额外运行 checkpoint 已超时的 PCM128/256。超时不计为通过。此入口验证变换复现，GPU 性能使用已有冻结 runner 单独测量。
 
-执行参数只有 `DECISION_GREEDY_JOBS`（默认 8）和可选的 `DECISION_CHECKPOINT_TOOL`（后端观测）。历史实验请切换 checkpoint 查阅，不作为 v1 可选策略。
+执行参数只有 `DECISION_GREEDY_JOBS`（默认 16，连续队列）和可选的 `DECISION_CHECKPOINT_TOOL`（后端观测）。历史实验请切换 checkpoint 查阅，不作为 v1 可选策略。
 
 ## 从这里开始
 

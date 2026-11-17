@@ -190,6 +190,9 @@ with tempfile.TemporaryDirectory() as directory:
         summary = json.loads((out / "auto/summary.json").read_text())
         assert summary["shared_arm_trials"] and summary["b2b_strategy"] == "dp1"
         assert summary["pipeline_version"] == "v1"
+        assert summary["candidate_scheduler"] == "continuous-queue"
+        assert summary["persistent_trial_workers"]
+        assert not any(a.get("queue_recovery") for r in summary["rounds"] for a in r["attempts"])
         assert summary["condition_budget"] == 4 and summary["phi_fold_threshold"] == 7
         assert summary["structural_cleanup"] == "darm-cfg-dce-instcombine"
         for request in (out / "auto").glob("trial-*/request.json"):
