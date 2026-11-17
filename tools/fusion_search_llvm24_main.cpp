@@ -1,3 +1,4 @@
+#include "fusion_profile.h"
 #include <fcntl.h>
 #include <unistd.h>
 #include <cerrno>
@@ -113,6 +114,7 @@ struct TrialWorker {
 };
 
 static int runSearch(int argc, const char *const *argv, TrialWorker *batch = nullptr) {
+  fusion::requestProfile.clear();
   try {
     std::string input,function,output,debug,split,left,right,replayParentHash,policy="llvm24";Options options;options.cleanupMode=CleanupMode::DarmCFGInstCombine;bool singleBranchB2B=true, strategyGiven=true, useDarmB2B=false;
     std::string recipeInput, quoteMode="on";
@@ -318,7 +320,7 @@ static int runSearch(int argc, const char *const *argv, TrialWorker *batch = nul
         for (auto &plan : plans) {
           if (plan.valid && !seenDP1.insert(moduleHash(*plan.normalized)).second)
             continue;
-          auto result = evaluateTrial(*module, plan, round, scorer);
+          auto result = profileCall("evaluate_score",[&](){return evaluateTrial(*module, plan, round, scorer);});
           if (StringRef(result.reason).startswith("tti_quote_")) throw std::runtime_error(result.reason);
           const bool allowed = eligible(plan, result, options);
           if (t.mergePath.empty() ||
@@ -335,11 +337,12 @@ static int runSearch(int argc, const char *const *argv, TrialWorker *batch = nul
       if (!plannedB2B) {
         t = tryPair(*module, c, 0, options.optLevel, options.cleanupMode,
                     logical.get(), allowDarmB2B);
-        if (t.valid) score = evaluateTrial(*module, t, round, scorer);
+        if (t.valid) score = profileCall("evaluate_score",[&](){return evaluateTrial(*module, t, round, scorer);});
       }
       if (StringRef(score.reason).startswith("tti_quote_")) throw std::runtime_error(score.reason);
       if(observer)jsonFile(debug+"/tti-quote-cache.json",llvm24Scorer.quoteCacheStats());
       if(observer)observer->trial(t,round,score,eligible(t,score,options));
+      if(observer)jsonFile(debug+"/request-profile.json",profileJSON());
       if(!t.valid){errs()<<"rejected: "<<t.reason<<"\n";return 4;}
       if(score.status!=ScoreStatus::Scored)errs()<<"score unsupported; exporting legal trial: "<<score.reason<<"\n";
       writeIR(*t.normalized,output);outs()<<"pair trial verified; static_score="<<score.total<<"; eligible="<<eligible(t,score,options)<<"; semantic validation not run\n";return 0;

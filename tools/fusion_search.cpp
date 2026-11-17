@@ -1,3 +1,4 @@
+#include "fusion_profile.h"
 #include <optional>
 #include "fusion_search.h"
 #include "darm_pair_engine/InstructionMatch.h"
@@ -110,6 +111,7 @@ static double millis(Clock::time_point start) {
   return std::chrono::duration<double,std::milli>(Clock::now()-start).count();
 }
 std::string moduleHash(const Module&m) {
+  ProfileScope hashScope("serialize_and_hash");
   std::string s;raw_string_ostream out(s);m.print(out,nullptr);out.flush();
   SHA1 hash;hash.update(s);auto bytes=hash.final();std::string hex;
   const char*digits="0123456789abcdef";
@@ -1896,6 +1898,7 @@ std::vector<Trial> planSingleBranchB2B(const Module &parent, const Candidate &c,
                                        StringRef replay,
                                        function_ref<int(const Instruction &)> intrinsicCost,
                                        json::Object *recipeOut, const json::Object *recipeIn) {
+  ProfileScope planningScope("b2b_plan_generate_clean_total");
   std::vector<Trial> trials;
   const auto parentIdentity = moduleHash(parent);
   if (recipeIn && (recipeIn->getString("schema") != Optional<StringRef>("b2b-recipe-v2") ||
@@ -1941,9 +1944,9 @@ std::vector<Trial> planSingleBranchB2B(const Module &parent, const Candidate &c,
   trial.candidate = c;
   trial.cleanupMode = mode;
   ValueToValueMapTy inputMap;
-  trial.raw = CloneModule(parent, inputMap);
+  trial.raw = profileCall("clone_parent",[&](){return CloneModule(parent, inputMap);});
   auto *f = trial.raw->getFunction(c.function);
-  if (verifyModule(*trial.raw, &errs())) return trials;
+  if (profileCall("verify",[&](){return verifyModule(*trial.raw, &errs());})) return trials;
   auto *split = cast<BasicBlock>(inputMap[blocks[0]]);
   auto *left = cast<BasicBlock>(inputMap[blocks[1]]);
   auto *right = cast<BasicBlock>(inputMap[blocks[2]]);
@@ -2246,8 +2249,9 @@ std::vector<Trial> planSingleBranchB2B(const Module &parent, const Candidate &c,
     t.sideReason = trial.sideReason;
     for (unsigned side = 0; side < 2; ++side) t.sideBefore[side] = trial.sideBefore[side];
     ValueToValueMapTy clone;
-    t.raw = CloneModule(*trial.raw, clone);
+    t.raw = profileCall("clone_layout",[&](){return CloneModule(*trial.raw, clone);});
     auto *raw = t.raw->getFunction(c.function);
+    { ProfileScope emitScope("emit_layout");
     auto *rawBranch = cast<BranchInst>(clone[branch]);
     auto *rawLeft = cast<BasicBlock>(clone[left]);
     auto *rawRight = cast<BasicBlock>(clone[right]);
@@ -2358,18 +2362,19 @@ std::vector<Trial> planSingleBranchB2B(const Module &parent, const Candidate &c,
       rawLeft->getTerminator()->setSuccessor(0, merge);
       rawRight->getTerminator()->setSuccessor(0, merge);
     }
+    } // layout emission
     clone.clear();
-    if (verifyModule(*t.raw, &errs())) {
+    if (profileCall("verify",[&](){return verifyModule(*t.raw, &errs());})) {
       t.reason = "raw_verifier_failed";
       trials.push_back(std::move(t));
       continue;
     }
-    t.afterRaw = features(*raw);
-    t.normalized = CloneModule(*t.raw);
-    t.cleanupIterations = cleanup(*t.normalized, c.function, level, mode);
+    t.afterRaw = profileCall("features",[&](){return features(*raw);});
+    t.normalized = profileCall("clone_before_cleanup",[&](){return CloneModule(*t.raw);});
+    t.cleanupIterations = profileCall("cleanup",[&](){return cleanup(*t.normalized, c.function, level, mode);});
     auto *after = t.normalized->getFunction(c.function);
-    if (!verifyModule(*t.normalized, &errs())) {
-      t.after = features(*after);
+    if (!profileCall("verify",[&](){return verifyModule(*t.normalized, &errs());})) {
+      t.after = profileCall("features",[&](){return features(*after);});
       if (auto *cond = findSideCondition(*after, t.sideReason))
         t.sideAfterOk = sideBlocksBoth(*after, cond, t.sideAfter, t.sideReason);
       t.valid = t.after.loops <= t.before.loops;
@@ -2383,6 +2388,7 @@ std::vector<Trial> planSingleBranchB2B(const Module &parent, const Candidate &c,
 }
 
 RoundContext makeRound(const Module&parent,const std::string&function,unsigned version,unsigned level,CleanupMode mode) {
+  ProfileScope roundScope("round_control_analysis_cleanup");
   RoundContext r;r.cleanupMode=mode;r.parentVersion=version;r.function=function;r.parentHash=moduleHash(parent);
   r.targetTriple=parent.getTargetTriple();r.dataLayout=parent.getDataLayoutStr();r.llvmVersion=LLVM_VERSION_STRING;
   r.cleanup=mode==CleanupMode::None ? "none;no_external_cleanup" :

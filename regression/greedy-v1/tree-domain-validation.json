@@ -1,0 +1,431 @@
+{
+  "pcm256_chain": {
+    "runs": [
+      {
+        "directory": "build/incremental-identity-regression/PCM256",
+        "commits": 122,
+        "trials": 13254,
+        "tti": 2257,
+        "terminal_required": 4,
+        "terminal_attempted": 4,
+        "all_committed_ir_verified": true
+      },
+      {
+        "directory": "build/incremental-unit-audit/pcm-domain-v3-complete/PCM256-trees",
+        "commits": 122,
+        "trials": 137,
+        "tti": 2214,
+        "terminal_required": 1,
+        "terminal_attempted": 1,
+        "all_committed_ir_verified": true
+      }
+    ],
+    "first_divergence": {
+      "step": 91,
+      "reference": {
+        "candidate": "_Z3pcmPi:B13:B106:B105",
+        "cost": 2847,
+        "ir": "/data/home/chh/kernel-benchmark-suite/build/incremental-identity-regression/PCM256/trial-11728/fused.ll"
+      },
+      "trees": {
+        "candidate": "_Z3pcmPi:B11:B109:B108",
+        "cost": 2848,
+        "ir": "/data/home/chh/kernel-benchmark-suite/build/incremental-unit-audit/pcm-domain-v3-complete/PCM256-trees/trial-93/fused.ll"
+      }
+    },
+    "final_ir_equal": false,
+    "scope": "Verifier and terminal candidate coverage; execution correctness requires separate tests"
+  },
+  "pcm256_gpu": {
+    "baseline_sha256": "e4577724eb9368dd021dd81e1aacf5eaa7aa02c4f92436f6ebfdff11ee63155f",
+    "candidate_sha256": "52cdf3a201830ab17ef7748942e80b3fc5e955d090a3bcf61f82865fa8971a4d",
+    "seeds": 4,
+    "elements_per_seed": 131072,
+    "baseline_and_cpu_sort_exact": true
+  },
+  "quant8_chain": {
+    "runs": [
+      {
+        "directory": "build/incremental-unit-audit/domain-small-v2/quant8-legacy",
+        "commits": 7,
+        "trials": 44,
+        "tti": 25,
+        "terminal_required": 0,
+        "terminal_attempted": 0,
+        "all_committed_ir_verified": true
+      },
+      {
+        "directory": "build/incremental-unit-audit/quant8-domain-v3",
+        "commits": 7,
+        "trials": 76,
+        "tti": 25,
+        "terminal_required": 0,
+        "terminal_attempted": 0,
+        "all_committed_ir_verified": true
+      }
+    ],
+    "first_divergence": null,
+    "final_ir_equal": true,
+    "scope": "Verifier and terminal candidate coverage; execution correctness requires separate tests"
+  },
+  "quant8_cpu": {
+    "products": 15,
+    "inputs": 100018,
+    "bitwise_equal": true
+  },
+  "dependency_cpu": [
+    {
+      "mode": "legacy",
+      "seconds": 0.6219207329995697,
+      "commits": 2,
+      "trials": 4,
+      "tti": 36,
+      "verified_products": 3,
+      "cpu_inputs": 6724
+    },
+    {
+      "mode": "trees",
+      "seconds": 0.635929918003967,
+      "commits": 2,
+      "trials": 3,
+      "tti": 36,
+      "verified_products": 3,
+      "cpu_inputs": 6724
+    }
+  ],
+  "pcm32_repeated": [
+    {
+      "mode": "legacy",
+      "rep": 0,
+      "seconds": 3.9466569270007312,
+      "commits": 17,
+      "trials": 71,
+      "cost": 1142,
+      "phases": {
+        "domain_queue_and_requests": {
+          "calls": 19,
+          "milliseconds": 12.87915
+        },
+        "enumerate_catalog": {
+          "calls": 19,
+          "milliseconds": 452.40063599999996
+        },
+        "initialization": {
+          "calls": 1,
+          "milliseconds": 38.669346
+        },
+        "parse_and_discover": {
+          "calls": 19,
+          "milliseconds": 101.235015
+        },
+        "prepare_arms": {
+          "calls": 19,
+          "milliseconds": 32.90724
+        },
+        "read_scores_and_select": {
+          "calls": 19,
+          "milliseconds": 42.723694
+        },
+        "record_and_commit": {
+          "calls": 19,
+          "milliseconds": 18.187420000000003
+        },
+        "trial_workers_wall": {
+          "calls": 19,
+          "milliseconds": 3229.9537930000006
+        }
+      }
+    },
+    {
+      "mode": "trees",
+      "rep": 0,
+      "seconds": 3.8956771480006864,
+      "commits": 17,
+      "trials": 26,
+      "cost": 1138,
+      "phases": {
+        "domain_queue_and_requests": {
+          "calls": 20,
+          "milliseconds": 10.276666
+        },
+        "enumerate_catalog": {
+          "calls": 20,
+          "milliseconds": 431.68093700000003
+        },
+        "initialization": {
+          "calls": 1,
+          "milliseconds": 40.700453
+        },
+        "parse_and_discover": {
+          "calls": 20,
+          "milliseconds": 123.20870100000003
+        },
+        "prepare_arms": {
+          "calls": 20,
+          "milliseconds": 32.80710100000001
+        },
+        "read_scores_and_select": {
+          "calls": 20,
+          "milliseconds": 19.418424
+        },
+        "record_and_commit": {
+          "calls": 20,
+          "milliseconds": 26.628186
+        },
+        "trial_workers_wall": {
+          "calls": 20,
+          "milliseconds": 3185.6303329999996
+        }
+      }
+    },
+    {
+      "mode": "trees",
+      "rep": 1,
+      "seconds": 3.970390636008233,
+      "commits": 17,
+      "trials": 26,
+      "cost": 1138,
+      "phases": {
+        "domain_queue_and_requests": {
+          "calls": 20,
+          "milliseconds": 9.015455
+        },
+        "enumerate_catalog": {
+          "calls": 20,
+          "milliseconds": 442.1115260000001
+        },
+        "initialization": {
+          "calls": 1,
+          "milliseconds": 44.057223
+        },
+        "parse_and_discover": {
+          "calls": 20,
+          "milliseconds": 112.89158000000002
+        },
+        "prepare_arms": {
+          "calls": 20,
+          "milliseconds": 31.275200000000005
+        },
+        "read_scores_and_select": {
+          "calls": 20,
+          "milliseconds": 19.434172999999994
+        },
+        "record_and_commit": {
+          "calls": 20,
+          "milliseconds": 11.413122000000001
+        },
+        "trial_workers_wall": {
+          "calls": 20,
+          "milliseconds": 3274.1574339999993
+        }
+      }
+    },
+    {
+      "mode": "legacy",
+      "rep": 1,
+      "seconds": 4.083145527998568,
+      "commits": 17,
+      "trials": 71,
+      "cost": 1142,
+      "phases": {
+        "domain_queue_and_requests": {
+          "calls": 19,
+          "milliseconds": 14.055583000000002
+        },
+        "enumerate_catalog": {
+          "calls": 19,
+          "milliseconds": 428.8305220000001
+        },
+        "initialization": {
+          "calls": 1,
+          "milliseconds": 39.391311
+        },
+        "parse_and_discover": {
+          "calls": 19,
+          "milliseconds": 123.22482799999999
+        },
+        "prepare_arms": {
+          "calls": 19,
+          "milliseconds": 39.540338
+        },
+        "read_scores_and_select": {
+          "calls": 19,
+          "milliseconds": 43.670783
+        },
+        "record_and_commit": {
+          "calls": 19,
+          "milliseconds": 34.541531000000006
+        },
+        "trial_workers_wall": {
+          "calls": 19,
+          "milliseconds": 3340.135243
+        }
+      }
+    },
+    {
+      "mode": "legacy",
+      "rep": 2,
+      "seconds": 4.107414778001839,
+      "commits": 17,
+      "trials": 71,
+      "cost": 1142,
+      "phases": {
+        "domain_queue_and_requests": {
+          "calls": 19,
+          "milliseconds": 14.192663000000001
+        },
+        "enumerate_catalog": {
+          "calls": 19,
+          "milliseconds": 435.72387299999997
+        },
+        "initialization": {
+          "calls": 1,
+          "milliseconds": 39.39121
+        },
+        "parse_and_discover": {
+          "calls": 19,
+          "milliseconds": 109.57260299999999
+        },
+        "prepare_arms": {
+          "calls": 19,
+          "milliseconds": 32.10732499999999
+        },
+        "read_scores_and_select": {
+          "calls": 19,
+          "milliseconds": 47.230110999999994
+        },
+        "record_and_commit": {
+          "calls": 19,
+          "milliseconds": 38.838911
+        },
+        "trial_workers_wall": {
+          "calls": 19,
+          "milliseconds": 3365.290934999999
+        }
+      }
+    },
+    {
+      "mode": "trees",
+      "rep": 2,
+      "seconds": 3.8107177819911158,
+      "commits": 17,
+      "trials": 26,
+      "cost": 1138,
+      "phases": {
+        "domain_queue_and_requests": {
+          "calls": 20,
+          "milliseconds": 9.116085000000004
+        },
+        "enumerate_catalog": {
+          "calls": 20,
+          "milliseconds": 421.080644
+        },
+        "initialization": {
+          "calls": 1,
+          "milliseconds": 39.008551
+        },
+        "parse_and_discover": {
+          "calls": 20,
+          "milliseconds": 110.76818
+        },
+        "prepare_arms": {
+          "calls": 20,
+          "milliseconds": 31.555070000000004
+        },
+        "read_scores_and_select": {
+          "calls": 20,
+          "milliseconds": 18.543606
+        },
+        "record_and_commit": {
+          "calls": 20,
+          "milliseconds": 21.729400000000002
+        },
+        "trial_workers_wall": {
+          "calls": 20,
+          "milliseconds": 3137.600626000001
+        }
+      }
+    }
+  ],
+  "profile_parity": [
+    {
+      "case": "PCM32",
+      "candidate": "_Z3pcmPi:B9:B10:B11",
+      "scores_exact": true,
+      "ir_bytes_exact": true,
+      "ir_sha256": "8afade5f253332b755e9a89558225ac42d52af49cba5e3db70a0bf191298544a",
+      "old_seconds": 0.2543904240010306,
+      "new_seconds": 0.21454851400631014,
+      "score_ms": [
+        104.591793,
+        83.054065
+      ]
+    },
+    {
+      "case": "PCM256",
+      "candidate": "_Z3pcmPi:B0:B2:B1",
+      "scores_exact": true,
+      "ir_bytes_exact": true,
+      "ir_sha256": "feb600d68d389c2892b763afa45ea275e5553d8143a758e8b84a30df14e8a6cb",
+      "old_seconds": 0.3920216279948363,
+      "new_seconds": 0.4017993640009081,
+      "score_ms": [
+        167.057651,
+        173.092977
+      ]
+    },
+    {
+      "case": "BIT32",
+      "candidate": "_ZL11bitonicSortPi:B1:R3:R4",
+      "scores_exact": true,
+      "ir_bytes_exact": true,
+      "ir_sha256": "df6eedb1d10465e1827f0b26bb845b65dfa4158a34c9eec92917479e04c660f8",
+      "old_seconds": 0.08080853200226557,
+      "new_seconds": 0.0825411779951537,
+      "score_ms": [
+        45.634627,
+        50.090172
+      ]
+    },
+    {
+      "case": "MS32",
+      "candidate": "_Z13gpu_mergesortPlS_lllP4dim3S1_:B16:B17:B18",
+      "scores_exact": true,
+      "ir_bytes_exact": true,
+      "ir_sha256": "54daf11c53c51c623ff9af9348af4043dc46d6dc892c212cdfa03ee90d75c390",
+      "old_seconds": 1.186008396995021,
+      "new_seconds": 1.2464632019982673,
+      "score_ms": [
+        16.269877,
+        17.27001
+      ]
+    },
+    {
+      "case": "vllm",
+      "candidate": "cache_eval:B55:B54:B56",
+      "scores_exact": true,
+      "ir_bytes_exact": true,
+      "ir_sha256": "e07d9c04435564af3b84881a8d5c90028da57875e2f336ce89f268a91f4d487b",
+      "old_seconds": 0.4416561429970898,
+      "new_seconds": 0.450444176007295,
+      "score_ms": [
+        118.873305,
+        118.775435
+      ]
+    },
+    {
+      "case": "tigre",
+      "candidate": "_Z19kernelPixelDetector8GeometryPfiiP13__hip_texture:B5:R6:R7",
+      "scores_exact": true,
+      "ir_bytes_exact": true,
+      "ir_sha256": "a44cd20e66ee290238477536d4f99de2165be875ee107d63e3e3d253e63b3484",
+      "old_seconds": 0.12289002399484161,
+      "new_seconds": 0.12523691699607298,
+      "score_ms": [
+        78.273371,
+        82.043482
+      ]
+    }
+  ],
+  "status": "checkpoint; PCM256 repeated timing pending; goal incomplete"
+}

@@ -1,4 +1,5 @@
 #include "decision_model.h"
+#include "fusion_domains.h"
 #include "incremental_candidate_queue.h"
 #include "scoped_greedy_adapter.h"
 #include "llvm/Analysis/PostDominators.h"
@@ -16,6 +17,7 @@
 #include "llvm/Support/Path.h"
 #include "llvm/Support/FormatVariadic.h"
 #include <set>
+#include <chrono>
 #include <cstdlib>
 #include <stdexcept>
 using namespace llvm;
@@ -101,13 +103,21 @@ static bool prepareArmPairs(Module &module, StringRef function, unsigned decisio
 }
 
 int main(int argc,char**argv){try{
+ using Clock=std::chrono::steady_clock;
+ const auto started=Clock::now();auto phaseStarted=started;
+ std::map<std::string,double> phaseMilliseconds;
+ std::map<std::string,int64_t> phaseCalls;
+ auto mark=[&](const std::string &phase){auto now=Clock::now();phaseMilliseconds[phase]+=std::chrono::duration<double,std::milli>(now-phaseStarted).count();++phaseCalls[phase];phaseStarted=now;};
+ auto timingReport=[&](){json::Object phases;for(const auto &kv:phaseMilliseconds)phases[kv.first]=json::Object{{"milliseconds",kv.second},{"calls",phaseCalls[kv.first]}};return phases;};
+
  if(argc==2&&StringRef(argv[1])=="--help"){
-   outs()<<"usage: decision-greedy INPUT FUNCTION [TOOL_ROOT] NEW_OUTPUT [--b2b-strategy dp1|darm] [--trial-policy whole-function|scoped-full|scoped-reuse]\n";
+   outs()<<"usage: decision-greedy INPUT FUNCTION [TOOL_ROOT] NEW_OUTPUT [--b2b-strategy dp1|darm] [--trial-policy whole-function|scoped-full|scoped-reuse] [--domain-schedule legacy|trees]\n";
    return 0;
  }
- std::string b2bStrategy="dp1", quoteMode="on", trialPolicy="whole-function";
+ std::string b2bStrategy="dp1", quoteMode="on", trialPolicy="whole-function", domainSchedule="legacy";
  while (argc >= 3) {
    StringRef option(argv[argc-2]), value(argv[argc-1]);
+   if(option == "--domain-schedule" && (value == "legacy" || value == "trees")) { domainSchedule=value.str();argc-=2;continue; }
    if (option == "--b2r-strategy" && value == "darm") {
      argc -= 2;
      continue;
@@ -125,6 +135,7 @@ int main(int argc,char**argv){try{
  }
  if(argc!=4&&argc!=5)
    throw std::runtime_error("usage: decision-greedy INPUT FUNCTION [TOOL_ROOT] NEW_OUTPUT [--b2b-strategy dp1|darm]");
+ if(domainSchedule=="trees"&&trialPolicy!="whole-function")throw std::runtime_error("tree scheduling currently requires unchanged whole-function trials");
  if(trialPolicy!="whole-function"&&b2bStrategy!="dp1")throw std::runtime_error("scoped trial policy requires dp1");
  const bool implicitRoot=argc==4;
  std::string root;
@@ -175,7 +186,7 @@ int main(int argc,char**argv){try{
      record["backend_resources_error"]=std::string(error.what());
    }
  };
- auto report=[&](StringRef status){save(out+"/summary.json",json::Value(json::Object{{"status",status.str()},{"trial_policy",trialPolicy},{"scoped_trials",scoped?json::Value(scoped->report()):json::Value(nullptr)},{"search","per-decision greedy; best positive adjacent or structural candidate"},{"cfg_cleanup","structural"},{"structural_cleanup",structuralCleanup},{"structural_candidates_enabled",true},{"shared_arm_trials",true},{"cross_level_b2r",false},{"pipeline_version","v1"},{"candidate_jobs",structuralJobs},{"candidate_scheduler","continuous-queue"},{"persistent_trial_workers",true},{"condition_budget",conditionBudget},{"phi_fold_threshold",7},{"r2r_enumeration","darm-alignment"},{"b2b_strategy",b2bStrategy},{"tti_quote_cache",quoteMode},{"backend_resource_gate_enabled",false},{"uniform_loss_guard_enabled",false},{"max_uniform_loss",-1},{"max_pressure_growth",-1},{"max_pressure",-1},{"initial_cost",initialCost},{"final_cost",parentCost},{"commits",int64_t(commits)},{"trials",int64_t(trials)},{"final_ir",current},{"rounds",json::Value(json::Array(rounds))},{"stops",json::Value(json::Array(stops))}}));};
+ auto report=[&](StringRef status){save(out+"/summary.json",json::Value(json::Object{{"status",status.str()},{"driver_phase_timings",timingReport()},{"elapsed_ms",std::chrono::duration<double,std::milli>(Clock::now()-started).count()},{"domain_schedule",domainSchedule},{"trial_policy",trialPolicy},{"scoped_trials",scoped?json::Value(scoped->report()):json::Value(nullptr)},{"search","per-decision greedy; best positive adjacent or structural candidate"},{"cfg_cleanup","structural"},{"structural_cleanup",structuralCleanup},{"structural_candidates_enabled",true},{"shared_arm_trials",true},{"cross_level_b2r",false},{"pipeline_version","v1"},{"candidate_jobs",structuralJobs},{"candidate_scheduler","continuous-queue"},{"persistent_trial_workers",true},{"condition_budget",conditionBudget},{"phi_fold_threshold",7},{"r2r_enumeration","darm-alignment"},{"b2b_strategy",b2bStrategy},{"tti_quote_cache",quoteMode},{"backend_resource_gate_enabled",false},{"uniform_loss_guard_enabled",false},{"max_uniform_loss",-1},{"max_pressure_growth",-1},{"max_pressure",-1},{"initial_cost",initialCost},{"final_cost",parentCost},{"commits",int64_t(commits)},{"trials",int64_t(trials)},{"final_ir",current},{"rounds",json::Value(json::Array(rounds))},{"stops",json::Value(json::Array(stops))}}));};
  report("running");
  fusion::IncrementalCandidateQueue candidateQueue;
  std::unique_ptr<Module> scopedParent;if(scoped)scopedParent=CloneModule(*initial);
@@ -184,7 +195,8 @@ int main(int argc,char**argv){try{
  std::string catalogParent;
  Optional<json::Value> structuralCatalog;
 
- for(auto &target:targets){for(unsigned iteration=0;iteration<256;++iteration){
+ mark("initialization");
+ for(auto &target:targets){for(unsigned iteration=0;iteration<(domainSchedule=="trees"?100000u:256u);++iteration){
   auto m=scopedParent?std::move(scopedParent):parseIRFile(current,error,ctx);if(!m)throw std::runtime_error("cannot read parent");
   if(scoped)scoped->begin(*m,rounds.size());
   std::string wholeTrialInput=current;
@@ -201,6 +213,7 @@ int main(int argc,char**argv){try{
     unsigned identities=0;for(auto &candidate:catalog)identities+=candidate.id==target;
     if(identities!=1)throw std::runtime_error("ambiguous decision identity: "+target);
   }
+  mark("parse_and_discover");
   decision::Decision emptyDecision;
   auto &d=target.empty()?emptyDecision:catalog[di];
   int64_t bestCost=parentCost;
@@ -236,6 +249,7 @@ int main(int argc,char**argv){try{
       {"stage","preparation_rejected"},{"reason",std::move(reason)}});
   }
   {
+    mark("prepare_arms");
     const std::string scan=out+"/structural-"+std::to_string(rounds.size());
     std::vector<std::string> args{structural,"--ir",wholeTrialInput,"--function",fn,
       "--structural","1",
@@ -280,6 +294,7 @@ int main(int argc,char**argv){try{
           {"logical_right",d.arms[pair.left+1].id}});
     }
 
+    mark("enumerate_catalog");
     std::string decisionSplit;
     if(d.root) {
       unsigned index=0;
@@ -300,14 +315,43 @@ int main(int argc,char**argv){try{
       std::optional<fusion::ScopedGreedyAdapter::Descriptor> local;
     };
     std::vector<StructuralTrial> structuralTrials;
-    for(const auto *list:{&candidates, static_cast<const json::Array*>(&normalizedCandidates)})
+    fusion::FusionDomains domains(*m->getFunction(fn),catalog);
+    BasicBlock *activeDomain=nullptr;
+    if(domainSchedule=="trees" && target.empty()) {
+      for(const auto &entry:candidates) {
+        const auto &c=*entry.getAsObject();
+        if(auto reason=c.getString("preflight_rejection"))if(!reason->empty())continue;
+        if(attemptedStructural.count(c.getString("candidate")->str()))continue;
+        activeDomain=domains.root(c.getString("split")->str());break;
+      }
+    }
+    json::Array originalRootCandidates, extendedTreeCandidates;
+    std::vector<const json::Array*> candidateLists{&candidates,&normalizedCandidates};
+    if(domainSchedule=="trees" && !decisionSplit.empty()) {
+      // Preserve the old direct-root / prepared ordering on ties. New family
+      // members are appended, not promoted ahead of old legal candidates.
+      for(const auto &entry:candidates) {
+        const auto &c=*entry.getAsObject();auto split=c.getString("split")->str();
+        if(split==decisionSplit)originalRootCandidates.push_back(json::Value(json::Object(c)));
+        else if(domains.root(split)==domains.root(decisionSplit))
+          extendedTreeCandidates.push_back(json::Value(json::Object(c)));
+      }
+      candidateLists={&originalRootCandidates,&normalizedCandidates,&extendedTreeCandidates};
+    }
+    for(const auto *list:candidateLists)
     for(const auto &entry:*list) {
       const auto &candidate=*entry.getAsObject();
       // Compare both candidate kinds at this decision. The final structural
       // sweep also considers roots outside the initial decision catalog.
       const auto preparedInput=candidate.getString("prepared_input");
-      if(!preparedInput&&!decisionSplit.empty()&&candidate.getString("split")!=Optional<StringRef>(decisionSplit))
-        continue;
+      if(!preparedInput&&!decisionSplit.empty()) {
+        const auto split=candidate.getString("split")->str();
+        if(domainSchedule=="trees") {
+          if(domains.root(split)!=domains.root(decisionSplit))continue;
+        }else if(split!=decisionSplit)continue;
+      }
+      if(domainSchedule=="trees" && target.empty() && !preparedInput &&
+         (!activeDomain || domains.root(candidate.getString("split")->str())!=activeDomain))continue;
       const auto candidateKey=candidate.getString("candidate")->str();
       if(!preparedInput&&!attemptedStructural.insert(candidateKey).second)continue;
       if(auto reason=candidate.getString("preflight_rejection"))if(!reason->empty())continue;
@@ -414,6 +458,7 @@ int main(int argc,char**argv){try{
     // per-request claim makes completion immediately release a slot, without
     // a batch barrier or a static partition. TTI and parent IR caches are local
     // to each worker; LLVM IR is never shared across threads or processes.
+    mark("domain_queue_and_requests");
     if (externalPending) {
       const auto base = out + "/trial-queue-" + std::to_string(rounds.size());
       json::Array requests;
@@ -466,6 +511,7 @@ int main(int argc,char**argv){try{
         checkQuoteFailure(trial.directory + "/stderr");
       }
     }
+    mark("trial_workers_wall");
     // Candidate order breaks score ties, independently of process completion.
     for (auto &trial : structuralTrials) {
       if(trial.local){
@@ -548,8 +594,15 @@ int main(int argc,char**argv){try{
       }
     }
   }
+  mark("read_scores_and_select");
   json::Object record{{"decision",target},{"iteration",int64_t(iteration)},{"parent",current},{"parent_cost",parentCost},{"attempts",std::move(attempts)},{"preparation_rejections",std::move(preparationRejections)},{"selected",best}};
-  if(best.empty()){rounds.push_back(std::move(record));stops.push_back(json::Object{{"decision",target},{"reason","no_positive_legal_candidate"}});report("running");if(scoped)scopedParent=std::move(m);break;}
+  if(best.empty() && domainSchedule=="trees" && target.empty() && !record.getArray("attempts")->empty()) {
+    record["domain_exhausted"]=true;
+    rounds.push_back(std::move(record));report("running");mark("record_and_commit");
+    if(scoped)scopedParent=std::move(m);
+    continue;
+  }
+  if(best.empty()){rounds.push_back(std::move(record));stops.push_back(json::Object{{"decision",target},{"reason","no_positive_legal_candidate"}});report("running");if(scoped)scopedParent=std::move(m);mark("record_and_commit");break;}
   if(scoped){
     if(!bestLocalKey.empty()){
       auto product=scoped->materialize(bestLocalKey);writeModule(*product,best+"/fused.ll");scopedParent=std::move(product);
@@ -560,8 +613,8 @@ int main(int argc,char**argv){try{
     }
   }
   recordResources(best+"/fused.ll",best+"/resources",record);
-  record["selected_cost"]=bestCost;record["score"]=double(parentCost-bestCost)/std::max<int64_t>(parentCost,1);rounds.push_back(std::move(record));parentCost=bestCost;current=best+"/fused.ll";attemptedStructural.clear();++commits;report("running");outs()<<"commit="<<commits<<" cost="<<parentCost<<" decision="<<target<<"\n";outs().flush();
-  if(iteration==255)throw std::runtime_error("round budget exceeded");
+  record["selected_cost"]=bestCost;record["score"]=double(parentCost-bestCost)/std::max<int64_t>(parentCost,1);rounds.push_back(std::move(record));parentCost=bestCost;current=best+"/fused.ll";attemptedStructural.clear();++commits;report("running");outs()<<"commit="<<commits<<" cost="<<parentCost<<" decision="<<target<<"\n";outs().flush();mark("record_and_commit");
+  if(iteration==(domainSchedule=="trees"?99999u:255u))throw std::runtime_error("round budget exceeded");
  }}
  if(auto e=sys::fs::copy_file(current,out+"/final.ll"))throw std::runtime_error(e.message());current=out+"/final.ll";report("completed");return 0;
 }catch(const std::exception&e){errs()<<e.what()<<"\n";return 1;}}
