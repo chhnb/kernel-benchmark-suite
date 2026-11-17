@@ -1,0 +1,79 @@
+#pragma once
+#include "incremental_ir_snapshot.h"
+#include "llvm/IR/CFG.h"
+
+namespace fusion {
+// Boundary contract for the FIRST isolated-cleanup implementation. This is
+// intentionally not a certificate for the legacy whole-function cleanup.
+// Eligibility does not authorize reuse until generation/cleanup/scoring are
+// executed inside this contract and their write/read obligations are checked.
+struct B2BOptimizationUnit {
+  std::string identity, rejection;
+  std::set<uint64_t> writes, reads;
+  uint64_t entry=0, left=0, right=0, exit=0;
+  bool eligible() const {return rejection.empty();}
+  static B2BOptimizationUnit discover(llvm::BasicBlock &root,IRIdentity &ids) {
+    B2BOptimizationUnit unit;
+    auto reject=[&](const char *why){unit.rejection=why;return unit;};
+    auto *br=llvm::dyn_cast<llvm::BranchInst>(root.getTerminator());
+    if(!br || !br->isConditional())return reject("not_binary_branch");
+    auto *l=br->getSuccessor(0),*r=br->getSuccessor(1);
+    if(l==r || l->getSinglePredecessor()!=&root || r->getSinglePredecessor()!=&root)
+      return reject("arms_not_exclusive_single_entry");
+    auto *join=l->getSingleSuccessor();
+    if(!join || join!=r->getSingleSuccessor() || join==l || join==r || join==&root)
+      return reject("not_simple_common_exit");
+    if(llvm::pred_size(join)!=2)return reject("external_exit_predecessor");
+    if(root.hasAddressTaken()||l->hasAddressTaken()||r->hasAddressTaken()||join->hasAddressTaken())
+      return reject("address_taken_boundary");
+    // External instructions carry context we have not yet isolated. Function
+    // arguments are opaque inputs; constants retain their exact LLVM semantics.
+    auto isInput=[](llvm::Value *v){
+      return llvm::isa<llvm::Argument>(v)||llvm::isa<llvm::ConstantInt>(v);
+    };
+    if(!isInput(br->getCondition()))return reject("external_condition_definition");
+    std::set<llvm::Instruction*> internal;
+    for(auto *arm:{l,r})for(auto &i:*arm)if(!i.isTerminator()){
+      if(!(llvm::isa<llvm::BinaryOperator>(i)||llvm::isa<llvm::ICmpInst>(i)||
+           llvm::isa<llvm::SelectInst>(i)||llvm::isa<llvm::CastInst>(i)) ||
+          !i.getType()->isIntegerTy() || i.mayReadOrWriteMemory() || i.mayHaveSideEffects())
+        return reject("unsupported_isolated_instruction");
+      internal.insert(&i);
+    }
+    for(auto *i:internal) {
+      for(auto &operand:i->operands()) {
+        auto *v=operand.get();auto *def=llvm::dyn_cast<llvm::Instruction>(v);
+        if(!v->getType()->isIntegerTy() || (!isInput(v) && (!def||!internal.count(def))))
+          return reject("external_operand_definition");
+        if(def && def->getParent()!=i->getParent())return reject("cross_arm_operand");
+      }
+      for(auto &use:i->uses()) {
+        auto *user=llvm::dyn_cast<llvm::Instruction>(use.getUser());
+        if(!user)return reject("external_noninstruction_use");
+        if(internal.count(user))continue;
+        auto *phi=llvm::dyn_cast<llvm::PHINode>(user);
+        if(!phi || phi->getParent()!=join)return reject("unbounded_live_out");
+      }
+    }
+    for(auto &phi:join->phis()) {
+      if(!phi.getType()->isIntegerTy()||phi.getNumIncomingValues()!=2)
+        return reject("unsupported_exit_phi");
+      for(unsigned i=0;i<2;++i){
+        auto *v=phi.getIncomingValue(i);auto *def=llvm::dyn_cast<llvm::Instruction>(v);
+        if(!isInput(v) && (!def || !internal.count(def)))return reject("external_exit_value");
+        if(def && def->getParent()!=phi.getIncomingBlock(i))return reject("invalid_exit_value_side");
+      }
+    }
+    unit.identity=ids.candidate(root,*l,*r);
+    unit.entry=ids.block(root);unit.left=ids.block(*l);unit.right=ids.block(*r);unit.exit=ids.block(*join);
+    unit.writes.insert(unit.entry);
+    for(auto *arm:{l,r})for(auto &i:*arm)unit.writes.insert(ids.instruction(i));
+    for(auto &phi:join->phis())unit.writes.insert(ids.instruction(phi));
+    unit.reads=unit.writes;
+    // The exit terminator is a read-only boundary. Changes to it invalidate,
+    // rather than allowing cleanup to follow arbitrarily far downstream.
+    unit.reads.insert(unit.exit);
+    return unit;
+  }
+};
+} // namespace fusion
