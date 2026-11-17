@@ -1,4 +1,4 @@
-# 按决策树调度（开发中）
+# 按决策树调度
 
 入口 `decision-greedy --domain-schedule trees`，旧对照为 `legacy`，默认暂未切换。仅支持原 whole-function trial，不能与 scoped 清理实验混用。
 
@@ -15,7 +15,7 @@
 ## 已有证据
 
 - PCM256 原流程：122提交、13254 trial，其中13253发生在全函数扫尾。首扫121个split根，120个单候选根、一个31候选根。
-- v3 PCM256 trees：177.487秒、122提交、137 trial、TTI2214。历史旧版626.96秒、TTI2257。前90步逐步IR一致，第91步分歧。当前同场legacy仍在运行，首轮计时同期有诊断引擎编译，不作为稳定加速结论。
+- v3 PCM256 trees：177.487秒、122提交、137 trial、TTI2214。历史旧版626.96秒、TTI2257。前90步逐步IR一致，第91步分歧。同二进制首组 legacy 为 616.45 秒，以下另列交错复测。
 - 所有提交IR verifier通过；终态结构候选覆盖检查通过。
 - PCM256 GPU：4 seeds，每seed131072元素，未融合/新IR/CPU分组排序逐元素一致，16个block、每block256线程。不是原artifact完整32768个block规模的性能测试。
 - vLLM真实八叶树提取：旧44 trial、新76 trial；7次提交、TTI25；每步IR仅忽略ModuleID后相同。最早v2曾TTI38，原因是扩展候选抢占同分优先级，失败产物保留。
@@ -29,4 +29,34 @@
 
 driver_phase_timings 是顺序的driver阶段wall时间。trial_workers_wall包含多个worker并行执行，不能与worker累计时间相加。request-profile.json是单请求inclusive计时，父子scope重叠，不能直接求和。profile引擎独立构建，六组同父候选score_result与IR完全一致。
 
-尚缺：同场和无干扰重复完整计时、全部worker阶段细分、完善生命周期测试、正式checkpoint。Goal未完成。
+## PCM256 交错复测
+
+固定同一输入 SHA、驱动、引擎、16 个常驻 worker 和清理参数，执行次序为 legacy、trees、trees、legacy。两次 legacy 分别用时 616.92 和 606.43 秒，两次 trees 分别为 178.68 和 176.79 秒。中位耗时 611.67 → 177.74 秒，下降 70.9%。每种调度的两次运行，122 步候选、成本和逐步 IR 的散列均一致，仅规范化 ModuleID。两次对照均在第 91 次提交首次分歧。旧调度在所有根中选到 TTI 2847，新调度在当前域内选到 2848。两者最终 TTI 分别为 2257、2214。两轮终态 catalog 的输入文件均与终态父 IR 对应，catalog 中可试结构候选覆盖分别为 4/4、1/1。
+
+GPU 使用 32768 个 block、每个 block 256 个线程，固定 seed 42，每次恢复相同输入。三种版本各预热一次，再平衡顺序测六次。kernel 中位数为未融合 1550.94 ms、legacy 1066.28 ms、trees 1106.64 ms。每次均逐元素核对 268435456 个输出与 CPU 排序。树调度较未融合减少 28.65%，较 legacy 增加 3.79%。
+
+下表使用两次运行的中位数。driver 为墙钟秒数，worker 为跨并行请求的累计 inclusive 秒数，父子 scope 有重叠。规划、生成、清理的总 scope 包含多个子阶段；特征及依赖信息由现有分析路径收集，未单独计时的分析不可从总数中精确拆出。
+
+| 时钟 | 阶段 | 旧次数 | 树次数 | 旧秒 | 树秒 |
+|---|---|---:|---:|---:|---:|
+| driver | domain_queue_and_requests | 124 | 128 | 1.110 | 0.098 |
+| driver | enumerate_catalog | 124 | 128 | 6.065 | 6.505 |
+| driver | initialization | 1 | 1 | 0.097 | 0.103 |
+| driver | parse_and_discover | 124 | 128 | 5.304 | 6.809 |
+| driver | prepare_arms | 124 | 128 | 0.022 | 0.022 |
+| driver | read_scores_and_select | 124 | 128 | 4.478 | 0.129 |
+| driver | record_and_commit | 124 | 128 | 11.725 | 0.421 |
+| driver | trial_workers_wall | 124 | 128 | 582.647 | 163.618 |
+| worker | b2b_plan_generate_clean_total | 13524 | 141 | 3473.485 | 48.541 |
+| worker | cleanup | 216838 | 3545 | 1209.726 | 17.101 |
+| worker | clone_before_cleanup | 216838 | 3545 | 235.182 | 3.894 |
+| worker | clone_layout | 216838 | 3545 | 193.264 | 2.552 |
+| worker | clone_parent | 12917 | 140 | 12.496 | 0.129 |
+| worker | emit_layout | 216838 | 3545 | 2.569 | 0.041 |
+| worker | evaluate_score | 201536 | 3225 | 3219.054 | 91.409 |
+| worker | features | 433676 | 7090 | 922.352 | 12.197 |
+| worker | round_control_analysis_cleanup | 1902 | 137 | 33.382 | 2.186 |
+| worker | serialize_and_hash | 464722 | 7578 | 1505.727 | 19.959 |
+| worker | verify | 446593 | 7230 | 187.203 | 2.516 |
+
+明细和二进制散列见同目录 tree-domain-validation.json。该终态审计覆盖原始结构 catalog；prepared 候选仍跟随初始决策及其规范化，尚缺对提交后新增 prepared-only 决策的独立终态证明。

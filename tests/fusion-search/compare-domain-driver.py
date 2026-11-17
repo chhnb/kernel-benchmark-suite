@@ -21,7 +21,9 @@ for directory in [a.reference,a.trees]:
  attempted={t["candidate"] for r in terminal for t in r["attempts"]}
  catalogs=sorted(directory.glob("structural-*/catalog.json"),key=lambda f:int(f.parent.name.split("-")[-1]))
  assert catalogs,"missing terminal candidate catalog"
- c=json.loads(catalogs[-1].read_text());required={x["candidate"] for x in c["candidates"] if not x.get("preflight_rejection")}
+ c=json.loads(catalogs[-1].read_text())
+ assert Path(c["source_ir"]).samefile(last),(directory,"catalog parent differs from terminal IR")
+ required={x["candidate"] for x in c["candidates"] if not x.get("preflight_rejection")}
  assert not required-attempted,(directory,"terminal candidates omitted",required-attempted)
  reports.append(dict(directory=str(directory),commits=s["commits"],trials=s["trials"],tti=s["final_cost"],terminal_required=len(required),terminal_attempted=len(attempted),all_committed_ir_verified=True))
  chains.append(chain)
