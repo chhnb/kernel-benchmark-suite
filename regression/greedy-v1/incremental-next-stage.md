@@ -213,3 +213,17 @@ MS32 的 15 分不是原样边界拼接产生的，也不能标记为匹配指�
 因此本轮没有放宽 `isolatedScalarTTIDomain`，也没有修改默认报价 key。后续应建立外部评分依赖证书，并用真实上下文变化反例检验；不能把上述探针的单次成功作为跨提交复用依据。
 
 证据目录：`build/incremental-unit-audit/dct8-real-control/`、`ms32-real-control/`。重放入口：`python3 tests/fusion-search/probe-isolated-real.py --case DCT8 --tool build/incremental-unit-audit/probe-real --out <新目录>`。
+
+## v4：外部评分依赖接入队列
+
+实验入口不再要求整个函数只有纯整数计算。单元本身仍受原纯计算边界限制；外部指令仅允许已有、经过 pinned GCN 审核的 `gcnQuoteKey` 范围。没有扩展默认报价 key，也没有给未知指令猜测价格。
+
+新增 `isolatedScoringReads`：除原先上下文无关的整数/控制指令外，按稳定 instruction ID 记录每条指令的报价 key，并合入每个候选 read-set。外部 GEP 使用者信息、extending-load 属性、访存地址空间/对齐等报价输入改变，或相关指令增加/删除时，保守地使所有候选收益失效。模块属性/目标仍由 snapshot context 覆盖；单元操作数和精确 use-site 仍由原依赖集合覆盖。这样外部报价输入未变时，未改动指令成本在 before/after 差值中抵消；但不能据此复用全函数清理产生的收益。
+
+新 `--memory` 测试在独立 A/B 之外添加 store/load，并把 load 的值用于最终结果。实际完整 LLVM24 成本 **66 → 46 → 26**；全量与增量逐步 IR、提交和 TTI 相同，trial 3 → 2，清理/评分 21 → 14，6,724 组 CPU 输出一致。报价缓存始终关闭。改变外部 load 对齐会使队列失效，阻止提交，并拒绝旧 ticket 结果。新测试已加入 `tests/run-v1`。
+
+同一测试的原全函数清理对照是 65 → 65 → 45（首先消除了可转发的 load），最终 IR 仍不同；该差异明确保留，不能用局部策略的通过结果宣称默认流程等价。真实 18 → 21 反例的原回归仍通过；实验入口依然不会尝试其含访存的两臂，不能误缓存该收益。
+
+全部 40 个冻结输入重新审核：评分域覆盖从 0 增至 8（BIT32/64/128/256、PCM32/64/128/256），但与当前 7 个可隔离单输出单元没有交集。因此真实 benchmark 整次 trial 复用仍为 0；当前瓶颈转向单元内部的访存与边界能力，而不是函数外存在任意访存便全部拒绝。下一步需实现带明确读写契约的访存单元，保留共享准入和全局清理对照。
+
+证据：`build/incremental-unit-audit/coverage-external-quotes.json`；默认 v1 driver 未改。

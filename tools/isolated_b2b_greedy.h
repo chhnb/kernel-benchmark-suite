@@ -4,25 +4,34 @@
 #include "llvm24_scorer.h"
 #include <functional>
 namespace fusion {
-// Experimental local-cleanup path. This does NOT certify cached gains from
-// legacy whole-function cleanup. The first proof domain excludes all memory,
-// calls, vector/floating operations, and context-sensitive cast prices.
+// Experimental local cleanup only. Memory/calls remain forbidden INSIDE units.
+// Outside units admit only the audited pinned-GCN quote-key domain.
+// External quote dependencies invalidate gains, never supply guessed prices.
+inline bool isolatedContextFreeOpcode(unsigned opcode) {
+  switch(opcode){
+  case llvm::Instruction::Add:case llvm::Instruction::Sub:case llvm::Instruction::Mul:
+  case llvm::Instruction::And:case llvm::Instruction::Or:case llvm::Instruction::Xor:
+  case llvm::Instruction::Shl:case llvm::Instruction::LShr:case llvm::Instruction::AShr:
+  case llvm::Instruction::ICmp:case llvm::Instruction::Select:case llvm::Instruction::PHI:
+  case llvm::Instruction::Br:case llvm::Instruction::Ret:case llvm::Instruction::Freeze:return true;
+  default:return false;
+  }
+}
 inline bool isolatedScalarTTIDomain(const llvm::Function &f) {
   if(f.getParent()->getTargetTriple()!="amdgcn-amd-amdhsa" ||
      f.getFnAttribute("target-cpu").getValueAsString()!="gfx906")return false;
-  for(const auto &b:f)for(const auto &i:b){
-    switch(i.getOpcode()){
-    case llvm::Instruction::Add:case llvm::Instruction::Sub:case llvm::Instruction::Mul:
-    case llvm::Instruction::And:case llvm::Instruction::Or:case llvm::Instruction::Xor:
-    case llvm::Instruction::Shl:case llvm::Instruction::LShr:case llvm::Instruction::AShr:
-    case llvm::Instruction::ICmp:case llvm::Instruction::Select:case llvm::Instruction::PHI:
-    case llvm::Instruction::Br:case llvm::Instruction::Ret:case llvm::Instruction::Freeze:break;
-    default:return false;
-    }
-    if(!gcnQuoteKey(i))return false;
-    if(!i.getType()->isVoidTy() && (!i.getType()->isIntegerTy()||i.getType()->getIntegerBitWidth()>64))return false;
-  }
+  for(const auto &b:f)for(const auto &i:b)if(!gcnQuoteKey(i))return false;
   return true;
+}
+inline IncrementalCandidateQueue::ReadSet isolatedScoringReads(
+    llvm::Function &f,IRIdentity &ids) {
+  IncrementalCandidateQueue::ReadSet reads;
+  for(auto &b:f)for(auto &i:b)if(!isolatedContextFreeOpcode(i.getOpcode())){
+    auto key=gcnQuoteKey(i);
+    if(!key)throw std::runtime_error("unsupported isolated scoring dependency");
+    reads["tti-context:"+std::to_string(ids.instruction(i))]=*key;
+  }
+  return reads;
 }
 struct IsolatedGreedyStats {
   uint64_t trials=0,generations=0,layoutCleanups=0,scores=0,reusedTrials=0,commits=0;
@@ -37,7 +46,7 @@ struct IsolatedGreedyResult {
 inline IncrementalCandidateQueue::ReadSet isolatedReads(
     const IRDependencySnapshot &snapshot,const B2BOptimizationUnit &unit) {
   IncrementalCandidateQueue::ReadSet reads{{"context",snapshot.context},
-    {"policy","isolated-pure-integer-gfx906-v3;opaque-ssa-inputs;fold-output-boundary;no-global-cleanup"}};
+    {"policy","isolated-pure-integer-gfx906-v4;external-quote-dependencies;opaque-ssa-inputs;fold-output-boundary;no-global-cleanup"}};
   for(auto id:unit.reads){
     const auto &record=snapshot.instructions.at(id);
     reads["instruction:"+std::to_string(id)]=(id==unit.entry||unit.inputs.count(id))?
@@ -70,6 +79,7 @@ inline IsolatedGreedyResult runIsolatedB2BGreedy(
       auto *b=pendingBlocks.back();pendingBlocks.pop_back();if(!reachable.insert(b).second)continue;
       for(auto *s:llvm::successors(b))pendingBlocks.push_back(s);
     }
+    auto scoringReads=isolatedScoringReads(*f,ids);
     std::vector<IncrementalCandidateQueue::Candidate> inventory;
     std::map<std::string,B2BOptimizationUnit> units;
     for(auto &b:*f){
@@ -78,6 +88,7 @@ inline IsolatedGreedyResult runIsolatedB2BGreedy(
       auto *exit=ids.lookup(unit.exit)->getParent();
       if(std::distance(exit->phis().begin(),exit->phis().end())!=1)continue;
       auto reads=isolatedReads(snapshot,unit);
+      reads.insert(scoringReads.begin(),scoringReads.end());
       if(!reuse)reads["force_full_rescore"]=std::to_string(round);
       inventory.push_back({unit.identity,std::move(reads),inventory.size()});units.emplace(unit.identity,std::move(unit));
     }
