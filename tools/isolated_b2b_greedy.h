@@ -1,0 +1,134 @@
+#pragma once
+#include "b2b_unit_capsule.h"
+#include "incremental_candidate_queue.h"
+#include "llvm24_scorer.h"
+#include <functional>
+namespace fusion {
+// Experimental local-cleanup path. This does NOT certify cached gains from
+// legacy whole-function cleanup. The first proof domain excludes all memory,
+// calls, vector/floating operations, and context-sensitive cast prices.
+inline bool isolatedScalarTTIDomain(const llvm::Function &f) {
+  if(f.getParent()->getTargetTriple()!="amdgcn-amd-amdhsa" ||
+     f.getFnAttribute("target-cpu").getValueAsString()!="gfx906")return false;
+  for(const auto &b:f)for(const auto &i:b){
+    switch(i.getOpcode()){
+    case llvm::Instruction::Add:case llvm::Instruction::Sub:case llvm::Instruction::Mul:
+    case llvm::Instruction::And:case llvm::Instruction::Or:case llvm::Instruction::Xor:
+    case llvm::Instruction::Shl:case llvm::Instruction::LShr:case llvm::Instruction::AShr:
+    case llvm::Instruction::ICmp:case llvm::Instruction::Select:case llvm::Instruction::PHI:
+    case llvm::Instruction::Br:case llvm::Instruction::Ret:case llvm::Instruction::Freeze:break;
+    default:return false;
+    }
+    if(!gcnQuoteKey(i))return false;
+    if(!i.getType()->isVoidTy() && (!i.getType()->isIntegerTy()||i.getType()->getIntegerBitWidth()>64))return false;
+  }
+  return true;
+}
+struct IsolatedGreedyStats {
+  uint64_t trials=0,generations=0,layoutCleanups=0,scores=0,reusedTrials=0,commits=0;
+  uint64_t enumerated=0,newCandidates=0,invalidated=0,disappeared=0;
+};
+struct IsolatedGreedyResult {
+  std::unique_ptr<llvm::Module> module;
+  IsolatedGreedyStats stats;
+  std::vector<std::string> identities,hashes;
+  std::vector<int64_t> gains,costs;
+};
+inline IncrementalCandidateQueue::ReadSet isolatedReads(
+    const IRDependencySnapshot &snapshot,const B2BOptimizationUnit &unit) {
+  IncrementalCandidateQueue::ReadSet reads{{"context",snapshot.context},
+    {"policy","isolated-pure-integer-gfx906-v1;no-commit-global-cleanup"}};
+  for(auto id:unit.reads){
+    reads["instruction:"+std::to_string(id)]=snapshot.instructions.at(id);
+    std::string uses;
+    auto found=snapshot.users.find(id);
+    if(found!=snapshot.users.end())for(auto u:found->second)
+      uses+=std::to_string(u.first)+":"+std::to_string(u.second)+";";
+    reads["uses:"+std::to_string(id)]=std::move(uses);
+  }
+  return reads;
+}
+// Full-rescore and incremental modes share this exact algorithm and tie order.
+// No original driver behavior is replaced by this experimental entry point.
+inline IsolatedGreedyResult runIsolatedB2BGreedy(
+    const llvm::Module &input,const std::string &function,
+    const LLVM24Scorer &scorer,bool reuse,
+    std::function<void(const llvm::Module &,unsigned)> observer={}) {
+  IsolatedGreedyResult result;result.module=llvm::CloneModule(input);
+  IncrementalCandidateQueue queue;
+  std::optional<int64_t> currentCost;
+  struct Saved {std::unique_ptr<B2BUnitCapsule> capsule;std::unique_ptr<llvm::Module> product;};
+  std::map<std::string,Saved> saved;
+  for(unsigned round=0;round<256;++round){
+    auto &current=*result.module;auto *f=current.getFunction(function);
+    if(!f||!isolatedScalarTTIDomain(*f))throw std::runtime_error("outside isolated TTI proof domain");
+    auto snapshot=IRDependencySnapshot::capture(current);IRIdentity ids(current);
+    std::set<llvm::BasicBlock*> reachable;std::vector<llvm::BasicBlock*> pendingBlocks{&f->getEntryBlock()};
+    while(!pendingBlocks.empty()){
+      auto *b=pendingBlocks.back();pendingBlocks.pop_back();if(!reachable.insert(b).second)continue;
+      for(auto *s:llvm::successors(b))pendingBlocks.push_back(s);
+    }
+    std::vector<IncrementalCandidateQueue::Candidate> inventory;
+    std::map<std::string,B2BOptimizationUnit> units;
+    for(auto &b:*f){
+      if(!reachable.count(&b))continue;
+      auto unit=B2BOptimizationUnit::discover(b,ids);if(!unit.eligible())continue;
+      auto *exit=ids.lookup(unit.exit)->getParent();
+      if(std::distance(exit->phis().begin(),exit->phis().end())!=1)continue;
+      auto reads=isolatedReads(snapshot,unit);
+      if(!reuse)reads["force_full_rescore"]=std::to_string(round);
+      inventory.push_back({unit.identity,std::move(reads),inventory.size()});units.emplace(unit.identity,std::move(unit));
+    }
+    result.stats.enumerated+=inventory.size();
+    auto pending=queue.synchronize(inventory);
+    for(auto &ticket:pending)if(saved.count(ticket.id))++result.stats.invalidated;else ++result.stats.newCandidates;
+    result.stats.reusedTrials+=inventory.size()-pending.size();
+    for(auto it=saved.begin();it!=saved.end();)if(!units.count(it->first)){++result.stats.disappeared;it=saved.erase(it);}else ++it;
+    // Every invalidated/new item is evaluated before looking at the heap top.
+    auto context=makeRound(current,function,round,0,CleanupMode::None);
+    for(auto &ticket:pending){
+      const auto &unit=units.at(ticket.id);auto *root=ids.lookup(unit.entry)->getParent();
+      auto capsule=std::make_unique<B2BUnitCapsule>(current,*root);
+      ++result.stats.trials;++result.stats.generations;
+      Candidate candidate{"unit","B0","B1","B2"};
+      auto layouts=planSingleBranchB2B(*capsule->ir,candidate,1,CleanupMode::DarmCFGInstCombine,"");
+      int64_t bestGain=0;std::unique_ptr<llvm::Module> best;
+      bool certified=true;
+      for(auto &layout:layouts){
+        if(layout.normalized)++result.stats.layoutCleanups;
+        if(!layout.valid||!layout.normalized)continue;
+        Trial trial;trial.valid=true;trial.cleanupMode=CleanupMode::None;
+        trial.candidate={function,"","", "",round};
+        trial.normalized=capsule->apply(current,*layout.normalized);
+        if(!isolatedScalarTTIDomain(*trial.normalized->getFunction(function)))
+          throw std::runtime_error("isolated product outside TTI proof domain");
+        trial.raw=llvm::CloneModule(*trial.normalized);
+        trial.before=features(*f);trial.after=features(*trial.normalized->getFunction(function));trial.afterRaw=trial.after;
+        ++result.stats.scores;
+        auto score=evaluateTrial(current,trial,context,scorer);
+        if(score.status!=ScoreStatus::Scored){certified=false;continue;}
+        const int64_t before=score.metrics.at("work_before");
+        if(currentCost && *currentCost!=before)throw std::runtime_error("isolated cached cost disagrees with full TTI");
+        currentCost=before;
+        const int64_t gain=before-score.metrics.at("work_after");
+        if(gain>bestGain){bestGain=gain;best=llvm::CloneModule(*layout.normalized);}
+      }
+      // An incomplete score set is not a valid zero nor a valid winner.
+      if(!certified)throw std::runtime_error("incomplete isolated trial scoring");
+      saved[ticket.id]={std::move(capsule),std::move(best)};
+      if(!queue.publish(ticket,{bestGain,ticket.id,0,true}))throw std::runtime_error("stale isolated trial result");
+    }
+    if(!queue.ready())throw std::runtime_error("isolated queue not fully evaluated");
+    auto winner=queue.best();if(!winner)return result;
+    auto &chosen=saved.at(winner->first.id);if(!chosen.product)throw std::runtime_error("missing isolated product");
+    // This is commit materialization, not another trial or cleanup/score.
+    result.module=chosen.capsule->apply(current,*chosen.product);
+    ++result.stats.commits;result.identities.push_back(winner->first.id);
+    if(!currentCost)throw std::runtime_error("isolated baseline cost unavailable");
+    *currentCost-=winner->second.gain;result.costs.push_back(*currentCost);
+    result.gains.push_back(winner->second.gain);result.hashes.push_back(moduleHash(*result.module));
+    if(observer)observer(*result.module,round);
+  }
+  throw std::runtime_error("isolated round budget exceeded");
+}
+} // namespace fusion

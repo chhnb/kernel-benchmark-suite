@@ -3,6 +3,7 @@
 #include "llvm/IR/Verifier.h"
 #include "llvm/Transforms/Utils/BasicBlockUtils.h"
 #include "llvm/Transforms/Utils/ValueMapper.h"
+#include <functional>
 
 namespace fusion {
 // Disposable isolated IR for the first single-output, pure-integer unit.
@@ -38,7 +39,7 @@ public:
     auto *cr=llvm::BasicBlock::Create(source.getContext(),"right",cf);
     auto *exit=llvm::BasicBlock::Create(source.getContext(),"exit",cf);
     map[&root]=entry;map[l]=cl;map[r]=cr;map[join]=exit;
-    auto copy=[&](llvm::Instruction &i,llvm::BasicBlock *to){auto *c=i.clone();to->getInstList().push_back(c);map[&i]=c;};
+    auto copy=[&](llvm::Instruction &i,llvm::BasicBlock *to){auto *c=i.clone();c->setMetadata("fusion.incremental.identity",nullptr);to->getInstList().push_back(c);map[&i]=c;};
     copy(*root.getTerminator(),entry);
     for(auto &i:*l)copy(i,cl);for(auto &i:*r)copy(i,cr);
     copy(*output,exit);
@@ -77,6 +78,15 @@ public:
       for(auto &md:metadata)if(md.first!=i.getContext().getMDKindID("fusion.incremental.identity"))
         throw std::runtime_error("unsupported capsule product metadata");
     }
+    // Every path in the product must reach an output; preserve reachability
+    // of the original outside CFG when replacing the simple diamond.
+    std::map<const llvm::BasicBlock*,unsigned> colors;
+    std::function<void(const llvm::BasicBlock*)> visit=[&](const llvm::BasicBlock *b){
+      if(colors[b]==1)throw std::runtime_error("cyclic capsule product");
+      if(colors[b]==2)return;
+      colors[b]=1;for(auto *next:llvm::successors(b))visit(next);colors[b]=2;
+    };
+    for(auto &b:*cf)visit(&b);
     if(llvm::verifyModule(product,&llvm::errs()))throw std::runtime_error("invalid capsule product");
     llvm::ValueToValueMapTy map;unsigned index=0;
     for(auto &a:cf->args()){
