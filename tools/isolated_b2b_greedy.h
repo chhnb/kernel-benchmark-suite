@@ -1,72 +1,7 @@
 #pragma once
-#include "b2b_unit_capsule.h"
-#include "incremental_candidate_queue.h"
-#include "llvm24_scorer.h"
+#include "isolated_b2b_trial.h"
 #include <functional>
 namespace fusion {
-// Experimental local cleanup only. Units allow integer/address work and ordinary
-// integer memory operations; calls, atomics and volatile accesses remain excluded.
-// Outside units admit only the audited pinned-GCN quote-key domain.
-// External quote dependencies invalidate gains, never supply guessed prices.
-// Pinned GCN/BasicTTI scalar pointer selects depend only on the legalized
-// pointer type and i1 condition type; scalar PHI uses generic CF cost.
-// This extension is isolated-only: default instruction quote cache unchanged.
-inline std::optional<std::string> isolatedQuoteKey(const llvm::Instruction &i) {
-  if(auto key=gcnQuoteKey(i))return key;
-  if(i.getType()->isPointerTy()&&
-     (llvm::isa<llvm::PHINode>(i)||(llvm::isa<llvm::SelectInst>(i)&&i.getOperand(0)->getType()->isIntegerTy(1)))){
-    std::string key;llvm::raw_string_ostream out(key);
-    out<<"gcn-throughput-6be16f356d3e-pointer:"<<i.getOpcodeName()<<":";
-    i.getType()->print(out);out.flush();return key;
-  }
-  return std::nullopt;
-}
-inline bool isolatedContextFreeOpcode(unsigned opcode) {
-  switch(opcode){
-  case llvm::Instruction::Add:case llvm::Instruction::Sub:case llvm::Instruction::Mul:
-  case llvm::Instruction::And:case llvm::Instruction::Or:case llvm::Instruction::Xor:
-  case llvm::Instruction::Shl:case llvm::Instruction::LShr:case llvm::Instruction::AShr:
-  case llvm::Instruction::ICmp:case llvm::Instruction::Select:case llvm::Instruction::PHI:
-  case llvm::Instruction::Br:case llvm::Instruction::Ret:case llvm::Instruction::Freeze:return true;
-  default:return false;
-  }
-}
-// These supported quote keys cannot change merely because a user/operand
-// is rebound at a boundary: memory value type, AS and alignment are unchanged;
-// the admitted zero-argument intrinsics and pointer bitcasts are context-free.
-inline bool isolatedBoundaryStableOpcode(unsigned opcode) {
-  switch(opcode){
-  case llvm::Instruction::Load:case llvm::Instruction::Store:
-  case llvm::Instruction::Fence:case llvm::Instruction::Call:
-  case llvm::Instruction::BitCast:return true;
-  default:return false;
-  }
-}
-inline void addIsolatedScoringReads(IncrementalCandidateQueue::ReadSet &reads,
-    const IncrementalCandidateQueue::ReadSet &scoring,IRIdentity &ids,
-    const B2BOptimizationUnit &unit) {
-  for(auto &kv:scoring){
-    auto id=std::stoull(kv.first.substr(12));auto *i=ids.lookup(id);
-    if(unit.reads.count(id)||(unit.writes.count(id)&&!isolatedBoundaryStableOpcode(i->getOpcode())))
-      reads.insert(kv);
-  }
-}
-inline bool isolatedScalarTTIDomain(const llvm::Function &f) {
-  if(f.getParent()->getTargetTriple()!="amdgcn-amd-amdhsa" ||
-     f.getFnAttribute("target-cpu").getValueAsString()!="gfx906")return false;
-  for(const auto &b:f)for(const auto &i:b)if(!isolatedQuoteKey(i))return false;
-  return true;
-}
-inline IncrementalCandidateQueue::ReadSet isolatedScoringReads(
-    llvm::Function &f,IRIdentity &ids) {
-  IncrementalCandidateQueue::ReadSet reads;
-  for(auto &b:f)for(auto &i:b)if(!isolatedContextFreeOpcode(i.getOpcode())){
-    auto key=isolatedQuoteKey(i);
-    if(!key)throw std::runtime_error("unsupported isolated scoring dependency");
-    reads["tti-context:"+std::to_string(ids.instruction(i))]=*key;
-  }
-  return reads;
-}
 struct IsolatedGreedyStats {
   uint64_t trials=0,generations=0,layoutCleanups=0,scores=0,reusedTrials=0,commits=0;
   uint64_t enumerated=0,newCandidates=0,invalidated=0,disappeared=0;
@@ -79,22 +14,6 @@ struct IsolatedGreedyResult {
   std::vector<std::string> identities,hashes;
   std::vector<int64_t> gains,costs;
 };
-inline IncrementalCandidateQueue::ReadSet isolatedReads(
-    const IRDependencySnapshot &snapshot,const B2BOptimizationUnit &unit) {
-  IncrementalCandidateQueue::ReadSet reads{{"context",snapshot.context},
-    {"policy","isolated-pure-integer-gfx906-v6;opaque-global-inputs;ordinary-loads;scoped-quote-dependencies;stripped-instruction-metadata;opaque-ssa-inputs;fold-output-boundary;no-global-cleanup"}};
-  for(auto id:unit.reads){
-    const auto &record=snapshot.instructions.at(id);
-    reads["instruction:"+std::to_string(id)]=(id==unit.entry||unit.inputs.count(id))?
-        IRDependencySnapshot::instructionBody(record):record;
-    std::string uses;
-    auto found=snapshot.users.find(id);
-    if(found!=snapshot.users.end())for(auto u:found->second)
-      uses+=std::to_string(u.first)+":"+std::to_string(u.second)+";";
-    reads["uses:"+std::to_string(id)]=std::move(uses);
-  }
-  return reads;
-}
 // Full-rescore and incremental modes share this exact algorithm and tie order.
 // No original driver behavior is replaced by this experimental entry point.
 inline IsolatedGreedyResult runIsolatedB2BGreedy(
@@ -205,41 +124,17 @@ inline IsolatedGreedyResult runIsolatedB2BGreedy(
         if(!queue.publish(ticket,{bestGain,ticket.id,0,true}))throw std::runtime_error("stale fallback result");
         continue;
       }
-      const auto &unit=units.at(ticket.id);auto *root=ids.lookup(unit.entry)->getParent();
-      auto capsule=std::make_unique<B2BUnitCapsule>(current,*root,&replayContext);
+      const auto &unit=units.at(ticket.id);
       ++result.stats.trials;++result.stats.generations;
-      Candidate candidate{"unit","B0","B1","B2"};
-      auto layouts=planSingleBranchB2B(*capsule->ir,candidate,1,CleanupMode::DarmCFGInstCombine,"");
-      int64_t bestGain=0;std::unique_ptr<llvm::Module> best;
-      bool certified=true;
-      for(auto &layout:layouts){
-        if(layout.normalized)++result.stats.layoutCleanups;
-        if(!layout.valid||!layout.normalized)continue;
-        Trial trial;trial.valid=true;trial.cleanupMode=CleanupMode::None;
-        trial.candidate={function,"","", "",round};
-        trial.normalized=capsule->apply(current,*layout.normalized,&replayContext);
-        if(!isolatedScalarTTIDomain(*trial.normalized->getFunction(function)))
-        {
-          std::string unknown;
-          for(auto &b:*trial.normalized->getFunction(function))for(auto &i:b)
-            if(!isolatedQuoteKey(i))unknown+=std::string(i.getOpcodeName())+";";
-          throw std::runtime_error("isolated product outside TTI proof domain: "+unknown);
-        }
-        trial.raw=llvm::CloneModule(*trial.normalized);
-        trial.before=features(*f);trial.after=features(*trial.normalized->getFunction(function));trial.afterRaw=trial.after;
-        ++result.stats.scores;
-        auto score=evaluateTrial(current,trial,context,scorer);
-        if(score.status!=ScoreStatus::Scored){certified=false;continue;}
-        const int64_t before=score.metrics.at("work_before");
-        if(currentCost && *currentCost!=before)throw std::runtime_error("isolated cached cost disagrees with full TTI");
-        currentCost=before;
-        const int64_t gain=before-score.metrics.at("work_after");
-        if(gain>bestGain){bestGain=gain;best=llvm::CloneModule(*layout.normalized);}
+      auto trial=evaluateIsolatedB2B(current,*ids.lookup(unit.entry)->getParent(),ids,replayContext,context,scorer);
+      if(trial.identity!=ticket.id)throw std::runtime_error("isolated trial identity changed");
+      result.stats.layoutCleanups+=trial.cleanedLayouts;result.stats.scores+=trial.scoredLayouts;
+      if(trial.parentCost){
+        if(currentCost&&*currentCost!=*trial.parentCost)throw std::runtime_error("isolated cached cost disagrees with full TTI");
+        currentCost=trial.parentCost;
       }
-      // An incomplete score set is not a valid zero nor a valid winner.
-      if(!certified)throw std::runtime_error("incomplete isolated trial scoring");
-      saved[ticket.id]={std::move(capsule),std::move(best)};
-      if(!queue.publish(ticket,{bestGain,ticket.id,0,true}))throw std::runtime_error("stale isolated trial result");
+      saved[ticket.id]={std::move(trial.capsule),std::move(trial.product)};
+      if(!queue.publish(ticket,{trial.gain,ticket.id,0,true}))throw std::runtime_error("stale isolated trial result");
     }
     if(!queue.ready())throw std::runtime_error("isolated queue not fully evaluated");
     auto winner=queue.best();if(!winner)return result;

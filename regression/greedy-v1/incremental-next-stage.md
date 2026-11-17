@@ -379,3 +379,13 @@ PCM32 完整实验结果：
 - 本次单线程顺序计时 44.657/25.815 秒；同期旧 PCM256 长测运行，不作为默认 16-worker 编译耗时结论。
 
 结果 `incremental-pcm32-catalog.json`，详细产物 `build/incremental-unit-audit/pcm32-catalog/`。新测试 `check-region-fallback.py` 已纳入 tests/run-v1。下一阶段仍需正式 driver 集成、原同分顺序、完整冻结回归及 PCM128/256；Goal 未完成。
+
+## 正式 driver 接线前的单候选接口
+
+代码核对发现，正式 `decision-greedy` 先依次处理初始 decision targets，最后进行 structural sweep；每轮顺序是原父 IR catalog，再接 prepared arm candidates。当前实验队列是全函数竞争。直接从正式入口调用实验 run-loop 会改变调度和同分行为，因此不能作为等价接线。
+
+将规划/依赖/评分证明与调度分开：新增 `isolated_b2b_trial.h` 的 `evaluateIsolatedB2B`。输入为当前 Module、实际 root、当前 IRIdentity、严格同父 IR 的 ReplayContext 和 RoundContext；内部重新发现 unit，校验边界和评分域。返回稳定身份、完整 read certificate、write set、capsule 计划、当前完整父成本/收益、布局清理和评分计数。部分评分失败抛出错误，不返回可缓存零收益。产物是 capsule，不是可覆盖旧整模块的产物。
+
+实验队列已改为调用此接口，队列本身仍负责失效、全量 pending 评分和原有同分比较。正式 driver 后续应在既有 raw catalog 条目上调用单候选接口，保留 per-decision/末尾 sweep 调度；prepared 候选须单独证明 normalization 的依赖和身份，初期继续全函数重算。局部清理属于单独策略，不能把该接口的 gain 冒充旧全函数清理 gain。
+
+接口抽取验证：PCM32 full/cached 两组各 17 步，与抽取前的 catalog 版本相比，所有非计时指标相同，34 份逐步 IR 仅去除 ModuleID 路径后逐字一致。记录 `incremental-trial-interface-check.json`。访存依赖合成例仍为 66 → 46 → 26，整次 trial 3 → 2，6,724 CPU 输入一致；区域身份/回退测试和真实全函数 18 → 21 反例通过。默认 driver 尚未调用新接口，不能把接口抽取算作正式接线完成。
