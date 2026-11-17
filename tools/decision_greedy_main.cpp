@@ -342,8 +342,18 @@ int main(int argc,char**argv){try{
     };
     for (size_t i = 0; i < structuralTrials.size(); ++i) {
       auto &trial = structuralTrials[i];
-      const auto key = trial.attempt.getString("candidate")->str() +
-                       "|" + trial.args[2];
+      // Paths identify artifacts, not candidates. Content belongs to the read
+      // set; keep a candidate identity across new trial directories.
+      std::string key;
+      auto identityPart=[&](StringRef part) {
+        key+=std::to_string(part.size())+":"+part.str();
+      };
+      identityPart(trial.attempt.getString("candidate").getValue());
+      if(trial.attempt.getString("prepared_input")) {
+        identityPart("prepared");identityPart(target);
+        identityPart(trial.attempt.getString("left").getValue());
+        identityPart(trial.attempt.getString("right").getValue());
+      } else identityPart("structural");
       inventory.push_back({key, {{"parent", digestFor(current)}, {"input", digestFor(trial.args[2])}, {"strategy", b2bStrategy}, {"cleanup", structuralCleanup}}, i});
     }
     const auto pending = candidateQueue.synchronize(inventory);

@@ -429,7 +429,19 @@
       "quote_on_seconds": 622.26,
       "timing_limitation": "Single observations with concurrent benchmark activity; not isolated repeated timing",
       "frozen_manifest_limitation": "Original manifest records timeout and no final IR, so its passed=false is not a detected semantic regression"
-    }
+    },
+    "pcm128_completed_on_run": {
+      "case": "PCM128",
+      "exit": 0,
+      "seconds": 4853.17,
+      "passed": false,
+      "commits": 250,
+      "tti": 4251,
+      "verified": true,
+      "ir_sha256": "f937e8875db3b28623537ecae47229d259b7064a9e21d5e15df7799e0b8e0248",
+      "identical_ir": false
+    },
+    "pcm128_interpretation": "On run completed and verifier passed; off-mode full reference still running. Old manifest contains a timeout checkpoint, not a final expected IR. No complete-chain equality claim yet."
   },
   "runtime_plan_cache": {
     "state": "enabled; regenerate on planner-fact changes; all candidate scores still recomputed",
@@ -798,10 +810,6 @@
       "PCM128_off": {
         "pid": 156516,
         "timeout": 10800
-      },
-      "PCM128_on": {
-        "pid": 157199,
-        "timeout": 7200
       }
     },
     "installed_binary_sha256": "2d8c25fd52a73df0387e54b33087eb7c6a623406acefdb76d23fdcf6c9acd27a"
