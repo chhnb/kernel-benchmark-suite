@@ -71,6 +71,7 @@ struct IsolatedGreedyStats {
   uint64_t trials=0,generations=0,layoutCleanups=0,scores=0,reusedTrials=0,commits=0;
   uint64_t enumerated=0,newCandidates=0,invalidated=0,disappeared=0;
   uint64_t fallbackTrials=0,fallbackCommits=0;
+  std::map<std::string,uint64_t> fallbackOutcomes;
 };
 struct IsolatedGreedyResult {
   std::unique_ptr<llvm::Module> module;
@@ -100,7 +101,7 @@ inline IsolatedGreedyResult runIsolatedB2BGreedy(
     const llvm::Module &input,const std::string &function,
     const LLVM24Scorer &scorer,bool reuse,
     std::function<void(const llvm::Module &,unsigned)> observer={},
-    bool siblingFallback=false) {
+    bool siblingFallback=false,bool catalogFallback=false) {
   IsolatedGreedyResult result;result.module=llvm::CloneModule(input);
   IncrementalCandidateQueue queue;
   std::optional<int64_t> currentCost;
@@ -141,6 +142,28 @@ inline IsolatedGreedyResult runIsolatedB2BGreedy(
       if(!reuse)reads["force_full_rescore"]=std::to_string(round);
       inventory.push_back({unit.identity,std::move(reads),inventory.size()});units.emplace(unit.identity,std::move(unit));
     }
+    if(catalogFallback){
+      // Whole-parent certificates deliberately invalidate on any commit.
+      // This catalog includes optional block anchors (B2R/R2B), not just R IDs.
+      std::set<std::string> covered;
+      for(const auto &kv:fallbacks)covered.insert(kv.second.key());
+      for(const auto &kv:units){
+        auto *root=ids.lookup(kv.second.entry)->getParent();
+        auto *br=llvm::cast<llvm::BranchInst>(root->getTerminator());
+        covered.insert(Candidate{function,blockName(root),blockName(br->getSuccessor(0)),blockName(br->getSuccessor(1)),round}.key());
+      }
+      for(auto &resolved:resolveCandidateCatalog(*f,round)){
+        auto &c=resolved.candidate;
+        if(!reachable.count(resolved.split)||!covered.insert(c.key()).second)continue;
+        auto endpoint=[&](llvm::BasicBlock *b){return b?std::to_string(ids.block(*b)):"none";};
+        auto key="catalog:"+endpoint(resolved.split)+":"+
+            (resolved.leftRegion?"R":"B")+endpoint(resolved.leftEntry)+":"+endpoint(resolved.leftExit)+":"+
+            (resolved.rightRegion?"R":"B")+endpoint(resolved.rightEntry)+":"+endpoint(resolved.rightExit);
+        if(fallbacks.count(key))continue;
+        inventory.push_back({key,{{"exact-parent",replayContext.exactIR},{"policy","whole-function-catalog-dp1-darm-v1"}},inventory.size()});
+        fallbacks.emplace(key,std::move(c));
+      }
+    }
     result.stats.enumerated+=inventory.size();
     auto pending=queue.synchronize(inventory);
     for(auto &ticket:pending)if(saved.count(ticket.id))++result.stats.invalidated;else ++result.stats.newCandidates;
@@ -155,6 +178,14 @@ inline IsolatedGreedyResult runIsolatedB2BGreedy(
         auto source=llvm::CloneModule(current);
         for(auto &fn:*source)for(auto &bb:fn)for(auto &i:bb)i.setMetadata("fusion.incremental.identity",nullptr);
         auto layouts=planSingleBranchB2B(*source,fallback->second,1,CleanupMode::DarmCFGInstCombine,"");
+        // DARM handles structural/replication candidates. Never silently use
+        // DARM B2B when DP1 has no layout. Rejections remain parent-specific.
+        if(catalogFallback&&layouts.empty()){
+          auto structural=tryPair(*source,fallback->second,round,1,
+              CleanupMode::DarmCFGInstCombine,nullptr,false);
+          ++result.stats.fallbackOutcomes[structural.valid?"valid:"+structural.mergePath:"reject:"+structural.reason];
+          layouts.push_back(std::move(structural));
+        }
         int64_t bestGain=0;std::unique_ptr<llvm::Module> best;
         for(auto &layout:layouts){
           if(layout.normalized)++result.stats.layoutCleanups;

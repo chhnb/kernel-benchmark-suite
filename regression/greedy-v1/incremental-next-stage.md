@@ -361,3 +361,21 @@ PCM32 完整实验结果：
 新增 `hybrid-priority.ll` / `check-hybrid-priority.py`：一个高收益、不同出口的回退候选与局部候选同轮出现，必须先选回退，再从新身份 epoch 发现局部候选。得到 fallback → local，成本 43 → 23；full/cached 链一致，新 ID 不复用旧 epoch，6,724 组 CPU 输出与原 IR 一致。测试已加入 tests/run-v1。
 
 持久摘要：`incremental-pcm32-hybrid.json`；产物：`build/incremental-unit-audit/pcm32-hybrid/`。仍需覆盖其他候选形态、正式 driver、冻结 case 与 GPU 验证。PCM256 原进程 PID 3799792 / session 42668 保留，checkpoint 时运行约 23 分钟、full 已保存 2 步、cached 尚未开始，二进制未修改。
+
+## 结构候选的全函数回退竞争（catalog 实验入口）
+
+新增 `resolveCandidateCatalog`：在当前函数的 Analysis/Inventory 上解析既有 `enumerate` 结果，返回实际 split、左右 entry/exit 和 region 属性。不能按 B/R 名字推断融合类型：`tryPair` 对非必经块会分类为 B2R/R2B，即使双方坐标都是 B。区域候选身份由这些块的 terminator lineage 构成，不使用会重排的 B/R 编号。
+
+`--catalog` 是独立实验模式，保留先前 `--hybrid` 行为。每轮加入尚未覆盖的结构候选；DP1 无布局时调用既有 `tryPair(..., allowB2B=false)`，保留 DARM 区域/复制实现，但不允许静默 DARM B2B 回退。所有候选先完成评估再选堆顶。新增候选仍使用完整父 IR 的 read certificate，不跨提交复用收益或全模块产物。全函数回退提交后仍换身份 epoch、重新发现。
+
+这是既有结构 catalog 的接线，不是默认 decision-greedy 的完整替代：后者还会 normalize/prepareArmPairs。实验仍按原局部/root 顺序后追加 catalog，同分规则在 full/cached 间一致，但尚未证明与正式 driver 的全部同分顺序等价。默认 driver 和运行中的 PCM256 二进制未改。
+
+验证：
+
+- `catalog-regions.ll` 的 R2R 候选被实际评分并提交，最终成本 18，full/cached 每步身份、gain、成本、IR hash 相同，CPU 输出与未融合一致。
+- 同夹具重命名并重排块后，坐标变化，但解析后的区域稳定身份集合不变。
+- 两个复制 trial 的原始 PHI 未通过 verifier，记录 `raw_verifier_failed`，未评分、未提交。它们是既有变换拒绝，不声称已成功覆盖 B2R；需后续单独定位。
+- PCM32 catalog：17 次提交、最终 TTI 1142；full/cached trial 314/250，清理与评分各 724/404，整次 trial 复用 64。10 次合法 DARM R2R trial 已参与评分，未胜出；另有作用域/入口拒绝记录。所有 17 步与默认参考的 LLVM12 llvm-diff 返回 0。full/cached 内每步 hash 完全一致，未宣称与默认 metadata 字节相同。
+- 本次单线程顺序计时 44.657/25.815 秒；同期旧 PCM256 长测运行，不作为默认 16-worker 编译耗时结论。
+
+结果 `incremental-pcm32-catalog.json`，详细产物 `build/incremental-unit-audit/pcm32-catalog/`。新测试 `check-region-fallback.py` 已纳入 tests/run-v1。下一阶段仍需正式 driver 集成、原同分顺序、完整冻结回归及 PCM128/256；Goal 未完成。

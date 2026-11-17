@@ -150,6 +150,15 @@ std::set<std::string> crossLevelCatalogRejections(llvm::Function &,
     const std::vector<Candidate> &, const Options &);
 std::vector<Candidate> enumerate(llvm::Function &, unsigned version);
 std::vector<Candidate> enumerateAdjacent(llvm::Function &, unsigned version);
+// Resolved endpoints belong to this exact Function snapshot. Coordinates are
+// transport only; clients must bind persistent identity to the actual blocks.
+struct ResolvedCandidate {
+  Candidate candidate;
+  llvm::BasicBlock *split, *leftEntry, *leftExit, *rightEntry, *rightExit;
+  bool leftRegion, rightRegion;
+};
+std::vector<ResolvedCandidate> resolveCandidateCatalog(llvm::Function &, unsigned version);
+
 Trial tryPair(const llvm::Module &, const Candidate &, unsigned currentVersion,
               unsigned optLevel, CleanupMode mode=CleanupMode::DarmCFGInstCombine, const LogicalRegionState *logical=nullptr);
 Trial tryPair(const llvm::Module &, const Candidate &, unsigned currentVersion,

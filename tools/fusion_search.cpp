@@ -519,6 +519,17 @@ std::vector<Candidate> enumerateAdjacent(Function&f,unsigned version) {
   auto state=LogicalRegionState::initialize(f);state->version=version;
   return state->filter(f,enumerate(f,version));
 }
+std::vector<ResolvedCandidate> resolveCandidateCatalog(Function &f,unsigned version) {
+  auto candidates=enumerate(f,version);
+  Analysis analysis(f);Inventory inventory(f,analysis);
+  std::vector<ResolvedCandidate> result;
+  for(const auto &c:candidates){
+    const auto &l=inventory.units.at(c.left),&r=inventory.units.at(c.right);
+    result.push_back({c,inventory.blocks.at(c.split),l.entry,l.exit,r.entry,r.exit,
+                      bool(l.region),bool(r.region)});
+  }
+  return result;
+}
 // Adjacent logical leaves need not be opposite immediate branch successors.
 // Normalize just their entry chain into a diamond; never clone the remaining
 // else-if suffix. Validation is separate from mutation for rejected trials.
