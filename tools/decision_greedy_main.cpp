@@ -473,7 +473,8 @@ int main(int argc,char**argv){try{
       const bool canCommit = attempt.getBoolean("eligible") == Optional<bool>(true);
       const auto cost = attempt.getInteger("cost");
       if(!trial.scoreReused) candidateQueue.publish(trial.ticket,
-          {canCommit && cost ? parentCost - *cost : 0, dir, rc});
+          {canCommit && cost ? parentCost - *cost : 0, dir, rc,
+           rc==0 && attempt.getString("stage")==Optional<StringRef>("scored")});
       attempts.push_back(std::move(attempt));
     }
     if (!candidateQueue.ready()) throw std::runtime_error("unevaluated priority queue candidate");

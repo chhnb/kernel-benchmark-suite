@@ -14,7 +14,7 @@
 
 ## 队列状态与提交规则
 
-队列条目为 `(identity, read_set, generation, enumeration_order, result?)`；结果为 `(gain, artifact, exit_status)`。
+队列条目为 `(identity, read_set, generation, enumeration_order, result?)`；结果为 `(gain, artifact, exit_status, reusable)`。`reusable` 默认 false；驱动仅对成功评分的结果开启复用。临时进程失败和未成功评分的结果在下一次同步时重新排队，并更新 generation，防止旧结果覆盖重试结果。
 
 1. 在每个现有搜索范围内重新枚举：加入新候选、移除消失候选，对依赖集合或取值变化的候选增加 generation 并清空结果。
 2. 只调度没有有效结果的候选。异步结果必须携带 generation，过期结果不能写回。

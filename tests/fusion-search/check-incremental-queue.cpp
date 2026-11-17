@@ -10,9 +10,9 @@ int main() {
   std::vector<Q::Candidate> inventory = {{"a", {{"left", "1"}}, 0}, {"b", {{"right", "1"}}, 1}};
   auto first = queue.synchronize(inventory);
   assert(first.size() == 2 && !queue.best());
-  queue.publish(first[1], {7, "b-plan"});
+  queue.publish(first[1], {7, "b-plan",0,true});
   assert(!queue.best());
-  queue.publish(first[0], {7, "a-plan"});
+  queue.publish(first[0], {7, "a-plan",0,true});
   assert(queue.best()->first.id == "a");
   assert(queue.cached("a")->recipe == "a-plan");
   assert(!queue.cached("absent"));
@@ -22,8 +22,8 @@ int main() {
   assert(changed.size() == 2 && !queue.best());
   assert(!queue.cached("a") && queue.cached("b")->gain == 7);
   assert(!queue.publish(first[0], {999, "stale"}));
-  queue.publish(changed[0], {-1, "a-new"});
-  queue.publish(changed[1], {8, "new-plan"});
+  queue.publish(changed[0], {-1, "a-new",0,true});
+  queue.publish(changed[1], {8, "new-plan",0,true});
   assert(queue.best()->first.id == "new-after-a");
   inventory.erase(inventory.begin() + 2);
   assert(queue.synchronize(inventory).empty());
@@ -33,11 +33,22 @@ int main() {
   assert(queue.best()->first.id == "b");
   Q rejected;
   auto rejectedTickets=rejected.synchronize({{"same-path",{{"content","hash1"}},0}});
-  rejected.publish(rejectedTickets[0],{0,"rejected-artifact",4});
+  rejected.publish(rejectedTickets[0],{0,"rejected-artifact",4,true});
   assert(rejected.cached("same-path")->exitCode==4);
   assert(rejected.synchronize({{"same-path",{{"content","hash1"}},0}}).empty());
   assert(rejected.synchronize({{"same-path",{{"content","hash2"}},0}}).size()==1);
   assert(!rejected.cached("same-path"));
+  Q transient;
+  std::vector<Q::Candidate> transientInput={{"candidate",{{"content","same"}},0}};
+  auto failedTicket=transient.synchronize(transientInput)[0];
+  transient.publish(failedTicket,{0,"failed-process",2}); // no proof: non-reusable by default
+  assert(transient.ready() && !transient.best());
+  auto retried=transient.synchronize(transientInput);
+  assert(retried.size()==1 && !transient.ready());
+  assert(!transient.publish(failedTicket,{99,"late-stale-success"}));
+  transient.publish(retried[0],{7,"valid-current-result",0,true});
+  assert(transient.synchronize(transientInput).empty());
+  assert(transient.best()->second.gain==7);
   // Compare every incremental winner against full recomputation. Dependency
   // updates, appearance/disappearance and arbitrary tie orders are randomized.
   std::mt19937 random(17);
@@ -62,7 +73,7 @@ int main() {
     auto work = incremental.synchronize(rows);
     reused += rows.size() - work.size(); evaluated += work.size();
     std::shuffle(work.begin(), work.end(), random);
-    for (const auto &ticket : work) incremental.publish(ticket, {scores[ticket.id], ticket.id});
+    for (const auto &ticket : work) incremental.publish(ticket, {scores[ticket.id], ticket.id,0,true});
     auto actual = incremental.best();
     assert(bool(expected) == bool(actual));
     if (expected) assert(expected->second == actual->first.id && expected->first == actual->second.gain);

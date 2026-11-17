@@ -25,6 +25,7 @@ public:
     int64_t gain = 0;
     std::string recipe;
     int exitCode = 0;
+    bool reusable = false; // Transient evaluation failures must be retried next synchronization.
   };
   struct Ticket {
     std::string id;
@@ -59,7 +60,8 @@ public:
       if (!present.insert(candidate.id).second)
         throw std::runtime_error("duplicate incremental candidate identity");
       auto found = entries.find(candidate.id);
-      if (found == entries.end() || found->second.candidate.reads != candidate.reads) {
+      if (found == entries.end() || found->second.candidate.reads != candidate.reads ||
+          (found->second.result && !found->second.result->reusable)) {
         Entry replacement{candidate, ++generation, std::nullopt};
         entries.insert_or_assign(candidate.id, std::move(replacement));
         pending.push_back({candidate.id, generation});
