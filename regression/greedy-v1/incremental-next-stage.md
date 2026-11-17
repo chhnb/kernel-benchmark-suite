@@ -259,3 +259,32 @@ MS32 的 15 分不是原样边界拼接产生的，也不能标记为匹配指�
 - 未做本轮 GPU 执行验证，也尚未比较该局部策略与当前默认全函数策略的完整提交链。
 
 探针增加 `--greedy` 模式，保留 full/cached 每步完整 IR，报价缓存关闭。证据：`build/incremental-unit-audit/pcm32-store-probe/`、`pcm32-store-greedy/`。下一步缩小当前全局 metadata/外部报价依赖的保守范围，同时证明去掉的依赖不会改变候选计划及整体收益；不能仅根据这次 16 步一致而跳过评分。
+
+## v5：PCM32 首次跳过真实完整 trial
+
+审计工具 `audit-isolated-invalidations.cpp` 在已保存的逐步 IR 上重建候选读取集合，逐项区分 context / instruction / uses / tti-context。每步使用独立 LLVMContext，避免多次解析命名结构体产生自动后缀、误报上下文变化。旧证书的 120 次失效均涉及全局 metadata/报价项，其中 56 次还涉及指令与使用者变化。
+
+本次缩小的读取范围具有以下实现依据：
+
+1. 隔离提取器在规划前显式移除全部 instruction metadata，外部 SSA 作为无额外属性的 opaque 参数。因此 isolatedPlanning 快照可忽略 instruction metadata；named/global/function 根、目标和函数属性继续保留。完整写审计仍使用完整 metadata 图，未把此规则用于全函数清理。
+2. 评分仍要求整函数处于已审核 gcnQuoteKey 支持域。候选记录其读集和可能受边界改写影响的报价输入；区域外且不受改写影响的指令成本在 before/after 差值中抵消。
+3. 普通标量访存、零参数白名单 intrinsic、pointer bitcast 的已支持报价不读取被替换的 SSA 数值；只移动边界前缀不会改变这些报价。它们在实际 read-set 中仍被记录，但不因仅列入可移动 write-set 而扩大读取范围。GEP、extending-load cast 等仍保守记录 read/write 两侧。
+4. unit 指令/属性、直接及传递输入定义、精确 use-site、出口和当前支配关系仍校验；旧计划只回放到当前模块。不支持的完整函数继续拒绝实验复用。
+
+实际 PCM32 全量与增量队列结果：
+
+| 指标 | 全量重算 | 增量 |
+|---|---:|---:|
+| 提交 | 16 | 16 |
+| trial / IR 生成 | 136 | 72 |
+| 布局清理 | 680 | 360 |
+| 完整 TTI 评分 | 680 | 360 |
+| 整次 trial 复用 | 0 | 64 |
+| 依赖失效重算 | — | 56 |
+| 最终 TTI | 1152 | 1152 |
+
+每步提交身份、gain、TTI 与 IR hash 完全一致；与上一版局部策略的 16 步产物逐字比较也一致（仅忽略 ModuleID 路径）。完整 trial 减少 47.1%，这是计数结果，未把它直接当成编译时间加速比。报价缓存关闭。
+
+回归：普通 store 顺序观测、相关外部 load 对齐改变、过期 ticket、两个 live-out 引起的出口依赖失效、真实全函数 18 → 21 反例均通过；49 种布局当前父模块回放与每组 6,724 个 CPU 输入通过。metadata 测试确认 isolatedPlanning 忽略附件，但保留 named 根内容变化的失效。原含外部访存的独立单元仍可跳过一次完整 trial。
+
+持久摘要：`incremental-pcm32-local-reuse.json`；详细证据：`build/incremental-unit-audit/pcm32-scoped-greedy/`。这是**局部策略**首次在真实冻结输入上跨提交复用完整收益并跳过 trial。尚未证明与默认全函数清理等价，默认 driver 未切换；GPU、BIT/vLLM、PCM128/256 完整对照及编译耗时验收仍未完成，原 Goal 保持 active。

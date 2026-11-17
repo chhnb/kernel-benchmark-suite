@@ -18,6 +18,26 @@ inline bool isolatedContextFreeOpcode(unsigned opcode) {
   default:return false;
   }
 }
+// These supported quote keys cannot change merely because a user/operand
+// is rebound at a boundary: memory value type, AS and alignment are unchanged;
+// the admitted zero-argument intrinsics and pointer bitcasts are context-free.
+inline bool isolatedBoundaryStableOpcode(unsigned opcode) {
+  switch(opcode){
+  case llvm::Instruction::Load:case llvm::Instruction::Store:
+  case llvm::Instruction::Fence:case llvm::Instruction::Call:
+  case llvm::Instruction::BitCast:return true;
+  default:return false;
+  }
+}
+inline void addIsolatedScoringReads(IncrementalCandidateQueue::ReadSet &reads,
+    const IncrementalCandidateQueue::ReadSet &scoring,IRIdentity &ids,
+    const B2BOptimizationUnit &unit) {
+  for(auto &kv:scoring){
+    auto id=std::stoull(kv.first.substr(12));auto *i=ids.lookup(id);
+    if(unit.reads.count(id)||(unit.writes.count(id)&&!isolatedBoundaryStableOpcode(i->getOpcode())))
+      reads.insert(kv);
+  }
+}
 inline bool isolatedScalarTTIDomain(const llvm::Function &f) {
   if(f.getParent()->getTargetTriple()!="amdgcn-amd-amdhsa" ||
      f.getFnAttribute("target-cpu").getValueAsString()!="gfx906")return false;
@@ -47,7 +67,7 @@ struct IsolatedGreedyResult {
 inline IncrementalCandidateQueue::ReadSet isolatedReads(
     const IRDependencySnapshot &snapshot,const B2BOptimizationUnit &unit) {
   IncrementalCandidateQueue::ReadSet reads{{"context",snapshot.context},
-    {"policy","isolated-pure-integer-gfx906-v4;external-quote-dependencies;opaque-ssa-inputs;fold-output-boundary;no-global-cleanup"}};
+    {"policy","isolated-pure-integer-gfx906-v5;scoped-quote-dependencies;stripped-instruction-metadata;opaque-ssa-inputs;fold-output-boundary;no-global-cleanup"}};
   for(auto id:unit.reads){
     const auto &record=snapshot.instructions.at(id);
     reads["instruction:"+std::to_string(id)]=(id==unit.entry||unit.inputs.count(id))?
@@ -74,7 +94,7 @@ inline IsolatedGreedyResult runIsolatedB2BGreedy(
   for(unsigned round=0;round<256;++round){
     auto &current=*result.module;auto *f=current.getFunction(function);
     if(!f||!isolatedScalarTTIDomain(*f))throw std::runtime_error("outside isolated TTI proof domain");
-    auto snapshot=IRDependencySnapshot::capture(current);IRIdentity ids(current);
+    auto snapshot=IRDependencySnapshot::isolatedPlanning(current);IRIdentity ids(current);
     std::set<llvm::BasicBlock*> reachable;std::vector<llvm::BasicBlock*> pendingBlocks{&f->getEntryBlock()};
     while(!pendingBlocks.empty()){
       auto *b=pendingBlocks.back();pendingBlocks.pop_back();if(!reachable.insert(b).second)continue;
@@ -89,7 +109,7 @@ inline IsolatedGreedyResult runIsolatedB2BGreedy(
       auto *exit=ids.lookup(unit.exit)->getParent();
       if(exit->phis().empty())continue;
       auto reads=isolatedReads(snapshot,unit);
-      reads.insert(scoringReads.begin(),scoringReads.end());
+      addIsolatedScoringReads(reads,scoringReads,ids,unit);
       if(!reuse)reads["force_full_rescore"]=std::to_string(round);
       inventory.push_back({unit.identity,std::move(reads),inventory.size()});units.emplace(unit.identity,std::move(unit));
     }

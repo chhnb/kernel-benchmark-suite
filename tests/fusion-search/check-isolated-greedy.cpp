@@ -100,6 +100,18 @@ int main(int argc,char **argv){
    assert(!queue.publish(ticket,{99,"stale",0,true}));
    load->setAlignment(Align(4));
    assert(reads==fusion::isolatedScoringReads(*f,identities));
+   // A load used as a candidate input is a relevant quote dependency.
+   auto *branch=cast<BranchInst>(term);auto *oldCondition=branch->getCondition();
+   auto *condition=new ICmpInst(term,ICmpInst::ICMP_NE,load,ConstantInt::get(Type::getInt32Ty(ctx),0));
+   branch->setCondition(condition);fusion::IRIdentity updated(*parent);
+   auto unit=fusion::B2BOptimizationUnit::discover(f->getEntryBlock(),updated);assert(unit.eligible());
+   fusion::IncrementalCandidateQueue::ReadSet relevantBefore,relevantAfter;
+   fusion::addIsolatedScoringReads(relevantBefore,fusion::isolatedScoringReads(*f,updated),updated,unit);
+   load->setAlignment(Align(8));
+   fusion::addIsolatedScoringReads(relevantAfter,fusion::isolatedScoringReads(*f,updated),updated,unit);
+   assert(relevantBefore!=relevantAfter);load->setAlignment(Align(4));
+   branch->setCondition(oldCondition);condition->eraseFromParent();
+
  }
  parent->setTargetTriple("amdgcn-amd-amdhsa");
  parent->setDataLayout("e-p:64:64-i64:64-n32:64");

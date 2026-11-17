@@ -28,7 +28,7 @@ public:
     for(auto &phi:join->phis()){outputs.push_back(&phi);outputTypes.push_back(phi.getType());}
     if(outputs.empty())throw std::runtime_error("capsule: output_required");
     auto *returnType=outputs.size()==1?outputTypes.front():llvm::StructType::get(source.getContext(),outputTypes);
-    parent=IRDependencySnapshot::capture(source);
+    parent=IRDependencySnapshot::isolatedPlanning(source);
     ir=std::make_unique<llvm::Module>("isolated-b2b",source.getContext());
     ir->setDataLayout(source.getDataLayout());ir->setTargetTriple(source.getTargetTriple());
     std::vector<llvm::Type*> types;for(auto &a:f->args())types.push_back(a.getType());
@@ -62,7 +62,7 @@ public:
   std::unique_ptr<llvm::Module> apply(llvm::Module &current,const llvm::Module &product) const {
     auto result=llvm::CloneModule(current);
     auto currentFacts=IRDependencySnapshot::capture(*result);
-    if(!parent.sameReads(currentFacts,unit.reads,unit.placementIndependentReads()))
+    if(!parent.sameReads(IRDependencySnapshot::isolatedPlanning(*result),unit.reads,unit.placementIndependentReads()))
       throw std::runtime_error("capsule dependencies changed");
     IRIdentity ids(*result);
     auto *rootTerm=ids.lookup(unit.entry);if(!rootTerm)throw std::runtime_error("capsule root disappeared");

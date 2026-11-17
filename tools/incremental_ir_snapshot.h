@@ -94,6 +94,14 @@ struct IRDependencySnapshot {
     llvm::raw_string_ostream stream(result.context);m->print(stream,nullptr);stream<<"\n"<<metadataGraph.serialize();stream.flush();
     return result;
   }
+  // For isolated generators that explicitly strip ALL instruction metadata
+  // before planning. Never use this for whole-function cleanup or write audits.
+  // Named/global/function roots remain part of the context.
+  static IRDependencySnapshot isolatedPlanning(llvm::Module &source) {
+    IRIdentity ids(source);std::set<uint64_t> omitted;
+    for(auto &f:source)for(auto &b:f)for(auto &i:b)omitted.insert(ids.instruction(i));
+    return capture(source,omitted);
+  }
   IRChangeSet changesTo(const IRDependencySnapshot &next) const {
     IRChangeSet result;result.contextChanged=context!=next.context;
     for(const auto &entry:instructions){

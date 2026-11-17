@@ -44,6 +44,18 @@ int main(){
  b->setMetadata("audit",fresh);
  assert(bounded.context!=fusion::IRDependencySnapshot::capture(*m,{ai}).context);
  b->setMetadata("audit",original);a->setMetadata("audit",original);
+ // Only the metadata-stripping isolated planner may ignore attachments.
+ auto isolated=fusion::IRDependencySnapshot::isolatedPlanning(*m);
+ b->setMetadata("audit",fresh);
+ assert(isolated.sameReads(fusion::IRDependencySnapshot::isolatedPlanning(*m),{ai}));
+ b->setMetadata("audit",original);
+ m->getNamedMetadata("anchor")->setOperand(0,fresh);
+ // A different graph with equal values can remain isomorphic without the
+ // ignored attachments. Change its CONTENT to test retained named dependence.
+ fresh->replaceOperandWith(1,MDString::get(ctx,"named-change"));
+ assert(!isolated.sameReads(fusion::IRDependencySnapshot::isolatedPlanning(*m),{ai}));
+ fresh->replaceOperandWith(1,MDString::get(ctx,"same"));
+ m->getNamedMetadata("anchor")->setOperand(0,original);
  // Changing just the named anchor must also invalidate cross-root sharing.
  m->getNamedMetadata("anchor")->setOperand(0,fresh);
  assert(before.context!=fusion::IRDependencySnapshot::capture(*m).context);
