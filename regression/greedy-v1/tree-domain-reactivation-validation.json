@@ -1,0 +1,1329 @@
+{
+  "checkpoint": "953fa85",
+  "pcm256_aggregate": {
+    "complete": true,
+    "summary": {
+      "legacy": {
+        "runs": 2,
+        "seconds_median": 625.6482175170022,
+        "seconds_min": 622.1725173340092,
+        "seconds_max": 629.1239176999952,
+        "repeated_commit_trace_equal": true,
+        "repeated_final_ir_equal": true,
+        "commits": [
+          122
+        ],
+        "trials": [
+          13254
+        ],
+        "final_tti": [
+          2257
+        ]
+      },
+      "trees": {
+        "runs": 2,
+        "seconds_median": 182.10053052900184,
+        "seconds_min": 181.01671794800495,
+        "seconds_max": 183.18434310999874,
+        "repeated_commit_trace_equal": false,
+        "repeated_final_ir_equal": false,
+        "commits": [
+          122
+        ],
+        "trials": [
+          257
+        ],
+        "final_tti": [
+          2214
+        ]
+      }
+    },
+    "runs": [
+      {
+        "mode": "legacy",
+        "rep": 0,
+        "seconds": 629.1239176999952,
+        "exit": 0,
+        "status": "completed",
+        "commits": 122,
+        "trials": 13254,
+        "final_cost": 2257,
+        "driver_phase_timings": {
+          "domain_queue_and_requests": {
+            "calls": 124,
+            "milliseconds": 1783.8310539999993
+          },
+          "enumerate_catalog": {
+            "calls": 124,
+            "milliseconds": 6604.277892999996
+          },
+          "enumerate_prepared_catalog": {
+            "calls": 124,
+            "milliseconds": 0.09420899999999999
+          },
+          "initialization": {
+            "calls": 1,
+            "milliseconds": 112.465488
+          },
+          "parse_and_discover": {
+            "calls": 124,
+            "milliseconds": 6065.611134000002
+          },
+          "prepare_arms": {
+            "calls": 124,
+            "milliseconds": 48.961310999999995
+          },
+          "read_scores_and_select": {
+            "calls": 124,
+            "milliseconds": 4276.276160999999
+          },
+          "record_and_commit": {
+            "calls": 124,
+            "milliseconds": 12120.073507000003
+          },
+          "trial_workers_wall": {
+            "calls": 124,
+            "milliseconds": 597877.4131409999
+          }
+        },
+        "commit_trace_sha256": "b2a87afefb0afb97022037435f4d7f10c13c5df5a58d9cb6e7d60e0bacf395aa",
+        "profiled_requests": 13254,
+        "worker_inclusive_totals": {
+          "b2b_plan_generate_clean_total": {
+            "calls": 13524,
+            "inclusive_ms": 3548099.2539779977
+          },
+          "cleanup": {
+            "calls": 216838,
+            "inclusive_ms": 1237599.7089550043
+          },
+          "clone_before_cleanup": {
+            "calls": 216838,
+            "inclusive_ms": 239776.82079100065
+          },
+          "clone_layout": {
+            "calls": 216838,
+            "inclusive_ms": 199879.2742949999
+          },
+          "clone_parent": {
+            "calls": 12917,
+            "inclusive_ms": 12916.509024000008
+          },
+          "decode_layout_recipe": {
+            "calls": 6719,
+            "inclusive_ms": 94.53255100000031
+          },
+          "emit_layout": {
+            "calls": 216838,
+            "inclusive_ms": 2750.052279999986
+          },
+          "evaluate_score": {
+            "calls": 201536,
+            "inclusive_ms": 3300975.6166449934
+          },
+          "features": {
+            "calls": 433676,
+            "inclusive_ms": 935569.076102995
+          },
+          "round_control_analysis_cleanup": {
+            "calls": 1902,
+            "inclusive_ms": 35063.55655899996
+          },
+          "serialize_and_hash": {
+            "calls": 464722,
+            "inclusive_ms": 1514641.4410460007
+          },
+          "verify": {
+            "calls": 446593,
+            "inclusive_ms": 191890.23943300033
+          },
+          "plan_layouts": {
+            "calls": 550,
+            "inclusive_ms": 32.87927800000003
+          }
+        },
+        "canonical_final_sha256": "59b16e51fd509f7c2e1467b8a00832122433f4cf8f70dab4e8886142cba02621"
+      },
+      {
+        "mode": "trees",
+        "rep": 0,
+        "seconds": 183.18434310999874,
+        "exit": 0,
+        "status": "completed",
+        "commits": 122,
+        "trials": 257,
+        "final_cost": 2214,
+        "driver_phase_timings": {
+          "domain_queue_and_requests": {
+            "calls": 128,
+            "milliseconds": 115.201016
+          },
+          "enumerate_catalog": {
+            "calls": 128,
+            "milliseconds": 6283.045151000002
+          },
+          "enumerate_prepared_catalog": {
+            "calls": 128,
+            "milliseconds": 3.4638030000000013
+          },
+          "initialization": {
+            "calls": 1,
+            "milliseconds": 109.416308
+          },
+          "parse_and_discover": {
+            "calls": 128,
+            "milliseconds": 6005.431987999998
+          },
+          "prepare_arms": {
+            "calls": 128,
+            "milliseconds": 2245.2258300000003
+          },
+          "read_scores_and_select": {
+            "calls": 128,
+            "milliseconds": 183.647979
+          },
+          "record_and_commit": {
+            "calls": 128,
+            "milliseconds": 881.6352410000003
+          },
+          "trial_workers_wall": {
+            "calls": 128,
+            "milliseconds": 167332.92896099997
+          }
+        },
+        "commit_trace_sha256": "41f99b9472bea2ee7ec619f3956429be0623f8536e7e01994ead4b9098420392",
+        "profiled_requests": 257,
+        "worker_inclusive_totals": {
+          "b2b_plan_generate_clean_total": {
+            "calls": 261,
+            "inclusive_ms": 99122.441187
+          },
+          "cleanup": {
+            "calls": 7087,
+            "inclusive_ms": 35184.934405
+          },
+          "clone_before_cleanup": {
+            "calls": 7087,
+            "inclusive_ms": 7675.049926999998
+          },
+          "clone_layout": {
+            "calls": 7087,
+            "inclusive_ms": 5203.333641000004
+          },
+          "clone_parent": {
+            "calls": 260,
+            "inclusive_ms": 250.47397800000007
+          },
+          "decode_layout_recipe": {
+            "calls": 107,
+            "inclusive_ms": 1.1877560000000005
+          },
+          "emit_layout": {
+            "calls": 7087,
+            "inclusive_ms": 84.95647800000003
+          },
+          "evaluate_score": {
+            "calls": 6489,
+            "inclusive_ms": 184206.80224300013
+          },
+          "features": {
+            "calls": 14174,
+            "inclusive_ms": 25115.49103999997
+          },
+          "round_control_analysis_cleanup": {
+            "calls": 257,
+            "inclusive_ms": 4153.342318999998
+          },
+          "serialize_and_hash": {
+            "calls": 15104,
+            "inclusive_ms": 42556.59261100004
+          },
+          "verify": {
+            "calls": 14434,
+            "inclusive_ms": 5203.695478999999
+          },
+          "plan_layouts": {
+            "calls": 135,
+            "inclusive_ms": 8.241161
+          }
+        },
+        "canonical_final_sha256": "62c316d64821b944460ba28852ea8a04fb42220087dc677f0f57ff7b7efb3fa2"
+      },
+      {
+        "mode": "trees",
+        "rep": 1,
+        "seconds": 181.01671794800495,
+        "exit": 0,
+        "status": "completed",
+        "commits": 122,
+        "trials": 257,
+        "final_cost": 2214,
+        "driver_phase_timings": {
+          "domain_queue_and_requests": {
+            "calls": 128,
+            "milliseconds": 117.82730500000008
+          },
+          "enumerate_catalog": {
+            "calls": 128,
+            "milliseconds": 5893.052460999997
+          },
+          "enumerate_prepared_catalog": {
+            "calls": 128,
+            "milliseconds": 3.9660369999999987
+          },
+          "initialization": {
+            "calls": 1,
+            "milliseconds": 96.479215
+          },
+          "parse_and_discover": {
+            "calls": 128,
+            "milliseconds": 6021.2719449999995
+          },
+          "prepare_arms": {
+            "calls": 128,
+            "milliseconds": 2338.749088000001
+          },
+          "read_scores_and_select": {
+            "calls": 128,
+            "milliseconds": 181.0508240000001
+          },
+          "record_and_commit": {
+            "calls": 128,
+            "milliseconds": 1311.278507
+          },
+          "trial_workers_wall": {
+            "calls": 128,
+            "milliseconds": 165010.51130299998
+          }
+        },
+        "commit_trace_sha256": "1d4d461b72dcf27f8fa6c7d5da08197e936275d7dc7608e84a4d935e0f92cdc1",
+        "profiled_requests": 257,
+        "worker_inclusive_totals": {
+          "b2b_plan_generate_clean_total": {
+            "calls": 261,
+            "inclusive_ms": 95327.61948700008
+          },
+          "cleanup": {
+            "calls": 7087,
+            "inclusive_ms": 34058.68548799999
+          },
+          "clone_before_cleanup": {
+            "calls": 7087,
+            "inclusive_ms": 7361.983058999997
+          },
+          "clone_layout": {
+            "calls": 7087,
+            "inclusive_ms": 4968.8825540000025
+          },
+          "clone_parent": {
+            "calls": 260,
+            "inclusive_ms": 234.73819100000014
+          },
+          "decode_layout_recipe": {
+            "calls": 107,
+            "inclusive_ms": 1.1195840000000001
+          },
+          "emit_layout": {
+            "calls": 7087,
+            "inclusive_ms": 79.6469370000001
+          },
+          "evaluate_score": {
+            "calls": 6489,
+            "inclusive_ms": 185516.98932699996
+          },
+          "features": {
+            "calls": 14174,
+            "inclusive_ms": 24087.329726000007
+          },
+          "round_control_analysis_cleanup": {
+            "calls": 257,
+            "inclusive_ms": 3963.3288979999984
+          },
+          "serialize_and_hash": {
+            "calls": 15104,
+            "inclusive_ms": 41133.33838499999
+          },
+          "verify": {
+            "calls": 14434,
+            "inclusive_ms": 4999.616684000001
+          },
+          "plan_layouts": {
+            "calls": 135,
+            "inclusive_ms": 8.005280999999998
+          }
+        },
+        "canonical_final_sha256": "04c7480e9bc52794454c5f6eaba9da48e1e8cfd94bee0abf8ddc037504d66906"
+      },
+      {
+        "mode": "legacy",
+        "rep": 1,
+        "seconds": 622.1725173340092,
+        "exit": 0,
+        "status": "completed",
+        "commits": 122,
+        "trials": 13254,
+        "final_cost": 2257,
+        "driver_phase_timings": {
+          "domain_queue_and_requests": {
+            "calls": 124,
+            "milliseconds": 1214.1044370000004
+          },
+          "enumerate_catalog": {
+            "calls": 124,
+            "milliseconds": 6017.1741379999985
+          },
+          "enumerate_prepared_catalog": {
+            "calls": 124,
+            "milliseconds": 0.08808900000000003
+          },
+          "initialization": {
+            "calls": 1,
+            "milliseconds": 91.67839
+          },
+          "parse_and_discover": {
+            "calls": 124,
+            "milliseconds": 5090.369727000001
+          },
+          "prepare_arms": {
+            "calls": 124,
+            "milliseconds": 41.948108999999995
+          },
+          "read_scores_and_select": {
+            "calls": 124,
+            "milliseconds": 4267.754529000001
+          },
+          "record_and_commit": {
+            "calls": 124,
+            "milliseconds": 14324.071557000001
+          },
+          "trial_workers_wall": {
+            "calls": 124,
+            "milliseconds": 590911.8042919999
+          }
+        },
+        "commit_trace_sha256": "b2a87afefb0afb97022037435f4d7f10c13c5df5a58d9cb6e7d60e0bacf395aa",
+        "profiled_requests": 13254,
+        "worker_inclusive_totals": {
+          "b2b_plan_generate_clean_total": {
+            "calls": 13524,
+            "inclusive_ms": 3509936.6744139944
+          },
+          "cleanup": {
+            "calls": 216838,
+            "inclusive_ms": 1226751.8072270015
+          },
+          "clone_before_cleanup": {
+            "calls": 216838,
+            "inclusive_ms": 235897.25004800054
+          },
+          "clone_layout": {
+            "calls": 216838,
+            "inclusive_ms": 195824.73298899975
+          },
+          "clone_parent": {
+            "calls": 12917,
+            "inclusive_ms": 12726.202148999986
+          },
+          "decode_layout_recipe": {
+            "calls": 6719,
+            "inclusive_ms": 91.26402700000018
+          },
+          "emit_layout": {
+            "calls": 216838,
+            "inclusive_ms": 2665.3282510000054
+          },
+          "evaluate_score": {
+            "calls": 201536,
+            "inclusive_ms": 3255590.3657620177
+          },
+          "features": {
+            "calls": 433676,
+            "inclusive_ms": 928904.0153460015
+          },
+          "round_control_analysis_cleanup": {
+            "calls": 1902,
+            "inclusive_ms": 34729.91462700003
+          },
+          "serialize_and_hash": {
+            "calls": 464722,
+            "inclusive_ms": 1509049.2724480024
+          },
+          "verify": {
+            "calls": 446593,
+            "inclusive_ms": 190187.57406000094
+          },
+          "plan_layouts": {
+            "calls": 550,
+            "inclusive_ms": 32.15030999999999
+          }
+        },
+        "canonical_final_sha256": "59b16e51fd509f7c2e1467b8a00832122433f4cf8f70dab4e8886142cba02621"
+      }
+    ],
+    "timing_scope": "driver phase times are wall times; worker inclusive times accumulate parallel requests and overlap parent scopes, so cannot be added to wall time",
+    "median_wall_reduction_percent": 70.89410223980168
+  },
+  "pcm256_final_matches_gpu_tested_tree_schedule": true,
+  "pcm256_audits": [
+    {
+      "runs": [
+        {
+          "directory": "/data/home/chh/domain-reactivation/build/final-pcm256/legacy0",
+          "commits": 122,
+          "trials": 13254,
+          "tti": 2257,
+          "terminal_required": 4,
+          "terminal_attempted": 4,
+          "all_committed_ir_verified": true
+        },
+        {
+          "directory": "/data/home/chh/domain-reactivation/build/final-pcm256/trees0",
+          "commits": 122,
+          "trials": 257,
+          "tti": 2214,
+          "terminal_required": 1,
+          "terminal_attempted": 1,
+          "all_committed_ir_verified": true
+        }
+      ],
+      "first_divergence": {
+        "step": 91,
+        "reference": {
+          "candidate": "_Z3pcmPi:B13:B106:B105",
+          "cost": 2847,
+          "ir": "/data/home/chh/domain-reactivation/build/final-pcm256/legacy0/trial-11728/fused.ll"
+        },
+        "trees": {
+          "candidate": "_Z3pcmPi:B11:B109:B108",
+          "cost": 2848,
+          "ir": "/data/home/chh/domain-reactivation/build/final-pcm256/trees0/trial-182/fused.ll"
+        }
+      },
+      "final_ir_equal": false,
+      "scope": "Verifier and terminal candidate coverage; execution correctness requires separate tests"
+    },
+    {
+      "runs": [
+        {
+          "directory": "/data/home/chh/domain-reactivation/build/final-pcm256/legacy1",
+          "commits": 122,
+          "trials": 13254,
+          "tti": 2257,
+          "terminal_required": 4,
+          "terminal_attempted": 4,
+          "all_committed_ir_verified": true
+        },
+        {
+          "directory": "/data/home/chh/domain-reactivation/build/final-pcm256/trees1",
+          "commits": 122,
+          "trials": 257,
+          "tti": 2214,
+          "terminal_required": 1,
+          "terminal_attempted": 1,
+          "all_committed_ir_verified": true
+        }
+      ],
+      "first_divergence": {
+        "step": 91,
+        "reference": {
+          "candidate": "_Z3pcmPi:B13:B106:B105",
+          "cost": 2847,
+          "ir": "/data/home/chh/domain-reactivation/build/final-pcm256/legacy1/trial-11728/fused.ll"
+        },
+        "trees": {
+          "candidate": "_Z3pcmPi:B11:B109:B108",
+          "cost": 2848,
+          "ir": "/data/home/chh/domain-reactivation/build/final-pcm256/trees1/trial-182/fused.ll"
+        }
+      },
+      "final_ir_equal": false,
+      "scope": "Verifier and terminal candidate coverage; execution correctness requires separate tests"
+    }
+  ],
+  "frozen_non_pcm256": [
+    {
+      "case": "vllm",
+      "commits": 224,
+      "cost": 2619,
+      "trials": 1292,
+      "first_divergence": null,
+      "final_equal": true
+    },
+    {
+      "case": "tigre",
+      "commits": 6,
+      "cost": 946,
+      "trials": 19,
+      "first_divergence": null,
+      "final_equal": true
+    },
+    {
+      "case": "LUD32-lud_diagonal",
+      "commits": 0,
+      "cost": 796,
+      "trials": 1,
+      "first_divergence": null,
+      "final_equal": true
+    },
+    {
+      "case": "LUD32-lud_perimeter",
+      "commits": 0,
+      "cost": 6831,
+      "trials": 3,
+      "first_divergence": null,
+      "final_equal": true
+    },
+    {
+      "case": "LUD32-lud_internal",
+      "commits": 0,
+      "cost": 248,
+      "trials": 0,
+      "first_divergence": null,
+      "final_equal": true
+    },
+    {
+      "case": "BIT64",
+      "commits": 21,
+      "cost": 649,
+      "trials": 21,
+      "first_divergence": null,
+      "final_equal": true
+    },
+    {
+      "case": "DCT8",
+      "commits": 0,
+      "cost": 62,
+      "trials": 1,
+      "first_divergence": null,
+      "final_equal": true
+    },
+    {
+      "case": "PCM128",
+      "commits": 250,
+      "cost": 4208,
+      "trials": 513,
+      "first_divergence": null,
+      "final_equal": true
+    },
+    {
+      "case": "MS128",
+      "commits": 1,
+      "cost": 212,
+      "trials": 7,
+      "first_divergence": null,
+      "final_equal": true
+    },
+    {
+      "case": "BIT128",
+      "commits": 28,
+      "cost": 855,
+      "trials": 28,
+      "first_divergence": null,
+      "final_equal": true
+    },
+    {
+      "case": "MS32",
+      "commits": 1,
+      "cost": 212,
+      "trials": 7,
+      "first_divergence": null,
+      "final_equal": true
+    },
+    {
+      "case": "BIT256",
+      "commits": 36,
+      "cost": 1090,
+      "trials": 36,
+      "first_divergence": null,
+      "final_equal": true
+    },
+    {
+      "case": "LUD64-lud_diagonal",
+      "commits": 0,
+      "cost": 1276,
+      "trials": 1,
+      "first_divergence": null,
+      "final_equal": true
+    },
+    {
+      "case": "LUD64-lud_perimeter",
+      "commits": 0,
+      "cost": 12795,
+      "trials": 4,
+      "first_divergence": null,
+      "final_equal": true
+    },
+    {
+      "case": "LUD64-lud_internal",
+      "commits": 0,
+      "cost": 408,
+      "trials": 0,
+      "first_divergence": null,
+      "final_equal": true
+    },
+    {
+      "case": "NQU64",
+      "commits": 1,
+      "cost": 282,
+      "trials": 11,
+      "first_divergence": null,
+      "final_equal": true
+    },
+    {
+      "case": "DCT4",
+      "commits": 0,
+      "cost": 62,
+      "trials": 1,
+      "first_divergence": null,
+      "final_equal": true
+    },
+    {
+      "case": "NQU128",
+      "commits": 1,
+      "cost": 300,
+      "trials": 11,
+      "first_divergence": null,
+      "final_equal": true
+    },
+    {
+      "case": "PCM32",
+      "commits": 17,
+      "cost": 1138,
+      "trials": 34,
+      "first_divergence": null,
+      "final_equal": true
+    },
+    {
+      "case": "SRAD16",
+      "commits": 3,
+      "cost": 451,
+      "trials": 19,
+      "first_divergence": null,
+      "final_equal": true
+    },
+    {
+      "case": "NQU256",
+      "commits": 1,
+      "cost": 300,
+      "trials": 11,
+      "first_divergence": null,
+      "final_equal": true
+    },
+    {
+      "case": "DCT16",
+      "commits": 0,
+      "cost": 62,
+      "trials": 1,
+      "first_divergence": null,
+      "final_equal": true
+    },
+    {
+      "case": "LUD8-lud_diagonal",
+      "commits": 0,
+      "cost": 723,
+      "trials": 0,
+      "first_divergence": null,
+      "final_equal": true
+    },
+    {
+      "case": "LUD8-lud_perimeter",
+      "commits": 2,
+      "cost": 742,
+      "trials": 9,
+      "first_divergence": null,
+      "final_equal": true
+    },
+    {
+      "case": "LUD8-lud_internal",
+      "commits": 0,
+      "cost": 128,
+      "trials": 0,
+      "first_divergence": null,
+      "final_equal": true
+    },
+    {
+      "case": "hypersonic",
+      "commits": 4,
+      "cost": 1867,
+      "trials": 69,
+      "first_divergence": null,
+      "final_equal": true
+    },
+    {
+      "case": "landau",
+      "commits": 28,
+      "cost": 1987,
+      "trials": 531,
+      "first_divergence": null,
+      "final_equal": true
+    },
+    {
+      "case": "LUD16-lud_diagonal",
+      "commits": 0,
+      "cost": 2115,
+      "trials": 0,
+      "first_divergence": null,
+      "final_equal": true
+    },
+    {
+      "case": "LUD16-lud_perimeter",
+      "commits": 0,
+      "cost": 2183,
+      "trials": 3,
+      "first_divergence": null,
+      "final_equal": true
+    },
+    {
+      "case": "LUD16-lud_internal",
+      "commits": 0,
+      "cost": 168,
+      "trials": 0,
+      "first_divergence": null,
+      "final_equal": true
+    },
+    {
+      "case": "PCM64",
+      "commits": 17,
+      "cost": 1138,
+      "trials": 34,
+      "first_divergence": null,
+      "final_equal": true
+    },
+    {
+      "case": "SRAD32",
+      "commits": 3,
+      "cost": 451,
+      "trials": 19,
+      "first_divergence": null,
+      "final_equal": true
+    },
+    {
+      "case": "BIT32",
+      "commits": 15,
+      "cost": 472,
+      "trials": 15,
+      "first_divergence": null,
+      "final_equal": true
+    },
+    {
+      "case": "MS256",
+      "commits": 1,
+      "cost": 212,
+      "trials": 7,
+      "first_divergence": null,
+      "final_equal": true
+    },
+    {
+      "case": "MS64",
+      "commits": 1,
+      "cost": 212,
+      "trials": 7,
+      "first_divergence": null,
+      "final_equal": true
+    },
+    {
+      "case": "NQU96",
+      "commits": 1,
+      "cost": 299,
+      "trials": 11,
+      "first_divergence": null,
+      "final_equal": true
+    },
+    {
+      "case": "MapAiry",
+      "commits": 31,
+      "cost": 4349,
+      "trials": 539,
+      "first_divergence": null,
+      "final_equal": true
+    },
+    {
+      "case": "SW2D",
+      "commits": 1,
+      "cost": 1921,
+      "trials": 18,
+      "first_divergence": null,
+      "final_equal": true
+    },
+    {
+      "case": "HLLD",
+      "commits": 3,
+      "cost": 1836,
+      "trials": 12,
+      "first_divergence": null,
+      "final_equal": true
+    }
+  ],
+  "fixed_requests": [
+    {
+      "case": "PCM32",
+      "candidate": "_Z3pcmPi:B9:B10:B11",
+      "scores_compared": 1,
+      "fused_sha256": "d213e457d9e01b5cc42ef157ca77dcfaac41af62227d9a282c2400dd88e91077"
+    },
+    {
+      "case": "PCM256",
+      "candidate": "_Z3pcmPi:B0:B2:B1",
+      "scores_compared": 1,
+      "fused_sha256": "feb600d68d389c2892b763afa45ea275e5553d8143a758e8b84a30df14e8a6cb"
+    },
+    {
+      "case": "BIT32",
+      "candidate": "_ZL11bitonicSortPi:B13:R15:R16",
+      "scores_compared": 1,
+      "fused_sha256": "e60f07cb9e739aac37511789658592636e2685d3dd0f7c92f1d93c0ee9878f6b"
+    },
+    {
+      "case": "MS32",
+      "candidate": "_Z13gpu_mergesortPlS_lllP4dim3S1_:B16:B17:B18",
+      "scores_compared": 1,
+      "fused_sha256": "919fee9ec774080439e0b1427c7b1ceec6281be758d8146dd8107a76a9e8599a"
+    },
+    {
+      "case": "vllm",
+      "candidate": "cache_eval:B55:B54:B56",
+      "scores_compared": 1,
+      "fused_sha256": "c25d34dc38891f0ba979f60c3edbbbbdc7a6f25d1bf7140e06e0391eefee59cd"
+    },
+    {
+      "case": "tigre",
+      "candidate": "_Z19kernelPixelDetector8GeometryPfiiP13__hip_texture:B5:R6:R7",
+      "scores_compared": 1,
+      "fused_sha256": "b90b16c8c38a066ec81c52798dfbfcaa5ecee4fad67cab9bceaeb0426777f669"
+    }
+  ],
+  "strict_repeat_ir_ok": {
+    "legacy": true,
+    "trees": false
+  },
+  "step92_isolated_replay": [
+    {
+      "raw": "51767b1af7c25fecf0d4d5e94bc2cb7328feb99887a1ed089d7018fca51ea0a7",
+      "clean": "690a440b2191a35269c18bb1927f5fdc39346ebc4b16e4a43f6dfccdf3937fb0",
+      "score": 0.04389044943820225,
+      "plan": "darm-B2R"
+    },
+    {
+      "raw": "51767b1af7c25fecf0d4d5e94bc2cb7328feb99887a1ed089d7018fca51ea0a7",
+      "clean": "690a440b2191a35269c18bb1927f5fdc39346ebc4b16e4a43f6dfccdf3937fb0",
+      "score": 0.04389044943820225,
+      "plan": "darm-B2R"
+    },
+    {
+      "raw": "9c84f68547d66097638badc38598af48a68117611cf55ea2902412381ea04f8b",
+      "clean": "86dea9ecd6c2bad3da7daad3fa73e8270470e7066d39ad8adf3ab0fec5b3e44c",
+      "score": 0.04389044943820225,
+      "plan": "darm-B2R"
+    },
+    {
+      "raw": "51767b1af7c25fecf0d4d5e94bc2cb7328feb99887a1ed089d7018fca51ea0a7",
+      "clean": "690a440b2191a35269c18bb1927f5fdc39346ebc4b16e4a43f6dfccdf3937fb0",
+      "score": 0.04389044943820225,
+      "plan": "darm-B2R"
+    },
+    {
+      "raw": "51767b1af7c25fecf0d4d5e94bc2cb7328feb99887a1ed089d7018fca51ea0a7",
+      "clean": "690a440b2191a35269c18bb1927f5fdc39346ebc4b16e4a43f6dfccdf3937fb0",
+      "score": 0.04389044943820225,
+      "plan": "darm-B2R"
+    },
+    {
+      "raw": "51767b1af7c25fecf0d4d5e94bc2cb7328feb99887a1ed089d7018fca51ea0a7",
+      "clean": "690a440b2191a35269c18bb1927f5fdc39346ebc4b16e4a43f6dfccdf3937fb0",
+      "score": 0.04389044943820225,
+      "plan": "darm-B2R"
+    },
+    {
+      "raw": "9c84f68547d66097638badc38598af48a68117611cf55ea2902412381ea04f8b",
+      "clean": "86dea9ecd6c2bad3da7daad3fa73e8270470e7066d39ad8adf3ab0fec5b3e44c",
+      "score": 0.04389044943820225,
+      "plan": "darm-B2R"
+    },
+    {
+      "raw": "9c84f68547d66097638badc38598af48a68117611cf55ea2902412381ea04f8b",
+      "clean": "86dea9ecd6c2bad3da7daad3fa73e8270470e7066d39ad8adf3ab0fec5b3e44c",
+      "score": 0.04389044943820225,
+      "plan": "darm-B2R"
+    }
+  ],
+  "direct_gpu": {
+    "measurements": {
+      "baseline": {
+        "median": 1551.09355,
+        "min": 1550.9421,
+        "max": 1564.1179,
+        "samples": [
+          1564.1179,
+          1551.1196,
+          1563.5029,
+          1551.0675,
+          1550.9556,
+          1550.9421
+        ]
+      },
+      "legacy": {
+        "median": 1066.30515,
+        "min": 1065.9813,
+        "max": 1066.501,
+        "samples": [
+          1065.9813,
+          1066.1477,
+          1066.2395,
+          1066.501,
+          1066.4369,
+          1066.3708
+        ]
+      },
+      "trees": {
+        "median": 1104.7221,
+        "min": 1104.5032,
+        "max": 1105.0822,
+        "samples": [
+          1104.5371,
+          1104.5032,
+          1104.6111,
+          1104.8331,
+          1105.0822,
+          1105.035
+        ]
+      }
+    },
+    "warmup_rounds_excluded": 1,
+    "seed": 42,
+    "grid": 32768,
+    "block": 256,
+    "elements": 268435456,
+    "exact_cpu_output_checks": 21,
+    "hsaco_sha256": {
+      "baseline": "d04aa2635a03e1b8d0c6e2a560f8f28ffbff584915211594a841381f893a0157",
+      "legacy": "1bbf8397dd6efe455b5f571230340d4c1b9fda420387e1f1f4f415fa7fe5699f",
+      "trees": "e1c0a69b3442570fb65be16d4c158b3e0999e0b8204d5975ff1a1f788e5c05f4"
+    }
+  },
+  "binary_validation": {
+    "BIT128": {
+      "case": "BIT128",
+      "final_ir": "/data/home/chh/domain-reactivation/build/owner-prefix-parity/BIT128/final.ll",
+      "reference": "/data/home/chh/kernel-benchmark-suite/build/incremental-unit-audit/domain-suite-40/BIT128/gpu/trees.hsaco",
+      "tested_sha256": "3a4b649aaecfeb1589ecfd48a9ba5ff2602724bcb8086ded6eecb8f386b8c2a2",
+      "actual_sha256": "3a4b649aaecfeb1589ecfd48a9ba5ff2602724bcb8086ded6eecb8f386b8c2a2",
+      "byte_equal": true
+    },
+    "BIT256": {
+      "case": "BIT256",
+      "final_ir": "/data/home/chh/domain-reactivation/build/owner-prefix-parity/BIT256/final.ll",
+      "reference": "/data/home/chh/kernel-benchmark-suite/build/incremental-unit-audit/domain-suite-40/BIT256/gpu/trees.hsaco",
+      "tested_sha256": "498050379c38b65fd9aeced9c8d93af32847d705a63c35cce11329d2e43cd345",
+      "actual_sha256": "498050379c38b65fd9aeced9c8d93af32847d705a63c35cce11329d2e43cd345",
+      "byte_equal": true
+    },
+    "BIT32": {
+      "case": "BIT32",
+      "final_ir": "/data/home/chh/domain-reactivation/build/owner-prefix-parity/BIT32/final.ll",
+      "reference": "/data/home/chh/kernel-benchmark-suite/build/incremental-unit-audit/domain-suite-40/BIT32/gpu/trees.hsaco",
+      "tested_sha256": "b46fda0c0ec1356560ad8264ca6ba86cde64e11af165793cd4ac3615015ace82",
+      "actual_sha256": "b46fda0c0ec1356560ad8264ca6ba86cde64e11af165793cd4ac3615015ace82",
+      "byte_equal": true
+    },
+    "BIT64": {
+      "case": "BIT64",
+      "final_ir": "/data/home/chh/domain-reactivation/build/owner-prefix-parity/BIT64/final.ll",
+      "reference": "/data/home/chh/kernel-benchmark-suite/build/incremental-unit-audit/domain-suite-40/BIT64/gpu/trees.hsaco",
+      "tested_sha256": "37b4b0dcd45026e923e278b2940efc85c6dc4864548b7e00318ecc9956e3e1be",
+      "actual_sha256": "37b4b0dcd45026e923e278b2940efc85c6dc4864548b7e00318ecc9956e3e1be",
+      "byte_equal": true
+    },
+    "DCT16": {
+      "case": "DCT16",
+      "final_ir": "/data/home/chh/domain-reactivation/build/owner-prefix-parity/DCT16/final.ll",
+      "reference": "/data/home/chh/kernel-benchmark-suite/build/incremental-unit-audit/domain-suite-40/DCT16/gpu/trees.hsaco",
+      "tested_sha256": "d69527a5caafce15b1e1cb221295ccf64d10de45c8192ed7b927f84d4a469535",
+      "actual_sha256": "d69527a5caafce15b1e1cb221295ccf64d10de45c8192ed7b927f84d4a469535",
+      "byte_equal": true
+    },
+    "DCT4": {
+      "case": "DCT4",
+      "final_ir": "/data/home/chh/domain-reactivation/build/owner-prefix-parity/DCT4/final.ll",
+      "reference": "/data/home/chh/kernel-benchmark-suite/build/incremental-unit-audit/domain-suite-40/DCT4/gpu/trees.hsaco",
+      "tested_sha256": "27631af76b900843f160b962843cb199b883f30ab3c69e76b3c7805d1ac0ae9f",
+      "actual_sha256": "27631af76b900843f160b962843cb199b883f30ab3c69e76b3c7805d1ac0ae9f",
+      "byte_equal": true
+    },
+    "DCT8": {
+      "case": "DCT8",
+      "final_ir": "/data/home/chh/domain-reactivation/build/owner-prefix-parity/DCT8/final.ll",
+      "reference": "/data/home/chh/kernel-benchmark-suite/build/incremental-unit-audit/domain-suite-40/DCT8/gpu/trees.hsaco",
+      "tested_sha256": "634622b27a147978e259891db01f843bb3b22fbd125ce155c5cdca9cd367dc73",
+      "actual_sha256": "634622b27a147978e259891db01f843bb3b22fbd125ce155c5cdca9cd367dc73",
+      "byte_equal": true
+    },
+    "HLLD": {
+      "case": "HLLD",
+      "final_ir": "/data/home/chh/domain-reactivation/build/owner-prefix-parity/HLLD/final.ll",
+      "reference": "/data/home/chh/kernel-benchmark-suite/build/incremental-unit-audit/domain-suite-40/HLLD/gpu-extra/trees.hsaco",
+      "tested_sha256": "ac11534cb2c83342bfd5fe5f4ca3696a16368a967fcb9b597791e8c11043b016",
+      "actual_sha256": "ac11534cb2c83342bfd5fe5f4ca3696a16368a967fcb9b597791e8c11043b016",
+      "byte_equal": true
+    },
+    "LUD16-lud_diagonal": {
+      "case": "LUD16-lud_diagonal",
+      "final_ir": "/data/home/chh/domain-reactivation/build/owner-prefix-parity/LUD16-lud_diagonal/final.ll",
+      "reference": "/data/home/chh/kernel-benchmark-suite/build/incremental-unit-audit/domain-suite-40/LUD16-lud_diagonal/gpu/trees.hsaco",
+      "tested_sha256": "d2ad233ec2b0f4b61c767dce154797113e9e110a90d3db2821ee71cbe14199c9",
+      "actual_sha256": "d2ad233ec2b0f4b61c767dce154797113e9e110a90d3db2821ee71cbe14199c9",
+      "byte_equal": true
+    },
+    "LUD16-lud_internal": {
+      "case": "LUD16-lud_internal",
+      "final_ir": "/data/home/chh/domain-reactivation/build/owner-prefix-parity/LUD16-lud_internal/final.ll",
+      "reference": "/data/home/chh/kernel-benchmark-suite/build/incremental-unit-audit/domain-suite-40/LUD16-lud_internal/gpu/trees.hsaco",
+      "tested_sha256": "d2ad233ec2b0f4b61c767dce154797113e9e110a90d3db2821ee71cbe14199c9",
+      "actual_sha256": "d2ad233ec2b0f4b61c767dce154797113e9e110a90d3db2821ee71cbe14199c9",
+      "byte_equal": true
+    },
+    "LUD16-lud_perimeter": {
+      "case": "LUD16-lud_perimeter",
+      "final_ir": "/data/home/chh/domain-reactivation/build/owner-prefix-parity/LUD16-lud_perimeter/final.ll",
+      "reference": "/data/home/chh/kernel-benchmark-suite/build/incremental-unit-audit/domain-suite-40/LUD16-lud_perimeter/gpu/trees.hsaco",
+      "tested_sha256": "d2ad233ec2b0f4b61c767dce154797113e9e110a90d3db2821ee71cbe14199c9",
+      "actual_sha256": "d2ad233ec2b0f4b61c767dce154797113e9e110a90d3db2821ee71cbe14199c9",
+      "byte_equal": true
+    },
+    "LUD32-lud_diagonal": {
+      "case": "LUD32-lud_diagonal",
+      "final_ir": "/data/home/chh/domain-reactivation/build/owner-prefix-parity/LUD32-lud_diagonal/final.ll",
+      "reference": "/data/home/chh/kernel-benchmark-suite/build/incremental-unit-audit/domain-suite-40/LUD32-lud_diagonal/gpu/trees.hsaco",
+      "tested_sha256": "2d368a411ee68b780b421d74964578f311c0782103dc08faed4941bf7df062a7",
+      "actual_sha256": "2d368a411ee68b780b421d74964578f311c0782103dc08faed4941bf7df062a7",
+      "byte_equal": true
+    },
+    "LUD32-lud_internal": {
+      "case": "LUD32-lud_internal",
+      "final_ir": "/data/home/chh/domain-reactivation/build/owner-prefix-parity/LUD32-lud_internal/final.ll",
+      "reference": "/data/home/chh/kernel-benchmark-suite/build/incremental-unit-audit/domain-suite-40/LUD32-lud_internal/gpu/trees.hsaco",
+      "tested_sha256": "b3caf34fb7b1a2bb036e93ab4b5cc04d564d52d05809e4724d4000dbbaeefc5f",
+      "actual_sha256": "b3caf34fb7b1a2bb036e93ab4b5cc04d564d52d05809e4724d4000dbbaeefc5f",
+      "byte_equal": true
+    },
+    "LUD32-lud_perimeter": {
+      "case": "LUD32-lud_perimeter",
+      "final_ir": "/data/home/chh/domain-reactivation/build/owner-prefix-parity/LUD32-lud_perimeter/final.ll",
+      "reference": "/data/home/chh/kernel-benchmark-suite/build/incremental-unit-audit/domain-suite-40/LUD32-lud_perimeter/gpu/trees.hsaco",
+      "tested_sha256": "2d368a411ee68b780b421d74964578f311c0782103dc08faed4941bf7df062a7",
+      "actual_sha256": "2d368a411ee68b780b421d74964578f311c0782103dc08faed4941bf7df062a7",
+      "byte_equal": true
+    },
+    "LUD64-lud_diagonal": {
+      "case": "LUD64-lud_diagonal",
+      "final_ir": "/data/home/chh/domain-reactivation/build/owner-prefix-parity/LUD64-lud_diagonal/final.ll",
+      "reference": "/data/home/chh/kernel-benchmark-suite/build/incremental-unit-audit/domain-suite-40/LUD64-lud_diagonal/gpu/trees.hsaco",
+      "tested_sha256": "712ec8a8dc0de7db4ef1fe10e868e6453e9b1fca2ad8e210408b0541e6c503ff",
+      "actual_sha256": "712ec8a8dc0de7db4ef1fe10e868e6453e9b1fca2ad8e210408b0541e6c503ff",
+      "byte_equal": true
+    },
+    "LUD64-lud_internal": {
+      "case": "LUD64-lud_internal",
+      "final_ir": "/data/home/chh/domain-reactivation/build/owner-prefix-parity/LUD64-lud_internal/final.ll",
+      "reference": "/data/home/chh/kernel-benchmark-suite/build/incremental-unit-audit/domain-suite-40/LUD64-lud_internal/gpu/trees.hsaco",
+      "tested_sha256": "712ec8a8dc0de7db4ef1fe10e868e6453e9b1fca2ad8e210408b0541e6c503ff",
+      "actual_sha256": "712ec8a8dc0de7db4ef1fe10e868e6453e9b1fca2ad8e210408b0541e6c503ff",
+      "byte_equal": true
+    },
+    "LUD64-lud_perimeter": {
+      "case": "LUD64-lud_perimeter",
+      "final_ir": "/data/home/chh/domain-reactivation/build/owner-prefix-parity/LUD64-lud_perimeter/final.ll",
+      "reference": "/data/home/chh/kernel-benchmark-suite/build/incremental-unit-audit/domain-suite-40/LUD64-lud_perimeter/gpu/trees.hsaco",
+      "tested_sha256": "712ec8a8dc0de7db4ef1fe10e868e6453e9b1fca2ad8e210408b0541e6c503ff",
+      "actual_sha256": "712ec8a8dc0de7db4ef1fe10e868e6453e9b1fca2ad8e210408b0541e6c503ff",
+      "byte_equal": true
+    },
+    "LUD8-lud_diagonal": {
+      "case": "LUD8-lud_diagonal",
+      "final_ir": "/data/home/chh/domain-reactivation/build/owner-prefix-parity/LUD8-lud_diagonal/final.ll",
+      "reference": "/data/home/chh/kernel-benchmark-suite/build/incremental-unit-audit/domain-suite-40/LUD8-lud_diagonal/gpu/trees.hsaco",
+      "tested_sha256": "3bff44685e322c7d11ec0b0453b3a0b760ccb07d8735553281ba4e42527c8e7d",
+      "actual_sha256": "3bff44685e322c7d11ec0b0453b3a0b760ccb07d8735553281ba4e42527c8e7d",
+      "byte_equal": true
+    },
+    "LUD8-lud_internal": {
+      "case": "LUD8-lud_internal",
+      "final_ir": "/data/home/chh/domain-reactivation/build/owner-prefix-parity/LUD8-lud_internal/final.ll",
+      "reference": "/data/home/chh/kernel-benchmark-suite/build/incremental-unit-audit/domain-suite-40/LUD8-lud_internal/gpu/trees.hsaco",
+      "tested_sha256": "3bff44685e322c7d11ec0b0453b3a0b760ccb07d8735553281ba4e42527c8e7d",
+      "actual_sha256": "3bff44685e322c7d11ec0b0453b3a0b760ccb07d8735553281ba4e42527c8e7d",
+      "byte_equal": true
+    },
+    "LUD8-lud_perimeter": {
+      "case": "LUD8-lud_perimeter",
+      "final_ir": "/data/home/chh/domain-reactivation/build/owner-prefix-parity/LUD8-lud_perimeter/final.ll",
+      "reference": "/data/home/chh/kernel-benchmark-suite/build/incremental-unit-audit/domain-suite-40/LUD8-lud_perimeter/gpu/trees.hsaco",
+      "tested_sha256": "2febf1e09055b4510c63e1c88259cd693c3193b11eb04e00687df8345f5cd459",
+      "actual_sha256": "2febf1e09055b4510c63e1c88259cd693c3193b11eb04e00687df8345f5cd459",
+      "byte_equal": true
+    },
+    "MS128": {
+      "case": "MS128",
+      "final_ir": "/data/home/chh/domain-reactivation/build/owner-prefix-parity/MS128/final.ll",
+      "reference": "/data/home/chh/kernel-benchmark-suite/build/incremental-unit-audit/domain-suite-40/MS128/gpu/trees.hsaco",
+      "tested_sha256": "822e83d3bcca9ca4f10495bac17157f18bc871e75bf2e5f2fe251bf1702dd6cb",
+      "actual_sha256": "822e83d3bcca9ca4f10495bac17157f18bc871e75bf2e5f2fe251bf1702dd6cb",
+      "byte_equal": true
+    },
+    "MS256": {
+      "case": "MS256",
+      "final_ir": "/data/home/chh/domain-reactivation/build/owner-prefix-parity/MS256/final.ll",
+      "reference": "/data/home/chh/kernel-benchmark-suite/build/incremental-unit-audit/domain-suite-40/MS256/gpu/trees.hsaco",
+      "tested_sha256": "822e83d3bcca9ca4f10495bac17157f18bc871e75bf2e5f2fe251bf1702dd6cb",
+      "actual_sha256": "822e83d3bcca9ca4f10495bac17157f18bc871e75bf2e5f2fe251bf1702dd6cb",
+      "byte_equal": true
+    },
+    "MS32": {
+      "case": "MS32",
+      "final_ir": "/data/home/chh/domain-reactivation/build/owner-prefix-parity/MS32/final.ll",
+      "reference": "/data/home/chh/kernel-benchmark-suite/build/incremental-unit-audit/domain-suite-40/MS32/gpu/trees.hsaco",
+      "tested_sha256": "822e83d3bcca9ca4f10495bac17157f18bc871e75bf2e5f2fe251bf1702dd6cb",
+      "actual_sha256": "822e83d3bcca9ca4f10495bac17157f18bc871e75bf2e5f2fe251bf1702dd6cb",
+      "byte_equal": true
+    },
+    "MS64": {
+      "case": "MS64",
+      "final_ir": "/data/home/chh/domain-reactivation/build/owner-prefix-parity/MS64/final.ll",
+      "reference": "/data/home/chh/kernel-benchmark-suite/build/incremental-unit-audit/domain-suite-40/MS64/gpu/trees.hsaco",
+      "tested_sha256": "822e83d3bcca9ca4f10495bac17157f18bc871e75bf2e5f2fe251bf1702dd6cb",
+      "actual_sha256": "822e83d3bcca9ca4f10495bac17157f18bc871e75bf2e5f2fe251bf1702dd6cb",
+      "byte_equal": true
+    },
+    "MapAiry": {
+      "case": "MapAiry",
+      "final_ir": "/data/home/chh/domain-reactivation/build/frozen-parity/MapAiry/final.ll",
+      "reference": "/data/home/chh/kernel-benchmark-suite/build/incremental-unit-audit/domain-suite-40/MapAiry/gpu-extra/trees.hsaco",
+      "tested_sha256": "66a2fa7417c4ce585f34836e8821b5c038d104e2445fd67281da6b2e87807dd9",
+      "actual_sha256": "66a2fa7417c4ce585f34836e8821b5c038d104e2445fd67281da6b2e87807dd9",
+      "byte_equal": true
+    },
+    "NQU128": {
+      "case": "NQU128",
+      "final_ir": "/data/home/chh/domain-reactivation/build/frozen-parity/NQU128/final.ll",
+      "reference": "/data/home/chh/kernel-benchmark-suite/build/incremental-unit-audit/domain-suite-40/NQU128/gpu/trees.hsaco",
+      "tested_sha256": "4c054167adb21e1faf2f14d2224108d9e343d3a6bfdc6f36b8fe42d474955684",
+      "actual_sha256": "4c054167adb21e1faf2f14d2224108d9e343d3a6bfdc6f36b8fe42d474955684",
+      "byte_equal": true
+    },
+    "NQU256": {
+      "case": "NQU256",
+      "final_ir": "/data/home/chh/domain-reactivation/build/frozen-parity/NQU256/final.ll",
+      "reference": "/data/home/chh/kernel-benchmark-suite/build/incremental-unit-audit/domain-suite-40/NQU256/gpu/trees.hsaco",
+      "tested_sha256": "6a31912ebd87926bf1cc9a06b50dd3e43b14b915dd134e2a4351058e446432b5",
+      "actual_sha256": "6a31912ebd87926bf1cc9a06b50dd3e43b14b915dd134e2a4351058e446432b5",
+      "byte_equal": true
+    },
+    "NQU64": {
+      "case": "NQU64",
+      "final_ir": "/data/home/chh/domain-reactivation/build/frozen-parity/NQU64/final.ll",
+      "reference": "/data/home/chh/kernel-benchmark-suite/build/incremental-unit-audit/domain-suite-40/NQU64/gpu/trees.hsaco",
+      "tested_sha256": "42b2bda66286d3c3b437dd6fe78ecba602f6718f4f75659fe101bb5dc2c6865c",
+      "actual_sha256": "42b2bda66286d3c3b437dd6fe78ecba602f6718f4f75659fe101bb5dc2c6865c",
+      "byte_equal": true
+    },
+    "NQU96": {
+      "case": "NQU96",
+      "final_ir": "/data/home/chh/domain-reactivation/build/frozen-parity/NQU96/final.ll",
+      "reference": "/data/home/chh/kernel-benchmark-suite/build/incremental-unit-audit/domain-suite-40/NQU96/gpu/trees.hsaco",
+      "tested_sha256": "8f000c058a864a28c269f72a166cc6878991888c7296160bf319436f790e2c33",
+      "actual_sha256": "8f000c058a864a28c269f72a166cc6878991888c7296160bf319436f790e2c33",
+      "byte_equal": true
+    },
+    "PCM32": {
+      "case": "PCM32",
+      "final_ir": "/data/home/chh/domain-reactivation/build/frozen-parity/PCM32/final.ll",
+      "reference": "/data/home/chh/kernel-benchmark-suite/build/incremental-unit-audit/domain-suite-40/PCM32/gpu/trees.hsaco",
+      "tested_sha256": "c648759ca25a2e5086bda064c664e16426f76bcd2597d3d839fc27cd902f70d2",
+      "actual_sha256": "c648759ca25a2e5086bda064c664e16426f76bcd2597d3d839fc27cd902f70d2",
+      "byte_equal": true
+    },
+    "PCM64": {
+      "case": "PCM64",
+      "final_ir": "/data/home/chh/domain-reactivation/build/frozen-parity/PCM64/final.ll",
+      "reference": "/data/home/chh/kernel-benchmark-suite/build/incremental-unit-audit/domain-suite-40/PCM64/gpu/trees.hsaco",
+      "tested_sha256": "6de7d179cc71f24e4b4fa78f8662600af59dbe6193a4bfce81b8a61d31ac8d09",
+      "actual_sha256": "6de7d179cc71f24e4b4fa78f8662600af59dbe6193a4bfce81b8a61d31ac8d09",
+      "byte_equal": true
+    },
+    "SRAD16": {
+      "case": "SRAD16",
+      "final_ir": "/data/home/chh/domain-reactivation/build/frozen-parity/SRAD16/final.ll",
+      "reference": "/data/home/chh/kernel-benchmark-suite/build/incremental-unit-audit/domain-suite-40/SRAD16/gpu/trees.hsaco",
+      "tested_sha256": "c308f0d8ffc860d9f6849bbe3fa274e19ecc5c3c25c95fb3d817246a70d806a4",
+      "actual_sha256": "c308f0d8ffc860d9f6849bbe3fa274e19ecc5c3c25c95fb3d817246a70d806a4",
+      "byte_equal": true
+    },
+    "SRAD32": {
+      "case": "SRAD32",
+      "final_ir": "/data/home/chh/domain-reactivation/build/frozen-parity/SRAD32/final.ll",
+      "reference": "/data/home/chh/kernel-benchmark-suite/build/incremental-unit-audit/domain-suite-40/SRAD32/gpu/trees.hsaco",
+      "tested_sha256": "5b56f9685c62cf7f93c13b5ef8297ea59ec1dc8910ccd6d7e1a6038ee32e6695",
+      "actual_sha256": "5b56f9685c62cf7f93c13b5ef8297ea59ec1dc8910ccd6d7e1a6038ee32e6695",
+      "byte_equal": true
+    },
+    "SW2D": {
+      "case": "SW2D",
+      "final_ir": "/data/home/chh/domain-reactivation/build/frozen-parity/SW2D/final.ll",
+      "reference": "/data/home/chh/kernel-benchmark-suite/build/incremental-unit-audit/domain-suite-40/SW2D/gpu-extra/trees.hsaco",
+      "tested_sha256": "3bda55b4ecce656adf5dca38d40e701e8763228d1b89f904f6bb2dc69410fc12",
+      "actual_sha256": "3bda55b4ecce656adf5dca38d40e701e8763228d1b89f904f6bb2dc69410fc12",
+      "byte_equal": true
+    },
+    "hypersonic": {
+      "case": "hypersonic",
+      "final_ir": "/data/home/chh/domain-reactivation/build/frozen-parity/hypersonic/final.ll",
+      "reference": "/data/home/chh/kernel-benchmark-suite/build/incremental-unit-audit/domain-suite-40/hypersonic/gpu-extra/trees.hsaco",
+      "tested_sha256": "74a564e31d63d5c37b78123c152bd3cb5a54a1f325eceef6cc1e83c5499b2dea",
+      "actual_sha256": "74a564e31d63d5c37b78123c152bd3cb5a54a1f325eceef6cc1e83c5499b2dea",
+      "byte_equal": true
+    },
+    "landau": {
+      "case": "landau",
+      "final_ir": "/data/home/chh/domain-reactivation/build/frozen-parity/landau/final.ll",
+      "reference": "/data/home/chh/kernel-benchmark-suite/build/incremental-unit-audit/domain-suite-40/landau/gpu-extra/trees.hsaco",
+      "tested_sha256": "fc231a90fe05ed9f9d4a923949b620d1e5b12acdb2003b4e2718b36e64d48df7",
+      "actual_sha256": "fc231a90fe05ed9f9d4a923949b620d1e5b12acdb2003b4e2718b36e64d48df7",
+      "byte_equal": true
+    },
+    "tigre": {
+      "case": "tigre",
+      "final_ir": "/data/home/chh/domain-reactivation/build/frozen-parity/tigre/final.ll",
+      "reference": "/data/home/chh/kernel-benchmark-suite/build/incremental-unit-audit/domain-suite-40/tigre/gpu-extra/trees.hsaco",
+      "tested_sha256": "02452bc591290cb318b1ed9d876a907a56fd849fa9094e4efd74a76892e83a9a",
+      "actual_sha256": "02452bc591290cb318b1ed9d876a907a56fd849fa9094e4efd74a76892e83a9a",
+      "byte_equal": true
+    },
+    "vllm": {
+      "case": "vllm",
+      "final_ir": "/data/home/chh/domain-reactivation/build/frozen-parity/vllm/final.ll",
+      "reference": "/data/home/chh/kernel-benchmark-suite/build/incremental-unit-audit/domain-suite-40/vllm/gpu-extra/trees.hsaco",
+      "tested_sha256": "9aa97bca3906c0d31452e4594b5fc17c535bce25ba5e7e4df92e5ff6841c5fa6",
+      "actual_sha256": "9aa97bca3906c0d31452e4594b5fc17c535bce25ba5e7e4df92e5ff6841c5fa6",
+      "byte_equal": true
+    },
+    "PCM128": {
+      "case": "PCM128",
+      "final_ir": "/data/home/chh/domain-reactivation/build/frozen-parity/PCM128/final.ll",
+      "reference": "/data/home/chh/kernel-benchmark-suite/build/incremental-unit-audit/domain-suite-40/PCM128/gpu-reference-replay/trees.hsaco",
+      "tested_sha256": "d33da2f152ab450eec676e69903979e06a1dd87660b4a00c6cd217bba361de9c",
+      "actual_sha256": "d33da2f152ab450eec676e69903979e06a1dd87660b4a00c6cd217bba361de9c",
+      "byte_equal": true
+    },
+    "PCM256": {
+      "case": "PCM256",
+      "final_ir": "/data/home/chh/domain-reactivation/build/final-pcm256/trees0/final.ll",
+      "reference": "/data/home/chh/domain-reactivation/build/gpu-binary-parity/PCM256/trees.hsaco",
+      "tested_sha256": "e1c0a69b3442570fb65be16d4c158b3e0999e0b8204d5975ff1a1f788e5c05f4",
+      "actual_sha256": "e1c0a69b3442570fb65be16d4c158b3e0999e0b8204d5975ff1a1f788e5c05f4",
+      "byte_equal": true,
+      "early_gpu_reference": "/data/home/chh/kernel-benchmark-suite/build/incremental-unit-audit/pcm-domain-gpu-replay/candidate.hsaco",
+      "early_gpu_reference_sha256": "ec8a51ed348a8729f9fd416f88fd6d01165e2d8c67138e4db3d5c1ba8424579d",
+      "early_gpu_reference_byte_equal": false,
+      "direct_gpu_results": "/data/home/chh/domain-reactivation/build/final-pcm256-gpu/results.json"
+    }
+  }
+}
