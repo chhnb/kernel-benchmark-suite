@@ -28,7 +28,8 @@ struct IRDependencySnapshot {
   using UseSite = std::pair<uint64_t,unsigned>;
   std::map<uint64_t,std::set<UseSite>> users;
   // Rebuild after every mutation; no pointers from an older module survive.
-  static IRDependencySnapshot capture(llvm::Module &source) {
+  static IRDependencySnapshot capture(llvm::Module &source,
+      const std::set<uint64_t> &ignoredMetadata={}) {
     IRIdentity sourceIDs(source);
     if(sourceIDs.ambiguous())throw std::runtime_error("ambiguous incremental snapshot lineage");
     auto m=llvm::CloneModule(source);IRIdentity ids(*m);
@@ -47,7 +48,10 @@ struct IRDependencySnapshot {
         }
       }
     }
-    IncrementalMetadataGraph metadataGraph;metadataGraph.capture(*m,keys);
+    auto metadataKeys=keys;
+    for(auto it=metadataKeys.begin();it!=metadataKeys.end();)
+      if(ignoredMetadata.count(it->second))it=metadataKeys.erase(it);else ++it;
+    IncrementalMetadataGraph metadataGraph;metadataGraph.capture(*m,metadataKeys);
     // Reserve canonical names in a separate phase: LLVM may suffix a name
     // while another instruction still has that name. Clear then assign again.
     for(auto &f:*m) {

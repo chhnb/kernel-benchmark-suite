@@ -9,6 +9,7 @@ using namespace llvm;
 static void save(const Module &m,const std::string &path){std::error_code e;raw_fd_ostream s(path,e);assert(!e);m.print(s,nullptr);}
 int main(int argc,char **argv){
  assert(argc==4||argc==5);const bool external=argc==5&&StringRef(argv[4])=="external";
+ const bool stores=argc==5&&StringRef(argv[4])=="stores";
  const bool multi=argc==5&&StringRef(argv[4])=="multi";
  const bool memoryContext=argc==5&&StringRef(argv[4])=="memory";
  const StringRef option="two-entry-phi-node-folding-threshold";
@@ -53,6 +54,30 @@ int main(int argc,char **argv){
    auto *ret=cast<ReturnInst>(join->getTerminator());
    auto *sum=BinaryOperator::CreateAdd(ret->getReturnValue(),phi,"tuple.sum",ret);ret->setOperand(0,sum);
  }
+ if(stores){
+   auto *f=parent->getFunction("f");auto *term=f->getEntryBlock().getTerminator();
+   auto *g=new GlobalVariable(*parent,Type::getInt32Ty(ctx),false,GlobalValue::InternalLinkage,
+       ConstantInt::get(Type::getInt32Ty(ctx),0),"sink",nullptr,GlobalValue::NotThreadLocal,1);
+   auto *ptr=GetElementPtrInst::Create(Type::getInt32Ty(ctx),g,{ConstantInt::get(Type::getInt32Ty(ctx),0)},"store.ptr",term);
+   for(auto &b:*f)if(b.getName()=="AL"||b.getName()=="AR"||b.getName()=="BL"||b.getName()=="BR"){
+     auto *store=new StoreInst(&b.front(),ptr,b.getTerminator());
+     store->setMetadata("nontemporal",MDNode::get(ctx,ConstantAsMetadata::get(ConstantInt::get(Type::getInt32Ty(ctx),1))));
+   }
+   auto *ret=cast<ReturnInst>(f->back().getTerminator());
+   auto *load=new LoadInst(Type::getInt32Ty(ctx),ptr,"last.store",ret);
+   auto *mid=term->getSuccessor(0)->getSingleSuccessor();
+   auto *firstLoad=new LoadInst(Type::getInt32Ty(ctx),ptr,"first.store",mid->getTerminator());
+   auto *both=BinaryOperator::CreateAdd(firstLoad,load,"observed.stores",ret);
+   auto *sum=BinaryOperator::CreateAdd(ret->getReturnValue(),both,"store.sum",ret);ret->setOperand(0,sum);
+   // Ordinary store admitted; volatile/atomic variants must be rejected.
+   fusion::IRIdentity ids(*parent);auto *arm=term->getSuccessor(0);
+   auto *store=cast<StoreInst>(arm->getTerminator()->getPrevNode());
+   assert(fusion::B2BOptimizationUnit::discover(f->getEntryBlock(),ids).eligible());
+   store->setVolatile(true);assert(!fusion::B2BOptimizationUnit::discover(f->getEntryBlock(),ids).eligible());
+   store->setVolatile(false);store->setOrdering(AtomicOrdering::Monotonic);
+   assert(!fusion::B2BOptimizationUnit::discover(f->getEntryBlock(),ids).eligible());
+   store->setOrdering(AtomicOrdering::NotAtomic);
+ }
  if(memoryContext){
    auto *f=parent->getFunction("f");auto *term=f->getEntryBlock().getTerminator();
    auto *g=new GlobalVariable(*parent,Type::getInt32Ty(ctx),false,GlobalValue::InternalLinkage,
@@ -84,11 +109,12 @@ int main(int argc,char **argv){
  auto full=fusion::runIsolatedB2BGreedy(*parent,"f",fullScorer,false,[&](const Module &m,unsigned n){save(m,std::string(argv[1])+"/full-"+std::to_string(n)+".ll");});
  auto cached=fusion::runIsolatedB2BGreedy(*parent,"f",cacheScorer,true,[&](const Module &m,unsigned n){save(m,std::string(argv[1])+"/cached-"+std::to_string(n)+".ll");});
  assert(full.stats.commits==2);assert(cached.stats.commits==2);
- assert(full.costs==cached.costs);if(!memoryContext&&!multi)assert(full.costs==(external?std::vector<int64_t>({45,25}):std::vector<int64_t>({43,23})));
+ assert(full.costs==cached.costs);if(!memoryContext&&!multi&&!stores)assert(full.costs==(external?std::vector<int64_t>({45,25}):std::vector<int64_t>({43,23})));
  assert(full.identities==cached.identities);assert(full.gains==cached.gains);assert(full.hashes==cached.hashes);
  assert(fusion::moduleHash(*full.module)==fusion::moduleHash(*cached.module));
  assert(full.stats.trials==3);
- if(multi){
+ if(multi||stores){
+   // Metadata/quote changes in store plans conservatively invalidate peers.
    // B now has larger gain and commits first. Its rewrite changes A's exit
    // boundary, so A MUST be invalidated rather than counted as independent.
    assert(cached.stats.trials==3&&cached.stats.reusedTrials==0);

@@ -34,7 +34,7 @@ struct B2BOptimizationUnit {
     // definitions are not cloned, moved, or given stronger argument attributes.
     llvm::DominatorTree dominators(*root.getParent());
     auto isInput=[&](llvm::Value *v){
-      if(!v->getType()->isIntegerTy())return false;
+      if(!v->getType()->isIntegerTy()&&!v->getType()->isPointerTy())return false;
       if(llvm::isa<llvm::Argument>(v)||llvm::isa<llvm::ConstantInt>(v))return true;
       auto *def=llvm::dyn_cast<llvm::Instruction>(v);
       if(!def || def->getFunction()!=root.getParent() || !dominators.dominates(def,br))return false;
@@ -43,16 +43,18 @@ struct B2BOptimizationUnit {
     if(!isInput(br->getCondition()))return reject("unavailable_condition_definition");
     std::set<llvm::Instruction*> internal;
     for(auto *arm:{l,r})for(auto &i:*arm)if(!i.isTerminator()){
-      if(!(llvm::isa<llvm::BinaryOperator>(i)||llvm::isa<llvm::ICmpInst>(i)||
-           llvm::isa<llvm::SelectInst>(i)||llvm::isa<llvm::CastInst>(i)) ||
-          !i.getType()->isIntegerTy() || i.mayReadOrWriteMemory() || i.mayHaveSideEffects())
-        return reject("unsupported_isolated_instruction");
+      const auto *store=llvm::dyn_cast<llvm::StoreInst>(&i);
+      const bool ordinaryStore=store&&store->isSimple()&&store->getValueOperand()->getType()->isIntegerTy();
+      const bool computation=(llvm::isa<llvm::BinaryOperator>(i)||llvm::isa<llvm::ICmpInst>(i)||
+           llvm::isa<llvm::SelectInst>(i)||llvm::isa<llvm::CastInst>(i))&&
+           i.getType()->isIntegerTy()&&!i.mayReadOrWriteMemory()&&!i.mayHaveSideEffects();
+      if(!ordinaryStore&&!computation)return reject("unsupported_isolated_instruction");
       internal.insert(&i);
     }
     for(auto *i:internal) {
       for(auto &operand:i->operands()) {
         auto *v=operand.get();auto *def=llvm::dyn_cast<llvm::Instruction>(v);
-        if(!v->getType()->isIntegerTy() || (!isInput(v) && (!def||!internal.count(def))))
+        if((!v->getType()->isIntegerTy()&&!v->getType()->isPointerTy()) || (!isInput(v) && (!def||!internal.count(def))))
           return reject("external_operand_definition");
         if(def && internal.count(def) && def->getParent()!=i->getParent())return reject("cross_arm_operand");
       }

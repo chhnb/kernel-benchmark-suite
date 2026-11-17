@@ -7,12 +7,31 @@
 #include "llvm/Support/FormatVariadic.h"
 int main(int argc,char **argv){
  using namespace llvm;using namespace fusion;
- if(argc!=5)return 2;
+ if(argc!=5&&argc!=6)return 2;
  auto &options=cl::getRegisteredOptions();auto opt=options.find("two-entry-phi-node-folding-threshold");
  if(opt==options.end()||opt->second->addOccurrence(0,"two-entry-phi-node-folding-threshold","7"))return 2;
  LLVMContext ctx;SMDiagnostic err;auto m=parseIRFile(argv[1],err,ctx);
  if(!m){err.print(argv[0],errs());return 2;}auto *f=m->getFunction(argv[2]);if(!f)return 2;
  LLVM24Scorer scorer(argv[3],"off");IRIdentity ids(*m);
+ if(argc==6){
+   auto run=[&](bool reuse){
+     return runIsolatedB2BGreedy(*m,argv[2],scorer,reuse,[&](const Module &ir,unsigned n){
+       std::string path=std::string(argv[4])+(reuse?"/cached-":"/full-")+std::to_string(n)+".ll";
+       std::error_code ec;raw_fd_ostream out(path,ec);if(ec)throw std::runtime_error(ec.message());ir.print(out,nullptr);
+     });
+   };
+   auto full=run(false),cached=run(true);
+   if(full.hashes!=cached.hashes||full.identities!=cached.identities||full.costs!=cached.costs||full.gains!=cached.gains)
+     throw std::runtime_error("real incremental/full divergence");
+   json::Array costs;for(auto c:full.costs)costs.push_back(c);
+   outs()<<formatv("{0:2}\n",json::Value(json::Object{
+     {"commits",int64_t(full.stats.commits)},{"costs",std::move(costs)},
+     {"full_trials",int64_t(full.stats.trials)},{"cached_trials",int64_t(cached.stats.trials)},
+     {"reused_trials",int64_t(cached.stats.reusedTrials)},{"invalidated",int64_t(cached.stats.invalidated)},
+     {"full_cleanups",int64_t(full.stats.layoutCleanups)},{"cached_cleanups",int64_t(cached.stats.layoutCleanups)},
+     {"full_scores",int64_t(full.stats.scores)},{"cached_scores",int64_t(cached.stats.scores)},
+     {"exact_step_parity",true}}));return 0;
+ }
  auto round=makeRound(*m,argv[2],0,0,CleanupMode::None);
  json::Array results;unsigned n=0;
  for(auto &b:*f){auto unit=B2BOptimizationUnit::discover(b,ids);if(!unit.eligible())continue;

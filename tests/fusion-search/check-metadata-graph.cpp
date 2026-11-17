@@ -35,6 +35,15 @@ int main(){
  assert(!before.sameReads(separate,{ai}));assert(before.changesTo(separate).contextChanged);
  b->setMetadata("audit",original);
  assert(before.context==fusion::IRDependencySnapshot::capture(*m).context);
+ // Patch write checking may ignore ONLY attachments on the authorized writes.
+ // The full snapshot used by the read certificate must still invalidate.
+ auto bounded=fusion::IRDependencySnapshot::capture(*m,{ai});
+ a->setMetadata("audit",fresh);
+ assert(bounded.context==fusion::IRDependencySnapshot::capture(*m,{ai}).context);
+ assert(before.context!=fusion::IRDependencySnapshot::capture(*m).context);
+ b->setMetadata("audit",fresh);
+ assert(bounded.context!=fusion::IRDependencySnapshot::capture(*m,{ai}).context);
+ b->setMetadata("audit",original);a->setMetadata("audit",original);
  // Changing just the named anchor must also invalidate cross-root sharing.
  m->getNamedMetadata("anchor")->setOperand(0,fresh);
  assert(before.context!=fusion::IRDependencySnapshot::capture(*m).context);

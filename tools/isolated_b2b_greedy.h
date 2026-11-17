@@ -4,7 +4,8 @@
 #include "llvm24_scorer.h"
 #include <functional>
 namespace fusion {
-// Experimental local cleanup only. Memory/calls remain forbidden INSIDE units.
+// Experimental local cleanup only. Units allow pure integer work and ordinary
+// integer stores; loads, calls, atomics and volatile accesses remain excluded.
 // Outside units admit only the audited pinned-GCN quote-key domain.
 // External quote dependencies invalidate gains, never supply guessed prices.
 inline bool isolatedContextFreeOpcode(unsigned opcode) {

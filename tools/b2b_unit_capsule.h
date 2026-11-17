@@ -45,7 +45,7 @@ public:
     auto *cr=llvm::BasicBlock::Create(source.getContext(),"right",cf);
     auto *exit=llvm::BasicBlock::Create(source.getContext(),"exit",cf);
     map[&root]=entry;map[l]=cl;map[r]=cr;map[join]=exit;
-    auto copy=[&](llvm::Instruction &i,llvm::BasicBlock *to){auto *c=i.clone();c->setMetadata("fusion.incremental.identity",nullptr);to->getInstList().push_back(c);map[&i]=c;};
+    auto copy=[&](llvm::Instruction &i,llvm::BasicBlock *to){auto *c=i.clone();llvm::SmallVector<std::pair<unsigned,llvm::MDNode*>,4> md;c->getAllMetadata(md);for(auto &x:md)c->setMetadata(x.first,nullptr);to->getInstList().push_back(c);map[&i]=c;};
     copy(*root.getTerminator(),entry);
     for(auto &i:*l)copy(i,cl);for(auto &i:*r)copy(i,cr);
     for(auto *output:outputs)copy(*output,exit);
@@ -83,10 +83,13 @@ public:
     for(auto &b:*cf)for(auto &i:b){
       if(!(llvm::isa<llvm::BinaryOperator>(i)||llvm::isa<llvm::ICmpInst>(i)||
            llvm::isa<llvm::SelectInst>(i)||llvm::isa<llvm::CastInst>(i)||
-           llvm::isa<llvm::InsertValueInst>(i)||llvm::isa<llvm::ExtractValueInst>(i)||
+           llvm::isa<llvm::StoreInst>(i)||llvm::isa<llvm::InsertValueInst>(i)||llvm::isa<llvm::ExtractValueInst>(i)||
            llvm::isa<llvm::FreezeInst>(i)||llvm::isa<llvm::PHINode>(i)||llvm::isa<llvm::BranchInst>(i)||llvm::isa<llvm::ReturnInst>(i)))
         throw std::runtime_error("unsupported capsule product instruction");
-      if(!i.isTerminator()&&!i.getType()->isIntegerTy()&&!llvm::isa<llvm::InsertValueInst>(i))throw std::runtime_error("unsupported capsule product type");
+      if(!i.isTerminator()&&!i.getType()->isIntegerTy()&&!i.getType()->isPointerTy()&&!llvm::isa<llvm::InsertValueInst>(i)&&!llvm::isa<llvm::StoreInst>(i))throw std::runtime_error("unsupported capsule product type");
+      if(auto *store=llvm::dyn_cast<llvm::StoreInst>(&i))
+        if(!store->isSimple()||!store->getValueOperand()->getType()->isIntegerTy())
+          throw std::runtime_error("unsupported capsule store");
       llvm::SmallVector<std::pair<unsigned,llvm::MDNode*>,4> metadata;i.getAllMetadata(metadata);
       for(auto &md:metadata)if(md.first!=i.getContext().getMDKindID("fusion.incremental.identity"))
         throw std::runtime_error("unsupported capsule product metadata");
@@ -157,6 +160,12 @@ public:
     if(llvm::verifyModule(*result,&llvm::errs()))throw std::runtime_error("invalid spliced capsule");
     auto after=IRDependencySnapshot::capture(*result);auto delta=currentFacts.changesTo(after);
     auto newWrites=now.writes;newWrites.insert(delta.added.begin(),delta.added.end());
+    // Metadata on rewritten instructions may be conservatively dropped.
+    // Compare the complete remaining rooted graph, including named roots and
+    // outside attachments. Read certificates continue to use FULL snapshots.
+    auto oldBoundary=IRDependencySnapshot::capture(current,now.writes);
+    auto newBoundary=IRDependencySnapshot::capture(*result,newWrites);
+    delta=oldBoundary.changesTo(newBoundary);
     if(!delta.within(now.writes,newWrites)){
       for(auto id:delta.changed)if(!now.writes.count(id))
         throw std::runtime_error("capsule changed outside boundary: "+currentFacts.instructions.at(id)+" -> "+after.instructions.at(id));
