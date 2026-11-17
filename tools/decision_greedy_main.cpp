@@ -327,7 +327,7 @@ int main(int argc,char**argv){try{
         normalizedCandidates.push_back(json::Object{
           {"candidate",fn+":"+ids[0]+":"+ids[1]+":"+ids[2]},
           {"split",ids[0]},{"left",ids[1]},{"right",ids[2]},
-          {"prepared_input",pair.input},{"logical_left",d.arms[pair.left].id},
+          {"prepared_input",pair.input},{"prepared_decision",d.id},{"prepared_ordinal",int64_t(pair.left)},{"logical_left",d.arms[pair.left].id},
           {"logical_right",d.arms[pair.left+1].id}});
     }
 
@@ -416,6 +416,8 @@ int main(int argc,char**argv){try{
         {"candidate",candidateKey},{"eligible",false},{"stage","enumerated"}};
       if(preparedInput){
         attempt["prepared_input"]=preparedInput->str();
+        attempt["prepared_decision"]=candidate.getString("prepared_decision")->str();
+        attempt["prepared_ordinal"]=*candidate.getInteger("prepared_ordinal");
         attempt["left"]=candidate.getString("logical_left")->str();
         attempt["right"]=candidate.getString("logical_right")->str();
       }
@@ -445,7 +447,9 @@ int main(int argc,char**argv){try{
       };
       identityPart(trial.attempt.getString("candidate").getValue());
       if(trial.attempt.getString("prepared_input")) {
-        identityPart("prepared");identityPart(target);
+        identityPart("prepared");
+        identityPart(trial.attempt.getString("prepared_decision").getValue());
+        identityPart(std::to_string(*trial.attempt.getInteger("prepared_ordinal")));
         identityPart(trial.attempt.getString("left").getValue());
         identityPart(trial.attempt.getString("right").getValue());
       } else identityPart("structural");
