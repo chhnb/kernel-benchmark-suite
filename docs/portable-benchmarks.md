@@ -121,3 +121,21 @@ The [gfx906 memory cost table](../regression/tti-gfx906/memory-costs.csv)
 contains both cost kinds for the checked-in probe. The offline regression
 checks those quotes and records both cost kinds in one database to verify
 that replay never reads a quote from the wrong mode.
+
+
+## B2R strategy
+
+Auto Greedy uses `--b2r-strategy darm` by default. Use
+`--b2r-strategy guarded` with `decision-greedy`, `fusion-search-llvm24`, or
+`tools/compile_kernel.py` to guard unmatched instructions in replicated
+B2R and R2B regions. A branch-only counterpart needs a guard only if its
+side can reach it and the unmatched instruction is unsafe to execute
+unconditionally. Conditional stores stay under control flow, with no
+old-value load or writeback.
+Candidate discovery, instruction alignment, cleanup, and scoring use the
+same pipeline for both strategies.
+
+When a replicated read tail and its boundary arm have matching ordered loads,
+`guarded` also tries sharing the boundary loads. The mask read stays behind
+its original path condition. The trial records both layouts and their costs
+in `layout_profitability`.

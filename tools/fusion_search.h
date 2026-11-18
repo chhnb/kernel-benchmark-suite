@@ -165,10 +165,13 @@ struct ResolvedCandidate {
 };
 std::vector<ResolvedCandidate> resolveCandidateCatalog(llvm::Function &, unsigned version);
 
+enum class B2RStrategy { Darm, Guarded };
+
 Trial tryPair(const llvm::Module &, const Candidate &, unsigned currentVersion,
               unsigned optLevel, CleanupMode mode=CleanupMode::DarmCFGInstCombine, const LogicalRegionState *logical=nullptr);
 Trial tryPair(const llvm::Module &, const Candidate &, unsigned currentVersion,
-              unsigned optLevel, CleanupMode, const LogicalRegionState *, bool allowB2B);
+              unsigned optLevel, CleanupMode, const LogicalRegionState *, bool allowB2B,
+              B2RStrategy b2rStrategy=B2RStrategy::Darm, Trial *boundaryFold=nullptr);
 std::vector<Trial> planSingleBranchB2B(const llvm::Module &, const Candidate &,
                                        unsigned optLevel, CleanupMode, llvm::StringRef replay,
                                        llvm::function_ref<int(const llvm::Instruction &)> intrinsicCost = nullptr,

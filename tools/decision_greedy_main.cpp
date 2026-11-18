@@ -138,20 +138,18 @@ int main(int argc,char**argv){try{
  auto timingReport=[&](){json::Object phases;for(const auto &kv:phaseMilliseconds)phases[kv.first]=json::Object{{"milliseconds",kv.second},{"calls",phaseCalls[kv.first]}};return phases;};
 
  if(argc==2&&StringRef(argv[1])=="--help"){
-   outs()<<"usage: decision-greedy INPUT FUNCTION [TOOL_ROOT] NEW_OUTPUT [--b2b-strategy dp1|darm] [--trial-policy whole-function|scoped-full|scoped-reuse] [--domain-schedule legacy|trees|competing|ordered] [--ir-snapshots full|compact]\n";
+   outs()<<"usage: decision-greedy INPUT FUNCTION [TOOL_ROOT] NEW_OUTPUT [--b2b-strategy dp1|darm] [--b2r-strategy darm|guarded] [--trial-policy whole-function|scoped-full|scoped-reuse] [--domain-schedule legacy|trees|competing|ordered] [--ir-snapshots full|compact]\n";
    outs()<<"Default schedule: ordered for whole-function trials (Auto Greedy v2).\n";
    return 0;
  }
- std::string b2bStrategy="dp1", quoteMode="on", trialPolicy="whole-function", domainSchedule, snapshotMode;
+ std::string b2bStrategy="dp1", b2rStrategy="darm", quoteMode="on", trialPolicy="whole-function", domainSchedule, snapshotMode;
  while (argc >= 3) {
    StringRef option(argv[argc-2]), value(argv[argc-1]);
    if(option == "--domain-schedule" && (value == "legacy" || value == "trees" || value == "competing" || value == "ordered")) { domainSchedule=value.str();argc-=2;continue; }
    if (option == "--ir-snapshots" && (value == "full" || value == "compact"))
      snapshotMode = value.str();
-   else if (option == "--b2r-strategy" && value == "darm") {
-     argc -= 2;
-     continue;
-   }
+   else if (option == "--b2r-strategy" && (value == "darm" || value == "guarded"))
+     b2rStrategy = value.str();
    else if (option == "--trial-policy" && (value == "whole-function" || value == "scoped-full" || value == "scoped-reuse"))
      trialPolicy = value.str();
    else if (option == "--tti-quote-cache" && (value == "off" || value == "audit" || value == "on"))
@@ -164,7 +162,7 @@ int main(int argc,char**argv){try{
    argc -= 2;
  }
  if(argc!=4&&argc!=5)
-   throw std::runtime_error("usage: decision-greedy INPUT FUNCTION [TOOL_ROOT] NEW_OUTPUT [--b2b-strategy dp1|darm]");
+   throw std::runtime_error("usage: decision-greedy INPUT FUNCTION [TOOL_ROOT] NEW_OUTPUT [--b2b-strategy dp1|darm] [--b2r-strategy darm|guarded]");
  // Scoped trials still require the legacy scheduler.
  if(domainSchedule.empty())domainSchedule=trialPolicy=="whole-function"?"ordered":"legacy";
  if(snapshotMode.empty())snapshotMode=domainSchedule=="ordered"?"compact":"full";
@@ -228,7 +226,7 @@ int main(int argc,char**argv){try{
    }
  };
  unsigned reusedSweepSnapshots=0;
- auto report=[&](StringRef status){save(out+"/summary.json",json::Value(json::Object{{"status",status.str()},{"driver_phase_timings",timingReport()},{"elapsed_ms",std::chrono::duration<double,std::milli>(Clock::now()-started).count()},{"domain_schedule",domainSchedule},{"ir_snapshots",snapshotMode},{"trial_policy",trialPolicy},{"scoped_trials",scoped?json::Value(scoped->report()):json::Value(nullptr)},{"search","per-decision greedy; best positive adjacent or structural candidate"},{"cfg_cleanup","structural"},{"structural_cleanup",structuralCleanup},{"structural_candidates_enabled",true},{"shared_arm_trials",true},{"cross_level_b2r",false},{"reused_sweep_snapshots",int64_t(reusedSweepSnapshots)},{"pipeline_version",domainSchedule=="ordered"?"v2":"v1"},{"candidate_jobs",structuralJobs},{"candidate_scheduler","continuous-queue"},{"persistent_trial_workers",true},{"condition_budget",conditionBudget},{"phi_fold_threshold",7},{"r2r_enumeration","darm-alignment"},{"b2b_strategy",b2bStrategy},{"tti_quote_cache",quoteMode},{"tti_cost_kind",fusion::ttiCostKindName()},{"backend_resource_gate_enabled",false},{"uniform_loss_guard_enabled",false},{"max_uniform_loss",-1},{"max_pressure_growth",-1},{"max_pressure",-1},{"initial_cost",initialCost},{"final_cost",parentCost},{"commits",int64_t(commits)},{"trials",int64_t(trials)},{"final_ir",current},{"rounds",json::Value(json::Array(rounds))},{"stops",json::Value(json::Array(stops))}}));};
+ auto report=[&](StringRef status){save(out+"/summary.json",json::Value(json::Object{{"status",status.str()},{"driver_phase_timings",timingReport()},{"elapsed_ms",std::chrono::duration<double,std::milli>(Clock::now()-started).count()},{"domain_schedule",domainSchedule},{"ir_snapshots",snapshotMode},{"trial_policy",trialPolicy},{"scoped_trials",scoped?json::Value(scoped->report()):json::Value(nullptr)},{"search","per-decision greedy; best positive adjacent or structural candidate"},{"cfg_cleanup","structural"},{"structural_cleanup",structuralCleanup},{"structural_candidates_enabled",true},{"shared_arm_trials",true},{"cross_level_b2r",false},{"reused_sweep_snapshots",int64_t(reusedSweepSnapshots)},{"pipeline_version",domainSchedule=="ordered"?"v2":"v1"},{"candidate_jobs",structuralJobs},{"candidate_scheduler","continuous-queue"},{"persistent_trial_workers",true},{"condition_budget",conditionBudget},{"phi_fold_threshold",7},{"r2r_enumeration","darm-alignment"},{"b2b_strategy",b2bStrategy},{"b2r_strategy",b2rStrategy},{"tti_quote_cache",quoteMode},{"tti_cost_kind",fusion::ttiCostKindName()},{"backend_resource_gate_enabled",false},{"uniform_loss_guard_enabled",false},{"max_uniform_loss",-1},{"max_pressure_growth",-1},{"max_pressure",-1},{"initial_cost",initialCost},{"final_cost",parentCost},{"commits",int64_t(commits)},{"trials",int64_t(trials)},{"final_ir",current},{"rounds",json::Value(json::Array(rounds))},{"stops",json::Value(json::Array(stops))}}));};
  report("running");
  fusion::IncrementalCandidateQueue candidateQueue;
  std::unique_ptr<Module> scopedParent;if(scoped)scopedParent=CloneModule(*initial);
@@ -471,7 +469,7 @@ int main(int argc,char**argv){try{
         trialArgs.push_back(candidate.getString(key)->str());
       }
       // Keep the exact invocation and the arguments needed for trial replay.
-      trialArgs.insert(trialArgs.end(), {"--b2b-strategy", b2bStrategy});
+      trialArgs.insert(trialArgs.end(), {"--b2b-strategy", b2bStrategy, "--b2r-strategy", b2rStrategy});
       // IDs locate a prior recipe; current planner facts certify its reuse.
       if (b2bStrategy=="dp1" && !preparedInput) {
         auto recipe=b2bRecipes.find(candidateKey);
@@ -536,7 +534,7 @@ int main(int argc,char**argv){try{
           identityPart(trial.attempt.getString("left").getValue());
           identityPart(trial.attempt.getString("right").getValue());
         } else identityPart("structural");
-        inventory.push_back({key, {{"parent", digestFor(current)}, {"input", digestFor(trial.args[2])}, {"strategy", b2bStrategy}, {"cleanup", structuralCleanup}}, i});
+        inventory.push_back({key, {{"parent", digestFor(current)}, {"input", digestFor(trial.args[2])}, {"strategy", b2bStrategy}, {"b2r_strategy", b2rStrategy}, {"cleanup", structuralCleanup}}, i});
       }
       const auto pending = candidateQueue.synchronize(inventory);
       std::map<std::string, fusion::IncrementalCandidateQueue::Ticket> tickets;

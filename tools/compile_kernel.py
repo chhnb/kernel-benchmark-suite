@@ -11,7 +11,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 def compile_kernel(source, output, llvm, rocm, *, function=None, work_dir=None,
                    target="gfx906", features="+sramecc,-xnack", code_object_version=4,
-                   preopt=True, env=None):
+                   preopt=True, env=None, b2r_strategy="darm"):
     source = source.resolve(strict=True)
     output = output.absolute()
     if os.path.lexists(output):
@@ -33,6 +33,7 @@ def compile_kernel(source, output, llvm, rocm, *, function=None, work_dir=None,
         if function is not None:
             search = work / "greedy"
             command = [ROOT / "build/decision-fuse/decision-greedy", source, function, search]
+            command += ["--b2r-strategy", b2r_strategy]
             if work_dir is not None:
                 command += ["--ir-snapshots", "full"]
             run(*command)
@@ -65,6 +66,7 @@ def main():
     parser.add_argument("--rocm", type=Path, default=Path("/opt/rocm"))
     parser.add_argument("--mcpu", default="gfx906")
     parser.add_argument("--mattr", default="+sramecc,-xnack")
+    parser.add_argument("--b2r-strategy", choices=("darm", "guarded"), default="darm")
     parser.add_argument("--no-preopt", action="store_true",
                         help="Verify input to llc and skip the separate opt -O3 pass")
     parser.add_argument("--work-dir", type=Path, help="New directory for full search and build diagnostics")
@@ -72,7 +74,8 @@ def main():
     try:
         compile_kernel(args.ir, args.out, args.llvm12_bin.resolve(), args.rocm.resolve(),
                        function=args.function, work_dir=args.work_dir, target=args.mcpu,
-                       features=args.mattr, preopt=not args.no_preopt)
+                       features=args.mattr, preopt=not args.no_preopt,
+                       b2r_strategy=args.b2r_strategy)
     except (OSError, subprocess.CalledProcessError) as error:
         parser.exit(1, f"compile_kernel: {error}\n")
 

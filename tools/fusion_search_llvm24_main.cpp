@@ -131,11 +131,12 @@ static int runSearch(int argc, const char *const *argv, TrialWorker *batch = nul
   fusion::requestProfile.clear();
   try {
     std::string input,function,output,debug,split,left,right,replayParentHash,policy="llvm24";Options options;options.cleanupMode=CleanupMode::DarmCFGInstCombine;bool singleBranchB2B=true, strategyGiven=true, useDarmB2B=false;
+    B2RStrategy b2rStrategy = B2RStrategy::Darm;
     std::string recipeInput, quoteMode="on";
     bool recipeCache=false, fullSnapshots=true;
     bool controlOnly=false,catalogOnly=false;std::string ttiWorker="/home/chh/kernel-benchmark-suite/tools/run-llvm24-tti";
     for(int i=1;i<argc;++i){std::string k=argv[i];
-      if(k=="--help"){outs()<<"fusion-search v1 --ir FILE --function NAME --out FILE [--b2b-strategy dp1|darm] [--structural 0|1] [--split ID --left ID --right ID] [--debug-dir DIR] [--ir-snapshots full|compact] [--tti-worker EXECUTABLE] [--catalog-only 0|1] [--control-only 0|1] [--rounds N] [--trials N]\n";return 0;}
+      if(k=="--help"){outs()<<"fusion-search v1 --ir FILE --function NAME --out FILE [--b2b-strategy dp1|darm] [--b2r-strategy darm|guarded] [--structural 0|1] [--split ID --left ID --right ID] [--debug-dir DIR] [--ir-snapshots full|compact] [--tti-worker EXECUTABLE] [--catalog-only 0|1] [--control-only 0|1] [--rounds N] [--trials N]\n";return 0;}
       if(i+1==argc)throw std::runtime_error("missing option value");std::string v=argv[++i];
       if(k=="--control-only"){if(v!="0"&&v!="1")throw std::runtime_error("control-only must be 0 or 1");controlOnly=v=="1";}
       else if(k=="--catalog-only"){if(v!="0"&&v!="1")throw std::runtime_error("catalog-only must be 0 or 1");catalogOnly=v=="1";}
@@ -151,7 +152,11 @@ static int runSearch(int argc, const char *const *argv, TrialWorker *batch = nul
         if(v!="off" && v!="audit" && v!="on") throw std::runtime_error("invalid TTI quote cache mode");
         quoteMode=v;
       }
-      else if(k=="--b2r-strategy"){if(v!="darm")throw std::runtime_error("v1 B2R strategy is darm");}
+      else if(k=="--b2r-strategy"){
+        if(v!="darm" && v!="guarded")
+          throw std::runtime_error("b2r-strategy must be darm or guarded");
+        b2rStrategy=v=="guarded"?B2RStrategy::Guarded:B2RStrategy::Darm;
+      }
       else if(k=="--replay-parent-hash")replayParentHash=v;
       else if(k=="--ir")input=v;else if(k=="--function")function=v;else if(k=="--out")output=v;
       else if(k=="--b2b-strategy"){
@@ -273,7 +278,7 @@ static int runSearch(int argc, const char *const *argv, TrialWorker *batch = nul
     auto &llvm24Scorer = batch ? *batch->scorer : standaloneScorer;
     if(observer)jsonFile(debug+"/run.json",json::Object{
       {"schema","fusion-v1"},{"function",function},{"policy","llvm24"},
-      {"b2b_strategy",useDarmB2B?"darm":"dp1"},{"b2r_strategy","darm"},{"r2r_strategy","darm"},
+      {"b2b_strategy",useDarmB2B?"darm":"dp1"},{"b2r_strategy",b2rStrategy==B2RStrategy::Guarded?"guarded":"darm"},{"r2r_strategy","darm"},
       {"cleanup","darm-cfg-dce-instcombine"},{"phi_fold_threshold",7},
       {"initial_parent_hash",moduleHash(*module)},{"replay_parent_hash",replayParentHash},
       {"semantic_validation","not_run"}});
@@ -353,9 +358,33 @@ static int runSearch(int argc, const char *const *argv, TrialWorker *batch = nul
       }
       const bool allowDarmB2B = !strategyGiven || useDarmB2B;
       if (!plannedB2B) {
+        Trial boundaryFold;
         t = tryPair(*module, c, 0, options.optLevel, options.cleanupMode,
-                    logical.get(), allowDarmB2B);
+                    logical.get(), allowDarmB2B, b2rStrategy, &boundaryFold);
         if (t.valid) score = profileCall("evaluate_score",[&](){return evaluateTrial(*module, t, round, scorer);});
+        if (boundaryFold.valid) {
+          if (StringRef(score.reason).startswith("tti_quote_")) throw std::runtime_error(score.reason);
+          auto alternate = profileCall("evaluate_score",[&](){return evaluateTrial(*module, boundaryFold, round, scorer);});
+          if (StringRef(alternate.reason).startswith("tti_quote_")) throw std::runtime_error(alternate.reason);
+          json::Array layouts;
+          auto record = [&](const Trial &trial, const ScoreResult &scored) {
+            auto cost = scored.metrics.find("work_after");
+            layouts.push_back(json::Object{{"layout",trial.mergePath},
+                {"eligible",eligible(trial,scored,options)},
+                {"cost",cost==scored.metrics.end()?json::Value(nullptr):json::Value(cost->second)}});
+          };
+          record(t,score);
+          record(boundaryFold,alternate);
+          const bool originalEligible = eligible(t,score,options);
+          const bool alternateEligible = eligible(boundaryFold,alternate,options);
+          const bool betterScore = alternate.status == ScoreStatus::Scored &&
+              (score.status != ScoreStatus::Scored || alternate.total > score.total);
+          if (alternateEligible != originalEligible ? alternateEligible : betterScore) {
+            t = std::move(boundaryFold);
+            score = std::move(alternate);
+          }
+          t.layoutProfitability = std::move(layouts);
+        }
       }
       if (StringRef(score.reason).startswith("tti_quote_")) throw std::runtime_error(score.reason);
       if(observer)jsonFile(debug+"/tti-quote-cache.json",llvm24Scorer.quoteCacheStats());

@@ -93,7 +93,41 @@ void RegionMelder::recordBlockOrigin(BasicBlock *Left,BasicBlock *Right,BasicBlo
   BlockOrigins.push_back({sourceBlockID(Left),sourceBlockID(Right),label(Left),label(Right),WeakVH(Merged)});
 }
 
+// Project the replicated CFG onto its own side. Replication makes branch
+// choices leading to the matched block constant on that side.
+static void collectReachableBlocks(BasicBlock *Entry, BasicBlock *Exit,
+                                   SmallPtrSetImpl<BasicBlock *> &Reachable) {
+  SmallVector<BasicBlock *, 16> Worklist{Entry};
+  while (!Worklist.empty()) {
+    auto *Block = Worklist.pop_back_val();
+    if (Block == Exit || !Reachable.insert(Block).second)
+      continue;
+    auto *Branch = dyn_cast<BranchInst>(Block->getTerminator());
+    if (Branch && Branch->isConditional())
+      if (auto *Condition = dyn_cast<ConstantInt>(Branch->getCondition())) {
+        Worklist.push_back(Branch->getSuccessor(Condition->isZero() ? 1 : 0));
+        continue;
+      }
+    Worklist.append(succ_begin(Block), succ_end(Block));
+  }
+}
+
 void RegionMelder::cloneInstructions() {
+  SmallPtrSet<BasicBlock *, 16> ReachableLeft, ReachableRight;
+  if (GuardReplicatedMemory) {
+    collectReachableBlocks(EntryBlockL, ExitBlockL, ReachableLeft);
+    collectReachableBlocks(EntryBlockR, ExitBlockR, ReachableRight);
+  }
+  auto NeedsGap = [&](Instruction *Original, BasicBlock *Opposite,
+                      const SmallPtrSetImpl<BasicBlock *> &Reachable) {
+    if (Opposite->size() > 1)
+      return true;
+    if (GuardReplicatedMemory)
+      return Reachable.contains(Opposite) &&
+             !safeToExecuteUnconditionally(*Original);
+    return !NativeReplicationPredication;
+  };
+
   INFO << "Cloning instructions\n";
   // generate the control flow for merged region
   IRBuilder<> Builder(&MA.getParentFunction()->getEntryBlock());
@@ -167,16 +201,13 @@ void RegionMelder::cloneInstructions() {
         OrigToMergedValues[LeftI] = NewI;
         MergedInstructions.push_back(NewI);
 
-        // update splitRanges
-        // unpredication is not done if one the blocks is just a branch, occurs
-        // in region replication
+        // Empty replica blocks can share the merged control flow.
         auto ClonedRightParentIt =
             MergedValuesToRightValues.find(NewI->getParent());
         assert(ClonedRightParentIt != MergedValuesToRightValues.end() &&
                "Cloned left BB not found for right value!");
-        // if (cast<BasicBlock>(ClonedRightParentIt->second)->size() > 1)
         auto *corresponding = cast<BasicBlock>(ClonedRightParentIt->second);
-        if (!NativeReplicationPredication || corresponding->size() > 1)
+        if (NeedsGap(LeftI, corresponding, ReachableRight))
           updateSplitRangeMap(true, NewI);
       }
 
@@ -188,16 +219,13 @@ void RegionMelder::cloneInstructions() {
         OrigToMergedValues[RightI] = NewI;
         MergedInstructions.push_back(NewI);
 
-        // update splitRanges
-        // unpredication is not done if one the blocks is just a branch, occurs
-        // in region replication
+        // Empty replica blocks can share the merged control flow.
         auto ClonedLeftParentIt =
             MergedValuesToLeftValues.find(NewI->getParent());
         assert(ClonedLeftParentIt != MergedValuesToLeftValues.end() &&
                "Cloned left BB not found for right value!");
-        // if (cast<BasicBlock>(ClonedLeftParentIt->second)->size() > 1)
         auto *corresponding = cast<BasicBlock>(ClonedLeftParentIt->second);
-        if (!NativeReplicationPredication || corresponding->size() > 1)
+        if (NeedsGap(RightI, corresponding, ReachableLeft))
           updateSplitRangeMap(false, NewI);
       }
     }

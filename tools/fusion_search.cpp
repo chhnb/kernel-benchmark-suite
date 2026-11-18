@@ -712,22 +712,228 @@ static bool sideBlocksBoth(Function &f,Value *cond,std::vector<unsigned> (&sides
   return sideBlocks(f,cond,false,sides[0],why)&&sideBlocks(f,cond,true,sides[1],why);
 }
 
+// Recognize a guarded read followed by a shared read tail. The edge case
+// that originally bypassed the guard must have the same ordered read list
+// as the shared tail, with the region-side bases and a common edge index.
+static bool foldGuardedReadBoundary(BasicBlock &entry, Value *trialSide, DominatorTree &dt) {
+  auto conditional = [](BasicBlock *block) -> BranchInst * {
+    auto *br = dyn_cast<BranchInst>(block->getTerminator());
+    return br && br->isConditional() ? br : nullptr;
+  };
+  auto *outer = conditional(&entry);
+  if (!outer) return false;
+  auto *choice = dyn_cast<BinaryOperator>(outer->getCondition());
+  if (!choice || choice->getOpcode() != Instruction::And) return false;
+  auto *edge = outer->getSuccessor(0);
+  auto *guard = outer->getSuccessor(1);
+  auto *guardBranch = conditional(guard);
+  if (!guardBranch || edge->getSinglePredecessor() != &entry ||
+      guard->getSinglePredecessor() != &entry) return false;
+  Value *side = guardBranch->getCondition();
+  using namespace PatternMatch;
+  if (side != trialSide && !match(side, m_Not(m_Specific(trialSide)))) return false;
+  Value *boundary = choice->getOperand(0) == side ? choice->getOperand(1) :
+                    choice->getOperand(1) == side ? choice->getOperand(0) : nullptr;
+  if (!boundary || boundary == side) return false;
+  auto *mask = guardBranch->getSuccessor(0);
+  auto *check = guardBranch->getSuccessor(1);
+  auto *test = conditional(check);
+  if (!test || mask->getSinglePredecessor() != guard ||
+      mask->getTerminator()->getNumSuccessors() != 1 ||
+      mask->getSingleSuccessor() != check || pred_size(check) != 2)
+    return false;
+  auto *shared = test->getSuccessor(1);
+  auto *join = shared->getSingleSuccessor();
+  if (!join || edge->getSingleSuccessor() != join ||
+      edge->getTerminator()->getNumSuccessors() != 1 ||
+      shared->getTerminator()->getNumSuccessors() != 1 ||
+      shared->getSinglePredecessor() != check || !shared->phis().empty() ||
+      !test->getSuccessor(0)->phis().empty()) return false;
+  SmallPtrSet<BasicBlock *, 8> distinct;
+  for (auto *block : {&entry, edge, guard, mask, check, shared, join, test->getSuccessor(0)})
+    if (!distinct.insert(block).second) return false;
+  auto *testAnd = dyn_cast<BinaryOperator>(test->getCondition());
+  if (!testAnd || testAnd->getOpcode() != Instruction::And) return false;
+  Value *tested = testAnd->getOperand(0) == side ? testAnd->getOperand(1) :
+                  testAnd->getOperand(1) == side ? testAnd->getOperand(0) : nullptr;
+  auto *carry = dyn_cast<PHINode>(&check->front());
+  if (!carry || !carry->hasOneUse() || !testAnd->hasOneUse() ||
+      testAnd->getParent() != check || !isa<UndefValue>(carry->getIncomingValueForBlock(guard)))
+    return false;
+  // InstCombine can move the comparison into the protected block and
+  // carry the boolean instead of the load result.
+  const bool carriesComparison = tested == carry;
+  auto *compare = dyn_cast_or_null<ICmpInst>(
+      carriesComparison ? carry->getIncomingValueForBlock(mask) : tested);
+  if (!compare || !compare->hasOneUse() ||
+      compare->getParent() != (carriesComparison ? mask : check) ||
+      check->size() != (carriesComparison ? 3 : 4)) return false;
+  Value *compared = nullptr;
+  if (isa<Constant>(compare->getOperand(0))) compared = compare->getOperand(1);
+  else if (isa<Constant>(compare->getOperand(1))) compared = compare->getOperand(0);
+  if (!compared || (!carriesComparison && compared != carry)) return false;
+  auto *read = dyn_cast<LoadInst>(carriesComparison ? compared :
+                                  carry->getIncomingValueForBlock(mask));
+  if (!read || read->getParent() != mask || !read->isSimple() || !read->hasOneUse())
+    return false;
+  for (auto &inst : *guard)
+    if (!inst.isTerminator() && !safeToExecuteUnconditionally(inst)) return false;
+  for (auto &inst : *mask)
+    if (!inst.isTerminator() && &inst != read && !safeToExecuteUnconditionally(inst))
+      return false;
+
+  auto reads = [](BasicBlock *block, SmallVectorImpl<LoadInst *> &loads) {
+    for (auto &inst : *block) {
+      if (inst.isTerminator()) continue;
+      if (auto *load = dyn_cast<LoadInst>(&inst)) {
+        if (!load->isSimple()) return false;
+        loads.push_back(load);
+      } else if (!safeToExecuteUnconditionally(inst)) {
+        return false;
+      }
+    }
+    return true;
+  };
+  SmallVector<LoadInst *, 8> edgeReads, sharedReads;
+  if (!reads(edge, edgeReads) || !reads(shared, sharedReads) ||
+      edgeReads.empty() || edgeReads.size() != sharedReads.size()) return false;
+  DenseMap<Value *, Value *> paired;
+  Value *edgeIndex = nullptr;
+  SelectInst *index = nullptr;
+  for (unsigned i = 0; i < edgeReads.size(); ++i) {
+    auto *left = edgeReads[i], *right = sharedReads[i];
+    auto *from = dyn_cast<GetElementPtrInst>(left->getPointerOperand());
+    auto *to = dyn_cast<GetElementPtrInst>(right->getPointerOperand());
+    if (!from || !to || !from->isSameOperationAs(to) || from->getNumIndices() != 1 ||
+        from->isInBounds() != to->isInBounds() || !left->isSameOperationAs(right))
+      return false;
+    SmallVector<std::pair<unsigned, MDNode *>, 4> leftMetadata, rightMetadata;
+    left->getAllMetadataOtherThanDebugLoc(leftMetadata);
+    right->getAllMetadataOtherThanDebugLoc(rightMetadata);
+    if (leftMetadata != rightMetadata) return false;
+    auto *base = dyn_cast<SelectInst>(to->getPointerOperand());
+    auto *selectedIndex = dyn_cast<SelectInst>(to->getOperand(1));
+    if (!base || base->getCondition() != side || base->getTrueValue() != from->getPointerOperand() ||
+        !selectedIndex || selectedIndex->getParent() != shared ||
+        selectedIndex->getCondition() != side ||
+        (edgeIndex && edgeIndex != from->getOperand(1)) || (index && index != selectedIndex))
+      return false;
+    edgeIndex = from->getOperand(1);
+    index = selectedIndex;
+    paired[left] = right;
+  }
+  // Account for every outgoing value on the edge being redirected.
+  SmallVector<PHINode *, 8> undefOnEdge;
+  for (auto &phi : join->phis()) {
+    auto *from = phi.getIncomingValueForBlock(edge);
+    auto *to = phi.getIncomingValueForBlock(shared);
+    if (from == to || paired.lookup(from) == to) continue;
+    if (!isa<UndefValue>(from)) return false;
+    undefOnEdge.push_back(&phi);
+  }
+  for (auto &inst : *edge)
+    for (auto *user : inst.users()) {
+      auto *use = dyn_cast<Instruction>(user);
+      if (!use || (use->getParent() != edge &&
+                   !(paired.count(&inst) && isa<PHINode>(use) && use->getParent() == join)))
+        return false;
+    }
+
+  // Form both bypass indices at Entry. Any newly executed computation must
+  // be speculatable even when the corresponding index is never selected.
+  auto available = [&](Value *value, BasicBlock *local) {
+    SmallPtrSet<Value *, 16> seen;
+    SmallVector<Value *, 16> work{value};
+    while (!work.empty()) {
+      auto *def = dyn_cast<Instruction>(work.pop_back_val());
+      if (!def || dt.dominates(def, outer) || !seen.insert(def).second) continue;
+      if (def->getParent() != local || !safeToExecuteUnconditionally(*def) ||
+          isa<PHINode>(def)) return false;
+      work.append(def->op_begin(), def->op_end());
+    }
+    return true;
+  };
+  Value *regionIndex = index->getTrueValue();
+  if (!available(edgeIndex, edge) || !available(index->getFalseValue(), shared))
+    return false;
+  if (auto *definition = dyn_cast<Instruction>(regionIndex))
+    if (!dt.dominates(definition, guardBranch) && definition->getParent() != mask)
+      return false;
+  // Restrict the region index select to the matched address calculations.
+  for (auto *user : index->users())
+    if (llvm::none_of(sharedReads, [&](LoadInst *load) {
+          return load->getPointerOperand() == user;
+        })) return false;
+
+  IRBuilder<> builder(outer);
+  DenseMap<Value *, Value *> emitted;
+  std::function<Value *(Value *)> emit = [&](Value *value) -> Value * {
+    auto *def = dyn_cast<Instruction>(value);
+    if (!def || dt.dominates(def, outer)) return value;
+    if (auto *mapped = emitted.lookup(value)) return mapped;
+    auto *copy = def->clone();
+    for (unsigned i = 0; i < def->getNumOperands(); ++i)
+      copy->setOperand(i, emit(def->getOperand(i)));
+    return emitted[value] = builder.Insert(copy);
+  };
+  Value *atEdge = emit(edgeIndex);
+  Value *atShort = emit(index->getFalseValue());
+  auto *bypass = builder.CreateSelect(side, atEdge, atShort, "boundary.index");
+  auto *needsMask = builder.CreateAnd(side, builder.CreateNot(boundary), "boundary.read.guard");
+  outer->setCondition(needsMask);
+  outer->setMetadata(LLVMContext::MD_prof, nullptr);
+  outer->setSuccessor(0, guard);
+  outer->setSuccessor(1, shared);
+  auto *fromPath = PHINode::Create(index->getType(), 2, "boundary.shared.index", &shared->front());
+  fromPath->addIncoming(bypass, &entry);
+  fromPath->addIncoming(regionIndex, guard);
+  fromPath->addIncoming(UndefValue::get(index->getType()), check);
+  index->replaceAllUsesWith(fromPath);
+  index->eraseFromParent();
+
+  IRBuilder<> results(shared->getTerminator());
+  for (auto *phi : undefOnEdge) {
+    unsigned incoming = phi->getBasicBlockIndex(shared);
+    phi->setIncomingValue(incoming, results.CreateSelect(choice,
+        phi->getIncomingValueForBlock(edge), phi->getIncomingValue(incoming)));
+  }
+  auto *detour = test->getSuccessor(0);
+  while (&mask->front() != mask->getTerminator())
+    mask->front().moveBefore(guardBranch);
+  if (!carriesComparison) {
+    compare->replaceUsesOfWith(carry, read);
+    compare->moveBefore(guardBranch);
+  }
+  BranchInst::Create(detour, shared, compare, guardBranch);
+  guardBranch->eraseFromParent();
+  // Disconnect the dead paths before removing their phi entries at Join.
+  DeleteDeadBlocks({edge, mask, check});
+
+  return true;
+}
+
 // Share identical trailing arithmetic by redirecting the short arm to
 // the existing anchor. All other edges, including the long arm's memory
 // paths, keep their original execution conditions.
-static Trial tryPairImpl(const Module&parent,const Candidate&c,unsigned version,unsigned level,CleanupMode mode,const LogicalRegionState *logical,bool nested,bool allowB2B);
+static Trial tryPairImpl(const Module&parent,const Candidate&c,unsigned version,unsigned level,CleanupMode mode,const LogicalRegionState *logical,bool nested,bool allowB2B,B2RStrategy b2rStrategy,Trial *boundaryFold);
 // Public entry. The outermost call owns the side tag and removes it from every
 // IR it returns, so committed modules, debug dumps and hashes never carry it.
 Trial tryPair(const Module&parent,const Candidate&c,unsigned version,unsigned level,CleanupMode mode,const LogicalRegionState *logical) {
   return tryPair(parent,c,version,level,mode,logical,true);
 }
-Trial tryPair(const Module&parent,const Candidate&c,unsigned version,unsigned level,CleanupMode mode,const LogicalRegionState *logical,bool allowB2B) {
+Trial tryPair(const Module&parent,const Candidate&c,unsigned version,unsigned level,CleanupMode mode,const LogicalRegionState *logical,bool allowB2B,B2RStrategy b2rStrategy,Trial *boundaryFold) {
   bool nested=hasSideTag(parent.getFunction(c.function));
-  Trial t=tryPairImpl(parent,c,version,level,mode,logical,nested,allowB2B);
-  if(!nested){stripSideTag(t.raw.get());stripSideTag(t.normalized.get());}
+  Trial t=tryPairImpl(parent,c,version,level,mode,logical,nested,allowB2B,b2rStrategy,boundaryFold);
+  if(!nested){
+    stripSideTag(t.raw.get());stripSideTag(t.normalized.get());
+    if (boundaryFold && boundaryFold->valid) {
+      stripSideTag(boundaryFold->raw.get());
+      stripSideTag(boundaryFold->normalized.get());
+    }
+  }
   return t;
 }
-static Trial tryPairImpl(const Module&parent,const Candidate&c,unsigned version,unsigned level,CleanupMode mode,const LogicalRegionState *logical,bool nested,bool allowB2B) {
+static Trial tryPairImpl(const Module&parent,const Candidate&c,unsigned version,unsigned level,CleanupMode mode,const LogicalRegionState *logical,bool nested,bool allowB2B,B2RStrategy b2rStrategy,Trial *boundaryFold) {
   auto started=Clock::now();Trial t;t.candidate=c;t.cleanupMode=mode;auto reject=[&](const char*reason){t.reason=reason;t.totalMs=millis(started);return std::move(t);};
   // After-side reachability on the final cleaned IR, before the tag is stripped.
   auto finishSides=[&](Function *after){
@@ -823,9 +1029,8 @@ static Trial tryPairImpl(const Module&parent,const Candidate&c,unsigned version,
       leftRequired &&
       rightRequired && !logical &&
       guardsUnsafeWork;
-  // DARM aligns the original single block's accesses with the selected
-  // block in the opposite region. The guarded strategy audits accesses
-  // from the region side separately.
+  // Both strategies allow ordinary accesses in the expanded block and the
+  // opposite region. The strategy controls how unmatched work is emitted.
   const bool replicationWithMemory = !l.region && !logical &&
       leftRequired != rightRequired &&
       (leftRequired ? l.entry : r.entry) ==
@@ -1046,7 +1251,9 @@ static Trial tryPairImpl(const Module&parent,const Candidate&c,unsigned version,
   // to RegionMelder. No failure-driven fallback or second clone is involved.
   AdjacentLeafEntry leafEntry;
   bool directLeaves=!downstreamWrite&&regionStores.empty()&&bool(l.region)==bool(r.region)&&l.exit&&l.exit==r.exit&&leafEntry.prepare(l.entry,r.entry,a.dt,a.loops,bool(l.region));
-  t.mergePath=directLeaves?(l.region?"darm-adjacent-R2R":"darm-adjacent-B2B"):"darm-"+t.planKind;
+  const bool guardedB2R = b2rStrategy == B2RStrategy::Guarded &&
+                          (t.planKind == "B2R" || t.planKind == "R2B");
+  t.mergePath=directLeaves?(l.region?"darm-adjacent-R2R":"darm-adjacent-B2B"):(guardedB2R?"guarded-":"darm-")+t.planKind;
   if(!directLeaves&&(t.planKind=="B2R"||t.planKind=="R2B")){
     auto *d=decisionDiscriminator(split);
     if(optionalBehindSameDecision(r.entry,br->getSuccessor(1),d,a)||optionalBehindSameDecision(l.entry,br->getSuccessor(0),d,a))
@@ -1125,7 +1332,12 @@ static Trial tryPairImpl(const Module&parent,const Candidate&c,unsigned version,
         }
       };
     }
-    melder.NativeReplicationPredication = darmReplication && t.replication;
+    // Empty replica blocks carry no accesses from the opposite arm.
+    // Guard unsafe gaps that the other side could reach. Keep conditional
+    // stores on their original path without an old-value load or writeback.
+    melder.GuardReplicatedMemory = guardedB2R && t.replication;
+    melder.NativeReplicationPredication =
+        darmReplication && t.replication && !melder.GuardReplicatedMemory;
     try { melder.merge(0); }
     catch(const std::exception &error) { return reject(error.what()); }
   }
@@ -1248,7 +1460,58 @@ static Trial tryPairImpl(const Module&parent,const Candidate&c,unsigned version,
   ft=Clock::now();t.after=features(*after);t.featuresMs+=millis(ft);if(t.after.loops>t.before.loops)return reject("new_normalized_loop");
   if(t.logicalState){if(!t.logicalState->stageMerge(c))return reject("logical_state_candidate_mismatch");t.logicalState->rebind(*after);}
   finishSides(after);
-  t.valid=true;t.reason="verified_ir_only";t.totalMs=millis(started);return t;
+  t.valid=true;t.reason="verified_ir_only";t.totalMs=millis(started);
+  if (boundaryFold && guardedB2R && t.replication && !logical) {
+    auto startFold = Clock::now();
+    Trial alternate;
+    alternate.raw = CloneModule(*t.normalized);
+    auto &target = *alternate.raw->getFunction(c.function);
+    std::string sideError;
+    auto *trialSide = findSideCondition(target, sideError);
+    if (!trialSide) return t;
+    DominatorTree dt(target);
+    for (auto &block : target) {
+      if (!foldGuardedReadBoundary(block, trialSide, dt)) continue;
+      if (verifyModule(*alternate.raw)) break;
+      canonicalPhiOrder(*alternate.raw, c.function);
+      alternate.afterRaw = features(target);
+      alternate.normalized = CloneModule(*alternate.raw);
+      alternate.cleanupIterations = cleanup(*alternate.normalized, c.function, level, mode);
+      canonicalPhiOrder(*alternate.normalized, c.function);
+      if (verifyModule(*alternate.normalized)) break;
+      auto &finalTarget = *alternate.normalized->getFunction(c.function);
+      alternate.after = features(finalTarget);
+      if (alternate.afterRaw.loops > t.before.loops || alternate.after.loops > t.before.loops) break;
+      alternate.cleanupMode = mode;
+      alternate.candidate = c;
+      alternate.before = t.before;
+      alternate.left = t.left;
+      alternate.right = t.right;
+      alternate.leftContext = t.leftContext;
+      alternate.rightContext = t.rightContext;
+      alternate.planKind = t.planKind;
+      alternate.matchedLeft = t.matchedLeft;
+      alternate.matchedRight = t.matchedRight;
+      alternate.replication = true;
+      alternate.swapped = t.swapped;
+      alternate.loopHeaderSplit = t.loopHeaderSplit;
+      alternate.originalSimilarity = t.originalSimilarity;
+      alternate.originalProfitable = t.originalProfitable;
+      alternate.sideBeforeOk = t.sideBeforeOk;
+      for (unsigned side : {0u, 1u}) alternate.sideBefore[side] = t.sideBefore[side];
+      std::string why;
+      if (auto *condition = findSideCondition(finalTarget, why))
+        alternate.sideAfterOk = sideBlocksBoth(finalTarget, condition, alternate.sideAfter, why);
+      alternate.sideReason = alternate.sideAfterOk ? t.sideReason : why;
+      alternate.mergePath = t.mergePath + "-boundary-fold";
+      alternate.valid = alternate.rewriteStarted = true;
+      alternate.reason = "verified_ir_only";
+      alternate.totalMs = millis(startFold);
+      *boundaryFold = std::move(alternate);
+      break;
+    }
+  }
+  return t;
 }
 // A direct diamond can share arithmetic before the original split or after
 // both arms. Keeping the arm blocks intact preserves their execution domains
