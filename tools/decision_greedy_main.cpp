@@ -1,5 +1,6 @@
 #include "decision_model.h"
 #include "domain_competition.h"
+#include "ordered_arms.h"
 #include "incremental_candidate_queue.h"
 #include "scoped_greedy_adapter.h"
 #include "llvm/Analysis/PostDominators.h"
@@ -51,10 +52,11 @@ static bool eligible(const decision::Arm&a,const decision::Arm&b){return a.kind!
 // use block indices in that module, including any new dispatch and join.
 static bool prepareArmPairs(Module &module, StringRef function, unsigned decisionIndex,
                               unsigned left, unsigned conditionBudget, std::string &reason,
-                              std::vector<std::array<std::string,3>> &coordinates) {
+                              std::vector<std::array<std::string,3>> &coordinates, const decision::OrderedArms *table) {
   auto &f=*module.getFunction(function);
   auto decisions=decision::discover(f);
   auto &d=decisions.at(decisionIndex);
+  if(table) { table->arrange(d); decision::OrderedArms::stamp(d,left); }
   auto *leftEntry=d.arms.at(left).entry;
   auto *rightEntry=d.arms.at(left+1).entry;
   BasicBlock *dispatch=nullptr;
@@ -111,13 +113,13 @@ int main(int argc,char**argv){try{
  auto timingReport=[&](){json::Object phases;for(const auto &kv:phaseMilliseconds)phases[kv.first]=json::Object{{"milliseconds",kv.second},{"calls",phaseCalls[kv.first]}};return phases;};
 
  if(argc==2&&StringRef(argv[1])=="--help"){
-   outs()<<"usage: decision-greedy INPUT FUNCTION [TOOL_ROOT] NEW_OUTPUT [--b2b-strategy dp1|darm] [--trial-policy whole-function|scoped-full|scoped-reuse] [--domain-schedule legacy|trees|competing]\n";
+   outs()<<"usage: decision-greedy INPUT FUNCTION [TOOL_ROOT] NEW_OUTPUT [--b2b-strategy dp1|darm] [--trial-policy whole-function|scoped-full|scoped-reuse] [--domain-schedule legacy|trees|competing|ordered]\n";
    return 0;
  }
  std::string b2bStrategy="dp1", quoteMode="on", trialPolicy="whole-function", domainSchedule="legacy";
  while (argc >= 3) {
    StringRef option(argv[argc-2]), value(argv[argc-1]);
-   if(option == "--domain-schedule" && (value == "legacy" || value == "trees" || value == "competing")) { domainSchedule=value.str();argc-=2;continue; }
+   if(option == "--domain-schedule" && (value == "legacy" || value == "trees" || value == "competing" || value == "ordered")) { domainSchedule=value.str();argc-=2;continue; }
    if (option == "--b2r-strategy" && value == "darm") {
      argc -= 2;
      continue;
@@ -197,7 +199,12 @@ int main(int argc,char**argv){try{
  Optional<json::Value> structuralCatalog;
 
  mark("initialization");
- for(auto &target:targets){for(unsigned iteration=0;iteration<(domainSchedule!="legacy"?100000u:256u);++iteration){
+ const bool ordered=domainSchedule=="ordered";
+ bool boundaryTagsAvailable=true;
+ if(ordered)for(auto &bb:*initial->getFunction(fn))for(auto &i:bb)
+   if(i.getMetadata(decision::OrderedArms::marker))boundaryTagsAvailable=false;
+ for(auto &target:targets){decision::OrderedArms table;
+ for(unsigned iteration=0;iteration<(domainSchedule!="legacy"?100000u:256u);++iteration){
   auto m=scopedParent?std::move(scopedParent):parseIRFile(current,error,ctx);if(!m)throw std::runtime_error("cannot read parent");
   if(scoped)scoped->begin(*m,rounds.size());
   std::string wholeTrialInput=current;
@@ -209,10 +216,18 @@ int main(int argc,char**argv){try{
   auto catalog=decision::discover(*m->getFunction(fn));
   unsigned di=0;
   while(di<catalog.size()&&catalog[di].id!=target)++di;
-  if(!target.empty()&&di==catalog.size()){stops.push_back(json::Object{{"decision",target},{"reason","decision_completed_or_absorbed"}});if(scoped)scopedParent=std::move(m);break;}
+  const bool bound=ordered && table.nextDecision.has_value();
+  if(bound)di=*table.nextDecision;
+  if(!target.empty()&&di>=catalog.size()){stops.push_back(json::Object{{"decision",target},{"reason","decision_completed_or_absorbed"}});if(scoped)scopedParent=std::move(m);break;}
   if(!target.empty()) {
     unsigned identities=0;for(auto &candidate:catalog)identities+=candidate.id==target;
-    if(identities!=1)throw std::runtime_error("ambiguous decision identity: "+target);
+    if(!bound && identities!=1)throw std::runtime_error("ambiguous decision identity: "+target);
+  }
+  const bool track=ordered && boundaryTagsAvailable && !target.empty() && !table.retired;
+  if(track){
+    if(table.order.empty())table.start(catalog[di].arms.size());
+    table.atFunctionEntry=catalog[di].root==&m->getFunction(fn)->getEntryBlock();
+    table.arrange(catalog[di]);
   }
   mark("parse_and_discover");
   const std::string scan=out+"/structural-"+std::to_string(rounds.size());
@@ -232,7 +247,7 @@ int main(int argc,char**argv){try{
   fusion::FusionDomains domains(*m->getFunction(fn),catalog);
   BasicBlock *activeDomain=nullptr;
   fusion::CompetingDomains competition;
-  if(domainSchedule=="competing" && target.empty())
+  if((domainSchedule=="competing" || ordered) && target.empty())
     competition=fusion::competingDomains(*m->getFunction(fn),domains,candidates,attemptedStructural);
   auto activeOwner=[&](BasicBlock *owner) {
     return competition.owners.empty() ? owner==activeDomain : competition.owners.count(owner)!=0;
@@ -250,7 +265,10 @@ int main(int argc,char**argv){try{
   // Re-discover maximal preparation targets from the current parent, including
   // decisions that appeared after the initial target list was built.
   std::vector<unsigned> prepare;
-  if(domainSchedule!="legacy") {
+  if(ordered && !target.empty()){
+    activeDomain=domains.root(catalog[di].root);
+    prepare.push_back(di);
+  }else if(domainSchedule!="legacy") {
     if(!target.empty())activeDomain=domains.root(catalog[di].root);
     std::set<BasicBlock*> coveredTests;
     for(unsigned i=0;i<catalog.size();++i){
@@ -286,7 +304,7 @@ int main(int argc,char**argv){try{
       auto prepared=CloneModule(*m);
       std::string reason;
       std::vector<std::array<std::string,3>> coordinates;
-      if(prepareArmPairs(*prepared,fn,owner,left,conditionBudget,reason,coordinates)){
+      if(prepareArmPairs(*prepared,fn,owner,left,conditionBudget,reason,coordinates,track ? &table : nullptr)){
         const std::string decisionSuffix=domainSchedule!="legacy" ? "-"+std::to_string(owner) : "";
         const auto input=out+"/prepared-"+std::to_string(rounds.size())+decisionSuffix+"-"+std::to_string(left)+".ll";
         std::error_code ec;
@@ -368,7 +386,7 @@ int main(int argc,char**argv){try{
       for(const auto &entry:candidates) {
         const auto &c=*entry.getAsObject();auto split=c.getString("split")->str();
         if(split==decisionSplit)originalRootCandidates.push_back(json::Value(json::Object(c)));
-        else if(domains.root(split)==domains.root(decisionSplit))
+        else if(!ordered && domains.root(split)==domains.root(decisionSplit))
           extendedTreeCandidates.push_back(json::Value(json::Object(c)));
       }
       candidateLists={&originalRootCandidates,&normalizedCandidates,&extendedTreeCandidates};
@@ -665,6 +683,26 @@ int main(int argc,char**argv){try{
       auto product=parseIRFile(best+"/fused.ll",error,ctx);
       if(!product)throw std::runtime_error("cannot parse whole-function commit");
       scoped->restampWholeCommit(*product);writeModule(*product,best+"/fused.ll");scopedParent=std::move(product);
+    }
+  }
+  if(track){
+    record["ordered_arms"]=table.describe(catalog[di]);
+    auto &rows=*record.getArray("attempts");
+    auto winner=std::find_if(rows.begin(),rows.end(),[&](auto &row){
+      return row.getAsObject()->getString("directory")==StringRef(best);
+    });
+    if(winner==rows.end())throw std::runtime_error("ordered winner missing");
+    auto ordinal=winner->getAsObject()->getInteger("prepared_ordinal");
+    if(ordinal){
+      auto cleaned=parseIRFile(best+"/fused.ll",error,ctx);
+      if(!cleaned)throw std::runtime_error("cannot bind ordered winner");
+      record["ordered_left"]=*ordinal;
+      record["ordered_update"]=table.advance(*cleaned->getFunction(fn),*ordinal);
+      if(verifyModule(*cleaned,&errs()))throw std::runtime_error("invalid ordered winner");
+      writeModule(*cleaned,best+"/fused.ll");
+    }else{
+      table.retired=true;table.nextDecision.reset();
+      record["ordered_update"]="structural_winner_rediscover";
     }
   }
   recordResources(best+"/fused.ll",best+"/resources",record);
