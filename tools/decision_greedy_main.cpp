@@ -215,7 +215,8 @@ int main(int argc,char**argv){try{
      record["backend_resources_error"]=std::string(error.what());
    }
  };
- auto report=[&](StringRef status){save(out+"/summary.json",json::Value(json::Object{{"status",status.str()},{"driver_phase_timings",timingReport()},{"elapsed_ms",std::chrono::duration<double,std::milli>(Clock::now()-started).count()},{"domain_schedule",domainSchedule},{"trial_policy",trialPolicy},{"scoped_trials",scoped?json::Value(scoped->report()):json::Value(nullptr)},{"search","per-decision greedy; best positive adjacent or structural candidate"},{"cfg_cleanup","structural"},{"structural_cleanup",structuralCleanup},{"structural_candidates_enabled",true},{"shared_arm_trials",true},{"cross_level_b2r",false},{"pipeline_version",domainSchedule=="ordered"?"v2":"v1"},{"candidate_jobs",structuralJobs},{"candidate_scheduler","continuous-queue"},{"persistent_trial_workers",true},{"condition_budget",conditionBudget},{"phi_fold_threshold",7},{"r2r_enumeration","darm-alignment"},{"b2b_strategy",b2bStrategy},{"tti_quote_cache",quoteMode},{"backend_resource_gate_enabled",false},{"uniform_loss_guard_enabled",false},{"max_uniform_loss",-1},{"max_pressure_growth",-1},{"max_pressure",-1},{"initial_cost",initialCost},{"final_cost",parentCost},{"commits",int64_t(commits)},{"trials",int64_t(trials)},{"final_ir",current},{"rounds",json::Value(json::Array(rounds))},{"stops",json::Value(json::Array(stops))}}));};
+ unsigned reusedSweepSnapshots=0;
+ auto report=[&](StringRef status){save(out+"/summary.json",json::Value(json::Object{{"status",status.str()},{"driver_phase_timings",timingReport()},{"elapsed_ms",std::chrono::duration<double,std::milli>(Clock::now()-started).count()},{"domain_schedule",domainSchedule},{"trial_policy",trialPolicy},{"scoped_trials",scoped?json::Value(scoped->report()):json::Value(nullptr)},{"search","per-decision greedy; best positive adjacent or structural candidate"},{"cfg_cleanup","structural"},{"structural_cleanup",structuralCleanup},{"structural_candidates_enabled",true},{"shared_arm_trials",true},{"cross_level_b2r",false},{"reused_sweep_snapshots",int64_t(reusedSweepSnapshots)},{"pipeline_version",domainSchedule=="ordered"?"v2":"v1"},{"candidate_jobs",structuralJobs},{"candidate_scheduler","continuous-queue"},{"persistent_trial_workers",true},{"condition_budget",conditionBudget},{"phi_fold_threshold",7},{"r2r_enumeration","darm-alignment"},{"b2b_strategy",b2bStrategy},{"tti_quote_cache",quoteMode},{"backend_resource_gate_enabled",false},{"uniform_loss_guard_enabled",false},{"max_uniform_loss",-1},{"max_pressure_growth",-1},{"max_pressure",-1},{"initial_cost",initialCost},{"final_cost",parentCost},{"commits",int64_t(commits)},{"trials",int64_t(trials)},{"final_ir",current},{"rounds",json::Value(json::Array(rounds))},{"stops",json::Value(json::Array(stops))}}));};
  report("running");
  fusion::IncrementalCandidateQueue candidateQueue;
  std::unique_ptr<Module> scopedParent;if(scoped)scopedParent=CloneModule(*initial);
@@ -231,8 +232,17 @@ int main(int argc,char**argv){try{
  if(ordered)for(auto &bb:*initial->getFunction(fn))for(auto &i:bb)
    if(i.getMetadata(decision::OrderedArms::marker))boundaryTagsAvailable=false;
  for(auto &target:targets){decision::OrderedArms table;
+ // Only a sweep round without a commit may hand this immutable snapshot
+ // to the next round. Candidate attempts remain specific to each round.
+ std::unique_ptr<Module> sweepParent;
+ std::vector<decision::Decision> sweepCatalog;
+ std::optional<fusion::FusionDomains> sweepDomains;
  for(unsigned iteration=0;iteration<(domainSchedule!="legacy"?100000u:256u);++iteration){
-  auto m=scopedParent?std::move(scopedParent):parseIRFile(current,error,ctx);if(!m)throw std::runtime_error("cannot read parent");
+  const bool reuseSweepSnapshot=bool(sweepParent);
+  if(reuseSweepSnapshot)++reusedSweepSnapshots;
+  auto m=reuseSweepSnapshot ? std::move(sweepParent)
+       : scopedParent ? std::move(scopedParent) : parseIRFile(current,error,ctx);
+  if(!m)throw std::runtime_error("cannot read parent");
   if(scoped)scoped->begin(*m,rounds.size());
   std::string wholeTrialInput=current;
   auto stripIncrementalTags=[](Module &module){for(auto &f:module)for(auto &b:f)for(auto &i:b)i.setMetadata("fusion.incremental.identity",nullptr);};
@@ -240,7 +250,8 @@ int main(int argc,char**argv){try{
     auto untracked=CloneModule(*m);stripIncrementalTags(*untracked);
     wholeTrialInput=out+"/whole-parent-"+std::to_string(rounds.size())+".ll";writeModule(*untracked,wholeTrialInput);
   }
-  auto catalog=decision::discover(*m->getFunction(fn));
+  auto catalog=reuseSweepSnapshot ? std::move(sweepCatalog)
+                                  : decision::discover(*m->getFunction(fn));
   unsigned di=0;
   while(di<catalog.size()&&catalog[di].id!=target)++di;
   const bool bound=ordered && table.nextDecision.has_value();
@@ -271,7 +282,9 @@ int main(int argc,char**argv){try{
   }
   const auto &candidates=*structuralCatalog->getAsObject()->getArray("candidates");
   mark("enumerate_catalog");
-  fusion::FusionDomains domains(*m->getFunction(fn),catalog);
+  auto domains=reuseSweepSnapshot ? std::move(*sweepDomains)
+                                  : fusion::FusionDomains(*m->getFunction(fn),catalog);
+  sweepDomains.reset();
   BasicBlock *activeDomain=nullptr;
   fusion::CompetingDomains competition;
   if((domainSchedule=="competing" || ordered) && target.empty())
@@ -712,7 +725,9 @@ int main(int argc,char**argv){try{
   if(best.empty() && domainSchedule!="legacy" && target.empty() && (!prepare.empty() || !record.getArray("attempts")->empty())) {
     record["domain_exhausted"]=true;
     rounds.push_back(std::move(record));report("running");mark("record_and_commit");
-    if(scoped)scopedParent=std::move(m);
+    sweepParent=std::move(m);
+    sweepCatalog=std::move(catalog);
+    sweepDomains=std::move(domains);
     continue;
   }
   if(best.empty()){rounds.push_back(std::move(record));stops.push_back(json::Object{{"decision",target},{"reason","no_positive_legal_candidate"}});report("running");if(scoped)scopedParent=std::move(m);mark("record_and_commit");break;}
