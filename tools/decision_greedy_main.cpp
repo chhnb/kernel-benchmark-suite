@@ -1,5 +1,5 @@
 #include "decision_model.h"
-#include "fusion_domains.h"
+#include "domain_competition.h"
 #include "incremental_candidate_queue.h"
 #include "scoped_greedy_adapter.h"
 #include "llvm/Analysis/PostDominators.h"
@@ -111,13 +111,13 @@ int main(int argc,char**argv){try{
  auto timingReport=[&](){json::Object phases;for(const auto &kv:phaseMilliseconds)phases[kv.first]=json::Object{{"milliseconds",kv.second},{"calls",phaseCalls[kv.first]}};return phases;};
 
  if(argc==2&&StringRef(argv[1])=="--help"){
-   outs()<<"usage: decision-greedy INPUT FUNCTION [TOOL_ROOT] NEW_OUTPUT [--b2b-strategy dp1|darm] [--trial-policy whole-function|scoped-full|scoped-reuse] [--domain-schedule legacy|trees]\n";
+   outs()<<"usage: decision-greedy INPUT FUNCTION [TOOL_ROOT] NEW_OUTPUT [--b2b-strategy dp1|darm] [--trial-policy whole-function|scoped-full|scoped-reuse] [--domain-schedule legacy|trees|competing]\n";
    return 0;
  }
  std::string b2bStrategy="dp1", quoteMode="on", trialPolicy="whole-function", domainSchedule="legacy";
  while (argc >= 3) {
    StringRef option(argv[argc-2]), value(argv[argc-1]);
-   if(option == "--domain-schedule" && (value == "legacy" || value == "trees")) { domainSchedule=value.str();argc-=2;continue; }
+   if(option == "--domain-schedule" && (value == "legacy" || value == "trees" || value == "competing")) { domainSchedule=value.str();argc-=2;continue; }
    if (option == "--b2r-strategy" && value == "darm") {
      argc -= 2;
      continue;
@@ -135,7 +135,7 @@ int main(int argc,char**argv){try{
  }
  if(argc!=4&&argc!=5)
    throw std::runtime_error("usage: decision-greedy INPUT FUNCTION [TOOL_ROOT] NEW_OUTPUT [--b2b-strategy dp1|darm]");
- if(domainSchedule=="trees"&&trialPolicy!="whole-function")throw std::runtime_error("tree scheduling currently requires unchanged whole-function trials");
+ if(domainSchedule!="legacy"&&trialPolicy!="whole-function")throw std::runtime_error("tree scheduling currently requires unchanged whole-function trials");
  if(trialPolicy!="whole-function"&&b2bStrategy!="dp1")throw std::runtime_error("scoped trial policy requires dp1");
  const bool implicitRoot=argc==4;
  std::string root;
@@ -197,7 +197,7 @@ int main(int argc,char**argv){try{
  Optional<json::Value> structuralCatalog;
 
  mark("initialization");
- for(auto &target:targets){for(unsigned iteration=0;iteration<(domainSchedule=="trees"?100000u:256u);++iteration){
+ for(auto &target:targets){for(unsigned iteration=0;iteration<(domainSchedule!="legacy"?100000u:256u);++iteration){
   auto m=scopedParent?std::move(scopedParent):parseIRFile(current,error,ctx);if(!m)throw std::runtime_error("cannot read parent");
   if(scoped)scoped->begin(*m,rounds.size());
   std::string wholeTrialInput=current;
@@ -231,18 +231,26 @@ int main(int argc,char**argv){try{
   mark("enumerate_catalog");
   fusion::FusionDomains domains(*m->getFunction(fn),catalog);
   BasicBlock *activeDomain=nullptr;
-  if(domainSchedule=="trees" && target.empty()) {
+  fusion::CompetingDomains competition;
+  if(domainSchedule=="competing" && target.empty())
+    competition=fusion::competingDomains(*m->getFunction(fn),domains,candidates,attemptedStructural);
+  auto activeOwner=[&](BasicBlock *owner) {
+    return competition.owners.empty() ? owner==activeDomain : competition.owners.count(owner)!=0;
+  };
+  if(domainSchedule!="legacy" && target.empty()) {
     for(const auto &entry:candidates) {
       const auto &c=*entry.getAsObject();
       if(auto reason=c.getString("preflight_rejection"))if(!reason->empty())continue;
       if(attemptedStructural.count(c.getString("candidate")->str()))continue;
-      activeDomain=domains.root(c.getString("split")->str());break;
+      auto *owner=domains.root(c.getString("split")->str());
+      if(!competition.owners.empty() && !activeOwner(owner))continue;
+      activeDomain=owner;break;
     }
   }
   // Re-discover maximal preparation targets from the current parent, including
   // decisions that appeared after the initial target list was built.
   std::vector<unsigned> prepare;
-  if(domainSchedule=="trees") {
+  if(domainSchedule!="legacy") {
     if(!target.empty())activeDomain=domains.root(catalog[di].root);
     std::set<BasicBlock*> coveredTests;
     for(unsigned i=0;i<catalog.size();++i){
@@ -253,7 +261,7 @@ int main(int argc,char**argv){try{
       if(attemptedPreparation.count(i))continue;
       auto *owner=domains.root(decision.root);
       if(!activeDomain)activeDomain=owner;
-      if(owner==activeDomain)prepare.push_back(i);
+      if(activeOwner(owner))prepare.push_back(i);
     }
     if(!target.empty() && !attemptedPreparation.count(di) &&
        std::find(prepare.begin(),prepare.end(),di)==prepare.end())prepare.insert(prepare.begin(),di);
@@ -271,7 +279,7 @@ int main(int argc,char**argv){try{
   };
   std::vector<PreparedPair> preparedPairs;
   for(unsigned owner:prepare){
-    if(domainSchedule=="trees")attemptedPreparation.insert(owner);
+    if(domainSchedule!="legacy")attemptedPreparation.insert(owner);
     auto &d=catalog[owner];
     for (unsigned left=0; left+1<d.arms.size(); ++left) {
       if(!eligible(d.arms[left],d.arms[left+1]))continue;
@@ -279,7 +287,7 @@ int main(int argc,char**argv){try{
       std::string reason;
       std::vector<std::array<std::string,3>> coordinates;
       if(prepareArmPairs(*prepared,fn,owner,left,conditionBudget,reason,coordinates)){
-        const std::string decisionSuffix=domainSchedule=="trees" ? "-"+std::to_string(owner) : "";
+        const std::string decisionSuffix=domainSchedule!="legacy" ? "-"+std::to_string(owner) : "";
         const auto input=out+"/prepared-"+std::to_string(rounds.size())+decisionSuffix+"-"+std::to_string(left)+".ll";
         std::error_code ec;
         raw_fd_ostream stream(input,ec);
@@ -354,7 +362,7 @@ int main(int argc,char**argv){try{
     std::vector<StructuralTrial> structuralTrials;
     json::Array originalRootCandidates, extendedTreeCandidates;
     std::vector<const json::Array*> candidateLists{&candidates,&normalizedCandidates};
-    if(domainSchedule=="trees" && !decisionSplit.empty()) {
+    if(domainSchedule!="legacy" && !decisionSplit.empty()) {
       // Preserve the old direct-root / prepared ordering on ties. New family
       // members are appended, not promoted ahead of old legal candidates.
       for(const auto &entry:candidates) {
@@ -373,12 +381,12 @@ int main(int argc,char**argv){try{
       const auto preparedInput=candidate.getString("prepared_input");
       if(!preparedInput&&!decisionSplit.empty()) {
         const auto split=candidate.getString("split")->str();
-        if(domainSchedule=="trees") {
+        if(domainSchedule!="legacy") {
           if(domains.root(split)!=domains.root(decisionSplit))continue;
         }else if(split!=decisionSplit)continue;
       }
-      if(domainSchedule=="trees" && target.empty() && !preparedInput &&
-         (!activeDomain || domains.root(candidate.getString("split")->str())!=activeDomain))continue;
+      if(domainSchedule!="legacy" && target.empty() && !preparedInput &&
+         (!activeDomain || !activeOwner(domains.root(candidate.getString("split")->str()))))continue;
       const auto candidateKey=candidate.getString("candidate")->str();
       if(!preparedInput&&!attemptedStructural.insert(candidateKey).second)continue;
       if(auto reason=candidate.getString("preflight_rejection"))if(!reason->empty())continue;
@@ -627,7 +635,12 @@ int main(int argc,char**argv){try{
   }
   mark("read_scores_and_select");
   json::Object record{{"decision",target},{"iteration",int64_t(iteration)},{"parent",current},{"parent_cost",parentCost},{"attempts",std::move(attempts)},{"preparation_rejections",std::move(preparationRejections)},{"selected",best}};
-  if(domainSchedule=="trees"){
+  if(domainSchedule!="legacy"){
+    if(!competition.owners.empty()) {
+      record["competition_seed"]=competition.seed;
+      record["competition_common_work"]=int64_t(competition.commonWork);
+      record["competition_domains"]=int64_t(competition.owners.size());
+    }
     json::Array preparedDecisions;
     for(unsigned index:prepare)preparedDecisions.push_back(catalog[index].id);
     record["prepared_decisions"]=std::move(preparedDecisions);
@@ -638,7 +651,7 @@ int main(int argc,char**argv){try{
       record["active_domain"]=name.str();
     }
   }
-  if(best.empty() && domainSchedule=="trees" && target.empty() && (!prepare.empty() || !record.getArray("attempts")->empty())) {
+  if(best.empty() && domainSchedule!="legacy" && target.empty() && (!prepare.empty() || !record.getArray("attempts")->empty())) {
     record["domain_exhausted"]=true;
     rounds.push_back(std::move(record));report("running");mark("record_and_commit");
     if(scoped)scopedParent=std::move(m);
@@ -656,7 +669,7 @@ int main(int argc,char**argv){try{
   }
   recordResources(best+"/fused.ll",best+"/resources",record);
   record["selected_cost"]=bestCost;record["score"]=double(parentCost-bestCost)/std::max<int64_t>(parentCost,1);rounds.push_back(std::move(record));parentCost=bestCost;current=best+"/fused.ll";attemptedStructural.clear();attemptedPreparation.clear();++commits;report("running");outs()<<"commit="<<commits<<" cost="<<parentCost<<" decision="<<target<<"\n";outs().flush();mark("record_and_commit");
-  if(iteration==(domainSchedule=="trees"?99999u:255u))throw std::runtime_error("round budget exceeded");
+  if(iteration==(domainSchedule!="legacy"?99999u:255u))throw std::runtime_error("round budget exceeded");
  }}
  if(auto e=sys::fs::copy_file(current,out+"/final.ll"))throw std::runtime_error(e.message());current=out+"/final.ll";report("completed");return 0;
 }catch(const std::exception&e){errs()<<e.what()<<"\n";return 1;}}
