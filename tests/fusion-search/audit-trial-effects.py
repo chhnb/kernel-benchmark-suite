@@ -67,15 +67,21 @@ def main():
         trial=json.loads((detail/'trial.json').read_text());fn=chosen['candidate'].rsplit(':',3)[0]
         arms=set(trial['left']['blocks']+trial['right']['blocks'])
         paths=[base/'state-0.ll',detail/'after-raw.ll',detail/'after.ll']
-        if not all(p.exists() for p in paths):
-            rows.append(dict(round=index,missing=[str(p) for p in paths if not p.exists()]));continue
+        control=base/'round-0-control.ll'
+        missing=[str(p) for p in [*paths,control] if not p.exists()]
+        if missing:
+            row=dict(round=index,missing=missing)
+            if trial.get('snapshot_mode')=='compact':
+                row['diagnostic']='Replay the request or rerun decision-greedy with --ir-snapshots full'
+            rows.append(row)
+            continue
         a,b,c=[snapshot(p,fn) for p in paths]
         rows.append(dict(round=index,candidate=chosen['candidate'],directory=r['selected'],
             fusion_kind=trial['fusion_plan']['kind'],gain=chosen['gain'],
             input=str(paths[0]),driver_parent=r['parent'],
             preparation_separate=str(paths[0])!=r['parent'],
             fusion=compare(a,b,arms),cleanup=compare(b,c,arms),
-            cleaned_control_to_result=compare(snapshot(base/'round-0-control.ll',fn),c,arms)))
+            cleaned_control_to_result=compare(snapshot(control,fn),c,arms)))
     result=dict(schema='observed-trial-effects-v1',proof_of_independence=False,
         caveats=['Numeric B indices in adjacent rounds are NOT stable candidate identity.',
                  'Retained textual names are observations, not SSA lineage certificates.',

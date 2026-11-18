@@ -58,18 +58,29 @@ static void jsonFile(const std::string&p,json::Object o) {
   std::error_code ec;raw_fd_ostream out(p,ec);if(ec)throw std::runtime_error(ec.message());out<<formatv("{0:2}\n",json::Value(std::move(o)));
 }
 struct DebugObserver final:Observer {
-  std::string dir;unsigned n=0;
-  explicit DebugObserver(std::string d):dir(std::move(d)) {
+  std::string dir;
+  std::string inputPath, outputPath;
+  bool fullSnapshots;
+  unsigned n=0;
+  DebugObserver(std::string d, bool full, StringRef input, StringRef output)
+      : dir(std::move(d)), fullSnapshots(full) {
+    if (!fullSnapshots) {
+      SmallString<256> absoluteInput(input), absoluteOutput(output);
+      if (auto ec=sys::fs::make_absolute(absoluteInput))throw std::runtime_error(ec.message());
+      if (auto ec=sys::fs::make_absolute(absoluteOutput))throw std::runtime_error(ec.message());
+      inputPath=absoluteInput.str().str();
+      outputPath=absoluteOutput.str().str();
+    }
     if(sys::fs::exists(dir))throw std::runtime_error("debug directory already exists");
     auto ec=sys::fs::create_directories(dir);if(ec)throw std::runtime_error(ec.message());
   }
   void logical(unsigned version,const std::string &value)override {
     std::error_code ec;raw_fd_ostream out(dir+"/logical-state-"+std::to_string(version)+".json",ec);if(ec)throw std::runtime_error(ec.message());out<<value;
   }
-  void initial(const Module&m)override { writeIR(m,dir+"/state-0.ll"); }
+  void initial(const Module&m)override { if(fullSnapshots)writeIR(m,dir+"/state-0.ll"); }
   void round(const RoundContext&r)override {
     auto stem=dir+"/round-"+std::to_string(r.parentVersion);
-    writeIR(*r.control,stem+"-control.ll");
+    if(fullSnapshots)writeIR(*r.control,stem+"-control.ll");
     jsonFile(stem+".json",json::Object{{"schema","incremental-score-round-v1"},{"hash_algorithm","llvm-sha1-printed-module"},{"parent_version",int64_t(r.parentVersion)},{"function",r.function},{"parent_hash",r.parentHash},{"control_hash",r.controlHash},{"llvm_version",r.llvmVersion},{"target_triple",r.targetTriple},{"data_layout",r.dataLayout},{"target_attributes",r.targetAttributes},{"cleanup",r.cleanup},{"feature_schema",r.featureSchema},{"weight_version",r.weightVersion},{"normalization_scale",r.normalizationScale},{"parent",stats(r.parentFeatures)},{"control",stats(r.controlFeatures)},{"control_ms",r.controlMs},{"control_cleanup_iterations",int64_t(r.controlCleanupIterations)}});
   }
   void trial(const Trial&t,const RoundContext&r,const ScoreResult&score,bool eligible)override {
@@ -83,7 +94,10 @@ struct DebugObserver final:Observer {
         {"before",pressure(*r.control->getFunction(r.function))},
         {"after",pressure(*t.normalized->getFunction(r.function))}});
     }
-    if(t.raw)writeIR(*t.raw,path+"/after-raw.ll");if(t.normalized)writeIR(*t.normalized,path+"/after.ll");
+    if (fullSnapshots) {
+      if(t.raw)writeIR(*t.raw,path+"/after-raw.ll");
+      if(t.normalized)writeIR(*t.normalized,path+"/after.ll");
+    }
     if(t.logicalState){std::error_code ec;raw_fd_ostream out(path+"/logical-state.json",ec);if(ec)throw std::runtime_error(ec.message());out<<t.logicalState->json();}
     json::Array Origins;for(auto &P:t.blockProvenance)Origins.push_back(json::Object{
       {"left_source_id",P.leftID},{"right_source_id",P.rightID},
@@ -93,7 +107,7 @@ struct DebugObserver final:Observer {
     jsonFile(path+"/block-provenance.json",json::Object{{"schema","melding-block-provenance-v1"},
       {"logical_decision",t.candidate.logicalDecision},{"logical_left",t.candidate.logicalLeft},{"logical_right",t.candidate.logicalRight},{"candidate",t.candidate.key()},{"parent_hash",r.parentHash},
       {"cleaned_hash",t.normalized?moduleHash(*t.normalized):""},{"blocks",std::move(Origins)}});
-    jsonFile(path+"/trial.json",json::Object{{"schema","incremental-score-trial-v1"},{"logical_decision",t.candidate.logicalDecision},{"logical_left",t.candidate.logicalLeft},{"logical_right",t.candidate.logicalRight},{"candidate",t.candidate.key()},{"version",int64_t(t.candidate.version)},{"parent_hash",r.parentHash},{"control_hash",r.controlHash},{"round_context","../round-"+std::to_string(r.parentVersion)+".json"},{"valid",t.valid},{"rewrite_started",t.rewriteStarted},{"decision",!t.valid?"reject":score.status!=ScoreStatus::Scored?"unsupported":eligible?"accept":"reject"},{"reason",t.reason},{"merge_path",t.mergePath},{"layout_profitability",json::Array(t.layoutProfitability)},{"cross_decision_leaves",false},{"complete_leaf_plan",false},{"moved_leaf_instructions",int64_t(t.movedLeafInstructions)},{"leaf_anchors",int64_t(t.leafAnchors)},{"leaf_anchor_pairs",[&](){json::Array a;for(auto &p:t.leafAnchorPairs)a.push_back(p);return a;}()},{"fusion_plan",json::Object{{"kind",t.planKind},{"matched_left",t.matchedLeft},{"matched_right",t.matchedRight},{"left_context",bound(t.leftContext)},{"right_context",bound(t.rightContext)},{"split_is_loop_header",t.loopHeaderSplit},{"replication_required",t.replication}}},{"local_reject_reason",t.localRejectReason},{"score_result",scoreJson(score)},{"eligible",eligible},{"cleanup_iterations",int64_t(t.cleanupIterations)},{"alignment_order","function_order_v1"},{"original_darm_similarity",t.originalSimilarity},{"original_darm_profitable",t.originalProfitable},{"replication_required",t.replication},{"orientation_swapped",t.swapped},{"left",bound(t.left)},{"right",bound(t.right)},{"after_raw",stats(t.afterRaw)},{"after",stats(t.after)},{"cleaned_hash",t.normalized?moduleHash(*t.normalized):""},{"parent_ir","../state-"+std::to_string(t.candidate.version)+".ll"},{"timings_ms",json::Object{{"merge",t.mergeMs},{"normalization",t.normalizeMs},{"features",t.featuresMs},{"trial_total",t.totalMs},{"score_with_analysis",t.scoreMs}}},{"semantic_validation","not_run"}});
+    jsonFile(path+"/trial.json",json::Object{{"schema","incremental-score-trial-v1"},{"logical_decision",t.candidate.logicalDecision},{"logical_left",t.candidate.logicalLeft},{"logical_right",t.candidate.logicalRight},{"candidate",t.candidate.key()},{"version",int64_t(t.candidate.version)},{"parent_hash",r.parentHash},{"control_hash",r.controlHash},{"round_context","../round-"+std::to_string(r.parentVersion)+".json"},{"valid",t.valid},{"rewrite_started",t.rewriteStarted},{"decision",!t.valid?"reject":score.status!=ScoreStatus::Scored?"unsupported":eligible?"accept":"reject"},{"reason",t.reason},{"merge_path",t.mergePath},{"layout_profitability",json::Array(t.layoutProfitability)},{"cross_decision_leaves",false},{"complete_leaf_plan",false},{"moved_leaf_instructions",int64_t(t.movedLeafInstructions)},{"leaf_anchors",int64_t(t.leafAnchors)},{"leaf_anchor_pairs",[&](){json::Array a;for(auto &p:t.leafAnchorPairs)a.push_back(p);return a;}()},{"fusion_plan",json::Object{{"kind",t.planKind},{"matched_left",t.matchedLeft},{"matched_right",t.matchedRight},{"left_context",bound(t.leftContext)},{"right_context",bound(t.rightContext)},{"split_is_loop_header",t.loopHeaderSplit},{"replication_required",t.replication}}},{"local_reject_reason",t.localRejectReason},{"score_result",scoreJson(score)},{"eligible",eligible},{"cleanup_iterations",int64_t(t.cleanupIterations)},{"alignment_order","function_order_v1"},{"original_darm_similarity",t.originalSimilarity},{"original_darm_profitable",t.originalProfitable},{"replication_required",t.replication},{"orientation_swapped",t.swapped},{"left",bound(t.left)},{"right",bound(t.right)},{"after_raw",stats(t.afterRaw)},{"after",stats(t.after)},{"cleaned_hash",t.normalized?moduleHash(*t.normalized):""},{"parent_ir",fullSnapshots?"../state-"+std::to_string(t.candidate.version)+".ll":inputPath},{"snapshot_mode",fullSnapshots?"full":"compact"},{"cleaned_ir",t.valid?(fullSnapshots?"after.ll":outputPath):""},{"timings_ms",json::Object{{"merge",t.mergeMs},{"normalization",t.normalizeMs},{"features",t.featuresMs},{"trial_total",t.totalMs},{"score_with_analysis",t.scoreMs}}},{"semantic_validation","not_run"}});
   }
   void commit(unsigned version,const Candidate&c,const ScoreResult&score,const Module&m)override {
     writeIR(m,dir+"/state-"+std::to_string(version)+".ll");
@@ -118,14 +132,18 @@ static int runSearch(int argc, const char *const *argv, TrialWorker *batch = nul
   try {
     std::string input,function,output,debug,split,left,right,replayParentHash,policy="llvm24";Options options;options.cleanupMode=CleanupMode::DarmCFGInstCombine;bool singleBranchB2B=true, strategyGiven=true, useDarmB2B=false;
     std::string recipeInput, quoteMode="on";
-    bool recipeCache=false;
+    bool recipeCache=false, fullSnapshots=true;
     bool controlOnly=false,catalogOnly=false;std::string ttiWorker="/home/chh/kernel-benchmark-suite/tools/run-llvm24-tti";
     for(int i=1;i<argc;++i){std::string k=argv[i];
-      if(k=="--help"){outs()<<"fusion-search v1 --ir FILE --function NAME --out FILE [--b2b-strategy dp1|darm] [--structural 0|1] [--split ID --left ID --right ID] [--debug-dir DIR] [--tti-worker EXECUTABLE] [--catalog-only 0|1] [--control-only 0|1] [--rounds N] [--trials N]\n";return 0;}
+      if(k=="--help"){outs()<<"fusion-search v1 --ir FILE --function NAME --out FILE [--b2b-strategy dp1|darm] [--structural 0|1] [--split ID --left ID --right ID] [--debug-dir DIR] [--ir-snapshots full|compact] [--tti-worker EXECUTABLE] [--catalog-only 0|1] [--control-only 0|1] [--rounds N] [--trials N]\n";return 0;}
       if(i+1==argc)throw std::runtime_error("missing option value");std::string v=argv[++i];
       if(k=="--control-only"){if(v!="0"&&v!="1")throw std::runtime_error("control-only must be 0 or 1");controlOnly=v=="1";}
       else if(k=="--catalog-only"){if(v!="0"&&v!="1")throw std::runtime_error("catalog-only must be 0 or 1");catalogOnly=v=="1";}
       else if(k=="--darm-region-candidates"){if(v!="1")throw std::runtime_error("v1 uses DARM region alignment");}
+      else if(k=="--ir-snapshots"){
+        if(v!="full" && v!="compact")throw std::runtime_error("ir-snapshots must be full or compact");
+        fullSnapshots=v=="full";
+      }
       else if(k=="--tti-worker")ttiWorker=v;
       else if(k=="--b2b-recipe-in")recipeInput=v;
       else if(k=="--b2b-recipe-cache") { recipeInput=v; recipeCache=true; }
@@ -226,7 +244,7 @@ static int runSearch(int argc, const char *const *argv, TrialWorker *batch = nul
     }
     if(!batch && verifyModule(*module,&errs()))return 2;
     auto*f=module->getFunction(function);if(!f||f->isDeclaration())throw std::runtime_error("function missing");
-    std::unique_ptr<DebugObserver> observer;if(!debug.empty())observer=std::make_unique<DebugObserver>(debug);
+    std::unique_ptr<DebugObserver> observer;if(!debug.empty())observer=std::make_unique<DebugObserver>(debug,fullSnapshots,input,output);
     if(catalogOnly){
       if(pair||controlOnly||!observer)throw std::runtime_error("catalog-only requires debug-dir and excludes pair/control-only");
       if(verifyModule(*module,&errs()))return 2;

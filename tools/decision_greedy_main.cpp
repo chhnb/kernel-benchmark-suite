@@ -137,25 +137,27 @@ int main(int argc,char**argv){try{
  auto timingReport=[&](){json::Object phases;for(const auto &kv:phaseMilliseconds)phases[kv.first]=json::Object{{"milliseconds",kv.second},{"calls",phaseCalls[kv.first]}};return phases;};
 
  if(argc==2&&StringRef(argv[1])=="--help"){
-   outs()<<"usage: decision-greedy INPUT FUNCTION [TOOL_ROOT] NEW_OUTPUT [--b2b-strategy dp1|darm] [--trial-policy whole-function|scoped-full|scoped-reuse] [--domain-schedule legacy|trees|competing|ordered]\n";
+   outs()<<"usage: decision-greedy INPUT FUNCTION [TOOL_ROOT] NEW_OUTPUT [--b2b-strategy dp1|darm] [--trial-policy whole-function|scoped-full|scoped-reuse] [--domain-schedule legacy|trees|competing|ordered] [--ir-snapshots full|compact]\n";
    outs()<<"Default schedule: ordered for whole-function trials (Auto Greedy v2).\n";
    return 0;
  }
- std::string b2bStrategy="dp1", quoteMode="on", trialPolicy="whole-function", domainSchedule;
+ std::string b2bStrategy="dp1", quoteMode="on", trialPolicy="whole-function", domainSchedule, snapshotMode;
  while (argc >= 3) {
    StringRef option(argv[argc-2]), value(argv[argc-1]);
    if(option == "--domain-schedule" && (value == "legacy" || value == "trees" || value == "competing" || value == "ordered")) { domainSchedule=value.str();argc-=2;continue; }
-   if (option == "--b2r-strategy" && value == "darm") {
+   if (option == "--ir-snapshots" && (value == "full" || value == "compact"))
+     snapshotMode = value.str();
+   else if (option == "--b2r-strategy" && value == "darm") {
      argc -= 2;
      continue;
    }
-   if (option == "--trial-policy" && (value == "whole-function" || value == "scoped-full" || value == "scoped-reuse"))
+   else if (option == "--trial-policy" && (value == "whole-function" || value == "scoped-full" || value == "scoped-reuse"))
      trialPolicy = value.str();
    else if (option == "--tti-quote-cache" && (value == "off" || value == "audit" || value == "on"))
      quoteMode = value.str();
    else if (option == "--b2b-strategy" && (value == "dp1" || value == "darm"))
      b2bStrategy = value.str();
-   else if (option == "--domain-schedule" || option == "--b2r-strategy" || option == "--b2b-strategy" || option == "--tti-quote-cache" || option == "--trial-policy")
+   else if (option == "--ir-snapshots" || option == "--domain-schedule" || option == "--b2r-strategy" || option == "--b2b-strategy" || option == "--tti-quote-cache" || option == "--trial-policy")
      throw std::runtime_error("invalid value for " + option.str());
    else break;
    argc -= 2;
@@ -164,6 +166,7 @@ int main(int argc,char**argv){try{
    throw std::runtime_error("usage: decision-greedy INPUT FUNCTION [TOOL_ROOT] NEW_OUTPUT [--b2b-strategy dp1|darm]");
  // Scoped trials still require the legacy scheduler.
  if(domainSchedule.empty())domainSchedule=trialPolicy=="whole-function"?"ordered":"legacy";
+ if(snapshotMode.empty())snapshotMode=domainSchedule=="ordered"?"compact":"full";
  if(domainSchedule!="legacy"&&trialPolicy!="whole-function")throw std::runtime_error("tree scheduling currently requires unchanged whole-function trials");
  if(trialPolicy!="whole-function"&&b2bStrategy!="dp1")throw std::runtime_error("scoped trial policy requires dp1");
  const bool implicitRoot=argc==4;
@@ -216,7 +219,7 @@ int main(int argc,char**argv){try{
    }
  };
  unsigned reusedSweepSnapshots=0;
- auto report=[&](StringRef status){save(out+"/summary.json",json::Value(json::Object{{"status",status.str()},{"driver_phase_timings",timingReport()},{"elapsed_ms",std::chrono::duration<double,std::milli>(Clock::now()-started).count()},{"domain_schedule",domainSchedule},{"trial_policy",trialPolicy},{"scoped_trials",scoped?json::Value(scoped->report()):json::Value(nullptr)},{"search","per-decision greedy; best positive adjacent or structural candidate"},{"cfg_cleanup","structural"},{"structural_cleanup",structuralCleanup},{"structural_candidates_enabled",true},{"shared_arm_trials",true},{"cross_level_b2r",false},{"reused_sweep_snapshots",int64_t(reusedSweepSnapshots)},{"pipeline_version",domainSchedule=="ordered"?"v2":"v1"},{"candidate_jobs",structuralJobs},{"candidate_scheduler","continuous-queue"},{"persistent_trial_workers",true},{"condition_budget",conditionBudget},{"phi_fold_threshold",7},{"r2r_enumeration","darm-alignment"},{"b2b_strategy",b2bStrategy},{"tti_quote_cache",quoteMode},{"backend_resource_gate_enabled",false},{"uniform_loss_guard_enabled",false},{"max_uniform_loss",-1},{"max_pressure_growth",-1},{"max_pressure",-1},{"initial_cost",initialCost},{"final_cost",parentCost},{"commits",int64_t(commits)},{"trials",int64_t(trials)},{"final_ir",current},{"rounds",json::Value(json::Array(rounds))},{"stops",json::Value(json::Array(stops))}}));};
+ auto report=[&](StringRef status){save(out+"/summary.json",json::Value(json::Object{{"status",status.str()},{"driver_phase_timings",timingReport()},{"elapsed_ms",std::chrono::duration<double,std::milli>(Clock::now()-started).count()},{"domain_schedule",domainSchedule},{"ir_snapshots",snapshotMode},{"trial_policy",trialPolicy},{"scoped_trials",scoped?json::Value(scoped->report()):json::Value(nullptr)},{"search","per-decision greedy; best positive adjacent or structural candidate"},{"cfg_cleanup","structural"},{"structural_cleanup",structuralCleanup},{"structural_candidates_enabled",true},{"shared_arm_trials",true},{"cross_level_b2r",false},{"reused_sweep_snapshots",int64_t(reusedSweepSnapshots)},{"pipeline_version",domainSchedule=="ordered"?"v2":"v1"},{"candidate_jobs",structuralJobs},{"candidate_scheduler","continuous-queue"},{"persistent_trial_workers",true},{"condition_budget",conditionBudget},{"phi_fold_threshold",7},{"r2r_enumeration","darm-alignment"},{"b2b_strategy",b2bStrategy},{"tti_quote_cache",quoteMode},{"backend_resource_gate_enabled",false},{"uniform_loss_guard_enabled",false},{"max_uniform_loss",-1},{"max_pressure_growth",-1},{"max_pressure",-1},{"initial_cost",initialCost},{"final_cost",parentCost},{"commits",int64_t(commits)},{"trials",int64_t(trials)},{"final_ir",current},{"rounds",json::Value(json::Array(rounds))},{"stops",json::Value(json::Array(stops))}}));};
  report("running");
  fusion::IncrementalCandidateQueue candidateQueue;
  std::unique_ptr<Module> scopedParent;if(scoped)scopedParent=CloneModule(*initial);
@@ -468,6 +471,9 @@ int main(int argc,char**argv){try{
       }
       json::Array replayArgs;
       for(const auto &argument:trialArgs)replayArgs.push_back(argument);
+      // Replay the saved request with the standalone tool's full diagnostics.
+      if (snapshotMode == "compact")
+        trialArgs.insert(trialArgs.end(),{"--ir-snapshots","compact"});
       trialArgs.insert(trialArgs.end(),{"--debug-dir",dir+"/structural","--out",dir+"/fused.ll"});
       json::Array invocation;
       for(const auto &argument:trialArgs)invocation.push_back(argument);

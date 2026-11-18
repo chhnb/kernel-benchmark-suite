@@ -22,6 +22,8 @@ python3 tools/run_v1_regression.py --out build/v1-regression-new
 
 构建脚本接受 `LLVM_CONFIG` 和 `LLVM24_CONFIG`，评分 worker 的 LLVM24 revision 为 `6be16f356d3e`。V2 的 `summary.json` 记录 `pipeline_version: v2` 和 `domain_schedule: ordered`。显式传入 `--domain-schedule legacy` 可重放旧调度。[V1 冻结回归](regression/greedy-v1/manifest.json) 由回归脚本显式选择旧调度，验证历史提交次数、TTI 和最终 IR。带 `--include-slow` 时同时运行 PCM128/256，超时单独记录。
 
+V2 默认保留评分、拒绝原因、重放请求及清理后的候选产物。排查某项改写时可传 `--ir-snapshots full`，同时导出每次试跑的父 IR、对照 IR 和清理前产物。单独执行 `fusion-search-llvm24` 默认导出完整诊断。
+
 ## 从这里开始
 
 | 想做什么 | 文档 |
