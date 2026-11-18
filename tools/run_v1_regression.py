@@ -56,7 +56,8 @@ def main():
         with (out / (case + '.log')).open('w') as log:
             rc = subprocess.run(['timeout', '-k', '3s', str(args.timeout) + 's',
                                  ROOT / 'build/decision-fuse/decision-greedy', source,
-                                 row['function'], ROOT, dest, '--b2b-strategy', 'dp1', '--tti-quote-cache', args.tti_quote_cache],
+                                 row['function'], ROOT, dest, '--domain-schedule', 'legacy',
+                                 '--b2b-strategy', 'dp1', '--tti-quote-cache', args.tti_quote_cache],
                                 stdout=log, stderr=subprocess.STDOUT, env=env).returncode
         result = dict(case=case, exit=rc, seconds=round(time.monotonic() - begin, 2), passed=False)
         summary = dest / 'summary.json'

@@ -4,28 +4,23 @@
 
 当前重点为8个程序、9个kernel条目：vLLM Quant、Map-Airy、Hypersonic、TIGRE Siddon、SRAD两个阶段、HiPIMS–HLLC、Cholla–HLLD、Reentry。目录中其他case与实验保留历史，不代表当前重点。
 
-## Auto Greedy v1
+## Auto Greedy V2
 
-本分支 `release/greedy-v1` 只维护当前可复现路径，整理前 checkpoint 为 `48fb41e`。
+全函数试跑默认使用有序 arm 调度。每个 decision 按逻辑顺序存放分支体，在相邻分支体之间枚举融合。一次提交把两个相邻区间合并为一个区间，再根据清理后的 CFG 确认它是单块 B 还是区域 R。入口、出口或未参与融合的分支体无法唯一定位时，驱动重新发现 CFG 边界。
 
-- B2B：默认 DP1，唯一策略参数是 `--b2b-strategy dp1|darm`。DP1 不回退到 DARM。
-- B2R / R2B / R2R：DARM。R2R 使用 DARM 对齐的区域对，不做区域笛卡尔积搜索。
-- 清理：DARM SimplifyCFG（PHI folding threshold 7）→ EarlyCSE → DCE → InstCombine。
-- 条件规范化预算固定为 4；未匹配的普通指令由分支保护。删除显式 SpecL/SpecR、Gap Search、DP2/DP3、旧评分/清理策略。
-- 保留 LLVM 的合法性检查与安全化简，以及 DARM 原生 B2R 区域复制。禁止规划器投机不等于禁止 SimplifyCFG 化简。
-- LLVM12 变换，LLVM24 常驻 worker 评分，严格正收益提交，失败保留父 IR。
+处理一棵指定 decision 树时，同时评估相邻 arm 的规范化候选和当前 split 的直接结构候选。结构扫尾处理其他 split。如果不同域的候选争用同一个基本块，且满足当前同后继和共同指令数量的触发条件，就对相关域联合评分。
+
+- B2B 默认 DP1。B2R、R2B、R2R 使用 DARM。
+- 合法 trial 依次执行 DARM SimplifyCFG（PHI folding threshold 7）、EarlyCSE、DCE、InstCombine。LLVM24 TTI 要求提交后的成本低于 trial 对照及当前父 IR。
+- 默认 16 路连续队列，使用常驻评分 worker。
 
 ```sh
-tools/build-v1 --search-only  # 已有 LLVM24 worker 时
+tools/build-v1 --search-only  # 已有 LLVM24 worker 时，构建当前驱动
 build/decision-fuse/decision-greedy INPUT.ll FUNCTION NEW_OUTPUT
 python3 tools/run_v1_regression.py --out build/v1-regression-new
 ```
 
-`LLVM_CONFIG` / `LLVM24_CONFIG` 可指定外部工具链；默认使用本机固定的 LLVM12 / LLVM24 安装。LLVM24 revision 仍须为 `6be16f356d3e`。`--search-only` 不重建 worker。
-
-[冻结清单](regression/greedy-v1/manifest.json) 包含 40 个函数/尺寸配置及压缩输入、输入 SHA256、最终 IR SHA256、提交次数和 TTI。默认回归 38 个已完成配置；`--include-slow` 额外运行 checkpoint 已超时的 PCM128/256。超时不计为通过。此入口验证变换复现，GPU 性能使用已有冻结 runner 单独测量。
-
-执行参数只有 `DECISION_GREEDY_JOBS`（默认 16，连续队列）和可选的 `DECISION_CHECKPOINT_TOOL`（后端观测）。历史实验请切换 checkpoint 查阅，不作为 v1 可选策略。
+构建脚本接受 `LLVM_CONFIG` 和 `LLVM24_CONFIG`，评分 worker 的 LLVM24 revision 为 `6be16f356d3e`。V2 的 `summary.json` 记录 `pipeline_version: v2` 和 `domain_schedule: ordered`。显式传入 `--domain-schedule legacy` 可重放旧调度。[V1 冻结回归](regression/greedy-v1/manifest.json) 由回归脚本显式选择旧调度，验证历史提交次数、TTI 和最终 IR。带 `--include-slow` 时同时运行 PCM128/256，超时单独记录。
 
 ## 从这里开始
 
