@@ -1,3 +1,4 @@
+#include "tti_cost_kind.h"
 #include "llvm/Analysis/TargetTransformInfo.h"
 #include "llvm/Config/llvm-config.h"
 #include "llvm/IR/LLVMContext.h"
@@ -40,7 +41,7 @@ struct TargetCache {
   }
 };
 static int score(StringRef input,StringRef function,bool summaryOnly,bool compact,
-                 TargetCache &targets) {
+                 TargetCache &targets, TargetTransformInfo::TargetCostKind costKind) {
  try {
   LLVMContext ctx;SMDiagnostic diagnostic;
   auto m=parseIRFile(input,diagnostic,ctx);
@@ -76,7 +77,7 @@ static int score(StringRef input,StringRef function,bool summaryOnly,bool compac
   unsigned blockID=0;
   for(auto &b:*f){unsigned bid=blockID++;if(!reachable.count(&b))continue;unsigned iid=0;
    for(auto&i:b){if(isa<DbgInfoIntrinsic>(i))continue;++count;
-    auto cost=tti.getInstructionCost(&i,TargetTransformInfo::TCK_RecipThroughput);
+    auto cost=tti.getInstructionCost(&i,costKind);
     bool ttiValid=cost.isValid();
     auto v=ttiValid?cost.getValue():0;
     std::string reason;
@@ -102,7 +103,7 @@ static int score(StringRef input,StringRef function,bool summaryOnly,bool compac
   json::Object output{{"schema","llvm24-tti-v1"},{"llvm_version",LLVM_VERSION_STRING},
     {"source_revision","6be16f356d3e"},{"triple",triple.str()},{"cpu",cpu.str()},{"features",originalFeatures},
     {"effective_features",features},{"compatibility_adjustment",compatibility},
-    {"cost_kind","TCK_RecipThroughput"},{"optimization_passes_run",false},{"verifier_passed",true},
+    {"cost_kind",fusion::ttiCostKindName()},{"optimization_passes_run",false},{"verifier_passed",true},
     {"instructions",count},{"unknown",unknown},{"zero",zero},{"modeled_cost",total},
     {"cost",unknown?json::Value(nullptr):json::Value(total)}};
   if(!summaryOnly){
@@ -116,6 +117,14 @@ static int score(StringRef input,StringRef function,bool summaryOnly,bool compac
  }catch(const std::exception&e){errs()<<e.what()<<"\n";return 2;}
 }
 int main(int argc,char **argv) {
+  TargetTransformInfo::TargetCostKind costKind;
+  try {
+    costKind=fusion::ttiCostKindName()=="TCK_Latency" ? TargetTransformInfo::TCK_Latency
+                                                     : TargetTransformInfo::TCK_RecipThroughput;
+  } catch (const std::invalid_argument &error) {
+    errs()<<error.what()<<"\n";
+    return 2;
+  }
   const bool fullServer=argc==3&&StringRef(argv[1])=="--serve-full";
   const bool server=fullServer||(argc==3&&StringRef(argv[1])=="--serve-summary");
   const bool summaryOnly=argc==4&&StringRef(argv[3])=="--summary-only";
@@ -125,10 +134,10 @@ int main(int argc,char **argv) {
   }
   InitializeAllTargetInfos();InitializeAllTargets();InitializeAllTargetMCs();
   TargetCache targets;
-  if(!server)return score(argv[1],argv[2],summaryOnly,false,targets);
+  if(!server)return score(argv[1],argv[2],summaryOnly,false,targets,costKind);
   std::string input;
   while(std::getline(std::cin,input)){
-    if(score(input,argv[2],!fullServer,true,targets))outs()<<"null\n";
+    if(score(input,argv[2],!fullServer,true,targets,costKind))outs()<<"null\n";
     outs().flush();
   }
   return 0;

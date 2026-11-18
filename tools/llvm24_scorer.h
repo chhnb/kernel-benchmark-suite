@@ -1,6 +1,7 @@
 #pragma once
 #include "fusion_search.h"
 #include "tti_quote_key.h"
+#include "tti_cost_kind.h"
 #include "tti_memory_io.h"
 #include "llvm/IR/IntrinsicInst.h"
 #include "llvm/Transforms/Utils/Cloning.h"
@@ -30,7 +31,7 @@ class LLVM24Scorer final:public Scorer {
   using QuoteKeys = std::vector<std::vector<std::optional<std::string>>>;
   QuoteKeys quoteKeys(const llvm::Function &f) const {
     using namespace llvm;
-    if (quoteMode=="off" || f.getParent()->getTargetTriple()!="amdgcn-amd-amdhsa" ||
+    if (quoteMode=="off" || ttiCostKindName()!="TCK_RecipThroughput" || f.getParent()->getTargetTriple()!="amdgcn-amd-amdhsa" ||
         f.getFnAttribute("target-cpu").getValueAsString()!="gfx906" || f.hasMetadata()) return {};
     std::string context; raw_string_ostream stream(context);
     stream << f.getName() << ';' << f.getCallingConv() << ';' << f.getParent()->getDataLayoutStr() << ';';
@@ -144,6 +145,8 @@ class LLVM24Scorer final:public Scorer {
     auto*o=j->getAsObject();if(!o)throw std::runtime_error("invalid worker JSON");
     if(o->getString("schema")!=Optional<StringRef>("llvm24-tti-v1")||
        o->getString("source_revision")!=Optional<StringRef>("6be16f356d3e"))throw std::runtime_error("worker identity mismatch");
+    if (o->getString("cost_kind")!=Optional<StringRef>(ttiCostKindName()))
+      throw std::runtime_error("worker cost kind mismatch");
     if(o->getString("triple")!=Optional<StringRef>(f.getParent()->getTargetTriple())||
        o->getString("cpu")!=Optional<StringRef>(f.getFnAttribute("target-cpu").getValueAsString())||
        o->getString("features")!=Optional<StringRef>(f.getFnAttribute("target-features").getValueAsString()))throw std::runtime_error("worker target mismatch");
@@ -218,7 +221,7 @@ public:
   // This entry point lets bounded callers avoid rebuilding unused DT/PDT/RI.
   ScoreResult evaluatePair(const Candidate &candidate,const llvm::Function &beforeIR,
       const llvm::Function &afterIR,const RoundContext &r,const Trial *trial=nullptr) const {
-    ScoreResult s;s.coverage.hardwareCosts="LLVM24_TTI_6be16f356d3e_reciprocal_throughput_uncalibrated";
+    ScoreResult s;s.coverage.hardwareCosts=ttiCostKindName()=="TCK_Latency" ? "LLVM24_TTI_6be16f356d3e_latency_uncalibrated" : "LLVM24_TTI_6be16f356d3e_reciprocal_throughput_uncalibrated";
     if(candidate.version!=r.parentVersion||candidate.function!=r.function){s.reason="round_identity_mismatch";return s;}
     try {
       if(cachedHash!=r.controlHash){auto*f=r.control->getFunction(r.function);if(!f)throw std::runtime_error("control_missing");cachedControl=query(*f);cachedHash=r.controlHash;}

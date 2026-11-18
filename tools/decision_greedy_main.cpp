@@ -1,3 +1,4 @@
+#include "tti_cost_kind.h"
 #include "decision_model.h"
 #include "domain_competition.h"
 #include "ordered_arms.h"
@@ -171,6 +172,9 @@ int main(int argc,char**argv){try{
  if(trialPolicy!="whole-function"&&b2bStrategy!="dp1")throw std::runtime_error("scoped trial policy requires dp1");
  const bool implicitRoot=argc==4;
  std::string root;
+ const char *ttiMode=std::getenv("FUSION_TTI_MODE");
+ const bool strictTTI=ttiMode&&StringRef(ttiMode)=="strict";
+ const bool offlineTTI=strictTTI||(ttiMode&&StringRef(ttiMode)=="offline");
  if(implicitRoot){
    const auto executable=sys::fs::getMainExecutable(argv[0],reinterpret_cast<void*>(&run));
    SmallString<256> location(executable);
@@ -178,12 +182,17 @@ int main(int argc,char**argv){try{
    root=location.str().str();
    if(!sys::fs::can_execute(root+"/build/llvm24-tti/fusion-search-llvm24")||
       !sys::fs::can_execute(root+"/tools/run-llvm24-tti")||
-      !sys::fs::can_execute(root+"/build/llvm24-tti/llvm24-tti"))
-     throw std::runtime_error("cannot find built fusion-search and LLVM24 TTI worker next to decision-greedy");
+      (!offlineTTI&&!sys::fs::can_execute(root+"/build/llvm24-tti/llvm24-tti")))
+     throw std::runtime_error("cannot find built fusion-search and selected TTI provider next to decision-greedy");
  }else root=argv[3];
  std::string current=argv[1],fn=argv[2],out=argv[argc-1];
  if(sys::fs::exists(out))throw std::runtime_error("output exists");
  if(auto e=sys::fs::create_directories(out))throw std::runtime_error(e.message());
+ const std::string strictTTIErrors=out+"/offline-tti-errors.log";
+ if(strictTTI&&setenv("FUSION_TTI_STRICT_ERRORS",strictTTIErrors.c_str(),1))
+   throw std::runtime_error("cannot configure strict offline TTI errors");
+ if(offlineTTI&&setenv("FUSION_TTI_WARNINGS",(out+"/offline-tti-warnings.log").c_str(),0))
+   throw std::runtime_error("cannot configure offline TTI warnings");
  int64_t structuralJobs=16;
  if (const char *value=std::getenv("DECISION_GREEDY_JOBS")) {
    if (StringRef(value).getAsInteger(10,structuralJobs) || structuralJobs<1 || structuralJobs>64)
@@ -205,7 +214,7 @@ int main(int argc,char**argv){try{
  if(!sys::fs::can_execute(structural))
    throw std::runtime_error("structural candidate engine unavailable: "+structural);
  targets.emplace_back();
- auto cost=[&](const std::string&input,const std::string&prefix){if(run({root+"/tools/run-llvm24-tti",input,fn},prefix+".json",prefix+".stderr"))throw std::runtime_error("TTI worker failed: "+prefix);auto v=read(prefix+".json");auto*o=v.getAsObject();if(!o||o->getInteger("unknown")!=Optional<int64_t>(0)||o->getString("source_revision")!=Optional<StringRef>("6be16f356d3e"))throw std::runtime_error("TTI unknown cost or revision mismatch");auto n=o->getInteger("cost");if(!n)throw std::runtime_error("missing cost");return *n;};
+ auto cost=[&](const std::string&input,const std::string&prefix){if(run({root+"/tools/run-llvm24-tti",input,fn},prefix+".json",prefix+".stderr"))throw std::runtime_error("TTI worker failed: "+prefix);auto v=read(prefix+".json");auto*o=v.getAsObject();if(!o||o->getInteger("unknown")!=Optional<int64_t>(0)||o->getString("source_revision")!=Optional<StringRef>("6be16f356d3e"))throw std::runtime_error("TTI unknown cost or revision mismatch");if(o->getString("cost_kind")!=Optional<StringRef>(fusion::ttiCostKindName()))throw std::runtime_error("TTI cost kind mismatch");auto n=o->getInteger("cost");if(!n)throw std::runtime_error("missing cost");return *n;};
  int64_t parentCost=cost(current,out+"/initial-tti"),initialCost=parentCost;unsigned commits=0,trials=0;json::Array rounds,stops;
  const char *checkpoint=std::getenv("DECISION_CHECKPOINT_TOOL");
  auto recordResources=[&](const std::string &ir,const std::string &prefix,json::Object &record){
@@ -219,7 +228,7 @@ int main(int argc,char**argv){try{
    }
  };
  unsigned reusedSweepSnapshots=0;
- auto report=[&](StringRef status){save(out+"/summary.json",json::Value(json::Object{{"status",status.str()},{"driver_phase_timings",timingReport()},{"elapsed_ms",std::chrono::duration<double,std::milli>(Clock::now()-started).count()},{"domain_schedule",domainSchedule},{"ir_snapshots",snapshotMode},{"trial_policy",trialPolicy},{"scoped_trials",scoped?json::Value(scoped->report()):json::Value(nullptr)},{"search","per-decision greedy; best positive adjacent or structural candidate"},{"cfg_cleanup","structural"},{"structural_cleanup",structuralCleanup},{"structural_candidates_enabled",true},{"shared_arm_trials",true},{"cross_level_b2r",false},{"reused_sweep_snapshots",int64_t(reusedSweepSnapshots)},{"pipeline_version",domainSchedule=="ordered"?"v2":"v1"},{"candidate_jobs",structuralJobs},{"candidate_scheduler","continuous-queue"},{"persistent_trial_workers",true},{"condition_budget",conditionBudget},{"phi_fold_threshold",7},{"r2r_enumeration","darm-alignment"},{"b2b_strategy",b2bStrategy},{"tti_quote_cache",quoteMode},{"backend_resource_gate_enabled",false},{"uniform_loss_guard_enabled",false},{"max_uniform_loss",-1},{"max_pressure_growth",-1},{"max_pressure",-1},{"initial_cost",initialCost},{"final_cost",parentCost},{"commits",int64_t(commits)},{"trials",int64_t(trials)},{"final_ir",current},{"rounds",json::Value(json::Array(rounds))},{"stops",json::Value(json::Array(stops))}}));};
+ auto report=[&](StringRef status){save(out+"/summary.json",json::Value(json::Object{{"status",status.str()},{"driver_phase_timings",timingReport()},{"elapsed_ms",std::chrono::duration<double,std::milli>(Clock::now()-started).count()},{"domain_schedule",domainSchedule},{"ir_snapshots",snapshotMode},{"trial_policy",trialPolicy},{"scoped_trials",scoped?json::Value(scoped->report()):json::Value(nullptr)},{"search","per-decision greedy; best positive adjacent or structural candidate"},{"cfg_cleanup","structural"},{"structural_cleanup",structuralCleanup},{"structural_candidates_enabled",true},{"shared_arm_trials",true},{"cross_level_b2r",false},{"reused_sweep_snapshots",int64_t(reusedSweepSnapshots)},{"pipeline_version",domainSchedule=="ordered"?"v2":"v1"},{"candidate_jobs",structuralJobs},{"candidate_scheduler","continuous-queue"},{"persistent_trial_workers",true},{"condition_budget",conditionBudget},{"phi_fold_threshold",7},{"r2r_enumeration","darm-alignment"},{"b2b_strategy",b2bStrategy},{"tti_quote_cache",quoteMode},{"tti_cost_kind",fusion::ttiCostKindName()},{"backend_resource_gate_enabled",false},{"uniform_loss_guard_enabled",false},{"max_uniform_loss",-1},{"max_pressure_growth",-1},{"max_pressure",-1},{"initial_cost",initialCost},{"final_cost",parentCost},{"commits",int64_t(commits)},{"trials",int64_t(trials)},{"final_ir",current},{"rounds",json::Value(json::Array(rounds))},{"stops",json::Value(json::Array(stops))}}));};
  report("running");
  fusion::IncrementalCandidateQueue candidateQueue;
  std::unique_ptr<Module> scopedParent;if(scoped)scopedParent=CloneModule(*initial);
@@ -764,5 +773,9 @@ int main(int argc,char**argv){try{
   record["selected_cost"]=bestCost;record["score"]=double(parentCost-bestCost)/std::max<int64_t>(parentCost,1);rounds.push_back(std::move(record));parentCost=bestCost;current=best+"/fused.ll";attemptedStructural.clear();attemptedPreparation.clear();++commits;report("running");outs()<<"commit="<<commits<<" cost="<<parentCost<<" decision="<<target<<"\n";outs().flush();mark("record_and_commit");
   if(iteration==(domainSchedule!="legacy"?99999u:255u))throw std::runtime_error("round budget exceeded");
  }}
+ if(strictTTI&&sys::fs::exists(strictTTIErrors)){
+   report("offline_tti_error");
+   throw std::runtime_error("offline TTI replay incomplete; see "+strictTTIErrors);
+ }
  if(auto e=sys::fs::copy_file(current,out+"/final.ll"))throw std::runtime_error(e.message());current=out+"/final.ll";report("completed");return 0;
 }catch(const std::exception&e){errs()<<e.what()<<"\n";return 1;}}

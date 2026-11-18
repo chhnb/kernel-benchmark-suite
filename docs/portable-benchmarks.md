@@ -57,3 +57,67 @@ The preparation commands were checked on Linux with LLVM 12.0.0git and ROCm
 The HIP runner builds and the LLVM 24 worker returns a VLLM TTI report.
 GPU validation and timing with this portable entry point remain to be checked
 on the destination machine.
+
+## Offline scoring for frozen searches
+
+Build the search engine and the LLVM12 instruction reader with
+`LLVM_CONFIG=/path/to/llvm12/bin/llvm-config tools/build-v1 --search-only`.
+The recording host also needs the pinned LLVM24 worker. Use a separate
+database per frozen case and run the full search once to record the scores.
+
+```bash
+export FUSION_TTI_DB=/absolute/path/to/case.sqlite
+FUSION_TTI_MODE=record build/decision-fuse/decision-greedy INPUT.ll FUNCTION record-out
+FUSION_TTI_MODE=strict build/decision-fuse/decision-greedy INPUT.ll FUNCTION strict-out
+```
+
+Strict mode requires an exact recorded score request. Compare the candidate
+scores, selected candidates and final IR with those from the recording run.
+Missing strict requests fail the replay and are recorded in
+`offline-tti-errors.log` in its output directory. Keep the original input
+path when the IR has no explicit `source_filename`, since LLVM derives
+that field from the path. The database contains compressed LLVM24 reports and a smaller set
+of reusable instruction quotes keyed by the available target and instruction
+context.
+
+For an experiment with adjustable costs, use `FUSION_TTI_MODE=offline`.
+It uses the recorded quotes when available and charges 1 for a missing
+instruction quote. Greedy appends warnings to `offline-tti-warnings.log` in the output directory,
+or to the path given by `FUSION_TTI_WARNINGS`. When a changed score changes the
+selected fusion, subsequent requests can need additional fallback quotes.
+
+Set `FUSION_TTI_OVERRIDES=/absolute/path/to/overrides.json` in offline mode.
+This example overrides 8-byte-aligned global double loads on gfx906.
+
+```json
+[
+  {"cpu": "gfx906", "key": "load:double", "address_space": 1, "alignment": 8, "cost": 4}
+]
+```
+
+Rules match the given fields. If multiple rules match, the last match wins.
+Both offline modes use Python 3 with SQLite and the LLVM12 build. The pinned
+LLVM24 binary and libraries are used only for recording.
+
+Set `FUSION_TTI_COST_KIND=latency` to use LLVM24 `TCK_Latency` for either live
+worker queries or recording and offline replay. Without it, the cost kind is
+`TCK_RecipThroughput`.
+
+```bash
+FUSION_TTI_COST_KIND=latency tools/run-llvm24-tti INPUT.ll FUNCTION > latency.json
+FUSION_TTI_COST_KIND=latency FUSION_TTI_MODE=record \
+  FUSION_TTI_DB=/absolute/path/to/latency.sqlite \
+  build/decision-fuse/decision-greedy INPUT.ll FUNCTION latency-record
+FUSION_TTI_COST_KIND=latency FUSION_TTI_MODE=strict \
+  FUSION_TTI_DB=/absolute/path/to/latency.sqlite \
+  build/decision-fuse/decision-greedy INPUT.ll FUNCTION latency-replay
+```
+
+Latency and throughput reports use separate lookup keys. Latency replay uses
+the exact recorded IR requests. The reusable per-instruction cache is verified
+for throughput only.
+
+The [gfx906 memory cost table](../regression/tti-gfx906/memory-costs.csv)
+contains both cost kinds for the checked-in probe. The offline regression
+checks those quotes and records both cost kinds in one database to verify
+that replay never reads a quote from the wrong mode.
