@@ -10,8 +10,10 @@ import statistics
 import subprocess
 import sys
 
+from compile_kernel import compile_kernel
+
 ROOT = Path(__file__).resolve().parents[1]
-CASES = {"vllm": "vllm-quant", "mapairy": "boost-mapairy"}
+CASES = {"vllm": ("vllm-quant", "cache_eval"), "mapairy": ("boost-mapairy", "evaluate")}
 
 
 def main():
@@ -23,11 +25,14 @@ def main():
     parser.add_argument("--rocm", type=Path, default=Path("/opt/rocm"))
     parser.add_argument("--boost-math-include", type=Path)
     parser.add_argument("--prepare-only", action="store_true", help="Build and generate inputs without launching a GPU job")
+    parser.add_argument("--auto-greedy", action="store_true", help="Apply Auto Greedy V2 before code generation")
+    parser.add_argument("--work-dir", type=Path, help="New directory for full build diagnostics")
     args = parser.parse_args()
+    case_path, function = CASES[args.case]
     out = args.out.resolve()
     llvm = args.llvm12_bin.resolve()
     rocm = args.rocm.resolve()
-    source = (args.ir or ROOT / "cases" / CASES[args.case] / "start.ll").resolve()
+    source = (args.ir or ROOT / "cases" / case_path / "start.ll").resolve()
     if not source.is_file():
         parser.error(f"missing IR: {source}")
     env = os.environ.copy()
@@ -44,14 +49,11 @@ def main():
     def run(*command):
         subprocess.run(command, check=True, env=env)
 
-    optimized = out / "kernel-final.ll"
-    obj = out / "kernel.o"
     binary = out / "kernel.hsaco"
     runner = out / "bench_hip"
-    run(llvm / "opt", source, "-O3", "-verify-each", "-S", "-o", optimized)
-    run(llvm / "llc", optimized, "-O3", "-mtriple=amdgcn-amd-amdhsa", "-mcpu=gfx906",
-        "-mattr=+sram-ecc,-xnack", "-filetype=obj", "-o", obj)
-    run(rocm / "llvm/bin/ld.lld", "-shared", obj, "-o", binary)
+    compile_kernel(source, binary, llvm, rocm, function=function if args.auto_greedy else None,
+                   work_dir=args.work_dir, features="+sram-ecc,-xnack", code_object_version=None,
+                   env=env)
     run(env.get("CXX", "g++"), "-std=c++17", "-O2", "-DBENCH_HIP", "-D__HIP_PLATFORM_AMD__",
         "-I" + str(rocm / "include"), ROOT / "runner/replay.cpp",
         "-L" + str(rocm / "lib"), "-Wl,-rpath," + str(rocm / "lib"),

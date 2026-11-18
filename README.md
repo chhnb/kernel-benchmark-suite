@@ -24,6 +24,15 @@ python3 tools/run_v1_regression.py --out build/v1-regression-new
 
 V2 默认保留评分、拒绝原因、重放请求及清理后的候选产物。排查某项改写时可传 `--ir-snapshots full`，同时导出每次试跑的父 IR、对照 IR 和清理前产物。单独执行 `fusion-search-llvm24` 默认导出完整诊断。
 
+直接生成 GPU 二进制，使用完整编译入口：
+
+```sh
+python3 tools/compile_kernel.py INPUT.ll FUNCTION --llvm12-bin /path/to/llvm12/bin \
+  --rocm /opt/rocm --out kernel.hsaco
+```
+
+这个入口默认执行 V2 融合、LLVM 12 后端和链接，只交付 HSACO。需要保留试跑、IR 和目标文件时，用 `--work-dir` 指定新的目录。默认后端为 gfx906，使用 code object v4。PCM 等直接把融合结果交给 `llc` 的配置可用 `--no-preopt`。可移植 GPU benchmark 使用相同的编译函数，用 `--auto-greedy` 选择融合版本。
+
 ## 从这里开始
 
 | 想做什么 | 文档 |
