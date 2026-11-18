@@ -48,15 +48,39 @@ static sys::ProcessInfo startTrial(const std::vector<std::string> &args,
   return failed?sys::ProcessInfo():process;
 }
 static bool eligible(const decision::Arm&a,const decision::Arm&b){return a.kind!=decision::ArmKind::Unsupported&&b.kind!=decision::ArmKind::Unsupported;}
+// A clone has the same CFG. Carry the discovered decision over to its blocks.
+static decision::Decision cloneDecision(const decision::Decision &source,
+                                        const ValueToValueMapTy &values) {
+  auto result = source;
+  auto remap = [&](BasicBlock *&block) {
+    if (block) {
+      Value *cloned = values.lookup(block);
+      block = cast<BasicBlock>(cloned);
+    }
+  };
+  auto remapPath = [&](std::vector<decision::Edge> &path) {
+    for (auto &edge : path) remap(edge.test);
+  };
+  remap(result.root);
+  remap(result.join);
+  for (auto *&test : result.tests) remap(test);
+  for (auto &arm : result.arms) {
+    remap(arm.entry);
+    for (auto *&block : arm.blocks) remap(block);
+    for (auto *&exit : arm.exitSources) remap(exit);
+    remapPath(arm.predicate);
+    for (auto &path : arm.alternatives) remapPath(path);
+  }
+  return result;
+}
+
 // Materialize the logical pair on a disposable module. Structural trials
 // use block indices in that module, including any new dispatch and join.
-static bool prepareArmPairs(Module &module, StringRef function, unsigned decisionIndex,
-                              unsigned left, unsigned conditionBudget, std::string &reason,
-                              std::vector<std::array<std::string,3>> &coordinates, const decision::OrderedArms *table) {
-  auto &f=*module.getFunction(function);
-  auto decisions=decision::discover(f);
-  auto &d=decisions.at(decisionIndex);
-  if(table) { table->arrange(d); decision::OrderedArms::stamp(d,left); }
+static bool prepareArmPairs(Function &f, decision::Decision &d, unsigned left,
+                            unsigned conditionBudget, std::string &reason,
+                            std::vector<std::array<std::string,3>> &coordinates,
+                            bool track) {
+  if (track) decision::OrderedArms::stamp(d, left);
   auto *leftEntry=d.arms.at(left).entry;
   auto *rightEntry=d.arms.at(left+1).entry;
   BasicBlock *dispatch=nullptr;
@@ -77,7 +101,7 @@ static bool prepareArmPairs(Module &module, StringRef function, unsigned decisio
   }
   auto *branch=dyn_cast<BranchInst>(dispatch->getTerminator());
   if(!branch||!branch->isConditional()||branch->getSuccessor(0)!=leftEntry||
-     branch->getSuccessor(1)!=rightEntry||verifyModule(module,&errs())){
+     branch->getSuccessor(1)!=rightEntry||verifyModule(*f.getParent(),&errs())){
     reason="invalid_prepared_arm_pair";
     return false;
   }
@@ -291,6 +315,7 @@ int main(int argc,char**argv){try{
   auto &d=target.empty()?emptyDecision:catalog[di];
   int64_t bestCost=parentCost;
   std::string best,bestLocalKey;
+  Optional<unsigned> bestPreparedOrdinal;
   json::Array attempts, preparationRejections;
   struct PreparedPair {
     unsigned owner, left;
@@ -304,10 +329,12 @@ int main(int argc,char**argv){try{
     auto &d=catalog[owner];
     for (unsigned left=0; left+1<d.arms.size(); ++left) {
       if(!eligible(d.arms[left],d.arms[left+1]))continue;
-      auto prepared=CloneModule(*m);
+      ValueToValueMapTy values;
+      auto prepared=CloneModule(*m, values);
+      auto clonedDecision=cloneDecision(d, values);
       std::string reason;
       std::vector<std::array<std::string,3>> coordinates;
-      if(prepareArmPairs(*prepared,fn,owner,left,conditionBudget,reason,coordinates,track ? &table : nullptr)){
+      if(prepareArmPairs(*prepared->getFunction(fn),clonedDecision,left,conditionBudget,reason,coordinates,track)){
         const std::string decisionSuffix=domainSchedule!="legacy" ? "-"+std::to_string(owner) : "";
         const auto input=out+"/prepared-"+std::to_string(rounds.size())+decisionSuffix+"-"+std::to_string(left)+".ll";
         std::error_code ec;
@@ -378,36 +405,34 @@ int main(int argc,char**argv){try{
       fusion::IncrementalCandidateQueue::Ticket ticket;
       bool scoreReused=false;
       bool scopedFallback=false;
+      Optional<unsigned> preparedOrdinal;
       std::optional<fusion::ScopedGreedyAdapter::Descriptor> local;
     };
     std::vector<StructuralTrial> structuralTrials;
-    json::Array originalRootCandidates, extendedTreeCandidates;
-    std::vector<const json::Array*> candidateLists{&candidates,&normalizedCandidates};
-    if(domainSchedule!="legacy" && !decisionSplit.empty()) {
-      // Preserve the old direct-root / prepared ordering on ties. New family
-      // members are appended, not promoted ahead of old legal candidates.
-      for(const auto &entry:candidates) {
-        const auto &c=*entry.getAsObject();auto split=c.getString("split")->str();
-        if(split==decisionSplit)originalRootCandidates.push_back(json::Value(json::Object(c)));
-        else if(!ordered && domains.root(split)==domains.root(decisionSplit))
-          extendedTreeCandidates.push_back(json::Value(json::Object(c)));
-      }
-      candidateLists={&originalRootCandidates,&normalizedCandidates,&extendedTreeCandidates};
+    std::vector<const json::Object *> roundCandidates;
+    for (const auto &entry : candidates) {
+      const auto &candidate = *entry.getAsObject();
+      const auto split = candidate.getString("split")->str();
+      if (!decisionSplit.empty() && split != decisionSplit) continue;
+      if (domainSchedule != "legacy" && target.empty() &&
+          (!activeDomain || !activeOwner(domains.root(split)))) continue;
+      roundCandidates.push_back(&candidate);
     }
-    for(const auto *list:candidateLists)
-    for(const auto &entry:*list) {
-      const auto &candidate=*entry.getAsObject();
-      // Compare both candidate kinds at this decision. The final structural
-      // sweep also considers roots outside the initial decision catalog.
-      const auto preparedInput=candidate.getString("prepared_input");
-      if(!preparedInput&&!decisionSplit.empty()) {
-        const auto split=candidate.getString("split")->str();
-        if(domainSchedule!="legacy") {
-          if(domains.root(split)!=domains.root(decisionSplit))continue;
-        }else if(split!=decisionSplit)continue;
+    for (const auto &entry : normalizedCandidates)
+      roundCandidates.push_back(entry.getAsObject());
+    // The experimental tree schedules add other splits after the original
+    // candidates to preserve the existing tie order.
+    if (!decisionSplit.empty() && !ordered && domainSchedule != "legacy") {
+      for (const auto &entry : candidates) {
+        const auto &candidate = *entry.getAsObject();
+        const auto split = candidate.getString("split")->str();
+        if (split != decisionSplit && domains.root(split) == activeDomain)
+          roundCandidates.push_back(&candidate);
       }
-      if(domainSchedule!="legacy" && target.empty() && !preparedInput &&
-         (!activeDomain || !activeOwner(domains.root(candidate.getString("split")->str()))))continue;
+    }
+    for (const auto *entry : roundCandidates) {
+      const auto &candidate = *entry;
+      const auto preparedInput = candidate.getString("prepared_input");
       const auto candidateKey=candidate.getString("candidate")->str();
       if(!preparedInput&&!attemptedStructural.insert(candidateKey).second)continue;
       if(auto reason=candidate.getString("preflight_rejection"))if(!reason->empty())continue;
@@ -451,52 +476,54 @@ int main(int argc,char**argv){try{
         attempt["right"]=candidate.getString("logical_right")->str();
       }
       structuralTrials.push_back({std::move(trialArgs),dir,std::move(attempt),-1,{}});
+      if (preparedInput)
+        structuralTrials.back().preparedOrdinal = *candidate.getInteger("prepared_ordinal");
       if(scoped&&!preparedInput)structuralTrials.back().local=scoped->describe(
           *candidate.getString("split"),*candidate.getString("left"),*candidate.getString("right"));
     }
-    // Conservative certificate while scoped dependency proofs are audited:
-    // changing the parent invalidates every score. The queue itself also handles
-    // new/disappeared candidates, stale async results and stable tie ordering.
-    // Never enable local reuse by treating an unchanged block name as proof.
-    std::vector<fusion::IncrementalCandidateQueue::Candidate> inventory;
-    std::map<std::string,std::string> inputDigests;
-    auto digestFor=[&](const std::string &path)->const std::string & {
-      auto found=inputDigests.find(path);
-      if(found==inputDigests.end())found=inputDigests.emplace(path,inputDigest(path)).first;
-      return found->second;
-    };
-    for (size_t i = 0; i < structuralTrials.size(); ++i) {
-      auto &trial = structuralTrials[i];
-      if(trial.local){inventory.push_back({trial.local->key,trial.local->reads,i});continue;}
-      // Paths identify artifacts, not candidates. Content belongs to the read
-      // set; keep a candidate identity across new trial directories.
-      std::string key;
-      auto identityPart=[&](StringRef part) {
-        key+=std::to_string(part.size())+":"+part.str();
+    // Only the scoped experiments reuse whole trial scores.
+    if (scoped) {
+      // Never enable local reuse by treating an unchanged block name as proof.
+      std::vector<fusion::IncrementalCandidateQueue::Candidate> inventory;
+      std::map<std::string,std::string> inputDigests;
+      auto digestFor=[&](const std::string &path)->const std::string & {
+        auto found=inputDigests.find(path);
+        if(found==inputDigests.end())found=inputDigests.emplace(path,inputDigest(path)).first;
+        return found->second;
       };
-      identityPart(trial.attempt.getString("candidate").getValue());
-      if(trial.attempt.getString("prepared_input")) {
-        identityPart("prepared");
-        identityPart(trial.attempt.getString("prepared_decision").getValue());
-        identityPart(std::to_string(*trial.attempt.getInteger("prepared_ordinal")));
-        identityPart(trial.attempt.getString("left").getValue());
-        identityPart(trial.attempt.getString("right").getValue());
-      } else identityPart("structural");
-      inventory.push_back({key, {{"parent", digestFor(current)}, {"input", digestFor(trial.args[2])}, {"strategy", b2bStrategy}, {"cleanup", structuralCleanup}}, i});
-    }
-    const auto pending = candidateQueue.synchronize(inventory);
-    std::map<std::string, fusion::IncrementalCandidateQueue::Ticket> tickets;
-    for (const auto &ticket : pending) tickets.emplace(ticket.id, ticket);
-    for (size_t i = 0; i < structuralTrials.size(); ++i) {
-      auto found = tickets.find(inventory[i].id);
-      if (found == tickets.end()) {
-        auto cached=candidateQueue.cached(inventory[i].id);
-        if(!cached)throw std::runtime_error("missing cached full-parent trial");
-        auto &trial=structuralTrials[i];
-        trial.attempt["score_cache_source"]=cached->recipe;
-        if(!trial.local)trial.directory=cached->recipe;
-        trial.exitCode=cached->exitCode;trial.scoreReused=true;
-      } else structuralTrials[i].ticket = found->second;
+      for (size_t i = 0; i < structuralTrials.size(); ++i) {
+        auto &trial = structuralTrials[i];
+        if(trial.local){inventory.push_back({trial.local->key,trial.local->reads,i});continue;}
+        // Paths identify artifacts, not candidates. Content belongs to the read
+        // set; keep a candidate identity across new trial directories.
+        std::string key;
+        auto identityPart=[&](StringRef part) {
+          key+=std::to_string(part.size())+":"+part.str();
+        };
+        identityPart(trial.attempt.getString("candidate").getValue());
+        if(trial.attempt.getString("prepared_input")) {
+          identityPart("prepared");
+          identityPart(trial.attempt.getString("prepared_decision").getValue());
+          identityPart(std::to_string(*trial.attempt.getInteger("prepared_ordinal")));
+          identityPart(trial.attempt.getString("left").getValue());
+          identityPart(trial.attempt.getString("right").getValue());
+        } else identityPart("structural");
+        inventory.push_back({key, {{"parent", digestFor(current)}, {"input", digestFor(trial.args[2])}, {"strategy", b2bStrategy}, {"cleanup", structuralCleanup}}, i});
+      }
+      const auto pending = candidateQueue.synchronize(inventory);
+      std::map<std::string, fusion::IncrementalCandidateQueue::Ticket> tickets;
+      for (const auto &ticket : pending) tickets.emplace(ticket.id, ticket);
+      for (size_t i = 0; i < structuralTrials.size(); ++i) {
+        auto found = tickets.find(inventory[i].id);
+        if (found == tickets.end()) {
+          auto cached=candidateQueue.cached(inventory[i].id);
+          if(!cached)throw std::runtime_error("missing cached full-parent trial");
+          auto &trial=structuralTrials[i];
+          trial.attempt["score_cache_source"]=cached->recipe;
+          if(!trial.local)trial.directory=cached->recipe;
+          trial.exitCode=cached->exitCode;trial.scoreReused=true;
+        } else structuralTrials[i].ticket = found->second;
+      }
     }
 
     size_t externalPending=0;
@@ -640,17 +667,27 @@ int main(int argc,char**argv){try{
         attempt["plan_cache"]=read(dir+"/structural/b2b-recipe-cache.json");
       const bool canCommit = attempt.getBoolean("eligible") == Optional<bool>(true);
       const auto cost = attempt.getInteger("cost");
-      if(!trial.scoreReused) candidateQueue.publish(trial.ticket,
-          {canCommit && cost ? parentCost - *cost : 0, dir, rc,
-           !trial.scopedFallback && rc==0 && attempt.getString("stage")==Optional<StringRef>("scored")});
+      if (scoped) {
+        if (!trial.scoreReused)
+          candidateQueue.publish(trial.ticket,
+              {canCommit && cost ? parentCost - *cost : 0, dir, rc,
+               !trial.scopedFallback && rc==0 && attempt.getString("stage")==Optional<StringRef>("scored")});
+      } else if (canCommit && cost && *cost < bestCost) {
+        // Results are visited in enumeration order, so the first tie wins.
+        bestCost = *cost;
+        best = dir;
+        bestPreparedOrdinal = trial.preparedOrdinal;
+      }
       attempts.push_back(std::move(attempt));
     }
-    if (!candidateQueue.ready()) throw std::runtime_error("unevaluated priority queue candidate");
-    if (auto winner = candidateQueue.best()) {
-      best = winner->second.recipe;
-      bestCost = parentCost - winner->second.gain;
-      for(const auto &trial:structuralTrials)if(trial.local&&trial.local->key==winner->first.id){
-        bestLocalKey=trial.local->key;best=trial.directory;break;
+    if (scoped) {
+      if (!candidateQueue.ready()) throw std::runtime_error("unevaluated priority queue candidate");
+      if (auto winner = candidateQueue.best()) {
+        best = winner->second.recipe;
+        bestCost = parentCost - winner->second.gain;
+        for(const auto &trial:structuralTrials)if(trial.local&&trial.local->key==winner->first.id){
+          bestLocalKey=trial.local->key;best=trial.directory;break;
+        }
       }
     }
   }
@@ -690,17 +727,11 @@ int main(int argc,char**argv){try{
   }
   if(track){
     record["ordered_arms"]=table.describe(catalog[di]);
-    auto &rows=*record.getArray("attempts");
-    auto winner=std::find_if(rows.begin(),rows.end(),[&](auto &row){
-      return row.getAsObject()->getString("directory")==StringRef(best);
-    });
-    if(winner==rows.end())throw std::runtime_error("ordered winner missing");
-    auto ordinal=winner->getAsObject()->getInteger("prepared_ordinal");
-    if(ordinal){
+    if(bestPreparedOrdinal){
       auto cleaned=parseIRFile(best+"/fused.ll",error,ctx);
       if(!cleaned)throw std::runtime_error("cannot bind ordered winner");
-      record["ordered_left"]=*ordinal;
-      record["ordered_update"]=table.advance(*cleaned->getFunction(fn),*ordinal);
+      record["ordered_left"]=int64_t(*bestPreparedOrdinal);
+      record["ordered_update"]=table.advance(*cleaned->getFunction(fn),*bestPreparedOrdinal);
       if(verifyModule(*cleaned,&errs()))throw std::runtime_error("invalid ordered winner");
       writeModule(*cleaned,best+"/fused.ll");
     }else{
