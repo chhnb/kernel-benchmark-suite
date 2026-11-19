@@ -18,3 +18,7 @@ LLVM12 和 LLVM24 实时吞吐报价确认，原始记录保存在
 测试维护提交更新 V2 ordered 断言。旧拒绝列表中的 `guarded` 已在
 `4a91a50` 上受支持，继续由 `check-guarded-b2r.py` 验证。DP2／DP3 和其他已移除选项的拒绝检查保留。
 四个缺件测试列出缺失路径和恢复方式。Pair trial 使用新临时目录，保留已跟踪的历史证据目录。
+
+## 历史入口清理
+
+- 移除 `tests/fusion-search/compare-scoped-driver.py`。原用于比较 scoped-full 和 scoped-reuse 的提交链及复用情况。该脚本未列入当前 27 项通过、4 项缺件跳过的测试集合。
