@@ -1638,7 +1638,7 @@ static SmallVector<B2BMatch, 8> searchB2BCommon(
     BasicBlock &left, BasicBlock &right, BranchInst &split, DominatorTree &dt,
     bool completeCommon = false,
     SmallVectorImpl<SmallVector<B2BMatch, 8>> *finalists = nullptr,
-    bool prioritizeMatches = false, bool binaryOnly = false,
+    bool prioritizeMatches = false,
     function_ref<int(const Instruction &)> intrinsicCost = nullptr) {
   SmallVector<Instruction *, 16> l, r;
   for (auto &inst : left) if (!inst.isTerminator()) l.push_back(&inst);
@@ -1702,8 +1702,7 @@ static SmallVector<B2BMatch, 8> searchB2BCommon(
         }
         if (i == l.size() || j == r.size()) continue;
         auto *li = l[i], *ri = r[j];
-        if ((binaryOnly && !isa<BinaryOperator>(li) && !isa<StoreInst>(li)) ||
-            !compatibleB2BPrefix(*li, *ri) ||
+        if (!compatibleB2BPrefix(*li, *ri) ||
             (state.forked && li->mayReadOrWriteMemory()))
           continue;
         State shared = state;
@@ -2164,7 +2163,7 @@ std::vector<Trial> planSingleBranchB2B(const Module &parent, const Candidate &c,
   ProfileScope planningScope("b2b_plan_generate_clean_total");
   std::vector<Trial> trials;
   const auto parentIdentity = moduleHash(parent);
-  if (recipeIn && (recipeIn->getString("schema") != Optional<StringRef>("b2b-recipe-v2") ||
+  if (recipeIn && (recipeIn->getString("schema") != Optional<StringRef>("b2b-recipe-v3") ||
                    recipeIn->getInteger("opt_level") != Optional<int64_t>(level)))
     throw std::runtime_error("b2b_recipe_certificate_mismatch");
   if (!usesDarmDCE(mode))
@@ -2364,24 +2363,17 @@ std::vector<Trial> planSingleBranchB2B(const Module &parent, const Candidate &c,
   auto aligned = alignHoistableB2B(*left, *right, *branch, dt);
   if (aligned == prefix) aligned.clear();
   auto common = searchB2BCommon(*left, *right, *branch, dt,
-                                false, nullptr, false, false, intrinsicCost);
+                                false, nullptr, false, intrinsicCost);
   if (common == prefix || common == aligned) common.clear();
-  // Retain a binary-operation alignment as a separate finalist. Small-cost
-  // casts and compares can occupy the beam and hide useful arithmetic plans.
-  auto binaryCommon = searchB2BCommon(*left, *right, *branch, dt,
-                                      false, nullptr, false, true, nullptr);
-  if (binaryCommon == prefix || binaryCommon == aligned || binaryCommon == common)
-    binaryCommon.clear();
-
   SmallVector<SmallVector<B2BMatch, 8>, 4> completeCommon;
   searchB2BCommon(*left, *right, *branch, dt, true, &completeCommon,
-                  false, false, intrinsicCost);
+                  false, intrinsicCost);
   // Also retain the maximum-coverage alignment. Estimated transfer costs
   // can hide it because cleanup can fold several selects together.
   SmallVector<SmallVector<B2BMatch, 8>, 1> coverage;
   if (!completeCommon.empty())
     searchB2BCommon(*left, *right, *branch, dt, true, &coverage, true,
-                    false, intrinsicCost);
+                    intrinsicCost);
   if (!coverage.empty() && !llvm::is_contained(completeCommon, coverage.front()))
     completeCommon.push_back(std::move(coverage.front()));
   auto joined = join ? searchB2BJoin(*left, *right, *join)
@@ -2407,7 +2399,6 @@ std::vector<Trial> planSingleBranchB2B(const Module &parent, const Candidate &c,
   }
   if (!aligned.empty()) add("single-branch-aligned-hoist", aligned, {});
   if (!common.empty()) add("single-branch-common-dp", common, {});
-  if (!binaryCommon.empty()) add("single-branch-binary-common-dp", binaryCommon, {});
   if (!common.empty() && !suffix.empty())
     add("single-branch-common-dp-suffix", common, suffix);
   unsigned rank = 0;
@@ -2489,7 +2480,7 @@ std::vector<Trial> planSingleBranchB2B(const Module &parent, const Candidate &c,
       rows.push_back(json::Object{{"label",layout.label},{"before",pairs(layout.beforeSplit)},
                                  {"after",pairs(layout.afterJoin)},{"segments",std::move(segments)}});
     }
-    *recipeOut = json::Object{{"schema","b2b-recipe-v2"},{"parent_hash",parentIdentity},{"planner_facts",plannerFacts},
+    *recipeOut = json::Object{{"schema","b2b-recipe-v3"},{"parent_hash",parentIdentity},{"planner_facts",plannerFacts},
         {"candidate",c.key()},{"opt_level",int64_t(level)},{"layouts",std::move(rows)}};
   }
 
