@@ -39,3 +39,13 @@
 Map-Airy新增完整叶子候选改变第9步造成5.19%回退；`4ac5a90`加入默认判别值边界后恢复冻结二进制并实测通过。没有改TTI权重，也没有覆盖reference。该修复不代表TTI已能可靠评价所有跨层级融合。
 
 vLLM/Map-Airy输入已改为运行时生成；随机输入不纳入Git。旧Qwen归档保留历史。原生DARM匹配器不足与我们新增wrapper/逻辑追踪bug的归属，见项目状态文档。
+
+
+## Anchor 默认版本的性能与测量状态
+
+- HLLD 保持 `pending-regression`。历史 DP1/A 比未融合慢约 7%，逐次提交测量将主要退化定位于第 3 次 R2B。anchor 的同规模结果为 N/A 1.00821，N/baseline 1.09276。
+- Landau coherent 的 anchor 相比未融合慢约 6%（1.05970），mixed 通过。Landau 已归入设计集。
+- TPACF 的 DP1/A 相比未融合慢约 27%（1.26598），anchor 慢约 20%（1.19971）。
+- SasPoint5 与 SRAD stage2 1024×1024 的 A/A 轮间不稳定，按既定规则无法判定性能。SRAD stage2 256×256 的历史判定通过。
+
+实测和输入对应关系见 [anchor 留出记录](../regression/records/b2b-anchor-heldout-20261120.md)。

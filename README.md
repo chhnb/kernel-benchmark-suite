@@ -10,7 +10,7 @@
 
 处理一棵指定 decision 树时，同时评估相邻 arm 的规范化候选和当前 split 的直接结构候选。结构扫尾处理其他 split。如果不同域的候选争用同一个基本块，且满足当前同后继和共同指令数量的触发条件，就对相关域联合评分。
 
-- B2B 默认 DP1，可显式选择 DARM。B2R 和 R2B 默认使用 DARM，可用 `--b2r-strategy guarded` 比较保护布局。R2R 使用 DARM。
+- B2B 默认 anchor，可显式选择 DP1、DARM 或上游 DARM 对照。B2R 和 R2B 默认使用 DARM，可用 `--b2r-strategy guarded` 比较保护布局。R2R 使用 DARM。
 - 合法 trial 依次执行 DARM SimplifyCFG（PHI folding threshold 7）、EarlyCSE、DCE、InstCombine。LLVM24 TTI 要求提交后的成本低于 trial 对照及当前父 IR。
 - 默认 16 路连续队列，使用常驻评分 worker。
 
