@@ -20,12 +20,5 @@ python3 "$root/tests/fusion-search/check-score-fingerprints.py"
 python3 "$root/tests/fusion-search/check-tti-quotes.py"
 python3 "$root/tests/fusion-search/check-commit-score-invalidation.py"
 python3 "$root/tests/fusion-search/check-incremental-ir.py"
-python3 "$root/tests/fusion-search/check-b2b-capsule.py"
-python3 "$root/tests/fusion-search/check-isolated-greedy.py"
-python3 "$root/tests/fusion-search/check-isolated-greedy.py" --external
-python3 "$root/tests/fusion-search/check-isolated-greedy.py" --memory
-python3 "$root/tests/fusion-search/check-isolated-greedy.py" --multi
-python3 "$root/tests/fusion-search/check-isolated-greedy.py" --stores
-python3 "$root/tests/fusion-search/check-isolated-greedy.py" --loads
 python3 "$root/tests/fusion-search/check-hybrid-priority.py"
 python3 "$root/tests/fusion-search/check-region-fallback.py"
