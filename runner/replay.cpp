@@ -1,4 +1,5 @@
 #include "gpu.hpp"
+#include "measurement.hpp"
 #include <map>
 #include <cstdint>
 #include <sstream>
@@ -24,7 +25,7 @@ static void geometry(std::map<std::string,Buffer>&buf,const int dims[3],const in
  }
 }
 int main(int argc,char**argv){try{
- Options o(argc,argv);fs::path config=fs::absolute(o.input),root=config.parent_path();std::ifstream spec(config);need(bool(spec),"input spec");std::string line,symbol;unsigned grid[3]={1,1,1},block[3]={1,1,1};std::map<std::string,Buffer> buffers;std::vector<std::pair<std::string,std::string>> args;bool geo=false;int dims[3]{},nodes[3]{};
+ Options o(argc,argv,true);Measurement measurement{o};fs::path config=fs::absolute(o.input),root=config.parent_path();std::ifstream spec(config);need(bool(spec),"input spec");std::string line,symbol;unsigned grid[3]={1,1,1},block[3]={1,1,1};std::map<std::string,Buffer> buffers;std::vector<std::pair<std::string,std::string>> args;bool geo=false;int dims[3]{},nodes[3]{};
  while(std::getline(spec,line)){if(line.empty()||line[0]=='#')continue;std::istringstream in(line);std::string op;in>>op;
   if(op=="kernel")in>>symbol;else if(op=="grid")in>>grid[0]>>grid[1]>>grid[2];else if(op=="block")in>>block[0]>>block[1]>>block[2];
   else if(op=="buffer"){Buffer b;std::string initial,ref;in>>b.name>>initial>>b.check>>ref>>b.atol>>b.rtol;b.initial=readbytes(root/initial);need(!b.initial.empty(),"empty buffer "+b.name);if(ref!="-")b.reference=readbytes(root/ref);need(b.reference.empty()||b.reference.size()==b.initial.size(),"reference size");buffers.emplace(b.name,std::move(b));}
@@ -39,15 +40,38 @@ int main(int argc,char**argv){try{
   need(n=="wave_profile"&&b.initial.size()==32&&b.reference.empty()&&b.exact.empty(),"invalid wave profile buffer");
   need(std::all_of(b.initial.begin(),b.initial.end(),[](auto c){return c==0;}),"profile counters must start at zero");
  }
- init();Module mod;load(&mod,o.kernel.c_str());Function fn;function(&fn,mod,symbol.c_str());Stream stream;streamCreate(&stream);Event start,stop;eventCreate(&start);eventCreate(&stop);
- for(auto&[n,b]:buffers){b.base=alloc(b.initial.size()+512);b.ptr=(Ptr)((std::uintptr_t)b.base+256);}
+ init();
+ std::vector<Module> modules(measurement.roles());
+ std::vector<Function> functions(measurement.roles());
+ const auto paths=measurement.binaries();
+ for (int i=0;i<measurement.roles();++i) {
+  load(&modules[i],paths[i].c_str());
+  function(&functions[i],modules[i],symbol.c_str());
+ }
+ Stream stream;streamCreate(&stream);Event start,stop;eventCreate(&start);eventCreate(&stop);
+ std::ofstream addresses;
+ if(measurement.extended()) {
+  addresses.open(fs::path(o.output)/"addresses.csv");
+  addresses<<"window,buffer,address\n";
+ }
+ std::ofstream samples(fs::path(o.output)/"samples.csv");
+ samples<<"round,warmup,microseconds,timing,full_output_passed";
+ if(measurement.extended()) samples<<",window,role";
+ samples<<'\n'<<std::setprecision(10);
+ for(int window=0;window<measurement.windows();++window){
+ if(window==0||measurement.reallocate())
+  for(auto&[n,b]:buffers){
+   b.base=alloc(b.initial.size()+512);
+   b.ptr=(Ptr)((std::uintptr_t)b.base+256);
+   measurement.address(addresses,window,n,(std::uintptr_t)b.base);
+  }
  std::vector<std::vector<unsigned char>> storage;for(auto&[type,v]:args){std::vector<unsigned char>a;if(type=="ptr"){auto p=buffers.at(v).ptr;a.resize(8);memcpy(a.data(),&p,8);}else if(type=="hex"){need(v.size()%2==0,"hex size");for(size_t i=0;i<v.size();i+=2)a.push_back(std::stoul(v.substr(i,2),nullptr,16));}else if(type=="file")a=readbytes(root/v);else throw std::runtime_error("arg type");storage.push_back(std::move(a));}
  std::vector<void*> argvp;for(auto&a:storage)argvp.push_back(a.data());Graph graph{};GraphExec executable{};
- if(o.timing=="graph"){beginCapture(stream);launch(fn,grid,block,stream,argvp.data());endCapture(stream,&graph,&executable);}
- std::ofstream samples(fs::path(o.output)/"samples.csv");samples<<"round,warmup,microseconds,timing,full_output_passed\n"<<std::setprecision(10);
- for(int r=0;r<o.rounds();r++){
+ if(o.timing=="graph"){beginCapture(stream);launch(functions.front(),grid,block,stream,argvp.data());endCapture(stream,&graph,&executable);}
+ for(int r=0;r<o.rounds();r++)for(int position=0;position<measurement.roles();++position){
+  const int role=measurement.role(window,position);
   for(auto&[n,b]:buffers){std::vector<unsigned char>padded(b.initial.size()+512,0xa5);std::copy(b.initial.begin(),b.initial.end(),padded.begin()+256);upload(b.base,padded.data(),padded.size());}
-  record(start,stream);if(executable)graphLaunch(executable,stream);else launch(fn,grid,block,stream,argvp.data());record(stop,stream);float ms=elapsed(start,stop);
+  record(start,stream);if(executable)graphLaunch(executable,stream);else launch(functions[role],grid,block,stream,argvp.data());record(stop,stream);float ms=elapsed(start,stop);
   for(auto&[n,b]:buffers){std::vector<unsigned char>padded(b.initial.size()+512);download(padded.data(),b.base,padded.size());bool guards=std::all_of(padded.begin(),padded.begin()+256,[](auto c){return c==0xa5;})&&std::all_of(padded.end()-256,padded.end(),[](auto c){return c==0xa5;});b.got.assign(padded.begin()+256,padded.end()-256);bool pass=guards;if(!b.exact.empty())pass&=b.got==b.exact;
    if(b.check=="readonly")pass&=b.got==b.initial;else if(b.check=="exact")pass&=b.got==b.reference;else if(b.check=="f32"||b.check=="f64"){size_t width=b.check=="f32"?4:8;need(b.reference.size()==b.got.size()&&b.got.size()%width==0,"numeric reference size");for(size_t i=0;i<b.got.size()/width;i++){double x=width==4?value<float>(b.got,i):value<double>(b.got,i),y=width==4?value<float>(b.reference,i):value<double>(b.reference,i);pass&=std::isfinite(x)&&std::isfinite(y)&&std::abs(x-y)<=b.atol+b.rtol*std::abs(y);}}else need(b.check=="geometry"||b.check=="profile_u64", "unknown check "+b.check);
    if(!pass){writebytes(fs::path(o.output)/(n+"-failure.bin"),padded);throw std::runtime_error("output/guard failure "+n);}
@@ -58,8 +82,15 @@ int main(int argc,char**argv){try{
    need(t<=visits&&f<=visits&&both<=t&&both<=f&&t-both==visits-f,"invalid wave profile counters");
    writebytes(fs::path(o.output)/"wave-profile.bin",b.got);
   }
-  samples<<r<<","<<(o.mode=="benchmark"&&!o.measured(r))<<","<<(o.mode=="benchmark"?ms*1000:0)<<","<<o.timing<<",1\n";samples.flush();
+  samples<<r<<","<<(o.mode=="benchmark"&&!o.measured(r))<<","<<(o.mode=="benchmark"?ms*1000:0)<<","<<o.timing<<",1";
+  if(measurement.extended()) samples<<','<<window<<','<<Measurement::names[role];
+  samples<<'\n';samples.flush();
  }
- if(executable)graphFree(executable,graph);for(auto&[n,b]:buffers)release(b.base);eventFree(start);eventFree(stop);streamFree(stream);unload(mod);finish();
- std::ofstream result(fs::path(o.output)/"result.json");result<<"{\"passed\":true,\"launches\":"<<o.rounds()<<",\"timing\":\""<<o.timing<<"\",\"graph_nodes\":"<<(o.timing=="graph"?1:0)<<"}\n";std::cout<<"PASS "<<o.rounds()<<" full-output checks\n";return 0;
+ if(executable)graphFree(executable,graph);
+ if(measurement.reallocate()||window+1==measurement.windows())
+  for(auto&[n,b]:buffers)release(b.base);
+ }
+ eventFree(start);eventFree(stop);streamFree(stream);for(auto mod:modules)unload(mod);finish();
+ const int launches=o.rounds()*measurement.windows()*measurement.roles();
+ std::ofstream result(fs::path(o.output)/"result.json");result<<"{\"passed\":true,\"launches\":"<<launches<<",\"timing\":\""<<o.timing<<"\",\"graph_nodes\":"<<(o.timing=="graph"?1:0)<<"}\n";std::cout<<"PASS "<<launches<<" full-output checks\n";return 0;
 }catch(const std::exception&e){std::cerr<<e.what()<<"\n";return 1;}}

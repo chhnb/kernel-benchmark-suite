@@ -22,7 +22,7 @@ function(hip_runner target source)
 endfunction()
 hip_runner(bench_hypersonic cases/hypersonic/harness/tau_hypersonic_cuda_tests.cu cases/hypersonic/validate.hpp cases/hypersonic/harness/tau_hypersonic_cuda.cu)
 hip_runner(bench_reentry cases/reentry/harness/tau_reentry_cuda_tests.cu cases/reentry/validate.hpp cases/reentry/harness/tau_reentry_cuda.cu)
-hip_runner(bench_tigre cases/tigre-siddon/harness/bench.hip cases/tigre-siddon/harness/geometry.inc cases/tigre-siddon/harness/types_TIGRE.hpp)
+hip_runner(bench_tigre cases/tigre-siddon/harness/bench.hip cases/tigre-siddon/harness/geometry.inc cases/tigre-siddon/harness/types_TIGRE.hpp runner/measurement.hpp)
 set(HIPIMS ${CMAKE_SOURCE_DIR}/cases/hipims/source/lib)
 add_custom_command(OUTPUT ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/bench_hipims
  COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
