@@ -74,3 +74,55 @@ with tempfile.TemporaryDirectory() as temp:
         else:
             raise AssertionError(f'{shape}: no scored equivalent for the expected shape')
         print(f'{shape}: {cost(legacy)} → {cost(unified)}')
+
+seed_fixtures = Path(__file__).with_name('b2b-unified-seeds')
+with tempfile.TemporaryDirectory() as temp:
+    out = Path(temp)
+
+    def run_fixture(name, planner='unified'):
+        directory = out / f'{name}-{planner}'
+        trial = candidate(seed_fixtures / f'{name}.ll', planner, directory)
+        recipe = json.loads((directory / 'b2b-recipe.json').read_text())
+        return trial, recipe
+
+    def replay_plan(name, recipe, plan):
+        path = out / f'{name}-selected.json'
+        path.write_text(json.dumps({**recipe, 'layouts': [plan]}))
+        directory = out / f'{name}-replay'
+        trial = candidate(seed_fixtures / f'{name}.ll', 'unified', directory,
+                          ('--b2b-recipe-in', path))
+        return trial, (directory / 'trial-0/after-raw.ll').read_text()
+
+    name = 'low-estimate-merged-exit'
+    winner, recipe = run_fixture(name)
+    merged, = (layout for layout in recipe['layouts'] if layout['merge_exit'])
+    assert merged['before'] == [[i, i] for i in range(5)]
+    trial, raw = replay_plan(name, recipe, merged)
+    assert cost(trial) == cost(winner)
+    assert trial['b2b_plan']['removes_branch'] and 'br i1 ' not in raw
+    # Each operation has weight one. Six distinct selects make the seed's
+    # estimated contribution negative before considering cleanup.
+    assert raw.count('select i1 ') == 6 and 'freeze i1 ' in raw
+
+    name = 'greedy-suffix'
+    legacy, legacy_recipe = run_fixture(name, 'legacy')
+    winner, recipe = run_fixture(name)
+    greedy, = (layout for layout in legacy_recipe['layouts'] if layout['label'] == 'single-branch-suffix')
+    join_dp = [layout for layout in legacy_recipe['layouts'] if layout['label'].startswith('single-branch-join-dp')]
+    # Legacy drops any join-DP layout identical to the greedy suffix. Four
+    # surviving layouts establish that the greedy layout was outside its top four.
+    assert len(join_dp) == 4 and all(layout['after'] != greedy['after'] for layout in join_dp)
+    seed, = (layout for layout in recipe['layouts'] if layout['after'] == greedy['after']
+             and not layout['before'] and not layout['segments'])
+    trial, _ = replay_plan(name, recipe, seed)
+    assert cost(trial) == cost(winner) == cost(legacy)
+
+    name = 'deep-segment'
+    legacy, _ = run_fixture(name, 'legacy')
+    winner, recipe = run_fixture(name)
+    finals = [layout for layout in recipe['layouts'] if layout['segments']
+              and not layout['after'] and not layout['resplit']]
+    winning_rank = next(i for i, layout in enumerate(finals, 1)
+                        if layout['label'] == winner['merge_path'])
+    assert winning_rank > 4 and cost(winner) == cost(legacy)
+    print(f'PASS structural seeds and rank-{winning_rank} segmented winner')
