@@ -178,5 +178,6 @@ std::vector<Trial> planSingleBranchB2B(const llvm::Module &, const Candidate &,
                                        llvm::json::Object *recipeOut = nullptr,
                                        const llvm::json::Object *recipeIn = nullptr,
                                        llvm::function_ref<int(const llvm::Instruction &)> anchorCost = nullptr,
-                                       llvm::function_ref<int(llvm::Type *)> anchorSelectCost = nullptr);
+                                       llvm::function_ref<int(llvm::Type *)> anchorSelectCost = nullptr,
+                                       llvm::function_ref<int(llvm::Type *)> anchorPhiCost = nullptr);
 }

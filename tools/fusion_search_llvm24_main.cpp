@@ -331,14 +331,18 @@ static int runSearch(int argc, const char *const *argv, TrialWorker *batch = nul
           auto found = prices->find(&inst);
           return found == prices->end() ? -1 : found->second;
         };
-        std::optional<DenseMap<Type *, int>> selectPrices;
-        auto selectCost = [&](Type *type) {
-          if (!selectPrices) selectPrices = llvm24Scorer.selectCosts(*f);
-          auto found = selectPrices->find(type);
-          return found == selectPrices->end() ? -1 : found->second;
+        std::optional<LLVM24Scorer::TransferCosts> transferPrices;
+        auto transferCost = [&](Type *type, bool phi) {
+          if (!transferPrices)
+            transferPrices = llvm24Scorer.anchorTransferCosts(*f);
+          const auto &prices = phi ? transferPrices->phis : transferPrices->selects;
+          auto found = prices.find(type);
+          return found == prices.end() ? -1 : found->second;
         };
+        auto selectCost = [&](Type *type) { return transferCost(type, false); };
+        auto phiCost = [&](Type *type) { return transferCost(type, true); };
         plans = planSingleBranchB2B(*module, c, options.optLevel, options.cleanupMode,
-                                   "", intrinsicCost, nullptr, nullptr, cost, selectCost);
+                                   "", intrinsicCost, nullptr, nullptr, cost, selectCost, phiCost);
       } else if (!logical && singleBranchB2B) {
         try {
           plans=planSingleBranchB2B(*module,c,options.optLevel,options.cleanupMode,"",intrinsicCost,

@@ -2170,7 +2170,8 @@ std::vector<Trial> planSingleBranchB2B(const Module &parent, const Candidate &c,
                                        function_ref<int(const Instruction &)> intrinsicCost,
                                        json::Object *recipeOut, const json::Object *recipeIn,
                                        function_ref<int(const Instruction &)> anchorCost,
-                                       function_ref<int(Type *)> anchorSelectCost) {
+                                       function_ref<int(Type *)> anchorSelectCost,
+                                       function_ref<int(Type *)> anchorPhiCost) {
   ProfileScope planningScope("b2b_plan_generate_clean_total");
   std::vector<Trial> trials;
   const auto parentIdentity = moduleHash(parent);
@@ -2384,6 +2385,11 @@ std::vector<Trial> planSingleBranchB2B(const Module &parent, const Candidate &c,
       if (cost >= 0) return cost;
       return f->getParent()->getDataLayout().getTypeSizeInBits(ty).getKnownMinValue() <= 32 ? 1 : 2;
     };
+    auto phiCost = [&](Type *ty) {
+      const int cost = anchorPhiCost ? anchorPhiCost(ty) : -1;
+      if (cost >= 0) return cost;
+      return f->getParent()->getDataLayout().getTypeSizeInBits(ty).getKnownMinValue() <= 32 ? 1 : 2;
+    };
     const auto safePrefix = commonB2BPrefix(*left, *right, *branch, dt);
     SmallVector<Layout, 2> mergeExits;
     auto addUnique = [&](auto &list, Layout layout) {
@@ -2397,7 +2403,7 @@ std::vector<Trial> planSingleBranchB2B(const Module &parent, const Candidate &c,
     };
     for (bool pairTies : {true, false}) {
       auto plans = planB2BAnchors(segmentWork[0], segmentWork[1], *left, *right, join,
-                                pairTies, compatibleB2BPrefix, instructionCost, selectCost);
+                                pairTies, compatibleB2BPrefix, instructionCost, selectCost, phiCost);
       for (const auto &plan : plans) {
         auto buildLayout = [&]() -> std::optional<Layout> {
           ArrayRef<AnchorMatch> front = plan.matches;
@@ -2423,7 +2429,8 @@ std::vector<Trial> planSingleBranchB2B(const Module &parent, const Candidate &c,
             cutoffs.push_back(std::move(info));
           }
           for (auto pair : plan.forwardCutoffs)
-            forwardCutoffs.push_back(showPair(pair));
+            if (!llvm::is_contained(plan.matches, pair))
+              forwardCutoffs.push_back(showPair(pair));
           for (auto pair : front) {
             if (pair.swapped)
               swaps.push_back(json::Array{int64_t(pair.left), int64_t(pair.right)});
@@ -2440,7 +2447,8 @@ std::vector<Trial> planSingleBranchB2B(const Module &parent, const Candidate &c,
               {"anchors", int64_t(plan.anchors.size())}, {"discarded", int64_t(plan.discarded)},
               {"conflicts", int64_t(plan.conflicts)}, {"segments", int64_t(plan.segments)},
               {"cutoff_count", int64_t(plan.cutoffs.size())}, {"cutoffs", std::move(cutoffs)},
-              {"swaps", std::move(swaps)},
+              {"swaps", std::move(swaps)}, {"phi_charge", plan.phiCharge},
+              {"charged_segments", int64_t(plan.chargedSegments)},
               {"emission", prefix ? "before-split" : "segmented"}};
           return layout;
         };

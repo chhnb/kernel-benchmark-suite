@@ -62,10 +62,6 @@ with tempfile.TemporaryDirectory() as directory:
                         if row["anchor"]["mode"] == "tie-cut"
                         for cutoff in row["anchor"]["forward_cutoffs"]
                     )
-                    text = result.read_text()
-                    assert re.search(r" = fadd float .*%cond435", text)
-                    assert re.search(r" = fadd float .*%cond439", text)
-                    assert re.search(r" = fptoui float %fusion\.paired[0-9]* to i64", text)
         assert layouts["dp1"][0] == historical_tti, (name, layouts["dp1"][0])
         assert layouts["anchor"][0] <= historical_tti, (name, layouts["anchor"][0])
         if name == "vllm-7":

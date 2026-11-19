@@ -31,13 +31,16 @@ struct AnchorPlan {
   llvm::SmallVector<AnchorCutoff, 8> cutoffs;
   llvm::SmallVector<AnchorMatch, 8> forwardCutoffs;
   unsigned shared = 0;
+  unsigned chargedSegments = 0;
+  int64_t phiCharge = 0;
   unsigned discarded = 0, conflicts = 0, segments = 0;
 };
-llvm::SmallVector<AnchorPlan, 2> planB2BAnchors(
+llvm::SmallVector<AnchorPlan, 3> planB2BAnchors(
     llvm::ArrayRef<llvm::Instruction *> left,
     llvm::ArrayRef<llvm::Instruction *> right,
     llvm::BasicBlock &leftBlock, llvm::BasicBlock &rightBlock, llvm::BasicBlock *join, bool pairTies,
     llvm::function_ref<bool(llvm::Instruction &, llvm::Instruction &)> compatible,
     llvm::function_ref<int(const llvm::Instruction &)> instructionCost,
-    llvm::function_ref<int(llvm::Type *)> selectCost);
+    llvm::function_ref<int(llvm::Type *)> selectCost,
+    llvm::function_ref<int(llvm::Type *)> phiCost);
 }

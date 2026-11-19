@@ -18,6 +18,8 @@ using Work = ArrayRef<Instruction *>;
 struct State {
   Matches pairs;
   int64_t score = 0;
+  unsigned chargedSegments = 0;
+  int64_t phiCharge = 0;
 };
 using Beam = SmallVector<State, 4>;
 
@@ -34,11 +36,11 @@ void insert(Beam &beam, State state) {
 }
 }
 
-SmallVector<AnchorPlan, 2> planB2BAnchors(
+SmallVector<AnchorPlan, 3> planB2BAnchors(
     Work left, Work right, BasicBlock &leftBlock, BasicBlock &rightBlock,
     BasicBlock *join, bool pairTies, function_ref<bool(Instruction &, Instruction &)> compatible,
     function_ref<int(const Instruction &)> instructionCost,
-    function_ref<int(Type *)> selectCost) {
+    function_ref<int(Type *)> selectCost, function_ref<int(Type *)> phiCost) {
   const std::array<Work, 2> work{left, right};
   DenseMap<const Value *, unsigned> indices[2];
   for (unsigned side = 0; side != 2; ++side)
@@ -199,17 +201,66 @@ SmallVector<AnchorPlan, 2> planB2BAnchors(
       });
     });
   };
+  // An arm-local use at or beyond the boundary keeps a value live.
+  // Any use outside this arm also crosses the boundary.
+  std::vector<unsigned> lastUse[2];
+  std::vector<int> phiPrice[2];
+  for (unsigned side = 0; side != 2; ++side) {
+    for (auto *inst : work[side]) {
+      unsigned last = indices[side].lookup(inst);
+      for (const auto *user : inst->users()) {
+        auto pos = indices[side].find(user);
+        last = std::max(last, pos == indices[side].end() ? unsigned(work[side].size()) : pos->second);
+      }
+      lastUse[side].push_back(last);
+      phiPrice[side].push_back(inst->getType()->isVoidTy() ? 0 : phiCost(inst->getType()));
+    }
+  }
+  auto finishGap = [&](State &state, unsigned le, unsigned re, bool rejoins) {
+    unsigned begin[2] = {};
+    if (!state.pairs.empty()) {
+      begin[0] = state.pairs.back().left + 1;
+      begin[1] = state.pairs.back().right + 1;
+    }
+    if (begin[0] == le && begin[1] == re)
+      return;
+    ++state.chargedSegments;
+    state.score -= 2; // Match DP1's penalty for starting a fork.
+    if (!rejoins)
+      return; // The original exit PHIs already receive values from both arms.
+    int64_t charge = 0;
+    const unsigned end[2] = {le, re};
+    for (unsigned side = 0; side != 2; ++side)
+      for (unsigned k = begin[side]; k < end[side]; ++k)
+        if (lastUse[side][k] >= end[side])
+          charge += phiPrice[side][k];
+    state.phiCharge += charge;
+    state.score -= charge;
+  };
+
   Beam beam(1);
+  State anchorsOnly;
   unsigned li = 0, ri = 0, segments = 0;
-  auto align = [&](unsigned le, unsigned re) {
+  auto align = [&](unsigned le, unsigned re, bool rejoins) {
+    if (li == le && ri == re)
+      return;
+    ++segments;
+    // Keep an empty alignment even if the beam prefers several matches.
+    // Map-Airy commit 10 previously preferred the candidate with fewer
+    // pairs after cleanup, which is not represented by pair scores alone.
+    Beam empty;
+    for (auto state : beam) {
+      finishGap(state, le, re, rejoins);
+      insert(empty, std::move(state));
+    }
+    finishGap(anchorsOnly, le, re, rejoins);
     if (li == le || ri == re) {
-      segments += li != le || ri != re;
+      beam = std::move(empty);
       return;
     }
-    ++segments;
     const unsigned width = re - ri + 1;
     std::vector<Beam> row(width), next(width);
-    row[0] = std::move(beam);
+    row[0].swap(beam);
     for (unsigned i = li; i <= le; ++i) {
       for (unsigned j = ri; j <= re; ++j)
         for (const auto &state : row[j - ri]) {
@@ -223,9 +274,8 @@ SmallVector<AnchorPlan, 2> planB2BAnchors(
           AnchorMatch pair{i, j};
           const int inputCost = addedCost(pair, state.pairs);
           const int gain = instructionCost(*left[i]) - inputCost;
-          // A producer can be reached solely from a forward segment when
-          // its consumers are on different PHI edges. Retain the forward
-          // profitability check using known earlier pairings.
+          // Producers can also be reached solely from a forward segment
+          // when their consumers feed different exit PHI positions.
           auto *resultType = left[i]->getType();
           const int unpaired = resultType->isVoidTy() ? 0 : selectCost(resultType);
           const int net = gain + unpaired;
@@ -236,6 +286,7 @@ SmallVector<AnchorPlan, 2> planB2BAnchors(
             continue;
           }
           State shared = state;
+          finishGap(shared, i, j, true);
           shared.score += gain;
           shared.pairs.push_back(pair);
           insert(next[j + 1 - ri], std::move(shared));
@@ -246,16 +297,23 @@ SmallVector<AnchorPlan, 2> planB2BAnchors(
           cell.clear();
       }
     }
-    beam = std::move(row.back());
+    for (auto &state : row.back()) {
+      finishGap(state, le, re, rejoins);
+      insert(beam, std::move(state));
+    }
     if (beam.size() > 2)
       beam.resize(2);
+    insert(beam, std::move(empty.front()));
+  };
+  auto appendAnchor = [&](State &state, AnchorMatch anchor) {
+    state.score += instructionCost(*left[anchor.left]) - addedCost(anchor, state.pairs);
+    state.pairs.push_back(anchor);
   };
   for (auto anchor : anchors) {
-    align(anchor.left, anchor.right);
-    for (auto &state : beam) {
-      state.score += instructionCost(*left[anchor.left]) - addedCost(anchor, state.pairs);
-      state.pairs.push_back(anchor);
-    }
+    align(anchor.left, anchor.right, true);
+    for (auto &state : beam)
+      appendAnchor(state, anchor);
+    appendAnchor(anchorsOnly, anchor);
     llvm::stable_sort(beam, [](const State &a, const State &b) {
       return a.score > b.score ||
              (a.score == b.score && a.pairs.size() > b.pairs.size());
@@ -263,12 +321,16 @@ SmallVector<AnchorPlan, 2> planB2BAnchors(
     li = anchor.left + 1;
     ri = anchor.right + 1;
   }
-  align(left.size(), right.size());
+  align(left.size(), right.size(), !join);
 
-  SmallVector<AnchorPlan, 2> result;
+  if (beam.size() > 2)
+    beam.resize(2);
+  insert(beam, std::move(anchorsOnly));
+  SmallVector<AnchorPlan, 3> result;
   for (auto &state : beam)
     result.push_back({std::move(state.pairs), anchors, cutoffs, forwardCutoffs,
-                      shared, unsigned(proposed.size() - anchors.size()), conflicts, segments});
+                      shared, state.chargedSegments, state.phiCharge,
+                      unsigned(proposed.size() - anchors.size()), conflicts, segments});
   return result;
 }
 }

@@ -44,6 +44,25 @@ join:
   %v = phi double [ %lo, %l ], [ %ro, %r ]
   ret double %v
 }
+define i1 @phis(i1 %cond, double %x, double %y, double* %out0, double* %out1) {
+entry:
+  br i1 %cond, label %l, label %r
+l:
+  %d0 = fsub double %x, %y
+  %d1 = fsub double %y, %x
+  %independent = fmul double %x, %y
+  store double %d0, double* %out0
+  store double %d1, double* %out1
+  %lc = fcmp olt double %x, %y
+  br label %join
+r:
+  %other = fmul double %x, %y
+  %rc = fcmp olt double %x, %y
+  br label %join
+join:
+  %v = phi i1 [ %lc, %l ], [ %rc, %r ]
+  ret i1 %v
+}
 )IR", error, context);
   assert(module);
   for (auto &fn : *module) {
@@ -52,13 +71,27 @@ join:
     SmallVector<Instruction*, 8> left, right;
     for (auto &inst : l) if (!inst.isTerminator()) left.push_back(&inst);
     for (auto &inst : r) if (!inst.isTerminator()) right.push_back(&inst);
+    if (fn.getName() == "phis") {
+      for (int doublePhiCost : {0, 1}) {
+        auto plans = planB2BAnchors(left, right, l, r, &join, true,
+            [](Instruction &a, Instruction &b) { return a.isSameOperationAs(&b); },
+            [](const Instruction &inst) { return inst.getOpcode() == Instruction::FMul ? 3 : 1; },
+            [](Type *) { return 1; },
+            [=](Type *type) { return type->isDoubleTy() ? doublePhiCost : 0; });
+        assert(plans.front().chargedSegments == (doublePhiCost ? 1u : 2u));
+        assert(llvm::any_of(plans, [](const AnchorPlan &plan) {
+          return plan.matches.size() == 1 && plan.matches == plan.anchors;
+        }));
+      }
+      continue;
+    }
     for (bool pairTies : {false, true}) {
       auto plans = planB2BAnchors(left, right, l, r, &join, pairTies,
           [](Instruction &a, Instruction &b) { return a.isSameOperationAs(&b); },
           [](const Instruction &inst) {
             return isa<GetElementPtrInst>(inst) ? 0 : isa<LoadInst>(inst) ? 3 :
                    isa<FPExtInst>(inst) ? 2 : 1;
-          }, [](Type *) { return 1; });
+          }, [](Type *) { return 1; }, [](Type *) { return 1; });
       assert(!plans.empty());
       const auto &best = plans.front();
       if (fn.getName() == "chain") {

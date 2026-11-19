@@ -230,7 +230,11 @@ public:
     return result;
   }
 
-  llvm::DenseMap<llvm::Type *, int> selectCosts(const llvm::Function &f) const {
+  struct TransferCosts {
+    llvm::DenseMap<llvm::Type *, int> selects, phis;
+  };
+
+  TransferCosts anchorTransferCosts(const llvm::Function &f) const {
     using namespace llvm;
     SmallVector<Type *, 16> types;
     DenseSet<Type *> seen;
@@ -246,7 +250,7 @@ public:
     auto *pointerCostType = Type::getInt64Ty(context);
     if (seen.insert(pointerCostType).second)
       types.push_back(pointerCostType);
-    Module probe("anchor-select-quotes", context);
+    Module probe("anchor-transfer-quotes", context);
     probe.setTargetTriple(f.getParent()->getTargetTriple());
     probe.setDataLayout(f.getParent()->getDataLayout());
     SmallVector<Type *, 32> params{Type::getInt1Ty(context)};
@@ -263,18 +267,35 @@ public:
     SmallVector<const Instruction *, 16> selects;
     auto arg = fn->arg_begin();
     auto *condition = &*arg++;
-    for (size_t i = 0; i < types.size(); ++i) {
+    SmallVector<std::pair<Value *, Value *>, 16> operands;
+    for (auto *type : types) {
       auto *left = &*arg++;
       auto *right = &*arg++;
+      operands.emplace_back(left, right);
       selects.push_back(cast<Instruction>(builder.CreateSelect(condition, left, right)));
+    }
+    auto *left = BasicBlock::Create(context, "left", fn);
+    auto *right = BasicBlock::Create(context, "right", fn);
+    auto *join = BasicBlock::Create(context, "join", fn);
+    builder.CreateCondBr(condition, left, right);
+    BranchInst::Create(join, left);
+    BranchInst::Create(join, right);
+    builder.SetInsertPoint(join);
+    SmallVector<const Instruction *, 16> phis;
+    for (auto [l, r] : operands) {
+      auto *phi = builder.CreatePHI(l->getType(), 2);
+      phi->addIncoming(l, left);
+      phi->addIncoming(r, right);
+      phis.push_back(phi);
     }
     builder.CreateRetVoid();
     auto quoted = instructionCosts(*fn);
-    DenseMap<Type *, int> result;
-    for (auto item : llvm::enumerate(selects)) {
-      auto found = quoted.find(item.value());
-      if (found != quoted.end())
-        result.insert({types[item.index()], found->second});
+    TransferCosts result;
+    for (auto item : llvm::enumerate(types)) {
+      const auto sel = quoted.find(selects[item.index()]);
+      const auto phi = quoted.find(phis[item.index()]);
+      if (sel != quoted.end()) result.selects.insert({item.value(), sel->second});
+      if (phi != quoted.end()) result.phis.insert({item.value(), phi->second});
     }
     return result;
   }
