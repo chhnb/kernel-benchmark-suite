@@ -111,7 +111,7 @@ inline IsolatedB2BTrial evaluateIsolatedB2B(
   addIsolatedScoringReads(result.reads,isolatedScoringReads(*f,ids),ids,unit);
   result.capsule=std::make_unique<B2BUnitCapsule>(current,root,&replayContext);
   Candidate candidate{"unit","B0","B1","B2"};
-  auto layouts=planSingleBranchB2B(*result.capsule->ir,candidate,1,CleanupMode::DarmCFGInstCombine,"");
+  auto layouts=scorer.planAnchorB2B(*result.capsule->ir,candidate,CleanupMode::DarmCFGInstCombine);
   result.generatedLayouts=layouts.size();
   for(auto &layout:layouts){
     if(layout.normalized)++result.cleanedLayouts;

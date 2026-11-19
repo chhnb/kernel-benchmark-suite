@@ -311,6 +311,46 @@ public:
     return costs;
   }
 
+  std::vector<Trial> planAnchorB2B(const llvm::Module &module, const Candidate &candidate,
+                                   CleanupMode cleanup) const {
+    using namespace llvm;
+    auto *f = module.getFunction(candidate.function);
+    if (!f) return {};
+    std::optional<std::map<std::string, int64_t>> intrinsicQuotes;
+    std::set<std::string> unquotedIntrinsics;
+    auto intrinsicCost = [&](const Instruction &inst) -> int {
+      if (!intrinsicQuotes) {
+        intrinsicQuotes = intrinsicCosts(*f);
+      }
+      StringRef name = cast<CallInst>(inst).getCalledFunction()->getName();
+      auto found = intrinsicQuotes->lower_bound(name.str());
+      if (found != intrinsicQuotes->end() &&
+          (found->first == name || StringRef(found->first).startswith((name + ".").str())))
+        return found->second;
+      if (unquotedIntrinsics.insert(name.str()).second)
+        errs() << "anchor intrinsic cost fallback (1): " << name << "\n";
+      return 1;
+    };
+    std::optional<DenseMap<const Instruction *, int>> prices;
+    auto cost = [&](const Instruction &inst) {
+      if (!prices)
+        prices = instructionCosts(*f);
+      auto found = prices->find(&inst);
+      return found == prices->end() ? -1 : found->second;
+    };
+    std::optional<LLVM24Scorer::TransferCosts> transferPrices;
+    auto transferCost = [&](Type *type, bool phi) {
+      if (!transferPrices)
+        transferPrices = anchorTransferCosts(*f);
+      const auto &prices = phi ? transferPrices->phis : transferPrices->selects;
+      auto found = prices.find(type);
+      return found == prices.end() ? -1 : found->second;
+    };
+    auto selectCost = [&](Type *type) { return transferCost(type, false); };
+    auto phiCost = [&](Type *type) { return transferCost(type, true); };
+    return planSingleBranchB2B(module, candidate, cleanup, intrinsicCost, cost, selectCost, phiCost);
+  }
+
   explicit LLVM24Scorer(std::string executable, std::string mode="on")
       :worker(std::move(executable)),quoteMode(std::move(mode)){}
   llvm::json::Object quoteCacheStats() const {

@@ -129,7 +129,7 @@ int main(int argc,char**argv){try{
  auto timingReport=[&](){json::Object phases;for(const auto &kv:phaseMilliseconds)phases[kv.first]=json::Object{{"milliseconds",kv.second},{"calls",phaseCalls[kv.first]}};return phases;};
 
  if(argc==2&&StringRef(argv[1])=="--help"){
-   outs()<<"usage: decision-greedy INPUT FUNCTION [TOOL_ROOT] NEW_OUTPUT [--b2b-strategy dp1|darm|darm-artifact|anchor] [--b2r-strategy darm|guarded] [--domain-schedule ordered] [--ir-snapshots full|compact] [--tti-quote-cache off|audit|on]\n";
+   outs()<<"usage: decision-greedy INPUT FUNCTION [TOOL_ROOT] NEW_OUTPUT [--b2b-strategy anchor|darm|darm-artifact] [--b2r-strategy darm|guarded] [--domain-schedule ordered] [--ir-snapshots full|compact] [--tti-quote-cache off|audit|on]\n";
    outs()<<"Default schedule: ordered for whole-function trials (Auto Greedy v2).\n";
    return 0;
  }
@@ -143,7 +143,7 @@ int main(int argc,char**argv){try{
      b2rStrategy = value.str();
    else if (option == "--tti-quote-cache" && (value == "off" || value == "audit" || value == "on"))
      quoteMode = value.str();
-   else if (option == "--b2b-strategy" && (value == "dp1" || value == "darm" || value == "darm-artifact" || value == "anchor"))
+   else if (option == "--b2b-strategy" && (value == "darm" || value == "darm-artifact" || value == "anchor"))
      b2bStrategy = value.str();
    else if (option == "--ir-snapshots" || option == "--domain-schedule" || option == "--b2r-strategy" || option == "--b2b-strategy" || option == "--tti-quote-cache")
      throw std::runtime_error("invalid value for " + option.str());
@@ -151,7 +151,7 @@ int main(int argc,char**argv){try{
    argc -= 2;
  }
  if(argc!=4&&argc!=5)
-   throw std::runtime_error("usage: decision-greedy INPUT FUNCTION [TOOL_ROOT] NEW_OUTPUT [--b2b-strategy dp1|darm|darm-artifact|anchor] [--b2r-strategy darm|guarded] [--domain-schedule ordered] [--ir-snapshots full|compact] [--tti-quote-cache off|audit|on]");
+   throw std::runtime_error("usage: decision-greedy INPUT FUNCTION [TOOL_ROOT] NEW_OUTPUT [--b2b-strategy anchor|darm|darm-artifact] [--b2r-strategy darm|guarded] [--domain-schedule ordered] [--ir-snapshots full|compact] [--tti-quote-cache off|audit|on]");
  if(snapshotMode.empty())snapshotMode="compact";
  const bool implicitRoot=argc==4;
  std::string root;
@@ -208,7 +208,6 @@ int main(int argc,char**argv){try{
  unsigned reusedSweepSnapshots=0;
  auto report=[&](StringRef status){save(out+"/summary.json",json::Value(json::Object{{"status",status.str()},{"driver_phase_timings",timingReport()},{"elapsed_ms",std::chrono::duration<double,std::milli>(Clock::now()-started).count()},{"domain_schedule","ordered"},{"ir_snapshots",snapshotMode},{"trial_policy","whole-function"},{"scoped_trials",nullptr},{"search","per-decision greedy; best positive adjacent or structural candidate"},{"cfg_cleanup","structural"},{"structural_cleanup",structuralCleanup},{"structural_candidates_enabled",true},{"shared_arm_trials",true},{"cross_level_b2r",false},{"reused_sweep_snapshots",int64_t(reusedSweepSnapshots)},{"pipeline_version","v2"},{"candidate_jobs",structuralJobs},{"candidate_scheduler","continuous-queue"},{"persistent_trial_workers",true},{"condition_budget",conditionBudget},{"phi_fold_threshold",7},{"r2r_enumeration","darm-alignment"},{"b2b_strategy",b2bStrategy},{"b2r_strategy",b2rStrategy},{"tti_quote_cache",quoteMode},{"tti_cost_kind",fusion::ttiCostKindName()},{"uniform_loss_guard_enabled",false},{"max_uniform_loss",-1},{"initial_cost",initialCost},{"final_cost",parentCost},{"commits",int64_t(commits)},{"trials",int64_t(trials)},{"final_ir",current},{"rounds",json::Value(json::Array(rounds))},{"stops",json::Value(json::Array(stops))}}));};
  report("running");
- std::map<std::string,std::string> b2bRecipes;
  std::set<std::string> attemptedStructural;
  std::set<unsigned> attemptedPreparation; // Decision indices in this parent snapshot.
  std::string catalogParent;
@@ -423,11 +422,6 @@ int main(int argc,char**argv){try{
       // Keep the exact invocation and the arguments needed for trial replay.
       trialArgs.insert(trialArgs.end(), {"--b2b-strategy", b2bStrategy, "--b2r-strategy", b2rStrategy});
       // IDs locate a prior recipe; current planner facts certify its reuse.
-      if (b2bStrategy=="dp1" && !preparedInput) {
-        auto recipe=b2bRecipes.find(candidateKey);
-        if(recipe!=b2bRecipes.end())
-          trialArgs.insert(trialArgs.end(),{"--b2b-recipe-cache",recipe->second});
-      }
       json::Array replayArgs;
       for(const auto &argument:trialArgs)replayArgs.push_back(argument);
       // Replay the saved request with the standalone tool's full diagnostics.
@@ -562,11 +556,6 @@ int main(int argc,char**argv){try{
           }else attempt["reason"]="nonpositive_gain";
         }
       }
-      const auto recipePath=dir+"/structural/b2b-recipe.json";
-      if (rc==0 && sys::fs::exists(recipePath) && !attempt.getString("prepared_input"))
-        b2bRecipes[attempt.getString("candidate")->str()]=recipePath;
-      if(sys::fs::exists(dir+"/structural/b2b-recipe-cache.json"))
-        attempt["plan_cache"]=read(dir+"/structural/b2b-recipe-cache.json");
       const bool canCommit = attempt.getBoolean("eligible") == Optional<bool>(true);
       const auto cost = attempt.getInteger("cost");
       if (canCommit && cost && *cost < bestCost) {

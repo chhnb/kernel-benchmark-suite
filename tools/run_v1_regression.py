@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Reproduce frozen v1 IR, scores and commit counts from checked-in inputs."""
+"""Replay historical DP1 reference data with tools built at pre-dp1-removal."""
 import argparse
 from concurrent.futures import ThreadPoolExecutor
 import gzip
@@ -20,6 +20,7 @@ def ir_hash(path):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--out', type=Path, required=True)
+    parser.add_argument('--tool-root', type=Path, required=True, help='built pre-dp1-removal checkout')
     parser.add_argument('--case', action='append', dest='cases')
     parser.add_argument('--jobs', type=int, default=4)
     parser.add_argument('--timeout', type=int, default=900)
@@ -28,6 +29,10 @@ def main():
     args = parser.parse_args()
     if args.jobs < 1 or args.timeout < 1:
         parser.error('jobs and timeout must be positive')
+    tool_root = args.tool_root.resolve()
+    driver = tool_root / 'build/decision-fuse/decision-greedy'
+    if not driver.is_file():
+        parser.error('build the pre-dp1-removal tool-root first')
     rows = json.loads(MANIFEST.read_text())['cases']
     if args.cases:
         unknown = set(args.cases) - {r['case'] for r in rows}
@@ -55,8 +60,8 @@ def main():
         begin = time.monotonic()
         with (out / (case + '.log')).open('w') as log:
             rc = subprocess.run(['timeout', '-k', '3s', str(args.timeout) + 's',
-                                 ROOT / 'build/decision-fuse/decision-greedy', source,
-                                 row['function'], ROOT, dest, '--domain-schedule', 'ordered',
+                                 driver, source,
+                                 row['function'], tool_root, dest, '--domain-schedule', 'ordered',
                                  '--b2b-strategy', 'dp1', '--tti-quote-cache', args.tti_quote_cache],
                                 stdout=log, stderr=subprocess.STDOUT, env=env).returncode
         result = dict(case=case, exit=rc, seconds=round(time.monotonic() - begin, 2), passed=False)

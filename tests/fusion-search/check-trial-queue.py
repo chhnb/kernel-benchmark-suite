@@ -39,7 +39,7 @@ join:
 attributes #0 = {{ "target-cpu"="gfx906" }}
 ''')
         args = [str(search), '--ir', str(source), '--function', 'choose', '--split', 'B0',
-                '--left', 'B1', '--right', 'B2', '--b2b-strategy', 'dp1', '--tti-worker', str(worker)]
+                '--left', 'B1', '--right', 'B2', '--b2b-strategy', 'anchor', '--tti-worker', str(worker)]
         result = out / f'expected-{value}.ll'
         subprocess.run([*args, '--out', str(result)], check=True, capture_output=True)
         sources.append(args)

@@ -7,8 +7,7 @@ import sys
 import tempfile
 from pathlib import Path
 
-search, worker, opt, clang, greedy = map(Path, sys.argv[1:6])
-strategy = sys.argv[6] if len(sys.argv) == 7 else "dp1"
+search, worker, opt, clang, greedy = map(Path, sys.argv[1:])
 template = '''target triple = "amdgcn-amd-amdhsa"
 define i32 @choose(i1 %outside, i1 %p, i32 %x, i32 %y, i32* %mem) #0 {
 entry:
@@ -30,11 +29,11 @@ join:
 attributes #0 = { "target-cpu"="gfx906" }
 '''
 cases = {
-    "pure-aligned-hoist": (
+    "pure-nonprefix": (
         "  %a = xor i32 %x, 73\n  %lm = mul i32 %x, %y\n  %l = add i32 %a, %lm",
         "  %b = or i32 %x, 19\n  %rm = mul i32 %x, %y\n  %r = xor i32 %b, %rm",
     ),
-    "paired-aligned-hoist": (
+    "paired-nonprefix": (
         "  %a = load i32, i32* %mem, align 4\n  %lm = mul i32 %x, %y\n  %l = add i32 %a, %lm",
         "  %b = load i32, i32* %mem, align 4\n  %rm = mul i32 %x, %y\n"
         "  %r = xor i32 %b, %rm\n  store i32 %r, i32* %mem, align 4",
@@ -43,25 +42,25 @@ cases = {
         "  %l = mul i32 %x, %y",
         "  %r = mul i32 %x, %y\n  store i32 %r, i32* %mem, align 4",
     ),
-    "suffix": (
+    "tail-work": (
         "  %lv = add i32 %x, 7\n  %lm = mul i32 %lv, %y\n"
         "  %l = mul i32 %lm, %x",
         "  %rv = load i32, i32* %mem, align 4\n  %rm = mul i32 %rv, %y\n"
         "  %r = mul i32 %rm, %x",
     ),
-    "aligned-hoist": (
+    "nonprefix-with-memory": (
         "  %a = xor i32 %x, 73\n  %lm = mul i32 %x, %y\n"
         "  %l = add i32 %a, %lm",
         "  %b = load i32, i32* %mem, align 4\n  %rm = mul i32 %x, %y\n"
         "  %r = xor i32 %b, %rm\n  store i32 %r, i32* %mem, align 4",
     ),
-    "join-dp": (
+    "tail-with-memory": (
         "  %lv = add i32 %x, 7\n  %lm = mul i32 %lv, %y\n"
         "  %l = mul i32 %lm, %x",
         "  %rv = load i32, i32* %mem, align 4\n  %rm = mul i32 %rv, %y\n"
         "  store i32 %rv, i32* %mem, align 4\n  %r = mul i32 %rm, %x",
     ),
-    "prefix-join-dp": (
+    "prefix-and-tail-with-memory": (
         "  %lp = mul i32 %x, %y\n  %lv = add i32 %lp, 7\n"
         "  %lm = mul i32 %lv, %y\n  %l = mul i32 %lm, %x",
         "  %rp = mul i32 %x, %y\n  %loaded = load i32, i32* %mem, align 4\n"
@@ -72,14 +71,14 @@ cases = {
         "  %l = mul i32 %x, %y\n  store i32 %l, i32* %mem, align 4",
         "  %r = mul i32 %x, %x\n  store i32 %r, i32* %mem, align 4",
     ),
-    "paired-common-dp": (
+    "paired-after-side-work": (
         "  %a = xor i32 %x, 73\n  store i32 %a, i32* %mem, align 4\n"
         "  %lm = mul i32 %a, %y\n  %ln = mul i32 %lm, %y\n"
         "  %l = mul i32 %ln, %y\n  store i32 %l, i32* %mem, align 4",
         "  %rm = mul i32 %x, %y\n  %rn = mul i32 %rm, %y\n"
         "  %r = mul i32 %rn, %y\n  store i32 %r, i32* %mem, align 4",
     ),
-    "paired-segment-dp": (
+    "paired-segments": (
         "  store i32 %x, i32* %mem, align 4\n"
         "  %a = load i32, i32* %mem, align 4\n"
         "  %lm = mul i32 %a, %y\n  %ln = mul i32 %lm, %y\n"
@@ -88,7 +87,7 @@ cases = {
         "  %rm = mul i32 %b, %y\n  %rn = mul i32 %rm, %y\n"
         "  %ro = mul i32 %rn, %x\n  %r = mul i32 %ro, %y",
     ),
-    "paired-join-spec": (
+    "paired-unequal-arms": (
         "  store i32 %x, i32* %mem, align 4\n"
         "  %a = load i32, i32* %mem, align 4\n"
         "  %odd = xor i32 %a, 73\n  %lm = mul i32 %odd, %y\n  %ln = mul i32 %lm, %y\n"
@@ -97,7 +96,7 @@ cases = {
         "  %rm = mul i32 %b, %y\n  %rn = mul i32 %rm, %y\n"
         "  %ro = mul i32 %rn, %x\n  %r = mul i32 %ro, %y",
     ),
-    "paired-resplit": (
+    "paired-divergent-tail": (
         "  store i32 %x, i32* %mem, align 4\n"
         "  %a = load i32, i32* %mem, align 4\n"
         "  %odd = xor i32 %a, 73\n  %lm = mul i32 %odd, %y\n  %ln = mul i32 %lm, %y\n"
@@ -106,7 +105,7 @@ cases = {
         "  %rm = mul i32 %b, %y\n  %rn = mul i32 %rm, %y\n"
         "  %ro = mul i32 %rn, %x\n  %rt = mul i32 %ro, %y\n  %r = mul i32 %rt, %x",
     ),
-    "complete-common-dp": (
+    "no-compatible-pairs": (
         "  %l = mul i32 %x, %y",
         "  %r = xor i32 %x, %y",
     ),
@@ -153,12 +152,11 @@ with tempfile.TemporaryDirectory() as directory:
             args = [search, "--ir", source, "--function", "choose", "--split", "B2",
                     "--left", "B4" if swapped else "B3", "--right", "B3" if swapped else "B4",
                     "--structural", "1", "--cleanup", "darm-cfg-dce-instcombine",
-                    "--b2b-strategy", strategy, "--tti-worker", worker]
+                    "--b2b-strategy", "anchor", "--tti-worker", worker]
             run(*args, "--out", fused, "--debug-dir", out / "reports")
             report = out / "reports/trial-0/trial.json"
             trial = json.loads(report.read_text())
-            prefix = "b2b-anchor-" if strategy == "anchor" else "single-branch-"
-            assert trial["merge_path"].startswith(prefix), trial["merge_path"]
+            assert trial["merge_path"].startswith("b2b-anchor-"), trial["merge_path"]
             assert trial["valid"]
             assert trial["score_result"]["status"] == "scored"
             raw = report.with_name("after-raw.ll").read_text()
@@ -166,7 +164,7 @@ with tempfile.TemporaryDirectory() as directory:
             # Shared memory must preserve the external incoming edge and execute correctly.
             if shape == "paired-prefix":
                 assert raw.count("store i32") == 1
-            if shape == "paired-segment-dp":
+            if shape == "paired-segments":
                 assert raw.count("mul i32") == 4
                 assert raw.count("store i32") == 2
             run(opt, "-verify", "-disable-output", fused)
@@ -185,10 +183,9 @@ with tempfile.TemporaryDirectory() as directory:
 
     for shape in cases:
         out = root / f"{shape}-0"
-        extra = () if strategy == "anchor" else ("--b2b-strategy", "dp1")
-        run(greedy, out / "source.ll", "choose", out / "auto", *extra)
+        run(greedy, out / "source.ll", "choose", out / "auto")
         summary = json.loads((out / "auto/summary.json").read_text())
-        assert summary["shared_arm_trials"] and summary["b2b_strategy"] == strategy
+        assert summary["shared_arm_trials"] and summary["b2b_strategy"] == "anchor"
         assert summary["pipeline_version"] == "v2"
         assert summary["domain_schedule"] == "ordered"
         assert summary["candidate_scheduler"] == "continuous-queue"
@@ -216,7 +213,8 @@ with tempfile.TemporaryDirectory() as directory:
 
     # Experimental strategies and transformations must be rejected.
     source = root / "prefix-0/source.ll"
-    for option, value in (("--b2b-strategy", "dp2"), ("--b2b-strategy", "dp3"),
+    for option, value in (("--b2b-strategy", "dp1"), ("--b2b-recipe-in", "unused"),
+                          ("--b2b-recipe-cache", "unused"), ("--b2b-strategy", "dp2"), ("--b2b-strategy", "dp3"),
                           ("--b2b-planner", "unified"), ("--b2b-unified-extended", "on"),
                           ("--speculation", "cost"), ("--gap-trials", "4"),
                           ("--gap-replay", "unused"),

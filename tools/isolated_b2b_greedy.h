@@ -53,7 +53,7 @@ inline IsolatedGreedyResult runIsolatedB2BGreedy(
            br->getSuccessor(0)==&b||br->getSuccessor(1)==&b||br->getSuccessor(0)==br->getSuccessor(1))continue;
         auto key="fallback:"+ids.candidate(b,*br->getSuccessor(0),*br->getSuccessor(1));
         Candidate candidate{function,blockName(&b),blockName(br->getSuccessor(0)),blockName(br->getSuccessor(1)),round};
-        inventory.push_back({key,{{"exact-parent",replayContext.exactIR},{"policy","whole-function-dp1-fallback-v1"}},inventory.size()});
+        inventory.push_back({key,{{"exact-parent",replayContext.exactIR},{"policy","whole-function-anchor-fallback-v1"}},inventory.size()});
         fallbacks.emplace(key,std::move(candidate));continue;
       }
       auto reads=isolatedReads(snapshot,unit);
@@ -79,7 +79,7 @@ inline IsolatedGreedyResult runIsolatedB2BGreedy(
             (resolved.leftRegion?"R":"B")+endpoint(resolved.leftEntry)+":"+endpoint(resolved.leftExit)+":"+
             (resolved.rightRegion?"R":"B")+endpoint(resolved.rightEntry)+":"+endpoint(resolved.rightExit);
         if(fallbacks.count(key))continue;
-        inventory.push_back({key,{{"exact-parent",replayContext.exactIR},{"policy","whole-function-catalog-dp1-darm-v1"}},inventory.size()});
+        inventory.push_back({key,{{"exact-parent",replayContext.exactIR},{"policy","whole-function-catalog-anchor-darm-v1"}},inventory.size()});
         fallbacks.emplace(key,std::move(c));
       }
     }
@@ -96,9 +96,9 @@ inline IsolatedGreedyResult runIsolatedB2BGreedy(
         ++result.stats.trials;++result.stats.generations;++result.stats.fallbackTrials;
         auto source=llvm::CloneModule(current);
         for(auto &fn:*source)for(auto &bb:fn)for(auto &i:bb)i.setMetadata("fusion.incremental.identity",nullptr);
-        auto layouts=planSingleBranchB2B(*source,fallback->second,1,CleanupMode::DarmCFGInstCombine,"");
+        auto layouts=scorer.planAnchorB2B(*source,fallback->second,CleanupMode::DarmCFGInstCombine);
         // DARM handles structural/replication candidates. Never silently use
-        // DARM B2B when DP1 has no layout. Rejections remain parent-specific.
+        // DARM B2B when anchor has no layout. Rejections remain parent-specific.
         if(catalogFallback&&layouts.empty()){
           auto structural=tryPair(*source,fallback->second,round,1,
               CleanupMode::DarmCFGInstCombine,nullptr,false);

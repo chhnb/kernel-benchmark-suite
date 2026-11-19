@@ -57,8 +57,11 @@ public:
     for(auto &name:unit.globals)types.push_back(source.getNamedGlobal(name)->getType());
     auto *cf=llvm::Function::Create(llvm::FunctionType::get(returnType,types,false),
        llvm::GlobalValue::ExternalLinkage,"unit",ir.get());
-    // Input attributes are intentionally not imported as hidden facts. This
-    // may change optimization; isolated cleanup remains a separate path.
+    // Preserve the target context for anchor's TTI queries. Input attributes
+    // are intentionally excluded from isolated cleanup.
+    for (const char *name : {"target-cpu", "target-features"})
+      if (f->hasFnAttribute(name))
+        cf->addFnAttr(f->getFnAttribute(name));
     llvm::ValueToValueMapTy map;unsigned index=0;
     for(auto &a:f->args()){auto *arg=cf->getArg(index++);arg->setName(a.getName());map[&a]=arg;}
     for(auto id:unit.inputs){auto *arg=cf->getArg(index++);arg->setName("input"+std::to_string(id));map[ids.lookup(id)]=arg;}

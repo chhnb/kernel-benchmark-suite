@@ -23,3 +23,5 @@ LLVM12 和 LLVM24 实时吞吐报价确认，原始记录保存在
 
 - 移除 `tests/fusion-search/compare-scoped-driver.py`。原用于比较 scoped-full 和 scoped-reuse 的提交链及复用情况。该脚本未列入当前 27 项通过、4 项缺件跳过的测试集合。
 - 移除 `tests/fusion-search/check-preparation-reactivation.py`。原用于验证 trees 调度下准备臂的再激活。该脚本未列入当前 27 项通过、4 项缺件跳过的测试集合。
+
+- 移除仅适用于 DP1 的 recipe 测试。共享发射、TTI 报价、连续 worker、逐提交重新评分和局部／区域回退测试改用 anchor。缺件跳过清单保持不变。

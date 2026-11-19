@@ -132,14 +132,14 @@ struct TrialWorker {
 static int runSearch(int argc, const char *const *argv, TrialWorker *batch = nullptr) {
   fusion::requestProfile.clear();
   try {
-    std::string input,function,output,debug,split,left,right,replayParentHash,policy="llvm24";Options options;options.cleanupMode=CleanupMode::DarmCFGInstCombine;bool singleBranchB2B=true, strategyGiven=true, useDarmB2B=false;
+    std::string input,function,output,debug,split,left,right,replayParentHash,policy="llvm24";Options options;options.cleanupMode=CleanupMode::DarmCFGInstCombine;
     bool useArtifactB2B=false, useAnchorB2B=true;
     B2RStrategy b2rStrategy = B2RStrategy::Darm;
-    std::string recipeInput, quoteMode="on";
-    bool recipeCache=false, fullSnapshots=true;
+    std::string quoteMode="on";
+    bool fullSnapshots=true;
     bool controlOnly=false,catalogOnly=false;std::string ttiWorker="/home/chh/kernel-benchmark-suite/tools/run-llvm24-tti";
     for(int i=1;i<argc;++i){std::string k=argv[i];
-      if(k=="--help"){outs()<<"fusion-search v1 --ir FILE --function NAME --out FILE [--b2b-strategy dp1|darm|darm-artifact|anchor] [--b2r-strategy darm|guarded] [--structural 0|1] [--split ID --left ID --right ID] [--debug-dir DIR] [--ir-snapshots full|compact] [--tti-worker EXECUTABLE] [--catalog-only 0|1] [--control-only 0|1] [--rounds N] [--trials N]\n";return 0;}
+      if(k=="--help"){outs()<<"fusion-search v1 --ir FILE --function NAME --out FILE [--b2b-strategy anchor|darm|darm-artifact] [--b2r-strategy darm|guarded] [--structural 0|1] [--split ID --left ID --right ID] [--debug-dir DIR] [--ir-snapshots full|compact] [--tti-worker EXECUTABLE] [--catalog-only 0|1] [--control-only 0|1] [--rounds N] [--trials N]\n";return 0;}
       if(i+1==argc)throw std::runtime_error("missing option value");std::string v=argv[++i];
       if(k=="--control-only"){if(v!="0"&&v!="1")throw std::runtime_error("control-only must be 0 or 1");controlOnly=v=="1";}
       else if(k=="--catalog-only"){if(v!="0"&&v!="1")throw std::runtime_error("catalog-only must be 0 or 1");catalogOnly=v=="1";}
@@ -149,8 +149,6 @@ static int runSearch(int argc, const char *const *argv, TrialWorker *batch = nul
         fullSnapshots=v=="full";
       }
       else if(k=="--tti-worker")ttiWorker=v;
-      else if(k=="--b2b-recipe-in")recipeInput=v;
-      else if(k=="--b2b-recipe-cache") { recipeInput=v; recipeCache=true; }
       else if(k=="--tti-quote-cache") {
         if(v!="off" && v!="audit" && v!="on") throw std::runtime_error("invalid TTI quote cache mode");
         quoteMode=v;
@@ -163,13 +161,10 @@ static int runSearch(int argc, const char *const *argv, TrialWorker *batch = nul
       else if(k=="--replay-parent-hash")replayParentHash=v;
       else if(k=="--ir")input=v;else if(k=="--function")function=v;else if(k=="--out")output=v;
       else if(k=="--b2b-strategy"){
-        if(v!="darm" && v!="dp1" && v!="darm-artifact" && v!="anchor")
-          throw std::runtime_error("b2b-strategy must be dp1, darm, darm-artifact or anchor");
-        strategyGiven=true;
+        if(v!="darm" && v!="darm-artifact" && v!="anchor")
+          throw std::runtime_error("b2b-strategy must be anchor, darm or darm-artifact");
         useArtifactB2B=v=="darm-artifact";
         useAnchorB2B=v=="anchor";
-        useDarmB2B=v=="darm" || useArtifactB2B;
-        singleBranchB2B=!useDarmB2B;
       }
       else if(k=="--structural"){if(v!="1")throw std::runtime_error("v1 uses structural enumeration");}
       else if(k=="--cleanup"){if(v!="darm-cfg-dce-instcombine")throw std::runtime_error("v1 cleanup is fixed to darm-cfg-dce-instcombine");}
@@ -183,8 +178,6 @@ static int runSearch(int argc, const char *const *argv, TrialWorker *batch = nul
     if(input.empty()||function.empty()||output.empty())throw std::runtime_error("--ir, --function, --out required");
     if(options.optLevel!=2&&options.optLevel!=3)throw std::runtime_error("opt-level must be 2 or 3");
     if(sys::fs::exists(output))throw std::runtime_error("output already exists");
-    if (!recipeInput.empty() && (split.empty() || left.empty() || right.empty() || !singleBranchB2B || useAnchorB2B || catalogOnly || controlOnly))
-      throw std::runtime_error("recipe replay requires an explicit DP1 B2B pair");
     bool pair=!split.empty()||!left.empty()||!right.empty();if(pair&&(split.empty()||left.empty()||right.empty()))throw std::runtime_error("explicit pair requires all three IDs");
     if (options.cleanupMode == CleanupMode::DarmCFGInstCombine) {
       // LLVM 12 reads this registered option inside SimplifyCFG. Initialize it
@@ -283,7 +276,7 @@ static int runSearch(int argc, const char *const *argv, TrialWorker *batch = nul
     auto &llvm24Scorer = batch ? *batch->scorer : standaloneScorer;
     if(observer)jsonFile(debug+"/run.json",json::Object{
       {"schema","fusion-v1"},{"function",function},{"policy","llvm24"},
-      {"b2b_strategy",useAnchorB2B?"anchor":useArtifactB2B?"darm-artifact":useDarmB2B?"darm":"dp1"},{"b2r_strategy",b2rStrategy==B2RStrategy::Guarded?"guarded":"darm"},{"r2r_strategy","darm"},
+      {"b2b_strategy",useAnchorB2B?"anchor":useArtifactB2B?"darm-artifact":"darm"},{"b2r_strategy",b2rStrategy==B2RStrategy::Guarded?"guarded":"darm"},{"r2r_strategy","darm"},
       {"cleanup","darm-cfg-dce-instcombine"},{"phi_fold_threshold",7},
       {"initial_parent_hash",moduleHash(*module)},{"replay_parent_hash",replayParentHash},
       {"semantic_validation","not_run"}});
@@ -294,79 +287,17 @@ static int runSearch(int argc, const char *const *argv, TrialWorker *batch = nul
         roundStorage.emplace(makeRound(*module,function,0,options.optLevel,options.cleanupMode));
       const auto &round = *roundStorage;
       if(observer)observer->round(round);
-      std::optional<std::map<std::string, int64_t>> intrinsicQuotes;
-      std::set<std::string> unquotedIntrinsics;
-      auto intrinsicCost = [&](const Instruction &inst) -> int {
-        if (!intrinsicQuotes) {
-          intrinsicQuotes.emplace();
-          if (policy == "llvm24")
-            *intrinsicQuotes = llvm24Scorer.intrinsicCosts(*module->getFunction(function));
-        }
-        StringRef name = cast<CallInst>(inst).getCalledFunction()->getName();
-        auto found = intrinsicQuotes->lower_bound(name.str());
-        if (found != intrinsicQuotes->end() &&
-            (found->first == name || StringRef(found->first).startswith((name + ".").str())))
-          return found->second;
-        if (unquotedIntrinsics.insert(name.str()).second)
-          errs() << "DP1 intrinsic cost fallback (1): " << name << "\n";
-        return 1;
-      };
-      std::optional<json::Value> recipe;
-      if (!recipeInput.empty()) {
-        auto buffer = MemoryBuffer::getFile(recipeInput);
-        if (!buffer) throw std::runtime_error("cannot_read_b2b_recipe");
-        auto parsed = json::parse((*buffer)->getBuffer());
-        if (!parsed) throw std::runtime_error(toString(parsed.takeError()));
-        recipe = std::move(*parsed);
-        if (!recipe->getAsObject()) throw std::runtime_error("invalid_b2b_recipe");
-      }
-      json::Object recipeOut;
-      std::string recipeCacheStatus=recipe ? "hit" : "miss";
       std::vector<Trial> plans;
-      if (!logical && useAnchorB2B) {
-        std::optional<DenseMap<const Instruction *, int>> prices;
-        auto cost = [&](const Instruction &inst) {
-          if (!prices)
-            prices = llvm24Scorer.instructionCosts(*f);
-          auto found = prices->find(&inst);
-          return found == prices->end() ? -1 : found->second;
-        };
-        std::optional<LLVM24Scorer::TransferCosts> transferPrices;
-        auto transferCost = [&](Type *type, bool phi) {
-          if (!transferPrices)
-            transferPrices = llvm24Scorer.anchorTransferCosts(*f);
-          const auto &prices = phi ? transferPrices->phis : transferPrices->selects;
-          auto found = prices.find(type);
-          return found == prices.end() ? -1 : found->second;
-        };
-        auto selectCost = [&](Type *type) { return transferCost(type, false); };
-        auto phiCost = [&](Type *type) { return transferCost(type, true); };
-        plans = planSingleBranchB2B(*module, c, options.optLevel, options.cleanupMode,
-                                   "", intrinsicCost, nullptr, nullptr, cost, selectCost, phiCost);
-      } else if (!logical && singleBranchB2B) {
-        try {
-          plans=planSingleBranchB2B(*module,c,options.optLevel,options.cleanupMode,"",intrinsicCost,
-                                   &recipeOut,recipe ? recipe->getAsObject() : nullptr);
-        } catch (const std::runtime_error &error) {
-          if (!recipeCache || StringRef(error.what())!="b2b_recipe_dependencies_changed") throw;
-          recipeCacheStatus="invalidated";
-          recipe.reset();recipeOut=json::Object{};
-          plans=planSingleBranchB2B(*module,c,options.optLevel,options.cleanupMode,"",intrinsicCost,&recipeOut);
-        }
-      }
-      if (recipeCache && plans.empty()) { recipe.reset(); recipeCacheStatus="ineligible"; }
-      if (observer) jsonFile(debug+"/b2b-recipe-cache.json",json::Object{
-          {"status",recipeCacheStatus},{"source",recipeInput},{"scores_reused",false}});
-      if (observer && !recipeOut.empty()) jsonFile(debug+"/b2b-recipe.json", std::move(recipeOut));
-      if (recipe && plans.empty()) throw std::runtime_error("b2b_recipe_dependencies_changed");
+      if (!logical && useAnchorB2B)
+        plans = llvm24Scorer.planAnchorB2B(*module, c, options.cleanupMode);
       const bool plannedB2B = !plans.empty();
       Trial t;
       ScoreResult score;
       if (plannedB2B) {
         json::Array profitability;
-        std::set<std::string> seenDP1;
+        std::set<std::string> seenCleanedIR;
         for (auto &plan : plans) {
-          if (plan.valid && !seenDP1.insert(moduleHash(*plan.normalized)).second)
+          if (plan.valid && !seenCleanedIR.insert(moduleHash(*plan.normalized)).second)
             continue;
           auto result = profileCall("evaluate_score",[&](){return evaluateTrial(*module, plan, round, scorer);});
           if (StringRef(result.reason).startswith("tti_quote_")) throw std::runtime_error(result.reason);
@@ -385,11 +316,11 @@ static int runSearch(int argc, const char *const *argv, TrialWorker *batch = nul
         }
         if (useAnchorB2B) {
           t.anchorStats["generated"] = int64_t(plans.size());
-          t.anchorStats["unique_normalized"] = int64_t(seenDP1.size());
+          t.anchorStats["unique_normalized"] = int64_t(seenCleanedIR.size());
         }
         t.layoutProfitability = std::move(profitability);
       }
-      const bool allowDarmB2B = !strategyGiven || useDarmB2B;
+      const bool allowDarmB2B = !useAnchorB2B;
       if (!plannedB2B) {
         Trial boundaryFold;
         t = tryPair(*module, c, 0, options.optLevel, options.cleanupMode,

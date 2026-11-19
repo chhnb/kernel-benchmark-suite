@@ -70,7 +70,7 @@ int main(int argc,char **argv){
   control.before=features(*f);control.after=features(*control.normalized->getFunction(argv[2]));control.afterRaw=control.after;
   auto controlScore=evaluateTrial(*m,control,round,scorer);
   if(controlScore.status!=ScoreStatus::Scored)return 1;
-  auto layouts=planSingleBranchB2B(*capsule.ir,{"unit","B0","B1","B2"},1,CleanupMode::DarmCFGInstCombine,"");
+  auto layouts=scorer.planAnchorB2B(*capsule.ir,{"unit","B0","B1","B2"},CleanupMode::DarmCFGInstCombine);
   for(auto &layout:layouts){if(!layout.valid||!layout.normalized)continue;
    Trial trial;trial.valid=true;trial.cleanupMode=CleanupMode::None;trial.candidate={argv[2],"","","",0};
    trial.normalized=capsule.apply(*m,*layout.normalized);trial.raw=CloneModule(*trial.normalized);
