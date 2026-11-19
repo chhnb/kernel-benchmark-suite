@@ -133,7 +133,7 @@ int main(int argc,char**argv){try{
    outs()<<"Default schedule: ordered for whole-function trials (Auto Greedy v2).\n";
    return 0;
  }
- std::string b2bStrategy="dp1", b2rStrategy="darm", quoteMode="on", snapshotMode;
+ std::string b2bStrategy="anchor", b2rStrategy="darm", quoteMode="on", snapshotMode;
  while (argc >= 3) {
    StringRef option(argv[argc-2]), value(argv[argc-1]);
    if(option == "--domain-schedule" && value == "ordered") { argc-=2;continue; }

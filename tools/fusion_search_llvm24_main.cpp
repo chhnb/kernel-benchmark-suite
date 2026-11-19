@@ -133,7 +133,7 @@ static int runSearch(int argc, const char *const *argv, TrialWorker *batch = nul
   fusion::requestProfile.clear();
   try {
     std::string input,function,output,debug,split,left,right,replayParentHash,policy="llvm24";Options options;options.cleanupMode=CleanupMode::DarmCFGInstCombine;bool singleBranchB2B=true, strategyGiven=true, useDarmB2B=false;
-    bool useArtifactB2B=false, useAnchorB2B=false;
+    bool useArtifactB2B=false, useAnchorB2B=true;
     B2RStrategy b2rStrategy = B2RStrategy::Darm;
     std::string recipeInput, quoteMode="on";
     bool recipeCache=false, fullSnapshots=true;

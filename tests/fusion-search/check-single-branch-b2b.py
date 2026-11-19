@@ -185,7 +185,7 @@ with tempfile.TemporaryDirectory() as directory:
 
     for shape in cases:
         out = root / f"{shape}-0"
-        extra = ("--b2b-strategy", strategy) if strategy == "anchor" else ()
+        extra = () if strategy == "anchor" else ("--b2b-strategy", "dp1")
         run(greedy, out / "source.ll", "choose", out / "auto", *extra)
         summary = json.loads((out / "auto/summary.json").read_text())
         assert summary["shared_arm_trials"] and summary["b2b_strategy"] == strategy

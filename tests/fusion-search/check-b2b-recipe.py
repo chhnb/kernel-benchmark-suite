@@ -103,6 +103,7 @@ with tempfile.TemporaryDirectory() as temp:
   ir = out/(name+'.ll')
   ir.write_text(context_source.replace('DEST1',destinations[0]).replace('DEST2',destinations[1]))
   command = [search,'--ir',ir,'--function','choose','--split','B1','--left','B2','--right','B3',
+             '--b2b-strategy','dp1',
              '--tti-worker',worker,'--out',out/(name+'.after.ll'),'--debug-dir',out/name]
   subprocess.run(command,check=True,capture_output=True)
   recipe = json.loads((out/name/'b2b-recipe.json').read_text())
