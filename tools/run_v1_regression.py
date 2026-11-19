@@ -11,7 +11,7 @@ import subprocess
 import time
 
 ROOT = Path(__file__).resolve().parents[1]
-MANIFEST = ROOT / 'regression/greedy-v1/manifest.json'
+MANIFEST = ROOT / 'regression/greedy-v1/manifest-ordered-20261119.json'
 
 def ir_hash(path):
     return hashlib.sha256(b'\n'.join(line for line in path.read_bytes().splitlines()
@@ -56,7 +56,7 @@ def main():
         with (out / (case + '.log')).open('w') as log:
             rc = subprocess.run(['timeout', '-k', '3s', str(args.timeout) + 's',
                                  ROOT / 'build/decision-fuse/decision-greedy', source,
-                                 row['function'], ROOT, dest, '--domain-schedule', 'legacy',
+                                 row['function'], ROOT, dest, '--domain-schedule', 'ordered',
                                  '--b2b-strategy', 'dp1', '--tti-quote-cache', args.tti_quote_cache],
                                 stdout=log, stderr=subprocess.STDOUT, env=env).returncode
         result = dict(case=case, exit=rc, seconds=round(time.monotonic() - begin, 2), passed=False)
