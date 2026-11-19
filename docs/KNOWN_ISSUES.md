@@ -29,6 +29,11 @@
 - HLLC：23个有效候选均负的最新prepared baseline，对应GPU比较尚未完成。
 - Cholla/Reentry：当前复杂结构/副作用支持范围有限，尚无新路径已确认GPU收益。
 
+## HLLD 和 NQU64 的 uniform-wave 回归
+
+- HLLD 的 65,536 单元历史输入上，当前 A（`4a91a50` 默认产物）比未融合版慢约 6.9%。[逐次提交消融](../regression/records/hlld-regression-bisect-20261119.md)的五轮部分样本显示，主要退化来自第 3 次提交 `darm-R2B`，轮中位耗时从 59.839 µs 升至 68.320 µs（+14.17%）。两种 uniform 情形下，估计成本分别增加 133 和 29。本阶段只记录，留给后续的 uniform-wave 损失上限工作。
+- NQU64 的 DP2 第 3 次融合属于同一类问题。该次 B2B 的总 TTI 从 275 降至 270，GPU 耗时却增加 4.46%，原本单侧的两条运算扩展到整个到达分支的活动 lane。历史分析可用 `git show 5959ee1:regression/records/nqu-dp2-analysis-20261115.md` 查阅。
+
 ## 已解决但仍保留证据
 
 Map-Airy新增完整叶子候选改变第9步造成5.19%回退；`4ac5a90`加入默认判别值边界后恢复冻结二进制并实测通过。没有改TTI权重，也没有覆盖reference。该修复不代表TTI已能可靠评价所有跨层级融合。
