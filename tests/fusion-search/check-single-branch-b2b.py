@@ -217,6 +217,7 @@ with tempfile.TemporaryDirectory() as directory:
     # Experimental strategies and transformations must be rejected.
     source = root / "prefix-0/source.ll"
     for option, value in (("--b2b-strategy", "dp2"), ("--b2b-strategy", "dp3"),
+                          ("--b2b-planner", "unified"), ("--b2b-unified-extended", "on"),
                           ("--speculation", "cost"), ("--gap-trials", "4"),
                           ("--gap-replay", "unused"),
                           ("--cleanup", "o3"), ("--profile-bundle", "unused")):
