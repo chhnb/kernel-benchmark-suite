@@ -2,10 +2,11 @@
 """Audit coverage, all committed verifier results and first scheduling divergence."""
 import argparse,json,os,re,subprocess
 from pathlib import Path
-p=argparse.ArgumentParser();p.add_argument("reference",type=Path);p.add_argument("candidate",type=Path);p.add_argument("--out",type=Path,required=True);a=p.parse_args()
+p=argparse.ArgumentParser();p.add_argument("reference",type=Path);p.add_argument("candidate",type=Path,nargs="?");p.add_argument("--out",type=Path,required=True);a=p.parse_args()
 root=Path(__file__).resolve().parents[2];env=dict(os.environ,LD_LIBRARY_PATH=str(root/"build/llvm12-jammy/usr/lib/x86_64-linux-gnu"))
 reports=[];chains=[]
-for directory in [a.reference,a.candidate]:
+directories=[a.reference]+([a.candidate] if a.candidate else [])
+for directory in directories:
  s=json.loads((directory/"summary.json").read_text());assert s["status"]=="completed"
  chain=[]
  for r in s["rounds"]:
@@ -31,9 +32,9 @@ first=None
 def normalize(path):
  text=re.sub(r"^; ModuleID = .*\n","",Path(path).read_text())
  return re.sub(r"(?m)^([-.$_a-zA-Z0-9]+:)[ \t]+; preds = .*$",r"\1",text)
-for i,(x,y) in enumerate(zip(*chains)):
+for i,(x,y) in enumerate(zip(*chains) if a.candidate else []):
  if x["candidate"]!=y["candidate"] or x["cost"]!=y["cost"] or normalize(x["ir"])!=normalize(y["ir"]):
   first=dict(step=i+1,reference=x,trees=y);break
-if first is None and len(chains[0])!=len(chains[1]):first=dict(step=min(map(len,chains))+1,reason="different commit counts")
-result=dict(runs=reports,first_divergence=first,final_ir_equal=normalize(a.reference/"final.ll")==normalize(a.candidate/"final.ll"),scope="Verifier and terminal candidate coverage; execution correctness requires separate tests")
+if a.candidate and first is None and len(chains[0])!=len(chains[1]):first=dict(step=min(map(len,chains))+1,reason="different commit counts")
+result=dict(runs=reports,first_divergence=first,final_ir_equal=(normalize(a.reference/"final.ll")==normalize(a.candidate/"final.ll")) if a.candidate else None,scope="Verifier and terminal candidate coverage; execution correctness requires separate tests")
 a.out.write_text(json.dumps(result,indent=2)+"\n");print(json.dumps(result,indent=2))

@@ -129,14 +129,14 @@ int main(int argc,char**argv){try{
  auto timingReport=[&](){json::Object phases;for(const auto &kv:phaseMilliseconds)phases[kv.first]=json::Object{{"milliseconds",kv.second},{"calls",phaseCalls[kv.first]}};return phases;};
 
  if(argc==2&&StringRef(argv[1])=="--help"){
-   outs()<<"usage: decision-greedy INPUT FUNCTION [TOOL_ROOT] NEW_OUTPUT [--b2b-strategy dp1|darm] [--b2r-strategy darm|guarded] [--domain-schedule legacy|ordered] [--ir-snapshots full|compact]\n";
+   outs()<<"usage: decision-greedy INPUT FUNCTION [TOOL_ROOT] NEW_OUTPUT [--b2b-strategy dp1|darm] [--b2r-strategy darm|guarded] [--domain-schedule ordered] [--ir-snapshots full|compact]\n";
    outs()<<"Default schedule: ordered for whole-function trials (Auto Greedy v2).\n";
    return 0;
  }
- std::string b2bStrategy="dp1", b2rStrategy="darm", quoteMode="on", domainSchedule, snapshotMode;
+ std::string b2bStrategy="dp1", b2rStrategy="darm", quoteMode="on", snapshotMode;
  while (argc >= 3) {
    StringRef option(argv[argc-2]), value(argv[argc-1]);
-   if(option == "--domain-schedule" && (value == "legacy" || value == "ordered")) { domainSchedule=value.str();argc-=2;continue; }
+   if(option == "--domain-schedule" && value == "ordered") { argc-=2;continue; }
    if (option == "--ir-snapshots" && (value == "full" || value == "compact"))
      snapshotMode = value.str();
    else if (option == "--b2r-strategy" && (value == "darm" || value == "guarded"))
@@ -152,8 +152,7 @@ int main(int argc,char**argv){try{
  }
  if(argc!=4&&argc!=5)
    throw std::runtime_error("usage: decision-greedy INPUT FUNCTION [TOOL_ROOT] NEW_OUTPUT [--b2b-strategy dp1|darm] [--b2r-strategy darm|guarded]");
- if(domainSchedule.empty())domainSchedule="ordered";
- if(snapshotMode.empty())snapshotMode=domainSchedule=="ordered"?"compact":"full";
+ if(snapshotMode.empty())snapshotMode="compact";
  const bool implicitRoot=argc==4;
  std::string root;
  const char *ttiMode=std::getenv("FUSION_TTI_MODE");
@@ -207,7 +206,7 @@ int main(int argc,char**argv){try{
    }
  };
  unsigned reusedSweepSnapshots=0;
- auto report=[&](StringRef status){save(out+"/summary.json",json::Value(json::Object{{"status",status.str()},{"driver_phase_timings",timingReport()},{"elapsed_ms",std::chrono::duration<double,std::milli>(Clock::now()-started).count()},{"domain_schedule",domainSchedule},{"ir_snapshots",snapshotMode},{"trial_policy","whole-function"},{"scoped_trials",nullptr},{"search","per-decision greedy; best positive adjacent or structural candidate"},{"cfg_cleanup","structural"},{"structural_cleanup",structuralCleanup},{"structural_candidates_enabled",true},{"shared_arm_trials",true},{"cross_level_b2r",false},{"reused_sweep_snapshots",int64_t(reusedSweepSnapshots)},{"pipeline_version",domainSchedule=="ordered"?"v2":"v1"},{"candidate_jobs",structuralJobs},{"candidate_scheduler","continuous-queue"},{"persistent_trial_workers",true},{"condition_budget",conditionBudget},{"phi_fold_threshold",7},{"r2r_enumeration","darm-alignment"},{"b2b_strategy",b2bStrategy},{"b2r_strategy",b2rStrategy},{"tti_quote_cache",quoteMode},{"tti_cost_kind",fusion::ttiCostKindName()},{"backend_resource_gate_enabled",false},{"uniform_loss_guard_enabled",false},{"max_uniform_loss",-1},{"max_pressure_growth",-1},{"max_pressure",-1},{"initial_cost",initialCost},{"final_cost",parentCost},{"commits",int64_t(commits)},{"trials",int64_t(trials)},{"final_ir",current},{"rounds",json::Value(json::Array(rounds))},{"stops",json::Value(json::Array(stops))}}));};
+ auto report=[&](StringRef status){save(out+"/summary.json",json::Value(json::Object{{"status",status.str()},{"driver_phase_timings",timingReport()},{"elapsed_ms",std::chrono::duration<double,std::milli>(Clock::now()-started).count()},{"domain_schedule","ordered"},{"ir_snapshots",snapshotMode},{"trial_policy","whole-function"},{"scoped_trials",nullptr},{"search","per-decision greedy; best positive adjacent or structural candidate"},{"cfg_cleanup","structural"},{"structural_cleanup",structuralCleanup},{"structural_candidates_enabled",true},{"shared_arm_trials",true},{"cross_level_b2r",false},{"reused_sweep_snapshots",int64_t(reusedSweepSnapshots)},{"pipeline_version","v2"},{"candidate_jobs",structuralJobs},{"candidate_scheduler","continuous-queue"},{"persistent_trial_workers",true},{"condition_budget",conditionBudget},{"phi_fold_threshold",7},{"r2r_enumeration","darm-alignment"},{"b2b_strategy",b2bStrategy},{"b2r_strategy",b2rStrategy},{"tti_quote_cache",quoteMode},{"tti_cost_kind",fusion::ttiCostKindName()},{"backend_resource_gate_enabled",false},{"uniform_loss_guard_enabled",false},{"max_uniform_loss",-1},{"max_pressure_growth",-1},{"max_pressure",-1},{"initial_cost",initialCost},{"final_cost",parentCost},{"commits",int64_t(commits)},{"trials",int64_t(trials)},{"final_ir",current},{"rounds",json::Value(json::Array(rounds))},{"stops",json::Value(json::Array(stops))}}));};
  report("running");
  std::map<std::string,std::string> b2bRecipes;
  std::set<std::string> attemptedStructural;
@@ -216,9 +215,8 @@ int main(int argc,char**argv){try{
  Optional<json::Value> structuralCatalog;
 
  mark("initialization");
- const bool ordered=domainSchedule=="ordered";
  bool boundaryTagsAvailable=true;
- if(ordered)for(auto &bb:*initial->getFunction(fn))for(auto &i:bb)
+ for(auto &bb:*initial->getFunction(fn))for(auto &i:bb)
    if(i.getMetadata(decision::OrderedArms::marker))boundaryTagsAvailable=false;
  for(auto &target:targets){decision::OrderedArms table;
  // Only a sweep round without a commit may hand this immutable snapshot
@@ -226,7 +224,7 @@ int main(int argc,char**argv){try{
  std::unique_ptr<Module> sweepParent;
  std::vector<decision::Decision> sweepCatalog;
  std::optional<fusion::FusionDomains> sweepDomains;
- for(unsigned iteration=0;iteration<(domainSchedule!="legacy"?100000u:256u);++iteration){
+ for(unsigned iteration=0;iteration<100000u;++iteration){
   const bool reuseSweepSnapshot=bool(sweepParent);
   if(reuseSweepSnapshot)++reusedSweepSnapshots;
   auto m=reuseSweepSnapshot ? std::move(sweepParent)
@@ -236,14 +234,14 @@ int main(int argc,char**argv){try{
                                   : decision::discover(*m->getFunction(fn));
   unsigned di=0;
   while(di<catalog.size()&&catalog[di].id!=target)++di;
-  const bool bound=ordered && table.nextDecision.has_value();
+  const bool bound=table.nextDecision.has_value();
   if(bound)di=*table.nextDecision;
   if(!target.empty()&&di>=catalog.size()){stops.push_back(json::Object{{"decision",target},{"reason","decision_completed_or_absorbed"}});break;}
   if(!target.empty()) {
     unsigned identities=0;for(auto &candidate:catalog)identities+=candidate.id==target;
     if(!bound && identities!=1)throw std::runtime_error("ambiguous decision identity: "+target);
   }
-  const bool track=ordered && boundaryTagsAvailable && !target.empty() && !table.retired;
+  const bool track=boundaryTagsAvailable && !target.empty() && !table.retired;
   if(track){
     if(table.order.empty())table.start(catalog[di].arms.size());
     table.atFunctionEntry=catalog[di].root==&m->getFunction(fn)->getEntryBlock();
@@ -269,12 +267,12 @@ int main(int argc,char**argv){try{
   sweepDomains.reset();
   BasicBlock *activeDomain=nullptr;
   fusion::CompetingDomains competition;
-  if(ordered && target.empty())
+  if(target.empty())
     competition=fusion::competingDomains(*m->getFunction(fn),domains,candidates,attemptedStructural);
   auto activeOwner=[&](BasicBlock *owner) {
     return competition.owners.empty() ? owner==activeDomain : competition.owners.count(owner)!=0;
   };
-  if(domainSchedule!="legacy" && target.empty()) {
+  if(target.empty()) {
     for(const auto &entry:candidates) {
       const auto &c=*entry.getAsObject();
       if(auto reason=c.getString("preflight_rejection"))if(!reason->empty())continue;
@@ -287,10 +285,10 @@ int main(int argc,char**argv){try{
   // Re-discover maximal preparation targets from the current parent, including
   // decisions that appeared after the initial target list was built.
   std::vector<unsigned> prepare;
-  if(ordered && !target.empty()){
+  if(!target.empty()){
     activeDomain=domains.root(catalog[di].root);
     prepare.push_back(di);
-  }else if(domainSchedule!="legacy") {
+  }else {
     std::set<BasicBlock*> coveredTests;
     for(unsigned i=0;i<catalog.size();++i){
       auto &decision=catalog[i];
@@ -302,7 +300,7 @@ int main(int argc,char**argv){try{
       if(!activeDomain)activeDomain=owner;
       if(activeOwner(owner))prepare.push_back(i);
     }
-  }else if(!target.empty())prepare.push_back(di);
+  }
   decision::Decision emptyDecision;
   auto &d=target.empty()?emptyDecision:catalog[di];
   int64_t bestCost=parentCost;
@@ -317,7 +315,7 @@ int main(int argc,char**argv){try{
   };
   std::vector<PreparedPair> preparedPairs;
   for(unsigned owner:prepare){
-    if(domainSchedule!="legacy")attemptedPreparation.insert(owner);
+    attemptedPreparation.insert(owner);
     auto &d=catalog[owner];
     for (unsigned left=0; left+1<d.arms.size(); ++left) {
       if(!eligible(d.arms[left],d.arms[left+1]))continue;
@@ -327,7 +325,7 @@ int main(int argc,char**argv){try{
       std::string reason;
       std::vector<std::array<std::string,3>> coordinates;
       if(prepareArmPairs(*prepared->getFunction(fn),clonedDecision,left,conditionBudget,reason,coordinates,track)){
-        const std::string decisionSuffix=domainSchedule!="legacy" ? "-"+std::to_string(owner) : "";
+        const std::string decisionSuffix="-"+std::to_string(owner);
         const auto input=out+"/prepared-"+std::to_string(rounds.size())+decisionSuffix+"-"+std::to_string(left)+".ll";
         std::error_code ec;
         raw_fd_ostream stream(input,ec);
@@ -401,7 +399,7 @@ int main(int argc,char**argv){try{
       const auto &candidate = *entry.getAsObject();
       const auto split = candidate.getString("split")->str();
       if (!decisionSplit.empty() && split != decisionSplit) continue;
-      if (domainSchedule != "legacy" && target.empty() &&
+      if (target.empty() &&
           (!activeDomain || !activeOwner(domains.root(split)))) continue;
       roundCandidates.push_back(&candidate);
     }
@@ -582,7 +580,7 @@ int main(int argc,char**argv){try{
   }
   mark("read_scores_and_select");
   json::Object record{{"decision",target},{"iteration",int64_t(iteration)},{"parent",current},{"parent_cost",parentCost},{"attempts",std::move(attempts)},{"preparation_rejections",std::move(preparationRejections)},{"selected",best}};
-  if(domainSchedule!="legacy"){
+  {
     if(!competition.owners.empty()) {
       record["competition_seed"]=competition.seed;
       record["competition_common_work"]=int64_t(competition.commonWork);
@@ -598,7 +596,7 @@ int main(int argc,char**argv){try{
       record["active_domain"]=name.str();
     }
   }
-  if(best.empty() && domainSchedule!="legacy" && target.empty() && (!prepare.empty() || !record.getArray("attempts")->empty())) {
+  if(best.empty() && target.empty() && (!prepare.empty() || !record.getArray("attempts")->empty())) {
     record["domain_exhausted"]=true;
     rounds.push_back(std::move(record));report("running");mark("record_and_commit");
     sweepParent=std::move(m);
@@ -623,7 +621,7 @@ int main(int argc,char**argv){try{
   }
   recordResources(best+"/fused.ll",best+"/resources",record);
   record["selected_cost"]=bestCost;record["score"]=double(parentCost-bestCost)/std::max<int64_t>(parentCost,1);rounds.push_back(std::move(record));parentCost=bestCost;current=best+"/fused.ll";attemptedStructural.clear();attemptedPreparation.clear();++commits;report("running");outs()<<"commit="<<commits<<" cost="<<parentCost<<" decision="<<target<<"\n";outs().flush();mark("record_and_commit");
-  if(iteration==(domainSchedule!="legacy"?99999u:255u))throw std::runtime_error("round budget exceeded");
+  if(iteration==99999u)throw std::runtime_error("round budget exceeded");
  }}
  if(strictTTI&&sys::fs::exists(strictTTIErrors)){
    report("offline_tti_error");
