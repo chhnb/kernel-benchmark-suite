@@ -2683,6 +2683,11 @@ std::vector<Trial> planSingleBranchB2B(const Module &parent, const Candidate &c,
         rc->eraseFromParent();
       }
       if (layout.mergeExit || label == "single-branch-prefix-merged-exit") {
+        // Only anchor removes the branch without freezing its condition.
+        if (layout.mergeExit)
+          assert(&rawLeft->front() == rawLeft->getTerminator() &&
+                 &rawRight->front() == rawRight->getTerminator() &&
+                 "anchor merged-exit must pair every instruction in both arms");
         auto *commonBlock = rawBranch->getParent();
         for (auto &phi : rawJoin->phis()) {
           auto *lv = phi.getIncomingValueForBlock(rawLeft);
