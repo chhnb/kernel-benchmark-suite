@@ -25,11 +25,11 @@ for r in rows:
   trace.update((json.dumps(step)+"\n").encode())
  runs.append(dict(**r,commit_trace_sha256=trace.hexdigest(),profiled_requests=requests,worker_inclusive_totals=dict(totals),canonical_final_sha256=hashlib.sha256(text.encode()).hexdigest()))
 summary={}
-for mode in ["legacy","trees"]:
+for mode in ["legacy","ordered"]:
  rr=[r for r in runs if r["mode"]==mode]
  if not rr:continue
  times=[r["seconds"] for r in rr]
  summary[mode]=dict(runs=len(rr),seconds_median=statistics.median(times),seconds_min=min(times),seconds_max=max(times),repeated_commit_trace_equal=len({r["commit_trace_sha256"] for r in rr})==1,repeated_final_ir_equal=len({r["canonical_final_sha256"] for r in rr})==1,commits=sorted({r["commits"] for r in rr}),trials=sorted({r["trials"] for r in rr}),final_tti=sorted({r["final_cost"] for r in rr}))
 result=dict(complete=(a.directory/"completed.json").exists(),summary=summary,runs=runs,timing_scope="driver phase times are wall times; worker inclusive times accumulate parallel requests and overlap parent scopes, so cannot be added to wall time")
-if all(mode in summary for mode in ["legacy","trees"]):result["median_wall_reduction_percent"]=100*(1-summary["trees"]["seconds_median"]/summary["legacy"]["seconds_median"])
+if all(mode in summary for mode in ["legacy","ordered"]):result["median_wall_reduction_percent"]=100*(1-summary["ordered"]["seconds_median"]/summary["legacy"]["seconds_median"])
 a.out.write_text(json.dumps(result,indent=2)+"\n");print(json.dumps(summary,indent=2))

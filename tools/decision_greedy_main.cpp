@@ -129,14 +129,14 @@ int main(int argc,char**argv){try{
  auto timingReport=[&](){json::Object phases;for(const auto &kv:phaseMilliseconds)phases[kv.first]=json::Object{{"milliseconds",kv.second},{"calls",phaseCalls[kv.first]}};return phases;};
 
  if(argc==2&&StringRef(argv[1])=="--help"){
-   outs()<<"usage: decision-greedy INPUT FUNCTION [TOOL_ROOT] NEW_OUTPUT [--b2b-strategy dp1|darm] [--b2r-strategy darm|guarded] [--domain-schedule legacy|trees|competing|ordered] [--ir-snapshots full|compact]\n";
+   outs()<<"usage: decision-greedy INPUT FUNCTION [TOOL_ROOT] NEW_OUTPUT [--b2b-strategy dp1|darm] [--b2r-strategy darm|guarded] [--domain-schedule legacy|ordered] [--ir-snapshots full|compact]\n";
    outs()<<"Default schedule: ordered for whole-function trials (Auto Greedy v2).\n";
    return 0;
  }
  std::string b2bStrategy="dp1", b2rStrategy="darm", quoteMode="on", domainSchedule, snapshotMode;
  while (argc >= 3) {
    StringRef option(argv[argc-2]), value(argv[argc-1]);
-   if(option == "--domain-schedule" && (value == "legacy" || value == "trees" || value == "competing" || value == "ordered")) { domainSchedule=value.str();argc-=2;continue; }
+   if(option == "--domain-schedule" && (value == "legacy" || value == "ordered")) { domainSchedule=value.str();argc-=2;continue; }
    if (option == "--ir-snapshots" && (value == "full" || value == "compact"))
      snapshotMode = value.str();
    else if (option == "--b2r-strategy" && (value == "darm" || value == "guarded"))
@@ -269,7 +269,7 @@ int main(int argc,char**argv){try{
   sweepDomains.reset();
   BasicBlock *activeDomain=nullptr;
   fusion::CompetingDomains competition;
-  if((domainSchedule=="competing" || ordered) && target.empty())
+  if(ordered && target.empty())
     competition=fusion::competingDomains(*m->getFunction(fn),domains,candidates,attemptedStructural);
   auto activeOwner=[&](BasicBlock *owner) {
     return competition.owners.empty() ? owner==activeDomain : competition.owners.count(owner)!=0;
@@ -291,7 +291,6 @@ int main(int argc,char**argv){try{
     activeDomain=domains.root(catalog[di].root);
     prepare.push_back(di);
   }else if(domainSchedule!="legacy") {
-    if(!target.empty())activeDomain=domains.root(catalog[di].root);
     std::set<BasicBlock*> coveredTests;
     for(unsigned i=0;i<catalog.size();++i){
       auto &decision=catalog[i];
@@ -303,8 +302,6 @@ int main(int argc,char**argv){try{
       if(!activeDomain)activeDomain=owner;
       if(activeOwner(owner))prepare.push_back(i);
     }
-    if(!target.empty() && !attemptedPreparation.count(di) &&
-       std::find(prepare.begin(),prepare.end(),di)==prepare.end())prepare.insert(prepare.begin(),di);
   }else if(!target.empty())prepare.push_back(di);
   decision::Decision emptyDecision;
   auto &d=target.empty()?emptyDecision:catalog[di];
@@ -410,16 +407,6 @@ int main(int argc,char**argv){try{
     }
     for (const auto &entry : normalizedCandidates)
       roundCandidates.push_back(entry.getAsObject());
-    // The experimental tree schedules add other splits after the original
-    // candidates to preserve the existing tie order.
-    if (!decisionSplit.empty() && !ordered && domainSchedule != "legacy") {
-      for (const auto &entry : candidates) {
-        const auto &candidate = *entry.getAsObject();
-        const auto split = candidate.getString("split")->str();
-        if (split != decisionSplit && domains.root(split) == activeDomain)
-          roundCandidates.push_back(&candidate);
-      }
-    }
     for (const auto *entry : roundCandidates) {
       const auto &candidate = *entry;
       const auto preparedInput = candidate.getString("prepared_input");

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Compare tree/legacy scheduling without assuming identical merge order."""
+"""Compare ordered/legacy scheduling without assuming identical merge order."""
 import argparse,json,os,re,subprocess,time
 from pathlib import Path
 p=argparse.ArgumentParser();p.add_argument("--driver",type=Path,required=True);p.add_argument("--out",type=Path,required=True);a=p.parse_args()
@@ -22,7 +22,7 @@ def execute(ir,label):
  subprocess.run([str(bindir/"clang-12"),"-O0",str(cpu),str(harness),"-o",str(binary)],env=env,check=True,capture_output=True)
  return subprocess.check_output([str(binary)],env=env)
 expected=execute(source,"baseline");rows=[]
-for mode in ["legacy","trees"]:
+for mode in ["legacy","ordered"]:
  out=a.out/mode;start=time.monotonic()
  with (a.out/(mode+".stdout")).open("w") as stdout,(a.out/(mode+".stderr")).open("w") as stderr:
   subprocess.run([str(a.driver.resolve()),str(source),"choose",str(root),str(out),"--domain-schedule",mode],env=env,check=True,stdout=stdout,stderr=stderr)

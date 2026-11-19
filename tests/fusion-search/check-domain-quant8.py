@@ -5,13 +5,13 @@ from pathlib import Path
 p=argparse.ArgumentParser();p.add_argument("--driver",type=Path,required=True);p.add_argument("--out",type=Path,required=True);a=p.parse_args()
 root=Path(__file__).resolve().parents[2];a.out=a.out.resolve();a.out.mkdir(parents=True,exist_ok=False)
 env=dict(os.environ,LD_LIBRARY_PATH=str(root/"build/llvm12-jammy/usr/lib/x86_64-linux-gnu"),LLVM24_LIBDIR=str(root/"build/llvm24-pinned/lib"));bin=root/"build/llvm12-jammy/usr/bin";fixture=root/"tests/fusion-search/domain-vllm-quant8.ll"
-for mode in ["legacy","trees"]:
+for mode in ["legacy","ordered"]:
  with (a.out/(mode+".stdout")).open("w") as stdout,(a.out/(mode+".stderr")).open("w") as stderr:
   subprocess.run([str(a.driver.resolve()),str(fixture),"quant8",str(root),str(a.out/mode),"--domain-schedule",mode],env=env,check=True,stdout=stdout,stderr=stderr)
-subprocess.run(["python3",str(root/"tests/fusion-search/compare-domain-driver.py"),str(a.out/"legacy"),str(a.out/"trees"),"--out",str(a.out/"comparison.json")],env=env,check=True,capture_output=True)
+subprocess.run(["python3",str(root/"tests/fusion-search/compare-domain-driver.py"),str(a.out/"legacy"),str(a.out/"ordered"),"--out",str(a.out/"comparison.json")],env=env,check=True,capture_output=True)
 comparison=json.loads((a.out/"comparison.json").read_text());assert comparison["first_divergence"] is None;assert comparison["final_ir_equal"]
 paths=[fixture]
-for mode in ["legacy","trees"]:
+for mode in ["legacy","ordered"]:
  s=json.loads((a.out/mode/"summary.json").read_text());assert s["commits"]==7 and s["final_cost"]==25
  paths.extend(Path(r["selected"])/"fused.ll" for r in s["rounds"] if r.get("selected"))
 expected=None
