@@ -36,6 +36,7 @@ B2B 可配对普通访存及受支持的 intrinsic。单侧副作用保持分支
 ## 参数
 
 - `--b2b-strategy dp1|darm`，默认 `dp1`。
+- `--b2b-planner legacy|unified`，默认 `legacy`。仅用于 DP1。
 - `--b2r-strategy darm|guarded`，默认 `darm`。
 - `--domain-schedule ordered`，可省略。
 - `--ir-snapshots full|compact`，默认 `compact`。

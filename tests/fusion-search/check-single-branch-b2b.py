@@ -7,7 +7,10 @@ import sys
 import tempfile
 from pathlib import Path
 
-search, worker, opt, clang, greedy = map(Path, sys.argv[1:])
+search, worker, opt, clang, greedy = map(Path, sys.argv[1:6])
+planner_args = sys.argv[6:]
+assert planner_args in ([], ["--b2b-planner", "unified"])
+unified = bool(planner_args)
 template = '''target triple = "amdgcn-amd-amdhsa"
 define i32 @choose(i1 %outside, i1 %p, i32 %x, i32 %y, i32* %mem) #0 {
 entry:
@@ -152,16 +155,13 @@ with tempfile.TemporaryDirectory() as directory:
             args = [search, "--ir", source, "--function", "choose", "--split", "B2",
                     "--left", "B4" if swapped else "B3", "--right", "B3" if swapped else "B4",
                     "--structural", "1", "--cleanup", "darm-cfg-dce-instcombine",
-                    "--b2b-strategy", "dp1", "--tti-worker", worker]
+                    "--b2b-strategy", "dp1", "--tti-worker", worker, *planner_args]
             run(*args, "--out", fused, "--debug-dir", out / "reports")
             report = out / "reports/trial-0/trial.json"
             trial = json.loads(report.read_text())
-            assert trial["merge_path"].startswith("single-branch-"), trial["merge_path"]
+            assert trial["merge_path"].startswith("b2b-unified-" if unified else "single-branch-"), trial["merge_path"]
             assert trial["valid"]
             assert trial["score_result"]["status"] == "scored"
-            merged_exit = trial["merge_path"] == "single-branch-prefix-merged-exit"
-            segmented = trial["merge_path"].startswith("single-branch-segment-dp")
-            complete_common = trial["merge_path"].startswith("single-branch-complete-common-dp")
             raw = report.with_name("after-raw.ll").read_text()
             assert "[ 77, %external ]" in raw
             # Shared memory must preserve the external incoming edge and execute correctly.
@@ -186,11 +186,12 @@ with tempfile.TemporaryDirectory() as directory:
 
     for shape in cases:
         out = root / f"{shape}-0"
-        run(greedy, out / "source.ll", "choose", out / "auto")
+        run(greedy, out / "source.ll", "choose", out / "auto", *planner_args)
         summary = json.loads((out / "auto/summary.json").read_text())
         assert summary["shared_arm_trials"] and summary["b2b_strategy"] == "dp1"
         assert summary["pipeline_version"] == "v2"
         assert summary["domain_schedule"] == "ordered"
+        assert summary["b2b_planner"] == ("unified" if unified else "legacy")
         assert summary["candidate_scheduler"] == "continuous-queue"
         assert summary["persistent_trial_workers"]
         assert not any(a.get("queue_recovery") for r in summary["rounds"] for a in r["attempts"])
@@ -198,6 +199,7 @@ with tempfile.TemporaryDirectory() as directory:
         assert summary["structural_cleanup"] == "darm-cfg-dce-instcombine"
         for request in (out / "auto").glob("trial-*/request.json"):
             argv = json.loads(request.read_text())["argv"]
+            assert ("--b2b-planner" in argv) == unified
             assert "--speculation" not in argv
             assert "--gap-trials" not in argv
         if shape == "prefix":
@@ -216,7 +218,7 @@ with tempfile.TemporaryDirectory() as directory:
 
     # Experimental strategies and transformations must be rejected.
     source = root / "prefix-0/source.ll"
-    for option, value in (("--b2b-strategy", "dp2"), ("--b2b-strategy", "dp3"),
+    for option, value in (("--b2b-strategy", "dp2"), ("--b2b-strategy", "dp3"), ("--b2b-planner", "unknown"),
                           ("--speculation", "cost"), ("--gap-trials", "4"),
                           ("--gap-replay", "unused"),
                           ("--cleanup", "o3"), ("--profile-bundle", "unused")):

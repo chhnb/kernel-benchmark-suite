@@ -35,10 +35,10 @@ with tempfile.TemporaryDirectory() as temp:
  p=run('original',source);assert p.returncode==0,p.stderr
  recipe=out/'original/b2b-recipe.json'
  recipe_data=json.loads(recipe.read_text())
- assert recipe_data['schema']=='b2b-recipe-v3'
+ assert recipe_data['schema']=='b2b-recipe-v4' and recipe_data['planner']=='legacy'
  assert all(layout['label']!='single-branch-binary-common-dp' for layout in recipe_data['layouts'])
  old_recipe=out/'old-recipe.json'
- recipe_data['schema']='b2b-recipe-v2'
+ recipe_data['schema']='b2b-recipe-v3'
  old_recipe.write_text(json.dumps(recipe_data))
  rejected=run('old-schema',source,old_recipe)
  assert rejected.returncode!=0 and 'recipe_certificate_mismatch' in rejected.stderr,rejected.stderr

@@ -1749,35 +1749,40 @@ static SmallVector<B2BMatch, 8> commonB2BPrefix(BasicBlock &left, BasicBlock &ri
   return result;
 }
 
+// A sunk value can be used only by a later sunk instruction or on
+// its original join PHI edge. Both operands must move together.
+static bool canSinkB2BPair(Instruction &left, Instruction &right, BasicBlock &join,
+                           ArrayRef<B2BMatch> later) {
+  if (!compatibleB2BArithmetic(left, right)) return false;
+  for (auto *inst : {&left, &right})
+    for (const auto &use : inst->uses()) {
+      if (llvm::any_of(later, [&](B2BMatch pair) {
+            return use.getUser() == (inst == &left ? pair.first : pair.second);
+          }))
+        continue;
+      auto *phi = dyn_cast<PHINode>(use.getUser());
+      if (!phi || phi->getParent() != &join ||
+          phi->getIncomingBlock(use) != inst->getParent())
+        return false;
+    }
+  for (auto [l, r] : later)
+    for (unsigned n = 0; n < l->getNumOperands(); ++n)
+      if ((l->getOperand(n) == &left) != (r->getOperand(n) == &right))
+        return false;
+  for (auto &phi : join.phis())
+    if ((phi.getIncomingValueForBlock(left.getParent()) == &left) !=
+        (phi.getIncomingValueForBlock(right.getParent()) == &right))
+      return false;
+  return true;
+}
+
 static SmallVector<B2BMatch, 8> commonB2BSuffix(BasicBlock &left, BasicBlock &right,
                                                 BasicBlock &join) {
   SmallVector<B2BMatch, 8> result;
-  DenseMap<Value *, Value *> later;
   auto l = left.rbegin(), r = right.rbegin();
   while (++l != left.rend() && ++r != right.rend() &&
-         compatibleB2BArithmetic(*l, *r)) {
-    bool usable = true;
-    for (auto *inst : {&*l, &*r})
-      for (const auto &use : inst->uses()) {
-        if (later.count(use.getUser())) continue;
-        auto *phi = dyn_cast<PHINode>(use.getUser());
-        usable &= phi && phi->getParent() == &join &&
-            phi->getIncomingBlock(use) == inst->getParent();
-      }
-    // A suffix value has no definition on an incoming edge of the new merge.
-    // Every such use must resolve to the same shared value on both sides.
-    for (const auto &match : result)
-      for (unsigned n = 0; n < match.first->getNumOperands(); ++n)
-        usable &= (match.first->getOperand(n) == &*l) ==
-                  (match.second->getOperand(n) == &*r);
-    for (auto &phi : join.phis())
-      usable &= (phi.getIncomingValueForBlock(&left) == &*l) ==
-                (phi.getIncomingValueForBlock(&right) == &*r);
-    if (!usable) break;
+         canSinkB2BPair(*l, *r, join, result))
     result.emplace_back(&*l, &*r);
-    later[&*l] = &*r;
-    later[&*r] = &*l;
-  }
   std::reverse(result.begin(), result.end());
   return result;
 }
@@ -1785,7 +1790,9 @@ static SmallVector<B2BMatch, 8> commonB2BSuffix(BasicBlock &left, BasicBlock &ri
 // Work backwards from the exit so a match is sinkable once every use is
 // either paired in the common continuation or on its original PHI edge.
 static SmallVector<SmallVector<B2BMatch, 8>, 4> searchB2BJoin(
-    BasicBlock &left, BasicBlock &right, BasicBlock &join) {
+    BasicBlock &left, BasicBlock &right, BasicBlock &join,
+    unsigned finalistsLimit = 4,
+    function_ref<int(const Instruction &)> intrinsicCost = nullptr) {
   SmallVector<Instruction *, 16> l, r;
   for (auto &inst : llvm::reverse(left)) if (!inst.isTerminator()) l.push_back(&inst);
   for (auto &inst : llvm::reverse(right)) if (!inst.isTerminator()) r.push_back(&inst);
@@ -1815,28 +1822,7 @@ static SmallVector<SmallVector<B2BMatch, 8>, 4> searchB2BJoin(
         if (j < r.size()) insert(at(i, j + 1), state);
         if (i == l.size() || j == r.size()) continue;
         auto *li = l[i], *ri = r[j];
-        if (!compatibleB2BArithmetic(*li, *ri)) continue;
-        auto sinkable = [&](Instruction *inst, bool isLeft) {
-          return llvm::all_of(inst->uses(), [&](const Use &use) {
-            if (llvm::any_of(state.pairs, [&](const B2BMatch &pair) {
-                  return use.getUser() == (isLeft ? pair.first : pair.second);
-                }))
-              return true;
-            auto *phi = dyn_cast<PHINode>(use.getUser());
-            return phi && phi->getParent() == &join &&
-                phi->getIncomingBlock(use) == inst->getParent();
-          });
-        };
-        if (!sinkable(li, true) || !sinkable(ri, false)) continue;
-        bool symmetric = true;
-        for (const auto &pair : state.pairs)
-          for (unsigned n = 0; n < pair.first->getNumOperands(); ++n)
-            symmetric &= (pair.first->getOperand(n) == li) ==
-                         (pair.second->getOperand(n) == ri);
-        for (auto &phi : join.phis())
-          symmetric &= (phi.getIncomingValueForBlock(&left) == li) ==
-                       (phi.getIncomingValueForBlock(&right) == ri);
-        if (!symmetric) continue;
+        if (!canSinkB2BPair(*li, *ri, join, state.pairs)) continue;
         State shared = state;
         shared.pairs.emplace_back(li, ri);
         // The emitter reuses a PHI for repeated ordered operand pairs. Charge
@@ -1850,7 +1836,7 @@ static SmallVector<SmallVector<B2BMatch, 8>, 4> searchB2BJoin(
         };
         shared.benefit = 0;
         for (const auto &pair : shared.pairs) {
-          shared.benefit += fusionInstructionWeight(*pair.first);
+          shared.benefit += b2bWeight(*pair.first, intrinsicCost);
           for (unsigned n = 0; n < pair.first->getNumOperands(); ++n)
             charge(pair.first->getOperand(n), pair.second->getOperand(n));
         }
@@ -1868,7 +1854,7 @@ static SmallVector<SmallVector<B2BMatch, 8>, 4> searchB2BJoin(
     if (!state.pairs.empty()) {
       std::reverse(state.pairs.begin(), state.pairs.end());
       finalists.push_back(std::move(state.pairs));
-      if (finalists.size() == 4) break;
+      if (finalists.size() == finalistsLimit) break;
     }
   return finalists;
 }
@@ -1890,15 +1876,16 @@ using B2BSegmentedPlan = SmallVector<B2BSegmentMatch, 8>;
 static SmallVector<B2BSegmentedPlan, 4>
 searchB2BSegments(ArrayRef<Instruction *> left, ArrayRef<Instruction *> right,
                   bool independentExits, unsigned minSegments,
-                  function_ref<int(const Instruction &)> intrinsicCost) {
+                  function_ref<int(const Instruction &)> intrinsicCost,
+                  unsigned limit = 32, bool deduplicateSelects = false,
+                  unsigned prefixLimit = std::numeric_limits<unsigned>::max()) {
   const size_t columns = right.size() + 1;
   if (left.empty() || right.empty() || left.size() + 1 > 4096 / columns)
     return {};
   struct State {
     SmallVector<B2BSegmentMatch, 8> matches;
     int benefit = 0;
-    unsigned commonEndLeft = 0, commonEndRight = 0;
-    unsigned closedSegments = 0;
+    SmallVector<std::pair<Value *, Value *>, 8> selects;
   };
   using Beam = SmallVector<State, 4>;
   std::vector<std::array<Beam, 2>> table((left.size() + 1) * columns);
@@ -1928,6 +1915,8 @@ searchB2BSegments(ArrayRef<Instruction *> left, ArrayRef<Instruction *> right,
             if (j < right.size()) insert(i, j + 1, true, std::move(side));
           }
           if (i == left.size() || j == right.size() ||
+              (prefixLimit != std::numeric_limits<unsigned>::max() &&
+               (i != j || i >= prefixLimit || forked)) ||
               !compatibleB2BPrefix(*left[i], *right[j]))
             continue;
           State shared = state;
@@ -1938,8 +1927,13 @@ searchB2BSegments(ArrayRef<Instruction *> left, ArrayRef<Instruction *> right,
             if (lv != rv && !llvm::any_of(state.matches, [&](B2BSegmentMatch match) {
                   return match.consumeLeft && match.consumeRight &&
                       left[match.left] == lv && right[match.right] == rv;
-                }))
-              --shared.benefit;
+                })) {
+              auto operands = std::make_pair(lv, rv);
+              if (!deduplicateSelects || !llvm::is_contained(shared.selects, operands)) {
+                --shared.benefit;
+                if (deduplicateSelects) shared.selects.push_back(operands);
+              }
+            }
           }
           shared.matches.push_back({i, j});
           insert(i + 1, j + 1, false, std::move(shared));
@@ -1947,7 +1941,7 @@ searchB2BSegments(ArrayRef<Instruction *> left, ArrayRef<Instruction *> right,
   SmallVector<const State *, 8> finalists;
   for (bool forked : {false, true})
     for (const auto &state : at(left.size(), right.size(), forked)) {
-      if (state.matches.empty()) continue;
+      if (!deduplicateSelects && state.matches.empty()) continue;
       unsigned segments = 0, i = 0, j = 0;
       for (auto match : state.matches) {
         segments += (i != match.left || j != match.right);
@@ -1965,20 +1959,67 @@ searchB2BSegments(ArrayRef<Instruction *> left, ArrayRef<Instruction *> right,
   for (const auto *state : finalists) {
     if (llvm::is_contained(plans, state->matches)) continue;
     plans.push_back(state->matches);
-    if (plans.size() == dp1LabelLimit) break;
+    if (plans.size() == limit) break;
   }
   return plans;
+}
+
+// Both planners use the same continuation lowering. Resolving a value here
+// also handles definitions copied into a segmented arm before the join.
+static void emitB2BSuffix(BasicBlock &block, BasicBlock &join,
+                          BasicBlock &left, BasicBlock &right,
+                          BasicBlock &leftPred, BasicBlock &rightPred,
+                          ArrayRef<B2BMatch> matches,
+                          function_ref<Value *(unsigned, Value *)> resolve,
+                          function_ref<Value *(Value *, Value *)> select = nullptr) {
+  auto *exit = block.getTerminator();
+  std::map<std::pair<Value *, Value *>, Value *> choices;
+  auto mergeValue = [&](Value *lv, Value *rv) -> Value * {
+    lv = resolve(0, lv);
+    rv = resolve(1, rv);
+    if (lv == rv) return lv;
+    if (select) return select(lv, rv);
+    auto &value = choices[{lv, rv}];
+    if (!value) {
+      auto *phi = PHINode::Create(lv->getType(), 2, "", &block.front());
+      phi->addIncoming(lv, &leftPred);
+      phi->addIncoming(rv, &rightPred);
+      value = phi;
+    }
+    return value;
+  };
+  for (auto [l, r] : matches) {
+    auto *shared = l->clone();
+    for (unsigned n = 0; n < shared->getNumOperands(); ++n)
+      shared->setOperand(n, mergeValue(l->getOperand(n), r->getOperand(n)));
+    shared->insertBefore(exit);
+    l->replaceAllUsesWith(shared);
+    r->replaceAllUsesWith(shared);
+    l->eraseFromParent();
+    r->eraseFromParent();
+  }
+  for (auto &phi : join.phis()) {
+    auto *incoming = mergeValue(phi.getIncomingValueForBlock(&left),
+                                phi.getIncomingValueForBlock(&right));
+    phi.removeIncomingValue(&left, false);
+    phi.removeIncomingValue(&right, false);
+    phi.addIncoming(incoming, &block);
+  }
 }
 
 static void emitB2BSegments(BranchInst &split, BasicBlock &left,
                             BasicBlock &right, BasicBlock &join,
                             ArrayRef<B2BSegmentMatch> matches, bool resplit,
-                            bool independentExits) {
+                            bool independentExits, ArrayRef<B2BMatch> suffix) {
   auto *function = split.getFunction();
   auto &context = function->getContext();
   SmallVector<Instruction *, 16> work[2];
-  for (auto &inst : left) if (!inst.isTerminator()) work[0].push_back(&inst);
-  for (auto &inst : right) if (!inst.isTerminator()) work[1].push_back(&inst);
+  for (auto &inst : left)
+    if (!inst.isTerminator() && llvm::none_of(suffix, [&](B2BMatch pair) { return pair.first == &inst; }))
+      work[0].push_back(&inst);
+  for (auto &inst : right)
+    if (!inst.isTerminator() && llvm::none_of(suffix, [&](B2BMatch pair) { return pair.second == &inst; }))
+      work[1].push_back(&inst);
   IRBuilder<> builder(&split);
   Value *condition = split.getCondition();
   // DP1's segmented rewrite stays within the execution domain of the
@@ -2021,8 +2062,8 @@ static void emitB2BSegments(BranchInst &split, BasicBlock &left,
     return choice;
   };
   unsigned cursor[2] = {};
-  auto preserve = [&](unsigned l, unsigned r, bool directExit) {
-    auto *next = directExit ? &join :
+  auto preserve = [&](unsigned l, unsigned r, BasicBlock *terminal) {
+    auto *next = terminal ? terminal :
         BasicBlock::Create(context, "fusion.common", function, &join);
     unsigned end[] = {l, r};
     BasicBlock *paths[] = {common, common};
@@ -2045,7 +2086,10 @@ static void emitB2BSegments(BranchInst &split, BasicBlock &left,
       }
       builder.CreateBr(next);
     }
-    if (directExit) {
+    if (terminal) {
+      joinedPaths[0] = paths[0];
+      joinedPaths[1] = paths[1];
+      if (terminal != &join) return;
       for (auto &phi : join.phis()) {
         auto *lv = value(0, phi.getIncomingValueForBlock(&left));
         auto *rv = value(1, phi.getIncomingValueForBlock(&right));
@@ -2078,7 +2122,7 @@ static void emitB2BSegments(BranchInst &split, BasicBlock &left,
   };
   for (auto match : matches) {
     if (cursor[0] != match.left || cursor[1] != match.right)
-      preserve(match.left, match.right, false);
+      preserve(match.left, match.right, nullptr);
     auto consume = [&](unsigned side, unsigned index) {
       auto *inst = work[side][index];
       ++cursor[side];
@@ -2097,7 +2141,7 @@ static void emitB2BSegments(BranchInst &split, BasicBlock &left,
   }
   const bool pending = cursor[0] != work[0].size() || cursor[1] != work[1].size();
   if (independentExits) {
-    if (pending) preserve(work[0].size(), work[1].size(), false);
+    if (pending) preserve(work[0].size(), work[1].size(), nullptr);
     builder.CreateCondBr(condition, &left, &right);
     // The original terminators and outgoing edges remain in place, including
     // the incoming labels of successor PHIs.
@@ -2110,8 +2154,19 @@ static void emitB2BSegments(BranchInst &split, BasicBlock &left,
     }
     return;
   }
-  if (pending) {
-    preserve(work[0].size(), work[1].size(), true);
+  if (!suffix.empty()) {
+    auto *tail = BasicBlock::Create(context, "fusion.suffix", function, &join);
+    if (pending) preserve(work[0].size(), work[1].size(), tail);
+    else builder.CreateBr(tail);
+    auto *exit = BranchInst::Create(&join, tail);
+    // With no terminal fork, both operand streams already dominate the
+    // continuation. Insert choices before the tail instructions.
+    builder.SetInsertPoint(exit);
+    emitB2BSuffix(*tail, join, left, right, pending ? *joinedPaths[0] : *common,
+                  pending ? *joinedPaths[1] : *common, suffix, value,
+                  pending ? function_ref<Value *(Value *, Value *)>() : select);
+  } else if (pending) {
+    preserve(work[0].size(), work[1].size(), &join);
   } else if (resplit) {
     auto *rightExit = BasicBlock::Create(context, "fusion.exit", function, &join);
     builder.CreateCondBr(condition, &join, rightExit);
@@ -2149,11 +2204,15 @@ std::vector<Trial> planSingleBranchB2B(const Module &parent, const Candidate &c,
                                        unsigned level, CleanupMode mode,
                                        StringRef replay,
                                        function_ref<int(const Instruction &)> intrinsicCost,
-                                       json::Object *recipeOut, const json::Object *recipeIn) {
+                                       json::Object *recipeOut, const json::Object *recipeIn,
+                                       B2BPlanner planner) {
+  const bool unified = planner == B2BPlanner::Unified;
+  const StringRef plannerName = unified ? "unified" : "legacy";
   ProfileScope planningScope("b2b_plan_generate_clean_total");
   std::vector<Trial> trials;
   const auto parentIdentity = moduleHash(parent);
-  if (recipeIn && (recipeIn->getString("schema") != Optional<StringRef>("b2b-recipe-v3") ||
+  if (recipeIn && (recipeIn->getString("schema") != Optional<StringRef>("b2b-recipe-v4") ||
+                   recipeIn->getString("planner") != Optional<StringRef>(plannerName) ||
                    recipeIn->getInteger("opt_level") != Optional<int64_t>(level)))
     throw std::runtime_error("b2b_recipe_certificate_mismatch");
   if (!usesDarmDCE(mode))
@@ -2329,6 +2388,7 @@ std::vector<Trial> planSingleBranchB2B(const Module &parent, const Candidate &c,
     std::string label;
     SmallVector<B2BMatch, 8> beforeSplit, afterJoin;
     SmallVector<B2BSegmentMatch, 8> segments;
+    bool resplit = false, mergeExit = false;
   };
   SmallVector<Layout, 12> layouts;
   auto add = [&](StringRef label, ArrayRef<B2BMatch> before,
@@ -2344,6 +2404,68 @@ std::vector<Trial> planSingleBranchB2B(const Module &parent, const Candidate &c,
   };
   if (!recipeIn) {
     ProfileScope layoutSearch("plan_layouts");
+  if (unified) {
+    constexpr unsigned finalistsLimit = 4;
+    const bool canMergeExit = join && llvm::all_of(join->phis(), [](const PHINode &phi) {
+      return phi.getType()->isFirstClassType() && !phi.getType()->isTokenTy();
+    });
+    const bool prefixOnly = !segmentUsesValid && !independentExits;
+    const auto prefixLimit = prefixOnly ? unsigned(commonB2BPrefix(*left, *right, *branch, dt).size())
+                                        : std::numeric_limits<unsigned>::max();
+    SmallVector<SmallVector<B2BMatch, 8>, 5> tails(1);
+    if (join) {
+      auto sunk = searchB2BJoin(*left, *right, *join, finalistsLimit, intrinsicCost);
+      tails.append(std::make_move_iterator(sunk.begin()), std::make_move_iterator(sunk.end()));
+    }
+    auto append = [&](Layout layout) {
+      layout.label = "b2b-unified-" + std::to_string(layouts.size() + 1);
+      layouts.push_back(std::move(layout));
+    };
+    for (const auto &tail : tails) {
+      SmallVector<Instruction *, 16> remaining[2];
+      for (unsigned side = 0; side < 2; ++side)
+        for (auto *inst : segmentWork[side])
+          if (llvm::none_of(tail, [&](B2BMatch pair) {
+                return (side ? pair.second : pair.first) == inst;
+              }))
+            remaining[side].push_back(inst);
+      auto plans = searchB2BSegments(remaining[0], remaining[1], independentExits, 0,
+                                     intrinsicCost, finalistsLimit, true, prefixLimit);
+      if (plans.empty()) plans.emplace_back();
+      for (const auto &plan : plans) {
+        Layout layout;
+        layout.afterJoin = tail;
+        bool prefix = true;
+        for (unsigned n = 0; n < plan.size(); ++n)
+          prefix &= plan[n].left == n && plan[n].right == n &&
+                    remaining[0][n] == segmentWork[0][n] &&
+                    remaining[1][n] == segmentWork[1][n];
+        // A contiguous prefix can use the original split and arm blocks.
+        const bool allPaired = plan.size() == remaining[0].size() &&
+                               plan.size() == remaining[1].size();
+        if (prefix) {
+          for (auto pair : plan)
+            layout.beforeSplit.emplace_back(remaining[0][pair.left], remaining[1][pair.right]);
+        } else {
+          if (prefixOnly) continue;
+          layout.segments = plan;
+        }
+        if (!tail.empty() && !prefix && allPaired && !canMergeExit) continue;
+        if (!prefix && tail.empty() && allPaired)
+          layout.resplit = !canMergeExit;
+        append(layout);
+        if (tail.empty() && allPaired && !plan.empty() && join) {
+          if (prefix && canMergeExit) {
+            layout.mergeExit = true;
+            append(layout);
+          } else if (!prefix && canMergeExit && !join->phis().empty()) {
+            layout.resplit = true;
+            append(layout);
+          }
+        }
+      }
+    }
+  } else {
   auto segments = (segmentUsesValid || independentExits)
       ? searchB2BSegments(segmentWork[0], segmentWork[1], independentExits, 1, intrinsicCost)
       : SmallVector<B2BSegmentedPlan, 4>();
@@ -2413,6 +2535,7 @@ std::vector<Trial> planSingleBranchB2B(const Module &parent, const Candidate &c,
       layouts.push_back({label + "-resplit", {}, {}, plan});
   }
   if (layouts.empty()) add("single-branch-separate", {}, {});
+  }
   } else {
     ProfileScope decode("decode_layout_recipe");
     auto *rows = recipeIn->getArray("layouts");
@@ -2427,6 +2550,12 @@ std::vector<Trial> planSingleBranchB2B(const Module &parent, const Candidate &c,
       auto *object = row.getAsObject();
       if (!object || !object->getString("label")) throw std::runtime_error("invalid_b2b_recipe_layout");
       Layout layout; layout.label = object->getString("label")->str();
+      if (unified) {
+        auto resplit = object->getBoolean("resplit"), mergeExit = object->getBoolean("merge_exit");
+        if (!resplit || !mergeExit) throw std::runtime_error("invalid_b2b_recipe_exit");
+        layout.resplit = *resplit;
+        layout.mergeExit = *mergeExit;
+      }
       auto decodePairs = [&](StringRef key, SmallVectorImpl<B2BMatch> &pairs) {
         auto *array = object->getArray(key);
         if (!array) throw std::runtime_error("missing_b2b_recipe_pairs");
@@ -2467,10 +2596,15 @@ std::vector<Trial> planSingleBranchB2B(const Module &parent, const Candidate &c,
         if (!step.consumeLeft || !step.consumeRight) throw std::runtime_error("unsupported_recipe_action");
         segments.push_back(json::Array{int64_t(step.left), int64_t(step.right)});
       }
-      rows.push_back(json::Object{{"label",layout.label},{"before",pairs(layout.beforeSplit)},
-                                 {"after",pairs(layout.afterJoin)},{"segments",std::move(segments)}});
+      json::Object row{{"label",layout.label},{"before",pairs(layout.beforeSplit)},
+                       {"after",pairs(layout.afterJoin)},{"segments",std::move(segments)}};
+      if (unified) {
+        row["resplit"] = layout.resplit;
+        row["merge_exit"] = layout.mergeExit;
+      }
+      rows.push_back(std::move(row));
     }
-    *recipeOut = json::Object{{"schema","b2b-recipe-v3"},{"parent_hash",parentIdentity},{"planner_facts",plannerFacts},
+    *recipeOut = json::Object{{"schema","b2b-recipe-v4"},{"planner",plannerName},{"parent_hash",parentIdentity},{"planner_facts",plannerFacts},
         {"candidate",c.key()},{"opt_level",int64_t(level)},{"layouts",std::move(rows)}};
   }
 
@@ -2503,11 +2637,37 @@ std::vector<Trial> planSingleBranchB2B(const Module &parent, const Candidate &c,
     auto *rawRight = cast<BasicBlock>(clone[right]);
     auto *rawJoin = join ? cast<BasicBlock>(clone[join]) : rawRight;
     const bool segmented = !layout.segments.empty();
+    const bool resplit = unified ? layout.resplit : label.endswith("-resplit");
+    const bool mergeExit = unified ? layout.mergeExit : label == "single-branch-prefix-merged-exit";
+    SmallVector<B2BMatch, 8> suffix;
+    for (auto [l, r] : layout.afterJoin)
+      suffix.emplace_back(cast<Instruction>(clone[l]), cast<Instruction>(clone[r]));
+    if (unified) {
+      unsigned sizes[] = {unsigned(segmentWork[0].size() - suffix.size()),
+                          unsigned(segmentWork[1].size() - suffix.size())};
+      unsigned cursor[2] = {unsigned(layout.beforeSplit.size()), unsigned(layout.beforeSplit.size())};
+      unsigned segments = !layout.beforeSplit.empty();
+      bool guarded = false;
+      for (auto pair : layout.segments) {
+        const bool gap = cursor[0] != pair.left || cursor[1] != pair.right;
+        guarded |= gap;
+        if (gap) segments += 2;
+        else if (cursor[0] == 0 && cursor[1] == 0) ++segments;
+        cursor[0] = pair.left + 1;
+        cursor[1] = pair.right + 1;
+      }
+      const bool pending = cursor[0] != sizes[0] || cursor[1] != sizes[1];
+      segments += pending;
+      segments += !suffix.empty();
+      t.b2bPlan = B2BPlanShape{segments, unsigned(suffix.size()),
+                                mergeExit || (segmented && !guarded && !pending &&
+                                              !resplit && !independentExits)};
+    }
     t.rewriteStarted = segmented || !layout.beforeSplit.empty() || !layout.afterJoin.empty();
     if (segmented) {
       try {
         emitB2BSegments(*rawBranch, *rawLeft, *rawRight, *rawJoin, layout.segments,
-                        label.endswith("-resplit"), independentExits);
+                        resplit, independentExits, suffix);
       } catch (const std::runtime_error &error) {
         t.reason = error.what();
         trials.push_back(std::move(t));
@@ -2518,7 +2678,7 @@ std::vector<Trial> planSingleBranchB2B(const Module &parent, const Candidate &c,
     if (!layout.beforeSplit.empty()) {
       IRBuilder<> builder(rawBranch);
       Value *condition = rawBranch->getCondition();
-      if (label == "single-branch-prefix-merged-exit" ||
+      if (mergeExit ||
           label.startswith("single-branch-complete-common-dp") ||
           llvm::any_of(layout.beforeSplit, [](B2BMatch step) {
             return step.first && step.second && step.first->mayReadOrWriteMemory();
@@ -2550,7 +2710,7 @@ std::vector<Trial> planSingleBranchB2B(const Module &parent, const Candidate &c,
         lc->eraseFromParent();
         rc->eraseFromParent();
       }
-      if (label == "single-branch-prefix-merged-exit") {
+      if (mergeExit) {
         auto *commonBlock = rawBranch->getParent();
         for (auto &phi : rawJoin->phis()) {
           auto *lv = phi.getIncomingValueForBlock(rawLeft);
@@ -2572,39 +2732,11 @@ std::vector<Trial> planSingleBranchB2B(const Module &parent, const Candidate &c,
       }
     }
 
-    if (!layout.afterJoin.empty()) {
+    if (!segmented && !suffix.empty()) {
       auto *merge = BasicBlock::Create(raw->getContext(), "fusion.suffix", raw, rawJoin);
-      auto *exit = BranchInst::Create(rawJoin, merge);
-      std::map<std::pair<Value *, Value *>, Value *> choices;
-      auto mergeValue = [&](Value *lv, Value *rv) -> Value * {
-        if (lv == rv) return lv;
-        auto &value = choices[{lv, rv}];
-        if (!value) {
-          auto *phi = PHINode::Create(lv->getType(), 2, "", &merge->front());
-          phi->addIncoming(lv, rawLeft);
-          phi->addIncoming(rv, rawRight);
-          value = phi;
-        }
-        return value;
-      };
-      for (auto [l, r] : layout.afterJoin) {
-        auto *lc = cast<Instruction>(clone[l]), *rc = cast<Instruction>(clone[r]);
-        auto *shared = lc->clone();
-        for (unsigned n = 0; n < shared->getNumOperands(); ++n)
-          shared->setOperand(n, mergeValue(lc->getOperand(n), rc->getOperand(n)));
-        shared->insertBefore(exit);
-        lc->replaceAllUsesWith(shared);
-        rc->replaceAllUsesWith(shared);
-        lc->eraseFromParent();
-        rc->eraseFromParent();
-      }
-      for (auto &phi : rawJoin->phis()) {
-        auto *value = mergeValue(phi.getIncomingValueForBlock(rawLeft),
-                                 phi.getIncomingValueForBlock(rawRight));
-        phi.removeIncomingValue(rawLeft, false);
-        phi.removeIncomingValue(rawRight, false);
-        phi.addIncoming(value, merge);
-      }
+      BranchInst::Create(rawJoin, merge);
+      emitB2BSuffix(*merge, *rawJoin, *rawLeft, *rawRight, *rawLeft, *rawRight, suffix,
+                    [](unsigned, Value *value) { return value; });
       rawLeft->getTerminator()->setSuccessor(0, merge);
       rawRight->getTerminator()->setSuccessor(0, merge);
     }

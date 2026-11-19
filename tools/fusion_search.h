@@ -1,4 +1,5 @@
 #pragma once
+#include <optional>
 #include "llvm/Support/JSON.h"
 #include "llvm/IR/Module.h"
 #include "llvm/Analysis/RegionInfo.h"
@@ -78,6 +79,10 @@ struct ScoreResult {
 struct BlockProvenance {
   std::string leftID,rightID,leftLabel,rightLabel,rawBlock,cleanedBlock;
 };
+struct B2BPlanShape {
+  unsigned segments = 0, sunkPairs = 0;
+  bool removesBranch = false;
+};
 struct Trial {
   std::shared_ptr<LogicalRegionState> logicalState;
   CleanupMode cleanupMode=CleanupMode::DarmCFGInstCombine;
@@ -104,6 +109,7 @@ struct Trial {
   bool loopHeaderSplit=false;
   bool insideLoop=false;
   llvm::json::Array layoutProfitability;
+  std::optional<B2BPlanShape> b2bPlan;
   double mergeMs=0, normalizeMs=0, featuresMs=0, totalMs=0, scoreMs=0;
 };
 struct ScoreInput {
@@ -170,9 +176,11 @@ Trial tryPair(const llvm::Module &, const Candidate &, unsigned currentVersion,
 Trial tryPair(const llvm::Module &, const Candidate &, unsigned currentVersion,
               unsigned optLevel, CleanupMode, const LogicalRegionState *, bool allowB2B,
               B2RStrategy b2rStrategy=B2RStrategy::Darm, Trial *boundaryFold=nullptr);
+enum class B2BPlanner { Legacy, Unified };
 std::vector<Trial> planSingleBranchB2B(const llvm::Module &, const Candidate &,
                                        unsigned optLevel, CleanupMode, llvm::StringRef replay,
                                        llvm::function_ref<int(const llvm::Instruction &)> intrinsicCost = nullptr,
                                        llvm::json::Object *recipeOut = nullptr,
-                                       const llvm::json::Object *recipeIn = nullptr);
+                                       const llvm::json::Object *recipeIn = nullptr,
+                                       B2BPlanner planner = B2BPlanner::Legacy);
 }
