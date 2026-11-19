@@ -43,9 +43,11 @@ vLLM/Map-Airy输入已改为运行时生成；随机输入不纳入Git。旧Qwen
 
 ## Anchor 默认版本的性能与测量状态
 
-- HLLD 保持 `pending-regression`。历史 DP1/A 比未融合慢约 7%，逐次提交测量将主要退化定位于第 3 次 R2B。anchor 的同规模结果为 N/A 1.00821，N/baseline 1.09276。
-- Landau coherent 的 anchor 相比未融合慢约 6%（1.05970），mixed 通过。Landau 已归入设计集。
-- TPACF 的 DP1/A 相比未融合慢约 27%（1.26598），anchor 慢约 20%（1.19971）。
+- **HLLD** · `pending-regression`。相对不融合慢约 7%–15%（历史 DP1 约 7%，anchor 的独立进程批次约 9%，本进程逐状态批次约 15%）。第 3 次带复制的 R2B 是主要台阶，uniform gain 为 −133／−29，第 4 次 R2B 又增加约 3.5%。后续用稳健接受规则限制单侧波前的损失。
+- **Landau coherent** · anchor 比 DP1 慢 4.4%，比不融合慢约 2%–6%。逐状态定位到第 17 次 R2R，uniform gain 为 −63／−59。后续用稳健接受规则约束单侧退化。这是发布第二层门槛的唯一性能例外。
+- **TPACF** · anchor 比不融合慢约 20%，DP1 慢约 27%。第 2、3 次 B2B 合并了条件，同时 SGPR spill 槽从 34 增至 52，`v_readlane` 从 34 条增至 276 条。后续用编译期 spill 信息做静态提交检查。
 - SasPoint5 与 SRAD stage2 1024×1024 的 A/A 轮间不稳定，按既定规则无法判定性能。SRAD stage2 256×256 的历史判定通过。
 
 实测和输入对应关系见 [anchor 留出记录](../regression/records/b2b-anchor-heldout-20261120.md)。
+
+逐状态计时、提交及机器码证据见[区域融合审计](../regression/records/region-fusion-audit-20261120.md)。

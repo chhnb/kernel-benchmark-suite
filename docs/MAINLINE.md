@@ -17,7 +17,7 @@
 |---|---|
 | `tools/decision_greedy_main.cpp` | 自动搜索、并行 trial、比较与提交 |
 | `tools/decision_model.cpp`、`condition_simplify.h` | 决策与条件规范化 |
-| `tools/fusion_search.cpp/.h` | B/R 枚举、DP1 方案、DARM 调用、固定清理与合法性 |
+| `tools/fusion_search.cpp/.h` | B/R 枚举、anchor 布局发射、DARM 调用、固定清理与合法性 |
 | `tools/fusion_search_llvm24_main.cpp` | 显式 pair、catalog、控制版本、连续试跑队列 |
 | `tools/darm_pair_engine/RegionAnalyzer.cpp` | 原生 DARM 区域对齐 |
 | `RegionMelder.cpp`、`RegionReplicator.cpp` | DARM 融合与区域复制 |
@@ -32,10 +32,11 @@
 再对相邻锚点间的指令做前向分段对齐，计入跨段 PHI 并保留空对齐方案。
 布局共用 B2B 发射和清理，最终由 LLVM24 TTI 裁决。
 
-DP1 保留用于对照和回退。`darm` 使用仓库内的 DARM 引擎，
-`darm-artifact` 保留上游 DARM 对照。
+当前 B2B 发射共享前缀、保留单侧代码的分段布局和 merged-exit。
+分段对齐按有界候选搜索，评分相同时沿用生成顺序。
 
-保留共享前缀、共享后缀、公共计算与分段对齐等当前复现需要的 finalist 生成方式。分段 DP 使用有限标签搜索；相同游标下的值映射可能不同，不能声称它是无界全局最优算法。删除 SpecL/SpecR 和保护段投机变体；不删除 LLVM 的安全判断或 SimplifyCFG 自身的合法化简。
+`darm` 使用仓库内的 DARM 引擎，`darm-artifact` 保留用于原版 DARM 对照。
+DP1 规划器及 recipe 缓存已移除，完整历史实现保存在 `pre-dp1-removal`。
 
 B2B 可配对普通访存及受支持的 intrinsic。单侧副作用保持分支保护。B2R/R2B 的 `guarded` 入口还可试跑适用的边界读共享布局，并分别评价独立保护与合并布局。
 
@@ -43,7 +44,7 @@ B2B 可配对普通访存及受支持的 intrinsic。单侧副作用保持分支
 
 ## 参数
 
-- `--b2b-strategy anchor|dp1|darm|darm-artifact`，默认 `anchor`。
+- `--b2b-strategy anchor|darm|darm-artifact`，默认 `anchor`。
 - `--b2r-strategy darm|guarded`，默认 `darm`。
 - `--domain-schedule ordered`，可省略。
 - `--ir-snapshots full|compact`，默认 `compact`。
@@ -54,9 +55,10 @@ B2B 可配对普通访存及受支持的 intrinsic。单侧副作用保持分支
 ```sh
 tools/build-v1 --search-only
 tests/run-v1
-python3 tools/run_v1_regression.py --out build/ordered-regression-new
+python3 regression/verify_anchor_release.py --tool-root "$PWD" --out build/anchor-release-check
 ```
 
-已有 LLVM24 worker 时可用 `--search-only`。完整工具链构建用 `tools/build-v1`，可设置 `LLVM_CONFIG` 和 `LLVM24_CONFIG`。固定输入和新参考摘要见 [ordered 冻结清单](../regression/greedy-v1/manifest-ordered-20261119.json)。默认跑 38 个常规配置，`--include-slow` 加跑 PCM128/256。原 [v1 清单](../regression/greedy-v1/manifest.json)保留历史对照。
-
-冻结回归核对输入哈希、提交次数、最终 TTI、LLVM verifier 和最终 IR 哈希。冻结 IR 哈希忽略 LLVM 的 ModuleID 行。历史 DP1 回归显式使用 `--b2b-strategy dp1`。默认 anchor 另与 `anchor-v2p-frozen-2` 做字节级核对。Map-Airy 新参考和同二进制连续性计时见[冻结目录](../regression/golden/20261120-mapairy-anchor-gfx906-v1/manifest.json)。
+完整工具链从 `tools/build-v1` 开始，指定固定的 `LLVM_CONFIG`、`LLVM24_CONFIG` 和链接库。已有 LLVM24 worker 时可用 `--search-only`。
+发布参考、可测 case 及逐字节验证命令见 [RELEASE](RELEASE.md)。
+[ordered DP1 清单](../regression/greedy-v1/manifest-ordered-20261119.json)可配合旧 checkout 重放。
+用 `python3 tools/run_v1_regression.py --tool-root /path/to/pre-dp1-removal --out build/ordered-dp1-check` 调用在历史 tag 上构建的工具。Map-Airy 的 anchor 参考仍位于[原冻结目录](../regression/golden/20261120-mapairy-anchor-gfx906-v1/manifest.json)。
