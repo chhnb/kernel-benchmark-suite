@@ -99,7 +99,7 @@ SmallVector<AnchorPlan, 3> planB2BAnchors(
   if (join)
     for (auto &phi : join->phis())
       seed(phi.getIncomingValueForBlock(&leftBlock),
-           phi.getIncomingValueForBlock(&rightBlock), selectCost(phi.getType()));
+           phi.getIncomingValueForBlock(&rightBlock), phiCost(phi.getType()));
   for (auto *l : left)
     if (auto *store = dyn_cast<StoreInst>(l))
       for (auto *r : right)
