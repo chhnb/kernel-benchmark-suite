@@ -189,7 +189,8 @@ with tempfile.TemporaryDirectory() as directory:
         run(greedy, out / "source.ll", "choose", out / "auto")
         summary = json.loads((out / "auto/summary.json").read_text())
         assert summary["shared_arm_trials"] and summary["b2b_strategy"] == "dp1"
-        assert summary["pipeline_version"] == "v1"
+        assert summary["pipeline_version"] == "v2"
+        assert summary["domain_schedule"] == "ordered"
         assert summary["candidate_scheduler"] == "continuous-queue"
         assert summary["persistent_trial_workers"]
         assert not any(a.get("queue_recovery") for r in summary["rounds"] for a in r["attempts"])
@@ -213,14 +214,14 @@ with tempfile.TemporaryDirectory() as directory:
         run(clang, out / "before.o", out / "auto.o", root / "check.c", "-o", out / "check-auto")
         run(out / "check-auto")
 
-    # Experimental strategies and transformations must not be accepted by v1.
+    # Experimental strategies and transformations must be rejected.
     source = root / "prefix-0/source.ll"
     for option, value in (("--b2b-strategy", "dp2"), ("--b2b-strategy", "dp3"),
                           ("--speculation", "cost"), ("--gap-trials", "4"),
-                          ("--gap-replay", "unused"), ("--b2r-strategy", "guarded"),
+                          ("--gap-replay", "unused"),
                           ("--cleanup", "o3"), ("--profile-bundle", "unused")):
         rejected = subprocess.run([str(search), "--ir", str(source), "--function", "choose",
                                    "--out", str(root / "rejected.ll"), option, value],
                                   capture_output=True, text=True)
         assert rejected.returncode == 2, (option, rejected.stderr)
-    print("v1 B2B verifier, determinism, CPU outputs/memory and removed-option checks passed")
+    print("V2 B2B verifier, determinism, CPU outputs/memory and removed-option checks passed")

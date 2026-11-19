@@ -1,6 +1,14 @@
 from pathlib import Path
 import subprocess,tempfile,struct,json
-r=Path(__file__).resolve().parents[2];d=Path(tempfile.mkdtemp(prefix='interval-test-',dir=r/'build/decision-fuse'))
+r=Path(__file__).resolve().parents[2]
+tool = r / "build/decision-fuse/condition-check"
+clang = Path("/home/chh/darm-artifacts-repro/build/bin/clang")
+missing = [str(path) for path in (tool, clang) if not path.is_file()]
+if missing:
+ print("SKIP condition: missing " + ", ".join(missing)
+       + "; use the pinned LLVM12 checkout and build tests/decision-model/condition_check.cpp with -Itools.")
+ raise SystemExit(77)
+d=Path(tempfile.mkdtemp(prefix='interval-test-',dir=r/'build/decision-fuse'))
 ll=[];decl=[];calls=[];n=0
 for ty,preds,bounds in [('i8','eq ne ugt uge ult ule sgt sge slt sle'.split(),[('-128','127'),('0','-1'),('-1','1')]),('float','false oeq ogt oge olt ole one ord ueq ugt uge ult ule une uno true'.split(),[('-1.0','1.0'),('0.0','-0.0'),('0x7FF0000000000000','0xFFF0000000000000'),('0x7FF8000000000000','1.0')])]:
  for lo,hi in bounds:
@@ -15,8 +23,8 @@ for ty,preds,bounds in [('i8','eq ne ugt uge ult ule sgt sge slt sle'.split(),[(
 (d/'before.ll').write_text('\n'.join(ll))
 bits=[0,0x80000000,1,0x80000001,0x3f7fffff,0x3f800000,0x3f800001,0xbf7fffff,0xbf800000,0xbf800001,0x7f800000,0xff800000,0x7fc00000,0xffc00000,0x7f800001]
 (d/'main.c').write_text('#include <stdio.h>\n#include <string.h>\n'+ '\n'.join(decl)+'\nint main(){unsigned bits[]={'+','.join(map(str,bits))+'};float v[15];memcpy(v,bits,sizeof(v));'+''.join(calls)+'return 0;}')
-with (d/'after.ll').open('w') as f:subprocess.run([r/'build/decision-fuse/condition-check',d/'before.ll'],stdout=f,check=True)
-clang='/home/chh/darm-artifacts-repro/build/bin/clang';outputs=[]
+with (d/'after.ll').open('w') as f:subprocess.run([tool,d/'before.ll'],stdout=f,check=True)
+outputs=[]
 for variant in ['before','after']:
  subprocess.run([clang,'-O0',d/(variant+'.ll'),d/'main.c','-o',d/variant],check=True,stderr=subprocess.DEVNULL);outputs.append(subprocess.check_output([d/variant]))
 assert outputs[0]==outputs[1]

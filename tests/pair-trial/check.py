@@ -1,6 +1,15 @@
 from pathlib import Path
-import json,subprocess,re
-S=Path(__file__).resolve().parents[2];D=S/'tests/pair-trial/runs-v1';D.mkdir();tool=S/'build/pair-trial/pair-trial';inv=S/'build/region-inventory/region-inventory';clang='/home/chh/region-fusion-lab/toolchains/llvm12/amd-bootstrap/bin/clang'
+import json,subprocess,re,tempfile
+S = Path(__file__).resolve().parents[2]
+tool = S / "build/pair-trial/pair-trial"
+inv = S / "build/region-inventory/region-inventory"
+clang = Path("/home/chh/region-fusion-lab/toolchains/llvm12/amd-bootstrap/bin/clang")
+missing = [str(path) for path in (tool, inv, clang) if not path.is_file()]
+if missing:
+ print("SKIP pair-trial: missing " + ", ".join(missing)
+       + "; build pair-trial and region-inventory from the 4a91a50 checkout with the historical LLVM12 toolchain.")
+ raise SystemExit(77)
+D = Path(tempfile.mkdtemp(prefix="pair-trial-check-"))
 sources={
 'blocks':"""define i32 @choose(i32 %x, i32 %side, i32 %inner) {
 entry:

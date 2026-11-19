@@ -6,11 +6,15 @@ LLVM12 和 LLVM24 实时吞吐报价确认，原始记录保存在
 
 | 测试 | 分类 | 基线失败 | 确认时间（UTC+08:00） | 当前状态 |
 | --- | --- | --- | --- | --- |
-| `single-b2b` | `stale-assertion` | `check-single-branch-b2b.py` 第 192 行期望 `pipeline_version == "v1"`，默认有序调度报告 `v2` | 2026-11-19 17:00:18 | 失败 |
-| `suite` | `stale-assertion` | `tests/run-v1` 调用同一个 B2B 测试，止于相同断言 | 2026-11-19 17:00:17 | 失败 |
-| `condition` | `missing-artifact` | `FileNotFoundError`，缺少 `build/decision-fuse/condition-check` | 2026-11-19 17:00:11 | 失败 |
-| `regions` | `missing-artifact` | `FileNotFoundError`，缺少 `/home/chh/darm-artifacts-repro/build/bin/opt` | 2026-11-19 17:00:11 | 失败 |
-| `similarity` | `missing-artifact` | `FileNotFoundError`，缺少同一个历史 `opt` | 2026-11-19 17:00:11 | 失败 |
-| `pair-trial` | `missing-artifact` | 首个错误为 `FileExistsError`，脚本试图在已跟踪的 `tests/pair-trial/runs-v1` 创建新目录。另缺少旧 `clang`、`pair-trial` 和 `region-inventory` 可执行文件。 | 2026-11-19 17:00:11 | 失败 |
+| `single-b2b` | `stale-assertion` | `check-single-branch-b2b.py` 第 192 行期望 `pipeline_version == "v1"`，默认有序调度报告 `v2` | 2026-11-19 17:00:18 | 已修复，验证 V2 ordered |
+| `suite` | `stale-assertion` | `tests/run-v1` 调用同一个 B2B 测试，止于相同断言 | 2026-11-19 17:00:17 | 已修复，执行更新后的 B2B 检查 |
+| `condition` | `missing-artifact` | `FileNotFoundError`，缺少 `build/decision-fuse/condition-check` | 2026-11-19 17:00:11 | 缺件时明确跳过（77） |
+| `regions` | `missing-artifact` | `FileNotFoundError`，缺少 `/home/chh/darm-artifacts-repro/build/bin/opt` | 2026-11-19 17:00:11 | 缺件时明确跳过（77） |
+| `similarity` | `missing-artifact` | `FileNotFoundError`，缺少同一个历史 `opt` | 2026-11-19 17:00:11 | 缺件时明确跳过（77） |
+| `pair-trial` | `missing-artifact` | 首个错误为 `FileExistsError`，脚本试图在已跟踪的 `tests/pair-trial/runs-v1` 创建新目录。另缺少旧 `clang`、`pair-trial` 和 `region-inventory` 可执行文件。 | 2026-11-19 17:00:11 | 缺件时明确跳过（77） |
 
 比较后续运行时，核对测试集合、状态和失败原因。删除测试或修复已知失败时，提交说明和本表同步记录。
+
+测试维护提交更新 V2 ordered 断言。旧拒绝列表中的 `guarded` 已在
+`4a91a50` 上受支持，继续由 `check-guarded-b2r.py` 验证。DP2／DP3 和其他已移除选项的拒绝检查保留。
+四个缺件测试列出缺失路径和恢复方式。Pair trial 使用新临时目录，保留已跟踪的历史证据目录。
