@@ -1,6 +1,6 @@
 # 当前状态导航
 
-更新：2026-11-10；融合实现含 `4ac5a90`。当前重点8个程序、9个kernel条目。
+更新于 2026-11-19。当前默认调度为 Auto Greedy V2 ordered。
 
 | 范围 | 当前状态 |
 |---|---|
@@ -10,7 +10,8 @@
 | Hypersonic | 指定L1+L2多锚点实验；IR回归通过；原runner异常未定因 |
 | SRAD两个阶段 | 默认0融合/不误融合回归；无稳定新融合收益 |
 | HiPIMS–HLLC | 最新prepared baseline GPU比较待验收 |
-| Cholla–HLLD、Reentry | 成本/结构覆盖，当前新路径收益未确认 |
+| Cholla–HLLD | 冻结规模扫描中 DP1 较 baseline 快 6.2%–8.3%。原版 DARM 在前两个规模慢 49.5%–60.7%，四个规模的范围为 49.5%–67.3%。见[同场记录](regression/records/hlld-v1-scaling.json)。 |
+| Reentry | 成本/结构覆盖，当前新路径收益未确认 |
 
 - [主线与架构](docs/MAINLINE.md)
 - [Benchmark构建与运行](docs/BENCHMARK_GUIDE.md)

@@ -129,7 +129,7 @@ int main(int argc,char**argv){try{
  auto timingReport=[&](){json::Object phases;for(const auto &kv:phaseMilliseconds)phases[kv.first]=json::Object{{"milliseconds",kv.second},{"calls",phaseCalls[kv.first]}};return phases;};
 
  if(argc==2&&StringRef(argv[1])=="--help"){
-   outs()<<"usage: decision-greedy INPUT FUNCTION [TOOL_ROOT] NEW_OUTPUT [--b2b-strategy dp1|darm] [--b2r-strategy darm|guarded] [--domain-schedule ordered] [--ir-snapshots full|compact]\n";
+   outs()<<"usage: decision-greedy INPUT FUNCTION [TOOL_ROOT] NEW_OUTPUT [--b2b-strategy dp1|darm] [--b2r-strategy darm|guarded] [--domain-schedule ordered] [--ir-snapshots full|compact] [--tti-quote-cache off|audit|on]\n";
    outs()<<"Default schedule: ordered for whole-function trials (Auto Greedy v2).\n";
    return 0;
  }
@@ -151,7 +151,7 @@ int main(int argc,char**argv){try{
    argc -= 2;
  }
  if(argc!=4&&argc!=5)
-   throw std::runtime_error("usage: decision-greedy INPUT FUNCTION [TOOL_ROOT] NEW_OUTPUT [--b2b-strategy dp1|darm] [--b2r-strategy darm|guarded]");
+   throw std::runtime_error("usage: decision-greedy INPUT FUNCTION [TOOL_ROOT] NEW_OUTPUT [--b2b-strategy dp1|darm] [--b2r-strategy darm|guarded] [--domain-schedule ordered] [--ir-snapshots full|compact] [--tti-quote-cache off|audit|on]");
  if(snapshotMode.empty())snapshotMode="compact";
  const bool implicitRoot=argc==4;
  std::string root;

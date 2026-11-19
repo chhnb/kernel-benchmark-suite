@@ -10,7 +10,7 @@
 
 处理一棵指定 decision 树时，同时评估相邻 arm 的规范化候选和当前 split 的直接结构候选。结构扫尾处理其他 split。如果不同域的候选争用同一个基本块，且满足当前同后继和共同指令数量的触发条件，就对相关域联合评分。
 
-- B2B 默认 DP1。B2R、R2B、R2R 使用 DARM。
+- B2B 默认 DP1，可显式选择 DARM。B2R 和 R2B 默认使用 DARM，可用 `--b2r-strategy guarded` 比较保护布局。R2R 使用 DARM。
 - 合法 trial 依次执行 DARM SimplifyCFG（PHI folding threshold 7）、EarlyCSE、DCE、InstCombine。LLVM24 TTI 要求提交后的成本低于 trial 对照及当前父 IR。
 - 默认 16 路连续队列，使用常驻评分 worker。
 
@@ -20,7 +20,7 @@ build/decision-fuse/decision-greedy INPUT.ll FUNCTION NEW_OUTPUT
 python3 tools/run_v1_regression.py --out build/v1-regression-new
 ```
 
-构建脚本接受 `LLVM_CONFIG` 和 `LLVM24_CONFIG`，评分 worker 的 LLVM24 revision 为 `6be16f356d3e`。V2 的 `summary.json` 记录 `pipeline_version: v2` 和 `domain_schedule: ordered`。显式传入 `--domain-schedule legacy` 可重放旧调度。[V1 冻结回归](regression/greedy-v1/manifest.json) 由回归脚本显式选择旧调度，验证历史提交次数、TTI 和最终 IR。带 `--include-slow` 时同时运行 PCM128/256，超时单独记录。
+构建脚本接受 `LLVM_CONFIG` 和 `LLVM24_CONFIG`，报价版本为 LLVM24 `6be16f356d3e`。V2 的 `summary.json` 记录 `pipeline_version: v2` 和 `domain_schedule: ordered`。`tools/run_v1_regression.py` 使用[有序调度冻结清单](regression/greedy-v1/manifest-ordered-20261119.json)，核对 38 个常规配置的提交次数、TTI 和最终 IR。带 `--include-slow` 时同时运行 PCM128/256。[原 v1 清单](regression/greedy-v1/manifest.json)保留历史对照。
 
 V2 默认保留评分、拒绝原因、重放请求及清理后的候选产物。排查某项改写时可传 `--ir-snapshots full`，同时导出每次试跑的父 IR、对照 IR 和清理前产物。单独执行 `fusion-search-llvm24` 默认导出完整诊断。
 
@@ -46,7 +46,7 @@ python3 tools/compile_kernel.py INPUT.ll FUNCTION --llvm12-bin /path/to/llvm12/b
 
 ## 当前事实
 
-- LLVM12负责IR变换和既定最终代码生成；LLVM24 worker只查询TTI成本。
+- LLVM12 负责 IR 变换和最终代码生成。TTI 支持 LLVM24 实时报价和离线记录回放。
 - 同一父状态枚举合法候选、克隆试融合、局部清理、评分、选择正分最优提交；不是穷举所有融合树。
 - baseline、原始artifacts DARM、新策略必须使用同一个准备后的IR、同一后端流程与同批输入。
 - 收益回归：vLLM随机64K/128K、Map-Airy混合输入、TIGRE。Hypersonic仍为实验性指定区域结果。
