@@ -7,7 +7,8 @@ import sys
 import tempfile
 from pathlib import Path
 
-search, worker, opt, clang, greedy = map(Path, sys.argv[1:])
+search, worker, opt, clang, greedy = map(Path, sys.argv[1:6])
+strategy = sys.argv[6] if len(sys.argv) == 7 else "dp1"
 template = '''target triple = "amdgcn-amd-amdhsa"
 define i32 @choose(i1 %outside, i1 %p, i32 %x, i32 %y, i32* %mem) #0 {
 entry:
@@ -152,16 +153,14 @@ with tempfile.TemporaryDirectory() as directory:
             args = [search, "--ir", source, "--function", "choose", "--split", "B2",
                     "--left", "B4" if swapped else "B3", "--right", "B3" if swapped else "B4",
                     "--structural", "1", "--cleanup", "darm-cfg-dce-instcombine",
-                    "--b2b-strategy", "dp1", "--tti-worker", worker]
+                    "--b2b-strategy", strategy, "--tti-worker", worker]
             run(*args, "--out", fused, "--debug-dir", out / "reports")
             report = out / "reports/trial-0/trial.json"
             trial = json.loads(report.read_text())
-            assert trial["merge_path"].startswith("single-branch-"), trial["merge_path"]
+            prefix = "b2b-anchor-" if strategy == "anchor" else "single-branch-"
+            assert trial["merge_path"].startswith(prefix), trial["merge_path"]
             assert trial["valid"]
             assert trial["score_result"]["status"] == "scored"
-            merged_exit = trial["merge_path"] == "single-branch-prefix-merged-exit"
-            segmented = trial["merge_path"].startswith("single-branch-segment-dp")
-            complete_common = trial["merge_path"].startswith("single-branch-complete-common-dp")
             raw = report.with_name("after-raw.ll").read_text()
             assert "[ 77, %external ]" in raw
             # Shared memory must preserve the external incoming edge and execute correctly.
@@ -186,9 +185,10 @@ with tempfile.TemporaryDirectory() as directory:
 
     for shape in cases:
         out = root / f"{shape}-0"
-        run(greedy, out / "source.ll", "choose", out / "auto")
+        extra = ("--b2b-strategy", strategy) if strategy == "anchor" else ()
+        run(greedy, out / "source.ll", "choose", out / "auto", *extra)
         summary = json.loads((out / "auto/summary.json").read_text())
-        assert summary["shared_arm_trials"] and summary["b2b_strategy"] == "dp1"
+        assert summary["shared_arm_trials"] and summary["b2b_strategy"] == strategy
         assert summary["pipeline_version"] == "v2"
         assert summary["domain_schedule"] == "ordered"
         assert summary["candidate_scheduler"] == "continuous-queue"

@@ -104,6 +104,7 @@ struct Trial {
   bool loopHeaderSplit=false;
   bool insideLoop=false;
   llvm::json::Array layoutProfitability;
+  llvm::json::Object anchorStats;
   double mergeMs=0, normalizeMs=0, featuresMs=0, totalMs=0, scoreMs=0;
 };
 struct ScoreInput {
@@ -169,10 +170,13 @@ Trial tryPair(const llvm::Module &, const Candidate &, unsigned currentVersion,
               unsigned optLevel, CleanupMode mode=CleanupMode::DarmCFGInstCombine, const LogicalRegionState *logical=nullptr);
 Trial tryPair(const llvm::Module &, const Candidate &, unsigned currentVersion,
               unsigned optLevel, CleanupMode, const LogicalRegionState *, bool allowB2B,
-              B2RStrategy b2rStrategy=B2RStrategy::Darm, Trial *boundaryFold=nullptr);
+              B2RStrategy b2rStrategy=B2RStrategy::Darm, Trial *boundaryFold=nullptr,
+              bool artifactB2B=false);
 std::vector<Trial> planSingleBranchB2B(const llvm::Module &, const Candidate &,
                                        unsigned optLevel, CleanupMode, llvm::StringRef replay,
                                        llvm::function_ref<int(const llvm::Instruction &)> intrinsicCost = nullptr,
                                        llvm::json::Object *recipeOut = nullptr,
-                                       const llvm::json::Object *recipeIn = nullptr);
+                                       const llvm::json::Object *recipeIn = nullptr,
+                                       llvm::function_ref<int(const llvm::Instruction &)> anchorCost = nullptr,
+                                       llvm::function_ref<int(llvm::Type *)> anchorSelectCost = nullptr);
 }

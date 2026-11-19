@@ -129,7 +129,7 @@ int main(int argc,char**argv){try{
  auto timingReport=[&](){json::Object phases;for(const auto &kv:phaseMilliseconds)phases[kv.first]=json::Object{{"milliseconds",kv.second},{"calls",phaseCalls[kv.first]}};return phases;};
 
  if(argc==2&&StringRef(argv[1])=="--help"){
-   outs()<<"usage: decision-greedy INPUT FUNCTION [TOOL_ROOT] NEW_OUTPUT [--b2b-strategy dp1|darm] [--b2r-strategy darm|guarded] [--domain-schedule ordered] [--ir-snapshots full|compact] [--tti-quote-cache off|audit|on]\n";
+   outs()<<"usage: decision-greedy INPUT FUNCTION [TOOL_ROOT] NEW_OUTPUT [--b2b-strategy dp1|darm|darm-artifact|anchor] [--b2r-strategy darm|guarded] [--domain-schedule ordered] [--ir-snapshots full|compact] [--tti-quote-cache off|audit|on]\n";
    outs()<<"Default schedule: ordered for whole-function trials (Auto Greedy v2).\n";
    return 0;
  }
@@ -143,7 +143,7 @@ int main(int argc,char**argv){try{
      b2rStrategy = value.str();
    else if (option == "--tti-quote-cache" && (value == "off" || value == "audit" || value == "on"))
      quoteMode = value.str();
-   else if (option == "--b2b-strategy" && (value == "dp1" || value == "darm"))
+   else if (option == "--b2b-strategy" && (value == "dp1" || value == "darm" || value == "darm-artifact" || value == "anchor"))
      b2bStrategy = value.str();
    else if (option == "--ir-snapshots" || option == "--domain-schedule" || option == "--b2r-strategy" || option == "--b2b-strategy" || option == "--tti-quote-cache")
      throw std::runtime_error("invalid value for " + option.str());
@@ -151,7 +151,7 @@ int main(int argc,char**argv){try{
    argc -= 2;
  }
  if(argc!=4&&argc!=5)
-   throw std::runtime_error("usage: decision-greedy INPUT FUNCTION [TOOL_ROOT] NEW_OUTPUT [--b2b-strategy dp1|darm] [--b2r-strategy darm|guarded] [--domain-schedule ordered] [--ir-snapshots full|compact] [--tti-quote-cache off|audit|on]");
+   throw std::runtime_error("usage: decision-greedy INPUT FUNCTION [TOOL_ROOT] NEW_OUTPUT [--b2b-strategy dp1|darm|darm-artifact|anchor] [--b2r-strategy darm|guarded] [--domain-schedule ordered] [--ir-snapshots full|compact] [--tti-quote-cache off|audit|on]");
  if(snapshotMode.empty())snapshotMode="compact";
  const bool implicitRoot=argc==4;
  std::string root;

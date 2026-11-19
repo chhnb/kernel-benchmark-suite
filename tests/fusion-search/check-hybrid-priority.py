@@ -8,7 +8,10 @@ env["LD_LIBRARY_PATH"]=str(root/"build/llvm12-jammy/usr/lib/x86_64-linux-gnu")+"
 env.setdefault("LLVM24_LIBDIR",str(root/"build/llvm24-pinned/lib"))
 lc=env.get("LLVM_CONFIG",str(root/"build/llvm12-jammy/usr/bin/llvm-config-12"))
 def flags(*a):return shlex.split(subprocess.check_output([lc,*a],env=env,text=True))
-objects=["ir_pressure","fusion_search","logical_region_state","RegionAnalyzer","RegionMelder","RegionReplicator","CFMelderUtils","InstructionMatch"]
+objects=["ir_pressure","fusion_search","b2b_anchor","logical_region_state","RegionAnalyzer","RegionMelder","RegionReplicator","CFMelderUtils","InstructionMatch",
+         "darm-artifact-RegionAnalyzer","darm-artifact-RegionMelder",
+         "darm-artifact-RegionReplicator","darm-artifact-CFMelderUtils",
+         "darm-artifact-InstructionMatch","darm-artifact-bridge"]
 with tempfile.TemporaryDirectory(prefix="hybrid-priority-") as d:
  p=Path(d);exe=p/"test";fixture=root/"tests/fusion-search/hybrid-priority.ll"
  subprocess.run([env.get("CXX","c++"),*flags("--cxxflags"),"-std=c++17","-fexceptions","-UNDEBUG","-O1","-Wno-deprecated-declarations","-I"+str(root/"tools"),str(root/"tests/fusion-search/probe-isolated-real.cpp"),*[str(root/"build/llvm24-tti"/(x+".o")) for x in objects],*flags("--ldflags","--link-shared","--libs","--system-libs"),"-o",str(exe)],env=env,check=True)

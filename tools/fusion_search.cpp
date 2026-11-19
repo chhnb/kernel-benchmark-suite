@@ -1,6 +1,8 @@
 #include "fusion_profile.h"
 #include <optional>
 #include "fusion_search.h"
+#include "b2b_anchor.h"
+#include "darm_artifact/bridge.h"
 #include "darm_pair_engine/InstructionMatch.h"
 #include "logical_region_state.h"
 #include "darm_pair_engine/RegionMelder.h"
@@ -905,15 +907,15 @@ static bool foldGuardedReadBoundary(BasicBlock &entry, Value *trialSide, Dominat
 // Share identical trailing arithmetic by redirecting the short arm to
 // the existing anchor. All other edges, including the long arm's memory
 // paths, keep their original execution conditions.
-static Trial tryPairImpl(const Module&parent,const Candidate&c,unsigned version,CleanupMode mode,const LogicalRegionState *logical,bool nested,bool allowB2B,B2RStrategy b2rStrategy,Trial *boundaryFold);
+static Trial tryPairImpl(const Module&parent,const Candidate&c,unsigned version,CleanupMode mode,const LogicalRegionState *logical,bool nested,bool allowB2B,B2RStrategy b2rStrategy,Trial *boundaryFold,bool artifactB2B);
 // Public entry. The outermost call owns the side tag and removes it from every
 // IR it returns, so committed modules, debug dumps and hashes never carry it.
 Trial tryPair(const Module&parent,const Candidate&c,unsigned version,unsigned level,CleanupMode mode,const LogicalRegionState *logical) {
   return tryPair(parent,c,version,level,mode,logical,true);
 }
-Trial tryPair(const Module&parent,const Candidate&c,unsigned version,unsigned,CleanupMode mode,const LogicalRegionState *logical,bool allowB2B,B2RStrategy b2rStrategy,Trial *boundaryFold) {
+Trial tryPair(const Module&parent,const Candidate&c,unsigned version,unsigned,CleanupMode mode,const LogicalRegionState *logical,bool allowB2B,B2RStrategy b2rStrategy,Trial *boundaryFold,bool artifactB2B) {
   bool nested=hasSideTag(parent.getFunction(c.function));
-  Trial t=tryPairImpl(parent,c,version,mode,logical,nested,allowB2B,b2rStrategy,boundaryFold);
+  Trial t=tryPairImpl(parent,c,version,mode,logical,nested,allowB2B,b2rStrategy,boundaryFold,artifactB2B);
   if(!nested){
     stripSideTag(t.raw.get());stripSideTag(t.normalized.get());
     if (boundaryFold && boundaryFold->valid) {
@@ -923,7 +925,7 @@ Trial tryPair(const Module&parent,const Candidate&c,unsigned version,unsigned,Cl
   }
   return t;
 }
-static Trial tryPairImpl(const Module&parent,const Candidate&c,unsigned version,CleanupMode mode,const LogicalRegionState *logical,bool nested,bool allowB2B,B2RStrategy b2rStrategy,Trial *boundaryFold) {
+static Trial tryPairImpl(const Module&parent,const Candidate&c,unsigned version,CleanupMode mode,const LogicalRegionState *logical,bool nested,bool allowB2B,B2RStrategy b2rStrategy,Trial *boundaryFold,bool artifactB2B) {
   auto started=Clock::now();Trial t;t.candidate=c;t.cleanupMode=mode;auto reject=[&](const char*reason){t.reason=reason;t.totalMs=millis(started);return std::move(t);};
   // After-side reachability on the final cleaned IR, before the tag is stripped.
   auto finishSides=[&](Function *after){
@@ -1269,8 +1271,10 @@ static Trial tryPairImpl(const Module&parent,const Candidate&c,unsigned version,
   std::unique_ptr<RegionAnalyzer> leafAnalyzer;
   std::unique_ptr<Region> leftLogicalRegion,rightLogicalRegion;
   t.rewriteStarted=true;
+  BasicBlock *artifactGate = split;
   if(directLeaves){
     auto *gate=leafEntry.apply();
+    artifactGate = gate;
     BasicBlock *leftExit=l.exit,*rightExit=r.exit;
     if(l.region){
       auto separateExit=[&](const std::set<BasicBlock*> &blocks,const char *suffix){
@@ -1293,6 +1297,8 @@ static Trial tryPairImpl(const Module&parent,const Candidate&c,unsigned version,
     t.leftContext=t.left;t.rightContext=t.right;
   }
   if (!allowB2B && t.planKind == "B2B") return reject("dp1_b2b_layout_unavailable");
+  const bool artifact = artifactB2B && t.planKind == "B2B";
+  std::vector<darm_artifact::Origin> artifactOrigins;
   RegionMelder melder(directLeaves?*leafAnalyzer:ma,true);
   if(t.logicalState)melder.onValueMapping=[&](const ValueToValueMapTy &m){t.logicalState->transfer(m);};
   {
@@ -1317,7 +1323,8 @@ static Trial tryPairImpl(const Module&parent,const Candidate&c,unsigned version,
           }
           for(unsigned side=0;side<2;++side)
             for(auto *memory:emitted[side])
-              if(!emitted[1-side].count(memory)&&!melder.hasGuardedGap(memory,side==0))
+              if(!emitted[1-side].count(memory)&&
+                 (artifact || !melder.hasGuardedGap(memory,side==0)))
                 throw std::runtime_error("unmatched_memory_not_guarded");
         }
       };
@@ -1328,7 +1335,16 @@ static Trial tryPairImpl(const Module&parent,const Candidate&c,unsigned version,
     melder.GuardReplicatedMemory = guardedB2R && t.replication;
     melder.NativeReplicationPredication =
         darmReplication && t.replication && !melder.GuardReplicatedMemory;
-    try { melder.merge(0); }
+    try {
+      if (artifact) {
+        auto &analysis = directLeaves ? *leafAnalysis : a;
+        t.mergePath = directLeaves ? "darm-artifact-adjacent-B2B" : "darm-artifact-B2B";
+        artifactOrigins = darm_artifact::meldBlocks(
+            artifactGate, directLeaves ? leafEntry.left : l.entry,
+            directLeaves ? leafEntry.right : r.entry,
+            analysis.dt, analysis.pdt, melder.onValueMapping);
+      } else melder.merge(0);
+    }
     catch(const std::exception &error) { return reject(error.what()); }
   }
   canonicalPhiOrder(*t.raw,c.function);t.mergeMs=millis(mt);
@@ -1433,13 +1449,15 @@ static Trial tryPairImpl(const Module&parent,const Candidate&c,unsigned version,
   auto nt=Clock::now();t.normalized=CloneModule(*t.raw,CloneMap);
   if(t.logicalState)t.logicalState=t.logicalState->clone(CloneMap);
   std::vector<WeakVH> CleanedBlocks;
-  for(auto &Origin:melder.blockOrigins()) {
+  auto recordOrigin = [&](const auto &Origin) {
     BlockProvenance P;P.leftID=Origin.leftID;P.rightID=Origin.rightID;
     P.leftLabel=Origin.leftLabel;P.rightLabel=Origin.rightLabel;
     Value *Raw=Origin.merged;Value *Cleaned=nullptr;
     if(Raw){P.rawBlock=blockLabel(Raw);auto It=CloneMap.find(Raw);if(It!=CloneMap.end())Cleaned=It->second;}
     t.blockProvenance.push_back(std::move(P));CleanedBlocks.push_back(WeakVH(Cleaned));
-  }
+  };
+  if (artifact) for (const auto &origin : artifactOrigins) recordOrigin(origin);
+  else for (const auto &origin : melder.blockOrigins()) recordOrigin(origin);
   // Do not retain CloneMap's tracking handles while cleanup mutates the clone.
   CloneMap.clear();
   t.cleanupIterations=cleanup(*t.normalized,c.function,mode);canonicalPhiOrder(*t.normalized,c.function);t.normalizeMs=millis(nt);
@@ -1878,10 +1896,11 @@ static SmallVector<SmallVector<B2BMatch, 8>, 4> searchB2BJoin(
 // and the positions of the shared actions.
 struct B2BSegmentMatch {
   unsigned left, right;
-  bool consumeLeft = true, consumeRight = true;
+  bool consumeLeft = true, consumeRight = true, swapOperands = false;
   bool operator==(const B2BSegmentMatch &other) const {
     return left == other.left && right == other.right &&
-        consumeLeft == other.consumeLeft && consumeRight == other.consumeRight;
+        consumeLeft == other.consumeLeft && consumeRight == other.consumeRight &&
+        swapOperands == other.swapOperands;
   }
 };
 
@@ -2089,7 +2108,7 @@ static void emitB2BSegments(BranchInst &split, BasicBlock &left,
     auto *shared = l->clone();
     for (unsigned n = 0; n < shared->getNumOperands(); ++n) {
       auto *lv = value(0, l->getOperand(n));
-      auto *rv = value(1, r->getOperand(n));
+      auto *rv = value(1, r->getOperand(n ^ unsigned(match.swapOperands)));
       shared->setOperand(n, select(lv, rv));
     }
     builder.Insert(shared);
@@ -2149,7 +2168,9 @@ std::vector<Trial> planSingleBranchB2B(const Module &parent, const Candidate &c,
                                        unsigned level, CleanupMode mode,
                                        StringRef replay,
                                        function_ref<int(const Instruction &)> intrinsicCost,
-                                       json::Object *recipeOut, const json::Object *recipeIn) {
+                                       json::Object *recipeOut, const json::Object *recipeIn,
+                                       function_ref<int(const Instruction &)> anchorCost,
+                                       function_ref<int(Type *)> anchorSelectCost) {
   ProfileScope planningScope("b2b_plan_generate_clean_total");
   std::vector<Trial> trials;
   const auto parentIdentity = moduleHash(parent);
@@ -2198,6 +2219,12 @@ std::vector<Trial> planSingleBranchB2B(const Module &parent, const Candidate &c,
   ValueToValueMapTy inputMap;
   trial.raw = profileCall("clone_parent",[&](){return CloneModule(parent, inputMap);});
   auto *f = trial.raw->getFunction(c.function);
+  DenseMap<const Instruction *, const Instruction *> anchorSources;
+  if (anchorCost)
+    for (const auto &block : *source)
+      for (const auto &instruction : block)
+        if (auto *clone = dyn_cast_or_null<Instruction>(static_cast<Value *>(inputMap.lookup(&instruction))))
+          anchorSources.insert({clone, &instruction});
   if (profileCall("verify",[&](){return verifyModule(*trial.raw, &errs());})) return trials;
   auto *split = cast<BasicBlock>(inputMap[blocks[0]]);
   auto *left = cast<BasicBlock>(inputMap[blocks[1]]);
@@ -2329,6 +2356,9 @@ std::vector<Trial> planSingleBranchB2B(const Module &parent, const Candidate &c,
     std::string label;
     SmallVector<B2BMatch, 8> beforeSplit, afterJoin;
     SmallVector<B2BSegmentMatch, 8> segments;
+    SmallVector<unsigned, 4> swappedBefore;
+    bool mergeExit = false;
+    json::Object stats;
   };
   SmallVector<Layout, 12> layouts;
   auto add = [&](StringRef label, ArrayRef<B2BMatch> before,
@@ -2342,7 +2372,54 @@ std::vector<Trial> planSingleBranchB2B(const Module &parent, const Candidate &c,
     layouts.push_back({label.str(), {before.begin(), before.end()},
                        {after.begin(), after.end()}, {}});
   };
-  if (!recipeIn) {
+  if (anchorCost) {
+    auto instructionCost = [&](const Instruction &inst) {
+      auto *sourceInst = anchorSources.lookup(&inst);
+      int cost = sourceInst ? anchorCost(*sourceInst) : -1;
+      return cost >= 0 ? cost : b2bWeight(inst, intrinsicCost);
+    };
+    auto selectCost = [&](Type *ty) -> int {
+      const int cost = anchorSelectCost ? anchorSelectCost(ty) : -1;
+      if (cost >= 0) return cost;
+      return f->getParent()->getDataLayout().getTypeSizeInBits(ty).getKnownMinValue() <= 32 ? 1 : 2;
+    };
+    auto plans = planB2BAnchors(segmentWork[0], segmentWork[1], *left, *right, join,
+                                compatibleB2BPrefix, instructionCost, selectCost);
+    const auto safePrefix = commonB2BPrefix(*left, *right, *branch, dt);
+    for (unsigned k = 0; k < plans.size(); ++k) {
+      const auto &plan = plans[k];
+      Layout layout;
+      layout.label = "b2b-anchor-" + std::to_string(k + 1);
+      const bool prefix = plan.matches.size() <= safePrefix.size() &&
+          llvm::all_of(llvm::enumerate(plan.matches), [](const auto &item) {
+            return item.value().left == item.index() && item.value().right == item.index();
+          });
+      if (!prefix && !segmentUsesValid && !independentExits)
+        continue;
+      layout.mergeExit = prefix && join && !plan.matches.empty() &&
+          plan.matches.size() == segmentWork[0].size() &&
+          plan.matches.size() == segmentWork[1].size() &&
+          llvm::all_of(join->phis(), [](const PHINode &phi) {
+            return phi.getType()->isFirstClassType() && !phi.getType()->isTokenTy();
+          });
+      json::Array swaps;
+      for (auto pair : plan.matches) {
+        if (pair.swapped)
+          swaps.push_back(json::Array{int64_t(pair.left), int64_t(pair.right)});
+        if (prefix) {
+          if (pair.swapped) layout.swappedBefore.push_back(layout.beforeSplit.size());
+          layout.beforeSplit.emplace_back(segmentWork[0][pair.left], segmentWork[1][pair.right]);
+        } else {
+          layout.segments.push_back({pair.left, pair.right, true, true, pair.swapped});
+        }
+      }
+      layout.stats = json::Object{
+          {"anchors", int64_t(plan.anchors)}, {"discarded", int64_t(plan.discarded)},
+          {"conflicts", int64_t(plan.conflicts)}, {"segments", int64_t(plan.segments)},
+          {"pruned", int64_t(plan.pruned)}, {"swaps", std::move(swaps)}};
+      layouts.push_back(std::move(layout));
+    }
+  } else if (!recipeIn) {
     ProfileScope layoutSearch("plan_layouts");
   auto segments = (segmentUsesValid || independentExits)
       ? searchB2BSegments(segmentWork[0], segmentWork[1], independentExits, 1, intrinsicCost)
@@ -2488,6 +2565,7 @@ std::vector<Trial> planSingleBranchB2B(const Module &parent, const Candidate &c,
     t.matchedRight = trial.matchedRight;
     t.planKind = trial.planKind;
     t.mergePath = label.str();
+    t.anchorStats = json::Object(layout.stats);
     t.swapped = trial.swapped;
     t.loopHeaderSplit = trial.loopHeaderSplit;
     t.insideLoop = loops.getLoopFor(split) != nullptr;
@@ -2518,7 +2596,7 @@ std::vector<Trial> planSingleBranchB2B(const Module &parent, const Candidate &c,
     if (!layout.beforeSplit.empty()) {
       IRBuilder<> builder(rawBranch);
       Value *condition = rawBranch->getCondition();
-      if (label == "single-branch-prefix-merged-exit" ||
+      if (layout.mergeExit || label == "single-branch-prefix-merged-exit" ||
           label.startswith("single-branch-complete-common-dp") ||
           llvm::any_of(layout.beforeSplit, [](B2BMatch step) {
             return step.first && step.second && step.first->mayReadOrWriteMemory();
@@ -2527,7 +2605,9 @@ std::vector<Trial> planSingleBranchB2B(const Module &parent, const Candidate &c,
         rawBranch->setCondition(condition);
       }
       std::map<std::pair<Value *, Value *>, Value *> selects;
-      for (auto [l, r] : layout.beforeSplit) {
+      for (auto item : llvm::enumerate(layout.beforeSplit)) {
+        auto [l, r] = item.value();
+        const bool swap = llvm::is_contained(layout.swappedBefore, item.index());
         if (!l || !r) {
           // Move the original instruction so existing guarded uses and later
           // shared steps both see the same definition.
@@ -2537,7 +2617,7 @@ std::vector<Trial> planSingleBranchB2B(const Module &parent, const Candidate &c,
         auto *lc = cast<Instruction>(clone[l]), *rc = cast<Instruction>(clone[r]);
         auto *shared = lc->clone();
         for (unsigned n = 0; n < shared->getNumOperands(); ++n) {
-          auto *lv = lc->getOperand(n), *rv = rc->getOperand(n);
+          auto *lv = lc->getOperand(n), *rv = rc->getOperand(n ^ unsigned(swap));
           if (lv != rv) {
             auto &choice = selects[{lv, rv}];
             if (!choice) choice = emitB2BSelect(builder, condition, lv, rv);
@@ -2550,7 +2630,7 @@ std::vector<Trial> planSingleBranchB2B(const Module &parent, const Candidate &c,
         lc->eraseFromParent();
         rc->eraseFromParent();
       }
-      if (label == "single-branch-prefix-merged-exit") {
+      if (layout.mergeExit || label == "single-branch-prefix-merged-exit") {
         auto *commonBlock = rawBranch->getParent();
         for (auto &phi : rawJoin->phis()) {
           auto *lv = phi.getIncomingValueForBlock(rawLeft);

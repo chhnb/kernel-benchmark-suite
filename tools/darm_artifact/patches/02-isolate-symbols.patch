@@ -1,0 +1,349 @@
+--- a/CFMelderUtils.cpp
++++ b/CFMelderUtils.cpp
+@@ -7,6 +7,10 @@
+ #include "llvm/IR/BasicBlock.h"
+ #include "llvm/IR/Function.h"
+ #include "llvm/IR/Instructions.h"
++
++namespace darm_artifact {
++using namespace llvm;
++
+ using namespace llvm;
+ 
+ // check for diamond shaped control-flow
+@@ -167,3 +171,5 @@
+   // errs() << "total latency in region: " << TotalLat << "\n";
+   return (double)LatReductionAtBest / (double)TotalLat;
+ }
++
++} // namespace darm_artifact
+--- a/CFMelderUtils.h
++++ b/CFMelderUtils.h
+@@ -1,5 +1,5 @@
+-#ifndef LLVM_LIB_TRANSFORMS_CFMELDER_UTILS_H
+-#define LLVM_LIB_TRANSFORMS_CFMELDER_UTILS_H
++#ifndef DARM_ARTIFACT_LLVM_LIB_TRANSFORMS_CFMELDER_UTILS_H
++#define DARM_ARTIFACT_LLVM_LIB_TRANSFORMS_CFMELDER_UTILS_H
+ 
+ // #include "llvm/ADT/SequenceAlignment.h"
+ #include "llvm/ADT/SmallSet.h"
+@@ -30,7 +30,8 @@
+ 
+ #endif
+ 
+-namespace llvm {
++namespace darm_artifact {
++using namespace llvm;
+ 
+ 
+ // utility functions
+@@ -54,6 +55,6 @@
+ 
+ 
+ 
+-} // namespace llvm
++} // namespace darm_artifact
+ 
+ #endif
+\ No newline at end of file
+--- a/InstructionMatch.cpp
++++ b/InstructionMatch.cpp
+@@ -1,6 +1,10 @@
+ #include "InstructionMatch.h"
+ #include "llvm/IR/IntrinsicInst.h"
+ #include "llvm/IR/Module.h"
++
++namespace darm_artifact {
++using namespace llvm;
++
+ 
+ // code is taken from : https://github.com/rcorcs/llvm-project/tree/func-merge
+ 
+@@ -457,3 +461,5 @@
+   }
+   return SavedCycles;
+ }
++
++} // namespace darm_artifact
+--- a/InstructionMatch.h
++++ b/InstructionMatch.h
+@@ -1,5 +1,5 @@
+-#ifndef LLVM_LIB_TRANSFORMS_INSTRUCTION_MATCH_H
+-#define LLVM_LIB_TRANSFORMS_INSTRUCTION_MATCH_H
++#ifndef DARM_ARTIFACT_LLVM_LIB_TRANSFORMS_INSTRUCTION_MATCH_H
++#define DARM_ARTIFACT_LLVM_LIB_TRANSFORMS_INSTRUCTION_MATCH_H
+ 
+ #include "llvm/IR/Instruction.h"
+ #include "llvm/IR/Instructions.h"
+@@ -8,7 +8,8 @@
+ 
+ using namespace llvm;
+ 
+-namespace llvm { 
++namespace darm_artifact {
++using namespace llvm; 
+ 
+ class InstructionMatch {
+ private:
+--- a/NeedlemanWunsch.h
++++ b/NeedlemanWunsch.h
+@@ -1,11 +1,14 @@
+-#ifndef __NEEDLEMAN_WUNSCH_H__
+-#define __NEEDLEMAN_WUNSCH_H__
++#ifndef DARM_ARTIFACT___NEEDLEMAN_WUNSCH_H__
++#define DARM_ARTIFACT___NEEDLEMAN_WUNSCH_H__
+ #include "SeqAlignmentUtils.h"
+ #include <assert.h>
+ #include <functional>
+ #include <memory>
+ #include <ostream>
+ #include <string>
++
++namespace darm_artifact {
++
+ 
+ using namespace std;
+ 
+@@ -102,4 +105,5 @@
+   }
+ };
+ 
++} // namespace darm_artifact
+ #endif
+\ No newline at end of file
+--- a/RegionAnalyzer.cpp
++++ b/RegionAnalyzer.cpp
+@@ -10,23 +10,27 @@
+ #include <algorithm>
+ #include <memory>
+ 
++namespace darm_artifact {
+ using namespace llvm;
+ 
++
++using namespace llvm;
++
+ static cl::opt<double> SimilarityThreshold(
+-    "cf-merging-similarity-threshold", cl::init(0.2), cl::Hidden,
++    "darm-artifact-cf-merging-similarity-threshold", cl::init(0.2), cl::Hidden,
+     cl::desc(
+         "Minimum similarity required to merge two basicblocks or two regions"));
+ 
+ static cl::opt<bool> PerformGreedyRegionMatch(
+-    "use-greedy-region-match", cl::init(false), cl::Hidden,
++    "darm-artifact-use-greedy-region-match", cl::init(false), cl::Hidden,
+     cl::desc("Enable greedy region match in control-flow melding"));
+ 
+ static cl::opt<bool> DisableRegionReplication(
+-    "disable-region-replication", cl::init(false), cl::Hidden,
++    "darm-artifact-disable-region-replication", cl::init(false), cl::Hidden,
+     cl::desc("Disable replicating regions in control-flow melding"));
+ 
+ static cl::opt<bool>
+-    RunBranchFusionOnly("run-branch-fusion-only", cl::init(false), cl::Hidden,
++    RunBranchFusionOnly("darm-artifact-run-branch-fusion-only", cl::init(false), cl::Hidden,
+                         cl::desc("Run branch fusion only, no region-melding"));
+ 
+ bool RegionComparator::compare() {
+@@ -687,4 +691,5 @@
+       Os << "\n";
+     }
+   }
+-}
+\ No newline at end of file
++}
++} // namespace darm_artifact
+--- a/RegionAnalyzer.h
++++ b/RegionAnalyzer.h
+@@ -1,5 +1,5 @@
+-#ifndef LLVM_LIB_TRANSFORMS_REGION_ANALYZER_H
+-#define LLVM_LIB_TRANSFORMS_REGION_ANALYZER_H
++#ifndef DARM_ARTIFACT_LLVM_LIB_TRANSFORMS_REGION_ANALYZER_H
++#define DARM_ARTIFACT_LLVM_LIB_TRANSFORMS_REGION_ANALYZER_H
+ 
+ #include "CFMelderUtils.h"
+ #include "SeqAlignmentUtils.h"
+@@ -9,7 +9,8 @@
+ #include "llvm/IR/Function.h"
+ 
+ 
+-namespace llvm {
++namespace darm_artifact {
++using namespace llvm;
+ 
+ class RegionComparator {
+ private:
+@@ -193,6 +194,6 @@
+   void printAnalysis(llvm::raw_ostream &OS);
+ };
+ 
+-} // namespace llvm
++} // namespace darm_artifact
+ 
+ #endif
+\ No newline at end of file
+--- a/RegionMelder.cpp
++++ b/RegionMelder.cpp
+@@ -13,21 +13,25 @@
+ #include "llvm/Transforms/Utils/BasicBlockUtils.h"
+ #include <chrono>
+ 
++namespace darm_artifact {
++using namespace llvm;
++
++
+ using namespace llvm;
+ #define ENABLE_TIMING 1
+ 
+ #define DEBUG_TYPE "cfmelder"
+ 
+ static cl::opt<bool> DisableMelding(
+-    "disable-melding", cl::init(false), cl::Hidden,
++    "darm-artifact-disable-melding", cl::init(false), cl::Hidden,
+     cl::desc("Disables melding step, runs region simplification if required"));
+ 
+ static cl::opt<bool> EnableFullPredication(
+-    "enable-full-predication", cl::init(false), cl::Hidden,
++    "darm-artifact-enable-full-predication", cl::init(false), cl::Hidden,
+     cl::desc("Enable full predication for merged blocks"));
+ 
+ static cl::opt<bool>
+-    DumpSeqAlignStats("dump-seq-align-stats", cl::init(false), cl::Hidden,
++    DumpSeqAlignStats("darm-artifact-dump-seq-align-stats", cl::init(false), cl::Hidden,
+                       cl::desc("Dump information on sequence alignment"));
+ 
+ STATISTIC(NumMeldings, "Number of profitable meldings performed");
+@@ -1162,3 +1166,5 @@
+     }
+   }
+ }
++
++} // namespace darm_artifact
+--- a/RegionMelder.h
++++ b/RegionMelder.h
+@@ -1,6 +1,6 @@
+ #include <functional>
+-#ifndef LLVM_LIB_TRANSFORMS_REGION_MELDER_H
+-#define LLVM_LIB_TRANSFORMS_REGION_MELDER_H
++#ifndef DARM_ARTIFACT_LLVM_LIB_TRANSFORMS_REGION_MELDER_H
++#define DARM_ARTIFACT_LLVM_LIB_TRANSFORMS_REGION_MELDER_H
+ 
+ #include "RegionAnalyzer.h"
+ #include "InstructionMatch.h"
+@@ -15,7 +15,8 @@
+ #include <string>
+ #include <vector>
+ 
+-namespace llvm {
++namespace darm_artifact {
++using namespace llvm;
+ 
+ 
+ // simple scoring function for intruction alignment
+@@ -161,7 +162,7 @@
+ 
+ };
+ 
+-} // namespace llvm
++} // namespace darm_artifact
+ 
+ 
+ #endif
+\ No newline at end of file
+--- a/RegionReplicator.cpp
++++ b/RegionReplicator.cpp
+@@ -4,6 +4,10 @@
+ #include "llvm/IR/CFG.h"
+ #include "llvm/IR/Constants.h"
+ #include "llvm/IR/Instructions.h"
++
++namespace darm_artifact {
++using namespace llvm;
++
+ 
+ using namespace llvm;
+ 
+@@ -299,3 +303,5 @@
+     }
+   }
+ }
++
++} // namespace darm_artifact
+--- a/RegionReplicator.h
++++ b/RegionReplicator.h
+@@ -1,9 +1,10 @@
+-#ifndef LLVM_LIB_TRANSFORMS_REGION_REPLICATOR_H
+-#define LLVM_LIB_TRANSFORMS_REGION_REPLICATOR_H
++#ifndef DARM_ARTIFACT_LLVM_LIB_TRANSFORMS_REGION_REPLICATOR_H
++#define DARM_ARTIFACT_LLVM_LIB_TRANSFORMS_REGION_REPLICATOR_H
+ 
+ #include "RegionAnalyzer.h"
+ 
+-namespace llvm {
++namespace darm_artifact {
++using namespace llvm;
+ 
+ class RegionReplicator {
+ private:
+@@ -31,6 +32,6 @@
+                             bool IsExpandingLeft);
+ };
+ 
+-} // namespace llvm
++} // namespace darm_artifact
+ 
+ #endif
+\ No newline at end of file
+--- a/SeqAlignmentUtils.h
++++ b/SeqAlignmentUtils.h
+@@ -1,5 +1,5 @@
+-#ifndef __SEQ_ALIGNMENT_UTIL_H__
+-#define __SEQ_ALIGNMENT_UTIL_H__
++#ifndef DARM_ARTIFACT___SEQ_ALIGNMENT_UTIL_H__
++#define DARM_ARTIFACT___SEQ_ALIGNMENT_UTIL_H__
+ 
+ #include "llvm/Support/raw_ostream.h"
+ #include <assert.h>
+@@ -8,6 +8,9 @@
+ #include <ostream>
+ #include <string>
+ #include <vector>
++
++namespace darm_artifact {
++
+ using namespace std;
+ 
+ enum Direction
+@@ -158,4 +161,5 @@
+   virtual int gap(int K) = 0;
+ };
+ 
++} // namespace darm_artifact
+ #endif
+\ No newline at end of file
+--- a/SmithWaterman.h
++++ b/SmithWaterman.h
+@@ -1,11 +1,14 @@
+-#ifndef __SMITH_WATERMAN_H__
+-#define __SMITH_WATERMAN_H__
++#ifndef DARM_ARTIFACT___SMITH_WATERMAN_H__
++#define DARM_ARTIFACT___SMITH_WATERMAN_H__
+ #include "SeqAlignmentUtils.h"
+ #include <assert.h>
+ #include <functional>
+ #include <memory>
+ #include <ostream>
+ #include <string>
++
++namespace darm_artifact {
++
+ using namespace std;
+ 
+ template <typename elemTy, typename ArrayTy, elemTy none_value>
+@@ -163,4 +166,5 @@
+   }
+ };
+ 
++} // namespace darm_artifact
+ #endif
+\ No newline at end of file

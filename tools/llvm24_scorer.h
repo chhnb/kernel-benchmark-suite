@@ -4,6 +4,8 @@
 #include "tti_cost_kind.h"
 #include "tti_memory_io.h"
 #include "llvm/IR/IntrinsicInst.h"
+#include "llvm/IR/IRBuilder.h"
+#include "llvm/ADT/DenseSet.h"
 #include "llvm/Transforms/Utils/Cloning.h"
 #include "llvm/Support/FileSystem.h"
 #include "llvm/Support/Program.h"
@@ -83,7 +85,8 @@ class LLVM24Scorer final:public Scorer {
     const auto *object = intrinsic->getArgOperand(1)->stripPointerCasts();
     return isa<PHINode>(object) || isa<SelectInst>(object);
   }
-  Cost query(const llvm::Function&f)const {
+  Cost query(const llvm::Function&f,
+             llvm::DenseMap<const llvm::Instruction *, int> *instructions = nullptr) const {
     using namespace llvm;
     std::unique_ptr<Module> scoringModule;
     for(const auto &block:f)
@@ -99,7 +102,7 @@ class LLVM24Scorer final:public Scorer {
     const auto &module=scoringModule?*scoringModule:*f.getParent();
     const auto keys=scoringModule?QuoteKeys{}:quoteKeys(f);
     const auto predicted=quotedCost(keys);
-    if(predicted && quoteMode=="on") { ++quoteHits; return *predicted; }
+    if(predicted && quoteMode=="on" && !instructions) { ++quoteHits; return *predicted; }
     ++quoteWorkerQueries;
     std::string result;
 #ifdef __linux__
@@ -173,6 +176,30 @@ class LLVM24Scorer final:public Scorer {
         if(v)c.blockCost[*bi]+=*v;else c.blockUnknown[*bi]=true;}
     }else rowsOk=false;
     if(!rowsOk){c.blockCost.clear();c.blockUnknown.clear();}
+    if (instructions && rowsOk) {
+      const auto &rows = *o->getArray("instruction_costs");
+      size_t position = 0;
+      int64_t blockIndex = 0;
+      for (const auto &block : f) {
+        int64_t index = 0;
+        if (seen.count(&block))
+          for (const auto &inst : block) {
+            if (isa<DbgInfoIntrinsic>(inst) || legacyLifetimeMarker(inst)) continue;
+            if (position >= rows.size())
+              throw std::runtime_error("anchor_instruction_quote_row_missing");
+            const auto &row = *rows[position++].getAsObject();
+            if (row.getInteger("block_index") != blockIndex ||
+                row.getInteger("instruction_index") != index++)
+              throw std::runtime_error("anchor_instruction_quote_row_mismatch");
+            auto value = row.getInteger("accepted_cost");
+            if (value && *value >= 0 && *value <= 1000000)
+              instructions->insert({&inst, static_cast<int>(*value)});
+          }
+        ++blockIndex;
+      }
+      if (position != rows.size())
+        throw std::runtime_error("anchor_instruction_quote_row_count");
+    }
     if(predicted) {
       ++quoteAudits;
       if(predicted->value!=c.value || predicted->count!=c.count || predicted->zero!=c.zero ||
@@ -196,6 +223,59 @@ class LLVM24Scorer final:public Scorer {
     return c;
   }
 public:
+  llvm::DenseMap<const llvm::Instruction *, int> instructionCosts(
+      const llvm::Function &f) const {
+    llvm::DenseMap<const llvm::Instruction *, int> result;
+    query(f, &result);
+    return result;
+  }
+
+  llvm::DenseMap<llvm::Type *, int> selectCosts(const llvm::Function &f) const {
+    using namespace llvm;
+    SmallVector<Type *, 16> types;
+    DenseSet<Type *> seen;
+    for (const auto &block : f)
+      for (const auto &inst : block)
+        for (const auto &operand : inst.operands()) {
+          auto *type = operand->getType();
+          if (type->isSingleValueType() && !type->isX86_MMXTy() &&
+              seen.insert(type).second)
+            types.push_back(type);
+        }
+    auto &context = f.getContext();
+    Module probe("anchor-select-quotes", context);
+    probe.setTargetTriple(f.getParent()->getTargetTriple());
+    probe.setDataLayout(f.getParent()->getDataLayout());
+    SmallVector<Type *, 32> params{Type::getInt1Ty(context)};
+    for (auto *type : types) {
+      params.push_back(type);
+      params.push_back(type);
+    }
+    auto *fn = Function::Create(FunctionType::get(Type::getVoidTy(context), params, false),
+                                GlobalValue::ExternalLinkage, f.getName(), probe);
+    for (StringRef name : {"target-cpu", "target-features"})
+      if (f.hasFnAttribute(name))
+        fn->addFnAttr(f.getFnAttribute(name));
+    IRBuilder<> builder(BasicBlock::Create(context, "entry", fn));
+    SmallVector<const Instruction *, 16> selects;
+    auto arg = fn->arg_begin();
+    auto *condition = &*arg++;
+    for (size_t i = 0; i < types.size(); ++i) {
+      auto *left = &*arg++;
+      auto *right = &*arg++;
+      selects.push_back(cast<Instruction>(builder.CreateSelect(condition, left, right)));
+    }
+    builder.CreateRetVoid();
+    auto quoted = instructionCosts(*fn);
+    DenseMap<Type *, int> result;
+    for (auto item : llvm::enumerate(selects)) {
+      auto found = quoted.find(item.value());
+      if (found != quoted.end())
+        result.insert({types[item.index()], found->second});
+    }
+    return result;
+  }
+
   std::map<std::string, int64_t> intrinsicCosts(const llvm::Function &f) const {
     std::map<std::string, int64_t> costs;
     for (const auto &entry : query(f).counts) {

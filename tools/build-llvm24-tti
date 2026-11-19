@@ -22,9 +22,23 @@ fi
 ${CXX:-g++} ${CPPFLAGS:-} "${flags[@]}" -std=c++17 -fexceptions -O2 \
   "$root/tools/offline_tti_layout.cpp" "${libs[@]}" ${LDFLAGS:-} -o "$build/offline-tti-layout"
 objects=()
-for source in ir_pressure fusion_search logical_region_state darm_pair_engine/RegionAnalyzer darm_pair_engine/RegionMelder darm_pair_engine/RegionReplicator darm_pair_engine/CFMelderUtils darm_pair_engine/InstructionMatch; do
+for source in ir_pressure fusion_search b2b_anchor logical_region_state darm_pair_engine/RegionAnalyzer darm_pair_engine/RegionMelder darm_pair_engine/RegionReplicator darm_pair_engine/CFMelderUtils darm_pair_engine/InstructionMatch; do
   obj="$build/$(basename "$source").o"
   ${CXX:-g++} ${CPPFLAGS:-} "${flags[@]}" -std=c++17 -fexceptions -O2 -DFUSION_DETERMINISTIC_REGION_ORDER -I"$root/tools" -I"$root/tools/darm_pair_engine" -c "$root/tools/$source.cpp" -o "$obj"
   objects+=("$obj")
+done
+artifact="$build/darm-artifact"
+python3 "$root/tools/darm_artifact/prepare.py" "$artifact"
+compat=()
+if [[ " ${flags[*]} " == *" -DFUSION_PACKAGED_LLVM12 "* ]]; then
+  compat=(-include "$root/tools/darm_artifact/llvm12_compat.h")
+fi
+for unit in RegionAnalyzer RegionMelder RegionReplicator CFMelderUtils InstructionMatch bridge; do
+  source="$artifact/$unit.cpp"
+  [[ $unit != bridge ]] || source="$root/tools/darm_artifact/bridge.cpp"
+  object="$build/darm-artifact-$unit.o"
+  ${CXX:-g++} ${CPPFLAGS:-} "${flags[@]}" -std=c++17 -fexceptions -O2 \
+    -DFUSION_DETERMINISTIC_REGION_ORDER "${compat[@]}" -I"$artifact" -c "$source" -o "$object"
+  objects+=("$object")
 done
 ${CXX:-g++} ${CPPFLAGS:-} "${flags[@]}" -std=c++17 -fexceptions -O2 -DFUSION_DETERMINISTIC_REGION_ORDER -I"$root/tools" -I"$root/tools/darm_pair_engine" "$root/tools/fusion_search_llvm24_main.cpp" "${objects[@]}" "${libs[@]}" ${LDFLAGS:-} -o "$build/fusion-search-llvm24"

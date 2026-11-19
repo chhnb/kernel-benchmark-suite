@@ -7,6 +7,8 @@ export LLVM24_LIBDIR=${LLVM24_LIBDIR:-"$root/build/llvm24-pinned/lib"}
 bindir=$("$LLVM_CONFIG" --bindir)
 search="$root/build/llvm24-tti/fusion-search-llvm24"
 python3 "$root/tests/fusion-search/check-single-branch-b2b.py" "$search" "$root/tools/run-llvm24-tti" "$bindir/opt" "$bindir/clang" "$root/build/decision-fuse/decision-greedy"
+python3 "$root/tests/fusion-search/check-single-branch-b2b.py" "$search" "$root/tools/run-llvm24-tti" "$bindir/opt" "$bindir/clang" "$root/build/decision-fuse/decision-greedy" anchor
+python3 "$root/tests/fusion-search/check-b2b-anchor.py" "$search" "$root/tools/run-llvm24-tti" "$bindir/opt"
 python3 "$root/tests/decision-model/check_independent_region_exits.py" "$search" "$bindir/opt" "$bindir/clang"
 python3 "$root/tests/decision-model/check_sibling_loops.py" "$search" "$bindir/opt" "$bindir/clang"
 python3 "$root/tests/fusion-search/check-trial-queue.py"

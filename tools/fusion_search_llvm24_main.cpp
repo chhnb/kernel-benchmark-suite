@@ -107,7 +107,9 @@ struct DebugObserver final:Observer {
     jsonFile(path+"/block-provenance.json",json::Object{{"schema","melding-block-provenance-v1"},
       {"logical_decision",t.candidate.logicalDecision},{"logical_left",t.candidate.logicalLeft},{"logical_right",t.candidate.logicalRight},{"candidate",t.candidate.key()},{"parent_hash",r.parentHash},
       {"cleaned_hash",t.normalized?moduleHash(*t.normalized):""},{"blocks",std::move(Origins)}});
-    jsonFile(path+"/trial.json",json::Object{{"schema","incremental-score-trial-v1"},{"logical_decision",t.candidate.logicalDecision},{"logical_left",t.candidate.logicalLeft},{"logical_right",t.candidate.logicalRight},{"candidate",t.candidate.key()},{"version",int64_t(t.candidate.version)},{"parent_hash",r.parentHash},{"control_hash",r.controlHash},{"round_context","../round-"+std::to_string(r.parentVersion)+".json"},{"valid",t.valid},{"rewrite_started",t.rewriteStarted},{"decision",!t.valid?"reject":score.status!=ScoreStatus::Scored?"unsupported":eligible?"accept":"reject"},{"reason",t.reason},{"merge_path",t.mergePath},{"layout_profitability",json::Array(t.layoutProfitability)},{"cross_decision_leaves",false},{"complete_leaf_plan",false},{"moved_leaf_instructions",int64_t(t.movedLeafInstructions)},{"leaf_anchors",int64_t(t.leafAnchors)},{"leaf_anchor_pairs",[&](){json::Array a;for(auto &p:t.leafAnchorPairs)a.push_back(p);return a;}()},{"fusion_plan",json::Object{{"kind",t.planKind},{"matched_left",t.matchedLeft},{"matched_right",t.matchedRight},{"left_context",bound(t.leftContext)},{"right_context",bound(t.rightContext)},{"split_is_loop_header",t.loopHeaderSplit},{"replication_required",t.replication}}},{"local_reject_reason",t.localRejectReason},{"score_result",scoreJson(score)},{"eligible",eligible},{"cleanup_iterations",int64_t(t.cleanupIterations)},{"alignment_order","function_order_v1"},{"original_darm_similarity",t.originalSimilarity},{"original_darm_profitable",t.originalProfitable},{"replication_required",t.replication},{"orientation_swapped",t.swapped},{"left",bound(t.left)},{"right",bound(t.right)},{"after_raw",stats(t.afterRaw)},{"after",stats(t.after)},{"cleaned_hash",t.normalized?moduleHash(*t.normalized):""},{"parent_ir",fullSnapshots?"../state-"+std::to_string(t.candidate.version)+".ll":inputPath},{"snapshot_mode",fullSnapshots?"full":"compact"},{"cleaned_ir",t.valid?(fullSnapshots?"after.ll":outputPath):""},{"timings_ms",json::Object{{"merge",t.mergeMs},{"normalization",t.normalizeMs},{"features",t.featuresMs},{"trial_total",t.totalMs},{"score_with_analysis",t.scoreMs}}},{"semantic_validation","not_run"}});
+    json::Object report{{"schema","incremental-score-trial-v1"},{"logical_decision",t.candidate.logicalDecision},{"logical_left",t.candidate.logicalLeft},{"logical_right",t.candidate.logicalRight},{"candidate",t.candidate.key()},{"version",int64_t(t.candidate.version)},{"parent_hash",r.parentHash},{"control_hash",r.controlHash},{"round_context","../round-"+std::to_string(r.parentVersion)+".json"},{"valid",t.valid},{"rewrite_started",t.rewriteStarted},{"decision",!t.valid?"reject":score.status!=ScoreStatus::Scored?"unsupported":eligible?"accept":"reject"},{"reason",t.reason},{"merge_path",t.mergePath},{"layout_profitability",json::Array(t.layoutProfitability)},{"cross_decision_leaves",false},{"complete_leaf_plan",false},{"moved_leaf_instructions",int64_t(t.movedLeafInstructions)},{"leaf_anchors",int64_t(t.leafAnchors)},{"leaf_anchor_pairs",[&](){json::Array a;for(auto &p:t.leafAnchorPairs)a.push_back(p);return a;}()},{"fusion_plan",json::Object{{"kind",t.planKind},{"matched_left",t.matchedLeft},{"matched_right",t.matchedRight},{"left_context",bound(t.leftContext)},{"right_context",bound(t.rightContext)},{"split_is_loop_header",t.loopHeaderSplit},{"replication_required",t.replication}}},{"local_reject_reason",t.localRejectReason},{"score_result",scoreJson(score)},{"eligible",eligible},{"cleanup_iterations",int64_t(t.cleanupIterations)},{"alignment_order","function_order_v1"},{"original_darm_similarity",t.originalSimilarity},{"original_darm_profitable",t.originalProfitable},{"replication_required",t.replication},{"orientation_swapped",t.swapped},{"left",bound(t.left)},{"right",bound(t.right)},{"after_raw",stats(t.afterRaw)},{"after",stats(t.after)},{"cleaned_hash",t.normalized?moduleHash(*t.normalized):""},{"parent_ir",fullSnapshots?"../state-"+std::to_string(t.candidate.version)+".ll":inputPath},{"snapshot_mode",fullSnapshots?"full":"compact"},{"cleaned_ir",t.valid?(fullSnapshots?"after.ll":outputPath):""},{"timings_ms",json::Object{{"merge",t.mergeMs},{"normalization",t.normalizeMs},{"features",t.featuresMs},{"trial_total",t.totalMs},{"score_with_analysis",t.scoreMs}}},{"semantic_validation","not_run"}};
+    if (!t.anchorStats.empty()) report["anchor"] = json::Object(t.anchorStats);
+    jsonFile(path+"/trial.json", std::move(report));
   }
   void commit(unsigned version,const Candidate&c,const ScoreResult&score,const Module&m)override {
     writeIR(m,dir+"/state-"+std::to_string(version)+".ll");
@@ -131,12 +133,13 @@ static int runSearch(int argc, const char *const *argv, TrialWorker *batch = nul
   fusion::requestProfile.clear();
   try {
     std::string input,function,output,debug,split,left,right,replayParentHash,policy="llvm24";Options options;options.cleanupMode=CleanupMode::DarmCFGInstCombine;bool singleBranchB2B=true, strategyGiven=true, useDarmB2B=false;
+    bool useArtifactB2B=false, useAnchorB2B=false;
     B2RStrategy b2rStrategy = B2RStrategy::Darm;
     std::string recipeInput, quoteMode="on";
     bool recipeCache=false, fullSnapshots=true;
     bool controlOnly=false,catalogOnly=false;std::string ttiWorker="/home/chh/kernel-benchmark-suite/tools/run-llvm24-tti";
     for(int i=1;i<argc;++i){std::string k=argv[i];
-      if(k=="--help"){outs()<<"fusion-search v1 --ir FILE --function NAME --out FILE [--b2b-strategy dp1|darm] [--b2r-strategy darm|guarded] [--structural 0|1] [--split ID --left ID --right ID] [--debug-dir DIR] [--ir-snapshots full|compact] [--tti-worker EXECUTABLE] [--catalog-only 0|1] [--control-only 0|1] [--rounds N] [--trials N]\n";return 0;}
+      if(k=="--help"){outs()<<"fusion-search v1 --ir FILE --function NAME --out FILE [--b2b-strategy dp1|darm|darm-artifact|anchor] [--b2r-strategy darm|guarded] [--structural 0|1] [--split ID --left ID --right ID] [--debug-dir DIR] [--ir-snapshots full|compact] [--tti-worker EXECUTABLE] [--catalog-only 0|1] [--control-only 0|1] [--rounds N] [--trials N]\n";return 0;}
       if(i+1==argc)throw std::runtime_error("missing option value");std::string v=argv[++i];
       if(k=="--control-only"){if(v!="0"&&v!="1")throw std::runtime_error("control-only must be 0 or 1");controlOnly=v=="1";}
       else if(k=="--catalog-only"){if(v!="0"&&v!="1")throw std::runtime_error("catalog-only must be 0 or 1");catalogOnly=v=="1";}
@@ -160,10 +163,12 @@ static int runSearch(int argc, const char *const *argv, TrialWorker *batch = nul
       else if(k=="--replay-parent-hash")replayParentHash=v;
       else if(k=="--ir")input=v;else if(k=="--function")function=v;else if(k=="--out")output=v;
       else if(k=="--b2b-strategy"){
-        if(v!="darm" && v!="dp1")
-          throw std::runtime_error("b2b-strategy must be darm or dp1");
+        if(v!="darm" && v!="dp1" && v!="darm-artifact" && v!="anchor")
+          throw std::runtime_error("b2b-strategy must be dp1, darm, darm-artifact or anchor");
         strategyGiven=true;
-        useDarmB2B=v=="darm";
+        useArtifactB2B=v=="darm-artifact";
+        useAnchorB2B=v=="anchor";
+        useDarmB2B=v=="darm" || useArtifactB2B;
         singleBranchB2B=!useDarmB2B;
       }
       else if(k=="--structural"){if(v!="1")throw std::runtime_error("v1 uses structural enumeration");}
@@ -178,7 +183,7 @@ static int runSearch(int argc, const char *const *argv, TrialWorker *batch = nul
     if(input.empty()||function.empty()||output.empty())throw std::runtime_error("--ir, --function, --out required");
     if(options.optLevel!=2&&options.optLevel!=3)throw std::runtime_error("opt-level must be 2 or 3");
     if(sys::fs::exists(output))throw std::runtime_error("output already exists");
-    if (!recipeInput.empty() && (split.empty() || left.empty() || right.empty() || !singleBranchB2B || catalogOnly || controlOnly))
+    if (!recipeInput.empty() && (split.empty() || left.empty() || right.empty() || !singleBranchB2B || useAnchorB2B || catalogOnly || controlOnly))
       throw std::runtime_error("recipe replay requires an explicit DP1 B2B pair");
     bool pair=!split.empty()||!left.empty()||!right.empty();if(pair&&(split.empty()||left.empty()||right.empty()))throw std::runtime_error("explicit pair requires all three IDs");
     if (options.cleanupMode == CleanupMode::DarmCFGInstCombine) {
@@ -278,7 +283,7 @@ static int runSearch(int argc, const char *const *argv, TrialWorker *batch = nul
     auto &llvm24Scorer = batch ? *batch->scorer : standaloneScorer;
     if(observer)jsonFile(debug+"/run.json",json::Object{
       {"schema","fusion-v1"},{"function",function},{"policy","llvm24"},
-      {"b2b_strategy",useDarmB2B?"darm":"dp1"},{"b2r_strategy",b2rStrategy==B2RStrategy::Guarded?"guarded":"darm"},{"r2r_strategy","darm"},
+      {"b2b_strategy",useAnchorB2B?"anchor":useArtifactB2B?"darm-artifact":useDarmB2B?"darm":"dp1"},{"b2r_strategy",b2rStrategy==B2RStrategy::Guarded?"guarded":"darm"},{"r2r_strategy","darm"},
       {"cleanup","darm-cfg-dce-instcombine"},{"phi_fold_threshold",7},
       {"initial_parent_hash",moduleHash(*module)},{"replay_parent_hash",replayParentHash},
       {"semantic_validation","not_run"}});
@@ -318,7 +323,23 @@ static int runSearch(int argc, const char *const *argv, TrialWorker *batch = nul
       json::Object recipeOut;
       std::string recipeCacheStatus=recipe ? "hit" : "miss";
       std::vector<Trial> plans;
-      if (!logical && singleBranchB2B) {
+      if (!logical && useAnchorB2B) {
+        std::optional<DenseMap<const Instruction *, int>> prices;
+        auto cost = [&](const Instruction &inst) {
+          if (!prices)
+            prices = llvm24Scorer.instructionCosts(*f);
+          auto found = prices->find(&inst);
+          return found == prices->end() ? -1 : found->second;
+        };
+        std::optional<DenseMap<Type *, int>> selectPrices;
+        auto selectCost = [&](Type *type) {
+          if (!selectPrices) selectPrices = llvm24Scorer.selectCosts(*f);
+          auto found = selectPrices->find(type);
+          return found == selectPrices->end() ? -1 : found->second;
+        };
+        plans = planSingleBranchB2B(*module, c, options.optLevel, options.cleanupMode,
+                                   "", intrinsicCost, nullptr, nullptr, cost, selectCost);
+      } else if (!logical && singleBranchB2B) {
         try {
           plans=planSingleBranchB2B(*module,c,options.optLevel,options.cleanupMode,"",intrinsicCost,
                                    &recipeOut,recipe ? recipe->getAsObject() : nullptr);
@@ -346,6 +367,10 @@ static int runSearch(int argc, const char *const *argv, TrialWorker *batch = nul
           auto result = profileCall("evaluate_score",[&](){return evaluateTrial(*module, plan, round, scorer);});
           if (StringRef(result.reason).startswith("tti_quote_")) throw std::runtime_error(result.reason);
           const bool allowed = eligible(plan, result, options);
+          if (useAnchorB2B)
+            profitability.push_back(json::Object{{"layout",plan.mergePath},{"valid",plan.valid},
+                {"eligible",allowed},{"anchor",json::Object(plan.anchorStats)},
+                {"score_result",scoreJson(result)}});
           if (t.mergePath.empty() ||
               ((plan.valid && !t.valid) ||
                 (result.status == ScoreStatus::Scored &&
@@ -354,13 +379,17 @@ static int runSearch(int argc, const char *const *argv, TrialWorker *batch = nul
             score = std::move(result);
           }
         }
+        if (useAnchorB2B) {
+          t.anchorStats["generated"] = int64_t(plans.size());
+          t.anchorStats["unique_normalized"] = int64_t(seenDP1.size());
+        }
         t.layoutProfitability = std::move(profitability);
       }
       const bool allowDarmB2B = !strategyGiven || useDarmB2B;
       if (!plannedB2B) {
         Trial boundaryFold;
         t = tryPair(*module, c, 0, options.optLevel, options.cleanupMode,
-                    logical.get(), allowDarmB2B, b2rStrategy, &boundaryFold);
+                    logical.get(), allowDarmB2B, b2rStrategy, &boundaryFold, useArtifactB2B);
         if (t.valid) score = profileCall("evaluate_score",[&](){return evaluateTrial(*module, t, round, scorer);});
         if (boundaryFold.valid) {
           if (StringRef(score.reason).startswith("tti_quote_")) throw std::runtime_error(score.reason);
