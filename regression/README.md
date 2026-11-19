@@ -79,3 +79,15 @@ Auto DARM 同轮测量并保留结果。两份冻结 Greedy 二进制相同；
 分开计时用于观察波动。门槛适用于此冻结输入和设备。
 
 规模扫描（65,536、262,144、1,048,576、4,194,304 个界面）见 `records/hlld-v1-scaling.json`。
+
+### Anchor GPU 判定
+
+`python3 regression/measure_anchor_gpu.py` 在同一批中交错测量 baseline、A 和
+anchor 候选 N，按每轮中位时间计算 N/A。每轮 N/A 均不超过 1.02，或配对比值
+中位数的 95% bootstrap 区间上限不超过 1.02，即通过性能判定。Bootstrap
+使用固定种子和 10,000 次重采样。
+
+稳定性单独计算 A/baseline 与 N/baseline 的跨轮跨度（最大比值除以最小比值再减 1）。
+超过 5% 停测，3% 到 5% 保留在结果中。DARM 诊断使用独立批次及单独的结果，
+诊断数据不参与稳定性和性能判定。TIGRE runner 校验六个子批次的完整输出和 guard，
+其他 event runner 对预热和计时样本逐次报告完整输出校验。
