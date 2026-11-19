@@ -12,7 +12,6 @@
 #include "llvm/Analysis/InstructionSimplify.h"
 #include "llvm/IR/IntrinsicInst.h"
 #include "llvm/IR/LegacyPassManager.h"
-#include "llvm/Transforms/IPO/PassManagerBuilder.h"
 #include "llvm/Transforms/Utils/Cloning.h"
 #include "llvm/Transforms/Utils/SSAUpdater.h"
 #include "llvm/Transforms/Utils/BasicBlockUtils.h"
@@ -50,9 +49,6 @@ static Value *emitB2BSelect(IRBuilder<> &builder, Value *condition,
 static std::string name(const Value *v) {
   if(!v) return "<exit>";
   std::string s; raw_string_ostream out(s); v->printAsOperand(out,false); return out.str();
-}
-static std::string text(const Value &v) {
-  std::string s; raw_string_ostream out(s); v.print(out); return out.str();
 }
 // Give each comparison its own function metadata slots. Include the node
 // definitions so equal slot numbers cannot hide changes to the attachments.
@@ -171,12 +167,6 @@ Features features(Function &f) {
   }
   return x;
 }
-void normalize(Module &m,unsigned level) {
-  legacy::PassManager pm; PassManagerBuilder builder;
-  builder.OptLevel=level; builder.SizeLevel=0;
-  builder.LoopVectorize=level>1; builder.SLPVectorize=level>1;
-  builder.populateModulePassManager(pm); pm.run(m);
-}
 // Match the original CFMelder outer cleanup, including target-aware TTI.
 // RegionMelder::merge already runs internal cleanup, post-optimization,
 // and (unless disabled upstream) unpredication.
@@ -188,7 +178,7 @@ static bool usesDarmDCE(CleanupMode mode) {
   return mode == CleanupMode::DarmCFGInstCombine;
 }
 
-unsigned cleanup(Module &m,const std::string &function,unsigned level,CleanupMode mode) {
+static unsigned cleanup(Module &m,const std::string &function,CleanupMode mode) {
   if(mode==CleanupMode::None)return 0;
   canonicalPhiOrder(m,function);
   auto*f=m.getFunction(function);if(!f)throw std::runtime_error("cleanup function missing");
@@ -602,7 +592,7 @@ struct AdjacentLeafEntry {
   }
 };
 std::set<std::string> crossLevelCatalogRejections(Function &f,
-    const std::vector<Candidate> &candidates,const Options &options) {
+    const std::vector<Candidate> &candidates) {
   std::set<std::string> rejected;
   Analysis analysis(f);
   Inventory inventory(f,analysis);
@@ -915,15 +905,15 @@ static bool foldGuardedReadBoundary(BasicBlock &entry, Value *trialSide, Dominat
 // Share identical trailing arithmetic by redirecting the short arm to
 // the existing anchor. All other edges, including the long arm's memory
 // paths, keep their original execution conditions.
-static Trial tryPairImpl(const Module&parent,const Candidate&c,unsigned version,unsigned level,CleanupMode mode,const LogicalRegionState *logical,bool nested,bool allowB2B,B2RStrategy b2rStrategy,Trial *boundaryFold);
+static Trial tryPairImpl(const Module&parent,const Candidate&c,unsigned version,CleanupMode mode,const LogicalRegionState *logical,bool nested,bool allowB2B,B2RStrategy b2rStrategy,Trial *boundaryFold);
 // Public entry. The outermost call owns the side tag and removes it from every
 // IR it returns, so committed modules, debug dumps and hashes never carry it.
 Trial tryPair(const Module&parent,const Candidate&c,unsigned version,unsigned level,CleanupMode mode,const LogicalRegionState *logical) {
   return tryPair(parent,c,version,level,mode,logical,true);
 }
-Trial tryPair(const Module&parent,const Candidate&c,unsigned version,unsigned level,CleanupMode mode,const LogicalRegionState *logical,bool allowB2B,B2RStrategy b2rStrategy,Trial *boundaryFold) {
+Trial tryPair(const Module&parent,const Candidate&c,unsigned version,unsigned,CleanupMode mode,const LogicalRegionState *logical,bool allowB2B,B2RStrategy b2rStrategy,Trial *boundaryFold) {
   bool nested=hasSideTag(parent.getFunction(c.function));
-  Trial t=tryPairImpl(parent,c,version,level,mode,logical,nested,allowB2B,b2rStrategy,boundaryFold);
+  Trial t=tryPairImpl(parent,c,version,mode,logical,nested,allowB2B,b2rStrategy,boundaryFold);
   if(!nested){
     stripSideTag(t.raw.get());stripSideTag(t.normalized.get());
     if (boundaryFold && boundaryFold->valid) {
@@ -933,7 +923,7 @@ Trial tryPair(const Module&parent,const Candidate&c,unsigned version,unsigned le
   }
   return t;
 }
-static Trial tryPairImpl(const Module&parent,const Candidate&c,unsigned version,unsigned level,CleanupMode mode,const LogicalRegionState *logical,bool nested,bool allowB2B,B2RStrategy b2rStrategy,Trial *boundaryFold) {
+static Trial tryPairImpl(const Module&parent,const Candidate&c,unsigned version,CleanupMode mode,const LogicalRegionState *logical,bool nested,bool allowB2B,B2RStrategy b2rStrategy,Trial *boundaryFold) {
   auto started=Clock::now();Trial t;t.candidate=c;t.cleanupMode=mode;auto reject=[&](const char*reason){t.reason=reason;t.totalMs=millis(started);return std::move(t);};
   // After-side reachability on the final cleaned IR, before the tag is stripped.
   auto finishSides=[&](Function *after){
@@ -1452,7 +1442,7 @@ static Trial tryPairImpl(const Module&parent,const Candidate&c,unsigned version,
   }
   // Do not retain CloneMap's tracking handles while cleanup mutates the clone.
   CloneMap.clear();
-  t.cleanupIterations=cleanup(*t.normalized,c.function,level,mode);canonicalPhiOrder(*t.normalized,c.function);t.normalizeMs=millis(nt);
+  t.cleanupIterations=cleanup(*t.normalized,c.function,mode);canonicalPhiOrder(*t.normalized,c.function);t.normalizeMs=millis(nt);
   for(size_t I=0;I<CleanedBlocks.size();++I)if(Value *V=CleanedBlocks[I])
     t.blockProvenance[I].cleanedBlock=blockLabel(V);
   if(verifyModule(*t.normalized,&errs()))return reject("normalized_verifier_failed");
@@ -1476,7 +1466,7 @@ static Trial tryPairImpl(const Module&parent,const Candidate&c,unsigned version,
       canonicalPhiOrder(*alternate.raw, c.function);
       alternate.afterRaw = features(target);
       alternate.normalized = CloneModule(*alternate.raw);
-      alternate.cleanupIterations = cleanup(*alternate.normalized, c.function, level, mode);
+      alternate.cleanupIterations = cleanup(*alternate.normalized, c.function, mode);
       canonicalPhiOrder(*alternate.normalized, c.function);
       if (verifyModule(*alternate.normalized)) break;
       auto &finalTarget = *alternate.normalized->getFunction(c.function);
@@ -2627,7 +2617,7 @@ std::vector<Trial> planSingleBranchB2B(const Module &parent, const Candidate &c,
     }
     t.afterRaw = profileCall("features",[&](){return features(*raw);});
     t.normalized = profileCall("clone_before_cleanup",[&](){return CloneModule(*t.raw);});
-    t.cleanupIterations = profileCall("cleanup",[&](){return cleanup(*t.normalized, c.function, level, mode);});
+    t.cleanupIterations = profileCall("cleanup",[&](){return cleanup(*t.normalized, c.function, mode);});
     auto *after = t.normalized->getFunction(c.function);
     if (!profileCall("verify",[&](){return verifyModule(*t.normalized, &errs());})) {
       t.after = profileCall("features",[&](){return features(*after);});
@@ -2643,7 +2633,7 @@ std::vector<Trial> planSingleBranchB2B(const Module &parent, const Candidate &c,
   return trials;
 }
 
-RoundContext makeRound(const Module&parent,const std::string&function,unsigned version,unsigned level,CleanupMode mode) {
+RoundContext makeRound(const Module&parent,const std::string&function,unsigned version,unsigned,CleanupMode mode) {
   ProfileScope roundScope("round_control_analysis_cleanup");
   RoundContext r;r.cleanupMode=mode;r.parentVersion=version;r.function=function;r.parentHash=moduleHash(parent);
   r.targetTriple=parent.getTargetTriple();r.dataLayout=parent.getDataLayoutStr();r.llvmVersion=LLVM_VERSION_STRING;
@@ -2651,7 +2641,7 @@ RoundContext makeRound(const Module&parent,const std::string&function,unsigned v
       "darm-simplifycfg-phi7-condbranch0-sink0-hoist0;earlycse-dce-instcombine;phi-edge-function-order-v1";
   auto*f=parent.getFunction(function);if(!f||f->isDeclaration())throw std::runtime_error("round function missing");
   r.targetAttributes=attributes(f->getAttributes(),f->arg_size());
-  auto start=Clock::now();r.parentFeatures=features(*f);r.control=CloneModule(parent);r.controlCleanupIterations=cleanup(*r.control,function,level,mode);
+  auto start=Clock::now();r.parentFeatures=features(*f);r.control=CloneModule(parent);r.controlCleanupIterations=cleanup(*r.control,function,mode);
   canonicalPhiOrder(*r.control,function);
   if(verifyModule(*r.control,&errs()))throw std::runtime_error("control verifier failed");
   auto*control=r.control->getFunction(function);if(!control||control->isDeclaration())throw std::runtime_error("control function missing");

@@ -149,11 +149,9 @@ RoundContext makeRound(const llvm::Module &, const std::string &function,
                        unsigned version, unsigned optLevel, CleanupMode mode=CleanupMode::DarmCFGInstCombine);
 ScoreResult evaluateTrial(const llvm::Module &, Trial &, const RoundContext &, const Scorer &);
 bool eligible(const Trial &, const ScoreResult &, const Options &);
-void normalize(llvm::Module &, unsigned optLevel);
-unsigned cleanup(llvm::Module &, const std::string &function, unsigned level, CleanupMode);
 // Complete E-leaves require same-SSA constant predicates unless explicitly enabled.
 std::set<std::string> crossLevelCatalogRejections(llvm::Function &,
-    const std::vector<Candidate> &, const Options &);
+    const std::vector<Candidate> &);
 std::vector<Candidate> enumerate(llvm::Function &, unsigned version);
 std::vector<Candidate> enumerateAdjacent(llvm::Function &, unsigned version);
 // Resolved endpoints belong to this exact Function snapshot. Coordinates are

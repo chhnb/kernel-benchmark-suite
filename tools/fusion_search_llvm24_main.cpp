@@ -257,7 +257,7 @@ static int runSearch(int argc, const char *const *argv, TrialWorker *batch = nul
       const char*cleanupName="darm-cfg-dce-instcombine";
       if(options.adjacentOnly){auto st=LogicalRegionState::initialize(*module->getFunction(function));observer->logical(0,st->json());}
       auto candidates=enumerate(*module->getFunction(function),0);json::Array entries;
-      const auto rejected=crossLevelCatalogRejections(*f,candidates,options);
+      const auto rejected=crossLevelCatalogRejections(*f,candidates);
       for(const auto&c:candidates)entries.push_back(json::Object{{"logical_decision",c.logicalDecision},{"logical_left",c.logicalLeft},{"logical_right",c.logicalRight},{"candidate",c.key()},{"function",c.function},{"split",c.split},{"left",c.left},{"right",c.right},{"preflight_rejection",rejected.count(c.key())?"b2r_replicates_same_decision_chain_requires_opt_in":""}});
       jsonFile(debug+"/catalog.json",json::Object{{"schema","postopt-candidate-catalog-v1"},{"adjacent_only",options.adjacentOnly},{"cross_decision_leaves",false},{"source_ir",input},{"function",function},
         {"parent_hash",moduleHash(*module)},{"cleanup",cleanupName},{"opt_level",int64_t(options.optLevel)},{"count",int64_t(candidates.size())},{"candidates",std::move(entries)},
