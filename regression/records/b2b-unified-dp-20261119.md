@@ -138,3 +138,64 @@ Map-Airy 第 8 次提交的 block 坐标、决策归属及父 IR 哈希一致。
 | PCM32 | 17 → 17 | 34 → 34 | 131 → 130 | 3.356 → 3.428 |
 
 逐请求、逐提交和逐轮原始记录位于 `build/b2b-layouts/k16-gpu/`。
+
+## 限制 unified 的候选组合 · 2026-11-19
+
+实现提交为 `e1a6812`。默认仍为 legacy，unified 的扩展组合需显式传入 `--b2b-unified-extended on`。扩展模式区分 recipe 的规划依赖。
+
+### Map-Airy 第 8 次提交的组合
+
+此前 U 的 `b2b-unified-75` 在 `evaluate:B6:B5:B7` 上使用 10 对前向分段 DP 配对。剩余臂坐标为 (0,0) 至 (2,2) 及 (4,4) 至 (10,10)，before 为空。后向 14 对与 legacy 的 `single-branch-join-dp-2` 相同，来自 reverse DP。贪心后缀只有 11 对。legacy 只会将该 14 对 tail 与零前向配对或完整臂的 3 对贪心前缀组合，并独立生成无 tail 的分段方案。
+
+用同一审计父 IR 做显式候选重放。扩展关时最优 TTI 为 4734，目标组合不在集合中。扩展开时原组合以 `b2b-unified-77` 出现，TTI 为 4730。此前完整扩展链在 GPU 上慢 5.60%。
+
+关闭扩展时，生成顺序为贪心前缀、merged-exit、贪心后缀及其前缀组合、每条 join-DP tail 的纯下沉与前缀组合、前向分段按排名及其 resplit。join-DP 的纯下沉和前缀变体按 legacy 实际代码逐条交错。存在有效且已评分的获胜方案时，只在 `result.total` 严格更大时替换，因此同分取发射顺序中第一个。清理后哈希相同的有效方案只评分一次。
+
+### 离线复现
+
+| 规划器 | 复现 | 每候选平均生成 | 去重后有效评分 |
+| --- | ---: | ---: | ---: |
+| legacy | 274/274 | 12.50 | 2308 |
+| 旧 unified K=16 | 274/274 | 10.27 | 2101 |
+| 限制后 unified K=16 | 270/274 | 7.54 | 1394 |
+
+| 历史布局族 | 复现 |
+| --- | ---: |
+| `common-join-dp` | 0/1 |
+| `prefix` | 90/90 |
+| `prefix-merged-exit` | 2/2 |
+| `prefix-suffix` | 6/6 |
+| `segment-dp` | 170/173 |
+| `separate` | 1/1 |
+| `suffix` | 1/1 |
+
+| Case | 提交序号 | 历史布局 | 历史 TTI | 限制后最低 TTI | 旧 unified 的获胜组合 |
+| --- | ---: | --- | ---: | ---: | --- |
+| MapAiry | 29 | `single-branch-segment-dp-32` | 4276 | 4292 | 3 对分段 + 1 对下沉 |
+| MapAiry | 30 | `single-branch-common-join-dp-2` | 4271 | 4272 | 1 对分段 + 3 对下沉 |
+| SRAD16 | 3 | `single-branch-segment-dp-28` | 451 | 457 | 3 对分段 + 1 对下沉 |
+| SRAD32 | 3 | `single-branch-segment-dp-28` | 451 | 457 | 3 对分段 + 1 对下沉 |
+
+三个原分段获胜者的 legacy 排名为第 28 或 32 名。Map-Airy 第 30 次原布局为 common-join，超出本轮允许的前缀／tail 组合。旧 unified 在这四处均靠分段加下沉达到历史 TTI。
+
+### 完整 Greedy 逐字节检查
+
+| Case | U 的最终 IR | A → U 提交数 | A → U 最终 TTI |
+| --- | --- | ---: | ---: |
+| vllm | A 别名 | 224 → 224 | 2619 → 2619 |
+| tigre | A 别名 | 6 → 6 | 946 → 946 |
+| MapAiry | 有差异 | 32 → 34 | 4259 → 4271 |
+| HLLD | A 别名 | 4 → 4 | 1701 → 1701 |
+| NQU64 | A 别名 | 1 → 1 | 282 → 282 |
+| MS32 | A 别名 | 1 → 1 | 212 → 212 |
+| PCM32 | A 别名 | 17 → 17 | 1138 → 1138 |
+
+MapAiry 第 29 次提交首次分歧。A 为第 47 轮 `evaluate:B54:B65:B64`，`single-branch-segment-dp-32`，TTI 4276。U 为第 47 轮 `evaluate:B54:B65:B64`，`b2b-unified-3`，TTI 4292。
+在相同父 IR 上，A 的布局没有进入 U 的候选集。
+第 8 次提交的清理后 IR 已恢复与 A 一致，前 28 次均一致。第 29 次的 A 布局是 legacy 的第 32 名分段方案，受限 unified 的预算为 16。U 改选纯下沉，TTI 为 4292。该处分歧由候选缺失触发。
+
+默认 legacy 的七份产物与 A 的提交序列、最终 IR 和 HSACO 逐字节一致。测试 27 项通过、4 项已知缺件跳过。本轮只进行离线验证和编译，完整门槛未达到，步骤 5 停在切换默认值之前。
+
+B2B 行数按 `using B2BMatch` 到 `makeRound` 之前计算，从 1258 行到 1279 行。本轮新增模式隔离与受限生成，尚未进入 legacy 删除阶段。
+
+原始评分、完整提交链与差异位于 `build/b2b-layouts/restricted-replay/`。
