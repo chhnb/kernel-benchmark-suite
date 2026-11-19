@@ -36,7 +36,7 @@ void insert(Beam &beam, State state) {
 
 SmallVector<AnchorPlan, 2> planB2BAnchors(
     Work left, Work right, BasicBlock &leftBlock, BasicBlock &rightBlock,
-    BasicBlock *join, bool allowTie, function_ref<bool(Instruction &, Instruction &)> compatible,
+    BasicBlock *join, bool pairTies, function_ref<bool(Instruction &, Instruction &)> compatible,
     function_ref<int(const Instruction &)> instructionCost,
     function_ref<int(Type *)> selectCost) {
   const std::array<Work, 2> work{left, right};
@@ -45,75 +45,96 @@ SmallVector<AnchorPlan, 2> planB2BAnchors(
     for (unsigned k = 0; k != work[side].size(); ++k)
       indices[side].insert({work[side][k], k});
 
-  std::vector<int> partners[2] = {
+  struct Node {
+    AnchorMatch match;
+    int parent, outputSelectCost;
+    int64_t value;
+    SmallVector<unsigned, 4> children;
+    bool kept = false;
+  };
+  std::vector<int> owners[2] = {
       std::vector<int>(left.size(), -1), std::vector<int>(right.size(), -1)};
-  Matches proposed, cutoffs;
-  unsigned conflicts = 0;
+  std::vector<Node> nodes;
+  unsigned conflicts = 0, shared = 0;
   auto couldPropagate = [&](Value *lv, Value *rv) {
     auto l = indices[0].find(lv), r = indices[1].find(rv);
     if (l == indices[0].end() || r == indices[1].end())
       return false;
-    return partners[0][l->second] == int(r->second) ||
-           (partners[0][l->second] == -1 && partners[1][r->second] == -1 &&
-            compatible(*left[l->second], *right[r->second]));
+    const int lo = owners[0][l->second], ro = owners[1][r->second];
+    return (lo >= 0 && lo == ro) ||
+           (lo < 0 && ro < 0 && compatible(*left[l->second], *right[r->second]));
   };
-  auto seed = [&](Value *lv, Value *rv, int outputSelectCost) {
+  auto addNode = [&](Value *lv, Value *rv, int parent, int outputSelectCost) {
     auto l = indices[0].find(lv), r = indices[1].find(rv);
     if (l == indices[0].end() || r == indices[1].end() ||
         !compatible(*left[l->second], *right[r->second]))
-      return;
+      return false;
     const auto i = l->second, j = r->second;
-    if (partners[0][i] == int(j))
-      return;
-    if (partners[0][i] != -1 || partners[1][j] != -1) {
+    const int lo = owners[0][i], ro = owners[1][j];
+    if (lo >= 0 && lo == ro) {
+      ++shared;
+      return false;
+    }
+    if (lo >= 0 || ro >= 0) {
       ++conflicts;
-      return;
+      return false;
     }
-    auto *li = left[i], *ri = right[j];
-    bool swapped = false;
-    if (li->isBinaryOp() && li->isCommutative() && ri->isCommutative()) {
-      auto count = [&](unsigned offset) {
-        return unsigned(couldPropagate(li->getOperand(0), ri->getOperand(offset))) +
-               unsigned(couldPropagate(li->getOperand(1), ri->getOperand(1 ^ offset)));
-      };
-      swapped = count(1) > count(0);
-    }
-    int inputSelectCost = 0;
-    for (unsigned n = 0; n < li->getNumOperands(); ++n) {
-      auto *lOp = li->getOperand(n), *rOp = ri->getOperand(n ^ unsigned(swapped));
-      if (lOp != rOp && !couldPropagate(lOp, rOp))
-        inputSelectCost += selectCost(lOp->getType());
-    }
-    const int extra = inputSelectCost - outputSelectCost;
-    const int cost = instructionCost(*li);
-    if (extra > cost || (!allowTie && extra == cost)) {
-      cutoffs.push_back({i, j, swapped});
-      return;
-    }
-    partners[0][i] = j;
-    partners[1][j] = i;
-    proposed.push_back({i, j, swapped});
+    const unsigned index = nodes.size();
+    owners[0][i] = owners[1][j] = index;
+    nodes.push_back({{i, j}, parent, outputSelectCost, instructionCost(*left[i]), {}});
+    if (parent >= 0)
+      nodes[parent].children.push_back(index);
+    return true;
   };
   if (join)
     for (auto &phi : join->phis())
-      seed(phi.getIncomingValueForBlock(&leftBlock),
-           phi.getIncomingValueForBlock(&rightBlock), selectCost(phi.getType()));
+      addNode(phi.getIncomingValueForBlock(&leftBlock),
+              phi.getIncomingValueForBlock(&rightBlock), -1, 0);
   for (auto *l : left)
     if (auto *store = dyn_cast<StoreInst>(l))
       for (auto *r : right)
         if (auto *other = dyn_cast<StoreInst>(r))
           if (store->getPointerOperand() == other->getPointerOperand())
-            seed(store, other, 0);
+            addNode(store, other, -1, 0);
 
-  for (unsigned k = 0; k < proposed.size(); ++k) {
-    const auto pair = proposed[k];
+  for (unsigned k = 0; k < nodes.size(); ++k) {
+    auto pair = nodes[k].match;
     auto *l = left[pair.left], *r = right[pair.right];
+    if (l->isBinaryOp() && l->isCommutative() && r->isCommutative()) {
+      auto count = [&](unsigned offset) {
+        return unsigned(couldPropagate(l->getOperand(0), r->getOperand(offset))) +
+               unsigned(couldPropagate(l->getOperand(1), r->getOperand(1 ^ offset)));
+      };
+      pair.swapped = count(1) > count(0);
+      nodes[k].match.swapped = pair.swapped;
+    }
     for (unsigned n = 0; n < l->getNumOperands(); ++n) {
       auto *op = l->getOperand(n);
       auto *other = r->getOperand(n ^ unsigned(pair.swapped));
-      if (op != other && indices[0].count(op) && indices[1].count(other))
-        seed(op, other, selectCost(op->getType()));
+      if (op == other)
+        continue;
+      const int outputSelectCost = selectCost(op->getType());
+      // Only the first incoming edge owns a shared node. Charge the other
+      // edge as a leaf so the forest never counts the same gain twice.
+      if (!addNode(op, other, k, outputSelectCost))
+        nodes[k].value -= outputSelectCost;
     }
+  }
+  for (auto &node : llvm::reverse(nodes))
+    for (unsigned child : node.children)
+      node.value += std::max<int64_t>(nodes[child].value, -nodes[child].outputSelectCost);
+
+  Matches proposed;
+  SmallVector<AnchorCutoff, 8> cutoffs;
+  for (auto &node : nodes) {
+    const bool ancestorCut = node.parent >= 0 && !nodes[node.parent].kept;
+    // Equal local costs leave control flow and cleanup to the final scorer.
+    const int64_t net = node.value + node.outputSelectCost;
+    node.kept = !ancestorCut && (net > 0 || (pairTies && net == 0));
+    if (node.kept)
+      proposed.push_back(node.match);
+    else
+      cutoffs.push_back({node.match, node.value, node.outputSelectCost, ancestorCut});
   }
 
   llvm::sort(proposed, [](auto a, auto b) { return a.left < b.left; });
@@ -161,8 +182,10 @@ SmallVector<AnchorPlan, 2> planB2BAnchors(
   };
 
   DenseSet<std::pair<unsigned, unsigned>> cutPairs;
-  for (auto pair : cutoffs)
-    cutPairs.insert({pair.left, pair.right});
+  for (const auto &cut : cutoffs)
+    cutPairs.insert({cut.match.left, cut.match.right});
+  DenseSet<std::pair<unsigned, unsigned>> seenForwardCut;
+  Matches forwardCutoffs;
   auto hasSharedConsumer = [&](Instruction *l, Instruction *r) {
     return llvm::any_of(l->uses(), [&](const Use &leftUse) {
       auto *leftUser = dyn_cast<Instruction>(leftUse.getUser());
@@ -201,12 +224,17 @@ SmallVector<AnchorPlan, 2> planB2BAnchors(
           const int inputCost = addedCost(pair, state.pairs);
           const int gain = instructionCost(*left[i]) - inputCost;
           // A producer can be reached solely from a forward segment when
-          // its consumers are on different PHI edges. Apply the strict
-          // cutoff to that case as well, using known earlier pairings.
+          // its consumers are on different PHI edges. Retain the forward
+          // profitability check using known earlier pairings.
           auto *resultType = left[i]->getType();
-          if (!allowTie && gain <= 0 && !resultType->isVoidTy() &&
-              gain + selectCost(resultType) <= 0 && hasSharedConsumer(left[i], right[j]))
+          const int unpaired = resultType->isVoidTy() ? 0 : selectCost(resultType);
+          const int net = gain + unpaired;
+          if (!resultType->isVoidTy() && (net < 0 || (!pairTies && net == 0)) &&
+              hasSharedConsumer(left[i], right[j])) {
+            if (seenForwardCut.insert({i, j}).second)
+              forwardCutoffs.push_back(pair);
             continue;
+          }
           State shared = state;
           shared.score += gain;
           shared.pairs.push_back(pair);
@@ -239,8 +267,8 @@ SmallVector<AnchorPlan, 2> planB2BAnchors(
 
   SmallVector<AnchorPlan, 2> result;
   for (auto &state : beam)
-    result.push_back({std::move(state.pairs), anchors, cutoffs,
-                      unsigned(proposed.size() - anchors.size()), conflicts, segments});
+    result.push_back({std::move(state.pairs), anchors, cutoffs, forwardCutoffs,
+                      shared, unsigned(proposed.size() - anchors.size()), conflicts, segments});
   return result;
 }
 }

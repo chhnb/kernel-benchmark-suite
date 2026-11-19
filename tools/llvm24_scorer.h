@@ -243,6 +243,9 @@ public:
             types.push_back(type);
         }
     auto &context = f.getContext();
+    auto *pointerCostType = Type::getInt64Ty(context);
+    if (seen.insert(pointerCostType).second)
+      types.push_back(pointerCostType);
     Module probe("anchor-select-quotes", context);
     probe.setTargetTriple(f.getParent()->getTargetTriple());
     probe.setDataLayout(f.getParent()->getDataLayout());

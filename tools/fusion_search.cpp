@@ -2379,6 +2379,7 @@ std::vector<Trial> planSingleBranchB2B(const Module &parent, const Candidate &c,
       return cost >= 0 ? cost : b2bWeight(inst, intrinsicCost);
     };
     auto selectCost = [&](Type *ty) -> int {
+      if (ty->isPointerTy()) ty = Type::getInt64Ty(f->getContext());
       const int cost = anchorSelectCost ? anchorSelectCost(ty) : -1;
       if (cost >= 0) return cost;
       return f->getParent()->getDataLayout().getTypeSizeInBits(ty).getKnownMinValue() <= 32 ? 1 : 2;
@@ -2394,9 +2395,9 @@ std::vector<Trial> planSingleBranchB2B(const Module &parent, const Candidate &c,
         return;
       list.push_back(std::move(layout));
     };
-    for (bool allowTie : {false, true}) {
+    for (bool pairTies : {true, false}) {
       auto plans = planB2BAnchors(segmentWork[0], segmentWork[1], *left, *right, join,
-                                allowTie, compatibleB2BPrefix, instructionCost, selectCost);
+                                pairTies, compatibleB2BPrefix, instructionCost, selectCost);
       for (const auto &plan : plans) {
         auto buildLayout = [&]() -> std::optional<Layout> {
           ArrayRef<AnchorMatch> front = plan.matches;
@@ -2407,13 +2408,22 @@ std::vector<Trial> planSingleBranchB2B(const Module &parent, const Candidate &c,
           if (!prefix && !segmentUsesValid && !independentExits)
             return std::nullopt;
           Layout layout;
-          json::Array swaps, cutoffs;
-          for (auto pair : plan.cutoffs) {
+          json::Array swaps, cutoffs, forwardCutoffs;
+          auto showPair = [&](AnchorMatch pair) -> json::Object {
             auto *l = segmentWork[0][pair.left], *r = segmentWork[1][pair.right];
-            cutoffs.push_back(json::Object{{"left", name(l)}, {"right", name(r)},
-                {"left_index", int64_t(pair.left)}, {"right_index", int64_t(pair.right)},
-                {"opcode", l->getOpcodeName()}});
+            return json::Object{{"left", name(l)}, {"right", name(r)},
+                    {"left_index", int64_t(pair.left)}, {"right_index", int64_t(pair.right)},
+                    {"opcode", l->getOpcodeName()}};
+          };
+          for (const auto &cut : plan.cutoffs) {
+            auto info = showPair(cut.match);
+            info["value"] = cut.value;
+            info["output_select_cost"] = cut.outputSelectCost;
+            info["ancestor_cut"] = cut.ancestorCut;
+            cutoffs.push_back(std::move(info));
           }
+          for (auto pair : plan.forwardCutoffs)
+            forwardCutoffs.push_back(showPair(pair));
           for (auto pair : front) {
             if (pair.swapped)
               swaps.push_back(json::Array{int64_t(pair.left), int64_t(pair.right)});
@@ -2425,7 +2435,8 @@ std::vector<Trial> planSingleBranchB2B(const Module &parent, const Candidate &c,
             }
           }
           layout.stats = json::Object{
-              {"mode", allowTie ? "relaxed" : "strict"},
+              {"mode", pairTies ? "tie-pair" : "tie-cut"}, {"shared", int64_t(plan.shared)},
+              {"forward_cutoffs", std::move(forwardCutoffs)},
               {"anchors", int64_t(plan.anchors.size())}, {"discarded", int64_t(plan.discarded)},
               {"conflicts", int64_t(plan.conflicts)}, {"segments", int64_t(plan.segments)},
               {"cutoff_count", int64_t(plan.cutoffs.size())}, {"cutoffs", std::move(cutoffs)},
@@ -2451,7 +2462,7 @@ std::vector<Trial> planSingleBranchB2B(const Module &parent, const Candidate &c,
       }
     }
     for (auto &layout : mergeExits)
-      if (layouts.size() < 6) addUnique(layouts, std::move(layout));
+      if (layouts.size() < 9) addUnique(layouts, std::move(layout));
     for (auto item : llvm::enumerate(layouts))
       item.value().label = "b2b-anchor-" + std::to_string(item.index() + 1);
   } else if (!recipeIn) {
