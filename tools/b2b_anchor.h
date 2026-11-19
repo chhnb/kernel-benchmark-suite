@@ -19,18 +19,11 @@ struct AnchorMatch {
     return left == other.left && right == other.right && swapped == other.swapped;
   }
 };
-struct AnchorCutoff {
-  AnchorMatch match;
-  int64_t value;
-  int outputSelectCost;
-  bool ancestorCut;
-};
 struct AnchorPlan {
   llvm::SmallVector<AnchorMatch, 8> matches;
   llvm::SmallVector<AnchorMatch, 8> anchors;
-  llvm::SmallVector<AnchorCutoff, 8> cutoffs;
+  llvm::SmallVector<AnchorMatch, 8> cutoffs;
   llvm::SmallVector<AnchorMatch, 8> forwardCutoffs;
-  unsigned shared = 0;
   unsigned chargedSegments = 0;
   int64_t phiCharge = 0;
   unsigned discarded = 0, conflicts = 0, segments = 0;
@@ -42,5 +35,5 @@ llvm::SmallVector<AnchorPlan, 3> planB2BAnchors(
     llvm::function_ref<bool(llvm::Instruction &, llvm::Instruction &)> compatible,
     llvm::function_ref<int(const llvm::Instruction &)> instructionCost,
     llvm::function_ref<int(llvm::Type *)> selectCost,
-    llvm::function_ref<int(llvm::Type *)> phiCost, bool chainCuts = true);
+    llvm::function_ref<int(llvm::Type *)> phiCost);
 }

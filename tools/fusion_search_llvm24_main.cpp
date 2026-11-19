@@ -324,14 +324,6 @@ static int runSearch(int argc, const char *const *argv, TrialWorker *batch = nul
       std::string recipeCacheStatus=recipe ? "hit" : "miss";
       std::vector<Trial> plans;
       if (!logical && useAnchorB2B) {
-        // Exercise each anchor component independently with the same worker.
-        StringRef ablation = "v3";
-        if (const char *value = std::getenv("FUSION_ANCHOR_ABLATION"))
-          ablation = value;
-        if (ablation != "v2" && ablation != "v2-c" && ablation != "v2-p" && ablation != "v3")
-          throw std::runtime_error("FUSION_ANCHOR_ABLATION must be v2, v2-c, v2-p or v3");
-        const bool chainCuts = ablation == "v2-c" || ablation == "v3";
-        const bool segmentPhis = ablation == "v2-p" || ablation == "v3";
         std::optional<DenseMap<const Instruction *, int>> prices;
         auto cost = [&](const Instruction &inst) {
           if (!prices)
@@ -342,7 +334,7 @@ static int runSearch(int argc, const char *const *argv, TrialWorker *batch = nul
         std::optional<LLVM24Scorer::TransferCosts> transferPrices;
         auto transferCost = [&](Type *type, bool phi) {
           if (!transferPrices)
-            transferPrices = llvm24Scorer.anchorTransferCosts(*f, chainCuts, segmentPhis);
+            transferPrices = llvm24Scorer.anchorTransferCosts(*f);
           const auto &prices = phi ? transferPrices->phis : transferPrices->selects;
           auto found = prices.find(type);
           return found == prices.end() ? -1 : found->second;
@@ -350,9 +342,7 @@ static int runSearch(int argc, const char *const *argv, TrialWorker *batch = nul
         auto selectCost = [&](Type *type) { return transferCost(type, false); };
         auto phiCost = [&](Type *type) { return transferCost(type, true); };
         plans = planSingleBranchB2B(*module, c, options.optLevel, options.cleanupMode,
-                                   "", intrinsicCost, nullptr, nullptr, cost, selectCost,
-                                   segmentPhis ? function_ref<int(Type *)>(phiCost) : nullptr,
-                                   chainCuts);
+                                   "", intrinsicCost, nullptr, nullptr, cost, selectCost, phiCost);
       } else if (!logical && singleBranchB2B) {
         try {
           plans=planSingleBranchB2B(*module,c,options.optLevel,options.cleanupMode,"",intrinsicCost,

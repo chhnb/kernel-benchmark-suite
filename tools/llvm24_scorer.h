@@ -234,8 +234,7 @@ public:
     llvm::DenseMap<llvm::Type *, int> selects, phis;
   };
 
-  TransferCosts anchorTransferCosts(const llvm::Function &f, bool quotePointer64,
-                                    bool quotePhis) const {
+  TransferCosts anchorTransferCosts(const llvm::Function &f) const {
     using namespace llvm;
     SmallVector<Type *, 16> types;
     DenseSet<Type *> seen;
@@ -248,10 +247,7 @@ public:
             types.push_back(type);
         }
     auto &context = f.getContext();
-    auto *pointerCostType = Type::getInt64Ty(context);
-    if (quotePointer64 && seen.insert(pointerCostType).second)
-      types.push_back(pointerCostType);
-    Module probe(quotePhis ? "anchor-transfer-quotes" : "anchor-select-quotes", context);
+    Module probe("anchor-transfer-quotes", context);
     probe.setTargetTriple(f.getParent()->getTargetTriple());
     probe.setDataLayout(f.getParent()->getDataLayout());
     SmallVector<Type *, 32> params{Type::getInt1Ty(context)};
@@ -276,20 +272,18 @@ public:
       selects.push_back(cast<Instruction>(builder.CreateSelect(condition, left, right)));
     }
     SmallVector<const Instruction *, 16> phis;
-    if (quotePhis) {
-      auto *left = BasicBlock::Create(context, "left", fn);
-      auto *right = BasicBlock::Create(context, "right", fn);
-      auto *join = BasicBlock::Create(context, "join", fn);
-      builder.CreateCondBr(condition, left, right);
-      BranchInst::Create(join, left);
-      BranchInst::Create(join, right);
-      builder.SetInsertPoint(join);
-      for (auto [l, r] : operands) {
-        auto *phi = builder.CreatePHI(l->getType(), 2);
-        phi->addIncoming(l, left);
-        phi->addIncoming(r, right);
-        phis.push_back(phi);
-      }
+    auto *left = BasicBlock::Create(context, "left", fn);
+    auto *right = BasicBlock::Create(context, "right", fn);
+    auto *join = BasicBlock::Create(context, "join", fn);
+    builder.CreateCondBr(condition, left, right);
+    BranchInst::Create(join, left);
+    BranchInst::Create(join, right);
+    builder.SetInsertPoint(join);
+    for (auto [l, r] : operands) {
+      auto *phi = builder.CreatePHI(l->getType(), 2);
+      phi->addIncoming(l, left);
+      phi->addIncoming(r, right);
+      phis.push_back(phi);
     }
     builder.CreateRetVoid();
     auto quoted = instructionCosts(*fn);
@@ -297,10 +291,8 @@ public:
     for (auto item : llvm::enumerate(types)) {
       const auto sel = quoted.find(selects[item.index()]);
       if (sel != quoted.end()) result.selects.insert({item.value(), sel->second});
-      if (quotePhis) {
-        const auto phi = quoted.find(phis[item.index()]);
-        if (phi != quoted.end()) result.phis.insert({item.value(), phi->second});
-      }
+      const auto phi = quoted.find(phis[item.index()]);
+      if (phi != quoted.end()) result.phis.insert({item.value(), phi->second});
     }
     return result;
   }

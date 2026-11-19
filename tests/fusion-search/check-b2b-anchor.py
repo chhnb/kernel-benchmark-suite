@@ -48,18 +48,18 @@ with tempfile.TemporaryDirectory() as directory:
                     assert stats["emission"] == "before-split"
                     assert emissions.index("before-split") < emissions.index("merged-exit")
                 if name == "vllm-7":
-                    assert stats["mode"] == "tie-pair"
+                    assert stats["mode"] == "relaxed"
                     assert any(
                         {cutoff["left"], cutoff["right"]} == {"%s108", "%s112"}
                         for row in report["layout_profitability"]
-                        if row["anchor"]["mode"] == "tie-cut"
+                        if row["anchor"]["mode"] == "strict"
                         for cutoff in row["anchor"]["cutoffs"]
                     )
                 if name == "Tigre4":
                     assert any(
                         {cutoff["left"], cutoff["right"]} == {"%add494", "%add508"}
                         for row in report["layout_profitability"]
-                        if row["anchor"]["mode"] == "tie-cut"
+                        if row["anchor"]["mode"] == "strict"
                         for cutoff in row["anchor"]["forward_cutoffs"]
                     )
         assert layouts["dp1"][0] == historical_tti, (name, layouts["dp1"][0])

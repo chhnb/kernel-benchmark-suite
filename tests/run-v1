@@ -24,9 +24,9 @@ if printf '%s\n' '#include "llvm/Support/InstructionCost.h"' | \
   read -r -a anchor_libs <<< "$("$LLVM_CONFIG" --ldflags --link-shared --libs --system-libs | tr '\n' ' ')"
 fi
 "${CXX:-c++}" "${anchor_cxxflags[@]}" -std=c++17 -I"$root/tools" \
-  "$root/tests/fusion-search/check-b2b-anchor-chain.cpp" \
-  "$root/build/llvm24-tti/b2b_anchor.o" "${anchor_libs[@]}" -o "$queue_test/anchor-chain"
-"$queue_test/anchor-chain"
+  "$root/tests/fusion-search/check-b2b-anchor-segments.cpp" \
+  "$root/build/llvm24-tti/b2b_anchor.o" "${anchor_libs[@]}" -o "$queue_test/anchor-segments"
+"$queue_test/anchor-segments"
 python3 "$root/tests/fusion-search/check-b2b-recipe.py"
 python3 "$root/tests/fusion-search/check-score-fingerprints.py"
 python3 "$root/tests/fusion-search/check-tti-quotes.py"
