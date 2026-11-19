@@ -50,12 +50,25 @@ def paired_summary(ratios):
     rng = Random(20261119)
     estimates = [median(rng.choices(ratios, k=len(ratios))) for _ in range(10000)]
     bounds = quantiles(estimates, n=40, method="inclusive")
+    minimum, maximum = min(ratios), max(ratios)
+    low, high = bounds[0], bounds[-1]
+    if maximum <= 1.02:
+        verdict, rule = "passed", "all_rounds"
+    elif minimum > 1.02:
+        verdict, rule = "performance_regression", "all_rounds"
+    elif high <= 1.02:
+        verdict, rule = "passed", "bootstrap"
+    elif low > 1.02:
+        verdict, rule = "performance_regression", "bootstrap"
+    else:
+        verdict, rule = "uncertain", "bootstrap"
     return {
         "median": median(ratios),
-        "maximum": max(ratios),
-        "confidence_interval_95": [bounds[0], bounds[-1]],
-        "all_rounds_pass": max(ratios) <= 1.02,
-        "bootstrap_pass": bounds[-1] <= 1.02,
+        "minimum": minimum,
+        "maximum": maximum,
+        "confidence_interval_95": [low, high],
+        "verdict": verdict,
+        "rule": rule,
     }
 
 
@@ -114,31 +127,24 @@ def measure(args):
                                      stop={"role": role, "round": index + 1})
                         save()
                         return 2
-                if "baseline" not in values:
-                    continue
-                for candidate, ratios in state["ratio_to_baseline"].items():
-                    if candidate not in values or len(ratios) > index:
-                        continue
-                    ratios.append(values[candidate] / values["baseline"])
-                    if spread(ratios) > 0.05:
-                        state.update(status="unstable", stop={
-                            "role": candidate, "round": index + 1,
-                            "paired_spread": spread(ratios),
-                        })
-                        save()
-                        return 3
             state.pop("partial_round")
+            for candidate, ratios in state["ratio_to_baseline"].items():
+                ratios.append(values[candidate] / values["baseline"])
             state["rounds"].append(values)
             save()
             print(f"Round {index + 1}: {values}", flush=True)
-    summary = paired_summary([row["N"] / row["A"] for row in state["rounds"]])
+    verdict_ratios = [row["N"] / row["A"] for row in state["rounds"]]
+    summary = paired_summary(verdict_ratios)
+    all_spreads = {role: spread(ratios) for role, ratios in state["ratio_to_baseline"].items()}
+    all_spreads["N/A"] = spread(verdict_ratios)
     state.update(
-        status="passed" if summary["all_rounds_pass"] or summary["bootstrap_pass"] else "performance_regression",
+        status=summary["verdict"],
         candidate_over_reference=summary,
-        paired_spread={role: spread(ratios) for role, ratios in state["ratio_to_baseline"].items()},
+        paired_spread=all_spreads,
+        uncertain_and_unstable=summary["verdict"] == "uncertain" and max(all_spreads.values()) > 0.05,
     )
     save()
-    return 0
+    return 3 if state["status"] == "uncertain" else 0
 
 
 if __name__ == "__main__":
