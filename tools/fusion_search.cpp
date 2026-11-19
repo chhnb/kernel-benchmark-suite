@@ -2383,42 +2383,108 @@ std::vector<Trial> planSingleBranchB2B(const Module &parent, const Candidate &c,
       if (cost >= 0) return cost;
       return f->getParent()->getDataLayout().getTypeSizeInBits(ty).getKnownMinValue() <= 32 ? 1 : 2;
     };
-    auto plans = planB2BAnchors(segmentWork[0], segmentWork[1], *left, *right, join,
-                                compatibleB2BPrefix, instructionCost, selectCost);
     const auto safePrefix = commonB2BPrefix(*left, *right, *branch, dt);
-    for (unsigned k = 0; k < plans.size(); ++k) {
-      const auto &plan = plans[k];
-      Layout layout;
-      layout.label = "b2b-anchor-" + std::to_string(k + 1);
-      const bool prefix = plan.matches.size() <= safePrefix.size() &&
-          llvm::all_of(llvm::enumerate(plan.matches), [](const auto &item) {
-            return item.value().left == item.index() && item.value().right == item.index();
-          });
-      if (!prefix && !segmentUsesValid && !independentExits)
-        continue;
-      layout.mergeExit = prefix && join && !plan.matches.empty() &&
-          plan.matches.size() == segmentWork[0].size() &&
-          plan.matches.size() == segmentWork[1].size() &&
-          llvm::all_of(join->phis(), [](const PHINode &phi) {
-            return phi.getType()->isFirstClassType() && !phi.getType()->isTokenTy();
-          });
-      json::Array swaps;
-      for (auto pair : plan.matches) {
-        if (pair.swapped)
-          swaps.push_back(json::Array{int64_t(pair.left), int64_t(pair.right)});
-        if (prefix) {
-          if (pair.swapped) layout.swappedBefore.push_back(layout.beforeSplit.size());
-          layout.beforeSplit.emplace_back(segmentWork[0][pair.left], segmentWork[1][pair.right]);
-        } else {
-          layout.segments.push_back({pair.left, pair.right, true, true, pair.swapped});
+    const auto safeSuffix = join ? commonB2BSuffix(*left, *right, *join)
+                                 : SmallVector<B2BMatch, 8>{};
+    SmallVector<Layout, 2> mergeExits, suffixes;
+    auto addUnique = [&](auto &list, Layout layout) {
+      if (llvm::any_of(list, [&](const Layout &old) {
+            return old.beforeSplit == layout.beforeSplit &&
+                   old.afterJoin == layout.afterJoin && old.segments == layout.segments &&
+                   old.swappedBefore == layout.swappedBefore && old.mergeExit == layout.mergeExit;
+          }))
+        return;
+      list.push_back(std::move(layout));
+    };
+    for (bool allowTie : {false, true}) {
+      auto plans = planB2BAnchors(segmentWork[0], segmentWork[1], *left, *right, join,
+                                allowTie, compatibleB2BPrefix, instructionCost, selectCost);
+      bool hasSuffix = false;
+      for (const auto &plan : plans) {
+        size_t sink = 0;
+        for (; sink < std::min(plan.matches.size(), safeSuffix.size()); ++sink) {
+          const auto &pair = plan.matches[plan.matches.size() - 1 - sink];
+          const auto &safe = safeSuffix[safeSuffix.size() - 1 - sink];
+          if (pair.swapped || !llvm::is_contained(plan.anchors, pair) ||
+              segmentWork[0][pair.left] != safe.first || segmentWork[1][pair.right] != safe.second)
+            break;
         }
+        auto buildLayout = [&](size_t tail) -> std::optional<Layout> {
+          auto front = ArrayRef<AnchorMatch>(plan.matches).drop_back(tail);
+          const bool prefix = front.size() <= safePrefix.size() &&
+              llvm::all_of(llvm::enumerate(front), [](const auto &item) {
+                return item.value().left == item.index() && item.value().right == item.index();
+              });
+          if (!prefix && !segmentUsesValid && !independentExits)
+            return std::nullopt;
+          Layout layout;
+          json::Array swaps, cutoffs;
+          for (auto pair : plan.cutoffs) {
+            auto *l = segmentWork[0][pair.left], *r = segmentWork[1][pair.right];
+            cutoffs.push_back(json::Object{{"left", name(l)}, {"right", name(r)},
+                {"left_index", int64_t(pair.left)}, {"right_index", int64_t(pair.right)},
+                {"opcode", l->getOpcodeName()}});
+          }
+          for (auto pair : front) {
+            if (pair.swapped)
+              swaps.push_back(json::Array{int64_t(pair.left), int64_t(pair.right)});
+            if (prefix) {
+              if (pair.swapped) layout.swappedBefore.push_back(layout.beforeSplit.size());
+              layout.beforeSplit.emplace_back(segmentWork[0][pair.left], segmentWork[1][pair.right]);
+            } else {
+              layout.segments.push_back({pair.left, pair.right, true, true, pair.swapped});
+            }
+          }
+          if (tail) layout.afterJoin.append(safeSuffix.end() - tail, safeSuffix.end());
+          layout.stats = json::Object{
+              {"mode", allowTie ? "relaxed" : "strict"},
+              {"anchors", int64_t(plan.anchors.size())}, {"discarded", int64_t(plan.discarded)},
+              {"conflicts", int64_t(plan.conflicts)}, {"segments", int64_t(plan.segments)},
+              {"cutoff_count", int64_t(plan.cutoffs.size())}, {"cutoffs", std::move(cutoffs)},
+              {"suffix_pairs", int64_t(tail)}, {"swaps", std::move(swaps)},
+              {"emission", tail ? "after-join" : prefix ? "before-split" : "segmented"}};
+          return layout;
+        };
+
+        if (auto layout = buildLayout(0)) {
+          const auto prefixSize = layout->beforeSplit.size();
+          if (join && prefixSize && prefixSize == segmentWork[0].size() &&
+              prefixSize == segmentWork[1].size() &&
+              llvm::all_of(join->phis(), [](const PHINode &phi) {
+                return phi.getType()->isFirstClassType() && !phi.getType()->isTokenTy();
+              })) {
+            Layout merged = *layout;
+            merged.mergeExit = true;
+            merged.stats["emission"] = "merged-exit";
+            addUnique(mergeExits, std::move(merged));
+          }
+          addUnique(layouts, std::move(*layout));
+        }
+        if (sink && !hasSuffix)
+          if (auto layout = buildLayout(sink)) {
+            // A suffix can be the only anchored work. Keep the option of
+            // sinking it while leaving speculative forward matches on their
+            // own arms, especially when selecting their inputs is costly.
+            if (sink == plan.anchors.size() &&
+                (!layout->beforeSplit.empty() || !layout->segments.empty())) {
+              Layout suffixOnly = *layout;
+              suffixOnly.beforeSplit.clear();
+              suffixOnly.swappedBefore.clear();
+              suffixOnly.segments.clear();
+              suffixOnly.stats["swaps"] = json::Array{};
+              addUnique(suffixes, std::move(suffixOnly));
+            }
+            addUnique(suffixes, std::move(*layout));
+            hasSuffix = true;
+          }
       }
-      layout.stats = json::Object{
-          {"anchors", int64_t(plan.anchors)}, {"discarded", int64_t(plan.discarded)},
-          {"conflicts", int64_t(plan.conflicts)}, {"segments", int64_t(plan.segments)},
-          {"pruned", int64_t(plan.pruned)}, {"swaps", std::move(swaps)}};
-      layouts.push_back(std::move(layout));
     }
+    for (auto &layout : mergeExits)
+      if (layouts.size() < 6) addUnique(layouts, std::move(layout));
+    for (auto &layout : suffixes)
+      if (layouts.size() < 6) addUnique(layouts, std::move(layout));
+    for (auto item : llvm::enumerate(layouts))
+      item.value().label = "b2b-anchor-" + std::to_string(item.index() + 1);
   } else if (!recipeIn) {
     ProfileScope layoutSearch("plan_layouts");
   auto segments = (segmentUsesValid || independentExits)
@@ -2582,9 +2648,48 @@ std::vector<Trial> planSingleBranchB2B(const Module &parent, const Candidate &c,
     auto *rawJoin = join ? cast<BasicBlock>(clone[join]) : rawRight;
     const bool segmented = !layout.segments.empty();
     t.rewriteStarted = segmented || !layout.beforeSplit.empty() || !layout.afterJoin.empty();
+    auto emitSuffix = [&]() {
+      auto *merge = BasicBlock::Create(raw->getContext(), "fusion.suffix", raw, rawJoin);
+      auto *exit = BranchInst::Create(rawJoin, merge);
+      std::map<std::pair<Value *, Value *>, Value *> choices;
+      auto mergeValue = [&](Value *lv, Value *rv) -> Value * {
+        if (lv == rv) return lv;
+        auto &value = choices[{lv, rv}];
+        if (!value) {
+          auto *phi = PHINode::Create(lv->getType(), 2, "", &merge->front());
+          phi->addIncoming(lv, rawLeft);
+          phi->addIncoming(rv, rawRight);
+          value = phi;
+        }
+        return value;
+      };
+      for (auto [l, r] : layout.afterJoin) {
+        auto *lc = cast<Instruction>(clone[l]), *rc = cast<Instruction>(clone[r]);
+        auto *shared = lc->clone();
+        for (unsigned n = 0; n < shared->getNumOperands(); ++n)
+          shared->setOperand(n, mergeValue(lc->getOperand(n), rc->getOperand(n)));
+        shared->insertBefore(exit);
+        lc->replaceAllUsesWith(shared);
+        rc->replaceAllUsesWith(shared);
+        lc->eraseFromParent();
+        rc->eraseFromParent();
+      }
+      for (auto &phi : rawJoin->phis()) {
+        auto *value = mergeValue(phi.getIncomingValueForBlock(rawLeft),
+                                 phi.getIncomingValueForBlock(rawRight));
+        phi.removeIncomingValue(rawLeft, false);
+        phi.removeIncomingValue(rawRight, false);
+        phi.addIncoming(value, merge);
+      }
+      rawLeft->getTerminator()->setSuccessor(0, merge);
+      rawRight->getTerminator()->setSuccessor(0, merge);
+      return merge;
+    };
+
     if (segmented) {
       try {
-        emitB2BSegments(*rawBranch, *rawLeft, *rawRight, *rawJoin, layout.segments,
+        auto *segmentJoin = layout.afterJoin.empty() ? rawJoin : emitSuffix();
+        emitB2BSegments(*rawBranch, *rawLeft, *rawRight, *segmentJoin, layout.segments,
                         label.endswith("-resplit"), independentExits);
       } catch (const std::runtime_error &error) {
         t.reason = error.what();
@@ -2596,11 +2701,15 @@ std::vector<Trial> planSingleBranchB2B(const Module &parent, const Candidate &c,
     if (!layout.beforeSplit.empty()) {
       IRBuilder<> builder(rawBranch);
       Value *condition = rawBranch->getCondition();
-      if (layout.mergeExit || label == "single-branch-prefix-merged-exit" ||
-          label.startswith("single-branch-complete-common-dp") ||
-          llvm::any_of(layout.beforeSplit, [](B2BMatch step) {
-            return step.first && step.second && step.first->mayReadOrWriteMemory();
-          })) {
+      // The original branch always executed on entry here. A poison or undef
+      // condition already made that execution undefined, so replacing the
+      // branch with selects in anchor's merged exit is a valid refinement.
+      if (!layout.mergeExit &&
+          (label == "single-branch-prefix-merged-exit" ||
+           label.startswith("single-branch-complete-common-dp") ||
+           llvm::any_of(layout.beforeSplit, [](B2BMatch step) {
+             return step.first && step.second && step.first->mayReadOrWriteMemory();
+           }))) {
         condition = builder.CreateFreeze(condition);
         rawBranch->setCondition(condition);
       }
@@ -2652,42 +2761,7 @@ std::vector<Trial> planSingleBranchB2B(const Module &parent, const Candidate &c,
       }
     }
 
-    if (!layout.afterJoin.empty()) {
-      auto *merge = BasicBlock::Create(raw->getContext(), "fusion.suffix", raw, rawJoin);
-      auto *exit = BranchInst::Create(rawJoin, merge);
-      std::map<std::pair<Value *, Value *>, Value *> choices;
-      auto mergeValue = [&](Value *lv, Value *rv) -> Value * {
-        if (lv == rv) return lv;
-        auto &value = choices[{lv, rv}];
-        if (!value) {
-          auto *phi = PHINode::Create(lv->getType(), 2, "", &merge->front());
-          phi->addIncoming(lv, rawLeft);
-          phi->addIncoming(rv, rawRight);
-          value = phi;
-        }
-        return value;
-      };
-      for (auto [l, r] : layout.afterJoin) {
-        auto *lc = cast<Instruction>(clone[l]), *rc = cast<Instruction>(clone[r]);
-        auto *shared = lc->clone();
-        for (unsigned n = 0; n < shared->getNumOperands(); ++n)
-          shared->setOperand(n, mergeValue(lc->getOperand(n), rc->getOperand(n)));
-        shared->insertBefore(exit);
-        lc->replaceAllUsesWith(shared);
-        rc->replaceAllUsesWith(shared);
-        lc->eraseFromParent();
-        rc->eraseFromParent();
-      }
-      for (auto &phi : rawJoin->phis()) {
-        auto *value = mergeValue(phi.getIncomingValueForBlock(rawLeft),
-                                 phi.getIncomingValueForBlock(rawRight));
-        phi.removeIncomingValue(rawLeft, false);
-        phi.removeIncomingValue(rawRight, false);
-        phi.addIncoming(value, merge);
-      }
-      rawLeft->getTerminator()->setSuccessor(0, merge);
-      rawRight->getTerminator()->setSuccessor(0, merge);
-    }
+    if (!segmented && !layout.afterJoin.empty()) emitSuffix();
     } // layout emission
     clone.clear();
     if (profileCall("verify",[&](){return verifyModule(*t.raw, &errs());})) {

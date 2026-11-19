@@ -13,6 +13,8 @@ cases = (
     ("vllm-7", "quant", "B2", "B1", 25),
     ("HLLD", "HLLD", "B1", "B2", 146),
     ("MapAiry", "MapAiry", "B1", "B2", 347),
+    ("Tigre4", "Tigre4", "B1", "B2", 91),
+    ("MapAiry10", "MapAiry10", "B1", "B2", 352),
     ("no-phi", "diamond", "B1", "B2", 10),
 )
 
@@ -38,13 +40,30 @@ with tempfile.TemporaryDirectory() as directory:
             layouts[strategy] = (score, result.read_bytes())
             if strategy == "anchor":
                 stats = report["anchor"]
-                assert 1 <= stats["unique_normalized"] <= stats["generated"] <= 4
+                assert 1 <= stats["unique_normalized"] <= stats["generated"] <= 6
                 assert stats["conflicts"] == 0
                 if name == "no-phi":
                     assert stats["anchors"] == 0 and stats["segments"] == 1
                 if name == "HLLD":
-                    raw = (trial / "after-raw.ll").read_text()
-                    assert "freeze i1 %cond" in raw and "br i1 " not in raw
+                    emissions = [row["anchor"]["emission"] for row in report["layout_profitability"]]
+                    assert stats["emission"] == "before-split"
+                    assert emissions.index("before-split") < emissions.index("merged-exit")
+                if name == "vllm-7":
+                    assert stats["mode"] == "relaxed"
+                    assert any(
+                        {cutoff["left"], cutoff["right"]} == {"%s108", "%s112"}
+                        for row in report["layout_profitability"]
+                        if row["anchor"]["mode"] == "strict"
+                        for cutoff in row["anchor"]["cutoffs"]
+                    )
+                if name == "Tigre4":
+                    assert stats["mode"] == "strict"
+                    text = result.read_text()
+                    assert re.search(r" = fadd float .*%cond435", text)
+                    assert re.search(r" = fadd float .*%cond439", text)
+                    assert re.search(r" = fptoui float %fusion\.paired to i64", text)
+                if name == "MapAiry10":
+                    assert stats["emission"] == "after-join" and stats["suffix_pairs"] == 1
         assert layouts["dp1"][0] == historical_tti, (name, layouts["dp1"][0])
         assert layouts["anchor"][0] <= historical_tti, (name, layouts["anchor"][0])
         if name == "vllm-7":

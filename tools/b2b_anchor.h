@@ -19,12 +19,13 @@ struct AnchorMatch {
 };
 struct AnchorPlan {
   llvm::SmallVector<AnchorMatch, 8> matches;
-  unsigned anchors = 0, discarded = 0, conflicts = 0, segments = 0, pruned = 0;
+  llvm::SmallVector<AnchorMatch, 8> anchors, cutoffs;
+  unsigned discarded = 0, conflicts = 0, segments = 0;
 };
-llvm::SmallVector<AnchorPlan, 4> planB2BAnchors(
+llvm::SmallVector<AnchorPlan, 2> planB2BAnchors(
     llvm::ArrayRef<llvm::Instruction *> left,
     llvm::ArrayRef<llvm::Instruction *> right,
-    llvm::BasicBlock &leftBlock, llvm::BasicBlock &rightBlock, llvm::BasicBlock *join,
+    llvm::BasicBlock &leftBlock, llvm::BasicBlock &rightBlock, llvm::BasicBlock *join, bool allowTie,
     llvm::function_ref<bool(llvm::Instruction &, llvm::Instruction &)> compatible,
     llvm::function_ref<int(const llvm::Instruction &)> instructionCost,
     llvm::function_ref<int(llvm::Type *)> selectCost);

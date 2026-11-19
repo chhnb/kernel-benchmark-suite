@@ -1,6 +1,7 @@
 #include "b2b_anchor.h"
 
 #include "llvm/ADT/DenseMap.h"
+#include "llvm/ADT/DenseSet.h"
 #include "llvm/ADT/STLExtras.h"
 #include "llvm/IR/Instructions.h"
 #include <algorithm>
@@ -33,9 +34,9 @@ void insert(Beam &beam, State state) {
 }
 }
 
-SmallVector<AnchorPlan, 4> planB2BAnchors(
+SmallVector<AnchorPlan, 2> planB2BAnchors(
     Work left, Work right, BasicBlock &leftBlock, BasicBlock &rightBlock,
-    BasicBlock *join, function_ref<bool(Instruction &, Instruction &)> compatible,
+    BasicBlock *join, bool allowTie, function_ref<bool(Instruction &, Instruction &)> compatible,
     function_ref<int(const Instruction &)> instructionCost,
     function_ref<int(Type *)> selectCost) {
   const std::array<Work, 2> work{left, right};
@@ -46,9 +47,17 @@ SmallVector<AnchorPlan, 4> planB2BAnchors(
 
   std::vector<int> partners[2] = {
       std::vector<int>(left.size(), -1), std::vector<int>(right.size(), -1)};
-  Matches proposed;
+  Matches proposed, cutoffs;
   unsigned conflicts = 0;
-  auto seed = [&](Value *lv, Value *rv) {
+  auto couldPropagate = [&](Value *lv, Value *rv) {
+    auto l = indices[0].find(lv), r = indices[1].find(rv);
+    if (l == indices[0].end() || r == indices[1].end())
+      return false;
+    return partners[0][l->second] == int(r->second) ||
+           (partners[0][l->second] == -1 && partners[1][r->second] == -1 &&
+            compatible(*left[l->second], *right[r->second]));
+  };
+  auto seed = [&](Value *lv, Value *rv, int outputSelectCost) {
     auto l = indices[0].find(lv), r = indices[1].find(rv);
     if (l == indices[0].end() || r == indices[1].end() ||
         !compatible(*left[l->second], *right[r->second]))
@@ -60,42 +69,51 @@ SmallVector<AnchorPlan, 4> planB2BAnchors(
       ++conflicts;
       return;
     }
+    auto *li = left[i], *ri = right[j];
+    bool swapped = false;
+    if (li->isBinaryOp() && li->isCommutative() && ri->isCommutative()) {
+      auto count = [&](unsigned offset) {
+        return unsigned(couldPropagate(li->getOperand(0), ri->getOperand(offset))) +
+               unsigned(couldPropagate(li->getOperand(1), ri->getOperand(1 ^ offset)));
+      };
+      swapped = count(1) > count(0);
+    }
+    int inputSelectCost = 0;
+    for (unsigned n = 0; n < li->getNumOperands(); ++n) {
+      auto *lOp = li->getOperand(n), *rOp = ri->getOperand(n ^ unsigned(swapped));
+      if (lOp != rOp && !couldPropagate(lOp, rOp))
+        inputSelectCost += selectCost(lOp->getType());
+    }
+    const int extra = inputSelectCost - outputSelectCost;
+    const int cost = instructionCost(*li);
+    if (extra > cost || (!allowTie && extra == cost)) {
+      cutoffs.push_back({i, j, swapped});
+      return;
+    }
     partners[0][i] = j;
     partners[1][j] = i;
-    proposed.push_back({i, j});
+    proposed.push_back({i, j, swapped});
   };
   if (join)
     for (auto &phi : join->phis())
       seed(phi.getIncomingValueForBlock(&leftBlock),
-           phi.getIncomingValueForBlock(&rightBlock));
+           phi.getIncomingValueForBlock(&rightBlock), selectCost(phi.getType()));
   for (auto *l : left)
     if (auto *store = dyn_cast<StoreInst>(l))
       for (auto *r : right)
         if (auto *other = dyn_cast<StoreInst>(r))
           if (store->getPointerOperand() == other->getPointerOperand())
-            seed(store, other);
+            seed(store, other, 0);
 
-  auto couldPropagate = [&](Value *lv, Value *rv) {
-    auto l = indices[0].find(lv), r = indices[1].find(rv);
-    if (l == indices[0].end() || r == indices[1].end())
-      return false;
-    return partners[0][l->second] == int(r->second) ||
-           (partners[0][l->second] == -1 && partners[1][r->second] == -1 &&
-            compatible(*left[l->second], *right[r->second]));
-  };
   for (unsigned k = 0; k < proposed.size(); ++k) {
-    auto *l = left[proposed[k].left], *r = right[proposed[k].right];
-    bool swapped = false;
-    if (l->isBinaryOp() && l->isCommutative() && r->isCommutative()) {
-      auto count = [&](unsigned offset) {
-        return unsigned(couldPropagate(l->getOperand(0), r->getOperand(offset))) +
-               unsigned(couldPropagate(l->getOperand(1), r->getOperand(1 ^ offset)));
-      };
-      swapped = count(1) > count(0);
+    const auto pair = proposed[k];
+    auto *l = left[pair.left], *r = right[pair.right];
+    for (unsigned n = 0; n < l->getNumOperands(); ++n) {
+      auto *op = l->getOperand(n);
+      auto *other = r->getOperand(n ^ unsigned(pair.swapped));
+      if (op != other && indices[0].count(op) && indices[1].count(other))
+        seed(op, other, selectCost(op->getType()));
     }
-    proposed[k].swapped = swapped;
-    for (unsigned n = 0; n < l->getNumOperands(); ++n)
-      seed(l->getOperand(n), r->getOperand(n ^ unsigned(swapped)));
   }
 
   llvm::sort(proposed, [](auto a, auto b) { return a.left < b.left; });
@@ -142,6 +160,22 @@ SmallVector<AnchorPlan, 4> planB2BAnchors(
     return cost;
   };
 
+  DenseSet<std::pair<unsigned, unsigned>> cutPairs;
+  for (auto pair : cutoffs)
+    cutPairs.insert({pair.left, pair.right});
+  auto hasSharedConsumer = [&](Instruction *l, Instruction *r) {
+    return llvm::any_of(l->uses(), [&](const Use &leftUse) {
+      auto *leftUser = dyn_cast<Instruction>(leftUse.getUser());
+      if (!leftUser || !indices[0].count(leftUser))
+        return false;
+      return llvm::any_of(r->uses(), [&](const Use &rightUse) {
+        auto *rightUser = dyn_cast<Instruction>(rightUse.getUser());
+        return rightUser && indices[1].count(rightUser) &&
+               leftUse.getOperandNo() == rightUse.getOperandNo() &&
+               compatible(*leftUser, *rightUser);
+      });
+    });
+  };
   Beam beam(1);
   unsigned li = 0, ri = 0, segments = 0;
   auto align = [&](unsigned le, unsigned re) {
@@ -160,11 +194,21 @@ SmallVector<AnchorPlan, 4> planB2BAnchors(
             insert(next[j - ri], state);
           if (j < re)
             insert(row[j + 1 - ri], state);
-          if (i == le || j == re || !compatible(*left[i], *right[j]))
+          if (i == le || j == re || cutPairs.count({i, j}) ||
+              !compatible(*left[i], *right[j]))
+            continue;
+          AnchorMatch pair{i, j};
+          const int inputCost = addedCost(pair, state.pairs);
+          const int gain = instructionCost(*left[i]) - inputCost;
+          // A producer can be reached solely from a forward segment when
+          // its consumers are on different PHI edges. Apply the strict
+          // cutoff to that case as well, using known earlier pairings.
+          auto *resultType = left[i]->getType();
+          if (!allowTie && gain <= 0 && !resultType->isVoidTy() &&
+              gain + selectCost(resultType) <= 0 && hasSharedConsumer(left[i], right[j]))
             continue;
           State shared = state;
-          AnchorMatch pair{i, j};
-          shared.score += instructionCost(*left[i]) - addedCost(pair, state.pairs);
+          shared.score += gain;
           shared.pairs.push_back(pair);
           insert(next[j + 1 - ri], std::move(shared));
         }
@@ -193,26 +237,10 @@ SmallVector<AnchorPlan, 4> planB2BAnchors(
   }
   align(left.size(), right.size());
 
-  SmallVector<AnchorPlan, 4> result;
-  auto add = [&](Matches pairs, unsigned pruned) {
-    if (!llvm::any_of(result, [&](const AnchorPlan &plan) { return plan.matches == pairs; }))
-      result.push_back({std::move(pairs), unsigned(anchors.size()),
-                        unsigned(proposed.size() - anchors.size()), conflicts, segments, pruned});
-  };
-  for (const auto &state : beam) {
-    add(state.pairs, 0);
-    Matches pruned = state.pairs;
-    size_t previous;
-    do {
-      previous = pruned.size();
-      for (unsigned j = pruned.size(); j > 0; --j) {
-        auto pair = pruned[j - 1];
-        if (addedCost(pair, pruned) >= instructionCost(*left[pair.left]))
-          pruned.erase(pruned.begin() + j - 1);
-      }
-    } while (pruned.size() != previous);
-    add(pruned, state.pairs.size() - pruned.size());
-  }
+  SmallVector<AnchorPlan, 2> result;
+  for (auto &state : beam)
+    result.push_back({std::move(state.pairs), anchors, cutoffs,
+                      unsigned(proposed.size() - anchors.size()), conflicts, segments});
   return result;
 }
 }
