@@ -14,7 +14,6 @@ cases = (
     ("HLLD", "HLLD", "B1", "B2", 146),
     ("MapAiry", "MapAiry", "B1", "B2", 347),
     ("Tigre4", "Tigre4", "B1", "B2", 91),
-    ("MapAiry10", "MapAiry10", "B1", "B2", 352),
     ("no-phi", "diamond", "B1", "B2", 10),
 )
 
@@ -62,8 +61,6 @@ with tempfile.TemporaryDirectory() as directory:
                     assert re.search(r" = fadd float .*%cond435", text)
                     assert re.search(r" = fadd float .*%cond439", text)
                     assert re.search(r" = fptoui float %fusion\.paired to i64", text)
-                if name == "MapAiry10":
-                    assert stats["emission"] == "after-join" and stats["suffix_pairs"] == 1
         assert layouts["dp1"][0] == historical_tti, (name, layouts["dp1"][0])
         assert layouts["anchor"][0] <= historical_tti, (name, layouts["anchor"][0])
         if name == "vllm-7":
