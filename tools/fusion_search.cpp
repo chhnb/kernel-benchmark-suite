@@ -2171,7 +2171,7 @@ std::vector<Trial> planSingleBranchB2B(const Module &parent, const Candidate &c,
                                        json::Object *recipeOut, const json::Object *recipeIn,
                                        function_ref<int(const Instruction &)> anchorCost,
                                        function_ref<int(Type *)> anchorSelectCost,
-                                       function_ref<int(Type *)> anchorPhiCost) {
+                                       function_ref<int(Type *)> anchorPhiCost, bool anchorChainCuts) {
   ProfileScope planningScope("b2b_plan_generate_clean_total");
   std::vector<Trial> trials;
   const auto parentIdentity = moduleHash(parent);
@@ -2380,7 +2380,7 @@ std::vector<Trial> planSingleBranchB2B(const Module &parent, const Candidate &c,
       return cost >= 0 ? cost : b2bWeight(inst, intrinsicCost);
     };
     auto selectCost = [&](Type *ty) -> int {
-      if (ty->isPointerTy()) ty = Type::getInt64Ty(f->getContext());
+      if (anchorChainCuts && ty->isPointerTy()) ty = Type::getInt64Ty(f->getContext());
       const int cost = anchorSelectCost ? anchorSelectCost(ty) : -1;
       if (cost >= 0) return cost;
       return f->getParent()->getDataLayout().getTypeSizeInBits(ty).getKnownMinValue() <= 32 ? 1 : 2;
@@ -2401,9 +2401,11 @@ std::vector<Trial> planSingleBranchB2B(const Module &parent, const Candidate &c,
         return;
       list.push_back(std::move(layout));
     };
-    for (bool pairTies : {true, false}) {
+    for (bool pairTies : {anchorChainCuts, !anchorChainCuts}) {
       auto plans = planB2BAnchors(segmentWork[0], segmentWork[1], *left, *right, join,
-                                pairTies, compatibleB2BPrefix, instructionCost, selectCost, phiCost);
+                                pairTies, compatibleB2BPrefix, instructionCost, selectCost,
+                                anchorPhiCost ? function_ref<int(Type *)>(phiCost) : nullptr,
+                                anchorChainCuts);
       for (const auto &plan : plans) {
         auto buildLayout = [&]() -> std::optional<Layout> {
           ArrayRef<AnchorMatch> front = plan.matches;
@@ -2442,7 +2444,9 @@ std::vector<Trial> planSingleBranchB2B(const Module &parent, const Candidate &c,
             }
           }
           layout.stats = json::Object{
-              {"mode", pairTies ? "tie-pair" : "tie-cut"}, {"shared", int64_t(plan.shared)},
+              {"mode", anchorChainCuts ? (pairTies ? "tie-pair" : "tie-cut")
+                                        : (pairTies ? "relaxed" : "strict")},
+              {"shared", int64_t(plan.shared)},
               {"forward_cutoffs", std::move(forwardCutoffs)},
               {"anchors", int64_t(plan.anchors.size())}, {"discarded", int64_t(plan.discarded)},
               {"conflicts", int64_t(plan.conflicts)}, {"segments", int64_t(plan.segments)},
@@ -2470,7 +2474,7 @@ std::vector<Trial> planSingleBranchB2B(const Module &parent, const Candidate &c,
       }
     }
     for (auto &layout : mergeExits)
-      if (layouts.size() < 9) addUnique(layouts, std::move(layout));
+      if (layouts.size() < (anchorPhiCost ? 9 : 6)) addUnique(layouts, std::move(layout));
     for (auto item : llvm::enumerate(layouts))
       item.value().label = "b2b-anchor-" + std::to_string(item.index() + 1);
   } else if (!recipeIn) {

@@ -42,5 +42,5 @@ llvm::SmallVector<AnchorPlan, 3> planB2BAnchors(
     llvm::function_ref<bool(llvm::Instruction &, llvm::Instruction &)> compatible,
     llvm::function_ref<int(const llvm::Instruction &)> instructionCost,
     llvm::function_ref<int(llvm::Type *)> selectCost,
-    llvm::function_ref<int(llvm::Type *)> phiCost);
+    llvm::function_ref<int(llvm::Type *)> phiCost, bool chainCuts = true);
 }
