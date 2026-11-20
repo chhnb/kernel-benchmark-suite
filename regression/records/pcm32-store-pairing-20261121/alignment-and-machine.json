@@ -1,0 +1,2936 @@
+{
+  "M": {
+    "groups": {
+      "load": {
+        "matched": 14,
+        "unmatched": 4,
+        "emitted": 18,
+        "step_offsets": {
+          "-1": 12,
+          "0": 2
+        },
+        "pairs": [
+          {
+            "address_space": 3,
+            "op": "load",
+            "ordinals": [
+              1,
+              1
+            ],
+            "source_align": [
+              4,
+              4
+            ]
+          },
+          {
+            "address_space": 3,
+            "op": "load",
+            "ordinals": [
+              2,
+              2
+            ],
+            "source_align": [
+              4,
+              4
+            ]
+          },
+          {
+            "address_space": 3,
+            "op": "load",
+            "ordinals": [
+              5,
+              3
+            ],
+            "source_align": [
+              4,
+              4
+            ]
+          },
+          {
+            "address_space": 3,
+            "op": "load",
+            "ordinals": [
+              6,
+              4
+            ],
+            "source_align": [
+              4,
+              4
+            ]
+          },
+          {
+            "address_space": 3,
+            "op": "load",
+            "ordinals": [
+              7,
+              5
+            ],
+            "source_align": [
+              4,
+              4
+            ]
+          },
+          {
+            "address_space": 3,
+            "op": "load",
+            "ordinals": [
+              8,
+              6
+            ],
+            "source_align": [
+              4,
+              4
+            ]
+          },
+          {
+            "address_space": 3,
+            "op": "load",
+            "ordinals": [
+              9,
+              7
+            ],
+            "source_align": [
+              4,
+              4
+            ]
+          },
+          {
+            "address_space": 3,
+            "op": "load",
+            "ordinals": [
+              10,
+              8
+            ],
+            "source_align": [
+              4,
+              4
+            ]
+          },
+          {
+            "address_space": 3,
+            "op": "load",
+            "ordinals": [
+              11,
+              9
+            ],
+            "source_align": [
+              4,
+              4
+            ]
+          },
+          {
+            "address_space": 3,
+            "op": "load",
+            "ordinals": [
+              12,
+              10
+            ],
+            "source_align": [
+              4,
+              4
+            ]
+          },
+          {
+            "address_space": 3,
+            "op": "load",
+            "ordinals": [
+              13,
+              11
+            ],
+            "source_align": [
+              4,
+              4
+            ]
+          },
+          {
+            "address_space": 3,
+            "op": "load",
+            "ordinals": [
+              14,
+              12
+            ],
+            "source_align": [
+              4,
+              4
+            ]
+          },
+          {
+            "address_space": 3,
+            "op": "load",
+            "ordinals": [
+              15,
+              13
+            ],
+            "source_align": [
+              4,
+              4
+            ]
+          },
+          {
+            "address_space": 3,
+            "op": "load",
+            "ordinals": [
+              16,
+              14
+            ],
+            "source_align": [
+              4,
+              4
+            ]
+          }
+        ]
+      },
+      "store": {
+        "matched": 7,
+        "unmatched": 2,
+        "emitted": 9,
+        "step_offsets": {
+          "-1": 7
+        },
+        "pairs": [
+          {
+            "address_space": 3,
+            "op": "store",
+            "ordinals": [
+              2,
+              1
+            ],
+            "source_align": [
+              4,
+              4
+            ]
+          },
+          {
+            "address_space": 3,
+            "op": "store",
+            "ordinals": [
+              3,
+              2
+            ],
+            "source_align": [
+              8,
+              8
+            ]
+          },
+          {
+            "address_space": 3,
+            "op": "store",
+            "ordinals": [
+              4,
+              3
+            ],
+            "source_align": [
+              4,
+              4
+            ]
+          },
+          {
+            "address_space": 3,
+            "op": "store",
+            "ordinals": [
+              5,
+              4
+            ],
+            "source_align": [
+              16,
+              16
+            ]
+          },
+          {
+            "address_space": 3,
+            "op": "store",
+            "ordinals": [
+              6,
+              5
+            ],
+            "source_align": [
+              4,
+              4
+            ]
+          },
+          {
+            "address_space": 3,
+            "op": "store",
+            "ordinals": [
+              7,
+              6
+            ],
+            "source_align": [
+              8,
+              8
+            ]
+          },
+          {
+            "address_space": 3,
+            "op": "store",
+            "ordinals": [
+              8,
+              7
+            ],
+            "source_align": [
+              4,
+              4
+            ]
+          }
+        ]
+      }
+    },
+    "hot_loop": {
+      "instructions": 662,
+      "conditional": 25,
+      "exec": 113,
+      "valu": 316,
+      "salu": 145,
+      "memory": 113,
+      "unconditional": 6,
+      "flow_wait_other": 88,
+      "execz": 16,
+      "execnz": 1,
+      "mask": 96,
+      "lds": 105,
+      "waitcnt": 53,
+      "cndmask": 87,
+      "bytes": 3916
+    },
+    "loops": [
+      {
+        "header": "0x1860",
+        "latches": [
+          "0x1860"
+        ],
+        "depth": 1,
+        "blocks": [
+          "0x1860"
+        ],
+        "stats": {
+          "instructions": 17,
+          "conditional": 1,
+          "exec": 0,
+          "valu": 4,
+          "salu": 3,
+          "memory": 8,
+          "unconditional": 0,
+          "flow_wait_other": 2,
+          "execz": 0,
+          "execnz": 0,
+          "mask": 0,
+          "lds": 4,
+          "waitcnt": 1,
+          "cndmask": 0,
+          "bytes": 108
+        }
+      },
+      {
+        "header": "0x1974",
+        "latches": [
+          "0x1958"
+        ],
+        "depth": 1,
+        "blocks": [
+          "0x1958",
+          "0x1974",
+          "0x199c",
+          "0x19b8",
+          "0x1a4c",
+          "0x1a94",
+          "0x1f38",
+          "0x1fac",
+          "0x1fc4",
+          "0x1fc8",
+          "0x202c",
+          "0x2048",
+          "0x2050",
+          "0x2064",
+          "0x2074",
+          "0x20d4",
+          "0x2100",
+          "0x2144",
+          "0x2170",
+          "0x21b4",
+          "0x21e0",
+          "0x2224",
+          "0x2250",
+          "0x2294",
+          "0x22c0",
+          "0x2304",
+          "0x2330",
+          "0x2374",
+          "0x23a0",
+          "0x23bc",
+          "0x23c8",
+          "0x23cc",
+          "0x23e8",
+          "0x2400",
+          "0x2404",
+          "0x2410",
+          "0x241c",
+          "0x2724",
+          "0x273c",
+          "0x2740",
+          "0x27a4"
+        ],
+        "stats": {
+          "instructions": 621,
+          "conditional": 23,
+          "exec": 113,
+          "valu": 308,
+          "salu": 139,
+          "memory": 93,
+          "unconditional": 6,
+          "flow_wait_other": 81,
+          "execz": 16,
+          "execnz": 1,
+          "mask": 96,
+          "lds": 93,
+          "waitcnt": 48,
+          "cndmask": 87,
+          "bytes": 3664
+        }
+      },
+      {
+        "header": "0x19b8",
+        "latches": [
+          "0x199c"
+        ],
+        "depth": 2,
+        "blocks": [
+          "0x199c",
+          "0x19b8",
+          "0x1a4c",
+          "0x1a94",
+          "0x1f38"
+        ],
+        "stats": {
+          "instructions": 251,
+          "conditional": 3,
+          "exec": 44,
+          "valu": 142,
+          "salu": 69,
+          "memory": 27,
+          "unconditional": 1,
+          "flow_wait_other": 13,
+          "execz": 2,
+          "execnz": 0,
+          "mask": 42,
+          "lds": 27,
+          "waitcnt": 9,
+          "cndmask": 67,
+          "bytes": 1552
+        }
+      },
+      {
+        "header": "0x1fc8",
+        "latches": [
+          "0x1fc8"
+        ],
+        "depth": 2,
+        "blocks": [
+          "0x1fc8"
+        ],
+        "stats": {
+          "instructions": 17,
+          "conditional": 1,
+          "exec": 0,
+          "valu": 2,
+          "salu": 2,
+          "memory": 8,
+          "unconditional": 0,
+          "flow_wait_other": 5,
+          "execz": 0,
+          "execnz": 0,
+          "mask": 0,
+          "lds": 8,
+          "waitcnt": 4,
+          "cndmask": 0,
+          "bytes": 100
+        }
+      },
+      {
+        "header": "0x2074",
+        "latches": [
+          "0x2064"
+        ],
+        "depth": 2,
+        "blocks": [
+          "0x2064",
+          "0x2074",
+          "0x20d4",
+          "0x2100",
+          "0x2144",
+          "0x2170",
+          "0x21b4",
+          "0x21e0",
+          "0x2224",
+          "0x2250",
+          "0x2294",
+          "0x22c0",
+          "0x2304",
+          "0x2330",
+          "0x2374",
+          "0x23a0",
+          "0x23bc",
+          "0x23c8",
+          "0x23cc",
+          "0x23e8"
+        ],
+        "stats": {
+          "instructions": 175,
+          "conditional": 11,
+          "exec": 52,
+          "valu": 71,
+          "salu": 44,
+          "memory": 32,
+          "unconditional": 2,
+          "flow_wait_other": 28,
+          "execz": 9,
+          "execnz": 1,
+          "mask": 42,
+          "lds": 32,
+          "waitcnt": 15,
+          "cndmask": 0,
+          "bytes": 924
+        }
+      },
+      {
+        "header": "0x241c",
+        "latches": [
+          "0x241c"
+        ],
+        "depth": 2,
+        "blocks": [
+          "0x241c"
+        ],
+        "stats": {
+          "instructions": 110,
+          "conditional": 1,
+          "exec": 0,
+          "valu": 81,
+          "salu": 2,
+          "memory": 18,
+          "unconditional": 0,
+          "flow_wait_other": 9,
+          "execz": 0,
+          "execnz": 0,
+          "mask": 0,
+          "lds": 18,
+          "waitcnt": 8,
+          "cndmask": 20,
+          "bytes": 776
+        }
+      },
+      {
+        "header": "0x2740",
+        "latches": [
+          "0x2740"
+        ],
+        "depth": 2,
+        "blocks": [
+          "0x2740"
+        ],
+        "stats": {
+          "instructions": 17,
+          "conditional": 1,
+          "exec": 0,
+          "valu": 2,
+          "salu": 2,
+          "memory": 8,
+          "unconditional": 0,
+          "flow_wait_other": 5,
+          "execz": 0,
+          "execnz": 0,
+          "mask": 0,
+          "lds": 8,
+          "waitcnt": 4,
+          "cndmask": 0,
+          "bytes": 100
+        }
+      },
+      {
+        "header": "0x27d0",
+        "latches": [
+          "0x27d0"
+        ],
+        "depth": 1,
+        "blocks": [
+          "0x27d0"
+        ],
+        "stats": {
+          "instructions": 24,
+          "conditional": 1,
+          "exec": 0,
+          "valu": 4,
+          "salu": 3,
+          "memory": 12,
+          "unconditional": 0,
+          "flow_wait_other": 5,
+          "execz": 0,
+          "execnz": 0,
+          "mask": 0,
+          "lds": 8,
+          "waitcnt": 4,
+          "cndmask": 0,
+          "bytes": 144
+        }
+      }
+    ],
+    "resources": {
+      "sgpr_count": 28,
+      "vgpr_count": 25,
+      "sgpr_spill_count": 0,
+      "vgpr_spill_count": 0,
+      "group_segment_fixed_size": 65536,
+      "wavefront_size": 64,
+      "max_flat_workgroup_size": 256,
+      "threads": 32,
+      "dynamic_lds": 0,
+      "waves_per_simd": 0.25
+    },
+    "pairs": 67,
+    "tti": 1665
+  },
+  "native": {
+    "groups": {
+      "load": {
+        "matched": 16,
+        "unmatched": 0,
+        "emitted": 16,
+        "step_offsets": {
+          "0": 16
+        },
+        "pairs": [
+          {
+            "address_space": 3,
+            "op": "load",
+            "ordinals": [
+              1,
+              1
+            ],
+            "source_align": [
+              4,
+              4
+            ]
+          },
+          {
+            "address_space": 3,
+            "op": "load",
+            "ordinals": [
+              2,
+              2
+            ],
+            "source_align": [
+              4,
+              4
+            ]
+          },
+          {
+            "address_space": 3,
+            "op": "load",
+            "ordinals": [
+              3,
+              3
+            ],
+            "source_align": [
+              4,
+              4
+            ]
+          },
+          {
+            "address_space": 3,
+            "op": "load",
+            "ordinals": [
+              4,
+              4
+            ],
+            "source_align": [
+              4,
+              4
+            ]
+          },
+          {
+            "address_space": 3,
+            "op": "load",
+            "ordinals": [
+              5,
+              5
+            ],
+            "source_align": [
+              4,
+              4
+            ]
+          },
+          {
+            "address_space": 3,
+            "op": "load",
+            "ordinals": [
+              6,
+              6
+            ],
+            "source_align": [
+              4,
+              4
+            ]
+          },
+          {
+            "address_space": 3,
+            "op": "load",
+            "ordinals": [
+              7,
+              7
+            ],
+            "source_align": [
+              4,
+              4
+            ]
+          },
+          {
+            "address_space": 3,
+            "op": "load",
+            "ordinals": [
+              8,
+              8
+            ],
+            "source_align": [
+              4,
+              4
+            ]
+          },
+          {
+            "address_space": 3,
+            "op": "load",
+            "ordinals": [
+              9,
+              9
+            ],
+            "source_align": [
+              4,
+              4
+            ]
+          },
+          {
+            "address_space": 3,
+            "op": "load",
+            "ordinals": [
+              10,
+              10
+            ],
+            "source_align": [
+              4,
+              4
+            ]
+          },
+          {
+            "address_space": 3,
+            "op": "load",
+            "ordinals": [
+              11,
+              11
+            ],
+            "source_align": [
+              4,
+              4
+            ]
+          },
+          {
+            "address_space": 3,
+            "op": "load",
+            "ordinals": [
+              12,
+              12
+            ],
+            "source_align": [
+              4,
+              4
+            ]
+          },
+          {
+            "address_space": 3,
+            "op": "load",
+            "ordinals": [
+              13,
+              13
+            ],
+            "source_align": [
+              4,
+              4
+            ]
+          },
+          {
+            "address_space": 3,
+            "op": "load",
+            "ordinals": [
+              14,
+              14
+            ],
+            "source_align": [
+              4,
+              4
+            ]
+          },
+          {
+            "address_space": 3,
+            "op": "load",
+            "ordinals": [
+              15,
+              15
+            ],
+            "source_align": [
+              4,
+              4
+            ]
+          },
+          {
+            "address_space": 3,
+            "op": "load",
+            "ordinals": [
+              16,
+              16
+            ],
+            "source_align": [
+              4,
+              4
+            ]
+          }
+        ]
+      },
+      "store": {
+        "matched": 0,
+        "unmatched": 16,
+        "emitted": 16,
+        "step_offsets": {},
+        "pairs": []
+      }
+    },
+    "hot_loop": {
+      "instructions": 630,
+      "conditional": 24,
+      "exec": 110,
+      "valu": 295,
+      "salu": 131,
+      "memory": 118,
+      "unconditional": 6,
+      "flow_wait_other": 86,
+      "execz": 15,
+      "execnz": 1,
+      "mask": 94,
+      "lds": 110,
+      "waitcnt": 52,
+      "cndmask": 70,
+      "bytes": 3724
+    },
+    "loops": [
+      {
+        "header": "0x1860",
+        "latches": [
+          "0x1860"
+        ],
+        "depth": 1,
+        "blocks": [
+          "0x1860"
+        ],
+        "stats": {
+          "instructions": 17,
+          "conditional": 1,
+          "exec": 0,
+          "valu": 4,
+          "salu": 3,
+          "memory": 8,
+          "unconditional": 0,
+          "flow_wait_other": 2,
+          "execz": 0,
+          "execnz": 0,
+          "mask": 0,
+          "lds": 4,
+          "waitcnt": 1,
+          "cndmask": 0,
+          "bytes": 108
+        }
+      },
+      {
+        "header": "0x196c",
+        "latches": [
+          "0x1950"
+        ],
+        "depth": 1,
+        "blocks": [
+          "0x1950",
+          "0x196c",
+          "0x1990",
+          "0x19a8",
+          "0x1eb0",
+          "0x1ee4",
+          "0x1efc",
+          "0x1f00",
+          "0x1f64",
+          "0x1f80",
+          "0x1f88",
+          "0x1f9c",
+          "0x1fac",
+          "0x200c",
+          "0x2038",
+          "0x207c",
+          "0x20a8",
+          "0x20ec",
+          "0x2118",
+          "0x215c",
+          "0x2188",
+          "0x21cc",
+          "0x21f8",
+          "0x223c",
+          "0x2268",
+          "0x22ac",
+          "0x22d8",
+          "0x22f4",
+          "0x2300",
+          "0x2304",
+          "0x2320",
+          "0x2338",
+          "0x233c",
+          "0x2348",
+          "0x2354",
+          "0x265c",
+          "0x2674",
+          "0x2678",
+          "0x26dc"
+        ],
+        "stats": {
+          "instructions": 589,
+          "conditional": 22,
+          "exec": 110,
+          "valu": 287,
+          "salu": 125,
+          "memory": 98,
+          "unconditional": 6,
+          "flow_wait_other": 79,
+          "execz": 15,
+          "execnz": 1,
+          "mask": 94,
+          "lds": 98,
+          "waitcnt": 47,
+          "cndmask": 70,
+          "bytes": 3472
+        }
+      },
+      {
+        "header": "0x19a8",
+        "latches": [
+          "0x1990"
+        ],
+        "depth": 2,
+        "blocks": [
+          "0x1990",
+          "0x19a8",
+          "0x1eb0"
+        ],
+        "stats": {
+          "instructions": 220,
+          "conditional": 2,
+          "exec": 41,
+          "valu": 121,
+          "salu": 56,
+          "memory": 32,
+          "unconditional": 1,
+          "flow_wait_other": 11,
+          "execz": 1,
+          "execnz": 0,
+          "mask": 40,
+          "lds": 32,
+          "waitcnt": 8,
+          "cndmask": 50,
+          "bytes": 1364
+        }
+      },
+      {
+        "header": "0x1f00",
+        "latches": [
+          "0x1f00"
+        ],
+        "depth": 2,
+        "blocks": [
+          "0x1f00"
+        ],
+        "stats": {
+          "instructions": 17,
+          "conditional": 1,
+          "exec": 0,
+          "valu": 2,
+          "salu": 2,
+          "memory": 8,
+          "unconditional": 0,
+          "flow_wait_other": 5,
+          "execz": 0,
+          "execnz": 0,
+          "mask": 0,
+          "lds": 8,
+          "waitcnt": 4,
+          "cndmask": 0,
+          "bytes": 100
+        }
+      },
+      {
+        "header": "0x1fac",
+        "latches": [
+          "0x1f9c"
+        ],
+        "depth": 2,
+        "blocks": [
+          "0x1f9c",
+          "0x1fac",
+          "0x200c",
+          "0x2038",
+          "0x207c",
+          "0x20a8",
+          "0x20ec",
+          "0x2118",
+          "0x215c",
+          "0x2188",
+          "0x21cc",
+          "0x21f8",
+          "0x223c",
+          "0x2268",
+          "0x22ac",
+          "0x22d8",
+          "0x22f4",
+          "0x2300",
+          "0x2304",
+          "0x2320"
+        ],
+        "stats": {
+          "instructions": 175,
+          "conditional": 11,
+          "exec": 52,
+          "valu": 71,
+          "salu": 44,
+          "memory": 32,
+          "unconditional": 2,
+          "flow_wait_other": 28,
+          "execz": 9,
+          "execnz": 1,
+          "mask": 42,
+          "lds": 32,
+          "waitcnt": 15,
+          "cndmask": 0,
+          "bytes": 924
+        }
+      },
+      {
+        "header": "0x2354",
+        "latches": [
+          "0x2354"
+        ],
+        "depth": 2,
+        "blocks": [
+          "0x2354"
+        ],
+        "stats": {
+          "instructions": 110,
+          "conditional": 1,
+          "exec": 0,
+          "valu": 81,
+          "salu": 2,
+          "memory": 18,
+          "unconditional": 0,
+          "flow_wait_other": 9,
+          "execz": 0,
+          "execnz": 0,
+          "mask": 0,
+          "lds": 18,
+          "waitcnt": 8,
+          "cndmask": 20,
+          "bytes": 776
+        }
+      },
+      {
+        "header": "0x2678",
+        "latches": [
+          "0x2678"
+        ],
+        "depth": 2,
+        "blocks": [
+          "0x2678"
+        ],
+        "stats": {
+          "instructions": 17,
+          "conditional": 1,
+          "exec": 0,
+          "valu": 2,
+          "salu": 2,
+          "memory": 8,
+          "unconditional": 0,
+          "flow_wait_other": 5,
+          "execz": 0,
+          "execnz": 0,
+          "mask": 0,
+          "lds": 8,
+          "waitcnt": 4,
+          "cndmask": 0,
+          "bytes": 100
+        }
+      },
+      {
+        "header": "0x2708",
+        "latches": [
+          "0x2708"
+        ],
+        "depth": 1,
+        "blocks": [
+          "0x2708"
+        ],
+        "stats": {
+          "instructions": 24,
+          "conditional": 1,
+          "exec": 0,
+          "valu": 4,
+          "salu": 3,
+          "memory": 12,
+          "unconditional": 0,
+          "flow_wait_other": 5,
+          "execz": 0,
+          "execnz": 0,
+          "mask": 0,
+          "lds": 8,
+          "waitcnt": 4,
+          "cndmask": 0,
+          "bytes": 144
+        }
+      }
+    ],
+    "resources": {
+      "sgpr_count": 26,
+      "vgpr_count": 24,
+      "sgpr_spill_count": 0,
+      "vgpr_spill_count": 0,
+      "group_segment_fixed_size": 65536,
+      "wavefront_size": 64,
+      "max_flat_workgroup_size": 256,
+      "threads": 32,
+      "dynamic_lds": 0,
+      "waves_per_simd": 0.25
+    },
+    "pairs": 59,
+    "tti": 1623
+  },
+  "e0": {
+    "groups": {
+      "load": {
+        "matched": 16,
+        "unmatched": 0,
+        "emitted": 16,
+        "step_offsets": {
+          "0": 16
+        },
+        "pairs": [
+          {
+            "address_space": 3,
+            "op": "load",
+            "ordinals": [
+              1,
+              1
+            ],
+            "source_align": [
+              4,
+              4
+            ]
+          },
+          {
+            "address_space": 3,
+            "op": "load",
+            "ordinals": [
+              2,
+              2
+            ],
+            "source_align": [
+              4,
+              4
+            ]
+          },
+          {
+            "address_space": 3,
+            "op": "load",
+            "ordinals": [
+              3,
+              3
+            ],
+            "source_align": [
+              4,
+              4
+            ]
+          },
+          {
+            "address_space": 3,
+            "op": "load",
+            "ordinals": [
+              4,
+              4
+            ],
+            "source_align": [
+              4,
+              4
+            ]
+          },
+          {
+            "address_space": 3,
+            "op": "load",
+            "ordinals": [
+              5,
+              5
+            ],
+            "source_align": [
+              4,
+              4
+            ]
+          },
+          {
+            "address_space": 3,
+            "op": "load",
+            "ordinals": [
+              6,
+              6
+            ],
+            "source_align": [
+              4,
+              4
+            ]
+          },
+          {
+            "address_space": 3,
+            "op": "load",
+            "ordinals": [
+              7,
+              7
+            ],
+            "source_align": [
+              4,
+              4
+            ]
+          },
+          {
+            "address_space": 3,
+            "op": "load",
+            "ordinals": [
+              8,
+              8
+            ],
+            "source_align": [
+              4,
+              4
+            ]
+          },
+          {
+            "address_space": 3,
+            "op": "load",
+            "ordinals": [
+              9,
+              9
+            ],
+            "source_align": [
+              4,
+              4
+            ]
+          },
+          {
+            "address_space": 3,
+            "op": "load",
+            "ordinals": [
+              10,
+              10
+            ],
+            "source_align": [
+              4,
+              4
+            ]
+          },
+          {
+            "address_space": 3,
+            "op": "load",
+            "ordinals": [
+              11,
+              11
+            ],
+            "source_align": [
+              4,
+              4
+            ]
+          },
+          {
+            "address_space": 3,
+            "op": "load",
+            "ordinals": [
+              12,
+              12
+            ],
+            "source_align": [
+              4,
+              4
+            ]
+          },
+          {
+            "address_space": 3,
+            "op": "load",
+            "ordinals": [
+              13,
+              13
+            ],
+            "source_align": [
+              4,
+              4
+            ]
+          },
+          {
+            "address_space": 3,
+            "op": "load",
+            "ordinals": [
+              14,
+              14
+            ],
+            "source_align": [
+              4,
+              4
+            ]
+          },
+          {
+            "address_space": 3,
+            "op": "load",
+            "ordinals": [
+              15,
+              15
+            ],
+            "source_align": [
+              4,
+              4
+            ]
+          },
+          {
+            "address_space": 3,
+            "op": "load",
+            "ordinals": [
+              16,
+              16
+            ],
+            "source_align": [
+              4,
+              4
+            ]
+          }
+        ]
+      },
+      "store": {
+        "matched": 0,
+        "unmatched": 16,
+        "emitted": 16,
+        "step_offsets": {},
+        "pairs": []
+      }
+    },
+    "hot_loop": {
+      "instructions": 630,
+      "conditional": 24,
+      "exec": 110,
+      "valu": 295,
+      "salu": 131,
+      "memory": 118,
+      "unconditional": 6,
+      "flow_wait_other": 86,
+      "execz": 15,
+      "execnz": 1,
+      "mask": 94,
+      "lds": 110,
+      "waitcnt": 52,
+      "cndmask": 70,
+      "bytes": 3724
+    },
+    "loops": [
+      {
+        "header": "0x1860",
+        "latches": [
+          "0x1860"
+        ],
+        "depth": 1,
+        "blocks": [
+          "0x1860"
+        ],
+        "stats": {
+          "instructions": 17,
+          "conditional": 1,
+          "exec": 0,
+          "valu": 4,
+          "salu": 3,
+          "memory": 8,
+          "unconditional": 0,
+          "flow_wait_other": 2,
+          "execz": 0,
+          "execnz": 0,
+          "mask": 0,
+          "lds": 4,
+          "waitcnt": 1,
+          "cndmask": 0,
+          "bytes": 108
+        }
+      },
+      {
+        "header": "0x196c",
+        "latches": [
+          "0x1950"
+        ],
+        "depth": 1,
+        "blocks": [
+          "0x1950",
+          "0x196c",
+          "0x1990",
+          "0x19a8",
+          "0x1eb0",
+          "0x1ee4",
+          "0x1efc",
+          "0x1f00",
+          "0x1f64",
+          "0x1f80",
+          "0x1f88",
+          "0x1f9c",
+          "0x1fac",
+          "0x200c",
+          "0x2038",
+          "0x207c",
+          "0x20a8",
+          "0x20ec",
+          "0x2118",
+          "0x215c",
+          "0x2188",
+          "0x21cc",
+          "0x21f8",
+          "0x223c",
+          "0x2268",
+          "0x22ac",
+          "0x22d8",
+          "0x22f4",
+          "0x2300",
+          "0x2304",
+          "0x2320",
+          "0x2338",
+          "0x233c",
+          "0x2348",
+          "0x2354",
+          "0x265c",
+          "0x2674",
+          "0x2678",
+          "0x26dc"
+        ],
+        "stats": {
+          "instructions": 589,
+          "conditional": 22,
+          "exec": 110,
+          "valu": 287,
+          "salu": 125,
+          "memory": 98,
+          "unconditional": 6,
+          "flow_wait_other": 79,
+          "execz": 15,
+          "execnz": 1,
+          "mask": 94,
+          "lds": 98,
+          "waitcnt": 47,
+          "cndmask": 70,
+          "bytes": 3472
+        }
+      },
+      {
+        "header": "0x19a8",
+        "latches": [
+          "0x1990"
+        ],
+        "depth": 2,
+        "blocks": [
+          "0x1990",
+          "0x19a8",
+          "0x1eb0"
+        ],
+        "stats": {
+          "instructions": 220,
+          "conditional": 2,
+          "exec": 41,
+          "valu": 121,
+          "salu": 56,
+          "memory": 32,
+          "unconditional": 1,
+          "flow_wait_other": 11,
+          "execz": 1,
+          "execnz": 0,
+          "mask": 40,
+          "lds": 32,
+          "waitcnt": 8,
+          "cndmask": 50,
+          "bytes": 1364
+        }
+      },
+      {
+        "header": "0x1f00",
+        "latches": [
+          "0x1f00"
+        ],
+        "depth": 2,
+        "blocks": [
+          "0x1f00"
+        ],
+        "stats": {
+          "instructions": 17,
+          "conditional": 1,
+          "exec": 0,
+          "valu": 2,
+          "salu": 2,
+          "memory": 8,
+          "unconditional": 0,
+          "flow_wait_other": 5,
+          "execz": 0,
+          "execnz": 0,
+          "mask": 0,
+          "lds": 8,
+          "waitcnt": 4,
+          "cndmask": 0,
+          "bytes": 100
+        }
+      },
+      {
+        "header": "0x1fac",
+        "latches": [
+          "0x1f9c"
+        ],
+        "depth": 2,
+        "blocks": [
+          "0x1f9c",
+          "0x1fac",
+          "0x200c",
+          "0x2038",
+          "0x207c",
+          "0x20a8",
+          "0x20ec",
+          "0x2118",
+          "0x215c",
+          "0x2188",
+          "0x21cc",
+          "0x21f8",
+          "0x223c",
+          "0x2268",
+          "0x22ac",
+          "0x22d8",
+          "0x22f4",
+          "0x2300",
+          "0x2304",
+          "0x2320"
+        ],
+        "stats": {
+          "instructions": 175,
+          "conditional": 11,
+          "exec": 52,
+          "valu": 71,
+          "salu": 44,
+          "memory": 32,
+          "unconditional": 2,
+          "flow_wait_other": 28,
+          "execz": 9,
+          "execnz": 1,
+          "mask": 42,
+          "lds": 32,
+          "waitcnt": 15,
+          "cndmask": 0,
+          "bytes": 924
+        }
+      },
+      {
+        "header": "0x2354",
+        "latches": [
+          "0x2354"
+        ],
+        "depth": 2,
+        "blocks": [
+          "0x2354"
+        ],
+        "stats": {
+          "instructions": 110,
+          "conditional": 1,
+          "exec": 0,
+          "valu": 81,
+          "salu": 2,
+          "memory": 18,
+          "unconditional": 0,
+          "flow_wait_other": 9,
+          "execz": 0,
+          "execnz": 0,
+          "mask": 0,
+          "lds": 18,
+          "waitcnt": 8,
+          "cndmask": 20,
+          "bytes": 776
+        }
+      },
+      {
+        "header": "0x2678",
+        "latches": [
+          "0x2678"
+        ],
+        "depth": 2,
+        "blocks": [
+          "0x2678"
+        ],
+        "stats": {
+          "instructions": 17,
+          "conditional": 1,
+          "exec": 0,
+          "valu": 2,
+          "salu": 2,
+          "memory": 8,
+          "unconditional": 0,
+          "flow_wait_other": 5,
+          "execz": 0,
+          "execnz": 0,
+          "mask": 0,
+          "lds": 8,
+          "waitcnt": 4,
+          "cndmask": 0,
+          "bytes": 100
+        }
+      },
+      {
+        "header": "0x2708",
+        "latches": [
+          "0x2708"
+        ],
+        "depth": 1,
+        "blocks": [
+          "0x2708"
+        ],
+        "stats": {
+          "instructions": 24,
+          "conditional": 1,
+          "exec": 0,
+          "valu": 4,
+          "salu": 3,
+          "memory": 12,
+          "unconditional": 0,
+          "flow_wait_other": 5,
+          "execz": 0,
+          "execnz": 0,
+          "mask": 0,
+          "lds": 8,
+          "waitcnt": 4,
+          "cndmask": 0,
+          "bytes": 144
+        }
+      }
+    ],
+    "resources": {
+      "sgpr_count": 26,
+      "vgpr_count": 24,
+      "sgpr_spill_count": 0,
+      "vgpr_spill_count": 0,
+      "group_segment_fixed_size": 65536,
+      "wavefront_size": 64,
+      "max_flat_workgroup_size": 256,
+      "threads": 32,
+      "dynamic_lds": 0,
+      "waves_per_simd": 0.25
+    },
+    "pairs": 59,
+    "tti": 1623
+  },
+  "e1": {
+    "groups": {
+      "load": {
+        "matched": 2,
+        "unmatched": 28,
+        "emitted": 30,
+        "step_offsets": {
+          "0": 2
+        },
+        "pairs": [
+          {
+            "address_space": 3,
+            "op": "load",
+            "ordinals": [
+              1,
+              1
+            ],
+            "source_align": [
+              4,
+              4
+            ]
+          },
+          {
+            "address_space": 3,
+            "op": "load",
+            "ordinals": [
+              2,
+              2
+            ],
+            "source_align": [
+              4,
+              4
+            ]
+          }
+        ]
+      },
+      "store": {
+        "matched": 0,
+        "unmatched": 16,
+        "emitted": 16,
+        "step_offsets": {},
+        "pairs": []
+      }
+    },
+    "hot_loop": {
+      "instructions": 615,
+      "conditional": 25,
+      "exec": 76,
+      "valu": 318,
+      "salu": 83,
+      "memory": 120,
+      "unconditional": 6,
+      "flow_wait_other": 94,
+      "execz": 16,
+      "execnz": 1,
+      "mask": 59,
+      "lds": 112,
+      "waitcnt": 59,
+      "cndmask": 67,
+      "bytes": 3760
+    },
+    "loops": [
+      {
+        "header": "0x1860",
+        "latches": [
+          "0x1860"
+        ],
+        "depth": 1,
+        "blocks": [
+          "0x1860"
+        ],
+        "stats": {
+          "instructions": 17,
+          "conditional": 1,
+          "exec": 0,
+          "valu": 4,
+          "salu": 3,
+          "memory": 8,
+          "unconditional": 0,
+          "flow_wait_other": 2,
+          "execz": 0,
+          "execnz": 0,
+          "mask": 0,
+          "lds": 4,
+          "waitcnt": 1,
+          "cndmask": 0,
+          "bytes": 108
+        }
+      },
+      {
+        "header": "0x1964",
+        "latches": [
+          "0x1948"
+        ],
+        "depth": 1,
+        "blocks": [
+          "0x1948",
+          "0x1964",
+          "0x1984",
+          "0x1998",
+          "0x19e4",
+          "0x1c2c",
+          "0x1c38",
+          "0x1f00",
+          "0x1f18",
+          "0x1f1c",
+          "0x1f80",
+          "0x1f9c",
+          "0x1fa4",
+          "0x1fb8",
+          "0x1fc8",
+          "0x2028",
+          "0x2054",
+          "0x2098",
+          "0x20c4",
+          "0x2108",
+          "0x2134",
+          "0x2178",
+          "0x21a4",
+          "0x21e8",
+          "0x2214",
+          "0x2258",
+          "0x2284",
+          "0x22c8",
+          "0x22f4",
+          "0x2310",
+          "0x231c",
+          "0x2320",
+          "0x233c",
+          "0x2354",
+          "0x2358",
+          "0x2364",
+          "0x2370",
+          "0x2678",
+          "0x2690",
+          "0x2694",
+          "0x26f8"
+        ],
+        "stats": {
+          "instructions": 574,
+          "conditional": 23,
+          "exec": 76,
+          "valu": 310,
+          "salu": 77,
+          "memory": 100,
+          "unconditional": 6,
+          "flow_wait_other": 87,
+          "execz": 16,
+          "execnz": 1,
+          "mask": 59,
+          "lds": 100,
+          "waitcnt": 54,
+          "cndmask": 67,
+          "bytes": 3508
+        }
+      },
+      {
+        "header": "0x1998",
+        "latches": [
+          "0x1984"
+        ],
+        "depth": 2,
+        "blocks": [
+          "0x1984",
+          "0x1998",
+          "0x19e4",
+          "0x1c2c",
+          "0x1c38"
+        ],
+        "stats": {
+          "instructions": 206,
+          "conditional": 3,
+          "exec": 7,
+          "valu": 145,
+          "salu": 8,
+          "memory": 34,
+          "unconditional": 1,
+          "flow_wait_other": 19,
+          "execz": 2,
+          "execnz": 0,
+          "mask": 5,
+          "lds": 34,
+          "waitcnt": 15,
+          "cndmask": 47,
+          "bytes": 1404
+        }
+      },
+      {
+        "header": "0x1f1c",
+        "latches": [
+          "0x1f1c"
+        ],
+        "depth": 2,
+        "blocks": [
+          "0x1f1c"
+        ],
+        "stats": {
+          "instructions": 17,
+          "conditional": 1,
+          "exec": 0,
+          "valu": 2,
+          "salu": 2,
+          "memory": 8,
+          "unconditional": 0,
+          "flow_wait_other": 5,
+          "execz": 0,
+          "execnz": 0,
+          "mask": 0,
+          "lds": 8,
+          "waitcnt": 4,
+          "cndmask": 0,
+          "bytes": 100
+        }
+      },
+      {
+        "header": "0x1fc8",
+        "latches": [
+          "0x1fb8"
+        ],
+        "depth": 2,
+        "blocks": [
+          "0x1fb8",
+          "0x1fc8",
+          "0x2028",
+          "0x2054",
+          "0x2098",
+          "0x20c4",
+          "0x2108",
+          "0x2134",
+          "0x2178",
+          "0x21a4",
+          "0x21e8",
+          "0x2214",
+          "0x2258",
+          "0x2284",
+          "0x22c8",
+          "0x22f4",
+          "0x2310",
+          "0x231c",
+          "0x2320",
+          "0x233c"
+        ],
+        "stats": {
+          "instructions": 175,
+          "conditional": 11,
+          "exec": 52,
+          "valu": 71,
+          "salu": 44,
+          "memory": 32,
+          "unconditional": 2,
+          "flow_wait_other": 28,
+          "execz": 9,
+          "execnz": 1,
+          "mask": 42,
+          "lds": 32,
+          "waitcnt": 15,
+          "cndmask": 0,
+          "bytes": 924
+        }
+      },
+      {
+        "header": "0x2370",
+        "latches": [
+          "0x2370"
+        ],
+        "depth": 2,
+        "blocks": [
+          "0x2370"
+        ],
+        "stats": {
+          "instructions": 110,
+          "conditional": 1,
+          "exec": 0,
+          "valu": 81,
+          "salu": 2,
+          "memory": 18,
+          "unconditional": 0,
+          "flow_wait_other": 9,
+          "execz": 0,
+          "execnz": 0,
+          "mask": 0,
+          "lds": 18,
+          "waitcnt": 8,
+          "cndmask": 20,
+          "bytes": 776
+        }
+      },
+      {
+        "header": "0x2694",
+        "latches": [
+          "0x2694"
+        ],
+        "depth": 2,
+        "blocks": [
+          "0x2694"
+        ],
+        "stats": {
+          "instructions": 17,
+          "conditional": 1,
+          "exec": 0,
+          "valu": 2,
+          "salu": 2,
+          "memory": 8,
+          "unconditional": 0,
+          "flow_wait_other": 5,
+          "execz": 0,
+          "execnz": 0,
+          "mask": 0,
+          "lds": 8,
+          "waitcnt": 4,
+          "cndmask": 0,
+          "bytes": 100
+        }
+      },
+      {
+        "header": "0x2724",
+        "latches": [
+          "0x2724"
+        ],
+        "depth": 1,
+        "blocks": [
+          "0x2724"
+        ],
+        "stats": {
+          "instructions": 24,
+          "conditional": 1,
+          "exec": 0,
+          "valu": 4,
+          "salu": 3,
+          "memory": 12,
+          "unconditional": 0,
+          "flow_wait_other": 5,
+          "execz": 0,
+          "execnz": 0,
+          "mask": 0,
+          "lds": 8,
+          "waitcnt": 4,
+          "cndmask": 0,
+          "bytes": 144
+        }
+      }
+    ],
+    "resources": {
+      "sgpr_count": 26,
+      "vgpr_count": 24,
+      "sgpr_spill_count": 0,
+      "vgpr_spill_count": 0,
+      "group_segment_fixed_size": 65536,
+      "wavefront_size": 64,
+      "max_flat_workgroup_size": 256,
+      "threads": 32,
+      "dynamic_lds": 0,
+      "waves_per_simd": 0.25
+    },
+    "pairs": 9,
+    "tti": 1609
+  },
+  "e2": {
+    "groups": {
+      "load": {
+        "matched": 2,
+        "unmatched": 28,
+        "emitted": 30,
+        "step_offsets": {
+          "0": 2
+        },
+        "pairs": [
+          {
+            "address_space": 3,
+            "op": "load",
+            "ordinals": [
+              1,
+              1
+            ],
+            "source_align": [
+              4,
+              4
+            ]
+          },
+          {
+            "address_space": 3,
+            "op": "load",
+            "ordinals": [
+              2,
+              2
+            ],
+            "source_align": [
+              4,
+              4
+            ]
+          }
+        ]
+      },
+      "store": {
+        "matched": 0,
+        "unmatched": 16,
+        "emitted": 16,
+        "step_offsets": {},
+        "pairs": []
+      }
+    },
+    "hot_loop": {
+      "instructions": 615,
+      "conditional": 25,
+      "exec": 76,
+      "valu": 318,
+      "salu": 83,
+      "memory": 120,
+      "unconditional": 6,
+      "flow_wait_other": 94,
+      "execz": 16,
+      "execnz": 1,
+      "mask": 59,
+      "lds": 112,
+      "waitcnt": 59,
+      "cndmask": 67,
+      "bytes": 3760
+    },
+    "loops": [
+      {
+        "header": "0x1860",
+        "latches": [
+          "0x1860"
+        ],
+        "depth": 1,
+        "blocks": [
+          "0x1860"
+        ],
+        "stats": {
+          "instructions": 17,
+          "conditional": 1,
+          "exec": 0,
+          "valu": 4,
+          "salu": 3,
+          "memory": 8,
+          "unconditional": 0,
+          "flow_wait_other": 2,
+          "execz": 0,
+          "execnz": 0,
+          "mask": 0,
+          "lds": 4,
+          "waitcnt": 1,
+          "cndmask": 0,
+          "bytes": 108
+        }
+      },
+      {
+        "header": "0x1964",
+        "latches": [
+          "0x1948"
+        ],
+        "depth": 1,
+        "blocks": [
+          "0x1948",
+          "0x1964",
+          "0x1984",
+          "0x1998",
+          "0x19e4",
+          "0x1c2c",
+          "0x1c38",
+          "0x1f00",
+          "0x1f18",
+          "0x1f1c",
+          "0x1f80",
+          "0x1f9c",
+          "0x1fa4",
+          "0x1fb8",
+          "0x1fc8",
+          "0x2028",
+          "0x2054",
+          "0x2098",
+          "0x20c4",
+          "0x2108",
+          "0x2134",
+          "0x2178",
+          "0x21a4",
+          "0x21e8",
+          "0x2214",
+          "0x2258",
+          "0x2284",
+          "0x22c8",
+          "0x22f4",
+          "0x2310",
+          "0x231c",
+          "0x2320",
+          "0x233c",
+          "0x2354",
+          "0x2358",
+          "0x2364",
+          "0x2370",
+          "0x2678",
+          "0x2690",
+          "0x2694",
+          "0x26f8"
+        ],
+        "stats": {
+          "instructions": 574,
+          "conditional": 23,
+          "exec": 76,
+          "valu": 310,
+          "salu": 77,
+          "memory": 100,
+          "unconditional": 6,
+          "flow_wait_other": 87,
+          "execz": 16,
+          "execnz": 1,
+          "mask": 59,
+          "lds": 100,
+          "waitcnt": 54,
+          "cndmask": 67,
+          "bytes": 3508
+        }
+      },
+      {
+        "header": "0x1998",
+        "latches": [
+          "0x1984"
+        ],
+        "depth": 2,
+        "blocks": [
+          "0x1984",
+          "0x1998",
+          "0x19e4",
+          "0x1c2c",
+          "0x1c38"
+        ],
+        "stats": {
+          "instructions": 206,
+          "conditional": 3,
+          "exec": 7,
+          "valu": 145,
+          "salu": 8,
+          "memory": 34,
+          "unconditional": 1,
+          "flow_wait_other": 19,
+          "execz": 2,
+          "execnz": 0,
+          "mask": 5,
+          "lds": 34,
+          "waitcnt": 15,
+          "cndmask": 47,
+          "bytes": 1404
+        }
+      },
+      {
+        "header": "0x1f1c",
+        "latches": [
+          "0x1f1c"
+        ],
+        "depth": 2,
+        "blocks": [
+          "0x1f1c"
+        ],
+        "stats": {
+          "instructions": 17,
+          "conditional": 1,
+          "exec": 0,
+          "valu": 2,
+          "salu": 2,
+          "memory": 8,
+          "unconditional": 0,
+          "flow_wait_other": 5,
+          "execz": 0,
+          "execnz": 0,
+          "mask": 0,
+          "lds": 8,
+          "waitcnt": 4,
+          "cndmask": 0,
+          "bytes": 100
+        }
+      },
+      {
+        "header": "0x1fc8",
+        "latches": [
+          "0x1fb8"
+        ],
+        "depth": 2,
+        "blocks": [
+          "0x1fb8",
+          "0x1fc8",
+          "0x2028",
+          "0x2054",
+          "0x2098",
+          "0x20c4",
+          "0x2108",
+          "0x2134",
+          "0x2178",
+          "0x21a4",
+          "0x21e8",
+          "0x2214",
+          "0x2258",
+          "0x2284",
+          "0x22c8",
+          "0x22f4",
+          "0x2310",
+          "0x231c",
+          "0x2320",
+          "0x233c"
+        ],
+        "stats": {
+          "instructions": 175,
+          "conditional": 11,
+          "exec": 52,
+          "valu": 71,
+          "salu": 44,
+          "memory": 32,
+          "unconditional": 2,
+          "flow_wait_other": 28,
+          "execz": 9,
+          "execnz": 1,
+          "mask": 42,
+          "lds": 32,
+          "waitcnt": 15,
+          "cndmask": 0,
+          "bytes": 924
+        }
+      },
+      {
+        "header": "0x2370",
+        "latches": [
+          "0x2370"
+        ],
+        "depth": 2,
+        "blocks": [
+          "0x2370"
+        ],
+        "stats": {
+          "instructions": 110,
+          "conditional": 1,
+          "exec": 0,
+          "valu": 81,
+          "salu": 2,
+          "memory": 18,
+          "unconditional": 0,
+          "flow_wait_other": 9,
+          "execz": 0,
+          "execnz": 0,
+          "mask": 0,
+          "lds": 18,
+          "waitcnt": 8,
+          "cndmask": 20,
+          "bytes": 776
+        }
+      },
+      {
+        "header": "0x2694",
+        "latches": [
+          "0x2694"
+        ],
+        "depth": 2,
+        "blocks": [
+          "0x2694"
+        ],
+        "stats": {
+          "instructions": 17,
+          "conditional": 1,
+          "exec": 0,
+          "valu": 2,
+          "salu": 2,
+          "memory": 8,
+          "unconditional": 0,
+          "flow_wait_other": 5,
+          "execz": 0,
+          "execnz": 0,
+          "mask": 0,
+          "lds": 8,
+          "waitcnt": 4,
+          "cndmask": 0,
+          "bytes": 100
+        }
+      },
+      {
+        "header": "0x2724",
+        "latches": [
+          "0x2724"
+        ],
+        "depth": 1,
+        "blocks": [
+          "0x2724"
+        ],
+        "stats": {
+          "instructions": 24,
+          "conditional": 1,
+          "exec": 0,
+          "valu": 4,
+          "salu": 3,
+          "memory": 12,
+          "unconditional": 0,
+          "flow_wait_other": 5,
+          "execz": 0,
+          "execnz": 0,
+          "mask": 0,
+          "lds": 8,
+          "waitcnt": 4,
+          "cndmask": 0,
+          "bytes": 144
+        }
+      }
+    ],
+    "resources": {
+      "sgpr_count": 26,
+      "vgpr_count": 24,
+      "sgpr_spill_count": 0,
+      "vgpr_spill_count": 0,
+      "group_segment_fixed_size": 65536,
+      "wavefront_size": 64,
+      "max_flat_workgroup_size": 256,
+      "threads": 32,
+      "dynamic_lds": 0,
+      "waves_per_simd": 0.25
+    },
+    "pairs": 9,
+    "tti": 1609
+  },
+  "e3": {
+    "groups": {
+      "load": {
+        "matched": 14,
+        "unmatched": 4,
+        "emitted": 18,
+        "step_offsets": {
+          "-1": 12,
+          "0": 2
+        },
+        "pairs": [
+          {
+            "address_space": 3,
+            "op": "load",
+            "ordinals": [
+              1,
+              1
+            ],
+            "source_align": [
+              4,
+              4
+            ]
+          },
+          {
+            "address_space": 3,
+            "op": "load",
+            "ordinals": [
+              2,
+              2
+            ],
+            "source_align": [
+              4,
+              4
+            ]
+          },
+          {
+            "address_space": 3,
+            "op": "load",
+            "ordinals": [
+              5,
+              3
+            ],
+            "source_align": [
+              4,
+              4
+            ]
+          },
+          {
+            "address_space": 3,
+            "op": "load",
+            "ordinals": [
+              6,
+              4
+            ],
+            "source_align": [
+              4,
+              4
+            ]
+          },
+          {
+            "address_space": 3,
+            "op": "load",
+            "ordinals": [
+              7,
+              5
+            ],
+            "source_align": [
+              4,
+              4
+            ]
+          },
+          {
+            "address_space": 3,
+            "op": "load",
+            "ordinals": [
+              8,
+              6
+            ],
+            "source_align": [
+              4,
+              4
+            ]
+          },
+          {
+            "address_space": 3,
+            "op": "load",
+            "ordinals": [
+              9,
+              7
+            ],
+            "source_align": [
+              4,
+              4
+            ]
+          },
+          {
+            "address_space": 3,
+            "op": "load",
+            "ordinals": [
+              10,
+              8
+            ],
+            "source_align": [
+              4,
+              4
+            ]
+          },
+          {
+            "address_space": 3,
+            "op": "load",
+            "ordinals": [
+              11,
+              9
+            ],
+            "source_align": [
+              4,
+              4
+            ]
+          },
+          {
+            "address_space": 3,
+            "op": "load",
+            "ordinals": [
+              12,
+              10
+            ],
+            "source_align": [
+              4,
+              4
+            ]
+          },
+          {
+            "address_space": 3,
+            "op": "load",
+            "ordinals": [
+              13,
+              11
+            ],
+            "source_align": [
+              4,
+              4
+            ]
+          },
+          {
+            "address_space": 3,
+            "op": "load",
+            "ordinals": [
+              14,
+              12
+            ],
+            "source_align": [
+              4,
+              4
+            ]
+          },
+          {
+            "address_space": 3,
+            "op": "load",
+            "ordinals": [
+              15,
+              13
+            ],
+            "source_align": [
+              4,
+              4
+            ]
+          },
+          {
+            "address_space": 3,
+            "op": "load",
+            "ordinals": [
+              16,
+              14
+            ],
+            "source_align": [
+              4,
+              4
+            ]
+          }
+        ]
+      },
+      "store": {
+        "matched": 7,
+        "unmatched": 2,
+        "emitted": 9,
+        "step_offsets": {
+          "-1": 7
+        },
+        "pairs": [
+          {
+            "address_space": 3,
+            "op": "store",
+            "ordinals": [
+              2,
+              1
+            ],
+            "source_align": [
+              4,
+              4
+            ]
+          },
+          {
+            "address_space": 3,
+            "op": "store",
+            "ordinals": [
+              3,
+              2
+            ],
+            "source_align": [
+              8,
+              8
+            ]
+          },
+          {
+            "address_space": 3,
+            "op": "store",
+            "ordinals": [
+              4,
+              3
+            ],
+            "source_align": [
+              4,
+              4
+            ]
+          },
+          {
+            "address_space": 3,
+            "op": "store",
+            "ordinals": [
+              5,
+              4
+            ],
+            "source_align": [
+              16,
+              16
+            ]
+          },
+          {
+            "address_space": 3,
+            "op": "store",
+            "ordinals": [
+              6,
+              5
+            ],
+            "source_align": [
+              4,
+              4
+            ]
+          },
+          {
+            "address_space": 3,
+            "op": "store",
+            "ordinals": [
+              7,
+              6
+            ],
+            "source_align": [
+              8,
+              8
+            ]
+          },
+          {
+            "address_space": 3,
+            "op": "store",
+            "ordinals": [
+              8,
+              7
+            ],
+            "source_align": [
+              4,
+              4
+            ]
+          }
+        ]
+      }
+    },
+    "hot_loop": {
+      "instructions": 649,
+      "conditional": 25,
+      "exec": 108,
+      "valu": 311,
+      "salu": 137,
+      "memory": 113,
+      "unconditional": 6,
+      "flow_wait_other": 88,
+      "execz": 16,
+      "execnz": 1,
+      "mask": 91,
+      "lds": 105,
+      "waitcnt": 53,
+      "cndmask": 81,
+      "bytes": 3840
+    },
+    "loops": [
+      {
+        "header": "0x1860",
+        "latches": [
+          "0x1860"
+        ],
+        "depth": 1,
+        "blocks": [
+          "0x1860"
+        ],
+        "stats": {
+          "instructions": 17,
+          "conditional": 1,
+          "exec": 0,
+          "valu": 4,
+          "salu": 3,
+          "memory": 8,
+          "unconditional": 0,
+          "flow_wait_other": 2,
+          "execz": 0,
+          "execnz": 0,
+          "mask": 0,
+          "lds": 4,
+          "waitcnt": 1,
+          "cndmask": 0,
+          "bytes": 108
+        }
+      },
+      {
+        "header": "0x196c",
+        "latches": [
+          "0x1950"
+        ],
+        "depth": 1,
+        "blocks": [
+          "0x1950",
+          "0x196c",
+          "0x1994",
+          "0x19b0",
+          "0x1a10",
+          "0x1a90",
+          "0x1ee4",
+          "0x1f58",
+          "0x1f70",
+          "0x1f74",
+          "0x1fd8",
+          "0x1ff4",
+          "0x1ffc",
+          "0x2010",
+          "0x2020",
+          "0x2080",
+          "0x20ac",
+          "0x20f0",
+          "0x211c",
+          "0x2160",
+          "0x218c",
+          "0x21d0",
+          "0x21fc",
+          "0x2240",
+          "0x226c",
+          "0x22b0",
+          "0x22dc",
+          "0x2320",
+          "0x234c",
+          "0x2368",
+          "0x2374",
+          "0x2378",
+          "0x2394",
+          "0x23ac",
+          "0x23b0",
+          "0x23bc",
+          "0x23c8",
+          "0x26d0",
+          "0x26e8",
+          "0x26ec",
+          "0x2750"
+        ],
+        "stats": {
+          "instructions": 608,
+          "conditional": 23,
+          "exec": 108,
+          "valu": 303,
+          "salu": 131,
+          "memory": 93,
+          "unconditional": 6,
+          "flow_wait_other": 81,
+          "execz": 16,
+          "execnz": 1,
+          "mask": 91,
+          "lds": 93,
+          "waitcnt": 48,
+          "cndmask": 81,
+          "bytes": 3588
+        }
+      },
+      {
+        "header": "0x19b0",
+        "latches": [
+          "0x1994"
+        ],
+        "depth": 2,
+        "blocks": [
+          "0x1994",
+          "0x19b0",
+          "0x1a10",
+          "0x1a90",
+          "0x1ee4"
+        ],
+        "stats": {
+          "instructions": 238,
+          "conditional": 3,
+          "exec": 39,
+          "valu": 137,
+          "salu": 61,
+          "memory": 27,
+          "unconditional": 1,
+          "flow_wait_other": 13,
+          "execz": 2,
+          "execnz": 0,
+          "mask": 37,
+          "lds": 27,
+          "waitcnt": 9,
+          "cndmask": 61,
+          "bytes": 1476
+        }
+      },
+      {
+        "header": "0x1f74",
+        "latches": [
+          "0x1f74"
+        ],
+        "depth": 2,
+        "blocks": [
+          "0x1f74"
+        ],
+        "stats": {
+          "instructions": 17,
+          "conditional": 1,
+          "exec": 0,
+          "valu": 2,
+          "salu": 2,
+          "memory": 8,
+          "unconditional": 0,
+          "flow_wait_other": 5,
+          "execz": 0,
+          "execnz": 0,
+          "mask": 0,
+          "lds": 8,
+          "waitcnt": 4,
+          "cndmask": 0,
+          "bytes": 100
+        }
+      },
+      {
+        "header": "0x2020",
+        "latches": [
+          "0x2010"
+        ],
+        "depth": 2,
+        "blocks": [
+          "0x2010",
+          "0x2020",
+          "0x2080",
+          "0x20ac",
+          "0x20f0",
+          "0x211c",
+          "0x2160",
+          "0x218c",
+          "0x21d0",
+          "0x21fc",
+          "0x2240",
+          "0x226c",
+          "0x22b0",
+          "0x22dc",
+          "0x2320",
+          "0x234c",
+          "0x2368",
+          "0x2374",
+          "0x2378",
+          "0x2394"
+        ],
+        "stats": {
+          "instructions": 175,
+          "conditional": 11,
+          "exec": 52,
+          "valu": 71,
+          "salu": 44,
+          "memory": 32,
+          "unconditional": 2,
+          "flow_wait_other": 28,
+          "execz": 9,
+          "execnz": 1,
+          "mask": 42,
+          "lds": 32,
+          "waitcnt": 15,
+          "cndmask": 0,
+          "bytes": 924
+        }
+      },
+      {
+        "header": "0x23c8",
+        "latches": [
+          "0x23c8"
+        ],
+        "depth": 2,
+        "blocks": [
+          "0x23c8"
+        ],
+        "stats": {
+          "instructions": 110,
+          "conditional": 1,
+          "exec": 0,
+          "valu": 81,
+          "salu": 2,
+          "memory": 18,
+          "unconditional": 0,
+          "flow_wait_other": 9,
+          "execz": 0,
+          "execnz": 0,
+          "mask": 0,
+          "lds": 18,
+          "waitcnt": 8,
+          "cndmask": 20,
+          "bytes": 776
+        }
+      },
+      {
+        "header": "0x26ec",
+        "latches": [
+          "0x26ec"
+        ],
+        "depth": 2,
+        "blocks": [
+          "0x26ec"
+        ],
+        "stats": {
+          "instructions": 17,
+          "conditional": 1,
+          "exec": 0,
+          "valu": 2,
+          "salu": 2,
+          "memory": 8,
+          "unconditional": 0,
+          "flow_wait_other": 5,
+          "execz": 0,
+          "execnz": 0,
+          "mask": 0,
+          "lds": 8,
+          "waitcnt": 4,
+          "cndmask": 0,
+          "bytes": 100
+        }
+      },
+      {
+        "header": "0x277c",
+        "latches": [
+          "0x277c"
+        ],
+        "depth": 1,
+        "blocks": [
+          "0x277c"
+        ],
+        "stats": {
+          "instructions": 24,
+          "conditional": 1,
+          "exec": 0,
+          "valu": 4,
+          "salu": 3,
+          "memory": 12,
+          "unconditional": 0,
+          "flow_wait_other": 5,
+          "execz": 0,
+          "execnz": 0,
+          "mask": 0,
+          "lds": 8,
+          "waitcnt": 4,
+          "cndmask": 0,
+          "bytes": 144
+        }
+      }
+    ],
+    "resources": {
+      "sgpr_count": 27,
+      "vgpr_count": 24,
+      "sgpr_spill_count": 0,
+      "vgpr_spill_count": 0,
+      "group_segment_fixed_size": 65536,
+      "wavefront_size": 64,
+      "max_flat_workgroup_size": 256,
+      "threads": 32,
+      "dynamic_lds": 0,
+      "waves_per_simd": 0.25
+    },
+    "pairs": 59,
+    "tti": 1642
+  }
+}

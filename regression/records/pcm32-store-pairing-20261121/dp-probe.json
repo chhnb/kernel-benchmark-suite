@@ -1,0 +1,44 @@
+{
+  "e1": [
+    "PCM_DP anchors ties=0 127/120:add 128/121:icmp",
+    "PCM_DP cutoffs ties=0",
+    "PCM_DP trials 96 same 0",
+    "PCM_DP score 276 2/2:load 5/5:load",
+    "PCM_DP score 269 2/2:load 5/5:load 14/115:store",
+    "PCM_DP score -100",
+    "PCM_DP anchors ties=1 127/120:add 128/121:icmp",
+    "PCM_DP cutoffs ties=1",
+    "PCM_DP trials 96 same 0",
+    "PCM_DP score 3108 2/2:load 5/5:load 18/17:load 21/20:load 34/32:load 37/35:load 50/47:load 53/50:load 66/62:load 69/65:load 82/77:load 85/80:load 98/92:load 101/95:load 114/107:load 117/110:load",
+    "PCM_DP score 3008 2/2:load 5/5:load 18/17:load 21/20:load 34/32:load 37/35:load 50/47:load 53/50:load 66/62:load 69/65:load 82/77:load 85/80:load 98/92:load 101/95:load 114/107:load 117/110:load",
+    "PCM_DP score -100"
+  ],
+  "e2": [
+    "PCM_DP anchors ties=0 127/120:add 128/121:icmp",
+    "PCM_DP cutoffs ties=0",
+    "PCM_DP trials 256 same 32",
+    "PCM_DP score 276 2/2:load 5/5:load",
+    "PCM_DP score 269 2/2:load 5/5:load 14/115:store",
+    "PCM_DP score -100",
+    "PCM_DP anchors ties=1 127/120:add 128/121:icmp",
+    "PCM_DP cutoffs ties=1",
+    "PCM_DP trials 256 same 32",
+    "PCM_DP score 476 2/2:load 5/5:load",
+    "PCM_DP score 469 2/2:load 5/5:load 14/115:store",
+    "PCM_DP score -100"
+  ],
+  "e3": [
+    "PCM_DP anchors ties=0 127/120:add 128/121:icmp",
+    "PCM_DP cutoffs ties=0",
+    "PCM_DP trials 96 same 0",
+    "PCM_DP score 204100 2/2:load 5/5:load 30/10:store 34/17:load 37/20:load 46/25:store 50/32:load 53/35:load 62/40:store 66/47:load 69/50:load 78/55:store 82/62:load 85/65:load 94/70:store 98/77:load 101/80:load 110/85:store 114/92:load 117/95:load 126/100:store",
+    "PCM_DP score 204000 2/2:load 21/5:load 30/10:store 34/17:load 37/20:load 46/25:store 50/32:load 53/35:load 62/40:store 66/47:load 69/50:load 78/55:store 82/62:load 85/65:load 94/70:store 98/77:load 101/80:load 110/85:store 114/92:load 117/95:load 126/100:store",
+    "PCM_DP score -100",
+    "PCM_DP anchors ties=1 127/120:add 128/121:icmp",
+    "PCM_DP cutoffs ties=1",
+    "PCM_DP trials 96 same 0",
+    "PCM_DP score 207300 2/2:load 5/5:load 30/10:store 34/17:load 37/20:load 46/25:store 50/32:load 53/35:load 62/40:store 66/47:load 69/50:load 78/55:store 82/62:load 85/65:load 94/70:store 98/77:load 101/80:load 110/85:store 114/92:load 117/95:load 126/100:store",
+    "PCM_DP score 207200 2/2:load 5/5:load 30/10:store 34/17:load 37/20:load 46/25:store 50/32:load 53/35:load 62/40:store 66/47:load 69/50:load 78/55:store 82/62:load 85/65:load 94/70:store 98/77:load 101/80:load 110/85:store 114/92:load 117/95:load 126/100:store",
+    "PCM_DP score -100"
+  ]
+}

@@ -1,0 +1,68 @@
+{
+  "e0": [
+    {
+      "ties": false,
+      "memory_pairs": {
+        "load": 16
+      },
+      "tti": 1637
+    },
+    {
+      "ties": true,
+      "memory_pairs": {
+        "load": 16
+      },
+      "tti": 1623
+    }
+  ],
+  "e1": [
+    {
+      "ties": false,
+      "memory_pairs": {
+        "load": 2
+      },
+      "tti": 1609
+    },
+    {
+      "ties": true,
+      "memory_pairs": {
+        "load": 16
+      },
+      "tti": 1623
+    }
+  ],
+  "e2": [
+    {
+      "ties": false,
+      "memory_pairs": {
+        "load": 2
+      },
+      "tti": 1609
+    },
+    {
+      "ties": true,
+      "memory_pairs": {
+        "load": 2
+      },
+      "tti": 1609
+    }
+  ],
+  "e3": [
+    {
+      "ties": false,
+      "memory_pairs": {
+        "load": 14,
+        "store": 7
+      },
+      "tti": 1726
+    },
+    {
+      "ties": true,
+      "memory_pairs": {
+        "load": 14,
+        "store": 7
+      },
+      "tti": 1642
+    }
+  ]
+}
