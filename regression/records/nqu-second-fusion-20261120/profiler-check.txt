@@ -1,0 +1,27 @@
+profile-env.log
+uid=1002(chh) gid=1002(chh) groups=1002(chh),992(render)
+crw-rw---- 1 root render 226, 129 Nov 16 15:54 /dev/dri/renderD129
+crw-rw---- 1 root render 238,   0 Nov 16 15:54 /dev/kfd
+6.12.116+deb13-amd64
+gfx906
+
+pmcv1.log
+  kernel = _Z24solve_nqueen_cuda_kerneliiPjS_S_S_i
+ROCPRofiler: 0 contexts collected, output directory /tmp/rpl_data_261120_160657_2471507/input0_results_261120_160657
+
+unfiltered-v1.log
+  kernel =
+ROCPRofiler: 6 contexts collected, output directory /tmp/rpl_data_261120_161408_2478369/input0_results_261120_161408
+
+unfiltered-v2.log
+Tool lib "/data/home/chh/simplify-v2/build/b2b-layouts/anchor-heldout/rocm/prof/opt/rocm-6.3.3/bin/lib/librocprofiler64.so.2" failed to load.
+
+metrics-all.log
+ROCPRofiler: 6 contexts collected, output directory /tmp/rpl_data_261120_161553_2480633/input0_results_261120_161553
+ROCPRofiler: 6 contexts collected, output directory /tmp/rpl_data_261120_161553_2480633/input1_results_261120_161553
+ROCPRofiler: 6 contexts collected, output directory /tmp/rpl_data_261120_161554_2480807/input0_results_261120_161554
+ROCPRofiler: 6 contexts collected, output directory /tmp/rpl_data_261120_161554_2480807/input1_results_261120_161554
+ROCPRofiler: 6 contexts collected, output directory /tmp/rpl_data_261120_161555_2480984/input0_results_261120_161555
+ROCPRofiler: 6 contexts collected, output directory /tmp/rpl_data_261120_161555_2480984/input1_results_261120_161555
+ROCPRofiler: 6 contexts collected, output directory /tmp/rpl_data_261120_161556_2481155/input0_results_261120_161556
+ROCPRofiler: 6 contexts collected, output directory /tmp/rpl_data_261120_161556_2481155/input1_results_261120_161556

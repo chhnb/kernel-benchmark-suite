@@ -1,0 +1,7 @@
+Index,KernelName,gpu-id,queue-id,queue-index,pid,tid,grd,wgr,lds,scr,arch_vgpr,accum_vgpr,sgpr,wave_size,sig,obj,SQ_WAVES,SQ_INSTS_VALU,SQ_INSTS_SALU,SQ_INSTS_LDS,SQ_THREAD_CYCLES_VALU,SQ_ACTIVE_INST_VALU
+0,"__amd_rocclr_fillBufferAligned.kd",2,0,0,2480735,2480735,256,256,0,0,8,0,32,64,0x0,0x7f8ed4cbd840,4,50,45,0,4032,63
+1,"solve_nqueen_cuda_kernel(int, int, unsigned int*, unsigned int*, unsigned int*, unsigned int*, int) [clone .kd]",2,0,2,2480735,2480735,24576,64,10752,0,12,0,32,64,0x0,0x7f8ede26a8c0,384,70607444,41024299,14735489,1912673481,70607828
+2,"__amd_rocclr_fillBufferAligned.kd",2,0,4,2480735,2480735,256,256,0,0,8,0,32,64,0x0,0x7f8ed4cbd840,4,50,45,0,4032,63
+3,"solve_nqueen_cuda_kernel(int, int, unsigned int*, unsigned int*, unsigned int*, unsigned int*, int) [clone .kd]",2,0,6,2480735,2480735,24576,64,10752,0,12,0,32,64,0x0,0x7f8ede26a8c0,384,71951773,41842957,14991844,1844348676,71952045
+4,"__amd_rocclr_fillBufferAligned.kd",2,0,8,2480735,2480735,256,256,0,0,8,0,32,64,0x0,0x7f8ed4cbd840,4,50,45,0,4032,63
+5,"solve_nqueen_cuda_kernel(int, int, unsigned int*, unsigned int*, unsigned int*, unsigned int*, int) [clone .kd]",2,0,10,2480735,2480735,24576,64,10752,0,12,0,32,64,0x0,0x7f8ede26a8c0,384,23264889,13527137,4853042,596961546,23264975

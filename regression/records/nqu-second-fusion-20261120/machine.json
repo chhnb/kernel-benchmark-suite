@@ -1,0 +1,2143 @@
+{
+  "P": {
+    "hot": [
+      {
+        "address": "0x1acc",
+        "opcode": "s_or_b64",
+        "args": "exec, exec, s[0:1]",
+        "bytes": 4,
+        "block": "0x1acc"
+      },
+      {
+        "address": "0x1ad0",
+        "opcode": "s_and_b64",
+        "args": "s[0:1], exec, s[2:3]",
+        "bytes": 4,
+        "block": "0x1acc"
+      },
+      {
+        "address": "0x1ad4",
+        "opcode": "s_or_b64",
+        "args": "s[10:11], s[0:1], s[10:11]",
+        "bytes": 4,
+        "block": "0x1acc"
+      },
+      {
+        "address": "0x1ad8",
+        "opcode": "v_cndmask_b32_e32",
+        "args": "v1, v4, v1, vcc",
+        "bytes": 4,
+        "block": "0x1acc"
+      },
+      {
+        "address": "0x1adc",
+        "opcode": "s_andn2_b64",
+        "args": "exec, exec, s[10:11]",
+        "bytes": 4,
+        "block": "0x1acc"
+      },
+      {
+        "address": "0x1ae0",
+        "opcode": "s_cbranch_execz",
+        "args": "BB0_13",
+        "bytes": 4,
+        "block": "0x1acc"
+      },
+      {
+        "address": "0x1ae4",
+        "opcode": "s_waitcnt",
+        "args": "lgkmcnt(0)",
+        "bytes": 4,
+        "block": "0x1ae4"
+      },
+      {
+        "address": "0x1ae8",
+        "opcode": "v_and_b32_e32",
+        "args": "v4, s6, v3",
+        "bytes": 4,
+        "block": "0x1ae4"
+      },
+      {
+        "address": "0x1aec",
+        "opcode": "v_add_u32_e32",
+        "args": "v7, 1, v3",
+        "bytes": 4,
+        "block": "0x1ae4"
+      },
+      {
+        "address": "0x1af0",
+        "opcode": "v_cmp_eq_u32_e32",
+        "args": "vcc, s6, v4",
+        "bytes": 4,
+        "block": "0x1ae4"
+      },
+      {
+        "address": "0x1af4",
+        "opcode": "v_lshlrev_b32_e32",
+        "args": "v5, 2, v2",
+        "bytes": 4,
+        "block": "0x1ae4"
+      },
+      {
+        "address": "0x1af8",
+        "opcode": "v_not_b32_e32",
+        "args": "v6, v3",
+        "bytes": 4,
+        "block": "0x1ae4"
+      },
+      {
+        "address": "0x1afc",
+        "opcode": "v_cmp_ne_u32_e64",
+        "args": "s[0:1], s6, v4",
+        "bytes": 8,
+        "block": "0x1ae4"
+      },
+      {
+        "address": "0x1b04",
+        "opcode": "v_cndmask_b32_e64",
+        "args": "v4, v7, 0, vcc",
+        "bytes": 8,
+        "block": "0x1ae4"
+      },
+      {
+        "address": "0x1b0c",
+        "opcode": "v_or_b32_e32",
+        "args": "v3, v3, v4",
+        "bytes": 4,
+        "block": "0x1ae4"
+      },
+      {
+        "address": "0x1b10",
+        "opcode": "v_mad_u32_u24",
+        "args": "v5, v0, 40, v5",
+        "bytes": 8,
+        "block": "0x1ae4"
+      },
+      {
+        "address": "0x1b18",
+        "opcode": "v_and_b32_e32",
+        "args": "v6, v7, v6",
+        "bytes": 4,
+        "block": "0x1ae4"
+      },
+      {
+        "address": "0x1b1c",
+        "opcode": "ds_write_b32",
+        "args": "v5, v3",
+        "bytes": 8,
+        "block": "0x1ae4"
+      },
+      {
+        "address": "0x1b24",
+        "opcode": "v_and_b32_e32",
+        "args": "v3, s6, v6",
+        "bytes": 4,
+        "block": "0x1ae4"
+      },
+      {
+        "address": "0x1b28",
+        "opcode": "v_cmp_ne_u32_e64",
+        "args": "s[2:3], 0, v3",
+        "bytes": 8,
+        "block": "0x1ae4"
+      },
+      {
+        "address": "0x1b30",
+        "opcode": "s_and_b64",
+        "args": "s[0:1], s[0:1], s[2:3]",
+        "bytes": 4,
+        "block": "0x1ae4"
+      },
+      {
+        "address": "0x1b34",
+        "opcode": "s_and_saveexec_b64",
+        "args": "s[2:3], s[0:1]",
+        "bytes": 4,
+        "block": "0x1ae4"
+      },
+      {
+        "address": "0x1b38",
+        "opcode": "s_xor_b64",
+        "args": "s[2:3], exec, s[2:3]",
+        "bytes": 4,
+        "block": "0x1ae4"
+      },
+      {
+        "address": "0x1b3c",
+        "opcode": "s_cbranch_execz",
+        "args": "BB0_9",
+        "bytes": 4,
+        "block": "0x1ae4"
+      },
+      {
+        "address": "0x1b40",
+        "opcode": "v_add_u32_e32",
+        "args": "v3, 1, v2",
+        "bytes": 4,
+        "block": "0x1b40"
+      },
+      {
+        "address": "0x1b44",
+        "opcode": "v_cmp_ne_u32_e64",
+        "args": "s[0:1], s7, v3",
+        "bytes": 8,
+        "block": "0x1b40"
+      },
+      {
+        "address": "0x1b4c",
+        "opcode": "s_and_saveexec_b64",
+        "args": "s[12:13], s[0:1]",
+        "bytes": 4,
+        "block": "0x1b40"
+      },
+      {
+        "address": "0x1b50",
+        "opcode": "s_xor_b64",
+        "args": "s[0:1], exec, s[12:13]",
+        "bytes": 4,
+        "block": "0x1b40"
+      },
+      {
+        "address": "0x1b54",
+        "opcode": "s_cbranch_execz",
+        "args": "BB0_6",
+        "bytes": 4,
+        "block": "0x1b40"
+      },
+      {
+        "address": "0x1b58",
+        "opcode": "v_lshlrev_b32_e32",
+        "args": "v4, 2, v2",
+        "bytes": 4,
+        "block": "0x1b58"
+      },
+      {
+        "address": "0x1b5c",
+        "opcode": "v_mad_u32_u24",
+        "args": "v4, v0, 40, v4",
+        "bytes": 8,
+        "block": "0x1b58"
+      },
+      {
+        "address": "0x1b64",
+        "opcode": "ds_read_b32",
+        "args": "v9, v4 offset:7680",
+        "bytes": 8,
+        "block": "0x1b58"
+      },
+      {
+        "address": "0x1b6c",
+        "opcode": "ds_read2st64_b32",
+        "args": "v[7:8], v4 offset0:10 offset1:20",
+        "bytes": 8,
+        "block": "0x1b58"
+      },
+      {
+        "address": "0x1b74",
+        "opcode": "s_waitcnt",
+        "args": "lgkmcnt(1)",
+        "bytes": 4,
+        "block": "0x1b58"
+      },
+      {
+        "address": "0x1b78",
+        "opcode": "v_or_b32_e32",
+        "args": "v9, v9, v6",
+        "bytes": 4,
+        "block": "0x1b58"
+      },
+      {
+        "address": "0x1b7c",
+        "opcode": "s_waitcnt",
+        "args": "lgkmcnt(0)",
+        "bytes": 4,
+        "block": "0x1b58"
+      },
+      {
+        "address": "0x1b80",
+        "opcode": "v_or_b32_e32",
+        "args": "v8, v8, v6",
+        "bytes": 4,
+        "block": "0x1b58"
+      },
+      {
+        "address": "0x1b84",
+        "opcode": "v_or_b32_e32",
+        "args": "v6, v7, v6",
+        "bytes": 4,
+        "block": "0x1b58"
+      },
+      {
+        "address": "0x1b88",
+        "opcode": "ds_write_b32",
+        "args": "v4, v9 offset:7684",
+        "bytes": 8,
+        "block": "0x1b58"
+      },
+      {
+        "address": "0x1b90",
+        "opcode": "v_lshlrev_b32_e32",
+        "args": "v7, 1, v8",
+        "bytes": 4,
+        "block": "0x1b58"
+      },
+      {
+        "address": "0x1b94",
+        "opcode": "v_lshrrev_b32_e32",
+        "args": "v6, 1, v6",
+        "bytes": 4,
+        "block": "0x1b58"
+      },
+      {
+        "address": "0x1b98",
+        "opcode": "v_add_u32_e32",
+        "args": "v4, 0xa04, v4",
+        "bytes": 8,
+        "block": "0x1b58"
+      },
+      {
+        "address": "0x1ba0",
+        "opcode": "ds_write2st64_b32",
+        "args": "v4, v6, v7 offset1:10",
+        "bytes": 8,
+        "block": "0x1b58"
+      },
+      {
+        "address": "0x1ba8",
+        "opcode": "v_or3_b32",
+        "args": "v4, v7, v9, v6",
+        "bytes": 8,
+        "block": "0x1b58"
+      },
+      {
+        "address": "0x1bb0",
+        "opcode": "ds_write_b32",
+        "args": "v5, v4 offset:4",
+        "bytes": 8,
+        "block": "0x1b58"
+      },
+      {
+        "address": "0x1bb8",
+        "opcode": "s_or_saveexec_b64",
+        "args": "s[0:1], s[0:1]",
+        "bytes": 4,
+        "block": "0x1bb8"
+      },
+      {
+        "address": "0x1bbc",
+        "opcode": "v_mov_b32_e32",
+        "args": "v4, v1",
+        "bytes": 4,
+        "block": "0x1bb8"
+      },
+      {
+        "address": "0x1bc0",
+        "opcode": "s_xor_b64",
+        "args": "exec, exec, s[0:1]",
+        "bytes": 4,
+        "block": "0x1bb8"
+      },
+      {
+        "address": "0x1bc4",
+        "opcode": "v_add_u32_e32",
+        "args": "v4, 1, v1",
+        "bytes": 4,
+        "block": "0x1bb8"
+      },
+      {
+        "address": "0x1bc8",
+        "opcode": "v_add_u32_e32",
+        "args": "v3, -1, v2",
+        "bytes": 4,
+        "block": "0x1bb8"
+      },
+      {
+        "address": "0x1bcc",
+        "opcode": "s_or_b64",
+        "args": "exec, exec, s[0:1]",
+        "bytes": 4,
+        "block": "0x1bb8"
+      },
+      {
+        "address": "0x1bd0",
+        "opcode": "s_or_saveexec_b64",
+        "args": "s[0:1], s[2:3]",
+        "bytes": 4,
+        "block": "0x1bd0"
+      },
+      {
+        "address": "0x1bd4",
+        "opcode": "s_xor_b64",
+        "args": "exec, exec, s[0:1]",
+        "bytes": 4,
+        "block": "0x1bd0"
+      },
+      {
+        "address": "0x1bd8",
+        "opcode": "v_add_u32_e32",
+        "args": "v3, -1, v2",
+        "bytes": 4,
+        "block": "0x1bd0"
+      },
+      {
+        "address": "0x1bdc",
+        "opcode": "v_mov_b32_e32",
+        "args": "v4, v1",
+        "bytes": 4,
+        "block": "0x1bd0"
+      },
+      {
+        "address": "0x1be0",
+        "opcode": "s_or_b64",
+        "args": "exec, exec, s[0:1]",
+        "bytes": 4,
+        "block": "0x1bd0"
+      },
+      {
+        "address": "0x1be4",
+        "opcode": "v_cndmask_b32_e32",
+        "args": "v2, v3, v3, vcc",
+        "bytes": 4,
+        "block": "0x1bd0"
+      },
+      {
+        "address": "0x1be8",
+        "opcode": "v_cmp_lt_i32_e64",
+        "args": "s[0:1], -1, v2",
+        "bytes": 8,
+        "block": "0x1bd0"
+      },
+      {
+        "address": "0x1bf0",
+        "opcode": "s_mov_b64",
+        "args": "s[2:3], -1",
+        "bytes": 4,
+        "block": "0x1bd0"
+      },
+      {
+        "address": "0x1bf4",
+        "opcode": "s_and_saveexec_b64",
+        "args": "s[12:13], s[0:1]",
+        "bytes": 4,
+        "block": "0x1bd0"
+      },
+      {
+        "address": "0x1bf8",
+        "opcode": "s_xor_b64",
+        "args": "s[0:1], exec, s[12:13]",
+        "bytes": 4,
+        "block": "0x1bd0"
+      },
+      {
+        "address": "0x1bfc",
+        "opcode": "s_cbranch_execz",
+        "args": "BB0_2",
+        "bytes": 4,
+        "block": "0x1bd0"
+      },
+      {
+        "address": "0x1c00",
+        "opcode": "v_lshlrev_b32_e32",
+        "args": "v3, 2, v2",
+        "bytes": 4,
+        "block": "0x1c00"
+      },
+      {
+        "address": "0x1c04",
+        "opcode": "v_mad_u32_u24",
+        "args": "v3, v0, 40, v3",
+        "bytes": 8,
+        "block": "0x1c00"
+      },
+      {
+        "address": "0x1c0c",
+        "opcode": "ds_read_b32",
+        "args": "v3, v3",
+        "bytes": 8,
+        "block": "0x1c00"
+      },
+      {
+        "address": "0x1c14",
+        "opcode": "s_xor_b64",
+        "args": "s[2:3], exec, -1",
+        "bytes": 4,
+        "block": "0x1c00"
+      },
+      {
+        "address": "0x1c18",
+        "opcode": "s_branch",
+        "args": "BB0_2",
+        "bytes": 4,
+        "block": "0x1c00"
+      }
+    ],
+    "total": {
+      "instructions": 198,
+      "conditional": 12,
+      "exec": 44,
+      "valu": 69,
+      "salu": 44,
+      "memory": 31,
+      "unconditional": 2,
+      "flow_wait_other": 54,
+      "execz": 12,
+      "execnz": 0,
+      "mask": 32,
+      "lds": 23,
+      "waitcnt": 31,
+      "cndmask": 3,
+      "bytes": 972
+    },
+    "loops_union": {
+      "instructions": 67,
+      "conditional": 4,
+      "exec": 20,
+      "valu": 33,
+      "salu": 19,
+      "memory": 7,
+      "unconditional": 1,
+      "flow_wait_other": 8,
+      "execz": 4,
+      "execnz": 0,
+      "mask": 16,
+      "lds": 7,
+      "waitcnt": 3,
+      "cndmask": 3,
+      "bytes": 336
+    },
+    "outside_loops": {
+      "instructions": 131,
+      "conditional": 8,
+      "exec": 24,
+      "valu": 36,
+      "salu": 25,
+      "memory": 24,
+      "unconditional": 1,
+      "flow_wait_other": 46,
+      "execz": 8,
+      "execnz": 0,
+      "mask": 16,
+      "lds": 16,
+      "waitcnt": 28,
+      "cndmask": 0,
+      "bytes": 636
+    },
+    "loops": [
+      {
+        "header": "0x1ae4",
+        "latches": [
+          "0x1acc"
+        ],
+        "depth": 1,
+        "blocks": [
+          "0x1acc",
+          "0x1ae4",
+          "0x1b40",
+          "0x1b58",
+          "0x1bb8",
+          "0x1bd0",
+          "0x1c00"
+        ],
+        "stats": {
+          "instructions": 67,
+          "conditional": 4,
+          "exec": 20,
+          "valu": 33,
+          "salu": 19,
+          "memory": 7,
+          "unconditional": 1,
+          "flow_wait_other": 8,
+          "execz": 4,
+          "execnz": 0,
+          "mask": 16,
+          "lds": 7,
+          "waitcnt": 3,
+          "cndmask": 3,
+          "bytes": 336
+        }
+      }
+    ]
+  },
+  "C": {
+    "hot": [
+      {
+        "address": "0x1acc",
+        "opcode": "s_or_b64",
+        "args": "exec, exec, s[0:1]",
+        "bytes": 4,
+        "block": "0x1acc"
+      },
+      {
+        "address": "0x1ad0",
+        "opcode": "s_and_b64",
+        "args": "s[0:1], exec, s[2:3]",
+        "bytes": 4,
+        "block": "0x1acc"
+      },
+      {
+        "address": "0x1ad4",
+        "opcode": "s_or_b64",
+        "args": "s[10:11], s[0:1], s[10:11]",
+        "bytes": 4,
+        "block": "0x1acc"
+      },
+      {
+        "address": "0x1ad8",
+        "opcode": "v_cndmask_b32_e32",
+        "args": "v1, v4, v1, vcc",
+        "bytes": 4,
+        "block": "0x1acc"
+      },
+      {
+        "address": "0x1adc",
+        "opcode": "s_andn2_b64",
+        "args": "exec, exec, s[10:11]",
+        "bytes": 4,
+        "block": "0x1acc"
+      },
+      {
+        "address": "0x1ae0",
+        "opcode": "s_cbranch_execz",
+        "args": "BB0_9",
+        "bytes": 4,
+        "block": "0x1acc"
+      },
+      {
+        "address": "0x1ae4",
+        "opcode": "s_waitcnt",
+        "args": "lgkmcnt(0)",
+        "bytes": 4,
+        "block": "0x1ae4"
+      },
+      {
+        "address": "0x1ae8",
+        "opcode": "v_and_b32_e32",
+        "args": "v6, s6, v3",
+        "bytes": 4,
+        "block": "0x1ae4"
+      },
+      {
+        "address": "0x1aec",
+        "opcode": "v_add_u32_e32",
+        "args": "v7, 1, v3",
+        "bytes": 4,
+        "block": "0x1ae4"
+      },
+      {
+        "address": "0x1af0",
+        "opcode": "v_cmp_eq_u32_e64",
+        "args": "s[0:1], s6, v6",
+        "bytes": 8,
+        "block": "0x1ae4"
+      },
+      {
+        "address": "0x1af8",
+        "opcode": "v_lshlrev_b32_e32",
+        "args": "v4, 2, v2",
+        "bytes": 4,
+        "block": "0x1ae4"
+      },
+      {
+        "address": "0x1afc",
+        "opcode": "v_not_b32_e32",
+        "args": "v5, v3",
+        "bytes": 4,
+        "block": "0x1ae4"
+      },
+      {
+        "address": "0x1b00",
+        "opcode": "v_cndmask_b32_e64",
+        "args": "v6, v7, 0, s[0:1]",
+        "bytes": 8,
+        "block": "0x1ae4"
+      },
+      {
+        "address": "0x1b08",
+        "opcode": "v_mad_u32_u24",
+        "args": "v4, v0, 40, v4",
+        "bytes": 8,
+        "block": "0x1ae4"
+      },
+      {
+        "address": "0x1b10",
+        "opcode": "v_or_b32_e32",
+        "args": "v3, v3, v6",
+        "bytes": 4,
+        "block": "0x1ae4"
+      },
+      {
+        "address": "0x1b14",
+        "opcode": "v_and_b32_e32",
+        "args": "v5, v7, v5",
+        "bytes": 4,
+        "block": "0x1ae4"
+      },
+      {
+        "address": "0x1b18",
+        "opcode": "ds_write_b32",
+        "args": "v4, v3",
+        "bytes": 8,
+        "block": "0x1ae4"
+      },
+      {
+        "address": "0x1b20",
+        "opcode": "v_and_b32_e32",
+        "args": "v3, s6, v5",
+        "bytes": 4,
+        "block": "0x1ae4"
+      },
+      {
+        "address": "0x1b24",
+        "opcode": "v_cmp_eq_u32_e32",
+        "args": "vcc, 0, v3",
+        "bytes": 4,
+        "block": "0x1ae4"
+      },
+      {
+        "address": "0x1b28",
+        "opcode": "s_or_b64",
+        "args": "vcc, s[0:1], vcc",
+        "bytes": 4,
+        "block": "0x1ae4"
+      },
+      {
+        "address": "0x1b2c",
+        "opcode": "v_add_u32_e32",
+        "args": "v3, 1, v2",
+        "bytes": 4,
+        "block": "0x1ae4"
+      },
+      {
+        "address": "0x1b30",
+        "opcode": "s_xor_b64",
+        "args": "s[12:13], vcc, -1",
+        "bytes": 4,
+        "block": "0x1ae4"
+      },
+      {
+        "address": "0x1b34",
+        "opcode": "v_cmp_ne_u32_e64",
+        "args": "s[2:3], s7, v3",
+        "bytes": 8,
+        "block": "0x1ae4"
+      },
+      {
+        "address": "0x1b3c",
+        "opcode": "s_and_b64",
+        "args": "s[2:3], s[2:3], s[12:13]",
+        "bytes": 4,
+        "block": "0x1ae4"
+      },
+      {
+        "address": "0x1b40",
+        "opcode": "s_and_saveexec_b64",
+        "args": "s[12:13], s[2:3]",
+        "bytes": 4,
+        "block": "0x1ae4"
+      },
+      {
+        "address": "0x1b44",
+        "opcode": "s_xor_b64",
+        "args": "s[2:3], exec, s[12:13]",
+        "bytes": 4,
+        "block": "0x1ae4"
+      },
+      {
+        "address": "0x1b48",
+        "opcode": "s_cbranch_execz",
+        "args": "BB0_5",
+        "bytes": 4,
+        "block": "0x1ae4"
+      },
+      {
+        "address": "0x1b4c",
+        "opcode": "v_lshlrev_b32_e32",
+        "args": "v6, 2, v2",
+        "bytes": 4,
+        "block": "0x1b4c"
+      },
+      {
+        "address": "0x1b50",
+        "opcode": "v_mad_u32_u24",
+        "args": "v8, v0, 40, v6",
+        "bytes": 8,
+        "block": "0x1b4c"
+      },
+      {
+        "address": "0x1b58",
+        "opcode": "ds_read_b32",
+        "args": "v9, v8 offset:7680",
+        "bytes": 8,
+        "block": "0x1b4c"
+      },
+      {
+        "address": "0x1b60",
+        "opcode": "ds_read2st64_b32",
+        "args": "v[6:7], v8 offset0:10 offset1:20",
+        "bytes": 8,
+        "block": "0x1b4c"
+      },
+      {
+        "address": "0x1b68",
+        "opcode": "s_waitcnt",
+        "args": "lgkmcnt(1)",
+        "bytes": 4,
+        "block": "0x1b4c"
+      },
+      {
+        "address": "0x1b6c",
+        "opcode": "v_or_b32_e32",
+        "args": "v9, v9, v5",
+        "bytes": 4,
+        "block": "0x1b4c"
+      },
+      {
+        "address": "0x1b70",
+        "opcode": "s_waitcnt",
+        "args": "lgkmcnt(0)",
+        "bytes": 4,
+        "block": "0x1b4c"
+      },
+      {
+        "address": "0x1b74",
+        "opcode": "v_or_b32_e32",
+        "args": "v7, v7, v5",
+        "bytes": 4,
+        "block": "0x1b4c"
+      },
+      {
+        "address": "0x1b78",
+        "opcode": "v_or_b32_e32",
+        "args": "v5, v6, v5",
+        "bytes": 4,
+        "block": "0x1b4c"
+      },
+      {
+        "address": "0x1b7c",
+        "opcode": "v_lshlrev_b32_e32",
+        "args": "v6, 1, v7",
+        "bytes": 4,
+        "block": "0x1b4c"
+      },
+      {
+        "address": "0x1b80",
+        "opcode": "v_lshrrev_b32_e32",
+        "args": "v5, 1, v5",
+        "bytes": 4,
+        "block": "0x1b4c"
+      },
+      {
+        "address": "0x1b84",
+        "opcode": "v_add_u32_e32",
+        "args": "v7, 0xa04, v8",
+        "bytes": 8,
+        "block": "0x1b4c"
+      },
+      {
+        "address": "0x1b8c",
+        "opcode": "ds_write2st64_b32",
+        "args": "v7, v5, v6 offset1:10",
+        "bytes": 8,
+        "block": "0x1b4c"
+      },
+      {
+        "address": "0x1b94",
+        "opcode": "v_or3_b32",
+        "args": "v5, v6, v9, v5",
+        "bytes": 8,
+        "block": "0x1b4c"
+      },
+      {
+        "address": "0x1b9c",
+        "opcode": "ds_write_b32",
+        "args": "v8, v9 offset:7684",
+        "bytes": 8,
+        "block": "0x1b4c"
+      },
+      {
+        "address": "0x1ba4",
+        "opcode": "ds_write_b32",
+        "args": "v4, v5 offset:4",
+        "bytes": 8,
+        "block": "0x1b4c"
+      },
+      {
+        "address": "0x1bac",
+        "opcode": "s_or_saveexec_b64",
+        "args": "s[2:3], s[2:3]",
+        "bytes": 4,
+        "block": "0x1bac"
+      },
+      {
+        "address": "0x1bb0",
+        "opcode": "v_mov_b32_e32",
+        "args": "v4, v1",
+        "bytes": 4,
+        "block": "0x1bac"
+      },
+      {
+        "address": "0x1bb4",
+        "opcode": "s_xor_b64",
+        "args": "exec, exec, s[2:3]",
+        "bytes": 4,
+        "block": "0x1bac"
+      },
+      {
+        "address": "0x1bb8",
+        "opcode": "v_add_u32_e32",
+        "args": "v4, 1, v1",
+        "bytes": 4,
+        "block": "0x1bac"
+      },
+      {
+        "address": "0x1bbc",
+        "opcode": "v_add_u32_e32",
+        "args": "v3, -1, v2",
+        "bytes": 4,
+        "block": "0x1bac"
+      },
+      {
+        "address": "0x1bc0",
+        "opcode": "s_or_b64",
+        "args": "exec, exec, s[2:3]",
+        "bytes": 4,
+        "block": "0x1bac"
+      },
+      {
+        "address": "0x1bc4",
+        "opcode": "s_or_b64",
+        "args": "s[0:1], s[0:1], vcc",
+        "bytes": 4,
+        "block": "0x1bac"
+      },
+      {
+        "address": "0x1bc8",
+        "opcode": "v_cndmask_b32_e64",
+        "args": "v2, v3, v3, s[0:1]",
+        "bytes": 8,
+        "block": "0x1bac"
+      },
+      {
+        "address": "0x1bd0",
+        "opcode": "v_cmp_lt_i32_e64",
+        "args": "s[0:1], -1, v2",
+        "bytes": 8,
+        "block": "0x1bac"
+      },
+      {
+        "address": "0x1bd8",
+        "opcode": "s_mov_b64",
+        "args": "s[2:3], -1",
+        "bytes": 4,
+        "block": "0x1bac"
+      },
+      {
+        "address": "0x1bdc",
+        "opcode": "s_and_saveexec_b64",
+        "args": "s[12:13], s[0:1]",
+        "bytes": 4,
+        "block": "0x1bac"
+      },
+      {
+        "address": "0x1be0",
+        "opcode": "s_xor_b64",
+        "args": "s[0:1], exec, s[12:13]",
+        "bytes": 4,
+        "block": "0x1bac"
+      },
+      {
+        "address": "0x1be4",
+        "opcode": "s_cbranch_execz",
+        "args": "BB0_2",
+        "bytes": 4,
+        "block": "0x1bac"
+      },
+      {
+        "address": "0x1be8",
+        "opcode": "v_lshlrev_b32_e32",
+        "args": "v3, 2, v2",
+        "bytes": 4,
+        "block": "0x1be8"
+      },
+      {
+        "address": "0x1bec",
+        "opcode": "v_mad_u32_u24",
+        "args": "v3, v0, 40, v3",
+        "bytes": 8,
+        "block": "0x1be8"
+      },
+      {
+        "address": "0x1bf4",
+        "opcode": "ds_read_b32",
+        "args": "v3, v3",
+        "bytes": 8,
+        "block": "0x1be8"
+      },
+      {
+        "address": "0x1bfc",
+        "opcode": "s_xor_b64",
+        "args": "s[2:3], exec, -1",
+        "bytes": 4,
+        "block": "0x1be8"
+      },
+      {
+        "address": "0x1c00",
+        "opcode": "s_branch",
+        "args": "BB0_2",
+        "bytes": 4,
+        "block": "0x1be8"
+      }
+    ],
+    "total": {
+      "instructions": 192,
+      "conditional": 11,
+      "exec": 38,
+      "valu": 66,
+      "salu": 42,
+      "memory": 31,
+      "unconditional": 2,
+      "flow_wait_other": 53,
+      "execz": 11,
+      "execnz": 0,
+      "mask": 27,
+      "lds": 23,
+      "waitcnt": 31,
+      "cndmask": 3,
+      "bytes": 948
+    },
+    "loops_union": {
+      "instructions": 61,
+      "conditional": 3,
+      "exec": 14,
+      "valu": 30,
+      "salu": 17,
+      "memory": 7,
+      "unconditional": 1,
+      "flow_wait_other": 7,
+      "execz": 3,
+      "execnz": 0,
+      "mask": 11,
+      "lds": 7,
+      "waitcnt": 3,
+      "cndmask": 3,
+      "bytes": 312
+    },
+    "outside_loops": {
+      "instructions": 131,
+      "conditional": 8,
+      "exec": 24,
+      "valu": 36,
+      "salu": 25,
+      "memory": 24,
+      "unconditional": 1,
+      "flow_wait_other": 46,
+      "execz": 8,
+      "execnz": 0,
+      "mask": 16,
+      "lds": 16,
+      "waitcnt": 28,
+      "cndmask": 0,
+      "bytes": 636
+    },
+    "loops": [
+      {
+        "header": "0x1ae4",
+        "latches": [
+          "0x1acc"
+        ],
+        "depth": 1,
+        "blocks": [
+          "0x1acc",
+          "0x1ae4",
+          "0x1b4c",
+          "0x1bac",
+          "0x1be8"
+        ],
+        "stats": {
+          "instructions": 61,
+          "conditional": 3,
+          "exec": 14,
+          "valu": 30,
+          "salu": 17,
+          "memory": 7,
+          "unconditional": 1,
+          "flow_wait_other": 7,
+          "execz": 3,
+          "execnz": 0,
+          "mask": 11,
+          "lds": 7,
+          "waitcnt": 3,
+          "cndmask": 3,
+          "bytes": 312
+        }
+      }
+    ]
+  },
+  "V-branch": {
+    "hot": [
+      {
+        "address": "0x1acc",
+        "opcode": "s_or_b64",
+        "args": "exec, exec, s[2:3]",
+        "bytes": 4,
+        "block": "0x1acc"
+      },
+      {
+        "address": "0x1ad0",
+        "opcode": "s_and_b64",
+        "args": "s[0:1], exec, s[0:1]",
+        "bytes": 4,
+        "block": "0x1acc"
+      },
+      {
+        "address": "0x1ad4",
+        "opcode": "s_or_b64",
+        "args": "s[10:11], s[0:1], s[10:11]",
+        "bytes": 4,
+        "block": "0x1acc"
+      },
+      {
+        "address": "0x1ad8",
+        "opcode": "s_andn2_b64",
+        "args": "exec, exec, s[10:11]",
+        "bytes": 4,
+        "block": "0x1acc"
+      },
+      {
+        "address": "0x1adc",
+        "opcode": "s_cbranch_execz",
+        "args": "BB0_7",
+        "bytes": 4,
+        "block": "0x1acc"
+      },
+      {
+        "address": "0x1ae0",
+        "opcode": "s_waitcnt",
+        "args": "lgkmcnt(0)",
+        "bytes": 4,
+        "block": "0x1ae0"
+      },
+      {
+        "address": "0x1ae4",
+        "opcode": "v_and_b32_e32",
+        "args": "v6, s6, v4",
+        "bytes": 4,
+        "block": "0x1ae0"
+      },
+      {
+        "address": "0x1ae8",
+        "opcode": "v_add_u32_e32",
+        "args": "v7, 1, v4",
+        "bytes": 4,
+        "block": "0x1ae0"
+      },
+      {
+        "address": "0x1aec",
+        "opcode": "v_cmp_eq_u32_e32",
+        "args": "vcc, s6, v6",
+        "bytes": 4,
+        "block": "0x1ae0"
+      },
+      {
+        "address": "0x1af0",
+        "opcode": "v_lshlrev_b32_e32",
+        "args": "v3, 2, v2",
+        "bytes": 4,
+        "block": "0x1ae0"
+      },
+      {
+        "address": "0x1af4",
+        "opcode": "v_not_b32_e32",
+        "args": "v5, v4",
+        "bytes": 4,
+        "block": "0x1ae0"
+      },
+      {
+        "address": "0x1af8",
+        "opcode": "v_cndmask_b32_e64",
+        "args": "v6, v7, 0, vcc",
+        "bytes": 8,
+        "block": "0x1ae0"
+      },
+      {
+        "address": "0x1b00",
+        "opcode": "v_mad_u32_u24",
+        "args": "v3, v0, 40, v3",
+        "bytes": 8,
+        "block": "0x1ae0"
+      },
+      {
+        "address": "0x1b08",
+        "opcode": "v_or_b32_e32",
+        "args": "v4, v4, v6",
+        "bytes": 4,
+        "block": "0x1ae0"
+      },
+      {
+        "address": "0x1b0c",
+        "opcode": "v_and_b32_e32",
+        "args": "v5, v7, v5",
+        "bytes": 4,
+        "block": "0x1ae0"
+      },
+      {
+        "address": "0x1b10",
+        "opcode": "ds_write_b32",
+        "args": "v3, v4",
+        "bytes": 8,
+        "block": "0x1ae0"
+      },
+      {
+        "address": "0x1b18",
+        "opcode": "v_and_b32_e32",
+        "args": "v4, s6, v5",
+        "bytes": 4,
+        "block": "0x1ae0"
+      },
+      {
+        "address": "0x1b1c",
+        "opcode": "v_cmp_eq_u32_e64",
+        "args": "s[0:1], 0, v4",
+        "bytes": 8,
+        "block": "0x1ae0"
+      },
+      {
+        "address": "0x1b24",
+        "opcode": "v_add_u32_e32",
+        "args": "v4, 1, v2",
+        "bytes": 4,
+        "block": "0x1ae0"
+      },
+      {
+        "address": "0x1b28",
+        "opcode": "v_cmp_eq_u32_e64",
+        "args": "s[2:3], s7, v4",
+        "bytes": 8,
+        "block": "0x1ae0"
+      },
+      {
+        "address": "0x1b30",
+        "opcode": "s_or_b64",
+        "args": "vcc, vcc, s[0:1]",
+        "bytes": 4,
+        "block": "0x1ae0"
+      },
+      {
+        "address": "0x1b34",
+        "opcode": "s_or_b64",
+        "args": "s[0:1], s[2:3], vcc",
+        "bytes": 4,
+        "block": "0x1ae0"
+      },
+      {
+        "address": "0x1b38",
+        "opcode": "v_add_u32_e32",
+        "args": "v6, -1, v2",
+        "bytes": 4,
+        "block": "0x1ae0"
+      },
+      {
+        "address": "0x1b3c",
+        "opcode": "s_xor_b64",
+        "args": "s[12:13], s[0:1], -1",
+        "bytes": 4,
+        "block": "0x1ae0"
+      },
+      {
+        "address": "0x1b40",
+        "opcode": "s_xor_b64",
+        "args": "s[0:1], vcc, -1",
+        "bytes": 4,
+        "block": "0x1ae0"
+      },
+      {
+        "address": "0x1b44",
+        "opcode": "v_add_u32_e32",
+        "args": "v7, -1, v2",
+        "bytes": 4,
+        "block": "0x1ae0"
+      },
+      {
+        "address": "0x1b48",
+        "opcode": "v_cndmask_b32_e32",
+        "args": "v6, v7, v6, vcc",
+        "bytes": 4,
+        "block": "0x1ae0"
+      },
+      {
+        "address": "0x1b4c",
+        "opcode": "s_and_b64",
+        "args": "vcc, s[2:3], s[0:1]",
+        "bytes": 4,
+        "block": "0x1ae0"
+      },
+      {
+        "address": "0x1b50",
+        "opcode": "v_addc_co_u32_e32",
+        "args": "v7, vcc, 0, v1, vcc",
+        "bytes": 4,
+        "block": "0x1ae0"
+      },
+      {
+        "address": "0x1b54",
+        "opcode": "s_and_saveexec_b64",
+        "args": "s[0:1], s[12:13]",
+        "bytes": 4,
+        "block": "0x1ae0"
+      },
+      {
+        "address": "0x1b58",
+        "opcode": "s_cbranch_execz",
+        "args": "BB0_5",
+        "bytes": 4,
+        "block": "0x1ae0"
+      },
+      {
+        "address": "0x1b5c",
+        "opcode": "v_lshlrev_b32_e32",
+        "args": "v2, 2, v2",
+        "bytes": 4,
+        "block": "0x1b5c"
+      },
+      {
+        "address": "0x1b60",
+        "opcode": "v_mad_u32_u24",
+        "args": "v2, v0, 40, v2",
+        "bytes": 8,
+        "block": "0x1b5c"
+      },
+      {
+        "address": "0x1b68",
+        "opcode": "ds_read_b32",
+        "args": "v8, v2 offset:7680",
+        "bytes": 8,
+        "block": "0x1b5c"
+      },
+      {
+        "address": "0x1b70",
+        "opcode": "ds_read2st64_b32",
+        "args": "v[6:7], v2 offset0:10 offset1:20",
+        "bytes": 8,
+        "block": "0x1b5c"
+      },
+      {
+        "address": "0x1b78",
+        "opcode": "s_waitcnt",
+        "args": "lgkmcnt(1)",
+        "bytes": 4,
+        "block": "0x1b5c"
+      },
+      {
+        "address": "0x1b7c",
+        "opcode": "v_or_b32_e32",
+        "args": "v8, v8, v5",
+        "bytes": 4,
+        "block": "0x1b5c"
+      },
+      {
+        "address": "0x1b80",
+        "opcode": "s_waitcnt",
+        "args": "lgkmcnt(0)",
+        "bytes": 4,
+        "block": "0x1b5c"
+      },
+      {
+        "address": "0x1b84",
+        "opcode": "v_or_b32_e32",
+        "args": "v7, v7, v5",
+        "bytes": 4,
+        "block": "0x1b5c"
+      },
+      {
+        "address": "0x1b88",
+        "opcode": "v_or_b32_e32",
+        "args": "v5, v6, v5",
+        "bytes": 4,
+        "block": "0x1b5c"
+      },
+      {
+        "address": "0x1b8c",
+        "opcode": "ds_write_b32",
+        "args": "v2, v8 offset:7684",
+        "bytes": 8,
+        "block": "0x1b5c"
+      },
+      {
+        "address": "0x1b94",
+        "opcode": "v_lshlrev_b32_e32",
+        "args": "v6, 1, v7",
+        "bytes": 4,
+        "block": "0x1b5c"
+      },
+      {
+        "address": "0x1b98",
+        "opcode": "v_lshrrev_b32_e32",
+        "args": "v5, 1, v5",
+        "bytes": 4,
+        "block": "0x1b5c"
+      },
+      {
+        "address": "0x1b9c",
+        "opcode": "v_add_u32_e32",
+        "args": "v2, 0xa04, v2",
+        "bytes": 8,
+        "block": "0x1b5c"
+      },
+      {
+        "address": "0x1ba4",
+        "opcode": "ds_write2st64_b32",
+        "args": "v2, v5, v6 offset1:10",
+        "bytes": 8,
+        "block": "0x1b5c"
+      },
+      {
+        "address": "0x1bac",
+        "opcode": "v_or3_b32",
+        "args": "v2, v6, v8, v5",
+        "bytes": 8,
+        "block": "0x1b5c"
+      },
+      {
+        "address": "0x1bb4",
+        "opcode": "ds_write_b32",
+        "args": "v3, v2 offset:4",
+        "bytes": 8,
+        "block": "0x1b5c"
+      },
+      {
+        "address": "0x1bbc",
+        "opcode": "v_mov_b32_e32",
+        "args": "v6, v4",
+        "bytes": 4,
+        "block": "0x1b5c"
+      },
+      {
+        "address": "0x1bc0",
+        "opcode": "v_mov_b32_e32",
+        "args": "v7, v1",
+        "bytes": 4,
+        "block": "0x1b5c"
+      },
+      {
+        "address": "0x1bc4",
+        "opcode": "s_or_b64",
+        "args": "exec, exec, s[0:1]",
+        "bytes": 4,
+        "block": "0x1bc4"
+      },
+      {
+        "address": "0x1bc8",
+        "opcode": "v_mov_b32_e32",
+        "args": "v2, v6",
+        "bytes": 4,
+        "block": "0x1bc4"
+      },
+      {
+        "address": "0x1bcc",
+        "opcode": "v_mov_b32_e32",
+        "args": "v1, v7",
+        "bytes": 4,
+        "block": "0x1bc4"
+      },
+      {
+        "address": "0x1bd0",
+        "opcode": "v_cmp_lt_i32_e32",
+        "args": "vcc, -1, v2",
+        "bytes": 4,
+        "block": "0x1bc4"
+      },
+      {
+        "address": "0x1bd4",
+        "opcode": "s_mov_b64",
+        "args": "s[0:1], -1",
+        "bytes": 4,
+        "block": "0x1bc4"
+      },
+      {
+        "address": "0x1bd8",
+        "opcode": "s_and_saveexec_b64",
+        "args": "s[2:3], vcc",
+        "bytes": 4,
+        "block": "0x1bc4"
+      },
+      {
+        "address": "0x1bdc",
+        "opcode": "s_xor_b64",
+        "args": "s[2:3], exec, s[2:3]",
+        "bytes": 4,
+        "block": "0x1bc4"
+      },
+      {
+        "address": "0x1be0",
+        "opcode": "s_cbranch_execz",
+        "args": "BB0_2",
+        "bytes": 4,
+        "block": "0x1bc4"
+      },
+      {
+        "address": "0x1be4",
+        "opcode": "v_lshlrev_b32_e32",
+        "args": "v3, 2, v2",
+        "bytes": 4,
+        "block": "0x1be4"
+      },
+      {
+        "address": "0x1be8",
+        "opcode": "v_mad_u32_u24",
+        "args": "v3, v0, 40, v3",
+        "bytes": 8,
+        "block": "0x1be4"
+      },
+      {
+        "address": "0x1bf0",
+        "opcode": "ds_read_b32",
+        "args": "v4, v3",
+        "bytes": 8,
+        "block": "0x1be4"
+      },
+      {
+        "address": "0x1bf8",
+        "opcode": "s_xor_b64",
+        "args": "s[0:1], exec, -1",
+        "bytes": 4,
+        "block": "0x1be4"
+      },
+      {
+        "address": "0x1bfc",
+        "opcode": "s_branch",
+        "args": "BB0_2",
+        "bytes": 4,
+        "block": "0x1be4"
+      }
+    ],
+    "total": {
+      "instructions": 192,
+      "conditional": 11,
+      "exec": 35,
+      "valu": 69,
+      "salu": 40,
+      "memory": 31,
+      "unconditional": 2,
+      "flow_wait_other": 52,
+      "execz": 11,
+      "execnz": 0,
+      "mask": 24,
+      "lds": 23,
+      "waitcnt": 30,
+      "cndmask": 2,
+      "bytes": 940
+    },
+    "loops_union": {
+      "instructions": 62,
+      "conditional": 3,
+      "exec": 11,
+      "valu": 33,
+      "salu": 15,
+      "memory": 7,
+      "unconditional": 1,
+      "flow_wait_other": 7,
+      "execz": 3,
+      "execnz": 0,
+      "mask": 8,
+      "lds": 7,
+      "waitcnt": 3,
+      "cndmask": 2,
+      "bytes": 308
+    },
+    "outside_loops": {
+      "instructions": 130,
+      "conditional": 8,
+      "exec": 24,
+      "valu": 36,
+      "salu": 25,
+      "memory": 24,
+      "unconditional": 1,
+      "flow_wait_other": 45,
+      "execz": 8,
+      "execnz": 0,
+      "mask": 16,
+      "lds": 16,
+      "waitcnt": 27,
+      "cndmask": 0,
+      "bytes": 632
+    },
+    "loops": [
+      {
+        "header": "0x1ae0",
+        "latches": [
+          "0x1acc"
+        ],
+        "depth": 1,
+        "blocks": [
+          "0x1acc",
+          "0x1ae0",
+          "0x1b5c",
+          "0x1bc4",
+          "0x1be4"
+        ],
+        "stats": {
+          "instructions": 62,
+          "conditional": 3,
+          "exec": 11,
+          "valu": 33,
+          "salu": 15,
+          "memory": 7,
+          "unconditional": 1,
+          "flow_wait_other": 7,
+          "execz": 3,
+          "execnz": 0,
+          "mask": 8,
+          "lds": 7,
+          "waitcnt": 3,
+          "cndmask": 2,
+          "bytes": 308
+        }
+      }
+    ]
+  },
+  "V-share": {
+    "hot": [
+      {
+        "address": "0x1acc",
+        "opcode": "s_or_b64",
+        "args": "exec, exec, s[0:1]",
+        "bytes": 4,
+        "block": "0x1acc"
+      },
+      {
+        "address": "0x1ad0",
+        "opcode": "s_and_b64",
+        "args": "s[0:1], exec, s[2:3]",
+        "bytes": 4,
+        "block": "0x1acc"
+      },
+      {
+        "address": "0x1ad4",
+        "opcode": "s_or_b64",
+        "args": "s[10:11], s[0:1], s[10:11]",
+        "bytes": 4,
+        "block": "0x1acc"
+      },
+      {
+        "address": "0x1ad8",
+        "opcode": "v_cndmask_b32_e32",
+        "args": "v1, v5, v1, vcc",
+        "bytes": 4,
+        "block": "0x1acc"
+      },
+      {
+        "address": "0x1adc",
+        "opcode": "s_andn2_b64",
+        "args": "exec, exec, s[10:11]",
+        "bytes": 4,
+        "block": "0x1acc"
+      },
+      {
+        "address": "0x1ae0",
+        "opcode": "s_cbranch_execz",
+        "args": "BB0_11",
+        "bytes": 4,
+        "block": "0x1acc"
+      },
+      {
+        "address": "0x1ae4",
+        "opcode": "s_waitcnt",
+        "args": "lgkmcnt(0)",
+        "bytes": 4,
+        "block": "0x1ae4"
+      },
+      {
+        "address": "0x1ae8",
+        "opcode": "v_and_b32_e32",
+        "args": "v4, s6, v3",
+        "bytes": 4,
+        "block": "0x1ae4"
+      },
+      {
+        "address": "0x1aec",
+        "opcode": "v_lshlrev_b32_e32",
+        "args": "v5, 2, v2",
+        "bytes": 4,
+        "block": "0x1ae4"
+      },
+      {
+        "address": "0x1af0",
+        "opcode": "v_mad_u32_u24",
+        "args": "v6, v0, 40, v5",
+        "bytes": 8,
+        "block": "0x1ae4"
+      },
+      {
+        "address": "0x1af8",
+        "opcode": "v_add_u32_e32",
+        "args": "v5, 1, v3",
+        "bytes": 4,
+        "block": "0x1ae4"
+      },
+      {
+        "address": "0x1afc",
+        "opcode": "v_cmp_eq_u32_e32",
+        "args": "vcc, s6, v4",
+        "bytes": 4,
+        "block": "0x1ae4"
+      },
+      {
+        "address": "0x1b00",
+        "opcode": "v_not_b32_e32",
+        "args": "v7, v3",
+        "bytes": 4,
+        "block": "0x1ae4"
+      },
+      {
+        "address": "0x1b04",
+        "opcode": "v_cmp_ne_u32_e64",
+        "args": "s[0:1], s6, v4",
+        "bytes": 8,
+        "block": "0x1ae4"
+      },
+      {
+        "address": "0x1b0c",
+        "opcode": "v_cndmask_b32_e64",
+        "args": "v4, v5, 0, vcc",
+        "bytes": 8,
+        "block": "0x1ae4"
+      },
+      {
+        "address": "0x1b14",
+        "opcode": "v_and_b32_e32",
+        "args": "v7, v5, v7",
+        "bytes": 4,
+        "block": "0x1ae4"
+      },
+      {
+        "address": "0x1b18",
+        "opcode": "v_or_b32_e32",
+        "args": "v3, v3, v4",
+        "bytes": 4,
+        "block": "0x1ae4"
+      },
+      {
+        "address": "0x1b1c",
+        "opcode": "ds_write_b32",
+        "args": "v6, v3",
+        "bytes": 8,
+        "block": "0x1ae4"
+      },
+      {
+        "address": "0x1b24",
+        "opcode": "v_and_b32_e32",
+        "args": "v3, s6, v7",
+        "bytes": 4,
+        "block": "0x1ae4"
+      },
+      {
+        "address": "0x1b28",
+        "opcode": "v_cmp_ne_u32_e64",
+        "args": "s[2:3], 0, v3",
+        "bytes": 8,
+        "block": "0x1ae4"
+      },
+      {
+        "address": "0x1b30",
+        "opcode": "v_add_u32_e32",
+        "args": "v3, -1, v2",
+        "bytes": 4,
+        "block": "0x1ae4"
+      },
+      {
+        "address": "0x1b34",
+        "opcode": "s_and_b64",
+        "args": "s[0:1], s[0:1], s[2:3]",
+        "bytes": 4,
+        "block": "0x1ae4"
+      },
+      {
+        "address": "0x1b38",
+        "opcode": "v_mov_b32_e32",
+        "args": "v5, v1",
+        "bytes": 4,
+        "block": "0x1ae4"
+      },
+      {
+        "address": "0x1b3c",
+        "opcode": "v_mov_b32_e32",
+        "args": "v4, v3",
+        "bytes": 4,
+        "block": "0x1ae4"
+      },
+      {
+        "address": "0x1b40",
+        "opcode": "s_and_saveexec_b64",
+        "args": "s[2:3], s[0:1]",
+        "bytes": 4,
+        "block": "0x1ae4"
+      },
+      {
+        "address": "0x1b44",
+        "opcode": "s_cbranch_execz",
+        "args": "BB0_9",
+        "bytes": 4,
+        "block": "0x1ae4"
+      },
+      {
+        "address": "0x1b48",
+        "opcode": "v_add_u32_e32",
+        "args": "v4, 1, v2",
+        "bytes": 4,
+        "block": "0x1b48"
+      },
+      {
+        "address": "0x1b4c",
+        "opcode": "v_cmp_ne_u32_e64",
+        "args": "s[0:1], s7, v4",
+        "bytes": 8,
+        "block": "0x1b48"
+      },
+      {
+        "address": "0x1b54",
+        "opcode": "s_and_saveexec_b64",
+        "args": "s[12:13], s[0:1]",
+        "bytes": 4,
+        "block": "0x1b48"
+      },
+      {
+        "address": "0x1b58",
+        "opcode": "s_xor_b64",
+        "args": "s[0:1], exec, s[12:13]",
+        "bytes": 4,
+        "block": "0x1b48"
+      },
+      {
+        "address": "0x1b5c",
+        "opcode": "s_cbranch_execz",
+        "args": "BB0_6",
+        "bytes": 4,
+        "block": "0x1b48"
+      },
+      {
+        "address": "0x1b60",
+        "opcode": "v_lshlrev_b32_e32",
+        "args": "v2, 2, v2",
+        "bytes": 4,
+        "block": "0x1b60"
+      },
+      {
+        "address": "0x1b64",
+        "opcode": "v_mad_u32_u24",
+        "args": "v2, v0, 40, v2",
+        "bytes": 8,
+        "block": "0x1b60"
+      },
+      {
+        "address": "0x1b6c",
+        "opcode": "ds_read_b32",
+        "args": "v5, v2 offset:7680",
+        "bytes": 8,
+        "block": "0x1b60"
+      },
+      {
+        "address": "0x1b74",
+        "opcode": "ds_read2st64_b32",
+        "args": "v[8:9], v2 offset0:10 offset1:20",
+        "bytes": 8,
+        "block": "0x1b60"
+      },
+      {
+        "address": "0x1b7c",
+        "opcode": "s_waitcnt",
+        "args": "lgkmcnt(1)",
+        "bytes": 4,
+        "block": "0x1b60"
+      },
+      {
+        "address": "0x1b80",
+        "opcode": "v_or_b32_e32",
+        "args": "v5, v5, v7",
+        "bytes": 4,
+        "block": "0x1b60"
+      },
+      {
+        "address": "0x1b84",
+        "opcode": "s_waitcnt",
+        "args": "lgkmcnt(0)",
+        "bytes": 4,
+        "block": "0x1b60"
+      },
+      {
+        "address": "0x1b88",
+        "opcode": "v_or_b32_e32",
+        "args": "v9, v9, v7",
+        "bytes": 4,
+        "block": "0x1b60"
+      },
+      {
+        "address": "0x1b8c",
+        "opcode": "v_or_b32_e32",
+        "args": "v7, v8, v7",
+        "bytes": 4,
+        "block": "0x1b60"
+      },
+      {
+        "address": "0x1b90",
+        "opcode": "ds_write_b32",
+        "args": "v2, v5 offset:7684",
+        "bytes": 8,
+        "block": "0x1b60"
+      },
+      {
+        "address": "0x1b98",
+        "opcode": "v_lshlrev_b32_e32",
+        "args": "v8, 1, v9",
+        "bytes": 4,
+        "block": "0x1b60"
+      },
+      {
+        "address": "0x1b9c",
+        "opcode": "v_lshrrev_b32_e32",
+        "args": "v7, 1, v7",
+        "bytes": 4,
+        "block": "0x1b60"
+      },
+      {
+        "address": "0x1ba0",
+        "opcode": "v_add_u32_e32",
+        "args": "v2, 0xa04, v2",
+        "bytes": 8,
+        "block": "0x1b60"
+      },
+      {
+        "address": "0x1ba8",
+        "opcode": "ds_write2st64_b32",
+        "args": "v2, v7, v8 offset1:10",
+        "bytes": 8,
+        "block": "0x1b60"
+      },
+      {
+        "address": "0x1bb0",
+        "opcode": "v_or3_b32",
+        "args": "v2, v8, v5, v7",
+        "bytes": 8,
+        "block": "0x1b60"
+      },
+      {
+        "address": "0x1bb8",
+        "opcode": "ds_write_b32",
+        "args": "v6, v2 offset:4",
+        "bytes": 8,
+        "block": "0x1b60"
+      },
+      {
+        "address": "0x1bc0",
+        "opcode": "s_or_saveexec_b64",
+        "args": "s[0:1], s[0:1]",
+        "bytes": 4,
+        "block": "0x1bc0"
+      },
+      {
+        "address": "0x1bc4",
+        "opcode": "v_mov_b32_e32",
+        "args": "v5, v1",
+        "bytes": 4,
+        "block": "0x1bc0"
+      },
+      {
+        "address": "0x1bc8",
+        "opcode": "s_xor_b64",
+        "args": "exec, exec, s[0:1]",
+        "bytes": 4,
+        "block": "0x1bc0"
+      },
+      {
+        "address": "0x1bcc",
+        "opcode": "v_add_u32_e32",
+        "args": "v5, 1, v1",
+        "bytes": 4,
+        "block": "0x1bc0"
+      },
+      {
+        "address": "0x1bd0",
+        "opcode": "v_mov_b32_e32",
+        "args": "v4, v3",
+        "bytes": 4,
+        "block": "0x1bc0"
+      },
+      {
+        "address": "0x1bd4",
+        "opcode": "s_or_b64",
+        "args": "exec, exec, s[0:1]",
+        "bytes": 4,
+        "block": "0x1bc0"
+      },
+      {
+        "address": "0x1bd8",
+        "opcode": "s_or_b64",
+        "args": "exec, exec, s[2:3]",
+        "bytes": 4,
+        "block": "0x1bd8"
+      },
+      {
+        "address": "0x1bdc",
+        "opcode": "v_cndmask_b32_e32",
+        "args": "v2, v4, v3, vcc",
+        "bytes": 4,
+        "block": "0x1bd8"
+      },
+      {
+        "address": "0x1be0",
+        "opcode": "v_cmp_lt_i32_e64",
+        "args": "s[0:1], -1, v2",
+        "bytes": 8,
+        "block": "0x1bd8"
+      },
+      {
+        "address": "0x1be8",
+        "opcode": "s_mov_b64",
+        "args": "s[2:3], -1",
+        "bytes": 4,
+        "block": "0x1bd8"
+      },
+      {
+        "address": "0x1bec",
+        "opcode": "s_and_saveexec_b64",
+        "args": "s[12:13], s[0:1]",
+        "bytes": 4,
+        "block": "0x1bd8"
+      },
+      {
+        "address": "0x1bf0",
+        "opcode": "s_xor_b64",
+        "args": "s[0:1], exec, s[12:13]",
+        "bytes": 4,
+        "block": "0x1bd8"
+      },
+      {
+        "address": "0x1bf4",
+        "opcode": "s_cbranch_execz",
+        "args": "BB0_2",
+        "bytes": 4,
+        "block": "0x1bd8"
+      },
+      {
+        "address": "0x1bf8",
+        "opcode": "v_lshlrev_b32_e32",
+        "args": "v3, 2, v2",
+        "bytes": 4,
+        "block": "0x1bf8"
+      },
+      {
+        "address": "0x1bfc",
+        "opcode": "v_mad_u32_u24",
+        "args": "v3, v0, 40, v3",
+        "bytes": 8,
+        "block": "0x1bf8"
+      },
+      {
+        "address": "0x1c04",
+        "opcode": "ds_read_b32",
+        "args": "v3, v3",
+        "bytes": 8,
+        "block": "0x1bf8"
+      },
+      {
+        "address": "0x1c0c",
+        "opcode": "s_xor_b64",
+        "args": "s[2:3], exec, -1",
+        "bytes": 4,
+        "block": "0x1bf8"
+      },
+      {
+        "address": "0x1c10",
+        "opcode": "s_branch",
+        "args": "BB0_2",
+        "bytes": 4,
+        "block": "0x1bf8"
+      }
+    ],
+    "total": {
+      "instructions": 196,
+      "conditional": 12,
+      "exec": 41,
+      "valu": 70,
+      "salu": 41,
+      "memory": 31,
+      "unconditional": 2,
+      "flow_wait_other": 54,
+      "execz": 12,
+      "execnz": 0,
+      "mask": 29,
+      "lds": 23,
+      "waitcnt": 31,
+      "cndmask": 3,
+      "bytes": 964
+    },
+    "loops_union": {
+      "instructions": 65,
+      "conditional": 4,
+      "exec": 17,
+      "valu": 34,
+      "salu": 16,
+      "memory": 7,
+      "unconditional": 1,
+      "flow_wait_other": 8,
+      "execz": 4,
+      "execnz": 0,
+      "mask": 13,
+      "lds": 7,
+      "waitcnt": 3,
+      "cndmask": 3,
+      "bytes": 328
+    },
+    "outside_loops": {
+      "instructions": 131,
+      "conditional": 8,
+      "exec": 24,
+      "valu": 36,
+      "salu": 25,
+      "memory": 24,
+      "unconditional": 1,
+      "flow_wait_other": 46,
+      "execz": 8,
+      "execnz": 0,
+      "mask": 16,
+      "lds": 16,
+      "waitcnt": 28,
+      "cndmask": 0,
+      "bytes": 636
+    },
+    "loops": [
+      {
+        "header": "0x1ae4",
+        "latches": [
+          "0x1acc"
+        ],
+        "depth": 1,
+        "blocks": [
+          "0x1acc",
+          "0x1ae4",
+          "0x1b48",
+          "0x1b60",
+          "0x1bc0",
+          "0x1bd8",
+          "0x1bf8"
+        ],
+        "stats": {
+          "instructions": 65,
+          "conditional": 4,
+          "exec": 17,
+          "valu": 34,
+          "salu": 16,
+          "memory": 7,
+          "unconditional": 1,
+          "flow_wait_other": 8,
+          "execz": 4,
+          "execnz": 0,
+          "mask": 13,
+          "lds": 7,
+          "waitcnt": 3,
+          "cndmask": 3,
+          "bytes": 328
+        }
+      }
+    ]
+  }
+}
