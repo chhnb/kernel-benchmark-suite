@@ -1,0 +1,14 @@
+{
+  "schema": "mapairy-anchor-gfx906-v1",
+  "target": "gfx906",
+  "input_manifest": "../../mapairy-v2.json",
+  "reference_source": "anchor-v2p-frozen-2 (905b308), explicit anchor",
+  "reference_tti": 4099,
+  "reference_commits": 29,
+  "ir_sha256": "860a6ffaffc03080484e40ad417795f70a3cc6e3b8f5455c657bd9d86cb8cd70",
+  "binary_sha256": "51c13dcce91306bb0c84aae7a3e4a1facc70d448d718483fbdb685f1fb48918d",
+  "continuity": "continuity.json",
+  "continuity_source": "b2b-anchor-v3-20261119.md, v3 GPU table; identical HSACO verified",
+  "N_over_A_paired_median": 0.848101302796028,
+  "N_over_baseline_paired_median": 0.3760526939655249
+}

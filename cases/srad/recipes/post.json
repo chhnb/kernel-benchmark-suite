@@ -1,0 +1,1 @@
+["/home/chh/region-fusion-lab/toolchains/llvm12/amd-bootstrap/bin/opt", "{out}/source.ll", "-always-inline", "-O3", "-internalize", "-internalize-public-api-list=srad_cuda_1", "-globaldce", "-verify", "-S", "-o", "{out}/post.ll"]

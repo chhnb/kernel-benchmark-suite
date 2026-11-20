@@ -1,0 +1,74 @@
+{
+  "name": "ced",
+  "enabled": true,
+  "status": "cpp_validated_three_batch_screening_complete",
+  "helper_extraction": false,
+  "profiles": {
+    "hip-llvm12-binary": {
+      "argv": [
+        "python3",
+        "{case}/build_binary.py",
+        "{out}"
+      ],
+      "artifact": "kernel.hsaco",
+      "kind": "hip-code-object",
+      "gpu_execution": false
+    }
+  },
+  "runtime": {
+    "kind": "cpp",
+    "backend": "amd",
+    "runner": "build/bin/bench_ced",
+    "default_kernel": "/home/chh/kernel-benchmark-suite/experiments/ced-target-only-v1/current-pair/baseline.hsaco",
+    "inputs": [
+      "fixtures"
+    ],
+    "timing_modes": [
+      "event"
+    ],
+    "scope": "Complete CED NMS; 110 official Gaussian frames with CPU-Sobel-derived magnitude/theta; 354x626 full uint8 oracle including halo; original grid39x22 block16x16 shared1296; each round sum of 110 individual kernel event intervals, no pipeline/transfer timing",
+    "environment": {
+      "LD_LIBRARY_PATH": "/opt/rocm/lib:/opt/rocm/lib64",
+      "HIP_VISIBLE_DEVICES": "0",
+      "ROCR_VISIBLE_DEVICES": "0"
+    },
+    "default_kernel_profile": "common lowerswitch + postopt-fp + final O3, separately from native source-build profile"
+  },
+  "provenance": {
+    "source": {
+      "source": "HeCBench6f44356/src/ced-hip/main.cu226-346",
+      "target": "complete non_max_supp_kernel",
+      "new_target": "previousCEDexperiments targeted sobel angle chain,notNMS",
+      "preservation": "nativekernel body exact slice,no math/branch/helper rewrite",
+      "stages": [
+        "native cfmelder",
+        "lowerswitch",
+        "lowered cfmelder"
+      ],
+      "scope": "CPUstaticcompatibility only,noGPU",
+      "limits": "60seconds percommand;canonicalcompilequota;verifierfail retained;no originalcompilerpatch",
+      "fairness": "future comparison native,lowered-noDARM,lowered+DARM;lowering not counted fusion"
+    },
+    "fixture": "/home/chh/divergence-strategy-search/explorations/switch-ced-diagnosis-20261031/fixtures"
+  },
+  "validation": {
+    "paired": "/home/chh/kernel-benchmark-suite/experiments/ced-target-only-v1/measure-v1",
+    "frames": 110,
+    "exact": true
+  },
+  "region_analysis": {
+    "ir": "/home/chh/kernel-benchmark-suite/experiments/ced-target-only-v1/lower.ll",
+    "function": "_Z19non_max_supp_kernelPKhPhS0_ii",
+    "report": "/home/chh/kernel-benchmark-suite/experiments/ced-target-only-v1/inventory.json"
+  },
+  "benchmark": {
+    "status": "three_batches_complete_no_stable_material_gain",
+    "review": "/home/chh/kernel-benchmark-suite/experiments/ced-target-only-v1/summary.json"
+  },
+  "acceptance": {
+    "source_build": true,
+    "gpu_correctness": true,
+    "timing": true,
+    "complete_planned_measurement": true
+  }
+}

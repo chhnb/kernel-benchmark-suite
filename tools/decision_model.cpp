@@ -1,4 +1,6 @@
 #include "decision_model.h"
+#include "condition_simplify.h"
+#include "darm_pair_engine/InstructionPolicy.h"
 #include "llvm/Analysis/PostDominators.h"
 #include "llvm/Analysis/LoopInfo.h"
 #include "llvm/IR/Dominators.h"
@@ -24,6 +26,7 @@ static bool testOnly(BasicBlock *b) {
  std::set<Instruction*> slice;
  std::function<void(Value*)> visit=[&](Value *v){auto *i=dyn_cast<Instruction>(v);if(!i||i->getParent()!=b||!slice.insert(i).second)return;for(auto &o:i->operands())visit(o.get());};
  visit(br->getCondition());
+ if(br->getMetadata("decision.condition_prefix"))for(auto &i:*b)if(i.getType()->isIntegerTy(1))visit(&i);
  for(auto &i:*b)if(!i.isTerminator()&&(!slice.count(&i)||i.mayHaveSideEffects()||isa<PHINode>(i)))return false;
  return true;
 }
@@ -88,7 +91,14 @@ std::vector<Decision> discover(Function &f) {
   if(!dt.dominates(b,x))a.reason="multiple_entry_or_shared_suffix";
   if(x==&root||li.getLoopFor(x)!=li.getLoopFor(&root))a.reason="unsupported_loop_scope";
   if(x->getTerminator()->getNumSuccessors()==0)a.reason="early_exit";
-  for(auto &i:*x){if(i.mayHaveSideEffects())a.reason="side_effects";if(auto *c=dyn_cast<CallBase>(&i))if(c->isConvergent())a.reason="convergent_call";}
+  for (auto &i : *x) {
+    // Normalization redirects arm edges and leaves ordinary stores in place.
+    auto *store = dyn_cast<StoreInst>(&i);
+    if (i.mayHaveSideEffects() && !(store && store->isSimple()))
+      a.reason = "side_effects";
+    if (auto *call = dyn_cast<CallBase>(&i))
+      if (call->isConvergent()) a.reason = "convergent_call";
+  }
   for(auto *s:successors(x)){if(s==d.join)a.exitSources.push_back(x);else if(dt.dominates(s,x))a.reason="backedge";else pending.push_back(s);}
  }
  if(a.blocks.empty())a.reason="empty_arm";
@@ -118,11 +128,34 @@ std::vector<Decision> discover(Function &f) {
  return result;
 }
 json::Array describe(const std::vector<Decision>&ds){json::Array out;for(auto &d:ds){json::Array arms,tests;for(auto *b:d.tests)tests.push_back(name(b));for(auto &a:d.arms){json::Array blocks,exits,path,alternatives,origins;for(auto &id:a.mergedFrom)origins.push_back(id);for(auto &p:a.alternatives){json::Array edges;for(auto e:p)edges.push_back(json::Object{{"test",name(e.test)},{"successor",e.successor}});alternatives.push_back(std::move(edges));}for(auto *b:a.blocks)blocks.push_back(name(b));for(auto *b:a.exitSources)exits.push_back(name(b));for(auto e:a.predicate)path.push_back(json::Object{{"test",name(e.test)},{"successor",e.successor}});arms.push_back(json::Object{{"id",a.id},{"entry",name(a.entry)},{"kind",a.kind==ArmKind::Linear?"Linear":a.kind==ArmKind::SESE?"SESE":"Unsupported"},{"reason",a.reason},{"blocks",std::move(blocks)},{"exit_sources",std::move(exits)},{"ordered_predicate",std::move(path)},{"predicate_alternatives",std::move(alternatives)},{"merged_from",std::move(origins)},{"order_family",a.orderFamily},{"order_first",a.orderFirst},{"order_last",a.orderLast}});}out.push_back(json::Object{{"id",d.id},{"root",name(d.root)},{"join",name(d.join)},{"tests",std::move(tests)},{"arms",std::move(arms)},{"identity_scope","persistent_origin_if_tagged_else_snapshot"}});}return out;}
-bool normalize(Function &f,const Decision &d,unsigned left,std::string &reason,BasicBlock **dispatchOut){
+// Keep a selector inside the group when the entry guard no longer needs it.
+static void sinkDispatchCondition(Value *value, BasicBlock *entry,
+                                  BasicBlock *dispatch) {
+ auto *inst = dyn_cast<Instruction>(value);
+ if (!inst || inst->getParent() != entry || !inst->getType()->isIntegerTy(1))
+  return;
+ unsigned opcode = inst->getOpcode();
+ if (!isa<CmpInst>(inst) && opcode != Instruction::And &&
+     opcode != Instruction::Or && opcode != Instruction::Xor)
+  return;
+ for (auto *user : inst->users()) {
+  auto *use = dyn_cast<Instruction>(user);
+  if (!use || isa<PHINode>(use) || use->getParent() != dispatch)
+   return;
+ }
+ inst->moveBefore(&*dispatch->getFirstInsertionPt());
+ for (auto &operand : inst->operands())
+  sinkDispatchCondition(operand.get(), entry, dispatch);
+}
+bool normalize(Function &f,const Decision &d,unsigned left,std::string &reason,BasicBlock **dispatchOut,unsigned conditionBudget){
  auto fail=[&](const char*s){reason=s;return false;};
- for(auto &bb:f)for(auto &i:bb)if(auto *c=dyn_cast<CallBase>(&i))if(c->isConvergent())return fail("convergent_function_not_supported");
  if(left+1>=d.arms.size())return fail("pair_out_of_range");
  auto &a=d.arms[left];auto &b=d.arms[left+1];
+ std::set<BasicBlock*> affected(d.tests.begin(),d.tests.end());
+ affected.insert(a.blocks.begin(),a.blocks.end());affected.insert(b.blocks.begin(),b.blocks.end());
+ if(d.join)affected.insert(d.join);
+ for(auto *bb:affected)for(auto &i:*bb)if(auto *c=dyn_cast<CallBase>(&i))
+  if(c->isConvergent())return fail("convergent_trial_region_not_supported");
  if(a.kind==ArmKind::Unsupported||b.kind==ArmKind::Unsupported)return fail("unsupported_arm");
  if(a.predicate.empty()||b.predicate.empty()||!d.join)return fail("missing_boundary");
  if(!a.orderFamily.empty()&&a.orderFamily==b.orderFamily&&a.orderLast+1!=b.orderFirst)return fail("nonadjacent_logical_ranges");
@@ -147,6 +180,7 @@ bool normalize(Function &f,const Decision &d,unsigned left,std::string &reason,B
  }
  if(!bx||!by||!bx->isConditional()||!by->isConditional()||x==y)return fail("not_adjacent_else_if");
  DominatorTree currentDT(f);PostDominatorTree currentPDT(f);
+ if(!currentDT.dominates(x,y))return fail("second_test_not_dominated_by_first");
  auto *prefixStart=bx->getSuccessor(1-ea.successor);
  if(!currentPDT.dominates(y,prefixStart))return fail("second_test_not_postdominating_prefix");
  std::set<BasicBlock*> tests(d.tests.begin(),d.tests.end()),seenPrefix;std::vector<BasicBlock*> pending{prefixStart};
@@ -163,19 +197,61 @@ bool normalize(Function &f,const Decision &d,unsigned left,std::string &reason,B
  auto *j=SplitBlockPredecessors(d.join,exits,".pair.join");
  if(!j)return fail("cannot_split_exit");
  foldExitPhis();
- auto &ctx=f.getContext();auto *g=BasicBlock::Create(ctx,"decision.gate",&f,y->getNextNode());auto *dispatch=BasicBlock::Create(ctx,"decision.dispatch",&f,g->getNextNode());
+ auto &ctx=f.getContext();
+ // Hoisting is permitted only for a single, exclusively owned test block.
+ bool eager=prefixStart==y&&y->getSinglePredecessor()==x&&!y->hasAddressTaken()
+   &&!bx->getMetadata("decision.short_gate");
+ unsigned weight=0;
+ for(auto &i:*y)if(!i.isTerminator()){
+  eager &= !isa<PHINode>(i)&&safeToExecuteUnconditionally(i);
+  weight += fusionInstructionWeight(i);
+  for(auto &op:i.operands())if(auto *def=dyn_cast<Instruction>(op.get()))
+   if(def->getParent()!=y&&!currentDT.dominates(def,bx))eager=false;
+ }
+ eager &= weight<=conditionBudget;
+ Value *selected=bx->getCondition();
+ if(ea.successor==1)selected=BinaryOperator::CreateNot(selected,"decision.left",bx);
+ if(eager){
+  Value *right=by->getCondition();
+  while(&y->front()!=by)y->front().moveBefore(bx);
+  if(eb.successor==1)right=BinaryOperator::CreateNot(right,"decision.right",bx);
+  auto *take=SelectInst::Create(selected,ConstantInt::getTrue(ctx),right,"decision.take",bx);
+  auto *dispatch=BasicBlock::Create(ctx,"decision.dispatch",&f,y);
+  bx->setCondition(take);bx->setSuccessor(0,dispatch);bx->setSuccessor(1,rest);
+  for(auto &p:rest->phis()){int n=p.getBasicBlockIndex(y);if(n>=0)p.setIncomingBlock(n,x);}
+  auto *dispatchBranch = BranchInst::Create(a.entry,b.entry,selected,dispatch);
+  bx->setMetadata("decision.condition_prefix",MDNode::get(ctx,{}));
+  // Retire the old branch before simplifying its condition DAG: otherwise
+  // that branch keeps the superseded comparison live during scoped DCE.
+  // The new entry and dispatch already retain every still-needed condition.
+  y->eraseFromParent();
+  simplifyCondition(take);
+  sinkDispatchCondition(dispatchBranch->getCondition(), x, dispatch);
+  attachIdentity(dispatch);
+  if(dispatchOut)*dispatchOut=dispatch;
+  reason="normalized_value_condition";
+  if(verifyFunction(f,&errs()))return fail("verifier_failed_discard_clone");
+  return true;
+ }
+ auto *g=BasicBlock::Create(ctx,"decision.gate",&f,y->getNextNode());auto *dispatch=BasicBlock::Create(ctx,"decision.dispatch",&f,g->getNextNode());
  Value *cj=by->getCondition();
  if(eb.successor==1)cj=BinaryOperator::CreateNot(cj,"decision.right",by);
  // Bridge every definition whose dominance is lost, including values used in rest.
- std::vector<Instruction*> defs;for(auto &i:*y)if(!i.getType()->isVoidTy())defs.push_back(&i);
+ // A recursive group can carry selectors defined in any prefix block.
+ // Keep uses inside that prefix unchanged; bridge only escaping values.
+ seenPrefix.insert(y);
+ std::vector<Instruction*> defs;
+ for(auto &bb:f)if(seenPrefix.count(&bb))for(auto &i:bb)
+  if(!i.getType()->isVoidTy())defs.push_back(&i);
  std::map<Value*,Value*> bridge;
- for(auto *i:defs){auto *p=PHINode::Create(i->getType(),2,"decision.value",g);p->addIncoming(UndefValue::get(i->getType()),x);p->addIncoming(i,y);bridge[i]=p;
-  SmallVector<Use*,8> uses;for(auto &u:i->uses()){auto *user=dyn_cast<Instruction>(u.getUser());if(user&&user!=p&&user->getParent()!=y)uses.push_back(&u);}for(auto *u:uses)u->set(p);
+ for(auto *i:defs){bool external=false;for(auto *u:i->users())if(auto *user=dyn_cast<Instruction>(u))if(!seenPrefix.count(user->getParent())&&user->getParent()!=g)external=true;if(!external)continue;if(!currentDT.dominates(i,by))return fail("escaping_prefix_value_unavailable_at_exit");auto *p=PHINode::Create(i->getType(),2,"decision.value",g);p->addIncoming(UndefValue::get(i->getType()),x);p->addIncoming(i,y);bridge[i]=p;
+  SmallVector<Use*,8> uses;for(auto &u:i->uses()){auto *user=dyn_cast<Instruction>(u.getUser());if(user&&user!=p&&!seenPrefix.count(user->getParent())&&user->getParent()!=g)uses.push_back(&u);}for(auto *u:uses)u->set(p);
  }
- auto *selected=PHINode::Create(Type::getInt1Ty(ctx),2,"decision.was_left",g);selected->addIncoming(ConstantInt::getTrue(ctx),x);selected->addIncoming(ConstantInt::getFalse(ctx),y);
+
  auto *gate=PHINode::Create(Type::getInt1Ty(ctx),2,"decision.take",g);gate->addIncoming(ConstantInt::getTrue(ctx),x);gate->addIncoming(cj,y);
  // cj belongs to y: the incoming value itself must remain the original definition.
  bx->setSuccessor(ea.successor,g);
+ bx->setMetadata("decision.condition_prefix",MDNode::get(ctx,{}));
  by->eraseFromParent();BranchInst::Create(g,y);
  for(auto &p:rest->phis()){int n=p.getBasicBlockIndex(y);if(n>=0)p.setIncomingBlock(n,g);}
  auto *gb=BranchInst::Create(dispatch,rest,gate,g);

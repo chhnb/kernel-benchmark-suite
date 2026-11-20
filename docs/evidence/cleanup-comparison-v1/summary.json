@@ -1,0 +1,838 @@
+{
+  "provenance": {
+    "base_commit": "35f9ccdc1795348cfb314b3cbf750216bf5448e7",
+    "checkpoint": "35f9ccd",
+    "checkpoint_fuse_sha256": "a6efd667ee699954df84a1190e9d183555648dbc43ffb1c1276e09e964d3d9e7",
+    "source_sha256": {
+      "tools/decision_model.cpp": "ce930ae099b323e5bec5ef182bfdaab16e37b37fc752ffa0845e1e33e0e7a21f",
+      "tools/decision_fuse_main.cpp": "e3dbd98cd10e1d3c7e7d4ca75f9af2ec60c629c5c29f920a42b614402cd0a7d3",
+      "tools/decision_greedy_main.cpp": "eec6537f88b0fcedd4c3758cc31d85c013a38a9715bf681be8c3954eb80ba145",
+      "tools/trial_full_cfg.h": "6c4a7691e1828f97ef966abb761b4923578aa8f38f70beffaf75e3e03116eaaf",
+      "tools/trial_simplify_cfg.h": "d21de08ad1e07002b0b52b4bcffcb044c89d764f7aa3fb49aad448e5c228a710",
+      "tools/trial_implicit_metrics.h": "76ffa2ee4c5f83fde24eb695c260498358d24b2342a600fbc2b2b463df777461",
+      "tools/darm_pair_engine/GapPlanning.h": "7998b4bfe4d4b9353195049741a4bd781e34ee0ba9a0ba5946a7ba2a3fdd4c58",
+      "tools/darm_pair_engine/RegionMelder.cpp": "05a81aa1f424fb6e717d261f0b249dd1d1d4c199f0b4db1d0aa4c2e4c25a9d0b",
+      "tools/ir_pressure.cpp": "9c07de002bdc9f371ad6e15e8be5629fef353e142a520e984fb7f791f5dd11f9",
+      "build/decision-fuse/decision-fuse": "5616d6fe7b5d2134ce12edc35a1d44c2c360cc86d1a63836737ff0baddc2f905",
+      "build/decision-fuse/decision-greedy": "739c2b938c20b86a3d8ea9b5b07b8c02d770bfa4e7429a1f61f39759cc466cd7"
+    },
+    "speculation": "none",
+    "condition_budget": 4,
+    "uniform_guard": "off; full implicit effects diagnostic-only",
+    "pressure_limits": "growth=1000000 and absolute=1000000; nonbinding comparison against checkpoint",
+    "cost_prototype_included_in_comparison": false
+  },
+  "build": [
+    {
+      "case": "mapairy",
+      "cleanup": "checkpoint",
+      "status": "compiled",
+      "source": "/home/chh/kernel-benchmark-suite/experiments/mapairy-full-convergence-20261109-v1/steps-final/state-0.ll",
+      "source_sha256": "130d89d31e175129c35386aa68f040556a3addb5c0615a26948b75ee7963dce2",
+      "commits": 25,
+      "trials": 99,
+      "initial_cost": 6402,
+      "final_cost": 4183,
+      "binary_sha256": "f947ee6fc87d0ceb37a20dbd660f9100cbede1f8d3b493ba2c2405b71c753746",
+      "candidate": "/home/chh/kernel-benchmark-suite-review-speculation/build/decision-fuse/cleanup-comparison-v1/mapairy-checkpoint-pair/variant.hsaco",
+      "rejections": {
+        "scored": 99
+      },
+      "seconds": 59.914338432019576
+    },
+    {
+      "case": "mapairy",
+      "cleanup": "full",
+      "status": "compiled",
+      "source": "/home/chh/kernel-benchmark-suite/experiments/mapairy-full-convergence-20261109-v1/steps-final/state-0.ll",
+      "source_sha256": "130d89d31e175129c35386aa68f040556a3addb5c0615a26948b75ee7963dce2",
+      "commits": 25,
+      "trials": 99,
+      "initial_cost": 6402,
+      "final_cost": 4183,
+      "binary_sha256": "f947ee6fc87d0ceb37a20dbd660f9100cbede1f8d3b493ba2c2405b71c753746",
+      "candidate": "/home/chh/kernel-benchmark-suite-review-speculation/build/decision-fuse/cleanup-comparison-v1/mapairy-full-pair/variant.hsaco",
+      "rejections": {
+        "scored": 99
+      },
+      "matches_checkpoint_binary": true,
+      "seconds": 79.72801225003786
+    },
+    {
+      "case": "mapairy",
+      "cleanup": "structural",
+      "status": "compiled",
+      "source": "/home/chh/kernel-benchmark-suite/experiments/mapairy-full-convergence-20261109-v1/steps-final/state-0.ll",
+      "source_sha256": "130d89d31e175129c35386aa68f040556a3addb5c0615a26948b75ee7963dce2",
+      "commits": 16,
+      "trials": 96,
+      "initial_cost": 6402,
+      "final_cost": 4437,
+      "binary_sha256": "27cf927dc9d76fe59c5932f76a069df65c74d3d7a93163cae751fc3de84c0485",
+      "candidate": "/home/chh/kernel-benchmark-suite-review-speculation/build/decision-fuse/cleanup-comparison-v1/mapairy-structural-pair/variant.hsaco",
+      "rejections": {
+        "scored": 89,
+        "no_common_computation_in_must_execute_anchors": 7
+      },
+      "seconds": 31.57823674706742
+    },
+    {
+      "case": "tigre",
+      "cleanup": "checkpoint",
+      "status": "compiled",
+      "source": "/home/chh/kernel-benchmark-suite/results/tigre-baseline-binary-v1/post.ll",
+      "source_sha256": "d4f77b409817282cd40aa99f6e9e7bc2d0bc2f6396bb9005fc3c34726754a836",
+      "commits": 5,
+      "trials": 6,
+      "initial_cost": 1182,
+      "final_cost": 1041,
+      "binary_sha256": "77519e0533dd303ef21771566d0ac2e61fd3d3524afb5c23c8f4d4c0267b5090",
+      "candidate": "/home/chh/kernel-benchmark-suite-review-speculation/build/decision-fuse/cleanup-comparison-v1/tigre-checkpoint-pair/variant.hsaco",
+      "rejections": {
+        "scored": 6
+      },
+      "seconds": 1.2899893911089748
+    },
+    {
+      "case": "tigre",
+      "cleanup": "full",
+      "status": "compiled",
+      "source": "/home/chh/kernel-benchmark-suite/results/tigre-baseline-binary-v1/post.ll",
+      "source_sha256": "d4f77b409817282cd40aa99f6e9e7bc2d0bc2f6396bb9005fc3c34726754a836",
+      "commits": 5,
+      "trials": 6,
+      "initial_cost": 1182,
+      "final_cost": 1041,
+      "binary_sha256": "77519e0533dd303ef21771566d0ac2e61fd3d3524afb5c23c8f4d4c0267b5090",
+      "candidate": "/home/chh/kernel-benchmark-suite-review-speculation/build/decision-fuse/cleanup-comparison-v1/tigre-full-pair/variant.hsaco",
+      "rejections": {
+        "scored": 6
+      },
+      "matches_checkpoint_binary": true,
+      "seconds": 2.094929078128189
+    },
+    {
+      "case": "tigre",
+      "cleanup": "structural",
+      "status": "compiled",
+      "source": "/home/chh/kernel-benchmark-suite/results/tigre-baseline-binary-v1/post.ll",
+      "source_sha256": "d4f77b409817282cd40aa99f6e9e7bc2d0bc2f6396bb9005fc3c34726754a836",
+      "commits": 2,
+      "trials": 6,
+      "initial_cost": 1182,
+      "final_cost": 1088,
+      "binary_sha256": "ad6f07dfc40fd741f03ad51c5fd18c5e305c71a1de29b635d6b95baf6c5e629f",
+      "candidate": "/home/chh/kernel-benchmark-suite-review-speculation/build/decision-fuse/cleanup-comparison-v1/tigre-structural-pair/variant.hsaco",
+      "rejections": {
+        "scored": 6
+      },
+      "seconds": 1.3658335669897497
+    },
+    {
+      "case": "hypersonic",
+      "cleanup": "checkpoint",
+      "status": "compiled",
+      "source": "/home/chh/kernel-benchmark-suite/experiments/hypersonic-no-jt-20261109-v1/O2-no-jt-codegen.ll",
+      "source_sha256": "fe112e11967a5266e10c62fca962c6b2ee1cd953e9d5149a759a14a84a0e63e4",
+      "commits": 2,
+      "trials": 18,
+      "initial_cost": 1913,
+      "final_cost": 1885,
+      "binary_sha256": "3cfbc111a970a8047fc0fecae6a6826b4d67459a07b55a0595433dc1e2b5e866",
+      "candidate": "/home/chh/kernel-benchmark-suite-review-speculation/build/decision-fuse/cleanup-comparison-v1/hypersonic-checkpoint-pair/variant.hsaco",
+      "rejections": {
+        "scored": 16,
+        "no_common_computation_in_must_execute_anchors": 1,
+        "second_test_not_dominated_by_first": 1
+      },
+      "seconds": 2.8635082449764013
+    },
+    {
+      "case": "hypersonic",
+      "cleanup": "full",
+      "status": "compiled",
+      "source": "/home/chh/kernel-benchmark-suite/experiments/hypersonic-no-jt-20261109-v1/O2-no-jt-codegen.ll",
+      "source_sha256": "fe112e11967a5266e10c62fca962c6b2ee1cd953e9d5149a759a14a84a0e63e4",
+      "commits": 2,
+      "trials": 18,
+      "initial_cost": 1913,
+      "final_cost": 1885,
+      "binary_sha256": "3cfbc111a970a8047fc0fecae6a6826b4d67459a07b55a0595433dc1e2b5e866",
+      "candidate": "/home/chh/kernel-benchmark-suite-review-speculation/build/decision-fuse/cleanup-comparison-v1/hypersonic-full-pair/variant.hsaco",
+      "rejections": {
+        "scored": 16,
+        "no_common_computation_in_must_execute_anchors": 1,
+        "second_test_not_dominated_by_first": 1
+      },
+      "matches_checkpoint_binary": true,
+      "seconds": 4.897239837097004
+    },
+    {
+      "case": "hypersonic",
+      "cleanup": "structural",
+      "status": "compiled",
+      "source": "/home/chh/kernel-benchmark-suite/experiments/hypersonic-no-jt-20261109-v1/O2-no-jt-codegen.ll",
+      "source_sha256": "fe112e11967a5266e10c62fca962c6b2ee1cd953e9d5149a759a14a84a0e63e4",
+      "commits": 1,
+      "trials": 17,
+      "initial_cost": 1913,
+      "final_cost": 1890,
+      "binary_sha256": "5c2f7d7e87f466080c3588a80f86f5eacb4ba2b940caa97c19522469963182a5",
+      "candidate": "/home/chh/kernel-benchmark-suite-review-speculation/build/decision-fuse/cleanup-comparison-v1/hypersonic-structural-pair/variant.hsaco",
+      "rejections": {
+        "scored": 15,
+        "no_common_computation_in_must_execute_anchors": 1,
+        "second_test_not_dominated_by_first": 1
+      },
+      "seconds": 2.8264265640173107
+    },
+    {
+      "case": "vllm",
+      "cleanup": "checkpoint",
+      "status": "compiled",
+      "source": "/home/chh/kernel-benchmark-suite/experiments/recursive-all32-greedy-20261108-v1/state-0.ll",
+      "source_sha256": "7e1e57ebb0adeb1beef9382eab38a3ff5dfb37e2449ccfc79396ddcf89cd9962",
+      "commits": 204,
+      "trials": 908,
+      "initial_cost": 5423,
+      "final_cost": 3179,
+      "binary_sha256": "faca408cc76cad618148b27f88d61a60a562f4ea42f8ecd8f8ae1d32985d12be",
+      "candidate": "/home/chh/kernel-benchmark-suite-review-speculation/build/decision-fuse/cleanup-comparison-v1/vllm-checkpoint-pair/variant.hsaco",
+      "rejections": {
+        "scored": 908
+      },
+      "seconds": 538.5294749611057
+    },
+    {
+      "case": "vllm",
+      "cleanup": "full",
+      "status": "compiled",
+      "source": "/home/chh/kernel-benchmark-suite/experiments/recursive-all32-greedy-20261108-v1/state-0.ll",
+      "source_sha256": "7e1e57ebb0adeb1beef9382eab38a3ff5dfb37e2449ccfc79396ddcf89cd9962",
+      "commits": 204,
+      "trials": 908,
+      "initial_cost": 5423,
+      "final_cost": 3179,
+      "binary_sha256": "faca408cc76cad618148b27f88d61a60a562f4ea42f8ecd8f8ae1d32985d12be",
+      "candidate": "/home/chh/kernel-benchmark-suite-review-speculation/build/decision-fuse/cleanup-comparison-v1/vllm-full-pair/variant.hsaco",
+      "rejections": {
+        "scored": 908
+      },
+      "matches_checkpoint_binary": true,
+      "seconds": 580.5695150019601
+    },
+    {
+      "case": "vllm",
+      "cleanup": "structural",
+      "status": "compiled",
+      "source": "/home/chh/kernel-benchmark-suite/experiments/recursive-all32-greedy-20261108-v1/state-0.ll",
+      "source_sha256": "7e1e57ebb0adeb1beef9382eab38a3ff5dfb37e2449ccfc79396ddcf89cd9962",
+      "commits": 160,
+      "trials": 876,
+      "initial_cost": 5423,
+      "final_cost": 3695,
+      "binary_sha256": "ea5da3de2b268816b4eb7c84412584865a8db4bdf51f1cc81678de0f3f47e7b8",
+      "candidate": "/home/chh/kernel-benchmark-suite-review-speculation/build/decision-fuse/cleanup-comparison-v1/vllm-structural-pair/variant.hsaco",
+      "rejections": {
+        "scored": 876
+      },
+      "seconds": 395.6254332200624
+    }
+  ],
+  "gpu": [
+    {
+      "case": "mapairy",
+      "status": "completed",
+      "correctness_passed": true,
+      "median_us": {
+        "checkpoint": [
+          24.96000099
+        ],
+        "full": [
+          24.96000099
+        ],
+        "structural": [
+          24.96000099
+        ]
+      },
+      "batch_medians_us": {
+        "checkpoint": [
+          [
+            24.80099869
+          ],
+          [
+            24.96000099
+          ],
+          [
+            24.96000099
+          ]
+        ],
+        "structural": [
+          [
+            24.96000099
+          ],
+          [
+            24.96000099
+          ],
+          [
+            24.80000114
+          ]
+        ]
+      },
+      "slowdown_vs_checkpoint_pct": {
+        "checkpoint": [
+          0.0
+        ],
+        "full": [
+          0.0
+        ],
+        "structural": [
+          0.0
+        ]
+      },
+      "performance_passed": {
+        "checkpoint": true,
+        "full": true,
+        "structural": true
+      },
+      "aliases": {
+        "checkpoint": "checkpoint",
+        "full": "checkpoint",
+        "structural": "structural"
+      },
+      "binary_sha256": {
+        "checkpoint": "f947ee6fc87d0ceb37a20dbd660f9100cbede1f8d3b493ba2c2405b71c753746",
+        "full": "f947ee6fc87d0ceb37a20dbd660f9100cbede1f8d3b493ba2c2405b71c753746",
+        "structural": "27cf927dc9d76fe59c5932f76a069df65c74d3d7a93163cae751fc3de84c0485"
+      }
+    },
+    {
+      "case": "tigre",
+      "status": "completed",
+      "correctness_passed": true,
+      "median_us": {
+        "checkpoint": [
+          550.2399999999999,
+          518.4,
+          513.9200000000001,
+          538.4,
+          546.88,
+          375.841
+        ],
+        "full": [
+          550.2399999999999,
+          518.4,
+          513.9200000000001,
+          538.4,
+          546.88,
+          375.841
+        ],
+        "structural": [
+          550.241,
+          516.161,
+          512.0,
+          536.161,
+          545.279,
+          375.841
+        ]
+      },
+      "batch_medians_us": {
+        "checkpoint": [
+          [
+            549.76,
+            519.04,
+            513.9200000000001,
+            537.7610000000001,
+            550.5600000000001,
+            375.841
+          ],
+          [
+            552.0,
+            518.4,
+            513.761,
+            538.5600000000001,
+            545.92,
+            374.08000000000004
+          ],
+          [
+            550.2399999999999,
+            518.4,
+            513.9200000000001,
+            538.4,
+            546.88,
+            381.91999999999996
+          ]
+        ],
+        "structural": [
+          [
+            550.241,
+            516.161,
+            512.0010000000001,
+            536.161,
+            543.84,
+            380.32
+          ],
+          [
+            549.7610000000001,
+            516.161,
+            512.0,
+            536.161,
+            545.279,
+            370.71999999999997
+          ],
+          [
+            550.5600000000001,
+            516.9599999999999,
+            511.68100000000004,
+            536.481,
+            545.4409999999999,
+            375.841
+          ]
+        ]
+      },
+      "slowdown_vs_checkpoint_pct": {
+        "checkpoint": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "full": [
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "structural": [
+          0.00018173887759154184,
+          -0.43190586419753485,
+          -0.37359900373600263,
+          -0.41586181277860623,
+          -0.2927516091281501,
+          0.0
+        ]
+      },
+      "performance_passed": {
+        "checkpoint": true,
+        "full": true,
+        "structural": true
+      },
+      "aliases": {
+        "checkpoint": "checkpoint",
+        "full": "checkpoint",
+        "structural": "structural"
+      },
+      "binary_sha256": {
+        "checkpoint": "77519e0533dd303ef21771566d0ac2e61fd3d3524afb5c23c8f4d4c0267b5090",
+        "full": "77519e0533dd303ef21771566d0ac2e61fd3d3524afb5c23c8f4d4c0267b5090",
+        "structural": "ad6f07dfc40fd741f03ad51c5fd18c5e305c71a1de29b635d6b95baf6c5e629f"
+      },
+      "sum_medians_ms": {
+        "checkpoint": 3.043681,
+        "full": 3.043681,
+        "structural": 3.035683
+      }
+    },
+    {
+      "case": "hypersonic",
+      "status": "completed",
+      "correctness_passed": true,
+      "median_us": {
+        "checkpoint": [
+          1807.3610067367554,
+          1807.6809644699097
+        ],
+        "full": [
+          1807.3610067367554,
+          1807.6809644699097
+        ],
+        "structural": [
+          1816.6409730911255,
+          1810.0810050964355
+        ]
+      },
+      "batch_medians_us": {
+        "checkpoint": [
+          [
+            1807.3610067367554,
+            1807.6809644699097
+          ],
+          [
+            1806.7209720611572,
+            1807.8409433364868
+          ],
+          [
+            1807.5209856033325,
+            1807.6809644699097
+          ]
+        ],
+        "structural": [
+          [
+            1821.2809562683105,
+            1810.0810050964355
+          ],
+          [
+            1809.2809915542603,
+            1809.4409704208374
+          ],
+          [
+            1816.6409730911255,
+            1812.8010034561157
+          ]
+        ]
+      },
+      "slowdown_vs_checkpoint_pct": {
+        "checkpoint": [
+          0.0,
+          0.0
+        ],
+        "full": [
+          0.0,
+          0.0
+        ],
+        "structural": [
+          0.5134539430573071,
+          0.13276903799390727
+        ]
+      },
+      "performance_passed": {
+        "checkpoint": true,
+        "full": true,
+        "structural": true
+      },
+      "aliases": {
+        "checkpoint": "checkpoint",
+        "full": "checkpoint",
+        "structural": "structural"
+      },
+      "binary_sha256": {
+        "checkpoint": "3cfbc111a970a8047fc0fecae6a6826b4d67459a07b55a0595433dc1e2b5e866",
+        "full": "3cfbc111a970a8047fc0fecae6a6826b4d67459a07b55a0595433dc1e2b5e866",
+        "structural": "5c2f7d7e87f466080c3588a80f86f5eacb4ba2b940caa97c19522469963182a5"
+      }
+    },
+    {
+      "case": "vllm",
+      "status": "completed",
+      "correctness_passed": true,
+      "median_us": {
+        "checkpoint": [
+          2446.399902,
+          4860.158203
+        ],
+        "full": [
+          2446.399902,
+          4860.158203
+        ],
+        "structural": [
+          2730.87915,
+          5436.479004
+        ]
+      },
+      "batch_medians_us": {
+        "checkpoint": [
+          [
+            2444.961182,
+            4859.364258
+          ],
+          [
+            2446.558838,
+            4860.158203
+          ],
+          [
+            2446.399902,
+            4862.398926
+          ]
+        ],
+        "structural": [
+          [
+            2730.721924,
+            5436.800781
+          ],
+          [
+            2730.87915,
+            5435.35791
+          ],
+          [
+            2731.359863,
+            5436.479004
+          ]
+        ]
+      },
+      "slowdown_vs_checkpoint_pct": {
+        "checkpoint": [
+          0.0,
+          0.0
+        ],
+        "full": [
+          0.0,
+          0.0
+        ],
+        "structural": [
+          11.628485096301322,
+          11.858066691003133
+        ]
+      },
+      "performance_passed": {
+        "checkpoint": true,
+        "full": true,
+        "structural": false
+      },
+      "aliases": {
+        "checkpoint": "checkpoint",
+        "full": "checkpoint",
+        "structural": "structural"
+      },
+      "binary_sha256": {
+        "checkpoint": "faca408cc76cad618148b27f88d61a60a562f4ea42f8ecd8f8ae1d32985d12be",
+        "full": "faca408cc76cad618148b27f88d61a60a562f4ea42f8ecd8f8ae1d32985d12be",
+        "structural": "ea5da3de2b268816b4eb7c84412584865a8db4bdf51f1cc81678de0f3f47e7b8"
+      }
+    }
+  ],
+  "cases": [
+    {
+      "case": "mapairy",
+      "full_matches_checkpoint_binary": true,
+      "full_matches_checkpoint_commit_sequence": true,
+      "resources": {
+        "checkpoint": {
+          "vgpr_count": 37,
+          "sgpr_count": 44,
+          "vgpr_spill_count": 0,
+          "sgpr_spill_count": 0
+        },
+        "full": {
+          "vgpr_count": 37,
+          "sgpr_count": 44,
+          "vgpr_spill_count": 0,
+          "sgpr_spill_count": 0
+        },
+        "structural": {
+          "vgpr_count": 37,
+          "sgpr_count": 44,
+          "vgpr_spill_count": 0,
+          "sgpr_spill_count": 0
+        }
+      },
+      "full_diagnostics": {
+        "commits": 25,
+        "side_metrics_available_commits": 25,
+        "conditional_hoisted_instructions": 286,
+        "conditional_hoisted_opcodes": {
+          "select": 225,
+          "fmul": 13,
+          "fadd": 12,
+          "fsub": 8,
+          "zext": 7,
+          "shl": 7,
+          "uitofp": 7,
+          "call": 7
+        },
+        "conditional_hoisted_weight_sum": 307,
+        "conditional_hoisted_size_latency_sum": 319,
+        "per_commit_file": "/home/chh/kernel-benchmark-suite-review-speculation/build/decision-fuse/cleanup-comparison-v1/mapairy-full-commits.json"
+      }
+    },
+    {
+      "case": "tigre",
+      "full_matches_checkpoint_binary": true,
+      "full_matches_checkpoint_commit_sequence": true,
+      "resources": {
+        "checkpoint": {
+          "vgpr_count": 44,
+          "sgpr_count": 50,
+          "vgpr_spill_count": 0,
+          "sgpr_spill_count": 0
+        },
+        "full": {
+          "vgpr_count": 44,
+          "sgpr_count": 50,
+          "vgpr_spill_count": 0,
+          "sgpr_spill_count": 0
+        },
+        "structural": {
+          "vgpr_count": 45,
+          "sgpr_count": 50,
+          "vgpr_spill_count": 0,
+          "sgpr_spill_count": 0
+        }
+      },
+      "full_diagnostics": {
+        "commits": 5,
+        "side_metrics_available_commits": 5,
+        "conditional_hoisted_instructions": 13,
+        "conditional_hoisted_opcodes": {
+          "fadd": 3,
+          "call": 6,
+          "select": 4
+        },
+        "conditional_hoisted_weight_sum": 31,
+        "conditional_hoisted_size_latency_sum": 13,
+        "per_commit_file": "/home/chh/kernel-benchmark-suite-review-speculation/build/decision-fuse/cleanup-comparison-v1/tigre-full-commits.json"
+      }
+    },
+    {
+      "case": "hypersonic",
+      "full_matches_checkpoint_binary": true,
+      "full_matches_checkpoint_commit_sequence": true,
+      "resources": {
+        "checkpoint": {
+          "vgpr_count": 92,
+          "sgpr_count": 58,
+          "vgpr_spill_count": 0,
+          "sgpr_spill_count": 0
+        },
+        "full": {
+          "vgpr_count": 92,
+          "sgpr_count": 58,
+          "vgpr_spill_count": 0,
+          "sgpr_spill_count": 0
+        },
+        "structural": {
+          "vgpr_count": 92,
+          "sgpr_count": 58,
+          "vgpr_spill_count": 0,
+          "sgpr_spill_count": 0
+        }
+      },
+      "full_diagnostics": {
+        "commits": 2,
+        "side_metrics_available_commits": 2,
+        "conditional_hoisted_instructions": 2,
+        "conditional_hoisted_opcodes": {
+          "or": 1,
+          "zext": 1
+        },
+        "conditional_hoisted_weight_sum": 2,
+        "conditional_hoisted_size_latency_sum": 1,
+        "per_commit_file": "/home/chh/kernel-benchmark-suite-review-speculation/build/decision-fuse/cleanup-comparison-v1/hypersonic-full-commits.json"
+      }
+    },
+    {
+      "case": "vllm",
+      "full_matches_checkpoint_binary": true,
+      "full_matches_checkpoint_commit_sequence": true,
+      "resources": {
+        "checkpoint": {
+          "vgpr_count": 78,
+          "sgpr_count": 76,
+          "vgpr_spill_count": 0,
+          "sgpr_spill_count": 0
+        },
+        "full": {
+          "vgpr_count": 78,
+          "sgpr_count": 76,
+          "vgpr_spill_count": 0,
+          "sgpr_spill_count": 0
+        },
+        "structural": {
+          "vgpr_count": 78,
+          "sgpr_count": 76,
+          "vgpr_spill_count": 0,
+          "sgpr_spill_count": 0
+        }
+      },
+      "full_diagnostics": {
+        "commits": 204,
+        "side_metrics_available_commits": 204,
+        "conditional_hoisted_instructions": 356,
+        "conditional_hoisted_opcodes": {
+          "fadd": 12,
+          "add": 12,
+          "call": 12,
+          "select": 320
+        },
+        "conditional_hoisted_weight_sum": 392,
+        "conditional_hoisted_size_latency_sum": 356,
+        "per_commit_file": "/home/chh/kernel-benchmark-suite-review-speculation/build/decision-fuse/cleanup-comparison-v1/vllm-full-commits.json"
+      }
+    }
+  ],
+  "all_full_sha_match": true,
+  "all_correctness_passed": true,
+  "all_structural_performance_passed": false,
+  "cpu_optimization": {
+    "before_seconds": 487.26560335303657,
+    "after_seconds": 395.6254332200624,
+    "reduction_pct": 18.807026291691365,
+    "same_commit_sequence": true,
+    "same_binary": true,
+    "comparison_note": "same none+structural nonbinding-pressure configuration, 160 commits and 876 trials; before already had reverse liveness, after additionally shares audit slot tracker"
+  },
+  "quantization_first_pair": [
+    {
+      "mode": "structural",
+      "cost": 5412,
+      "decision": "cache_eval:%if.else.7",
+      "left": "cache_eval:%if.then.i",
+      "right": "cache_eval:%if.then3.i",
+      "moved": null
+    },
+    {
+      "mode": "full",
+      "cost": 5412,
+      "decision": "cache_eval:%if.else.7",
+      "left": "cache_eval:%if.then.i",
+      "right": "cache_eval:%if.then3.i",
+      "moved": []
+    },
+    {
+      "mode": "checkpoint",
+      "cost": 5412,
+      "decision": "cache_eval:%if.else.7",
+      "left": "cache_eval:%if.then.i",
+      "right": "cache_eval:%if.then3.i",
+      "moved": null
+    }
+  ],
+  "decoder_first_pair": [
+    {
+      "mode": "structural",
+      "cost": 5424
+    },
+    {
+      "mode": "full",
+      "cost": 5412
+    },
+    {
+      "mode": "checkpoint",
+      "cost": 5412
+    }
+  ],
+  "validation_receipts": {
+    "cleanup-modes-unit-check": {
+      "exit": 0,
+      "seconds": 0.11648273468017578
+    },
+    "cleanup-modes-parity-check-v2": {
+      "exit": 0,
+      "seconds": 21.56139326095581
+    },
+    "cleanup-comparison-full-search": {
+      "exit": 0,
+      "seconds": 1709.7946875095367
+    },
+    "cleanup-quant-first-check": {
+      "exit": 0,
+      "seconds": 1.9200737476348877
+    },
+    "cleanup-modes-final-check": {
+      "exit": 0,
+      "seconds": 19.804102420806885
+    },
+    "cleanup-modes-cli-check": {
+      "exit": 0,
+      "seconds": 8.63552713394165
+    },
+    "cleanup-modes-final-replay": {
+      "exit": 0,
+      "seconds": 4.575388431549072
+    }
+  },
+  "post_comparison_change": "Added explicit conflict rejection for legacy disable flag plus new CFG flag; valid-path decoder and quantization byte-parity replay passed after this validation-only change."
+}

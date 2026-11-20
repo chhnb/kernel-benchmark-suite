@@ -1,0 +1,1377 @@
+{
+  "pcm256_chain": {
+    "runs": [
+      {
+        "directory": "build/incremental-identity-regression/PCM256",
+        "commits": 122,
+        "trials": 13254,
+        "tti": 2257,
+        "terminal_required": 4,
+        "terminal_attempted": 4,
+        "all_committed_ir_verified": true
+      },
+      {
+        "directory": "build/incremental-unit-audit/pcm-domain-v3-complete/PCM256-trees",
+        "commits": 122,
+        "trials": 137,
+        "tti": 2214,
+        "terminal_required": 1,
+        "terminal_attempted": 1,
+        "all_committed_ir_verified": true
+      }
+    ],
+    "first_divergence": {
+      "step": 91,
+      "reference": {
+        "candidate": "_Z3pcmPi:B13:B106:B105",
+        "cost": 2847,
+        "ir": "/data/home/chh/kernel-benchmark-suite/build/incremental-identity-regression/PCM256/trial-11728/fused.ll"
+      },
+      "trees": {
+        "candidate": "_Z3pcmPi:B11:B109:B108",
+        "cost": 2848,
+        "ir": "/data/home/chh/kernel-benchmark-suite/build/incremental-unit-audit/pcm-domain-v3-complete/PCM256-trees/trial-93/fused.ll"
+      }
+    },
+    "final_ir_equal": false,
+    "scope": "Verifier and terminal candidate coverage; execution correctness requires separate tests"
+  },
+  "pcm256_gpu": {
+    "baseline_sha256": "e4577724eb9368dd021dd81e1aacf5eaa7aa02c4f92436f6ebfdff11ee63155f",
+    "candidate_sha256": "52cdf3a201830ab17ef7748942e80b3fc5e955d090a3bcf61f82865fa8971a4d",
+    "seeds": 4,
+    "elements_per_seed": 131072,
+    "baseline_and_cpu_sort_exact": true
+  },
+  "quant8_chain": {
+    "runs": [
+      {
+        "directory": "build/incremental-unit-audit/domain-small-v2/quant8-legacy",
+        "commits": 7,
+        "trials": 44,
+        "tti": 25,
+        "terminal_required": 0,
+        "terminal_attempted": 0,
+        "all_committed_ir_verified": true
+      },
+      {
+        "directory": "build/incremental-unit-audit/quant8-domain-v3",
+        "commits": 7,
+        "trials": 76,
+        "tti": 25,
+        "terminal_required": 0,
+        "terminal_attempted": 0,
+        "all_committed_ir_verified": true
+      }
+    ],
+    "first_divergence": null,
+    "final_ir_equal": true,
+    "scope": "Verifier and terminal candidate coverage; execution correctness requires separate tests"
+  },
+  "quant8_cpu": {
+    "products": 15,
+    "inputs": 100018,
+    "bitwise_equal": true
+  },
+  "dependency_cpu": [
+    {
+      "mode": "legacy",
+      "seconds": 0.6219207329995697,
+      "commits": 2,
+      "trials": 4,
+      "tti": 36,
+      "verified_products": 3,
+      "cpu_inputs": 6724
+    },
+    {
+      "mode": "trees",
+      "seconds": 0.635929918003967,
+      "commits": 2,
+      "trials": 3,
+      "tti": 36,
+      "verified_products": 3,
+      "cpu_inputs": 6724
+    }
+  ],
+  "pcm32_repeated": [
+    {
+      "mode": "legacy",
+      "rep": 0,
+      "seconds": 3.9466569270007312,
+      "commits": 17,
+      "trials": 71,
+      "cost": 1142,
+      "phases": {
+        "domain_queue_and_requests": {
+          "calls": 19,
+          "milliseconds": 12.87915
+        },
+        "enumerate_catalog": {
+          "calls": 19,
+          "milliseconds": 452.40063599999996
+        },
+        "initialization": {
+          "calls": 1,
+          "milliseconds": 38.669346
+        },
+        "parse_and_discover": {
+          "calls": 19,
+          "milliseconds": 101.235015
+        },
+        "prepare_arms": {
+          "calls": 19,
+          "milliseconds": 32.90724
+        },
+        "read_scores_and_select": {
+          "calls": 19,
+          "milliseconds": 42.723694
+        },
+        "record_and_commit": {
+          "calls": 19,
+          "milliseconds": 18.187420000000003
+        },
+        "trial_workers_wall": {
+          "calls": 19,
+          "milliseconds": 3229.9537930000006
+        }
+      }
+    },
+    {
+      "mode": "trees",
+      "rep": 0,
+      "seconds": 3.8956771480006864,
+      "commits": 17,
+      "trials": 26,
+      "cost": 1138,
+      "phases": {
+        "domain_queue_and_requests": {
+          "calls": 20,
+          "milliseconds": 10.276666
+        },
+        "enumerate_catalog": {
+          "calls": 20,
+          "milliseconds": 431.68093700000003
+        },
+        "initialization": {
+          "calls": 1,
+          "milliseconds": 40.700453
+        },
+        "parse_and_discover": {
+          "calls": 20,
+          "milliseconds": 123.20870100000003
+        },
+        "prepare_arms": {
+          "calls": 20,
+          "milliseconds": 32.80710100000001
+        },
+        "read_scores_and_select": {
+          "calls": 20,
+          "milliseconds": 19.418424
+        },
+        "record_and_commit": {
+          "calls": 20,
+          "milliseconds": 26.628186
+        },
+        "trial_workers_wall": {
+          "calls": 20,
+          "milliseconds": 3185.6303329999996
+        }
+      }
+    },
+    {
+      "mode": "trees",
+      "rep": 1,
+      "seconds": 3.970390636008233,
+      "commits": 17,
+      "trials": 26,
+      "cost": 1138,
+      "phases": {
+        "domain_queue_and_requests": {
+          "calls": 20,
+          "milliseconds": 9.015455
+        },
+        "enumerate_catalog": {
+          "calls": 20,
+          "milliseconds": 442.1115260000001
+        },
+        "initialization": {
+          "calls": 1,
+          "milliseconds": 44.057223
+        },
+        "parse_and_discover": {
+          "calls": 20,
+          "milliseconds": 112.89158000000002
+        },
+        "prepare_arms": {
+          "calls": 20,
+          "milliseconds": 31.275200000000005
+        },
+        "read_scores_and_select": {
+          "calls": 20,
+          "milliseconds": 19.434172999999994
+        },
+        "record_and_commit": {
+          "calls": 20,
+          "milliseconds": 11.413122000000001
+        },
+        "trial_workers_wall": {
+          "calls": 20,
+          "milliseconds": 3274.1574339999993
+        }
+      }
+    },
+    {
+      "mode": "legacy",
+      "rep": 1,
+      "seconds": 4.083145527998568,
+      "commits": 17,
+      "trials": 71,
+      "cost": 1142,
+      "phases": {
+        "domain_queue_and_requests": {
+          "calls": 19,
+          "milliseconds": 14.055583000000002
+        },
+        "enumerate_catalog": {
+          "calls": 19,
+          "milliseconds": 428.8305220000001
+        },
+        "initialization": {
+          "calls": 1,
+          "milliseconds": 39.391311
+        },
+        "parse_and_discover": {
+          "calls": 19,
+          "milliseconds": 123.22482799999999
+        },
+        "prepare_arms": {
+          "calls": 19,
+          "milliseconds": 39.540338
+        },
+        "read_scores_and_select": {
+          "calls": 19,
+          "milliseconds": 43.670783
+        },
+        "record_and_commit": {
+          "calls": 19,
+          "milliseconds": 34.541531000000006
+        },
+        "trial_workers_wall": {
+          "calls": 19,
+          "milliseconds": 3340.135243
+        }
+      }
+    },
+    {
+      "mode": "legacy",
+      "rep": 2,
+      "seconds": 4.107414778001839,
+      "commits": 17,
+      "trials": 71,
+      "cost": 1142,
+      "phases": {
+        "domain_queue_and_requests": {
+          "calls": 19,
+          "milliseconds": 14.192663000000001
+        },
+        "enumerate_catalog": {
+          "calls": 19,
+          "milliseconds": 435.72387299999997
+        },
+        "initialization": {
+          "calls": 1,
+          "milliseconds": 39.39121
+        },
+        "parse_and_discover": {
+          "calls": 19,
+          "milliseconds": 109.57260299999999
+        },
+        "prepare_arms": {
+          "calls": 19,
+          "milliseconds": 32.10732499999999
+        },
+        "read_scores_and_select": {
+          "calls": 19,
+          "milliseconds": 47.230110999999994
+        },
+        "record_and_commit": {
+          "calls": 19,
+          "milliseconds": 38.838911
+        },
+        "trial_workers_wall": {
+          "calls": 19,
+          "milliseconds": 3365.290934999999
+        }
+      }
+    },
+    {
+      "mode": "trees",
+      "rep": 2,
+      "seconds": 3.8107177819911158,
+      "commits": 17,
+      "trials": 26,
+      "cost": 1138,
+      "phases": {
+        "domain_queue_and_requests": {
+          "calls": 20,
+          "milliseconds": 9.116085000000004
+        },
+        "enumerate_catalog": {
+          "calls": 20,
+          "milliseconds": 421.080644
+        },
+        "initialization": {
+          "calls": 1,
+          "milliseconds": 39.008551
+        },
+        "parse_and_discover": {
+          "calls": 20,
+          "milliseconds": 110.76818
+        },
+        "prepare_arms": {
+          "calls": 20,
+          "milliseconds": 31.555070000000004
+        },
+        "read_scores_and_select": {
+          "calls": 20,
+          "milliseconds": 18.543606
+        },
+        "record_and_commit": {
+          "calls": 20,
+          "milliseconds": 21.729400000000002
+        },
+        "trial_workers_wall": {
+          "calls": 20,
+          "milliseconds": 3137.600626000001
+        }
+      }
+    }
+  ],
+  "profile_parity": [
+    {
+      "case": "PCM32",
+      "candidate": "_Z3pcmPi:B9:B10:B11",
+      "scores_exact": true,
+      "ir_bytes_exact": true,
+      "ir_sha256": "8afade5f253332b755e9a89558225ac42d52af49cba5e3db70a0bf191298544a",
+      "old_seconds": 0.2543904240010306,
+      "new_seconds": 0.21454851400631014,
+      "score_ms": [
+        104.591793,
+        83.054065
+      ]
+    },
+    {
+      "case": "PCM256",
+      "candidate": "_Z3pcmPi:B0:B2:B1",
+      "scores_exact": true,
+      "ir_bytes_exact": true,
+      "ir_sha256": "feb600d68d389c2892b763afa45ea275e5553d8143a758e8b84a30df14e8a6cb",
+      "old_seconds": 0.3920216279948363,
+      "new_seconds": 0.4017993640009081,
+      "score_ms": [
+        167.057651,
+        173.092977
+      ]
+    },
+    {
+      "case": "BIT32",
+      "candidate": "_ZL11bitonicSortPi:B1:R3:R4",
+      "scores_exact": true,
+      "ir_bytes_exact": true,
+      "ir_sha256": "df6eedb1d10465e1827f0b26bb845b65dfa4158a34c9eec92917479e04c660f8",
+      "old_seconds": 0.08080853200226557,
+      "new_seconds": 0.0825411779951537,
+      "score_ms": [
+        45.634627,
+        50.090172
+      ]
+    },
+    {
+      "case": "MS32",
+      "candidate": "_Z13gpu_mergesortPlS_lllP4dim3S1_:B16:B17:B18",
+      "scores_exact": true,
+      "ir_bytes_exact": true,
+      "ir_sha256": "54daf11c53c51c623ff9af9348af4043dc46d6dc892c212cdfa03ee90d75c390",
+      "old_seconds": 1.186008396995021,
+      "new_seconds": 1.2464632019982673,
+      "score_ms": [
+        16.269877,
+        17.27001
+      ]
+    },
+    {
+      "case": "vllm",
+      "candidate": "cache_eval:B55:B54:B56",
+      "scores_exact": true,
+      "ir_bytes_exact": true,
+      "ir_sha256": "e07d9c04435564af3b84881a8d5c90028da57875e2f336ce89f268a91f4d487b",
+      "old_seconds": 0.4416561429970898,
+      "new_seconds": 0.450444176007295,
+      "score_ms": [
+        118.873305,
+        118.775435
+      ]
+    },
+    {
+      "case": "tigre",
+      "candidate": "_Z19kernelPixelDetector8GeometryPfiiP13__hip_texture:B5:R6:R7",
+      "scores_exact": true,
+      "ir_bytes_exact": true,
+      "ir_sha256": "a44cd20e66ee290238477536d4f99de2165be875ee107d63e3e3d253e63b3484",
+      "old_seconds": 0.12289002399484161,
+      "new_seconds": 0.12523691699607298,
+      "score_ms": [
+        78.273371,
+        82.043482
+      ]
+    }
+  ],
+  "status": "checkpoint; PCM256 repeated timing pending; goal incomplete",
+  "same_session_pcm256": [
+    {
+      "case": "PCM256",
+      "mode": "trees",
+      "seconds": 177.4873676999996,
+      "exit": 0,
+      "status": "completed",
+      "commits": 122,
+      "trials": 137,
+      "final_cost": 2214,
+      "driver_phase_timings": {
+        "domain_queue_and_requests": {
+          "calls": 128,
+          "milliseconds": 95.12372800000003
+        },
+        "enumerate_catalog": {
+          "calls": 128,
+          "milliseconds": 6575.902201999997
+        },
+        "initialization": {
+          "calls": 1,
+          "milliseconds": 94.052981
+        },
+        "parse_and_discover": {
+          "calls": 128,
+          "milliseconds": 6464.069252
+        },
+        "prepare_arms": {
+          "calls": 128,
+          "milliseconds": 23.301432000000005
+        },
+        "read_scores_and_select": {
+          "calls": 128,
+          "milliseconds": 121.53046300000001
+        },
+        "record_and_commit": {
+          "calls": 128,
+          "milliseconds": 392.19901799999985
+        },
+        "trial_workers_wall": {
+          "calls": 128,
+          "milliseconds": 163693.190915
+        }
+      }
+    },
+    {
+      "case": "PCM256",
+      "mode": "legacy",
+      "seconds": 616.4517802789924,
+      "exit": 0,
+      "status": "completed",
+      "commits": 122,
+      "trials": 13254,
+      "final_cost": 2257,
+      "driver_phase_timings": {
+        "domain_queue_and_requests": {
+          "calls": 124,
+          "milliseconds": 1117.0776709999998
+        },
+        "enumerate_catalog": {
+          "calls": 124,
+          "milliseconds": 6308.404235
+        },
+        "initialization": {
+          "calls": 1,
+          "milliseconds": 92.347008
+        },
+        "parse_and_discover": {
+          "calls": 124,
+          "milliseconds": 5243.834470000002
+        },
+        "prepare_arms": {
+          "calls": 124,
+          "milliseconds": 24.13532400000002
+        },
+        "read_scores_and_select": {
+          "calls": 124,
+          "milliseconds": 4294.897226999999
+        },
+        "record_and_commit": {
+          "calls": 124,
+          "milliseconds": 12473.038052000005
+        },
+        "trial_workers_wall": {
+          "calls": 124,
+          "milliseconds": 586650.473041
+        }
+      }
+    }
+  ],
+  "same_session_audit": {
+    "runs": [
+      {
+        "directory": "build/incremental-unit-audit/pcm-domain-v3-complete/PCM256-legacy",
+        "commits": 122,
+        "trials": 13254,
+        "tti": 2257,
+        "terminal_required": 4,
+        "terminal_attempted": 4,
+        "all_committed_ir_verified": true
+      },
+      {
+        "directory": "build/incremental-unit-audit/pcm-domain-v3-complete/PCM256-trees",
+        "commits": 122,
+        "trials": 137,
+        "tti": 2214,
+        "terminal_required": 1,
+        "terminal_attempted": 1,
+        "all_committed_ir_verified": true
+      }
+    ],
+    "first_divergence": {
+      "step": 91,
+      "reference": {
+        "candidate": "_Z3pcmPi:B13:B106:B105",
+        "cost": 2847,
+        "ir": "/data/home/chh/kernel-benchmark-suite/build/incremental-unit-audit/pcm-domain-v3-complete/PCM256-legacy/trial-11728/fused.ll"
+      },
+      "trees": {
+        "candidate": "_Z3pcmPi:B11:B109:B108",
+        "cost": 2848,
+        "ir": "/data/home/chh/kernel-benchmark-suite/build/incremental-unit-audit/pcm-domain-v3-complete/PCM256-trees/trial-93/fused.ll"
+      }
+    },
+    "final_ir_equal": false,
+    "scope": "Verifier and terminal candidate coverage; execution correctness requires separate tests"
+  },
+  "pcm256_full_grid_gpu": {
+    "measurements": {
+      "baseline": {
+        "kernel_ms": [
+          1550.9528,
+          1551.0063,
+          1551.0282,
+          1550.9264,
+          1550.936,
+          1550.9319
+        ],
+        "median": 1550.9443999999999,
+        "min": 1550.9264,
+        "max": 1551.0282
+      },
+      "legacy": {
+        "kernel_ms": [
+          1066.4037,
+          1066.4086,
+          1066.2902,
+          1066.2612,
+          1065.9863,
+          1066.0482
+        ],
+        "median": 1066.2757,
+        "min": 1065.9863,
+        "max": 1066.4086
+      },
+      "trees": {
+        "kernel_ms": [
+          1106.6724,
+          1106.6144,
+          1106.6663,
+          1106.6246,
+          1106.6512,
+          1106.355
+        ],
+        "median": 1106.6379000000002,
+        "min": 1106.355,
+        "max": 1106.6724
+      }
+    },
+    "trees_vs_baseline_reduction_pct": 28.64748085102211,
+    "legacy_vs_baseline_reduction_pct": 31.249908120497416,
+    "trees_vs_legacy_increase_pct": 3.785343696756871,
+    "seed": 42,
+    "grid": 32768,
+    "block": 256,
+    "elements": 268435456,
+    "exact_cpu_output_checks": 21,
+    "warmup_rounds_excluded": 1
+  },
+  "pcm256_legality": {
+    "source": "pcm-domain-v3-complete/PCM256-legacy/summary.json",
+    "round_index_zero_based": 33,
+    "attempts": 149,
+    "scored": 90,
+    "rejected": 59,
+    "reason": "matched_effect_has_no_guarded_lowering",
+    "first_offending_instruction": "store i32 to addrspace(3), align 4",
+    "rewrites_started": 0,
+    "rejections_scored": 0,
+    "both_contexts_single_block": 59,
+    "different_exit": 58,
+    "same_exit": 1,
+    "example": {
+      "candidate": "_Z3pcmPi:B5:B102:B101",
+      "trial": 4809,
+      "instruction": "%fusion.common: store i32 %1049, i32 addrspace(3)* %249, align 4"
+    },
+    "full_run_rejection_events": {
+      "legacy": 5371,
+      "trees": 9
+    },
+    "guard_commit": "474316d4"
+  },
+  "pcm256_repeated": {
+    "complete": true,
+    "summary": {
+      "legacy": {
+        "runs": 2,
+        "seconds_median": 611.6716997259937,
+        "seconds_min": 606.4259541499923,
+        "seconds_max": 616.917445301995,
+        "repeated_commit_trace_equal": true,
+        "repeated_final_ir_equal": true,
+        "commits": [
+          122
+        ],
+        "trials": [
+          13254
+        ],
+        "final_tti": [
+          2257
+        ]
+      },
+      "trees": {
+        "runs": 2,
+        "seconds_median": 177.7355382290043,
+        "seconds_min": 176.78746233200945,
+        "seconds_max": 178.68361412599916,
+        "repeated_commit_trace_equal": true,
+        "repeated_final_ir_equal": true,
+        "commits": [
+          122
+        ],
+        "trials": [
+          137
+        ],
+        "final_tti": [
+          2214
+        ]
+      }
+    },
+    "runs": [
+      {
+        "mode": "legacy",
+        "rep": 0,
+        "seconds": 616.917445301995,
+        "exit": 0,
+        "status": "completed",
+        "commits": 122,
+        "trials": 13254,
+        "final_cost": 2257,
+        "driver_phase_timings": {
+          "domain_queue_and_requests": {
+            "calls": 124,
+            "milliseconds": 1109.7020649999995
+          },
+          "enumerate_catalog": {
+            "calls": 124,
+            "milliseconds": 6138.767036
+          },
+          "initialization": {
+            "calls": 1,
+            "milliseconds": 95.450927
+          },
+          "parse_and_discover": {
+            "calls": 124,
+            "milliseconds": 5337.7732909999995
+          },
+          "prepare_arms": {
+            "calls": 124,
+            "milliseconds": 22.209671
+          },
+          "read_scores_and_select": {
+            "calls": 124,
+            "milliseconds": 4440.796804
+          },
+          "record_and_commit": {
+            "calls": 124,
+            "milliseconds": 11073.840125
+          },
+          "trial_workers_wall": {
+            "calls": 124,
+            "milliseconds": 588480.8975280002
+          }
+        },
+        "commit_trace_sha256": "b2a87afefb0afb97022037435f4d7f10c13c5df5a58d9cb6e7d60e0bacf395aa",
+        "profiled_requests": 13254,
+        "worker_inclusive_totals": {
+          "b2b_plan_generate_clean_total": {
+            "calls": 13524,
+            "inclusive_ms": 3542195.35844998
+          },
+          "cleanup": {
+            "calls": 216838,
+            "inclusive_ms": 1232851.1795069978
+          },
+          "clone_before_cleanup": {
+            "calls": 216838,
+            "inclusive_ms": 239720.94749700083
+          },
+          "clone_layout": {
+            "calls": 216838,
+            "inclusive_ms": 198223.33460999985
+          },
+          "clone_parent": {
+            "calls": 12917,
+            "inclusive_ms": 12697.13751000002
+          },
+          "emit_layout": {
+            "calls": 216838,
+            "inclusive_ms": 2627.6308280000044
+          },
+          "evaluate_score": {
+            "calls": 201536,
+            "inclusive_ms": 3230552.4940060116
+          },
+          "features": {
+            "calls": 433676,
+            "inclusive_ms": 939586.9807759994
+          },
+          "round_control_analysis_cleanup": {
+            "calls": 1902,
+            "inclusive_ms": 34657.653615999996
+          },
+          "serialize_and_hash": {
+            "calls": 464722,
+            "inclusive_ms": 1511663.4083999996
+          },
+          "verify": {
+            "calls": 446593,
+            "inclusive_ms": 190899.58291400055
+          }
+        },
+        "canonical_final_sha256": "59b16e51fd509f7c2e1467b8a00832122433f4cf8f70dab4e8886142cba02621"
+      },
+      {
+        "mode": "trees",
+        "rep": 0,
+        "seconds": 178.68361412599916,
+        "exit": 0,
+        "status": "completed",
+        "commits": 122,
+        "trials": 137,
+        "final_cost": 2214,
+        "driver_phase_timings": {
+          "domain_queue_and_requests": {
+            "calls": 128,
+            "milliseconds": 98.73155100000002
+          },
+          "enumerate_catalog": {
+            "calls": 128,
+            "milliseconds": 6552.779718000001
+          },
+          "initialization": {
+            "calls": 1,
+            "milliseconds": 109.844129
+          },
+          "parse_and_discover": {
+            "calls": 128,
+            "milliseconds": 6761.636272999999
+          },
+          "prepare_arms": {
+            "calls": 128,
+            "milliseconds": 21.906581999999986
+          },
+          "read_scores_and_select": {
+            "calls": 128,
+            "milliseconds": 131.33459199999996
+          },
+          "record_and_commit": {
+            "calls": 128,
+            "milliseconds": 434.287516
+          },
+          "trial_workers_wall": {
+            "calls": 128,
+            "milliseconds": 164538.42479200006
+          }
+        },
+        "commit_trace_sha256": "41f99b9472bea2ee7ec619f3956429be0623f8536e7e01994ead4b9098420392",
+        "profiled_requests": 137,
+        "worker_inclusive_totals": {
+          "b2b_plan_generate_clean_total": {
+            "calls": 141,
+            "inclusive_ms": 48666.986635999994
+          },
+          "cleanup": {
+            "calls": 3545,
+            "inclusive_ms": 17116.244746999997
+          },
+          "clone_before_cleanup": {
+            "calls": 3545,
+            "inclusive_ms": 3943.3888089999996
+          },
+          "clone_layout": {
+            "calls": 3545,
+            "inclusive_ms": 2555.965920999999
+          },
+          "clone_parent": {
+            "calls": 140,
+            "inclusive_ms": 130.667339
+          },
+          "emit_layout": {
+            "calls": 3545,
+            "inclusive_ms": 41.24593299999999
+          },
+          "evaluate_score": {
+            "calls": 3225,
+            "inclusive_ms": 91972.79715399999
+          },
+          "features": {
+            "calls": 7090,
+            "inclusive_ms": 12201.320567999994
+          },
+          "round_control_analysis_cleanup": {
+            "calls": 137,
+            "inclusive_ms": 2185.8942939999993
+          },
+          "serialize_and_hash": {
+            "calls": 7578,
+            "inclusive_ms": 19977.380437
+          },
+          "verify": {
+            "calls": 7230,
+            "inclusive_ms": 2512.1991040000016
+          }
+        },
+        "canonical_final_sha256": "62c316d64821b944460ba28852ea8a04fb42220087dc677f0f57ff7b7efb3fa2"
+      },
+      {
+        "mode": "trees",
+        "rep": 1,
+        "seconds": 176.78746233200945,
+        "exit": 0,
+        "status": "completed",
+        "commits": 122,
+        "trials": 137,
+        "final_cost": 2214,
+        "driver_phase_timings": {
+          "domain_queue_and_requests": {
+            "calls": 128,
+            "milliseconds": 97.82446300000004
+          },
+          "enumerate_catalog": {
+            "calls": 128,
+            "milliseconds": 6457.494869999998
+          },
+          "initialization": {
+            "calls": 1,
+            "milliseconds": 96.393065
+          },
+          "parse_and_discover": {
+            "calls": 128,
+            "milliseconds": 6855.865717
+          },
+          "prepare_arms": {
+            "calls": 128,
+            "milliseconds": 21.292142
+          },
+          "read_scores_and_select": {
+            "calls": 128,
+            "milliseconds": 127.32422700000002
+          },
+          "record_and_commit": {
+            "calls": 128,
+            "milliseconds": 406.9803739999998
+          },
+          "trial_workers_wall": {
+            "calls": 128,
+            "milliseconds": 162698.08380300002
+          }
+        },
+        "commit_trace_sha256": "41f99b9472bea2ee7ec619f3956429be0623f8536e7e01994ead4b9098420392",
+        "profiled_requests": 137,
+        "worker_inclusive_totals": {
+          "b2b_plan_generate_clean_total": {
+            "calls": 141,
+            "inclusive_ms": 48414.879875000035
+          },
+          "cleanup": {
+            "calls": 3545,
+            "inclusive_ms": 17085.689400999992
+          },
+          "clone_before_cleanup": {
+            "calls": 3545,
+            "inclusive_ms": 3844.701067
+          },
+          "clone_layout": {
+            "calls": 3545,
+            "inclusive_ms": 2547.417628
+          },
+          "clone_parent": {
+            "calls": 140,
+            "inclusive_ms": 127.46608299999998
+          },
+          "emit_layout": {
+            "calls": 3545,
+            "inclusive_ms": 41.498549999999994
+          },
+          "evaluate_score": {
+            "calls": 3225,
+            "inclusive_ms": 90845.275019
+          },
+          "features": {
+            "calls": 7090,
+            "inclusive_ms": 12193.605720000003
+          },
+          "round_control_analysis_cleanup": {
+            "calls": 137,
+            "inclusive_ms": 2185.8715830000006
+          },
+          "serialize_and_hash": {
+            "calls": 7578,
+            "inclusive_ms": 19940.705448000015
+          },
+          "verify": {
+            "calls": 7230,
+            "inclusive_ms": 2519.7243039999976
+          }
+        },
+        "canonical_final_sha256": "62c316d64821b944460ba28852ea8a04fb42220087dc677f0f57ff7b7efb3fa2"
+      },
+      {
+        "mode": "legacy",
+        "rep": 1,
+        "seconds": 606.4259541499923,
+        "exit": 0,
+        "status": "completed",
+        "commits": 122,
+        "trials": 13254,
+        "final_cost": 2257,
+        "driver_phase_timings": {
+          "domain_queue_and_requests": {
+            "calls": 124,
+            "milliseconds": 1109.8337860000004
+          },
+          "enumerate_catalog": {
+            "calls": 124,
+            "milliseconds": 5990.531146
+          },
+          "initialization": {
+            "calls": 1,
+            "milliseconds": 99.511934
+          },
+          "parse_and_discover": {
+            "calls": 124,
+            "milliseconds": 5269.249653000001
+          },
+          "prepare_arms": {
+            "calls": 124,
+            "milliseconds": 22.12061700000001
+          },
+          "read_scores_and_select": {
+            "calls": 124,
+            "milliseconds": 4514.36028
+          },
+          "record_and_commit": {
+            "calls": 124,
+            "milliseconds": 12376.194453
+          },
+          "trial_workers_wall": {
+            "calls": 124,
+            "milliseconds": 576813.2716860003
+          }
+        },
+        "commit_trace_sha256": "b2a87afefb0afb97022037435f4d7f10c13c5df5a58d9cb6e7d60e0bacf395aa",
+        "profiled_requests": 13254,
+        "worker_inclusive_totals": {
+          "b2b_plan_generate_clean_total": {
+            "calls": 13524,
+            "inclusive_ms": 3404775.5167509774
+          },
+          "cleanup": {
+            "calls": 216838,
+            "inclusive_ms": 1186601.0480019995
+          },
+          "clone_before_cleanup": {
+            "calls": 216838,
+            "inclusive_ms": 230642.12958099975
+          },
+          "clone_layout": {
+            "calls": 216838,
+            "inclusive_ms": 188304.73509899966
+          },
+          "clone_parent": {
+            "calls": 12917,
+            "inclusive_ms": 12293.919405999979
+          },
+          "emit_layout": {
+            "calls": 216838,
+            "inclusive_ms": 2511.2549410000092
+          },
+          "evaluate_score": {
+            "calls": 201536,
+            "inclusive_ms": 3207555.5555840046
+          },
+          "features": {
+            "calls": 433676,
+            "inclusive_ms": 905117.1544900009
+          },
+          "round_control_analysis_cleanup": {
+            "calls": 1902,
+            "inclusive_ms": 32106.843772999993
+          },
+          "serialize_and_hash": {
+            "calls": 464722,
+            "inclusive_ms": 1499791.4562159928
+          },
+          "verify": {
+            "calls": 446593,
+            "inclusive_ms": 183505.5269430009
+          }
+        },
+        "canonical_final_sha256": "59b16e51fd509f7c2e1467b8a00832122433f4cf8f70dab4e8886142cba02621"
+      }
+    ],
+    "timing_scope": "driver phase times are wall times; worker inclusive times accumulate parallel requests and overlap parent scopes, so cannot be added to wall time",
+    "median_wall_reduction_percent": 70.9426579145932
+  },
+  "pcm256_repeated_provenance": {
+    "driver": "/data/home/chh/kernel-benchmark-suite/build/incremental-unit-audit/decision-greedy-domains-v3",
+    "driver_sha256": "794420bf85d9abd4276b0d2334aa575ca83b0c4107265ad4b805294af577f255",
+    "engine_sha256": "905fec4969ce1cf938da6962fb670a3455c9ff96f8afb241843040802d07ab98",
+    "input_sha256": "e4577724eb9368dd021dd81e1aacf5eaa7aa02c4f92436f6ebfdff11ee63155f",
+    "jobs": 16,
+    "quote_cache": "on",
+    "cleanup": "darm-cfg-dce-instcombine",
+    "repeats": 2
+  },
+  "pcm256_repeated_audits": [
+    {
+      "runs": [
+        {
+          "directory": "build/incremental-unit-audit/pcm256-domains-repeated/legacy0",
+          "commits": 122,
+          "trials": 13254,
+          "tti": 2257,
+          "terminal_required": 4,
+          "terminal_attempted": 4,
+          "all_committed_ir_verified": true
+        },
+        {
+          "directory": "build/incremental-unit-audit/pcm256-domains-repeated/trees0",
+          "commits": 122,
+          "trials": 137,
+          "tti": 2214,
+          "terminal_required": 1,
+          "terminal_attempted": 1,
+          "all_committed_ir_verified": true
+        }
+      ],
+      "first_divergence": {
+        "step": 91,
+        "reference": {
+          "candidate": "_Z3pcmPi:B13:B106:B105",
+          "cost": 2847,
+          "ir": "/data/home/chh/kernel-benchmark-suite/build/incremental-unit-audit/pcm256-domains-repeated/legacy0/trial-11728/fused.ll"
+        },
+        "trees": {
+          "candidate": "_Z3pcmPi:B11:B109:B108",
+          "cost": 2848,
+          "ir": "/data/home/chh/kernel-benchmark-suite/build/incremental-unit-audit/pcm256-domains-repeated/trees0/trial-93/fused.ll"
+        }
+      },
+      "final_ir_equal": false,
+      "scope": "Verifier and terminal candidate coverage; execution correctness requires separate tests"
+    },
+    {
+      "runs": [
+        {
+          "directory": "build/incremental-unit-audit/pcm256-domains-repeated/legacy1",
+          "commits": 122,
+          "trials": 13254,
+          "tti": 2257,
+          "terminal_required": 4,
+          "terminal_attempted": 4,
+          "all_committed_ir_verified": true
+        },
+        {
+          "directory": "build/incremental-unit-audit/pcm256-domains-repeated/trees1",
+          "commits": 122,
+          "trials": 137,
+          "tti": 2214,
+          "terminal_required": 1,
+          "terminal_attempted": 1,
+          "all_committed_ir_verified": true
+        }
+      ],
+      "first_divergence": {
+        "step": 91,
+        "reference": {
+          "candidate": "_Z3pcmPi:B13:B106:B105",
+          "cost": 2847,
+          "ir": "/data/home/chh/kernel-benchmark-suite/build/incremental-unit-audit/pcm256-domains-repeated/legacy1/trial-11728/fused.ll"
+        },
+        "trees": {
+          "candidate": "_Z3pcmPi:B11:B109:B108",
+          "cost": 2848,
+          "ir": "/data/home/chh/kernel-benchmark-suite/build/incremental-unit-audit/pcm256-domains-repeated/trees1/trial-93/fused.ll"
+        }
+      },
+      "final_ir_equal": false,
+      "scope": "Verifier and terminal candidate coverage; execution correctness requires separate tests"
+    }
+  ],
+  "trees_terminal_fresh_discovery": [
+    {
+      "case": "tigre",
+      "additional": 0,
+      "trials": 1,
+      "status": "completed"
+    },
+    {
+      "case": "LUD32-lud_diagonal",
+      "additional": 0,
+      "trials": 1,
+      "status": "completed"
+    },
+    {
+      "case": "LUD32-lud_perimeter",
+      "additional": 0,
+      "trials": 3,
+      "status": "completed"
+    },
+    {
+      "case": "LUD32-lud_internal",
+      "additional": 0,
+      "trials": 0,
+      "status": "completed"
+    },
+    {
+      "case": "BIT64",
+      "additional": 0,
+      "trials": 0,
+      "status": "completed"
+    },
+    {
+      "case": "DCT8",
+      "additional": 0,
+      "trials": 1,
+      "status": "completed"
+    },
+    {
+      "case": "MS128",
+      "additional": 0,
+      "trials": 0,
+      "status": "completed"
+    },
+    {
+      "case": "BIT128",
+      "additional": 0,
+      "trials": 0,
+      "status": "completed"
+    },
+    {
+      "case": "PCM256",
+      "additional": 0,
+      "trials": 1,
+      "status": "completed"
+    },
+    {
+      "case": "MS32",
+      "additional": 0,
+      "trials": 0,
+      "status": "completed"
+    },
+    {
+      "case": "BIT256",
+      "additional": 0,
+      "trials": 0,
+      "status": "completed"
+    },
+    {
+      "case": "LUD64-lud_diagonal",
+      "additional": 0,
+      "trials": 1,
+      "status": "completed"
+    },
+    {
+      "case": "LUD64-lud_perimeter",
+      "additional": 0,
+      "trials": 4,
+      "status": "completed"
+    },
+    {
+      "case": "LUD64-lud_internal",
+      "additional": 0,
+      "trials": 0,
+      "status": "completed"
+    },
+    {
+      "case": "NQU64",
+      "additional": 0,
+      "trials": 7,
+      "status": "completed"
+    },
+    {
+      "case": "DCT4",
+      "additional": 0,
+      "trials": 1,
+      "status": "completed"
+    },
+    {
+      "case": "NQU128",
+      "additional": 0,
+      "trials": 7,
+      "status": "completed"
+    },
+    {
+      "case": "PCM32",
+      "additional": 0,
+      "trials": 1,
+      "status": "completed"
+    },
+    {
+      "case": "SRAD16",
+      "additional": 0,
+      "trials": 3,
+      "status": "completed"
+    },
+    {
+      "case": "NQU256",
+      "additional": 0,
+      "trials": 7,
+      "status": "completed"
+    },
+    {
+      "case": "DCT16",
+      "additional": 0,
+      "trials": 1,
+      "status": "completed"
+    },
+    {
+      "case": "LUD8-lud_diagonal",
+      "additional": 0,
+      "trials": 0,
+      "status": "completed"
+    },
+    {
+      "case": "LUD8-lud_perimeter",
+      "additional": 0,
+      "trials": 3,
+      "status": "completed"
+    },
+    {
+      "case": "LUD8-lud_internal",
+      "additional": 0,
+      "trials": 0,
+      "status": "completed"
+    },
+    {
+      "case": "hypersonic",
+      "additional": 0,
+      "trials": 36,
+      "status": "completed"
+    },
+    {
+      "case": "landau",
+      "additional": 0,
+      "trials": 27,
+      "status": "completed"
+    },
+    {
+      "case": "LUD16-lud_diagonal",
+      "additional": 0,
+      "trials": 0,
+      "status": "completed"
+    },
+    {
+      "case": "LUD16-lud_perimeter",
+      "additional": 0,
+      "trials": 3,
+      "status": "completed"
+    },
+    {
+      "case": "LUD16-lud_internal",
+      "additional": 0,
+      "trials": 0,
+      "status": "completed"
+    },
+    {
+      "case": "PCM64",
+      "additional": 0,
+      "trials": 1,
+      "status": "completed"
+    },
+    {
+      "case": "SRAD32",
+      "additional": 0,
+      "trials": 3,
+      "status": "completed"
+    },
+    {
+      "case": "BIT32",
+      "additional": 0,
+      "trials": 0,
+      "status": "completed"
+    },
+    {
+      "case": "MS256",
+      "additional": 0,
+      "trials": 0,
+      "status": "completed"
+    },
+    {
+      "case": "MS64",
+      "additional": 0,
+      "trials": 0,
+      "status": "completed"
+    },
+    {
+      "case": "NQU96",
+      "additional": 0,
+      "trials": 7,
+      "status": "completed"
+    },
+    {
+      "case": "MapAiry",
+      "additional": 0,
+      "trials": 43,
+      "status": "completed"
+    },
+    {
+      "case": "SW2D",
+      "additional": 0,
+      "trials": 8,
+      "status": "completed"
+    },
+    {
+      "case": "HLLD",
+      "additional": 0,
+      "trials": 1,
+      "status": "completed"
+    },
+    {
+      "case": "vllm",
+      "additional": 0,
+      "trials": 14,
+      "status": "completed"
+    },
+    {
+      "case": "PCM128",
+      "additional": 0,
+      "trials": 1,
+      "status": "completed"
+    }
+  ]
+}

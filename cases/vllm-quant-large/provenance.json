@@ -1,0 +1,151 @@
+{
+  "records": [
+    {
+      "kind": "real_qwen64k",
+      "layer": 3,
+      "key_global": 203.8293914794922,
+      "value_global": 405.73583984375,
+      "source_key_sha256": "893ed2a590d2931e10a2f5d6b77d3a2ea63249a4f346fee3155bf15629a4e031",
+      "source_value_sha256": "eb97594866d64eb62b7dc2a3996e96bc3cdd1179641fce05b4fb8c85debcdc81",
+      "fixture": "/home/chh/kernel-benchmark-suite/cases/vllm-quant-large/fixtures/qwen64k-layer03/input.txt",
+      "files": {
+        "ks-ref.bin": "1ed97c1d0d8ccc52ec97154ad9a24b6730d91f715e12f65a27008025c2c3582a",
+        "key.bin": "15633bb10f76f4b9835d01545b7f0e13acef0c12d1860bce1501001b33a60910",
+        "vs-ref.bin": "136d0a30a89791b08dd39f73fc5ef1bb48a5e660107ad49cef04470b1e7eef5d",
+        "input.txt": "9e73577ab22b9e97dea52583dc15435a8966ff9e64292eb0afceb46cd5959676",
+        "vd-init.bin": "532280f98371795e680f8a4e48f02f6b927705f53020f3f4f09a60c77414e50e",
+        "slots.bin": "197f7a314b356f70296099420b30d0beddb9fe80e95054af72e1c382cdf1eb9b",
+        "value.bin": "1d941294b628bf1a1e9976cb0b323f561628f028bbc353429c126b5115e77aa8",
+        "kd-ref.bin": "a8e1ed222d8d216d7db0d246636f01b1bf089786061de2cdd693150fb75086b3",
+        "vd-ref.bin": "077a3847ec44aa0641849b9d94dca9a530aead6b6e20f7bfa125044430d411aa",
+        "ks-init.bin": "fad3f60c6707d09e3a8de907103605326010cf223a9ed90b352e97a880c8f831",
+        "vs-init.bin": "fad3f60c6707d09e3a8de907103605326010cf223a9ed90b352e97a880c8f831",
+        "kd-init.bin": "532280f98371795e680f8a4e48f02f6b927705f53020f3f4f09a60c77414e50e"
+      }
+    },
+    {
+      "kind": "real_qwen64k",
+      "layer": 7,
+      "key_global": 200.03721618652344,
+      "value_global": 124.30057525634766,
+      "source_key_sha256": "9c2154a2d23ab095c2dff6cc86bae713da43b2b17c21450a741d39b6a9fa405c",
+      "source_value_sha256": "7385e40db90b9a0c7a62ee32c0b1ffce77669d105f50f409a78969c1d1149db1",
+      "fixture": "/home/chh/kernel-benchmark-suite/cases/vllm-quant-large/fixtures/qwen64k-layer07/input.txt",
+      "files": {
+        "ks-ref.bin": "8d37404aa4096d54b6e18fbdef38eb401413a7bc4489b8fde011937eb497d57c",
+        "key.bin": "d5df1012386850a5ade09f8c40ea08a60273ef9422d1c1aa1a1836159af7716f",
+        "vs-ref.bin": "16b8a96b68b8c138fd3d2e770ad566815a069211395bfdbfc3ac80b01421fa0f",
+        "input.txt": "5fbaf8f34d100a73a5493ce66f5b5a3f231bf9921fe2a7c72d1c2d979e3558d2",
+        "vd-init.bin": "532280f98371795e680f8a4e48f02f6b927705f53020f3f4f09a60c77414e50e",
+        "slots.bin": "197f7a314b356f70296099420b30d0beddb9fe80e95054af72e1c382cdf1eb9b",
+        "value.bin": "731b3a28fc6800ad3dd25a0dd170e92a21684cfadf2b7f18dfac620a46fbfd29",
+        "kd-ref.bin": "8af8dd8c5fd7beda0bf87916e28c7d79c8af9e675654c25940039c7d848ef28c",
+        "vd-ref.bin": "280f515dc997540d6dd2b6e0ca1eae9e1b6516cc602e91deff83929b36ea1954",
+        "ks-init.bin": "fad3f60c6707d09e3a8de907103605326010cf223a9ed90b352e97a880c8f831",
+        "vs-init.bin": "fad3f60c6707d09e3a8de907103605326010cf223a9ed90b352e97a880c8f831",
+        "kd-init.bin": "532280f98371795e680f8a4e48f02f6b927705f53020f3f4f09a60c77414e50e"
+      }
+    },
+    {
+      "kind": "real_qwen64k",
+      "layer": 11,
+      "key_global": 120.80899047851562,
+      "value_global": 132.74073791503906,
+      "source_key_sha256": "f36657855a63ab4384d937f9a9d1185c4631f8b7d3493b16c61be7ac02c4fd20",
+      "source_value_sha256": "19269a704c835443ad3079757b041f0fee05fd136b0688f444b35e86edaec42c",
+      "fixture": "/home/chh/kernel-benchmark-suite/cases/vllm-quant-large/fixtures/qwen64k-layer11/input.txt",
+      "files": {
+        "ks-ref.bin": "3a8bc3d3eb4f36ca7ce4277348a427a63e8a79758b9a572d9cd5d1ee0bcbff68",
+        "key.bin": "38a26ad4032f792c81dbf33693d950febb7be2d35e3c64d813485341d80ede05",
+        "vs-ref.bin": "b68d81a880665141fdff506dbb2210ccc2ae58f995381a31ff4dba0ced3cfab6",
+        "input.txt": "50c27f5b2f35fc194bbe5134ad9e91e608a6cea53782885cec44ffad90664d4f",
+        "vd-init.bin": "532280f98371795e680f8a4e48f02f6b927705f53020f3f4f09a60c77414e50e",
+        "slots.bin": "197f7a314b356f70296099420b30d0beddb9fe80e95054af72e1c382cdf1eb9b",
+        "value.bin": "d87f31b852963e60978395cb700954a08499488cfe59bcb0819054b56f9103b9",
+        "kd-ref.bin": "376399711127e7e096e23f7ba401b63208ae160d26e0faea9bdd85ed83057323",
+        "vd-ref.bin": "7cdb06a0129c2499599e812653a05a9833bdef05dcb359eb5bd58816accf7bb8",
+        "ks-init.bin": "fad3f60c6707d09e3a8de907103605326010cf223a9ed90b352e97a880c8f831",
+        "vs-init.bin": "fad3f60c6707d09e3a8de907103605326010cf223a9ed90b352e97a880c8f831",
+        "kd-init.bin": "532280f98371795e680f8a4e48f02f6b927705f53020f3f4f09a60c77414e50e"
+      }
+    },
+    {
+      "kind": "real_qwen64k",
+      "layer": 15,
+      "key_global": 156.9635009765625,
+      "value_global": 72.16107177734375,
+      "source_key_sha256": "7485f7264065559772b6eeb572d012b2ae94390f8dab368e7a6c379eb24d4a02",
+      "source_value_sha256": "614b0f1367bc0018473958309c6e55011ed982c6f46b5925fdf366f11a3123d7",
+      "fixture": "/home/chh/kernel-benchmark-suite/cases/vllm-quant-large/fixtures/qwen64k-layer15/input.txt",
+      "files": {
+        "ks-ref.bin": "b052fb06036873859f40230c023ff9d5fc2b81bbdc084edeeb0315cbe3b84cf4",
+        "key.bin": "97ab50a626f2f730cfe991acc612d0b61da05351bb6c159c649274eb140f784d",
+        "vs-ref.bin": "35ebe71343533381807d6ed6e634d1d4e5ab87e0b01ea54dd8097e80c0fa2fc0",
+        "input.txt": "75228cc4cea075ff2fa9c3231019f02e000d8073394ecc9843fc7939ad4b8dda",
+        "vd-init.bin": "532280f98371795e680f8a4e48f02f6b927705f53020f3f4f09a60c77414e50e",
+        "slots.bin": "197f7a314b356f70296099420b30d0beddb9fe80e95054af72e1c382cdf1eb9b",
+        "value.bin": "913e01946e32f619e4765f87faf1f77fbc8daa56c11a124c0586865b4ab6f7ad",
+        "kd-ref.bin": "216f6adb5f13421196bc740e0ebcff1e9b19808bfd10ce036fb068d3bb86a9e5",
+        "vd-ref.bin": "7dcd3b55369ddd73b9744b9f1c9aa53fefb475b4d506a59f3ee9b7131d7a5cd4",
+        "ks-init.bin": "fad3f60c6707d09e3a8de907103605326010cf223a9ed90b352e97a880c8f831",
+        "vs-init.bin": "fad3f60c6707d09e3a8de907103605326010cf223a9ed90b352e97a880c8f831",
+        "kd-init.bin": "532280f98371795e680f8a4e48f02f6b927705f53020f3f4f09a60c77414e50e"
+      }
+    },
+    {
+      "kind": "real_qwen64k",
+      "layer": 19,
+      "key_global": 209.7951202392578,
+      "value_global": 133.56521606445312,
+      "source_key_sha256": "53efb03e9b3e364739a0510efd7abda465bf8ca977e194b4fccec7b700cc96f0",
+      "source_value_sha256": "091b1c1574587936255c6d80ab5e1f7cb6731a5d1672a5f1b8e2c63388985160",
+      "fixture": "/home/chh/kernel-benchmark-suite/cases/vllm-quant-large/fixtures/qwen64k-layer19/input.txt",
+      "files": {
+        "ks-ref.bin": "e08de260c0fce2b860b06ed09381c7c28c2510d478784bfb69167ca44c6a8b4b",
+        "key.bin": "1965e0da812d46ce62c16e64e1b8d2955d2c7128f587752bd264683c0ea8d552",
+        "vs-ref.bin": "3d9c95a522c725c9cb597e56a9735d6bf8f33eecc8d317930a5704f0a98ed09c",
+        "input.txt": "44cd3d968fa98ca2e4d4074aea75a13e7696723faea3806b07364ea6b1902f3e",
+        "vd-init.bin": "532280f98371795e680f8a4e48f02f6b927705f53020f3f4f09a60c77414e50e",
+        "slots.bin": "197f7a314b356f70296099420b30d0beddb9fe80e95054af72e1c382cdf1eb9b",
+        "value.bin": "e53749559ce50827965eb781b8c9e41fb4445050ae68582eb18e3fba38817b89",
+        "kd-ref.bin": "16674688cec7343b9bd66e1d315ab70d49785227b0dcba79a361bc6965bbf4dc",
+        "vd-ref.bin": "bbabd8dc8d7df34287ebd190f366e1c077ae158b56a346d1ad0dbb8e6ba86917",
+        "ks-init.bin": "fad3f60c6707d09e3a8de907103605326010cf223a9ed90b352e97a880c8f831",
+        "vs-init.bin": "fad3f60c6707d09e3a8de907103605326010cf223a9ed90b352e97a880c8f831",
+        "kd-init.bin": "532280f98371795e680f8a4e48f02f6b927705f53020f3f4f09a60c77414e50e"
+      }
+    },
+    {
+      "kind": "real_qwen64k",
+      "layer": 23,
+      "key_global": 229.9893035888672,
+      "value_global": 179.1999969482422,
+      "source_key_sha256": "b7b43c5fa69bd1a38cb2a1008a17639ba91231f01a767c6254a4b9e8c21b9dc0",
+      "source_value_sha256": "744c243430f752c920a317db5d62c8f70c54507fd46e68e4938e807b5fc59bd0",
+      "fixture": "/home/chh/kernel-benchmark-suite/cases/vllm-quant-large/fixtures/qwen64k-layer23/input.txt",
+      "files": {
+        "ks-ref.bin": "6c462b2f79a9440fe13578a57873d615d14d342d8e3a8d6cf6316af63437a964",
+        "key.bin": "53fa84c9e88a357eff958cf48bb453644d0c2fa6a34752672b5a80e3587b544e",
+        "vs-ref.bin": "f43ea131169c8877ad54d0a42f970e18250bdd124761514f6afccc62d6f68b56",
+        "input.txt": "7f83eb4ce4d076cd80ce0895056791b988f022479ae9ddcb82f2ad024dd688cb",
+        "vd-init.bin": "532280f98371795e680f8a4e48f02f6b927705f53020f3f4f09a60c77414e50e",
+        "slots.bin": "197f7a314b356f70296099420b30d0beddb9fe80e95054af72e1c382cdf1eb9b",
+        "value.bin": "6b6ea87038ca05129b7aea1c38140e33662130b0bbb7227f84011f124f1b20af",
+        "kd-ref.bin": "d74ce2f1a7e13e12b25d6a75988d67b98a5ce89efc0f84224ab0b4007fffcad2",
+        "vd-ref.bin": "157f6058dc8fb189c384be3242d3d2dd3213e826cba089ea34b6e37c40650ebc",
+        "ks-init.bin": "fad3f60c6707d09e3a8de907103605326010cf223a9ed90b352e97a880c8f831",
+        "vs-init.bin": "fad3f60c6707d09e3a8de907103605326010cf223a9ed90b352e97a880c8f831",
+        "kd-init.bin": "532280f98371795e680f8a4e48f02f6b927705f53020f3f4f09a60c77414e50e"
+      }
+    }
+  ],
+  "synthetic128k": {
+    "fixture": "/home/chh/kernel-benchmark-suite/cases/vllm-quant/fixtures-cpp/131072/input.txt",
+    "seed": 20261103,
+    "heads": 8,
+    "dim": 128,
+    "source": "existing frozen standard-normal BF16 fixture with boundary values and skipped/shuffled slots"
+  },
+  "oracle_source": "/home/chh/kernel-benchmark-suite/archive/python-runtime/vllm-quant/harness/run_hip.py",
+  "oracle_sha256": "47de94f10ff4af49e71bfabd6f7a6d581d11f28d34205823a952b6dd8437823a"
+}

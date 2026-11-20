@@ -1,0 +1,50 @@
+[
+  {
+    "name": "vllm-old",
+    "path": "/home/chh/region-fusion-lab/runs/amd-vllm-cache-port-v1/darm-greedy/kernel.hsaco",
+    "sha256": "fcd947f85e9b307a97230089c6e261b0d1a099e184a596a1f00417ac343ebf0b",
+    "original_content_restored": true
+  },
+  {
+    "name": "vllm-old-baseline",
+    "path": "/home/chh/region-fusion-lab/runs/amd-vllm-cache-port-v1/unmerged/kernel.hsaco",
+    "sha256": "527c5eb7d5d10ee6c2997dc2632e104285ab264826710656a1c901e62373a35f",
+    "original_content_restored": true
+  },
+  {
+    "name": "vllm-current",
+    "path": "/home/chh/kernel-benchmark-suite-review-speculation/build/decision-fuse/greedy-regression-v1/vllm-pair/variant.hsaco",
+    "sha256": "faca408cc76cad618148b27f88d61a60a562f4ea42f8ecd8f8ae1d32985d12be",
+    "original_content_restored": true
+  },
+  {
+    "name": "vllm-current-baseline",
+    "path": "/home/chh/kernel-benchmark-suite-review-speculation/build/decision-fuse/greedy-regression-v1/vllm-pair/baseline.hsaco",
+    "sha256": "5a11c36bb754b38eb6864830d66925a59604bdac1cbe9d08b37d451aeb1b810a",
+    "original_content_restored": true
+  },
+  {
+    "name": "mapairy-old",
+    "path": "/home/chh/region-fusion-lab/runs/ir-net-controls-mapairy-v1/full-darm-native-greedy/kernel.hsaco",
+    "sha256": "60800710b4161df354540ba4e8c1f3c86f6ac622539d7f9795a6f2849ed4f114",
+    "original_content_restored": true
+  },
+  {
+    "name": "mapairy-old-baseline",
+    "path": "/home/chh/region-fusion-lab/runs/ir-net-controls-mapairy-v1/full-unmerged/kernel.hsaco",
+    "sha256": "0741e1097cd438e79b59d1da8dd45aab1f52e6e0bd2a45a942f6358e8074572d",
+    "original_content_restored": true
+  },
+  {
+    "name": "mapairy-current",
+    "path": "/home/chh/kernel-benchmark-suite-review-speculation/build/decision-fuse/map-fix-regression-v1/mapairy-pair/variant.hsaco",
+    "sha256": "f947ee6fc87d0ceb37a20dbd660f9100cbede1f8d3b493ba2c2405b71c753746",
+    "original_content_restored": true
+  },
+  {
+    "name": "mapairy-current-baseline",
+    "path": "/home/chh/kernel-benchmark-suite-review-speculation/build/decision-fuse/map-fix-regression-v1/mapairy-pair/baseline.hsaco",
+    "sha256": "014d5b000ac5b06f711d2252751893141a505713b2f43ef2b55909cb452d1eea",
+    "original_content_restored": true
+  }
+]

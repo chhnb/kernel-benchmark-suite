@@ -1,0 +1,8 @@
+[
+  "/home/chh/region-fusion-lab/toolchains/llvm12/amd-bootstrap/bin/opt",
+  "{out}/cache-front.ll",
+  "-verify",
+  "-S",
+  "-o",
+  "{out}/cache.ll"
+]

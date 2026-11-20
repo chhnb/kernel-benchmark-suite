@@ -1,0 +1,103 @@
+{
+  "change": "LLVM24 scorer skips unused CFG analyses; original trial authentication and other scorer paths preserved",
+  "candidate_checks": [
+    {
+      "case": "PCM32",
+      "candidate": "_Z3pcmPi:B9:B10:B11",
+      "scores_exact": true,
+      "ir_bytes_exact": true,
+      "ir_sha256": "8afade5f253332b755e9a89558225ac42d52af49cba5e3db70a0bf191298544a",
+      "old_seconds": 0.20461546200385783,
+      "new_seconds": 0.20364805999270175,
+      "score_ms": [
+        82.633943,
+        82.637024
+      ]
+    },
+    {
+      "case": "PCM256",
+      "candidate": "_Z3pcmPi:B0:B2:B1",
+      "scores_exact": true,
+      "ir_bytes_exact": true,
+      "ir_sha256": "feb600d68d389c2892b763afa45ea275e5553d8143a758e8b84a30df14e8a6cb",
+      "old_seconds": 0.3268375500047114,
+      "new_seconds": 0.3262101840082323,
+      "score_ms": [
+        137.735327,
+        135.677783
+      ]
+    },
+    {
+      "case": "BIT32",
+      "candidate": "_ZL11bitonicSortPi:B1:R3:R4",
+      "scores_exact": true,
+      "ir_bytes_exact": true,
+      "ir_sha256": "df6eedb1d10465e1827f0b26bb845b65dfa4158a34c9eec92917479e04c660f8",
+      "old_seconds": 0.08980740800325293,
+      "new_seconds": 0.08609211600560229,
+      "score_ms": [
+        54.866077,
+        50.739889
+      ]
+    },
+    {
+      "case": "MS32",
+      "candidate": "_Z13gpu_mergesortPlS_lllP4dim3S1_:B16:B17:B18",
+      "scores_exact": true,
+      "ir_bytes_exact": true,
+      "ir_sha256": "54daf11c53c51c623ff9af9348af4043dc46d6dc892c212cdfa03ee90d75c390",
+      "old_seconds": 1.1352951360022416,
+      "new_seconds": 1.144159267001669,
+      "score_ms": [
+        16.930469,
+        16.420683
+      ]
+    },
+    {
+      "case": "vllm",
+      "candidate": "cache_eval:B55:B54:B56",
+      "scores_exact": true,
+      "ir_bytes_exact": true,
+      "ir_sha256": "e07d9c04435564af3b84881a8d5c90028da57875e2f336ce89f268a91f4d487b",
+      "old_seconds": 0.406872731007752,
+      "new_seconds": 0.4117309339926578,
+      "score_ms": [
+        105.629976,
+        114.439948
+      ]
+    },
+    {
+      "case": "tigre",
+      "candidate": "_Z19kernelPixelDetector8GeometryPfiiP13__hip_texture:B5:R6:R7",
+      "scores_exact": true,
+      "ir_bytes_exact": true,
+      "ir_sha256": "a44cd20e66ee290238477536d4f99de2165be875ee107d63e3e3d253e63b3484",
+      "old_seconds": 0.13430943399725948,
+      "new_seconds": 0.127833124002791,
+      "score_ms": [
+        87.621734,
+        80.505019
+      ]
+    }
+  ],
+  "warm_score_check": {
+    "after": 4377,
+    "before": 4518,
+    "direct_ms": 141.033596,
+    "metrics_exact": true,
+    "new_warm_median_ms": 4.959561,
+    "old_ms": 144.812725,
+    "old_warm_median_ms": 6.0972635,
+    "quote_mode": "on",
+    "warm_repetitions": 10
+  },
+  "full_driver_check": {
+    "case": "PCM32",
+    "commits": 17,
+    "final_tti": 1142,
+    "all_step_candidates_costs_ir_equal": true,
+    "old_seconds": 3.9167787930055056,
+    "new_seconds": 3.929108582000481,
+    "timing_note": "one sequential sample with other long tests running; not a stable speedup claim"
+  }
+}

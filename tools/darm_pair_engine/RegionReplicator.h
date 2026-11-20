@@ -26,7 +26,7 @@ public:
 
   // expands SingleBB to have the same control flow as R
   Region *replicate(BasicBlock *ExpandedBlock, BasicBlock *MatchedBlock,
-                    Region *RegionToReplicate);
+                    Region *RegionToReplicate, bool PredicateStores = true);
   void getBasicBlockMapping(DenseMap<BasicBlock *, BasicBlock *> &Map,
                             bool IsExpandingLeft);
 };

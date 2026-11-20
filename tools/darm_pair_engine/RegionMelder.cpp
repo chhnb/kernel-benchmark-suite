@@ -1,3 +1,4 @@
+#include "InstructionPolicy.h"
 #include "RegionMelder.h"
 #include "CFMelderUtils.h"
 #include "RegionReplicator.h"
@@ -17,14 +18,6 @@ using namespace llvm;
 #define ENABLE_TIMING 1
 
 #define DEBUG_TYPE "cfmelder"
-
-static cl::opt<bool> DisableMelding(
-    "disable-melding", cl::init(false), cl::Hidden,
-    cl::desc("Disables melding step, runs region simplification if required"));
-
-static cl::opt<bool> EnableFullPredication(
-    "enable-full-predication", cl::init(false), cl::Hidden,
-    cl::desc("Enable full predication for merged blocks"));
 
 static cl::opt<bool>
     DumpSeqAlignStats("dump-seq-align-stats", cl::init(false), cl::Hidden,
@@ -90,20 +83,6 @@ void RegionMelder::computeRegionSeqAlignment(
   }
 }
 
-bool requireUnpredication(BasicBlock* Current, BasicBlock* Corresponding) {
-  if (Corresponding->size() > 1)
-    return true;
-  // Replication can pair a real block with a branch-only placeholder.
-  // That does not authorize executing its loads, stores, calls or trapping
-  // arithmetic on the other path. Preserve the predicate unless every
-  // non-PHI, non-terminator instruction is safe to speculate.
-  for (auto &I : *Current)
-    if (!isa<PHINode>(I) && !I.isTerminator() &&
-        !isSafeToSpeculativelyExecute(&I))
-      return true;
-  return false;
-}
-
 std::string RegionMelder::sourceBlockID(BasicBlock *BB) const {
   for(auto &Source:SourceBlocks)if(Source.block==BB)return Source.id;
   return "generated_before_alignment";
@@ -114,7 +93,41 @@ void RegionMelder::recordBlockOrigin(BasicBlock *Left,BasicBlock *Right,BasicBlo
   BlockOrigins.push_back({sourceBlockID(Left),sourceBlockID(Right),label(Left),label(Right),WeakVH(Merged)});
 }
 
+// Project the replicated CFG onto its own side. Replication makes branch
+// choices leading to the matched block constant on that side.
+static void collectReachableBlocks(BasicBlock *Entry, BasicBlock *Exit,
+                                   SmallPtrSetImpl<BasicBlock *> &Reachable) {
+  SmallVector<BasicBlock *, 16> Worklist{Entry};
+  while (!Worklist.empty()) {
+    auto *Block = Worklist.pop_back_val();
+    if (Block == Exit || !Reachable.insert(Block).second)
+      continue;
+    auto *Branch = dyn_cast<BranchInst>(Block->getTerminator());
+    if (Branch && Branch->isConditional())
+      if (auto *Condition = dyn_cast<ConstantInt>(Branch->getCondition())) {
+        Worklist.push_back(Branch->getSuccessor(Condition->isZero() ? 1 : 0));
+        continue;
+      }
+    Worklist.append(succ_begin(Block), succ_end(Block));
+  }
+}
+
 void RegionMelder::cloneInstructions() {
+  SmallPtrSet<BasicBlock *, 16> ReachableLeft, ReachableRight;
+  if (GuardReplicatedMemory) {
+    collectReachableBlocks(EntryBlockL, ExitBlockL, ReachableLeft);
+    collectReachableBlocks(EntryBlockR, ExitBlockR, ReachableRight);
+  }
+  auto NeedsGap = [&](Instruction *Original, BasicBlock *Opposite,
+                      const SmallPtrSetImpl<BasicBlock *> &Reachable) {
+    if (Opposite->size() > 1)
+      return true;
+    if (GuardReplicatedMemory)
+      return Reachable.contains(Opposite) &&
+             !safeToExecuteUnconditionally(*Original);
+    return !NativeReplicationPredication;
+  };
+
   INFO << "Cloning instructions\n";
   // generate the control flow for merged region
   IRBuilder<> Builder(&MA.getParentFunction()->getEntryBlock());
@@ -188,15 +201,13 @@ void RegionMelder::cloneInstructions() {
         OrigToMergedValues[LeftI] = NewI;
         MergedInstructions.push_back(NewI);
 
-        // update splitRanges
-        // unpredication is not done if one the blocks is just a branch, occurs
-        // in region replication
+        // Empty replica blocks can share the merged control flow.
         auto ClonedRightParentIt =
             MergedValuesToRightValues.find(NewI->getParent());
         assert(ClonedRightParentIt != MergedValuesToRightValues.end() &&
                "Cloned left BB not found for right value!");
-        // if (cast<BasicBlock>(ClonedRightParentIt->second)->size() > 1)
-        if(requireUnpredication(LeftI->getParent(), cast<BasicBlock>(ClonedRightParentIt->second)))
+        auto *corresponding = cast<BasicBlock>(ClonedRightParentIt->second);
+        if (NeedsGap(LeftI, corresponding, ReachableRight))
           updateSplitRangeMap(true, NewI);
       }
 
@@ -208,15 +219,13 @@ void RegionMelder::cloneInstructions() {
         OrigToMergedValues[RightI] = NewI;
         MergedInstructions.push_back(NewI);
 
-        // update splitRanges
-        // unpredication is not done if one the blocks is just a branch, occurs
-        // in region replication
+        // Empty replica blocks can share the merged control flow.
         auto ClonedLeftParentIt =
             MergedValuesToLeftValues.find(NewI->getParent());
         assert(ClonedLeftParentIt != MergedValuesToLeftValues.end() &&
                "Cloned left BB not found for right value!");
-        // if (cast<BasicBlock>(ClonedLeftParentIt->second)->size() > 1)
-        if(requireUnpredication(RightI->getParent(), cast<BasicBlock>(ClonedLeftParentIt->second)))
+        auto *corresponding = cast<BasicBlock>(ClonedLeftParentIt->second);
+        if (NeedsGap(RightI, corresponding, ReachableLeft))
           updateSplitRangeMap(false, NewI);
       }
     }
@@ -288,7 +297,25 @@ void RegionMelder::fixOperends() {
       if (isa<BranchInst>(L))
         setOperendsForBr(dyn_cast<BranchInst>(L), dyn_cast<BranchInst>(R),
                          dyn_cast<BranchInst>(MergedI));
-      else
+      else if (auto *LeftSwitch = dyn_cast<SwitchInst>(LeftI)) {
+        auto *RightSwitch = cast<SwitchInst>(RightI);
+        for (unsigned N = 0; N < LeftSwitch->getNumSuccessors(); ++N) {
+          auto *LeftTarget = LeftBbToMergedBb.lookup(LeftSwitch->getSuccessor(N));
+          auto *RightTarget = RightBbToMergedBb.lookup(RightSwitch->getSuccessor(N));
+          if (!LeftTarget || LeftTarget != RightTarget)
+            throw std::runtime_error("switch_successor_mapping_mismatch");
+        }
+        auto *LeftCondition = LeftSwitch->getCondition();
+        auto *RightCondition = RightSwitch->getCondition();
+        if (Value *Mapped = OrigToMergedValues.lookup(LeftCondition))
+          LeftCondition = Mapped;
+        if (Value *Mapped = OrigToMergedValues.lookup(RightCondition))
+          RightCondition = Mapped;
+        IRBuilder<> Builder(MergedI);
+        cast<SwitchInst>(MergedI)->setCondition(LeftCondition == RightCondition
+            ? LeftCondition
+            : Builder.CreateSelect(MA.getDivergentCondition(), LeftCondition, RightCondition));
+      } else
         setOperends(LeftI, RightI, MergedI);
 
     } else {
@@ -298,9 +325,6 @@ void RegionMelder::fixOperends() {
         assert(!isa<BranchInst>(L) && "unmatched branch found!");
         if (isa<PHINode>(L)) {
           fixPhiNode(dyn_cast<PHINode>(L));
-        } else if (isa<StoreInst>(L) && EnableFullPredication) {
-          StoreInst *MergedSi = dyn_cast<StoreInst>(OrigToMergedValues[L]);
-          setOprendsForNonMatchingStore(MergedSi, true);
         } else {
           assert(!isa<BasicBlock>(L) &&
                  "non matching value can not be a basicblock");
@@ -315,9 +339,6 @@ void RegionMelder::fixOperends() {
         assert(!isa<BranchInst>(R) && "unmatched branch found!");
         if (isa<PHINode>(R)) {
           fixPhiNode(dyn_cast<PHINode>(R));
-        } else if (isa<StoreInst>(R) && EnableFullPredication) {
-          StoreInst *MergedSi = dyn_cast<StoreInst>(OrigToMergedValues[R]);
-          setOprendsForNonMatchingStore(MergedSi, false);
         } else {
           assert(!isa<BasicBlock>(R) &&
                  "non matching value can not be a basicblock");
@@ -404,42 +425,7 @@ void RegionMelder::setOperendsForBr(BranchInst *LeftBr, BranchInst *RightBr,
   }
 }
 
-void RegionMelder::setOprendsForNonMatchingStore(StoreInst *SI, bool IsLeft) {
-  // non matching store instructions causes invalid memory write in
-  // L or R path. To avoid this we have to add a redundant load that reads the
-  // curent value of the address. and depending on the path we pick the correct
-  // to value to write. i.e. current value in the non-matching path or intended
-  // value in the matching path
-  Value *Addr = SI->getPointerOperand();
-  Value *Val = SI->getValueOperand();
 
-  // find the merged operends
-  if (OrigToMergedValues.find(Addr) != OrigToMergedValues.end())
-    Addr = OrigToMergedValues[Addr];
-  if (OrigToMergedValues.find(Val) != OrigToMergedValues.end())
-    Val = OrigToMergedValues[Val];
-
-  // create a load for the addr (gets current value)
-  IRBuilder<> Builder(SI);
-  Builder.SetInsertPoint(SI);
-  LoadInst *RedunLoad = Builder.CreateLoad(Addr, "redun.load");
-  // create a switch to pick the right value
-  Value *ValueL = nullptr, *ValueR = nullptr;
-  if (IsLeft) {
-    ValueL = Val;
-    ValueR = RedunLoad;
-  } else {
-    ValueL = RedunLoad;
-    ValueR = Val;
-  }
-  Value *ValToStore =
-      Builder.CreateSelect(MA.getDivergentCondition(), ValueL, ValueR);
-
-  // set the value
-  SI->setOperand(0, ValToStore);
-  // set the addr
-  SI->setOperand(1, Addr);
-}
 
 void RegionMelder::setOperends(Instruction *LeftI, Instruction *RightI,
                                Instruction *MergedI) {
@@ -549,26 +535,24 @@ void RegionMelder::runPostMergeCleanup() {
 }
 
 Region* RegionMelder::getRegionToReplicate(BasicBlock * MatchedBlock, BasicBlock* PathEntry) {
-  BasicBlock* Curr = MatchedBlock;
-  Region* R = nullptr;
-  do {
-    Region* Candidate = MA.getRI()->getRegionFor(Curr);
-    BasicBlock* Entry = Candidate->getEntry();
-    if (MA.getPDT()->dominates(Entry, PathEntry)){
-      R = Candidate;
-    }
-    else {
-      for(auto* Pred : make_range(pred_begin(Entry), pred_end(Entry))) {
-        if (!Candidate->contains(Pred)){
-          Curr = Pred;
-          break;
-        }
-      }
-    }
+  SmallPtrSet<BasicBlock *, 16> visited;
+  auto *current = MatchedBlock;
+  while (current && visited.insert(current).second) {
+    auto *candidate = MA.getRI()->getRegionFor(current);
+    if (!candidate || candidate->isTopLevelRegion())
+      return nullptr;
+    auto *entry = candidate->getEntry();
+    if (MA.getPDT()->dominates(entry, PathEntry))
+      return candidate;
 
-  } while (!R);
-  assert(R != nullptr && "can not find region to replicate!"); 
-  return R;
+    current = nullptr;
+    for (auto *pred : predecessors(entry))
+      if (!candidate->contains(pred)) {
+        current = pred;
+        break;
+      }
+  }
+  return nullptr;
 }
 
 
@@ -605,6 +589,9 @@ void RegionMelder::merge(unsigned Index) {
       RToReplicate = getRegionToReplicate(MatchedBlock, LeftPathEntry);
     }
 
+    if (!RToReplicate)
+      throw std::runtime_error("replication_region_boundary_not_found");
+
     // simplify the replicated region
     BasicBlock *ExitToReplicate = RToReplicate->getExit();
     BasicBlock *EntryToReplicate = RToReplicate->getEntry();
@@ -631,7 +618,8 @@ void RegionMelder::merge(unsigned Index) {
     // replicate the region
     RegionReplicator RR(MA, ExpandingLeft);
     Region *ReplicatedR =
-        RR.replicate(ExpandedBlock, MatchedBlock, RToReplicate);
+        RR.replicate(ExpandedBlock, MatchedBlock, RToReplicate,
+                     !GuardReplicatedMemory);
 
     // prepare for melding
     if (ExpandingLeft) {
@@ -694,7 +682,7 @@ void RegionMelder::merge(unsigned Index) {
   // run pre merge passes
   runPreMergePasses(RegionAlreadySimplified);
 
-  if (!DisableMelding) {
+  {
 
     // parentFunc->print(errs());
 
@@ -722,6 +710,15 @@ void RegionMelder::merge(unsigned Index) {
     // }
     // while(true);
 
+    // An unmatched terminator needs its own CFG rewrite. Gap protection
+    // cannot split after a terminator or clone it into an existing block.
+    for (auto &Entry : RegionInstrAlignement)
+      if (!Entry.match())
+        for (unsigned Side : {0u, 1u})
+          if (auto *I = dyn_cast_or_null<Instruction>(Entry.get(Side)))
+            if (I->isTerminator())
+              throw std::runtime_error("unmatched_terminator_in_meld");
+
     // merge
     cloneInstructions();
     fixOperends();
@@ -731,7 +728,6 @@ void RegionMelder::merge(unsigned Index) {
     // parentFunc->print(errs());
     runPostOptimizations();
 
-    if (!EnableFullPredication)
       runUnpredicationPass();
   }
   NumMeldings++;
@@ -762,7 +758,6 @@ Instruction *RegionMelder::cloneInstruction(Instruction *OrigI,
   // insertion
   Builder.SetInsertPoint(InsertAt);
   Builder.Insert(NewI);
-
   return NewI;
 }
 
@@ -770,106 +765,42 @@ Instruction *RegionMelder::cloneInstruction(Instruction *OrigI,
 // Each side keeps its original instruction/memory order and remains guarded.
 // Cross-side SSA dependencies, calls, volatile/atomic accesses and barriers
 // stop grouping. This is scheduling within one block, not speculation.
-void RegionMelder::coalesceGapRanges() {
-  DenseMap<Instruction *, bool> Side;
-  for (auto &Range : SplitRanges)
-    for (auto *I = Range.getStart();; I = I->getNextNode()) {
-      Side[I] = Range.splitToTrue();
-      if (I == Range.getEnd()) break;
-    }
-  auto movable = [](Instruction *I) {
-    if (I->isTerminator() || isa<PHINode>(I) || I->isEHPad() ||
-        isa<CallBase>(I) || isa<FenceInst>(I)) return false;
-    if (auto *L = dyn_cast<LoadInst>(I)) return L->isSimple();
-    if (auto *S = dyn_cast<StoreInst>(I)) return S->isSimple();
-    return !I->mayReadOrWriteMemory() && !I->mayHaveSideEffects();
-  };
-  for (auto &BB : *MA.getParentFunction()) {
-    SmallVector<Instruction *, 64> Instructions;
-    for (auto &I : BB) Instructions.push_back(&I);
-    for (unsigned Begin = 0; Begin < Instructions.size();) {
-      if (!Side.count(Instructions[Begin]) || !movable(Instructions[Begin])) {
-        ++Begin; continue;
-      }
-      unsigned End = Begin;
-      while (End < Instructions.size() && Side.count(Instructions[End]) &&
-             movable(Instructions[End])) ++End;
-      SmallPtrSet<Instruction *, 32> Group;
-      unsigned Runs = 0;
-      bool Prev = !Side.lookup(Instructions[Begin]);
-      for (unsigned N = Begin; N < End; ++N) {
-        Group.insert(Instructions[N]);
-        bool Dir = Side.lookup(Instructions[N]);
-        if (Dir != Prev) ++Runs;
-        Prev = Dir;
-      }
-      bool Legal = Runs > 2;
-      for (unsigned N = Begin; N < End && Legal; ++N)
-        for (auto &Op : Instructions[N]->operands())
-          if (auto *Def = dyn_cast<Instruction>(Op.get()))
-            if (Group.count(Def) && Side.lookup(Def) != Side.lookup(Instructions[N]))
-              Legal = false;
-      if (Legal) {
-        auto *Anchor = Instructions[End - 1]->getNextNode();
-        bool First = Side.lookup(Instructions[Begin]);
-        for (bool Dir : {First, !First})
-          for (unsigned N = Begin; N < End; ++N)
-            if (Side.lookup(Instructions[N]) == Dir)
-              Instructions[N]->moveBefore(Anchor);
-        ++CoalescedGapGroups;
-      }
-      Begin = End;
+bool RegionMelder::hasGuardedGap(const Instruction *instruction, bool left) const {
+  for (const auto &range : SplitRanges) {
+    if (range.splitToTrue() != left)
+      continue;
+    for (auto *current = range.getStart(); current; current = current->getNextNode()) {
+      if (current == instruction)
+        return true;
+      if (current == range.getEnd())
+        break;
     }
   }
-  // Rebuild in instruction order so the existing complementary-gap handler
-  // sees one left run and one right run, and introduces only one diamond.
-  SplitRanges.clear();
-  for (auto &BB : *MA.getParentFunction())
-    for (auto &I : BB)
-      if (Side.count(&I)) updateSplitRangeMap(Side.lookup(&I), &I);
+  return false;
 }
 
 void RegionMelder::runUnpredicationPass() {
-  if (CoalesceGaps) coalesceGapRanges();
+  auto Plan = planGaps(SplitRanges);
+  for (auto &Guard : Plan.Guards) {
+    auto Range = Guard.First.range();
+    auto *End = Guard.Second.empty() ? Range.getEnd() : Guard.Second.back();
+    auto *Start = Range.getStart();
+    if (!Start->getParent() || Start->getParent() != End->getParent() ||
+        !End->getNextNode() || isa<PHINode>(Start)) {
+      throw std::runtime_error("invalid_guarded_range");
+    }
+    if (!Guard.Second.empty() &&
+        Range.getEnd()->getNextNode() != Guard.Second.front())
+      throw std::runtime_error("nonadjacent_guarded_ranges");
 
-
-  for (unsigned RangeIndex = 0; RangeIndex < SplitRanges.size(); ++RangeIndex) {
-    auto &Range = SplitRanges[RangeIndex];
-    // Consecutive unmatched runs on opposite paths form one diamond, not two
-    // serial guard diamonds. Do this before introducing undef-carrier PHIs.
-    if (RangeIndex + 1 < SplitRanges.size()) {
-      auto &Other = SplitRanges[RangeIndex + 1];
-      bool Adjacent = Range.splitToTrue() != Other.splitToTrue() &&
-                      Range.getStart()->getParent() == Other.getStart()->getParent() &&
-                      Range.getEnd()->getNextNode() == Other.getStart();
-      if (Adjacent) {
-        SmallPtrSet<Instruction *, 16> First, Second;
-        for (auto *I = Range.getStart();; I = I->getNextNode()) {
-          First.insert(I);
-          if (I == Range.getEnd()) break;
-        }
-        for (auto *I = Other.getStart();; I = I->getNextNode()) {
-          Second.insert(I);
-          if (I == Other.getEnd()) break;
-        }
-        // Selecting two mutually exclusive arms must not introduce a use of a
-        // value produced only by the other arm. Fall back to the old path.
-        for (auto *I : First)
-          for (auto &Op : I->operands())
-            if (auto *Def = dyn_cast<Instruction>(Op.get()))
-              Adjacent &= !Second.count(Def);
-        for (auto *I : Second)
-          for (auto &Op : I->operands())
-            if (auto *Def = dyn_cast<Instruction>(Op.get()))
-              Adjacent &= !First.count(Def);
-      }
-      if (Adjacent) {
+    if (!Guard.Second.empty()) {
+      GapRange Other(Guard.Second.front(), Guard.Second.back(), !Range.Left);
         auto *Head = Range.getStart()->getParent();
-        auto *First = SplitBlock(Head, Range.getStart(), nullptr, nullptr,
+        auto *First = SplitBlock(Head, Range.getStart(), static_cast<DominatorTree *>(nullptr), nullptr,
                                  nullptr, "predication.first");
-        auto *Second = SplitBlock(First, Other.getStart(), nullptr, nullptr,
+        auto *Second = SplitBlock(First, Other.getStart(), static_cast<DominatorTree *>(nullptr), nullptr,
                                   nullptr, "predication.second");
-        auto *Tail = SplitBlock(Second, Other.getEnd()->getNextNode(), nullptr,
+        auto *Tail = SplitBlock(Second, Other.getEnd()->getNextNode(), static_cast<DominatorTree *>(nullptr),
                                 nullptr, nullptr, "predication.join");
         auto *TrueArm = Range.splitToTrue() ? First : Second;
         auto *FalseArm = Range.splitToTrue() ? Second : First;
@@ -925,15 +856,13 @@ void RegionMelder::runUnpredicationPass() {
         }
         for (auto *Phi : Carriers)
           if (Phi->use_empty()) Phi->eraseFromParent();
-        ++RangeIndex;
         continue;
-      }
     }
     BasicBlock *BB = Range.getStart()->getParent();
-    BasicBlock *SplitBb = SplitBlock(BB, Range.getStart(), nullptr, nullptr,
+    BasicBlock *SplitBb = SplitBlock(BB, Range.getStart(), static_cast<DominatorTree *>(nullptr), nullptr,
                                      nullptr, "predication.split");
     BasicBlock *TailBlock =
-        SplitBlock(SplitBb, Range.getEnd()->getNextNode(), nullptr, nullptr,
+        SplitBlock(SplitBb, Range.getEnd()->getNextNode(), static_cast<DominatorTree *>(nullptr), nullptr,
                    nullptr, "predication.tail");
     // now only execute the splitBlock conditionally
     Instruction *OldBr = BB->getTerminator();
@@ -977,13 +906,7 @@ void RegionMelder::runUnpredicationPass() {
 }
 
 void RegionMelder::updateSplitRangeMap(bool Direction, Instruction *I) {
-  InstrRange Range(I, I, Direction);
-  if (!SplitRanges.empty() && SplitRanges.back().canExtendUsing(Range)) {
-    InstrRange Prev = SplitRanges.pop_back_val();
-    SplitRanges.push_back(Prev.extendUsing(Range));
-  } else {
-    SplitRanges.push_back(Range);
-  }
+  appendGap(SplitRanges,Direction,I);
 }
 
 bool RegionMelder::isExitBlockSafeToMerge(BasicBlock *Exit, BasicBlock *Entry) {

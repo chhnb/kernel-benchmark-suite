@@ -1,0 +1,85 @@
+{
+  "case": "vllm",
+  "correctness_passed": true,
+  "performance_passed": true,
+  "counts": [
+    65536,
+    131072
+  ],
+  "median_us": {
+    "baseline": [
+      2896.641113,
+      5748.804199
+    ],
+    "reference": [
+      2108.961182,
+      4182.083008
+    ],
+    "candidate": [
+      2108.640869,
+      4181.922852
+    ]
+  },
+  "batch_medians_us": {
+    "baseline": [
+      [
+        2896.641113,
+        5748.804199
+      ],
+      [
+        2896.322021,
+        5747.684082
+      ],
+      [
+        2896.64209,
+        5750.244141
+      ]
+    ],
+    "reference": [
+      [
+        2170.241211,
+        4181.283203
+      ],
+      [
+        2107.201172,
+        4182.562988
+      ],
+      [
+        2108.961182,
+        4182.083008
+      ]
+    ],
+    "candidate": [
+      [
+        2108.961182,
+        4180.48291
+      ],
+      [
+        2107.841064,
+        4182.083008
+      ],
+      [
+        2108.640869,
+        4181.922852
+      ]
+    ]
+  },
+  "candidate_slowdown_vs_reference_pct": [
+    -0.015188188513570733,
+    -0.003829574871982988
+  ],
+  "candidate_decrease_vs_baseline_pct": [
+    27.20393080328416,
+    27.25577864127914
+  ],
+  "threshold_pct": 2,
+  "aliases_by_identical_binary": {
+    "baseline": "baseline",
+    "reference": "reference",
+    "candidate": "candidate"
+  },
+  "candidate_is_same_binary_as_reference": false,
+  "source_commit": "e4138fb0c337bb03ffa3c942d8ae12882011eac3",
+  "dataset": "generated synthetic; not historical Qwen / original Map-Airy shuffle",
+  "generation_receipt": "generation.json"
+}

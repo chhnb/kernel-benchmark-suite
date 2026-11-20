@@ -1,0 +1,33 @@
+{
+  "schema": "cholla-hlld-gfx906-v1",
+  "count": 65536,
+  "seed": 20261115,
+  "gfx": "gfx906",
+  "device": 0,
+  "warmup": 5,
+  "repeat": 25,
+  "rounds": 12,
+  "max_candidate_to_baseline_ratio": 0.95,
+  "fixture_sha256": {
+    "input.txt": "f44945344d914dd41c6056b15ca7e9cf5a39a0a0af48f387282fc794684a0e26",
+    "left.bin": "215214fc73a079e6c2279c6331a11a8a888d126aa8091dd651f7a4e83a87fe01",
+    "right.bin": "b96a8eba97f5fccc89b9a48a64785cdfd1fe0192ec02b2e44f4621bbe3d9f6c0",
+    "bx.bin": "db563277ff76a516a5d467a05f08f9f0049d339e910c5a8647f5f317b957ecc9",
+    "flux.bin": "4d9cbaf3aa0935a8c113f139691b3daf9c94c8d6c278aedc8eec66a4b9f6c8ae",
+    "flux.ref": "8b2b63c72b561cedf8b1cfd773d74b46b701a4ea741512442de0307e64560b2c"
+  },
+  "artifact_sha256": {
+    "parent.ll": "66a4463814ccb7464fc7c9add8d705b91c0dcd416a53653255a36c5b374d5375",
+    "baseline.hsaco": "0be1de32d70c4e642d5ee9ca38e8ccb947fed4c8419509ddfc530f8345ab0ec0",
+    "darm.hsaco": "36ecf8fcf97a20cef54914c3c112672fa9b6bca5a76404c3ae7696886ed3b429",
+    "dp1.hsaco": "fe8b51a93d33cd580a84d38aef0fd016237ba44bfa86c7da98c8a9dd0782b97e",
+    "dp2.hsaco": "fe8b51a93d33cd580a84d38aef0fd016237ba44bfa86c7da98c8a9dd0782b97e",
+    "runner": "aa92386ea2a19f0111b8168f12bc21966cf32ab78cdb8d57b277c7f248f423ef"
+  },
+  "reference_median_us": {
+    "baseline": 63.52,
+    "darm": 95.04,
+    "dp1": 59.68,
+    "dp2": 59.68
+  }
+}

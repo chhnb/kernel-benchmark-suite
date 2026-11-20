@@ -1,0 +1,27 @@
+TPACF integration and prescribed adjacent-four experiment
+
+Full original ACFKernel, no extracted helper; LLVM12 gfx906, FP contraction off; common no-unroll source adaptation; 16384 synthetic points in each set, original launch grid128x128/block128/shared3072
+((0,1),(2,3)) | ((4,5),(6,7)) | ... | ((28,29),(30,31))
+24 legal DARM merges; all outputs pass. Explicit plan, not greedy V1 acceptance.
+
+Batch | baseline us | group4 us | time increase
+0 | 4437.282 | 4527.043 | 2.023%
+1 | 4437.603 | 4527.522 | 2.026%
+2 | 4437.444 | 4524.162 | 1.954%
+
+Median of batch medians: 4437.444 -> 4527.043 us (+2.019% time).
+unclear at predeclared minimum log effect 0.02; all three batches slower
+
+Split classification out of loop header with unconditional edge; materialize empty default edge for (30,31); ordinary postopt-fp cleanup before last merge. No manual arithmetic, SSA helper, or bound monotonicity assumption.
+darm-cfg-earlycse after trials; postopt-fp once before final trial; identical final O3
+
+screening only, not independent confirmation
+synthetic isotropic catalogs, not official astronomy data
+not the historical helper/manual OR-grouping configuration
+resource metadata is diagnostic only, not established cause
+
+Build: python3 tools/suite.py build tpacf --profile hip-no-unroll-binary --out NEW_BUILD
+Validate: ./bench tpacf validate --build NEW_BUILD --out NEW_VALIDATION
+Benchmark: ./bench tpacf benchmark --build NEW_BUILD --validated NEW_VALIDATION --out NEW_TIMING
+Reproduce CPU merge sequence under CPU admission: python3 experiments/tpacf-adjacent-four-v1/reproduce_merges.py NEW_MERGE_DIRECTORY
+No automatic retries of retired GPU requests.

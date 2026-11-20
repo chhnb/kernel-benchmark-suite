@@ -1,0 +1,306 @@
+{
+  "name": "hypersonic",
+  "status": "cpp_baseline_validated_and_timed",
+  "origin": "/home/chh/divergence-strategy-search/explorations/fluid-sims-repro-20261104",
+  "scope": "Corrected upstream native CUDA baseline. Keep original and corrected semantics distinct; this build is an executable, not an IR profile.",
+  "helper_extraction": false,
+  "profiles": {
+    "nvcc-o2": {
+      "argv": [
+        "/usr/local/cuda/bin/nvcc",
+        "-O2",
+        "-std=c++17",
+        "-arch=sm_70",
+        "{case}/source/tau_hypersonic_cuda_tests.cu",
+        "-o",
+        "{out}/baseline"
+      ],
+      "artifact": "baseline",
+      "kind": "cuda-executable",
+      "origin_command": "/home/chh/divergence-strategy-search/explorations/fluid-sims-repro-20261104/fixes-v1/build/hypersonic.command.json",
+      "gpu_execution": false
+    },
+    "hip-native-o2-binary": {
+      "argv": [
+        "/opt/rocm/bin/hipcc",
+        "-O2",
+        "-std=c++17",
+        "--offload-arch=gfx906",
+        "--genco",
+        "{case}/hip/source.hip",
+        "-o",
+        "{out}/kernel.hsaco"
+      ],
+      "artifact": "kernel.hsaco",
+      "kind": "hsaco",
+      "gpu_execution": false
+    },
+    "hip-native-o2-ir": {
+      "argv": [
+        "/opt/rocm/bin/hipcc",
+        "-O2",
+        "-std=c++17",
+        "--offload-arch=gfx906",
+        "--genco",
+        "-S",
+        "-emit-llvm",
+        "{case}/hip/source.hip",
+        "-o",
+        "{out}/start.ll"
+      ],
+      "artifact": "start.ll",
+      "kind": "llvm-ir",
+      "gpu_execution": false,
+      "verify_argv": [
+        "/opt/rocm/llvm/bin/opt",
+        "-passes=verify",
+        "-disable-output",
+        "{artifact}"
+      ]
+    },
+    "runtime-hip-harness": {
+      "argv": [
+        "/opt/rocm/bin/hipcc",
+        "-O2",
+        "-std=c++17",
+        "--offload-arch=gfx906",
+        "-x",
+        "hip",
+        "{case}/harness/tau_hypersonic_cuda_tests.cu",
+        "-o",
+        "{out}/replay"
+      ],
+      "artifact": "replay",
+      "kind": "executable",
+      "gpu_execution": false
+    },
+    "hip-llvm12-o2-ir": {
+      "argv": [
+        "/home/chh/region-fusion-lab/toolchains/llvm12/amd-bootstrap/bin/clang",
+        "-cc1",
+        "-triple",
+        "amdgcn-amd-amdhsa",
+        "-aux-triple",
+        "x86_64-unknown-linux-gnu",
+        "-S",
+        "-emit-llvm",
+        "--mrelax-relocations",
+        "-disable-free",
+        "-main-file-name",
+        "main.cu",
+        "-mrelocation-model",
+        "pic",
+        "-pic-level",
+        "1",
+        "-mframe-pointer=none",
+        "-fno-rounding-math",
+        "-mconstructor-aliases",
+        "-aux-target-cpu",
+        "x86-64",
+        "-fcuda-is-device",
+        "-mllvm",
+        "-amdgpu-internalize-symbols",
+        "-fcuda-allow-variadic-functions",
+        "-fvisibility",
+        "hidden",
+        "-fapply-global-visibility-to-externs",
+        "-mlink-builtin-bitcode",
+        "/home/chh/divergence-strategy-search/explorations/darm-artifact-rocm-20260922/rocm4-userspace/opt/rocm-4.0.0/amdgcn/bitcode/hip.bc",
+        "-mlink-builtin-bitcode",
+        "/home/chh/divergence-strategy-search/explorations/darm-artifact-rocm-20260922/rocm4-userspace/opt/rocm-4.0.0/amdgcn/bitcode/ocml.bc",
+        "-mlink-builtin-bitcode",
+        "/home/chh/divergence-strategy-search/explorations/darm-artifact-rocm-20260922/rocm4-userspace/opt/rocm-4.0.0/amdgcn/bitcode/ockl.bc",
+        "-mlink-builtin-bitcode",
+        "/home/chh/divergence-strategy-search/explorations/darm-artifact-rocm-20260922/rocm4-userspace/opt/rocm-4.0.0/amdgcn/bitcode/oclc_daz_opt_off.bc",
+        "-mlink-builtin-bitcode",
+        "/home/chh/divergence-strategy-search/explorations/darm-artifact-rocm-20260922/rocm4-userspace/opt/rocm-4.0.0/amdgcn/bitcode/oclc_unsafe_math_off.bc",
+        "-mlink-builtin-bitcode",
+        "/home/chh/divergence-strategy-search/explorations/darm-artifact-rocm-20260922/rocm4-userspace/opt/rocm-4.0.0/amdgcn/bitcode/oclc_finite_only_off.bc",
+        "-mlink-builtin-bitcode",
+        "/home/chh/divergence-strategy-search/explorations/darm-artifact-rocm-20260922/rocm4-userspace/opt/rocm-4.0.0/amdgcn/bitcode/oclc_correctly_rounded_sqrt_on.bc",
+        "-mlink-builtin-bitcode",
+        "/home/chh/divergence-strategy-search/explorations/darm-artifact-rocm-20260922/rocm4-userspace/opt/rocm-4.0.0/amdgcn/bitcode/oclc_wavefrontsize64_on.bc",
+        "-mlink-builtin-bitcode",
+        "/home/chh/divergence-strategy-search/explorations/darm-artifact-rocm-20260922/rocm4-userspace/opt/rocm-4.0.0/amdgcn/bitcode/oclc_isa_version_906.bc",
+        "-target-cpu",
+        "gfx906",
+        "-fno-split-dwarf-inlining",
+        "-debugger-tuning=gdb",
+        "-resource-dir",
+        "/home/chh/region-fusion-lab/toolchains/llvm12/amd-bootstrap/lib/clang/12.0.0",
+        "-internal-isystem",
+        "/home/chh/region-fusion-lab/toolchains/llvm12/amd-bootstrap/lib/clang/12.0.0",
+        "-isystem",
+        "/home/chh/region-fusion-lab/toolchains/llvm12/amd-bootstrap/lib/clang/12.0.0/include/..",
+        "-isystem",
+        "/home/chh/divergence-strategy-search/explorations/darm-artifact-rocm-20260922/rocm4-userspace/opt/rocm-4.0.0/hsa/include",
+        "-isystem",
+        "/home/chh/divergence-strategy-search/explorations/darm-artifact-rocm-20260922/rocm4-userspace/opt/rocm-4.0.0/hip/include",
+        "-D",
+        "__HIP_ROCclr__",
+        "-internal-isystem",
+        "/usr/lib/gcc/x86_64-linux-gnu/12/../../../../include/c++/12",
+        "-internal-isystem",
+        "/usr/lib/gcc/x86_64-linux-gnu/12/../../../../include/x86_64-linux-gnu/c++/12",
+        "-internal-isystem",
+        "/usr/lib/gcc/x86_64-linux-gnu/12/../../../../include/x86_64-linux-gnu/c++/12",
+        "-internal-isystem",
+        "/usr/lib/gcc/x86_64-linux-gnu/12/../../../../include/c++/12/backward",
+        "-internal-isystem",
+        "/usr/lib/gcc/x86_64-linux-gnu/12/../../../../include/c++/12",
+        "-internal-isystem",
+        "/usr/lib/gcc/x86_64-linux-gnu/12/../../../../include/x86_64-linux-gnu/c++/12",
+        "-internal-isystem",
+        "/usr/lib/gcc/x86_64-linux-gnu/12/../../../../include/x86_64-linux-gnu/c++/12",
+        "-internal-isystem",
+        "/usr/lib/gcc/x86_64-linux-gnu/12/../../../../include/c++/12/backward",
+        "-internal-isystem",
+        "/usr/local/include",
+        "-internal-isystem",
+        "/home/chh/region-fusion-lab/toolchains/llvm12/amd-bootstrap/lib/clang/12.0.0/include",
+        "-internal-externc-isystem",
+        "/usr/include/x86_64-linux-gnu",
+        "-internal-externc-isystem",
+        "/include",
+        "-internal-externc-isystem",
+        "/usr/include",
+        "-internal-isystem",
+        "/usr/local/include",
+        "-internal-isystem",
+        "/home/chh/region-fusion-lab/toolchains/llvm12/amd-bootstrap/lib/clang/12.0.0/include",
+        "-internal-externc-isystem",
+        "/usr/include/x86_64-linux-gnu",
+        "-internal-externc-isystem",
+        "/include",
+        "-internal-externc-isystem",
+        "/usr/include",
+        "-O2",
+        "-disable-O0-optnone",
+        "-std=c++17",
+        "-fdeprecated-macro",
+        "-fno-autolink",
+        "-fdebug-compilation-dir",
+        "/home/chh/divergence-strategy-search/explorations/case-search-20261020",
+        "-ferror-limit",
+        "19",
+        "-fhip-new-launch-api",
+        "-fgnuc-version=4.2.1",
+        "-fcxx-exceptions",
+        "-fexceptions",
+        "-vectorize-loops",
+        "-vectorize-slp",
+        "-mllvm",
+        "-amdgpu-early-inline-all=true",
+        "-mllvm",
+        "-amdgpu-function-calls=false",
+        "-fcuda-allow-variadic-functions",
+        "-faddrsig",
+        "-o",
+        "{out}/start.ll",
+        "-x",
+        "hip",
+        "{case}/hip/source.hip",
+        "-ffp-contract=off"
+      ],
+      "artifact": "start.ll",
+      "kind": "llvm-ir",
+      "gpu_execution": false,
+      "scope": "LLVM12 gfx906 O2 ff-contract=off, original suite HIP source; no helper extraction"
+    }
+  },
+  "validation": {
+    "status": "pending fresh suite validation",
+    "final_inputs": "results/hypersonic-final-input-validation-v1",
+    "cpp": "results/cpp-hypersonic-validation-v1"
+  },
+  "benchmark": {
+    "status": "C++ fixed 2+5 completed",
+    "review": "results/cpp-review.json"
+  },
+  "input_and_harness_inventory": [
+    {
+      "path": "/home/chh/divergence-strategy-search/explorations/fluid-sims-repro-20261104/fixes-v1",
+      "exists": true,
+      "migrated": false
+    },
+    {
+      "path": "/home/chh/divergence-strategy-search/explorations/fluid-sims-repro-20261104/capture",
+      "exists": true,
+      "migrated": false
+    },
+    {
+      "path": "/home/chh/divergence-strategy-search/explorations/fluid-sims-repro-20261104/later-steps-v1",
+      "exists": true,
+      "migrated": false
+    }
+  ],
+  "verified_builds": [
+    {
+      "profile": "nvcc-o2",
+      "receipt": "results/hypersonic-nvcc-o2-v1/receipt.json"
+    },
+    {
+      "profile": "runtime-hip-harness",
+      "receipt": "results/hypersonic-hip-harness-v1/receipt.json"
+    },
+    {
+      "profile": "hip-native-o2-binary",
+      "receipt": "results/hypersonic-hip-native-baseline-v1/receipt.json"
+    },
+    {
+      "profile": "hip-native-o2-ir",
+      "receipt": "results/hypersonic-hip-native-ir-v1/receipt.json"
+    },
+    {
+      "profile": "hip-llvm12-o2-ir",
+      "receipt": "results/hypersonic-hip-llvm12-ir-v1/receipt.json"
+    }
+  ],
+  "acceptance": {
+    "source_build": true,
+    "gpu_correctness": true,
+    "timing": true,
+    "complete_benchmark": true
+  },
+  "runtime": {
+    "kind": "cpp",
+    "backend": "amd",
+    "runner": "build/bin/bench_hypersonic",
+    "default_kernel": "/home/chh/kernel-benchmark-suite/results/hypersonic-hip-native-baseline-v1/kernel.hsaco",
+    "inputs": [
+      "input"
+    ],
+    "timing_modes": [
+      "event"
+    ],
+    "scope": "hypersonic full original X-face replay, block256, frozen final snapshots 1/24; historical ROCm18 native O2 baseline; no face_decide extraction; abs1e-12+rel1e-10 full outputs, input bytes, guards and holes. Not full solver timing.",
+    "environment": {
+      "LD_LIBRARY_PATH": "/opt/rocm/lib:/opt/rocm/lib64:/usr/local/cuda/lib64",
+      "HIP_VISIBLE_DEVICES": "0",
+      "ROCR_VISIBLE_DEVICES": "0"
+    }
+  },
+  "runtime_limitations": "Baseline profile only; toolchains and admission service remain external.",
+  "cpp_migration": {
+    "status": "validated_and_timed",
+    "review": "results/cpp-review.json",
+    "historical_python_runtime": "archive/python-runtime/hypersonic-runtime.json"
+  },
+  "region_analysis": {
+    "llvm_version": 12,
+    "ir": "/home/chh/kernel-benchmark-suite/results/hypersonic-hip-llvm12-ir-v1/start.ll",
+    "ir_sha256": "e275d199bc7836f96f626b5224acf9d07711d108885ba27d3f7905472b9326b6",
+    "optimization": "O2",
+    "report": "/home/chh/kernel-benchmark-suite/analysis/suite-regions-llvm12-v4/hypersonic/inventory.json",
+    "darm_status": "failed-preserved",
+    "scope": "fresh LLVM12 source build; previous default runtime is ROCm18"
+  },
+  "neighbor_similarity": {
+    "llvm_version": 12,
+    "results": "/home/chh/kernel-benchmark-suite/analysis/neighbor-similarity-llvm12-v2/hypersonic/scores-factored.json",
+    "status": "completed",
+    "fusion_performed": false,
+    "native_darm_scoring": true,
+    "darm_candidate_sorter_used": false
+  }
+}

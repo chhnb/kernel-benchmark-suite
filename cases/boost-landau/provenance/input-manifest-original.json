@@ -1,0 +1,33 @@
+{
+  "seed": 2026110301,
+  "boundary_count": 259,
+  "performance_count": 65539,
+  "anchors": [
+    0.4375,
+    0.3125,
+    0.1875,
+    0.0625,
+    0.015625,
+    0.000244140625,
+    5.960464477539063e-08,
+    3.552713678800501e-15,
+    1.262177448353619e-29,
+    1.5930919111324523e-58,
+    2.5379418373156492e-116,
+    6.441148769597133e-232
+  ],
+  "performance_distributions": [
+    "interval-mixture",
+    "coherent-blocks"
+  ],
+  "finite_tolerance": {
+    "atol": 1e-14,
+    "rtol": 5e-13
+  },
+  "transformation_contract": "exact original GPU output bits for finite outputs and signed zero; classify NaN/Inf separately; no tolerance relaxation",
+  "oracle_status": "references not generated yet; these inputs alone are not correctness evidence",
+  "cases": [
+    "landau",
+    "mapairy"
+  ]
+}

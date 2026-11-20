@@ -1,5 +1,13 @@
 #!/usr/bin/env bash
 set -euo pipefail
 root=$(cd "$(dirname "$0")/.." && pwd)
-export LD_LIBRARY_PATH="$root/toolchains/llvm24-tti/root/usr/lib/x86_64-linux-gnu${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+case ${FUSION_TTI_MODE:-llvm24} in
+  strict|offline) exec python3 "$root/tools/offline_tti.py" "$@" ;;
+  record|llvm24) ;;
+  *) echo "invalid FUSION_TTI_MODE" >&2; exit 2 ;;
+esac
+export LD_LIBRARY_PATH="${LLVM24_LIBDIR:-"$root/toolchains/llvm24-tti/root/usr/lib/x86_64-linux-gnu"}${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+if [[ ${FUSION_TTI_MODE:-llvm24} == record ]]; then
+  exec python3 "$root/tools/offline_tti.py" "$@"
+fi
 exec "$root/build/llvm24-tti/llvm24-tti" "$@"

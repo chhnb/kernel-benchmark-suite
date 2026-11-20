@@ -1,0 +1,849 @@
+//  Copyright Benjamin Sobotta 2012
+
+//  Use, modification and distribution are subject to the
+//  Boost Software License, Version 1.0. (See accompanying file
+//  LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+
+#ifndef BOOST_STATS_SKEW_NORMAL_HPP
+#define BOOST_STATS_SKEW_NORMAL_HPP
+
+// http://en.wikipedia.org/wiki/Skew_normal_distribution
+// http://azzalini.stat.unipd.it/SN/
+// Also:
+// Azzalini, A. (1985). "A class of distributions which includes the normal ones".
+// Scand. J. Statist. 12: 171-178.
+
+#include <boost/math/distributions/fwd.hpp>
+#include <boost/math/special_functions/owens_t.hpp> // Owen's T function
+#include <boost/math/distributions/complement.hpp>
+#include <boost/math/distributions/normal.hpp>
+#include <boost/math/quadrature/exp_sinh.hpp>
+#include <boost/math/distributions/detail/common_error_handling.hpp>
+#include <boost/math/constants/constants.hpp>
+#include <boost/math/tools/tuple.hpp>
+#include <boost/math/tools/roots.hpp> // Newton-Raphson
+#include <boost/math/tools/assert.hpp>
+#include <boost/math/distributions/detail/generic_mode.hpp> // pdf max finder.
+
+#ifndef BOOST_MATH_BUILD_MODULE
+#include <utility>
+#include <algorithm> // std::lower_bound, std::distance
+#endif
+
+#ifdef BOOST_MATH_INSTRUMENT_SKEW_NORMAL_ITERATIONS
+extern std::uintmax_t global_iter_count;
+#endif
+
+#ifndef BOOST_MATH_HAS_NVRTC
+#include <boost/math/distributions/detail/entropy.hpp>
+#endif
+
+BOOST_MATH_NAMESPACE_BEGIN
+
+  namespace detail
+  {
+    template <class RealType, class Policy>
+    inline bool check_skew_normal_shape(
+      const char* function,
+      RealType shape,
+      RealType* result,
+      const Policy& pol)
+    {
+      if(!(BOOST_MATH_NAMESPACE::isfinite)(shape))
+      {
+        *result =
+          policies::raise_domain_error<RealType>(function,
+          "Shape parameter is %1%, but must be finite!",
+          shape, pol);
+        return false;
+      }
+      return true;
+    }
+
+#ifndef BOOST_MATH_HAS_NVRTC
+    template <class RealType, class Policy>
+    inline RealType skew_normal_tail_integral(RealType x, RealType shape, bool upper)
+    {
+      normal_distribution<RealType, Policy> std_normal;
+      quadrature::exp_sinh<RealType, Policy> integrator;
+      const RealType direction = upper ? static_cast<RealType>(1) : static_cast<RealType>(-1);
+      const auto integrand = [&](RealType t)->RealType
+      {
+        const RealType z = x + direction * t;
+        return static_cast<RealType>(2) * pdf(std_normal, z) * cdf(std_normal, shape * z);
+      };
+      return integrator.integrate(integrand, policies::get_epsilon<RealType, Policy>() * 8);
+    }
+#endif
+
+  } // namespace detail
+
+  BOOST_MATH_EXPORT template <class RealType = double, class Policy = policies::policy<> >
+  class skew_normal_distribution
+  {
+  public:
+    typedef RealType value_type;
+    typedef Policy policy_type;
+
+    skew_normal_distribution(RealType l_location = 0, RealType l_scale = 1, RealType l_shape = 0)
+      : location_(l_location), scale_(l_scale), shape_(l_shape)
+    { // Default is a 'standard' normal distribution N01. (shape=0 results in the normal distribution with no skew)
+      static const char* function = "boost::math::skew_normal_distribution<%1%>::skew_normal_distribution";
+
+      RealType result;
+      detail::check_scale(function, l_scale, &result, Policy());
+      detail::check_location(function, l_location, &result, Policy());
+      detail::check_skew_normal_shape(function, l_shape, &result, Policy());
+    }
+
+    RealType location()const
+    {
+      return location_;
+    }
+
+    RealType scale()const
+    {
+      return scale_;
+    }
+
+    RealType shape()const
+    {
+      return shape_;
+    }
+
+
+  private:
+    //
+    // Data members:
+    //
+    RealType location_;  // distribution location.
+    RealType scale_;    // distribution scale.
+    RealType shape_;    // distribution shape.
+  }; // class skew_normal_distribution
+
+  BOOST_MATH_EXPORT typedef skew_normal_distribution<double> skew_normal;
+
+  #ifdef __cpp_deduction_guides
+  BOOST_MATH_EXPORT template <class RealType>
+  skew_normal_distribution(RealType)->skew_normal_distribution<typename BOOST_MATH_NAMESPACE::tools::promote_args<RealType>::type>;
+  BOOST_MATH_EXPORT template <class RealType>
+  skew_normal_distribution(RealType,RealType)->skew_normal_distribution<typename BOOST_MATH_NAMESPACE::tools::promote_args<RealType>::type>;
+  BOOST_MATH_EXPORT template <class RealType>
+  skew_normal_distribution(RealType,RealType,RealType)->skew_normal_distribution<typename BOOST_MATH_NAMESPACE::tools::promote_args<RealType>::type>;
+  #endif
+
+  BOOST_MATH_EXPORT template <class RealType, class Policy>
+  inline const std::pair<RealType, RealType> range(const skew_normal_distribution<RealType, Policy>& /*dist*/)
+  { // Range of permissible values for random variable x.
+    using BOOST_MATH_NAMESPACE::tools::max_value;
+    return std::pair<RealType, RealType>(
+       std::numeric_limits<RealType>::has_infinity ? -std::numeric_limits<RealType>::infinity() : -max_value<RealType>(),
+       std::numeric_limits<RealType>::has_infinity ? std::numeric_limits<RealType>::infinity() : max_value<RealType>()); // - to + max value.
+  }
+
+  BOOST_MATH_EXPORT template <class RealType, class Policy>
+  inline const std::pair<RealType, RealType> support(const skew_normal_distribution<RealType, Policy>& /*dist*/)
+  { // Range of supported values for random variable x.
+    // This is range where cdf rises from 0 to 1, and outside it, the pdf is zero.
+
+    using BOOST_MATH_NAMESPACE::tools::max_value;
+    return std::pair<RealType, RealType>(-max_value<RealType>(),  max_value<RealType>()); // - to + max value.
+  }
+
+  BOOST_MATH_EXPORT template <class RealType, class Policy>
+  inline RealType pdf(const skew_normal_distribution<RealType, Policy>& dist, const RealType& x)
+  {
+    const RealType scale = dist.scale();
+    const RealType location = dist.location();
+    const RealType shape = dist.shape();
+
+    static const char* function = "boost::math::pdf(const skew_normal_distribution<%1%>&, %1%)";
+
+    RealType result = 0;
+    if(false == detail::check_scale(function, scale, &result, Policy()))
+    {
+      return result;
+    }
+    if(false == detail::check_location(function, location, &result, Policy()))
+    {
+      return result;
+    }
+    if(false == detail::check_skew_normal_shape(function, shape, &result, Policy()))
+    {
+      return result;
+    }
+    if((BOOST_MATH_NAMESPACE::isinf)(x))
+    {
+       return 0; // pdf + and - infinity is zero.
+    }
+    // Below produces MSVC 4127 warnings, so the above used instead.
+    //if(std::numeric_limits<RealType>::has_infinity && abs(x) == std::numeric_limits<RealType>::infinity())
+    //{ // pdf + and - infinity is zero.
+    //  return 0;
+    //}
+    if(false == detail::check_x(function, x, &result, Policy()))
+    {
+      return result;
+    }
+
+    const RealType transformed_x = (x-location)/scale;
+
+    normal_distribution<RealType, Policy> std_normal;
+
+    result = pdf(std_normal, transformed_x) * cdf(std_normal, shape*transformed_x) * 2 / scale;
+
+    return result;
+  } // pdf
+
+  BOOST_MATH_EXPORT template <class RealType, class Policy>
+  inline RealType cdf(const skew_normal_distribution<RealType, Policy>& dist, const RealType& x)
+  {
+    const RealType scale = dist.scale();
+    const RealType location = dist.location();
+    const RealType shape = dist.shape();
+
+    static const char* function = "boost::math::cdf(const skew_normal_distribution<%1%>&, %1%)";
+    RealType result = 0;
+    if(false == detail::check_scale(function, scale, &result, Policy()))
+    {
+      return result;
+    }
+    if(false == detail::check_location(function, location, &result, Policy()))
+    {
+      return result;
+    }
+    if(false == detail::check_skew_normal_shape(function, shape, &result, Policy()))
+    {
+      return result;
+    }
+    if((BOOST_MATH_NAMESPACE::isinf)(x))
+    {
+      if(x < 0) return 0; // -infinity
+      return 1; // + infinity
+    }
+    // These produce MSVC 4127 warnings, so the above used instead.
+    //if(std::numeric_limits<RealType>::has_infinity && x == std::numeric_limits<RealType>::infinity())
+    //{ // cdf +infinity is unity.
+    //  return 1;
+    //}
+    //if(std::numeric_limits<RealType>::has_infinity && x == -std::numeric_limits<RealType>::infinity())
+    //{ // cdf -infinity is zero.
+    //  return 0;
+    //}
+    if(false == detail::check_x(function, x, &result, Policy()))
+    {
+      return result;
+    }
+
+    const RealType transformed_x = (x-location)/scale;
+
+    normal_distribution<RealType, Policy> std_normal;
+
+    const RealType normal_cdf = cdf(std_normal, transformed_x);
+    result = normal_cdf - owens_t(transformed_x, shape)*static_cast<RealType>(2);
+
+#ifndef BOOST_MATH_HAS_NVRTC
+    // Subtraction magnifies the error in the normal CDF and Owen's T.
+    // Switch after losing three bits, rather than waiting until half the
+    // precision is lost: even moderate cancellation can spoil quantiles.
+    if((shape > 0) && (transformed_x < 0)
+      && (result < normal_cdf / static_cast<RealType>(8)))
+    {
+      result = detail::skew_normal_tail_integral<RealType, Policy>(transformed_x, shape, false);
+    }
+#endif
+
+    return result;
+  } // cdf
+
+  BOOST_MATH_EXPORT template <class RealType, class Policy>
+  inline RealType cdf(const complemented2_type<skew_normal_distribution<RealType, Policy>, RealType>& c)
+  {
+    const RealType scale = c.dist.scale();
+    const RealType location = c.dist.location();
+    const RealType shape = c.dist.shape();
+    const RealType x = c.param;
+
+    static const char* function = "boost::math::cdf(const complement(skew_normal_distribution<%1%>&), %1%)";
+
+    if((BOOST_MATH_NAMESPACE::isinf)(x))
+    {
+      if(x < 0) return 1; // cdf complement -infinity is unity.
+      return 0; // cdf complement +infinity is zero
+    }
+    // These produce MSVC 4127 warnings, so the above used instead.
+    //if(std::numeric_limits<RealType>::has_infinity && x == std::numeric_limits<RealType>::infinity())
+    //{ // cdf complement +infinity is zero.
+    //  return 0;
+    //}
+    //if(std::numeric_limits<RealType>::has_infinity && x == -std::numeric_limits<RealType>::infinity())
+    //{ // cdf complement -infinity is unity.
+    //  return 1;
+    //}
+    RealType result = 0;
+    if(false == detail::check_scale(function, scale, &result, Policy()))
+      return result;
+    if(false == detail::check_location(function, location, &result, Policy()))
+      return result;
+    if(false == detail::check_skew_normal_shape(function, shape, &result, Policy()))
+      return result;
+    if(false == detail::check_x(function, x, &result, Policy()))
+      return result;
+
+    const RealType transformed_x = (x-location)/scale;
+
+    normal_distribution<RealType, Policy> std_normal;
+
+    const RealType normal_cdf = cdf(complement(std_normal, transformed_x));
+    result = normal_cdf + owens_t(transformed_x, shape)*static_cast<RealType>(2);
+
+#ifndef BOOST_MATH_HAS_NVRTC
+    // The reflected tail has the same cancellation as the lower CDF.
+    if((shape < 0) && (transformed_x > 0)
+      && (result < normal_cdf / static_cast<RealType>(8)))
+    {
+      result = detail::skew_normal_tail_integral<RealType, Policy>(transformed_x, shape, true);
+    }
+#endif
+    return result;
+  } // cdf complement
+
+  template <class RealType, class Policy>
+  inline RealType location(const skew_normal_distribution<RealType, Policy>& dist)
+  {
+    return dist.location();
+  }
+
+  template <class RealType, class Policy>
+  inline RealType scale(const skew_normal_distribution<RealType, Policy>& dist)
+  {
+    return dist.scale();
+  }
+
+  template <class RealType, class Policy>
+  inline RealType shape(const skew_normal_distribution<RealType, Policy>& dist)
+  {
+    return dist.shape();
+  }
+
+  BOOST_MATH_EXPORT template <class RealType, class Policy>
+  inline RealType mean(const skew_normal_distribution<RealType, Policy>& dist)
+  {
+    BOOST_MATH_STD_USING  // for ADL of std functions
+
+    using namespace BOOST_MATH_NAMESPACE::constants;
+
+    //const RealType delta = dist.shape() / sqrt(static_cast<RealType>(1)+dist.shape()*dist.shape());
+
+    //return dist.location() + dist.scale() * delta * root_two_div_pi<RealType>();
+
+    return dist.location() + dist.scale() * dist.shape() / sqrt(pi<RealType>()+pi<RealType>()*dist.shape()*dist.shape()) * root_two<RealType>();
+  }
+
+  BOOST_MATH_EXPORT template <class RealType, class Policy>
+  inline RealType variance(const skew_normal_distribution<RealType, Policy>& dist)
+  {
+    using namespace BOOST_MATH_NAMESPACE::constants;
+
+    const RealType delta2 = dist.shape() != 0 ? static_cast<RealType>(1) / (static_cast<RealType>(1)+static_cast<RealType>(1)/(dist.shape()*dist.shape())) : static_cast<RealType>(0);
+    //const RealType inv_delta2 = static_cast<RealType>(1)+static_cast<RealType>(1)/(dist.shape()*dist.shape());
+
+    RealType variance = dist.scale()*dist.scale()*(static_cast<RealType>(1)-two_div_pi<RealType>()*delta2);
+    //RealType variance = dist.scale()*dist.scale()*(static_cast<RealType>(1)-two_div_pi<RealType>()/inv_delta2);
+
+    return variance;
+  }
+
+  namespace detail
+  {
+    /*
+      TODO No closed expression for mode, so use max of pdf.
+    */
+
+    template <class RealType, class Policy>
+    inline RealType mode_fallback(const skew_normal_distribution<RealType, Policy>& dist)
+    { // mode.
+        static const char* function = "mode(skew_normal_distribution<%1%> const&)";
+        const RealType scale = dist.scale();
+        const RealType location = dist.location();
+        const RealType shape = dist.shape();
+
+        RealType result;
+        if(!detail::check_scale(
+          function,
+          scale, &result, Policy())
+          ||
+        !detail::check_skew_normal_shape(
+          function,
+          shape,
+          &result,
+          Policy()))
+        return result;
+
+        if( shape == 0 )
+        {
+          return location;
+        }
+
+        if( shape < 0 )
+        {
+          skew_normal_distribution<RealType, Policy> D(0, 1, -shape);
+          result = mode_fallback(D);
+          result = location-scale*result;
+          return result;
+        }
+
+        BOOST_MATH_STD_USING
+
+        // 21 elements
+        static const RealType shapes[] = {
+          0.0,
+          1.000000000000000e-004,
+          2.069138081114790e-004,
+          4.281332398719396e-004,
+          8.858667904100824e-004,
+          1.832980710832436e-003,
+          3.792690190732250e-003,
+          7.847599703514606e-003,
+          1.623776739188722e-002,
+          3.359818286283781e-002,
+          6.951927961775606e-002,
+          1.438449888287663e-001,
+          2.976351441631319e-001,
+          6.158482110660261e-001,
+          1.274274985703135e+000,
+          2.636650898730361e+000,
+          5.455594781168514e+000,
+          1.128837891684688e+001,
+          2.335721469090121e+001,
+          4.832930238571753e+001,
+          1.000000000000000e+002};
+
+        // 21 elements
+        static const RealType guess[] = {
+          0.0,
+          5.000050000525391e-005,
+          1.500015000148736e-004,
+          3.500035000350010e-004,
+          7.500075000752560e-004,
+          1.450014500145258e-003,
+          3.050030500305390e-003,
+          6.250062500624765e-003,
+          1.295012950129504e-002,
+          2.675026750267495e-002,
+          5.525055250552491e-002,
+          1.132511325113255e-001,
+          2.249522495224952e-001,
+          3.992539925399257e-001,
+          5.353553535535358e-001,
+          4.954549545495457e-001,
+          3.524535245352451e-001,
+          2.182521825218249e-001,
+          1.256512565125654e-001,
+          6.945069450694508e-002,
+          3.735037350373460e-002
+        };
+
+        const RealType* result_ptr = std::lower_bound(shapes, shapes+21, shape);
+
+        typedef typename std::iterator_traits<RealType*>::difference_type diff_type;
+
+        const diff_type d = std::distance(shapes, result_ptr);
+
+        BOOST_MATH_ASSERT(d > static_cast<diff_type>(0));
+
+        // refine
+        if(d < static_cast<diff_type>(21)) // shape smaller 100
+        {
+          result = guess[d-static_cast<diff_type>(1)]
+            + (guess[d]-guess[d-static_cast<diff_type>(1)])/(shapes[d]-shapes[d-static_cast<diff_type>(1)])
+            * (shape-shapes[d-static_cast<diff_type>(1)]);
+        }
+        else // shape greater 100
+        {
+          result = 1e-4;
+        }
+
+        skew_normal_distribution<RealType, Policy> helper(0, 1, shape);
+
+        result = detail::generic_find_mode_01(helper, result, function);
+
+        result = result*scale + location;
+
+        return result;
+    } // mode_fallback
+
+
+    /*
+     * TODO No closed expression for mode, so use f'(x) = 0
+     */
+    template <class RealType, class Policy>
+    struct skew_normal_mode_functor
+    {
+      skew_normal_mode_functor(const BOOST_MATH_NAMESPACE::skew_normal_distribution<RealType, Policy> dist)
+        : distribution(dist)
+      {
+      }
+
+      BOOST_MATH_NAMESPACE::tuple<RealType, RealType> operator()(RealType const& x)
+      {
+        normal_distribution<RealType, Policy> std_normal;
+        const RealType shape = distribution.shape();
+        const RealType pdf_x = pdf(distribution, x);
+        const RealType normpdf_x = pdf(std_normal, x);
+        const RealType normpdf_ax = pdf(std_normal, x*shape);
+        RealType fx = static_cast<RealType>(2)*shape*normpdf_ax*normpdf_x - x*pdf_x;
+        RealType dx = static_cast<RealType>(2)*shape*x*normpdf_x*normpdf_ax*(static_cast<RealType>(1) + shape*shape) + pdf_x + x*fx;
+        // return both function evaluation difference f(x) and 1st derivative f'(x).
+        return BOOST_MATH_NAMESPACE::make_tuple(fx, -dx);
+      }
+    private:
+      const BOOST_MATH_NAMESPACE::skew_normal_distribution<RealType, Policy> distribution;
+    };
+
+  } // namespace detail
+
+  BOOST_MATH_EXPORT template <class RealType, class Policy>
+  inline RealType mode(const skew_normal_distribution<RealType, Policy>& dist)
+  {
+    const RealType scale = dist.scale();
+    const RealType location = dist.location();
+    const RealType shape = dist.shape();
+
+    static const char* function = "boost::math::mode(const skew_normal_distribution<%1%>&, %1%)";
+
+    RealType result = 0;
+    if(false == detail::check_scale(function, scale, &result, Policy()))
+      return result;
+    if(false == detail::check_location(function, location, &result, Policy()))
+      return result;
+    if(false == detail::check_skew_normal_shape(function, shape, &result, Policy()))
+      return result;
+
+    if( shape == 0 )
+    {
+      return location;
+    }
+
+    if( shape < 0 )
+    {
+      skew_normal_distribution<RealType, Policy> D(0, 1, -shape);
+      result = mode(D);
+      result = location-scale*result;
+      return result;
+    }
+
+    // 21 elements
+    static const RealType shapes[] = {
+      static_cast<RealType>(0.0),
+      static_cast<RealType>(1.000000000000000e-004),
+      static_cast<RealType>(2.069138081114790e-004),
+      static_cast<RealType>(4.281332398719396e-004),
+      static_cast<RealType>(8.858667904100824e-004),
+      static_cast<RealType>(1.832980710832436e-003),
+      static_cast<RealType>(3.792690190732250e-003),
+      static_cast<RealType>(7.847599703514606e-003),
+      static_cast<RealType>(1.623776739188722e-002),
+      static_cast<RealType>(3.359818286283781e-002),
+      static_cast<RealType>(6.951927961775606e-002),
+      static_cast<RealType>(1.438449888287663e-001),
+      static_cast<RealType>(2.976351441631319e-001),
+      static_cast<RealType>(6.158482110660261e-001),
+      static_cast<RealType>(1.274274985703135e+000),
+      static_cast<RealType>(2.636650898730361e+000),
+      static_cast<RealType>(5.455594781168514e+000),
+      static_cast<RealType>(1.128837891684688e+001),
+      static_cast<RealType>(2.335721469090121e+001),
+      static_cast<RealType>(4.832930238571753e+001),
+      static_cast<RealType>(1.000000000000000e+002)
+    };
+
+    // 21 elements
+    static const RealType guess[] = {
+      static_cast<RealType>(0.0),
+      static_cast<RealType>(5.000050000525391e-005),
+      static_cast<RealType>(1.500015000148736e-004),
+      static_cast<RealType>(3.500035000350010e-004),
+      static_cast<RealType>(7.500075000752560e-004),
+      static_cast<RealType>(1.450014500145258e-003),
+      static_cast<RealType>(3.050030500305390e-003),
+      static_cast<RealType>(6.250062500624765e-003),
+      static_cast<RealType>(1.295012950129504e-002),
+      static_cast<RealType>(2.675026750267495e-002),
+      static_cast<RealType>(5.525055250552491e-002),
+      static_cast<RealType>(1.132511325113255e-001),
+      static_cast<RealType>(2.249522495224952e-001),
+      static_cast<RealType>(3.992539925399257e-001),
+      static_cast<RealType>(5.353553535535358e-001),
+      static_cast<RealType>(4.954549545495457e-001),
+      static_cast<RealType>(3.524535245352451e-001),
+      static_cast<RealType>(2.182521825218249e-001),
+      static_cast<RealType>(1.256512565125654e-001),
+      static_cast<RealType>(6.945069450694508e-002),
+      static_cast<RealType>(3.735037350373460e-002)
+    };
+
+    const RealType* result_ptr = std::lower_bound(shapes, shapes+21, shape);
+
+    typedef typename std::iterator_traits<RealType*>::difference_type diff_type;
+
+    const diff_type d = std::distance(shapes, result_ptr);
+
+    BOOST_MATH_ASSERT(d > static_cast<diff_type>(0));
+
+    // TODO: make the search bounds smarter, depending on the shape parameter
+    RealType search_min = 0; // below zero was caught above
+    RealType search_max = 0.55f; // will never go above 0.55
+
+    // refine
+    if(d < static_cast<diff_type>(21)) // shape smaller 100
+    {
+      // it is safe to assume that d > 0, because shape==0.0 is caught earlier
+      result = guess[d-static_cast<diff_type>(1)]
+        + (guess[d]-guess[d-static_cast<diff_type>(1)])/(shapes[d]-shapes[d-static_cast<diff_type>(1)])
+        * (shape-shapes[d-static_cast<diff_type>(1)]);
+    }
+    else // shape greater 100
+    {
+      result = 1e-4f;
+      search_max = guess[19]; // set 19 instead of 20 to have a safety margin because the table may not be exact @ shape=100
+    }
+
+    const int get_digits = policies::digits<RealType, Policy>();// get digits from policy,
+    std::uintmax_t max_iter = policies::get_max_root_iterations<Policy>(); // and max iterations.
+
+    skew_normal_distribution<RealType, Policy> helper(0, 1, shape);
+
+    result = tools::newton_raphson_iterate(detail::skew_normal_mode_functor<RealType, Policy>(helper), result,
+      search_min, search_max, get_digits, max_iter);
+    if (max_iter >= policies::get_max_root_iterations<Policy>())
+    {
+       return policies::raise_evaluation_error<RealType>(function, "Unable to locate solution in a reasonable time:" // LCOV_EXCL_LINE
+          " either there is no answer to quantile or the answer is infinite.  Current best guess is %1%", result, Policy()); // LCOV_EXCL_LINE
+    }
+
+    result = result*scale + location;
+
+    return result;
+  }
+
+
+
+  BOOST_MATH_EXPORT template <class RealType, class Policy>
+  inline RealType skewness(const skew_normal_distribution<RealType, Policy>& dist)
+  {
+    BOOST_MATH_STD_USING  // for ADL of std functions
+    using namespace BOOST_MATH_NAMESPACE::constants;
+
+    static const RealType factor = four_minus_pi<RealType>()/static_cast<RealType>(2);
+    const RealType delta = dist.shape() / sqrt(static_cast<RealType>(1)+dist.shape()*dist.shape());
+
+    return static_cast<RealType>(factor * pow(root_two_div_pi<RealType>() * delta, 3) /
+      pow(static_cast<RealType>(1)-two_div_pi<RealType>()*delta*delta, static_cast<RealType>(1.5)));
+  }
+
+  BOOST_MATH_EXPORT template <class RealType, class Policy>
+  inline RealType kurtosis(const skew_normal_distribution<RealType, Policy>& dist)
+  {
+    return kurtosis_excess(dist)+static_cast<RealType>(3);
+  }
+
+  BOOST_MATH_EXPORT template <class RealType, class Policy>
+  inline RealType kurtosis_excess(const skew_normal_distribution<RealType, Policy>& dist)
+  {
+    using namespace BOOST_MATH_NAMESPACE::constants;
+
+    static const RealType factor = pi_minus_three<RealType>()*static_cast<RealType>(2);
+
+    const RealType delta2 = dist.shape() != 0 ? static_cast<RealType>(1) / (static_cast<RealType>(1)+static_cast<RealType>(1)/(dist.shape()*dist.shape())) : static_cast<RealType>(0);
+
+    const RealType x = static_cast<RealType>(1)-two_div_pi<RealType>()*delta2;
+    const RealType y = two_div_pi<RealType>() * delta2;
+
+    return factor * y*y / (x*x);
+  }
+
+  BOOST_MATH_EXPORT template <class RealType, class Policy>
+  inline RealType quantile(const skew_normal_distribution<RealType, Policy>& dist, const RealType& p)
+  {
+    const RealType scale = dist.scale();
+    const RealType location = dist.location();
+    const RealType shape = dist.shape();
+
+    static const char* function = "boost::math::quantile(const skew_normal_distribution<%1%>&, %1%)";
+
+    RealType result = 0;
+    if(false == detail::check_scale(function, scale, &result, Policy()))
+      return result;
+    if(false == detail::check_location(function, location, &result, Policy()))
+      return result;
+    if(false == detail::check_skew_normal_shape(function, shape, &result, Policy()))
+      return result;
+    if(false == detail::check_probability(function, p, &result, Policy()))
+      return result;
+
+    // Compute initial guess via Cornish-Fisher expansion.
+    RealType x = -BOOST_MATH_NAMESPACE::erfc_inv(2 * p, Policy()) * constants::root_two<RealType>();
+
+    // Avoid unnecessary computations if there is no skew.
+    if(shape != 0)
+    {
+      const RealType skew = skewness(dist);
+      const RealType exk = kurtosis_excess(dist);
+
+      x = x + (x*x-static_cast<RealType>(1))*skew/static_cast<RealType>(6)
+      + x*(x*x-static_cast<RealType>(3))*exk/static_cast<RealType>(24)
+      - x*(static_cast<RealType>(2)*x*x-static_cast<RealType>(5))*skew*skew/static_cast<RealType>(36);
+    } // if(shape != 0)
+
+    // handle special case of non-skew normal distribution.
+    if(shape == 0)
+      return standard_deviation(dist)*x+mean(dist);
+
+    // Search in standardized coordinates.  bracket_and_solve_root expands
+    // multiplicatively about zero, so searching in the user's location/scale
+    // can turn a good initial estimate into a very wide bracket.
+    skew_normal_distribution<RealType, Policy> standard_dist(
+       static_cast<RealType>(0), static_cast<RealType>(1), shape);
+    result = standard_deviation(standard_dist)*x+mean(standard_dist);
+
+    // refine the result by numerically searching the root of (p-cdf)
+
+    const int get_digits = policies::digits<RealType, Policy>();// get digits from policy,
+    std::uintmax_t max_iter = policies::get_max_root_iterations<Policy>(); // and max iterations.
+
+    if (result == 0)
+       result = tools::min_value<RealType>(); // we need to be one side of zero or the other for the root finder to work.
+
+    auto fun = [&, standard_dist, p](const RealType& z)->RealType { return cdf(standard_dist, z) - p; };
+
+    RealType f_result = fun(result);
+
+    if (f_result == 0)
+       return location + scale * result;
+
+    if (f_result * result > 0)
+    {
+       // If the root is in the direction of zero, we need to check that we're the correct side of it:
+       RealType f_zero = fun(static_cast<RealType>(0));
+       if (f_zero * f_result > 0)
+       {
+          // we're the wrong side of zero:
+          result = -result;
+          f_result = fun(result);
+       }
+    }
+
+    RealType scaling_factor = 1.25;
+    if (f_result * result > 0)
+    {
+       // We're heading towards zero... it's a long way down so use a larger scaling factor:
+       scaling_factor = 16;
+    }
+
+    auto p_result = tools::bracket_and_solve_root(fun, result, scaling_factor, true, tools::eps_tolerance<RealType>(get_digits), max_iter, Policy());
+
+#ifdef BOOST_MATH_INSTRUMENT_SKEW_NORMAL_ITERATIONS
+    global_iter_count += max_iter;
+#endif
+
+    result = (p_result.first + p_result.second) / 2;
+
+    //
+    // Try one last Newton step, just to close up the interval:
+    //
+    RealType step = fun(result) / pdf(standard_dist, result);
+
+    if (result - step <= p_result.first)
+       result = p_result.first;
+    else if (result - step >= p_result.second)
+       result = p_result.second;
+    else
+       result -= step;
+
+    result = location + scale * result;
+
+    if (max_iter >= policies::get_max_root_iterations<Policy>())
+    {
+       return policies::raise_evaluation_error<RealType>(function, "Unable to locate solution in a reasonable time: either there is no answer to quantile" // LCOV_EXCL_LINE
+          " or the answer is infinite.  Current best guess is %1%", result, Policy());  // LCOV_EXCL_LINE
+    }
+
+    return result;
+  } // quantile
+
+  BOOST_MATH_EXPORT template <class RealType, class Policy>
+  inline RealType quantile(const complemented2_type<skew_normal_distribution<RealType, Policy>, RealType>& c)
+  {
+    const RealType scale = c.dist.scale();
+    const RealType location = c.dist.location();
+    const RealType shape = c.dist.shape();
+
+    static const char* function = "boost::math::quantile(const complement(skew_normal_distribution<%1%>&), %1%)";
+    RealType result = 0;
+    if(false == detail::check_scale(function, scale, &result, Policy()))
+      return result;
+    if(false == detail::check_location(function, location, &result, Policy()))
+      return result;
+    if(false == detail::check_skew_normal_shape(function, shape, &result, Policy()))
+      return result;
+    RealType q = c.param;
+    if(false == detail::check_probability(function, q, &result, Policy()))
+      return result;
+
+    skew_normal_distribution<RealType, Policy> D(-location, scale, -shape);
+
+    result = -quantile(D, q);
+
+    return result;
+  } // quantile
+
+
+#ifndef BOOST_MATH_HAS_NVRTC
+// Not GPU enabled: uses quadrature.
+BOOST_MATH_EXPORT template <class RealType, class Policy>
+inline RealType entropy(const skew_normal_distribution<RealType, Policy>& dist)
+{
+   BOOST_MATH_STD_USING
+   // H = log(omega) + log(2 pi e)/2 - E[log(2 Phi(alpha Z))], Z the standard skew normal. Folding the
+   // integral onto x >= 0 turns Phi log(Phi) + (1 - Phi) log(1 - Phi) into the binary entropy h:
+   //   H = log(omega) + log(2 pi e)/2 - log(2) + 2 int_0^inf phi(x) h(Phi(|alpha| x)) dx,
+   // which has no closed form but a smooth, positive, Gaussian-decaying integrand.
+   RealType alpha = fabs(dist.shape());
+   auto h = [](RealType y) -> RealType
+   {
+      // Binary entropy of Phi(y) for y >= 0, with q = Phi(-y):
+      RealType q = BOOST_MATH_NAMESPACE::erfc(y * constants::one_div_root_two<RealType>(), Policy()) / 2;
+      if (q == 0)
+         return RealType(0);
+      return -q * log(q) - (1 - q) * BOOST_MATH_NAMESPACE::log1p(-q, Policy());
+   };
+   RealType integral;
+   quadrature::exp_sinh<RealType, Policy> integrator;
+   const RealType tol = policies::get_epsilon<RealType, Policy>() * 8;
+   if (alpha <= 1)
+   {
+      auto f = [&](RealType x) -> RealType { return 2 * exp(-x * x / 2) * h(alpha * x); };
+      integral = integrator.integrate(f, tol);
+   }
+   else
+   {
+      // y = alpha x keeps the integrand's width ~1 as alpha grows:
+      auto f = [&](RealType y) -> RealType { RealType x = y / alpha; return 2 * exp(-x * x / 2) * h(y); };
+      integral = integrator.integrate(f, tol) / alpha;
+   }
+   return log(dist.scale()) + constants::half<RealType>() - constants::ln_two<RealType>() + integral * constants::one_div_root_two_pi<RealType>()
+      + constants::log_root_two_pi<RealType>();
+}
+#endif
+
+BOOST_MATH_NAMESPACE_END
+
+// This include must be at the end, *after* the accessors
+// for this distribution have been defined, in order to
+// keep compilers that support two-phase lookup happy.
+#include <boost/math/distributions/detail/derived_accessors.hpp>
+
+#endif // BOOST_STATS_SKEW_NORMAL_HPP
+
+

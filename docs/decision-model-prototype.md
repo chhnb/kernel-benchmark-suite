@@ -1,14 +1,14 @@
 # 统一 Decision/Arm：只读发现与短路规范化原型
 
-状态：实验入口，默认搜索不使用。LLVM 12；生产搜索、TTI 和生产回归命令未改。
+> Historical stage record. For the current implementation, see [the checkpoint](decision-fusion-checkpoint-20261110.md).
 
-最新进展：已增加独立 decision-fuse，支持组与叶子、组与组递归融合；完整树结果见[融合实验](decision-fusion-full-trees-20261110.md)，单次 IR 见[对比](vllm-first-pair-ir-comparison-20261110.md)。下面只读与规范化部分描述的是第一阶段。
+状态：实验入口，默认搜索不使用。LLVM 12；未更换 RegionMelder、TTI 或生产回归命令。
 
 ## 主线目标与本次边界
 
 统一的是“决策、分支边界、候选来源和递归身份”，不是按 case 选择新引擎。
 本次完成独立的发现器、旧候选结构对照、相邻 else-if 短路规范化及测试。
-后续仍需把实验规范化接到生产 tryPair；独立 driver 已复用 RegionMelder 验证 B2B 和受限制的 SESE 锚点融合。
+后续再把规范化接到 tryPair，复用现有 B2B/R2R/B2R/多锚点引擎。
 
 新增文件：
 
@@ -19,7 +19,7 @@
 - `tests/decision-model/`：LLVM IR fixture 和执行等价测试。
 
 没有修改原搜索代码，也没有合入审查中的 0001–0004 补丁。
-只读工具不链接那四个补丁。新增融合工具仅在临时 engine 副本应用随提交提供的 speculation API 子集，不修改生产引擎与 CLI 默认值。
+新工具在 musa 的隔离审查目录编译；它本身不链接那四个补丁的实现。
 
 ## 使用
 
@@ -149,7 +149,7 @@ Map-Airy、vLLM、TIGRE、Hypersonic 的真实 IR 已做只读扫描与旧 catal
 1. 对关键源码叶子核对发现边界，逐项解释 no_same_decision 和 partial_arm_units。
 2. Map-Airy 和 vLLM 已进行“仅规范化”的专项 GPU 对比；继续覆盖其他配对和 case。
 3. 覆盖带入口 PHI 的规范化、switch 的变换，以及更一般的短路图。
-4. 独立 driver 已完成 RegionMelder 完整树实验；仍需接入默认关闭的生产 tryPair 路径。
+4. 将已验证的规范化作为默认关闭的 tryPair 路径，再试 RegionMelder。
 5. 引入每 Arm 静态成本诊断；当前原型不做成本评估、接受判断或贪心提交。
 
 入口 PHI、switch 改写和非相邻配对目前返回拒绝，不进行不完整的变换。

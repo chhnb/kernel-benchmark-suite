@@ -1,0 +1,6 @@
+{
+  "boost_commit": "4a6ce7851dc3e54ca7a6e3db3181e86e39d6d9ce",
+  "headers": "shared pinned source via ../../boost-landau/source/boost-math",
+  "kernel": "unmodified Boost public API mapairy_distribution<double>",
+  "inputs": "byte-identical retained 2026110301 Landau/Map-Airy synthetic probability inputs; regenerated Map-Airy references; no application-captured data"
+}

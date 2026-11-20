@@ -56,4 +56,3 @@
 - `regression/runs/20261110-mapairy-diagnosis/run.sh`：隔离编译、搜索和最终codegen命令。
 - 同目录 `comparison.json`、`search/`、`pair/`：恢复的融合选择与二进制哈希。
 - `regression/runs/20261110-current-generated/mapairy-search/trial-756/trial.json`：第9次当前候选，左右边界与R2B/复制标记。
-- `regression/records/20261110/mapairy-summary.json`：此前同批性能与完整输出结果。

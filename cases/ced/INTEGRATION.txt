@@ -1,0 +1,26 @@
+CED target-only V1 experiment — completed 2026-11-08
+Two target-region merges; no pre-switch preparation merges. Common lowerswitch,
+postopt-fp cleanup, final O3 and backend. SGPR/VGPR 26/14, zero reported spills in both.
+All 110 frames exact output/halo, input immutability and guards passed on every launch.
+Three paired batches, each frame 2 warmups + 5 measured launches per version.
+
+Batch | baseline us | variant us | time change
+0 | 1833.920 | 1787.520 | -2.530%
+1 | 1801.601 | 1797.601 | -0.222%
+2 | 1807.202 | 1804.321 | -0.159%
+
+Each value is the median of 5 sums of 110 individual kernel-event intervals.
+Not pipeline or end-to-end time. Transfers, initialization and checking excluded.
+
+Conclusion: unclear at predeclared minimum log effect 0.02. The first batch's
+2.53% reduction was not reproduced by the two later batches (0.22%, 0.16%).
+No stable material speedup claim. Baseline drift in the first batch is retained,
+not discarded. No performance-counter explanation is inferred from this timing.
+
+Batch0 retained from measure-authorized-v1; batches1/2 newly completed in
+measure-remaining-authorized-v2 with explicit user authorization. Historical
+admission denials remain retired; no automatic retry or extra samples.
+
+Build: python3 tools/suite.py build ced --profile hip-llvm12-binary --out NEW_BUILD
+Validate: ./bench ced validate --kernel FILE --out NEW_VALIDATION
+Default runtime baseline uses common lowerswitch/postopt-fp/O3; native source build profile is separately labeled.

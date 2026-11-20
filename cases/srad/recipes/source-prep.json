@@ -1,0 +1,1 @@
+["/home/chh/region-fusion-lab/toolchains/llvm12/amd-bootstrap/bin/opt", "{out}/source-front.ll", "-verify", "-S", "-o", "{out}/source.ll"]

@@ -1,0 +1,12 @@
+{
+  "status": "completed",
+  "cfg_cleanup": "structural",
+  "uniform_loss_guard_enabled": true,
+  "max_uniform_loss": 0,
+  "max_pressure_growth": 0,
+  "max_pressure": 1000000,
+  "commits": 138,
+  "trials": 812,
+  "initial_cost": 5423,
+  "final_cost": 3905
+}

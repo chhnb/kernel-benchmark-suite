@@ -1,0 +1,12 @@
+[
+  "/home/chh/region-fusion-lab/toolchains/llvm12/amd-bootstrap/bin/opt",
+  "{out}/input.ll",
+  "-O3",
+  "-internalize",
+  "-internalize-public-api-list=_Z4fluxPdddPiS_S0_S0_S_S_S_S_S_S_S_S_S_S_S_S_iiiddd",
+  "-globaldce",
+  "-verify",
+  "-S",
+  "-o",
+  "{out}/final.ll"
+]

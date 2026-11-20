@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+set -euo pipefail
+root=$(cd "$(dirname "$0")/.." && pwd)
+export LLVM_CONFIG=${LLVM_CONFIG:-"$root/build/llvm12-jammy/usr/bin/llvm-config-12"}
+export LLVM24_CONFIG=${LLVM24_CONFIG:-"$root/build/llvm24-pinned/bin/llvm-config"}
+export LD_LIBRARY_PATH="$root/build/llvm12-jammy/usr/lib/x86_64-linux-gnu:${LD_LIBRARY_PATH:-}"
+case ${1:-} in
+  "") "$root/tools/build-llvm24-tti" ;;
+  --search-only) "$root/tools/build-llvm24-tti" --search-only ;;
+  *) echo "usage: $0 [--search-only]" >&2; exit 2 ;;
+esac
+"$root/tools/build-decision-greedy"

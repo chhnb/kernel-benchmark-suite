@@ -1,0 +1,232 @@
+--- a/RegionAnalyzer.h
++++ b/RegionAnalyzer.h
+@@ -140,12 +140,28 @@
+ 
+   void computeRegionMatch();
+ 
++  // Explicit selection for isolated, caller-validated single-pair trials.
++  // This bypasses candidate enumeration/ranking, not the transformation.
++  void selectExplicitBlocks(BasicBlock *L, BasicBlock *R) {
++    BestRegionMatch.clear(); BestBbMatch = {L, R}; HasBbMatch = true;
++    BestBbMatchSimilarityScore = Utils::computeBBSimilarty(L, R);
++  }
++  bool selectExplicitRegions(Region *L, Region *R) {
++    RegionComparator RC(L, R);
++    if (!RC.compare()) return false;
++    BestRegionMatch.clear(); HasBbMatch = false; BestBbMatch = {nullptr, nullptr};
++    BestRegionMatch.push_back(std::make_shared<MergeableRegionPair>(*L, *R, RC));
++    return true;
++  }
++
++
+ 
+   // region analyzer's result
+   DenseMap<BasicBlock *, BasicBlock *> getRegionMatch(unsigned Index);
+   std::pair<BasicBlock *, BasicBlock *> getRegionMatchEntryBlocks(unsigned Index);
+   std::pair<BasicBlock *, BasicBlock *> getRegionMatchExitBlocks(unsigned Index);
+   // bool isInsideRegionMatch(BasicBlock *BB, unsigned Index);
++  double explicitSimilarity() const { return HasBbMatch ? BestBbMatchSimilarityScore : BestRegionMatch[0]->getSimilarityScore(); }
+   bool hasAnyProfitableMatch();
+   bool isRegionMatchProfitable(unsigned Index);
+   unsigned regionMatchSize() const;
+--- a/RegionMelder.cpp
++++ b/RegionMelder.cpp
+@@ -5,6 +5,7 @@
+ #include "llvm/ADT/SmallVector.h"
+ #include "llvm/ADT/iterator_range.h"
+ #include "llvm/IR/Constants.h"
++#include "llvm/Analysis/ValueTracking.h"
+ #include "llvm/IR/Instructions.h"
+ #include "llvm/IR/Verifier.h"
+ #include "llvm/Support/CommandLine.h"
+@@ -58,7 +59,14 @@
+ 
+ void RegionMelder::computeRegionSeqAlignment(
+     DenseMap<BasicBlock *, BasicBlock *> BbMap) {
++#ifdef FUSION_DETERMINISTIC_REGION_ORDER
++  // Beam replay requires address-independent block alignment order.
++  for (auto &Block : *MA.getParentFunction()) {
++    auto It = BbMap.find(&Block);
++    if (It == BbMap.end()) continue;
++#else
+   for (auto It = BbMap.begin(); It != BbMap.end(); It++) {
++#endif
+     BasicBlock *LBB = It->first;
+     BasicBlock *RBB = It->second;
+ 
+@@ -83,12 +91,27 @@
+ }
+ 
+ bool requireUnpredication(BasicBlock* Current, BasicBlock* Corresponding) {
+-  // if current contains store instructions we have to unpredicate
+-  // for (auto& I : *Current) {
+-  //   if(isa<StoreInst>(&I))
+-  //     return true;
+-  // }
+-  return Corresponding->size() > 1;
++  if (Corresponding->size() > 1)
++    return true;
++  // Replication can pair a real block with a branch-only placeholder.
++  // That does not authorize executing its loads, stores, calls or trapping
++  // arithmetic on the other path. Preserve the predicate unless every
++  // non-PHI, non-terminator instruction is safe to speculate.
++  for (auto &I : *Current)
++    if (!isa<PHINode>(I) && !I.isTerminator() &&
++        !isSafeToSpeculativelyExecute(&I))
++      return true;
++  return false;
++}
++
++std::string RegionMelder::sourceBlockID(BasicBlock *BB) const {
++  for(auto &Source:SourceBlocks)if(Source.block==BB)return Source.id;
++  return "generated_before_alignment";
++}
++void RegionMelder::recordBlockOrigin(BasicBlock *Left,BasicBlock *Right,BasicBlock *Merged) {
++  if(!RecordOrigins)return;
++  auto label=[](BasicBlock *BB){std::string S;raw_string_ostream O(S);BB->printAsOperand(O,false);O.flush();return S;};
++  BlockOrigins.push_back({sourceBlockID(Left),sourceBlockID(Right),label(Left),label(Right),WeakVH(Merged)});
+ }
+ 
+ void RegionMelder::cloneInstructions() {
+@@ -106,6 +129,7 @@
+         BasicBlock *NewBb =
+             BasicBlock::Create(MA.getParentFunction()->getContext(),
+                                "merged.bb", MA.getParentFunction());
++        recordBlockOrigin(cast<BasicBlock>(LEntry),cast<BasicBlock>(REntry),NewBb);
+         // update value map
+         MergedValuesToLeftValues[NewBb] = LEntry;
+         MergedValuesToRightValues[NewBb] = REntry;
+@@ -495,35 +519,18 @@
+   // fix outside phi nodes that are invalid after merge
+   // FixOutsidePHINodes(outsidePhisBeforeRAUW);
+ 
+-  // erase orig instructions in merged regions
++  // Alignment includes instructions owned by these blocks. Inspect all entries
++  // before deleting any block, otherwise later isa<> reads freed instructions.
++  SmallVector<BasicBlock *, 32> BlocksToErase;
++  SmallPtrSet<BasicBlock *, 32> SeenBlocks;
+   for (auto &Entry : RegionInstrAlignement) {
+-
+-    Value *L = Entry.get(0);
+-    Value *R = Entry.get(1);
+-
+-    if (Entry.match()) {
+-      if (isa<BasicBlock>(L)) {
+-        if (L != R) {
+-          dyn_cast<BasicBlock>(L)->eraseFromParent();
+-          dyn_cast<BasicBlock>(R)->eraseFromParent();
+-        } else {
+-          dyn_cast<BasicBlock>(L)->eraseFromParent();
+-        }
+-      }
+-    } else {
+-      if (L != nullptr) {
+-        if (isa<BasicBlock>(L)) {
+-          dyn_cast<BasicBlock>(L)->eraseFromParent();
+-        }
+-      }
+-
+-      if (R != nullptr) {
+-        if (isa<BasicBlock>(R)) {
+-          dyn_cast<BasicBlock>(R)->eraseFromParent();
+-        }
+-      }
+-    }
+-  }
++    for (unsigned Side=0; Side<2; ++Side) {
++      Value *V=Entry.get(Side);
++      if (auto *BB=dyn_cast_or_null<BasicBlock>(V))
++        if (SeenBlocks.insert(BB).second) BlocksToErase.push_back(BB);
++    }
++  }
++  for (auto *BB : BlocksToErase) BB->eraseFromParent();
+ 
+   // merging can result in additional predessors for merged entry blocks
+   // scan all phi nodes and add missing incoming blocks, value will be undef
+@@ -718,6 +725,8 @@
+     // merge
+     cloneInstructions();
+     fixOperends();
++    // Transfer search-owned origins before original instructions are erased.
++    if(onValueMapping)onValueMapping(OrigToMergedValues);
+     runPostMergeCleanup();
+     // parentFunc->print(errs());
+     runPostOptimizations();
+--- a/RegionMelder.h
++++ b/RegionMelder.h
+@@ -1,3 +1,4 @@
++#include <functional>
+ #ifndef LLVM_LIB_TRANSFORMS_REGION_MELDER_H
+ #define LLVM_LIB_TRANSFORMS_REGION_MELDER_H
+ 
+@@ -11,6 +12,8 @@
+ #include "llvm/IR/IRBuilder.h"
+ #include "llvm/IR/ValueMap.h"
+ #include "llvm/TableGen/Record.h"
++#include <string>
++#include <vector>
+ 
+ namespace llvm {
+ 
+@@ -39,7 +42,21 @@
+ };
+ 
+ class RegionMelder {
++public:
++  // Observational trace only. WeakVH does not follow RAUW; deletion is unknown,
++  // never silently attributed to the replacement block.
++  struct BlockOrigin {
++    std::string leftID, rightID, leftLabel, rightLabel;
++    WeakVH merged;
++  };
+ private:
++  struct SourceBlock { WeakVH block; std::string id; };
++  std::vector<SourceBlock> SourceBlocks;
++  std::vector<BlockOrigin> BlockOrigins;
++  bool RecordOrigins=false;
++  std::string sourceBlockID(BasicBlock *BB) const;
++  void recordBlockOrigin(BasicBlock *Left, BasicBlock *Right, BasicBlock *Merged);
++
+   RegionAnalyzer &MA;
+ 
+   // entry and exits of currently merging regions
+@@ -133,7 +150,12 @@
+   Region* getRegionToReplicate(BasicBlock * MatchedBlock, BasicBlock* PathEntry);
+ 
+ public:
+-  RegionMelder(RegionAnalyzer &MA) : MA(MA) {}
++  RegionMelder(RegionAnalyzer &MA, bool Record=false) : MA(MA), RecordOrigins(Record) {
++    if(RecordOrigins){unsigned I=0;for(auto &BB:*MA.getParentFunction())
++      SourceBlocks.push_back({WeakVH(&BB),"B"+std::to_string(I++)});}
++  }
++  std::function<void(const ValueToValueMapTy&)> onValueMapping;
++  const std::vector<BlockOrigin>& blockOrigins() const { return BlockOrigins; }
+   // meld I'th region pair
+   void merge(unsigned Index);
+ 
+--- a/RegionReplicator.cpp
++++ b/RegionReplicator.cpp
+@@ -1,4 +1,5 @@
+ #include "RegionReplicator.h"
++#include "llvm/ADT/SetVector.h"
+ #include "llvm/ADT/iterator_range.h"
+ #include "llvm/IR/CFG.h"
+ #include "llvm/IR/Constants.h"
+@@ -53,7 +54,7 @@
+   // DenseMap<BasicBlock *, BasicBlock *> Mapping;
+ 
+   // traverse the region to replicate and make new basic blocks
+-  SmallSet<BasicBlock *, 32> WorkList;
++  SmallSetVector<BasicBlock *, 32> WorkList;
+   SmallVector<BasicBlock *, 32> Visited;
+   WorkList.insert(RegionToReplicate->getEntry());
+ 
+@@ -63,7 +64,7 @@
+ 
+   while (!WorkList.empty()) {
+     auto Curr = *WorkList.begin();
+-    WorkList.erase(Curr);
++    WorkList.remove(Curr);
+     BasicBlock *ReplicatedBB = nullptr;
+     Visited.push_back(Curr);
+     // if the visited block is the block we want to match eventually

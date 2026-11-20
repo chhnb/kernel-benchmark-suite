@@ -1,3 +1,5 @@
+#include "GuardedRanges.h"
+#include "InstructionPolicy.h"
 #include <functional>
 #ifndef LLVM_LIB_TRANSFORMS_REGION_MELDER_H
 #define LLVM_LIB_TRANSFORMS_REGION_MELDER_H
@@ -14,6 +16,8 @@
 #include "llvm/TableGen/Record.h"
 #include <string>
 #include <vector>
+#include <set>
+#include "llvm/Support/JSON.h"
 
 namespace llvm {
 
@@ -40,6 +44,11 @@ public:
   }
   int gap(int K) override { return 2; }
 };
+
+// Weight of executing I on a path that did not originally run it (div/rem 8, call 4, other 1).
+unsigned fusionInstructionWeight(const llvm::Instruction &I);
+// Safe to run on a path that did not execute it: no trap, memory, side effect or convergence.
+bool safeToExecuteUnconditionally(const llvm::Instruction &I);
 
 class RegionMelder {
 public:
@@ -82,37 +91,7 @@ private:
   SmallVector<BasicBlock *, 0> MergedBBs;
 
   // un-predication
-  struct InstrRange {
-  private:
-    Instruction *StartI, *EndI;
-    bool Direction;
-
-  public:
-    InstrRange(Instruction *Start, Instruction *End, bool Dir)
-        : StartI(Start), EndI(End), Direction(Dir) {}
-    Instruction *getStart() const { return StartI; }
-    Instruction *getEnd() const { return EndI; }
-    bool splitToTrue() const { return Direction; }
-    bool splitToFalse() const { return !Direction; }
-    friend raw_ostream &operator<<(raw_ostream &OS, const InstrRange &Range) {
-      OS << "start : ";
-      Range.getStart()->print(OS);
-      OS << ", end : ";
-      Range.getEnd()->print(OS);
-      OS << ", direction : " << (Range.splitToTrue() ? "T" : "F");
-      return OS;
-    }
-
-    bool canExtendUsing(const InstrRange &Other) {
-      return Other.getStart()->getPrevNode() == EndI &&
-             Other.splitToTrue() == splitToTrue();
-    }
-    InstrRange extendUsing(const InstrRange &Other) {
-      assert(canExtendUsing(Other) &&
-             "this range can not be extended with provided range !");
-      return InstrRange(StartI, Other.getEnd(), splitToTrue());
-    }
-  };
+  using InstrRange = GapRange;
 
   SmallVector<InstrRange, 16> SplitRanges;
 
@@ -130,7 +109,6 @@ private:
   Instruction *cloneInstruction(Instruction *OrigI, IRBuilder<> &Builder);
   void fixPhiNode(PHINode *Orig);
   void runPostOptimizations();
-  void setOprendsForNonMatchingStore(StoreInst *SI, bool IsLeft);
   void runPreMergePasses(bool RegionAlreadySimplified);
   void mergeOutsideDefsAtEntry();
 
@@ -141,7 +119,6 @@ private:
   bool isExitBlockSafeToMerge(BasicBlock *Exit, BasicBlock *Entry);
   void updateMapping(BasicBlock *NewBb, BasicBlock *OldBb, bool IsLeft);
 
-  void coalesceGapRanges();
   void runUnpredicationPass();
   void updateSplitRangeMap(bool Direction, Instruction *I);
 
@@ -155,8 +132,9 @@ public:
     if(RecordOrigins){unsigned I=0;for(auto &BB:*MA.getParentFunction())
       SourceBlocks.push_back({WeakVH(&BB),"B"+std::to_string(I++)});}
   }
-  bool CoalesceGaps=false;
-  unsigned CoalescedGapGroups=0;
+  bool GuardReplicatedMemory=false;
+  bool NativeReplicationPredication=false;
+  bool hasGuardedGap(const Instruction *instruction, bool left) const;
   std::function<void(const ValueToValueMapTy&)> onValueMapping;
   const std::vector<BlockOrigin>& blockOrigins() const { return BlockOrigins; }
   // meld I'th region pair

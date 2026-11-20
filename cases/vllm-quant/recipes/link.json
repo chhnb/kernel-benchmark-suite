@@ -1,0 +1,8 @@
+[
+  "/home/chh/region-fusion-lab/toolchains/llvm12/amd-bootstrap/bin/llvm-link",
+  "{out}/cache.ll",
+  "{case}/source/quant-unmerged.ll",
+  "-S",
+  "-o",
+  "{out}/linked.ll"
+]

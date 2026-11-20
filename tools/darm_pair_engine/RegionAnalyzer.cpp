@@ -469,11 +469,13 @@ void RegionAnalyzer::findMergeableRegions(BasicBlock &BB) {
     }
   }
 
-  // verify dominance order
-  assert(verifyRegionList(LeftRegions, DT) &&
-         "Left regions are not in dominance order!");
-  assert(verifyRegionList(RightRegions, DT) &&
-         "Right regions are not in dominance order!");
+  // Only region-to-region alignment consumes the lists in dominance order.
+  if (!LeftRegions.empty() && !RightRegions.empty()) {
+    assert(verifyRegionList(LeftRegions, DT) &&
+           "Left regions are not in dominance order!");
+    assert(verifyRegionList(RightRegions, DT) &&
+           "Right regions are not in dominance order!");
+  }
 
 #ifdef CFMELDER_DEBUG
   DEBUG << "Left regions : ";

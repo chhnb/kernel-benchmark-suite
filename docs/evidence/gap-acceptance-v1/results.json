@@ -1,0 +1,338 @@
+[
+  {
+    "name": "recursive",
+    "ir": "/home/chh/kernel-benchmark-suite-review-speculation/build/gap-acceptance-v1/fixed/recursive/final.ll",
+    "compiled": true,
+    "raw": {
+      "selects": 276,
+      "i1_selects": 0,
+      "copysigns": 32
+    },
+    "resources": {
+      "private_segment_fixed_size": 0,
+      "sgpr_count": 76,
+      "sgpr_spill_count": 0,
+      "vgpr_count": 50,
+      "vgpr_spill_count": 0
+    },
+    "binary_sha256": "e937a1715a840f45ef314bbf4b4b120cbe6e44e90bc18e4d0a52097a49852af3",
+    "post_o3": {
+      "selects": 276,
+      "i1_selects": 0,
+      "copysigns": 32
+    },
+    "gpu": {
+      "case": "vllm",
+      "correctness_passed": true,
+      "performance_passed": true,
+      "counts": [
+        65536,
+        131072
+      ],
+      "median_us": {
+        "baseline": [
+          2896.641113,
+          5748.804199
+        ],
+        "reference": [
+          2108.961182,
+          4182.083008
+        ],
+        "candidate": [
+          2108.640869,
+          4181.922852
+        ]
+      },
+      "batch_medians_us": {
+        "baseline": [
+          [
+            2896.641113,
+            5748.804199
+          ],
+          [
+            2896.322021,
+            5747.684082
+          ],
+          [
+            2896.64209,
+            5750.244141
+          ]
+        ],
+        "reference": [
+          [
+            2170.241211,
+            4181.283203
+          ],
+          [
+            2107.201172,
+            4182.562988
+          ],
+          [
+            2108.961182,
+            4182.083008
+          ]
+        ],
+        "candidate": [
+          [
+            2108.961182,
+            4180.48291
+          ],
+          [
+            2107.841064,
+            4182.083008
+          ],
+          [
+            2108.640869,
+            4181.922852
+          ]
+        ]
+      },
+      "candidate_slowdown_vs_reference_pct": [
+        -0.015188188513570733,
+        -0.003829574871982988
+      ],
+      "candidate_decrease_vs_baseline_pct": [
+        27.20393080328416,
+        27.25577864127914
+      ],
+      "threshold_pct": 2,
+      "aliases_by_identical_binary": {
+        "baseline": "baseline",
+        "reference": "reference",
+        "candidate": "candidate"
+      },
+      "candidate_is_same_binary_as_reference": false,
+      "source_commit": "e4138fb0c337bb03ffa3c942d8ae12882011eac3",
+      "dataset": "generated synthetic; not historical Qwen / original Map-Airy shuffle",
+      "generation_receipt": "generation.json"
+    }
+  },
+  {
+    "name": "balanced",
+    "ir": "/home/chh/kernel-benchmark-suite-review-speculation/build/gap-acceptance-v1/fixed/balanced/final.ll",
+    "compiled": true,
+    "raw": {
+      "selects": 276,
+      "i1_selects": 0,
+      "copysigns": 32
+    },
+    "resources": {
+      "private_segment_fixed_size": 0,
+      "sgpr_count": 76,
+      "sgpr_spill_count": 0,
+      "vgpr_count": 53,
+      "vgpr_spill_count": 0
+    },
+    "binary_sha256": "464cfbfcc6bb72fb49738576ca776c4adba17e9eb8ae2b8d08d8c57a3f3407c6",
+    "post_o3": {
+      "selects": 276,
+      "i1_selects": 0,
+      "copysigns": 32
+    },
+    "gpu": {
+      "case": "vllm",
+      "correctness_passed": true,
+      "performance_passed": true,
+      "counts": [
+        65536,
+        131072
+      ],
+      "median_us": {
+        "baseline": [
+          2897.281982,
+          5749.283691
+        ],
+        "reference": [
+          2107.841064,
+          4183.203125
+        ],
+        "candidate": [
+          2108.000977,
+          4181.922852
+        ]
+      },
+      "batch_medians_us": {
+        "baseline": [
+          [
+            2897.281982,
+            5748.963867
+          ],
+          [
+            2896.481934,
+            5749.76416
+          ],
+          [
+            2897.442139,
+            5749.283691
+          ]
+        ],
+        "reference": [
+          [
+            2108.000977,
+            4184.642578
+          ],
+          [
+            2107.681152,
+            4183.203125
+          ],
+          [
+            2107.841064,
+            4182.562988
+          ]
+        ],
+        "candidate": [
+          [
+            2108.000977,
+            4184.48291
+          ],
+          [
+            2108.160889,
+            4181.922852
+          ],
+          [
+            2107.361084,
+            4181.922852
+          ]
+        ]
+      },
+      "candidate_slowdown_vs_reference_pct": [
+        0.0075865776946404395,
+        -0.03060508805677875
+      ],
+      "candidate_decrease_vs_baseline_pct": [
+        27.24211898957648,
+        27.261845531358386
+      ],
+      "threshold_pct": 2,
+      "aliases_by_identical_binary": {
+        "baseline": "baseline",
+        "reference": "reference",
+        "candidate": "candidate"
+      },
+      "candidate_is_same_binary_as_reference": false,
+      "source_commit": "e4138fb0c337bb03ffa3c942d8ae12882011eac3",
+      "dataset": "generated synthetic; not historical Qwen / original Map-Airy shuffle",
+      "generation_receipt": "generation.json"
+    }
+  },
+  {
+    "name": "greedy",
+    "ir": "/home/chh/kernel-benchmark-suite-review-speculation/build/gap-acceptance-v1/greedy/final.ll",
+    "compiled": true,
+    "raw": {
+      "selects": 200,
+      "i1_selects": 0,
+      "copysigns": 128
+    },
+    "resources": {
+      "private_segment_fixed_size": 0,
+      "sgpr_count": 76,
+      "sgpr_spill_count": 0,
+      "vgpr_count": 78,
+      "vgpr_spill_count": 0
+    },
+    "binary_sha256": "fbab4f14523bb1bf843176f105a9fe8752c2c16e82d3d20eb0aea85b82f7eaf1",
+    "post_o3": {
+      "selects": 200,
+      "i1_selects": 0,
+      "copysigns": 32
+    },
+    "gpu": {
+      "case": "vllm",
+      "correctness_passed": true,
+      "performance_passed": false,
+      "counts": [
+        65536,
+        131072
+      ],
+      "median_us": {
+        "baseline": [
+          2896.802002,
+          5749.124023
+        ],
+        "reference": [
+          2108.000977,
+          4181.603027
+        ],
+        "candidate": [
+          2532.321045,
+          5029.123047
+        ]
+      },
+      "batch_medians_us": {
+        "baseline": [
+          [
+            2896.64209,
+            5748.003906
+          ],
+          [
+            2896.802002,
+            5749.124023
+          ],
+          [
+            2898.401855,
+            5751.523926
+          ]
+        ],
+        "reference": [
+          [
+            2108.480957,
+            4180.643066
+          ],
+          [
+            2108.000977,
+            4182.242676
+          ],
+          [
+            2108.000977,
+            4181.603027
+          ]
+        ],
+        "candidate": [
+          [
+            2532.321045,
+            5029.444336
+          ],
+          [
+            2532.000977,
+            5029.123047
+          ],
+          [
+            2578.562012,
+            5027.203125
+          ]
+        ]
+      },
+      "candidate_slowdown_vs_reference_pct": [
+        20.129026154621176,
+        20.267825867919242
+      ],
+      "candidate_decrease_vs_baseline_pct": [
+        12.582183965226346,
+        12.523664007239322
+      ],
+      "threshold_pct": 2,
+      "aliases_by_identical_binary": {
+        "baseline": "baseline",
+        "reference": "reference",
+        "candidate": "candidate"
+      },
+      "candidate_is_same_binary_as_reference": false,
+      "source_commit": "e4138fb0c337bb03ffa3c942d8ae12882011eac3",
+      "dataset": "generated synthetic; not historical Qwen / original Map-Airy shuffle",
+      "generation_receipt": "generation.json"
+    },
+    "search": {
+      "status": "completed",
+      "commits": 138,
+      "trials": 812,
+      "initial_cost": 5423,
+      "final_cost": 3905
+    },
+    "rejections": {
+      "scored": 138,
+      "pressure_limit": 8,
+      "uniform_loss_limit": 666
+    }
+  }
+]

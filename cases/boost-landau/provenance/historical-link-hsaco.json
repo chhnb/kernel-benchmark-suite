@@ -1,0 +1,12 @@
+{
+  "command": [
+    "/opt/rocm/llvm/bin/ld.lld",
+    "-shared",
+    "/home/chh/region-fusion-lab/runs/amd-boost-landau-partition-adjacent-v1/original/kernel.o",
+    "-o",
+    "/home/chh/region-fusion-lab/runs/amd-boost-landau-partition-adjacent-v1/original/kernel.hsaco"
+  ],
+  "returncode": 0,
+  "stdout": "",
+  "stderr": ""
+}

@@ -28,7 +28,7 @@ struct Decision {
 std::vector<Decision> discover(llvm::Function &);
 llvm::json::Array describe(const std::vector<Decision>&);
 // Experimental adjacent chain normalization. Caller owns a disposable clone.
-// No speculation, cleanup, or fusion. Failure never authorizes committing IR.
+// Safe condition speculation within budget; no fusion. Caller discards failures.
 bool normalize(llvm::Function&, const Decision&, unsigned left, std::string &reason,
-               llvm::BasicBlock **dispatchOut=nullptr);
+               llvm::BasicBlock **dispatchOut=nullptr, unsigned conditionBudget=4);
 }

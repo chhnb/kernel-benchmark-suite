@@ -1,0 +1,410 @@
+# 整次 trial 复用：下一阶段约束与影响审计
+
+状态：未完成。检查点 `19696a3`。这里不把计划缓存、指令报价缓存视为整体收益复用。
+
+## 验收契约
+
+- 同一函数中的独立单元 A、B：提交 A 后 B 的完整 trial 启动数、生成数、清理数、评分数均不增加。
+- 仍须先评完所有新增或失效候选，再按原顺序打破同分。不能仅检查堆顶。
+- 保留真实融合后收益 18 → 21 的反例；外部 SSA、出口 PHI、控制条件和相关内存依赖变化必须失效。
+- 获胜缓存计划只能应用于当前模块。旧整模块产物不能用于跨提交回放。
+- 逐步对比提交序列、TTI 和 IR；局部清理若改变行为，报告第一处分歧，不改冻结期望。
+
+候选记录必须区分：稳定身份、当前模块回放计划、整体收益证书、优化单元版本、外部读取依赖、允许改写范围。B2B/B2R/R2R 是融合单位，不直接等同于失效单位。
+
+## 当前实现中还缺什么
+
+1. 当前驱动的候选身份包含 `B<n>`，去掉临时路径并没有解决块重新编号后的身份问题。
+2. 当前 read set 是整份输入内容；跨提交通常全部失效。
+3. 当前缓存命中直接引用旧 trial 目录，提交的是其中的 `fused.ll`。只有整输入相同才安全；不能直接换成局部指纹。
+4. 当前 cleanup 在整个函数执行 SimplifyCFG、EarlyCSE、DCE、InstCombine。只把 SimplifyCFG 的循环改为遍历少数块也不够：它可能改前驱/后继，后面的函数 pass 仍会跨边界读写。
+5. 当前规划缓存回放仍会生成、清理和评分，不满足上述首条验收。
+
+## 已执行影响审计
+
+新增 `tests/fusion-search/audit-trial-effects.py`，输出观测数据，不提供缓存授权。
+
+PCM256 完整轨迹：122 次提交，13,254 次候选记录；7,883 次成功评分，5,371 次合法性拒绝。相邻轮次存在 7,392 个相同编号的评分项，其中 7,363 次收益/准入相同、29 次不同。**这些不是稳定候选的命中统计**，因为编号会变化。
+
+原始文本 IR 使用数字槽号，不能用名字比较直接推断块增删。另对提交索引 0、60、121 的父输入运行 LLVM12 `-instnamer`，再用相同参数单独回放。没有替换默认二进制，没有改长测输入。三次均成功评分。
+
+| 提交索引（从 0 起） | 类型 | 融合：改/删/增已有块 | 清理：改/删/增 | 清理后对照 → 融合后：改/删/增 | 清理后 TTI |
+|---|---|---|---|---|---|
+| 0 | B2B | 4 / 0 / 0 | 249 / 1 / 0 | 127 / 1 / 0 | 4383 → 4377 |
+| 60 | B2B | 2 / 2 / 3 | 1 / 4 / 0 | 1 / 3 / 0 | 3374 → 3357 |
+| 121 | B2R | 2 / 2 / 3 | 1 / 4 / 0 | 1 / 3 / 0 | 2273 → 2257 |
+
+第一行的清理变化含 30 个只有 PHI incoming 顺序变化的块；排除后仍有 219 个块的正文变化。这里统计指令文本变化，不等同于机器工作量变化，也不证明完整读取范围。
+
+具体首步变化包括：下游 `add` 的操作数由 `%i206` 替换为 `%0`；较远块中的 load/store 改用复用的 GEP 指针；出口 PHI 改写。原始父成本 4518，而清理后的对照成本 4383。因此不能把 `4518 → 4377` 的全部差值当作局部融合收益。
+
+中间 B2B 的实际写范围较小，提示可复用潜力；仍需要显式读边界证明，不能据此直接缓存。
+
+证据：
+- `build/incremental-unit-audit/pcm256-effects.json`
+- `build/incremental-unit-audit/named-effects.json`
+- `build/incremental-unit-audit/named/{0,60,121}/`
+- checkpoint 的 39 个配置完整提交链对比：`build/incremental-identity-regression/commit-chain-comparison.json`
+
+## 局部路径的实现方向（尚未接入）
+
+先建立与原路径并存的封闭优化单元：将外部输入作为显式边界，出口 PHI/活出值作为显式输出。单元内清理不得访问隐含的外部支配值、内存状态、assume、范围元数据或其他用户上下文。仅限制写范围不够。不能证明某项依赖时扩大单元或回退全函数路径。
+
+一种可实现路径是在隔离的临时函数中清理单元，再把产物映射回当前函数；但输入参数化会丢失上下文，也可能改变 TTI 或融合选择。因此这是单独的优化路径，须先验证首个独立性正例和依赖反例，不能宣称与旧全函数清理普遍等价。临时函数的参数、返回包装和属性也不能直接混入原函数收益。
+
+另外，提交后的全函数清理若保留，必须把该阶段的变化重新反馈给依赖失效；不能把它隐藏在“局部提交”后。
+
+当前四项完成度：队列机制已有；正常跨提交整体收益复用尚未启用；规划和受限 TTI 报价可复用；全函数清理依赖仍保守重算。原 Goal 未完成。
+
+## 身份与边界机制实现进度
+
+新增 opt-in 基础设施，尚未接入默认 driver，也未授权任何跨提交整体收益复用：
+
+- `incremental_ir_identity.h`：持久的指令身份及单调分配计数器；候选由 root/left/right 的 terminator 身份组合。改名、数字槽号变化不改变身份；删除后不复用编号；复制造成重复 tag 时拒绝使用歧义身份。索引只对创建时的 IR 有效，结构修改后必须重建。
+- `incremental_ir_snapshot.h`：按身份记录指令正文、所属函数/块、每个使用位置（包括同一 user 的不同 operand），以及函数签名/属性、全局变量、目标设置等模块上下文。提供读依赖比较和改写边界检查。模块临时路径不计入语义上下文。当前拒绝未建模的指令 metadata、blockaddress；这是首批隔离路径的范围限制，不是给原全函数路径新增准入限制。
+- `b2b_optimization_unit.h`：识别二元单入口、共同出口、无外部出口前驱的整数纯计算 B2B。外部输入暂限函数参数/整数常量；完整臂和出口 PHI 纳入写范围；出口 terminator 为只读边界。外部 SSA 指令输入回退。这个结构契约不是任意 LLVM pass 的读取依赖证明。
+
+`check-incremental-ir.py` 编译并运行三组测试，显式 `-UNDEBUG`，避免 LLVM 配置中的 NDEBUG 禁掉断言。覆盖身份持久化、重命名、增删、重复身份拒绝、外部使用次数变化、改写越界、目标属性变化，以及同函数 A/B 独立读取的正例和外部 SSA 反例。已加入 `tests/run-v1`。
+
+仍缺：隔离清理执行器、从局部产物到当前模块的补丁应用、严格评分有效性证书及 driver 接线。现有测试没有断言 trial/生成/清理/评分计数不增长，不能当作用户要求的端到端独立性测试。
+
+## PCM128 完整对照已结束
+
+开关报价缓存两组均正常退出：250 次提交、TTI 4251；全部 250 步的候选、成本和 IR 哈希及最终 IR 一致。两次耗时分别 4853.17 秒和 9923.39 秒，存在不同并发负载，不能当作隔离性能测量。未重启任务。
+
+完整共同结果冻结进 manifest，旧超时检查点保留为 historical_timeout；标记 slow，默认快速集合仍 38 项。原始 result.json 不修改，其 passed:false 来自旧超时 manifest；单独的 manifest-revalidation.json 记录当前完整基线校验。
+
+## 局部 IR 提取与当前父 IR 回放
+
+新增 `b2b_unit_capsule.h`，把首批单输出纯整数 B2B 提取为独立临时函数。临时函数只有原函数参数、入口条件、两臂和出口返回值；不导入外部 SSA 指令或参数上的隐藏优化事实。这是一条隔离优化路径，不能假定等价于全函数清理。
+
+`apply(current, product)` 的行为：
+
+1. 克隆当前模块，在克隆上重新验证读取依赖和当前边界。
+2. 把临时函数参数映射回当前函数参数，拷贝局部产物。
+3. 把局部 return 接回原出口，更新原出口 PHI，保留其外部用户和其他单元修改。
+4. 验证 LLVM IR，并检查所有已有指令的变化/删除均在允许写范围内。
+5. 只有全部通过才返回新模块；拒绝不会修改调用者的当前模块。
+
+快照还补充了前一条指令身份，防止相同正文/操作数的指令换序逃过变化检查。已有身份、边界测试全部通过。
+
+新增 `check-b2b-capsule.cpp/.py`：实际调用现有 DP1 `planSingleBranchB2B` 和 `DarmCFGInstCombine`，明确设置 two-entry-phi-node-folding-threshold=7。先从旧父 IR 生成 A、B；应用 A 后，再应用旧 B 产物。与在新父 IR 重新生成 B 的结果逐字节 moduleHash 一致。所有产物通过 verifier，6,724 组 CPU 输入与原版输出一致。修改 B 的控制条件会在回放前拒绝，且当前模块哈希不变。
+
+这仍不是完整收益缓存验收：该测试没有接入 TTI 和调度队列。下一步要证明隔离路径下的完整 TTI 差值可加性（包括边界分支/PHI），再断言独立 B 不再启动 trial/生成/清理/评分。不能直接把临时函数返回包装的 TTI 差值当作父函数收益。
+
+## 首次整次 trial 复用（实验入口）
+
+新增 `isolated_b2b_greedy.h`，与原 `IncrementalCandidateQueue` 接线。`check-isolated-greedy.py` 使用真实 pinned LLVM24 scorer，关闭报价缓存；同一隔离清理策略分别运行 full-rescore 和 reuse。此入口尚未接到默认 decision-greedy。
+
+实测：
+
+| 模式 | 候选 trial | DP 生成 | 清理后布局 | 完整布局评分 | 跨提交跳过 trial | 提交 |
+|---|---:|---:|---:|---:|---:|---:|
+| 同策略全量重算 | 3 | 3 | 21 | 21 | 0 | 2 |
+| 同策略增量队列 | 2 | 2 | 14 | 14 | 1 | 2 |
+
+两组提交顺序（包括同分先 A）、每步 gain 15、每步完整模块哈希相同。独立调用 TTI worker 复核成本链均为 **63 → 48 → 33**。6,724 组 CPU 输入输出相同。提交阶段仍必须把缓存的局部产物映射到当前父 IR；这不是再次生成/清理/评分候选。
+
+计数不把依赖快照的内部克隆算成候选生成，也不把提交产物应用算成 trial。当前快照实现仍有全模块克隆开销，需要后续优化，尚无真实 case 编译加速结论。
+
+### 有效性依据和限制
+
+这个证书只适用于“隔离 trial 清理 + 局部提交”，不能用于旧全函数清理的缓存收益。
+
+1. 单元输入为参数/常量；完整单元内容、出口 PHI、读边界与精确 use-site 未变，临时函数规划/清理的输入不变。
+2. 清理只在临时函数内运行；提交不再运行全函数 cleanup。产物限制为无环纯整数 CFG，原外部 CFG 的可达性保持，外部已有指令不会被改写；出口 PHI 保留其定义身份和外部使用者。
+3. 仅允许 gfx906 / amdgcn 的固定标量整数指令子集：add/sub/mul、位运算/移位、icmp/select/phi、br/ret/freeze，并检查已有 `gcnQuoteKey` 覆盖。排除 memory、call、浮点/向量和上下文相关 cast。所有价格仍来自 pinned LLVM24 完整函数评分。
+4. 这个子集的每条价格由固定 target/context、操作码和相关类型决定。当前函数的原外部指令没有变化，价格可在差值中抵消。因此局部产物对应的 **完整函数差值** 在证书未失效时可复用；没有使用临时函数 return 包装的成本代替它。
+5. 保存 gain，不保存旧父 IR 的绝对 after-cost。提交后用当前成本减 gain；有新 trial 时，其完整 TTI before 必须等于累计预测的当前成本。所有未评分新候选/失效候选完成后才选堆顶。
+
+真实访存反例明确不属于证书覆盖域；测试断言实验入口拒绝它，并重跑现有 `18 → 21` 回归，确认原全函数路径仍重新评分。计划缓存、报价缓存与整体 trial 复用分别处理。
+
+### 已发现并修复的接线问题
+
+身份 metadata 最初被带进临时函数。DP1 的指令准入会把带非 debug metadata 的指令排除，实际只生成保持分离布局。现在提取时仅移除 `fusion.incremental.identity` 内部标记，父模块继续保留身份。这一修复后，A/B 各生成 7 份布局；局部回放测试扩大为 49 种组合，每种执行 6,724 组 CPU 输入。之前单组合回放只证明了拼接正确，不能证明已共享指令。
+
+### 与原全函数策略的首处分歧
+
+同一原始 fixture、同一个 A 候选，原 v1 全函数清理评分为 **63 → 43**；局部策略为 **63 → 48**。局部产物保留边界跳转和单输入出口 PHI，多 4+1 分。该差异没有通过修改旧期望隐藏，默认 driver 没有切换。
+
+后续仍需消除/妥善处理边界开销及跨边界依赖，接入默认 driver 和旧路径回退，再跑冻结 case 与完整 PCM 对照。本节只完成首类隔离策略的整次 trial 复用正例，不代表原 Goal 完成。
+
+完整产物和报告：`build/incremental-unit-audit/greedy-cost-verified/`。
+
+## 确定性出口折叠（v2）与实际覆盖审计
+
+局部提交现在可消除单输入出口 PHI，并用 `MergeBlockIntoPredecessor` 折叠该出口，不运行全函数清理。写范围明确扩展到当前入口前缀、出口正文、出口 PHI 的直接用户及入口入边；不把这些指令自动加入隔离规划器的读取输入。当前纯整数 TTI 子集中的相关外部用户只替换同类型操作数或移动块位置，不改变报价。
+
+只对 root 条件分支忽略快照中的块归属/前一指令身份；仍比较分支指令正文和完整 use-site。其依据是当前准入只允许参数/常量条件，临时函数不读取入口前缀。其他读指令仍比较位置和顺序。应用时按当前发现的写边界校验，而不是沿用旧父 IR 的前缀指令集合。
+
+同输入实测成本改善为 **63 → 43 → 23**；全量重算与增量仍逐步 IR 相同，trial 3 → 2，生成 3 → 2，清理/评分布局 21 → 14。边界折叠的 49 种 A/B 布局组合全部通过 verifier 和每组 6,724 个 CPU 输入。真实 18 → 21 访存反例仍通过原路径重评回归。
+
+原全函数路径也为 63 → 43 → 23，但其最终 IR 不同：全函数清理将 B 的 `(y + select(q,3,4))*7` 重排为 `y*7 + select(q,21,28)`，并改变 A/B 运算的排列。去除内部身份 metadata 和局部符号名后仍不同。因此这不是原流程逐字节等价的证明，不能直接启用为默认。
+
+新增 `audit-isolated-coverage.cpp` 对 manifest 全部 40 项（含 PCM128/256）只读审计，共 1,597 个条件分支根：
+
+| 当前局部结构准入结果 | 数量 |
+|---|---:|
+| 两臂不是独占单入口 | 693 |
+| 条件来自外部 SSA 指令 | 441 |
+| 非简单共同出口 | 408 |
+| 出口存在额外前驱 | 55 |
+| 当前可隔离单元 | 0 |
+
+40 个函数均不在当前全函数纯整数 TTI 证明域内。**当前运行时真实 case 的跨提交整次 trial 复用覆盖仍为零**，不能宣称已经解决 PCM 编译瓶颈。
+
+下一步优先处理 441 个外部条件定义：把已在入口可用的 SSA 值作为显式隔离输入，记录身份/类型/相等关系及必要的控制与数据依赖；随后扩展经过审核的评分上下文范围。仍不能直接放开内存/全函数清理读依赖。结构不同的其他三类要独立处理，不能用固定半径代替边界。
+
+证据：`build/incremental-unit-audit/boundary-verified/`、`build/incremental-unit-audit/coverage.json`。旧 v1 局部实验的 63 → 48 → 33 记录保留，冻结基线未修改。
+
+## 外部 SSA 显式输入（v3）
+
+单元发现不再要求条件直接是参数/常量。对于条件、臂内操作数和出口值中的外部整数 SSA 定义，使用 DT 检查其支配入口；按持久 ID 去重并作为额外临时函数参数。回放时查找当前模块中的同一 ID，复核可用性、类型及输入集合，绝不把旧定义复制回当前模块。
+
+读取依赖加入这些输入的递归定义闭包，用 visited 集合处理 PHI 环。直接输入只忽略位置字段，仍比较定义正文及精确 use-site；这是因为其定义不在隔离函数内优化，并在每次发现/回放时重新检查支配关系。间接依赖仍保守比较位置/顺序。没有据此放开全函数清理依赖。
+
+新增外部条件端到端测试：两个 root 分别使用外部 icmp。全量与增量成本均为 **65 → 45 → 25**，提交/逐步 IR 相同；完整 trial 3 → 2，布局清理与评分 21 → 14。修改条件上游 add 的常量（条件指令本身仍引用同一 SSA）会因传递依赖改变而拒绝旧计划，当前模块不被修改。不支配入口的值仍拒绝。原参数条件测试和真实 18 → 21 访存反例继续通过。
+
+重新审计全部 40 个冻结输入，校验了解压后 SHA256：
+
+- 1,597 个条件分支根中，当前单输出结构可隔离单元 **0 → 7**。
+- DCT4/8/16 各 1；MS32/64/128/256 各 1。
+- 原 441 个外部条件拒绝消失；其中 430 个转而因内部指令超出当前支持范围而拒绝，4 个多输出，7 个进入当前结构范围。
+- 其他结构拒绝仍为 693 / 408 / 55。
+- **完整评分证明域仍为 0 个函数**；结构覆盖不等于整体收益可缓存。
+
+进一步诊断显示，这 7 个单元所在模块也都会被当前快照的未知 metadata 检查拒绝。DCT 的报价缺口包含 call/sdiv/trunc；MS 还有私有访存、alloca、addrspacecast 等。不能仅解除布尔过滤就启用评分缓存。后续需要支持明确的 metadata 依赖表示，并审核未改动外部指令的 TTI 上下文依赖。
+
+新增可重放审计脚本 `audit-isolated-coverage.py`，保留先前审计文件。证据：`external-input-verified/`、`ssa-base-control/`、`coverage-ssa-details.json`，均位于 `build/incremental-unit-audit/`。默认 v1 未变，真实 benchmark 的跨提交整次 trial 复用尚未启用。
+
+## Tuple metadata 依赖图与冻结输入回放验证
+
+新增 `incremental_metadata.h`，把 named/global/function/instruction metadata 放在同一个有根图中记录，支持 MDTuple、MDString 和整数 ConstantAsMetadata。保留 distinct/uniqued、共享关系、自引用和跨 named/指令附件的身份关系；不使用指针地址或打印编号作为持久身份。专用 metadata 节点（例如 DIExpression）、临时节点、非整数常量仍明确拒绝。
+
+快照中的指令正文去除 metadata 打印编号，另附图根引用；完整图进入保守模块上下文。任何图变化均使上下文失效，尚未尝试局部 metadata 依赖裁剪。原模块的 metadata 不会被删除。这是依赖表示能力，不能替代清理/TTI 读取范围的证明。
+
+验证结果：
+
+- 图测试覆盖 clone、IR 文本往返、自引用、相同结构的不同 distinct 节点、跨 named 根共享关系、内容修改和不支持节点拒绝。
+- 冻结 40 项、1,597 个分支根重新审计；DCT4/8/16 和 MS32/64/128/256 的 7 个结构单元全部通过快照，并完成隔离提取、原计划回放到当前模块、LLVM verifier。此项没有声称产生融合收益或 GPU 性能收益。
+- 外部 SSA 独立单元回归仍为 65 → 45 → 25；全量/缓存逐步 IR 相同，trial 3 → 2，清理/评分 21 → 14，6,724 组 CPU 输入一致。
+- 原全函数清理与局部策略最终 IR 仍存在差异；没有修改期望值，也未切换默认路径。
+
+证据：`build/incremental-unit-audit/coverage-metadata-replay.json`。完整 TTI 证明域仍覆盖 0 个冻结函数，真实 benchmark 的跨提交整次 trial 跳过仍未启用。接下来必须证明未改动外部指令的评分上下文依赖，不能仅移除过滤条件。
+
+## 真实单元完整评分探针（仍不缓存整体收益）
+
+新增 `tests/fusion-search/probe-isolated-real.cpp/.py`。脚本校验冻结输入 SHA256；提取单元后先原样回放作为边界拼接对照，再执行实际 DP1 与局部清理，回放到完整当前模块，逐布局调用 LLVM24 评分（报价缓存 off）。回放自带 LLVM verifier。输出 plan_kind、merge_path、原样回放成本及每个完整模块产物；没有启用真实输入的跨提交收益复用。
+
+| 输入 | 父模块 | 原样提取/回放 | DP1 与局部清理后 | 生成路径 |
+|---|---:|---:|---:|---|
+| DCT8 | 62 | 62 | 62 | single-branch-segment-dp |
+| MS32 | 370 | 370 | 355 | single-branch-separate |
+
+MS32 的 15 分不是原样边界拼接产生的，也不能标记为匹配指令的共享收益：生成路径是 separate，经局部清理后降低成本。这说明接入默认提交策略前，还需保留其原有共享/收益准入条件，不能仅看到整体正分就提交。该探针仅检查 IR 生成与完整评分，不宣称 GPU 正确性或加速，也不证明其与全函数清理等价。
+
+评分源码审核定位（固定 LLVM24 6be16f356d3e）：
+
+- `TargetTransformInfoImpl.h:1526` 的 GEP 报价读取唯一使用者访问类型；不能只比较 GEP 自身。
+- `AMDGPUTargetTransformInfo.cpp:578` 的 FMul 分支读取唯一使用者及融合条件；浮点域不能沿用纯整数的局部证明。
+- 同函数整数 add/sub/mul/移位分支只读取类型合法化和子目标；整数 div/rem 进入 `BasicTTIImpl.h:1079`，后续扩展需单独覆盖其类型/操作合法化路径。
+- `BasicTTIImpl.h:1244` 的 cast 路径含 extending-load 检查；外部 SSA 正文不变不意味着相关 TTI 依赖未变。
+
+因此本轮没有放宽 `isolatedScalarTTIDomain`，也没有修改默认报价 key。后续应建立外部评分依赖证书，并用真实上下文变化反例检验；不能把上述探针的单次成功作为跨提交复用依据。
+
+证据目录：`build/incremental-unit-audit/dct8-real-control/`、`ms32-real-control/`。重放入口：`python3 tests/fusion-search/probe-isolated-real.py --case DCT8 --tool build/incremental-unit-audit/probe-real --out <新目录>`。
+
+## v4：外部评分依赖接入队列
+
+实验入口不再要求整个函数只有纯整数计算。单元本身仍受原纯计算边界限制；外部指令仅允许已有、经过 pinned GCN 审核的 `gcnQuoteKey` 范围。没有扩展默认报价 key，也没有给未知指令猜测价格。
+
+新增 `isolatedScoringReads`：除原先上下文无关的整数/控制指令外，按稳定 instruction ID 记录每条指令的报价 key，并合入每个候选 read-set。外部 GEP 使用者信息、extending-load 属性、访存地址空间/对齐等报价输入改变，或相关指令增加/删除时，保守地使所有候选收益失效。模块属性/目标仍由 snapshot context 覆盖；单元操作数和精确 use-site 仍由原依赖集合覆盖。这样外部报价输入未变时，未改动指令成本在 before/after 差值中抵消；但不能据此复用全函数清理产生的收益。
+
+新 `--memory` 测试在独立 A/B 之外添加 store/load，并把 load 的值用于最终结果。实际完整 LLVM24 成本 **66 → 46 → 26**；全量与增量逐步 IR、提交和 TTI 相同，trial 3 → 2，清理/评分 21 → 14，6,724 组 CPU 输出一致。报价缓存始终关闭。改变外部 load 对齐会使队列失效，阻止提交，并拒绝旧 ticket 结果。新测试已加入 `tests/run-v1`。
+
+同一测试的原全函数清理对照是 65 → 65 → 45（首先消除了可转发的 load），最终 IR 仍不同；该差异明确保留，不能用局部策略的通过结果宣称默认流程等价。真实 18 → 21 反例的原回归仍通过；实验入口依然不会尝试其含访存的两臂，不能误缓存该收益。
+
+全部 40 个冻结输入重新审核：评分域覆盖从 0 增至 8（BIT32/64/128/256、PCM32/64/128/256），但与当前 7 个可隔离单输出单元没有交集。因此真实 benchmark 整次 trial 复用仍为 0；当前瓶颈转向单元内部的访存与边界能力，而不是函数外存在任意访存便全部拒绝。下一步需实现带明确读写契约的访存单元，保留共享准入和全局清理对照。
+
+证据：`build/incremental-unit-audit/coverage-external-quotes.json`；默认 v1 driver 未改。
+
+## 多输出单元：PCM 所需的出口值接口
+
+直接检查冻结 PCM32：16 对简单兄弟 B2B 都包含单侧 store 与下标递减，出口有两个 PHI。因此其覆盖缺口不仅是访存指令，还包括旧隔离接口的单输出限制。
+
+`B2BUnitCapsule` 已扩展为非空的多整数输出：隔离函数使用结构体返回值承载出口 PHI；回放时逐个恢复当前模块的 PHI incoming，再按原有规则折叠单前驱出口。返回 tuple 必须能解析为显式组成值，否则拒绝回放。只删除从本次 capsule 复制来的无用 tuple 构造指令，不对父函数运行 DCE，也不修改其 ABI。最终仍在完整当前模块上做 verifier、写范围检查与 TTI 评分。
+
+新增 `--multi` 测试：B 带两个 live-out，收益变为 21，高于 A 的 20，提交顺序是 B 再 A。B 改写 A 的出口边界，因此缓存路径必须使 A 失效，实际两组都是 3 次 trial、21 次清理/评分；不能为了得到复用计数放宽这个边界依赖。两组完整 TTI 均为 **65 → 44 → 24**，逐步 IR/提交相同，6,724 组 CPU 输出相同。原全函数清理对照 60 → 40 → 24，最终 IR 不同，仍未宣称与其等价。
+
+原单输出端到端复用测试通过（63 → 43 → 23，trial 3 → 2）；49 种 A/B 布局组合的当前父模块回放和每组 6,724 个 CPU 输入对比也通过。多输出测试已纳入 `tests/run-v1`。
+
+40 个冻结输入重新审核：结构单元从 7 增至 11（DCT 三项各 1，MS 四项各 2），全部通过原样提取/回放 verifier；评分域仍为 BIT/PCM 的 8 项，两者尚无交集。PCM 内部 store 仍未放开，真实 benchmark 的整次 trial 复用仍为 0。下一步处理普通访存与指针输入、metadata 和副作用的隔离契约。
+
+证据：`build/incremental-unit-audit/coverage-multi-output.json`。默认 v1 driver 未改。
+
+## 普通 store、指针输入与 PCM32 完整队列对照
+
+单元内部增加普通整数 store，允许支配入口的指针 SSA/参数作为 opaque 输入。volatile/atomic store 仍明确拒绝，内部 load/call 未放开。隔离提取时保留普通指令属性与对齐，但不导入原 metadata 优化假设；回放禁止非普通 store。该局部路径仍是单独策略，不替代默认全函数清理。
+
+写范围检查增加有范围的 metadata 比较：仅在检查改写范围时忽略授权写集合的附件，完整比较 named/global/function 根及区域外附件。候选读取证书仍使用全图；没有利用这项写检查豁免缓存依赖。测试验证范围内附件可以变化，而外部附件或完整读取图的变化仍能被检测。
+
+新增 `--stores` 合成回归：A/B 均写同一地址，在两阶段之间和末尾分别读取，使两次写入及其顺序均可观察。实际 LLVM24 成本 **72 → 51 → 30**，缓存/全量逐步 IR 与提交一致；6,724 个 CPU 输入结果相同。volatile/atomic 负例通过。当前 metadata/外部报价证书保守失效，所以该例仍为 3 次 trial，未声称有整次复用。
+
+冻结 PCM32：
+
+- 同父输入 16 个候选共 80 个有效布局，经 verifier、授权写范围检查和完整 LLVM24 TTI；较好布局 **1392 → 1377**。
+- 完整局部策略全量重算与增量队列均提交 **16 次**，每步收益 15，成本链为 **1377,1362,1347,1332,1317,1302,1287,1272,1257,1242,1227,1212,1197,1182,1167,1152**。
+- 每步 candidate identity、gain、TTI、IR hash 完全一致。
+- 两组均 **136 次 trial、680 次布局清理、680 次评分**；增量组 120 次失效、**0 次整次 trial 复用**。这是覆盖与正确性证据，绝不是缓存加速完成。
+- 未做本轮 GPU 执行验证，也尚未比较该局部策略与当前默认全函数策略的完整提交链。
+
+探针增加 `--greedy` 模式，保留 full/cached 每步完整 IR，报价缓存关闭。证据：`build/incremental-unit-audit/pcm32-store-probe/`、`pcm32-store-greedy/`。下一步缩小当前全局 metadata/外部报价依赖的保守范围，同时证明去掉的依赖不会改变候选计划及整体收益；不能仅根据这次 16 步一致而跳过评分。
+
+## v5：PCM32 首次跳过真实完整 trial
+
+审计工具 `audit-isolated-invalidations.cpp` 在已保存的逐步 IR 上重建候选读取集合，逐项区分 context / instruction / uses / tti-context。每步使用独立 LLVMContext，避免多次解析命名结构体产生自动后缀、误报上下文变化。旧证书的 120 次失效均涉及全局 metadata/报价项，其中 56 次还涉及指令与使用者变化。
+
+本次缩小的读取范围具有以下实现依据：
+
+1. 隔离提取器在规划前显式移除全部 instruction metadata，外部 SSA 作为无额外属性的 opaque 参数。因此 isolatedPlanning 快照可忽略 instruction metadata；named/global/function 根、目标和函数属性继续保留。完整写审计仍使用完整 metadata 图，未把此规则用于全函数清理。
+2. 评分仍要求整函数处于已审核 gcnQuoteKey 支持域。候选记录其读集和可能受边界改写影响的报价输入；区域外且不受改写影响的指令成本在 before/after 差值中抵消。
+3. 普通标量访存、零参数白名单 intrinsic、pointer bitcast 的已支持报价不读取被替换的 SSA 数值；只移动边界前缀不会改变这些报价。它们在实际 read-set 中仍被记录，但不因仅列入可移动 write-set 而扩大读取范围。GEP、extending-load cast 等仍保守记录 read/write 两侧。
+4. unit 指令/属性、直接及传递输入定义、精确 use-site、出口和当前支配关系仍校验；旧计划只回放到当前模块。不支持的完整函数继续拒绝实验复用。
+
+实际 PCM32 全量与增量队列结果：
+
+| 指标 | 全量重算 | 增量 |
+|---|---:|---:|
+| 提交 | 16 | 16 |
+| trial / IR 生成 | 136 | 72 |
+| 布局清理 | 680 | 360 |
+| 完整 TTI 评分 | 680 | 360 |
+| 整次 trial 复用 | 0 | 64 |
+| 依赖失效重算 | — | 56 |
+| 最终 TTI | 1152 | 1152 |
+
+每步提交身份、gain、TTI 与 IR hash 完全一致；与上一版局部策略的 16 步产物逐字比较也一致（仅忽略 ModuleID 路径）。完整 trial 减少 47.1%，这是计数结果，未把它直接当成编译时间加速比。报价缓存关闭。
+
+回归：普通 store 顺序观测、相关外部 load 对齐改变、过期 ticket、两个 live-out 引起的出口依赖失效、真实全函数 18 → 21 反例均通过；49 种布局当前父模块回放与每组 6,724 个 CPU 输入通过。metadata 测试确认 isolatedPlanning 忽略附件，但保留 named 根内容变化的失效。原含外部访存的独立单元仍可跳过一次完整 trial。
+
+持久摘要：`incremental-pcm32-local-reuse.json`；详细证据：`build/incremental-unit-audit/pcm32-scoped-greedy/`。这是**局部策略**首次在真实冻结输入上跨提交复用完整收益并跳过 trial。尚未证明与默认全函数清理等价，默认 driver 未切换；GPU、BIT/vLLM、PCM128/256 完整对照及编译耗时验收仍未完成，原 Goal 保持 active。
+
+## PCM32 耗时与默认流程对照；PCM256 后续缺口
+
+探针增加 full/cached 独立计时及阶段 JSON；增加 `--seed-ir`，分别记录冻结原始输入 SHA256 和实际父 IR 路径/SHA256。不会把中间父 IR 的实验冒充从冻结输入开始的完整运行。
+
+PCM32 顺序执行 full 后 cached，报价缓存 off，单线程实验入口：
+
+- 全量 **48.014 s**，增量 **26.156 s**，下降 **45.5%**。
+- 仍是 16 次提交，136 → 72 个 trial，680 → 360 次清理/评分，逐步结果一致。
+- 此计时包含该入口的规划、回放、清理、完整评分和逐步 IR 保存；不是默认 16 路流水线的时间，也不是 GPU 加速。
+- 当前只有一次顺序测量，未消除先后执行和共享机器负载的影响，不宣称稳定倍数。
+
+与默认 v1 冻结参考 `build/incremental-identity-regression/PCM32/` 对比：前 16 次提交均是每次 -15 TTI，对应产物的 LLVM12 llvm-diff 全部返回 0。这里是指令结构比较，不宣称 metadata 或文本逐字相同。默认还有第 17 次 `_Z3pcmPi:B0:B2:B1`，把 1152 降到 1142：左侧入口分别计算 shl，但一侧去循环入口，另一侧去循环后汇合点，不满足当前隔离候选的共同直接出口要求。
+
+将局部第 16 步结果去掉内部 identity metadata 后，显式交给现有 DP1/full-cleanup 路径处理该候选，得到 **1152 → 1142**，最终与默认 final.ll 的 llvm-diff 也返回 0。这只证明此个案的手动回退可衔接；尚未实现自动混合队列，不允许先把全部局部候选提交完、再统一回退以冒充全局最佳贪心。未来必须把不支持的候选评分纳入每轮竞争，或给出合法上界。
+
+PCM256 原始输入及默认首步后的父 IR，当前实验入口均枚举 0 个候选；这两次毫秒级短跑不是有效性能回测。定位默认第二步 B101:B103:B102：两臂是 add/add/GEP/load，出口 5 个 PHI。当前内部 load/GEP 和全局数组指针输入尚不支持，因此不能进入目标的 PCM128/256 完整对照。下一步应补这类访存输入与回放，而不是调整并行或超时。
+
+持久结果：`incremental-pcm32-timing-fallback.json`。详细目录：`pcm32-scoped-timed/`、`pcm32-local-fallback/`、`pcm256-scoped-timed/`、`pcm256-after-step1-scoped-timed/`，均在 `build/incremental-unit-audit/`。上述任务均已终止完成，没有需保留的在途进程。默认 driver 未改，Goal 尚未完成。
+
+## v6：普通 load/GEP 与全局数组输入
+
+单元支持普通整数 load 和 GEP；volatile/atomic load 与原 store 一样拒绝。直接引用的 GlobalVariable 去重后作为额外 opaque 指针参数传入隔离函数，不导入 constant/noalias/readonly 等额外假设，不复制旧模块的全局对象。回放按当前模块的全局名称重新绑定并验证类型/集合，原完整模块 context 继续覆盖全局定义及初始化内容。内部调用与复杂指针常量表达式仍不支持。
+
+新增 isolated-only 指针 select/PHI 报价键：固定 LLVM24 `GCNTTIImpl::getCmpSelInstrCost` 经 `BasicTTIImpl.h:1441` 的标量分支只读取指针类型合法化及 i1 条件类型；PHI 使用通用 CF 成本。仍由 LLVM24 提供实际报价，没有猜测成本，默认 gcnQuoteKey 未改。这解决了共享 load 地址后产生的 pointer select 被实验评分域拒绝的问题；首个失败运行完整保留。
+
+测试：全局数组、两侧动态 GEP 与 load 的 `--loads` 回归为 **75 → 55 → 35**，全量/增量每步 IR 与 TTI 相同，6,724 个 CPU 输入一致。volatile/atomic 负例拒绝；改变全局初始化内容后旧 capsule 拒绝回放且当前模块不变。当前测试因边界报价依赖仍重算 3 次，未声称此合成例已复用。原 store 顺序测试、真实全函数 18 → 21 反例、snapshot/metadata/身份测试以及 49 种布局回放和每组 6,724 CPU 输入均通过。
+
+PCM256 默认首步后的父 IR：**120 个单元全部通过提取、原样回放和 verifier**，整函数在实验报价支持域内。已启动真实 full/cached 完整对照：
+
+- 二进制：`build/incremental-unit-audit/probe-real-loads-v2`，独立构建，运行期间不覆盖。
+- 输出：`build/incremental-unit-audit/pcm256-loads-v2-after-step1/`。
+- 进程 PID 3799792，工具 session 42668；checkpoint 时经 ps 确认运行约 4 分半，CPU 约 71%，仍在第一轮全量评分，尚未保存第一步。
+- `run-checkpoint.json` 保存二进制 SHA256 和起点。后续先检查现有进程/会话，不得因等待超时重启。
+
+这不是从冻结原始 IR 开始的完整默认流水线，也未得到 PCM256 性能结论。默认 driver 和自动回退尚未接入，PCM128 未启动；原 Goal 继续。
+
+## 同一父 IR 的只读快照复用（不是新增跨提交 gain cache）
+
+`B2BReplayContext` 一次构造完整写审计快照与 metadata-stripped 规划快照，并保存完整当前 IR 文本。隔离队列每轮构造一次，候选提取、布局回放和最终提交可以复用；每次使用前都逐字校验当前 IR，任何变化立即拒绝。此上下文不跨提交继续有效，不能替代独立候选的 read-set 证书，也不能让旧模块覆盖当前模块。无上下文的原回放接口继续保留作对照。
+
+验证：49 种 A/B 布局逐字 hash 与无上下文接口相同、每组 6,724 个 CPU 输入相同；即使 B 的实际依赖未变，A 提交后拿旧 exact-parent context 回放 B 仍会被拒绝。重新捕获当前上下文后可安全应用旧 B 计划。
+
+PCM32：完整 16 步与先前局部策略的产物逐字一致（只忽略 ModuleID 路径）；仍是 trial **136 → 72**、清理/评分 **680 → 360**、TTI **1392 → 1152**。本次顺序单线程计时 full **42.138 s**、cached **22.993 s**；同期 PCM256 原长测在运行，不能把它与之前不同负载的 48.014/26.156 s 直接相减来声称稳定优化幅度。摘要 `incremental-pcm32-parent-facts.json`。
+
+PCM256 原长测仍使用冻结的 `probe-real-loads-v2` 二进制，PID 3799792 / session 42668 未重启、未替换实现；本轮末已保存 full-0.ll，cached 阶段尚未开始。详细目录仍为 `pcm256-loads-v2-after-step1/`。后续继续轮询同一进程/会话。
+
+## 每轮竞争的直接兄弟 B2B 回退（实验入口）
+
+`runIsolatedB2BGreedy` 增加显式可选的 siblingFallback；探针 `--hybrid` 使用该模式，默认 v1 driver 未改。当前只加入不满足局部边界的直接兄弟 B2B，不声称覆盖 R2R、B2R 或原 decision-preparation 枚举。
+
+每轮先统一枚举局部/回退候选，再完成全部 new/invalid 评分，最后按 gain 和当轮枚举顺序选最佳。回退使用现有 DP1 和全函数 DarmCFG/EarlyCSE/DCE/InstCombine，收益按完整当前父 IR 相对完整产物计算，包含其非局部清理影响。它的 read-set 是完整父 IR 文本；任何提交后均重新试跑，绝不跨父 IR 复用其全模块产物。评分失败直接失败，不缓存成零收益。
+
+回退提交前再次逐字检查父 IR；产物从本轮完全相同父 IR 生成，不能覆盖其他新提交。由于无法证明旧 lineage，回退后从旧 next_identity 高水位以上给产物全部重新编号，保守使原候选失效并重新发现。局部候选仍可在依赖未变时跳过整个 trial。
+
+PCM32 完整实验结果：
+
+| 指标 | full | cached |
+|---|---:|---:|
+| 提交 | 17 | 17 |
+| 回退提交 | 1 | 1 |
+| trial | 304 | 240 |
+| 其中回退 trial | 168 | 168 |
+| 清理/评分 | 714 | 394 |
+| 完整 trial 复用 | 0 | 64 |
+| 最终 TTI | 1142 | 1142 |
+| 本次顺序单线程时间 | 43.353 s | 24.719 s |
+
+每步候选、gain、TTI 和 IR hash 在实验 full/cached 间完全一致。17 步与默认 PCM32 参考的 LLVM12 llvm-diff 也全部返回 0（不宣称 metadata/文本逐字一致）。原长测同期运行，计时仅作这次观测，不是默认 16-worker 流水线性能。
+
+新增 `hybrid-priority.ll` / `check-hybrid-priority.py`：一个高收益、不同出口的回退候选与局部候选同轮出现，必须先选回退，再从新身份 epoch 发现局部候选。得到 fallback → local，成本 43 → 23；full/cached 链一致，新 ID 不复用旧 epoch，6,724 组 CPU 输出与原 IR 一致。测试已加入 tests/run-v1。
+
+持久摘要：`incremental-pcm32-hybrid.json`；产物：`build/incremental-unit-audit/pcm32-hybrid/`。仍需覆盖其他候选形态、正式 driver、冻结 case 与 GPU 验证。PCM256 原进程 PID 3799792 / session 42668 保留，checkpoint 时运行约 23 分钟、full 已保存 2 步、cached 尚未开始，二进制未修改。
+
+## 结构候选的全函数回退竞争（catalog 实验入口）
+
+新增 `resolveCandidateCatalog`：在当前函数的 Analysis/Inventory 上解析既有 `enumerate` 结果，返回实际 split、左右 entry/exit 和 region 属性。不能按 B/R 名字推断融合类型：`tryPair` 对非必经块会分类为 B2R/R2B，即使双方坐标都是 B。区域候选身份由这些块的 terminator lineage 构成，不使用会重排的 B/R 编号。
+
+`--catalog` 是独立实验模式，保留先前 `--hybrid` 行为。每轮加入尚未覆盖的结构候选；DP1 无布局时调用既有 `tryPair(..., allowB2B=false)`，保留 DARM 区域/复制实现，但不允许静默 DARM B2B 回退。所有候选先完成评估再选堆顶。新增候选仍使用完整父 IR 的 read certificate，不跨提交复用收益或全模块产物。全函数回退提交后仍换身份 epoch、重新发现。
+
+这是既有结构 catalog 的接线，不是默认 decision-greedy 的完整替代：后者还会 normalize/prepareArmPairs。实验仍按原局部/root 顺序后追加 catalog，同分规则在 full/cached 间一致，但尚未证明与正式 driver 的全部同分顺序等价。默认 driver 和运行中的 PCM256 二进制未改。
+
+验证：
+
+- `catalog-regions.ll` 的 R2R 候选被实际评分并提交，最终成本 18，full/cached 每步身份、gain、成本、IR hash 相同，CPU 输出与未融合一致。
+- 同夹具重命名并重排块后，坐标变化，但解析后的区域稳定身份集合不变。
+- 两个复制 trial 的原始 PHI 未通过 verifier，记录 `raw_verifier_failed`，未评分、未提交。它们是既有变换拒绝，不声称已成功覆盖 B2R；需后续单独定位。
+- PCM32 catalog：17 次提交、最终 TTI 1142；full/cached trial 314/250，清理与评分各 724/404，整次 trial 复用 64。10 次合法 DARM R2R trial 已参与评分，未胜出；另有作用域/入口拒绝记录。所有 17 步与默认参考的 LLVM12 llvm-diff 返回 0。full/cached 内每步 hash 完全一致，未宣称与默认 metadata 字节相同。
+- 本次单线程顺序计时 44.657/25.815 秒；同期旧 PCM256 长测运行，不作为默认 16-worker 编译耗时结论。
+
+结果 `incremental-pcm32-catalog.json`，详细产物 `build/incremental-unit-audit/pcm32-catalog/`。新测试 `check-region-fallback.py` 已纳入 tests/run-v1。下一阶段仍需正式 driver 集成、原同分顺序、完整冻结回归及 PCM128/256；Goal 未完成。
+
+## 正式 driver 接线前的单候选接口
+
+代码核对发现，正式 `decision-greedy` 先依次处理初始 decision targets，最后进行 structural sweep；每轮顺序是原父 IR catalog，再接 prepared arm candidates。当前实验队列是全函数竞争。直接从正式入口调用实验 run-loop 会改变调度和同分行为，因此不能作为等价接线。
+
+将规划/依赖/评分证明与调度分开：新增 `isolated_b2b_trial.h` 的 `evaluateIsolatedB2B`。输入为当前 Module、实际 root、当前 IRIdentity、严格同父 IR 的 ReplayContext 和 RoundContext；内部重新发现 unit，校验边界和评分域。返回稳定身份、完整 read certificate、write set、capsule 计划、当前完整父成本/收益、布局清理和评分计数。部分评分失败抛出错误，不返回可缓存零收益。产物是 capsule，不是可覆盖旧整模块的产物。
+
+实验队列已改为调用此接口，队列本身仍负责失效、全量 pending 评分和原有同分比较。正式 driver 后续应在既有 raw catalog 条目上调用单候选接口，保留 per-decision/末尾 sweep 调度；prepared 候选须单独证明 normalization 的依赖和身份，初期继续全函数重算。局部清理属于单独策略，不能把该接口的 gain 冒充旧全函数清理 gain。
+
+接口抽取验证：PCM32 full/cached 两组各 17 步，与抽取前的 catalog 版本相比，所有非计时指标相同，34 份逐步 IR 仅去除 ModuleID 路径后逐字一致。记录 `incremental-trial-interface-check.json`。访存依赖合成例仍为 66 → 46 → 26，整次 trial 3 → 2，6,724 CPU 输入一致；区域身份/回退测试和真实全函数 18 → 21 反例通过。默认 driver 尚未调用新接口，不能把接口抽取算作正式接线完成。
+
+## 正式 decision-greedy 的可选接线（尚非默认）
+
+新增 `--trial-policy whole-function|scoped-full|scoped-reuse`。默认 whole-function 保持原路径；两个 scoped 模式共用原 per-decision、prepared arm 和最终 structural sweep 调度，仅对原父 IR 上可证明支持的直接 B2B 使用 `ScopedGreedyAdapter`。prepared/区域/评分域外候选继续调用原全函数 worker。局部模式自身仍是不同清理策略，不能默认认为等价。
+
+适配器为每轮候选提供稳定 lineage key 和完整 read certificate；原队列保留枚举同分顺序，先完成全部 pending 才选最佳。复用候选不入 worker manifest，也不调用局部生成/清理/评分。获选时 capsule 在当前内存模块上回放；全函数获选产物换 identity epoch。局部试跑发生边界或评分异常时，回退全函数且将结果标为不可跨提交复用，不能把全函数收益挂到弱的局部依赖证书上。
+
+正式接线中发现并修正了两类差异：
+
+1. 身份 metadata 进入全函数规划会改变可生成布局。v1 接线试跑 PCM32 停在 1152；所有全函数/准备输入现在先去掉 instruction identity 标记，driver 内仍保留 lineage，恢复最后一次全函数融合至 1142。旧失败目录 `pcm32-driver-full` / `pcm32-driver-reuse` 保留。
+2. 局部 `MergeBlockIntoPredecessor` 会让无名 root 继承临时 `unit.*` 名，原 driver 因找不到原 decision 提前扫尾。v3 接线虽有 56 次复用、最终仍 1142，但从第 2 步开始候选/IR 顺序不一致，**这 56 次不能算保持原流程的优化成果**。capsule 回放现保留原 root 名称，并新增无名 root 回归。保留内存中当前模块也避免反复解析导致类型重命名使证书保守失效。
+
+v4 结果：PCM32、PCM64 的 reference/scoped-full/scoped-reuse 均 17 次提交、TTI 1142；每一步 decision、候选坐标、成本相同，scoped full/reuse IR 去掉 ModuleID 路径后逐字一致，reference 与 scoped 的每步 LLVM12 llvm-diff 均通过，所有逐步 IR verifier 通过。两 case 的局部 trial 都是 44 次、220 次清理/评分，**正式路径整次 trial 复用为 0**。这是保持原调度后的真实结果，不以 v3 的改变调度数字代替。局部串行实现也不能据此声称编译加速；v3 的单次观测参考 3.830s、错误调度局部 full 40.489s/reuse 23.699s，反而提示局部审计/串行工作开销需要优化。
+
+验证器 `tests/fusion-search/compare-scoped-driver.py` 比较三组全提交链、verifier、IR，并检查复用候选未进入 worker manifest。`--require-reuse` 是单独的正复用验收，PCM32/64 本轮只通过一致性验收，没有通过正复用验收。记录 `incremental-pcm32-driver.json` / `incremental-pcm64-driver.json`。
+
+回归：49 组当前 IR 回放组合、每组 6,724 CPU 输入通过；无名 root 不被临时名替换；访存独立性合成仍跳过一次完整 trial；真实 18 → 21 全函数依赖反例通过。默认程序路径尚未切换，完整冻结回归、并行局部试跑和 PCM128/256 仍未完成。
+
+新 PCM256 正式入口长测从冻结原始输入开始，独立二进制 `build/incremental-unit-audit/decision-greedy-scoped-v4`，目录 `build/incremental-unit-audit/pcm256-driver-v4/`，full 后接 reuse；`provenance.json` 固定输入和二进制 SHA256，`active-process.json` 记录当前 PID，工具 session 13762。原 PID 3799792 / session 42668 的 isolated 长测继续保留，未重启、未覆盖二进制。后续须轮询实际进程，不以日志静默判定结束。

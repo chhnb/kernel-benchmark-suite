@@ -68,3 +68,11 @@ prepare.py 固定候选对比；compile.py 公共最终代码生成；measure.py
 reviewed.json 汇总结果；summary.json 含逐批时间；measure/ 保存接受收据和输入快照。
 old/trial-0/after.ll 与 triangle/trial-0/after.ll 是应对比的局部清理 IR。
 在此前显式候选命令中把 --cleanup scoped-cfg 改为 --cleanup scoped-cfg-triangles 即可。
+
+## 入库 IR
+
+`l1-l2-triangle-final.ll` 是 L1+L2 triangle 候选最终 LLVM 12 O3 后的完整
+`face_kernel` IR。用原始 variant.ll 重跑 O3 后逐字节一致，LLVM verifier 通过。
+IR SHA256 为 `3bbdab375fbb3bf8f7709561ef183c81f66c7e0b12160c9b2a6de87f205ec0d0`。
+历史测量的 HSACO SHA256 为 `0066c670f77d14c31081f86251aad86b5267db1358324e8be71261be8b9fa906`，
+与 reviewed.json 一致。本次 LLVM 12 llc 路径已失效，未重新生成 HSACO 或执行 GPU 测量。

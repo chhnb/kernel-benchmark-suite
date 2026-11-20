@@ -1,0 +1,12 @@
+{
+  "base_commit": "38565fe0adb031251b26c56ae568983393fdd433",
+  "worktree_changes_not_committed": true,
+  "gpu_summary_source_commit": "main suite runner provenance, not the experimental transform revision",
+  "cpu_continuation": {
+    "fixed": "first CPU admission timed out at 1800s; completed parent IR and compiled hashes validated before reuse",
+    "greedy": "paused at29 commits; continuation fixture reproduces uninterrupted selection rounds and final IR bytes; initial targets/order/config and parent TTI verified"
+  },
+  "scope": "VLLM generated synthetic64K/128K,3 batches,3 warmups,15 measurements; not historical Qwen inputs",
+  "conclusion": "fixed trees pass; default constrained greedy fails2% performance limit; no blanket replacement claim",
+  "frozen_references_modified": false
+}

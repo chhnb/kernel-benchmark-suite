@@ -1,0 +1,7 @@
+[
+  "/opt/rocm/llvm/bin/ld.lld",
+  "-shared",
+  "{out}/kernel.o",
+  "-o",
+  "{out}/kernel.hsaco"
+]

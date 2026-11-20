@@ -1,0 +1,420 @@
+{
+  "revision": "4a6ce7851dc3e54ca7a6e3db3181e86e39d6d9ce",
+  "source": "/home/chh/divergence-strategy-search/explorations/partition-darm-rocm-20261025/boost/partition-search-v1/landau/cache/plain.ll",
+  "source_bytes": 2392453,
+  "cache_manifest": {
+    "case": "landau",
+    "revision": "4a6ce7851dc3e54ca7a6e3db3181e86e39d6d9ce",
+    "n": 12,
+    "interval_count": 78,
+    "intervals": [
+      {
+        "a": 0,
+        "b": 1,
+        "function": "cache_landau_0_1"
+      },
+      {
+        "a": 0,
+        "b": 2,
+        "function": "cache_landau_0_2"
+      },
+      {
+        "a": 0,
+        "b": 3,
+        "function": "cache_landau_0_3"
+      },
+      {
+        "a": 0,
+        "b": 4,
+        "function": "cache_landau_0_4"
+      },
+      {
+        "a": 0,
+        "b": 5,
+        "function": "cache_landau_0_5"
+      },
+      {
+        "a": 0,
+        "b": 6,
+        "function": "cache_landau_0_6"
+      },
+      {
+        "a": 0,
+        "b": 7,
+        "function": "cache_landau_0_7"
+      },
+      {
+        "a": 0,
+        "b": 8,
+        "function": "cache_landau_0_8"
+      },
+      {
+        "a": 0,
+        "b": 9,
+        "function": "cache_landau_0_9"
+      },
+      {
+        "a": 0,
+        "b": 10,
+        "function": "cache_landau_0_10"
+      },
+      {
+        "a": 0,
+        "b": 11,
+        "function": "cache_landau_0_11"
+      },
+      {
+        "a": 0,
+        "b": 12,
+        "function": "cache_landau_0_12"
+      },
+      {
+        "a": 1,
+        "b": 2,
+        "function": "cache_landau_1_2"
+      },
+      {
+        "a": 1,
+        "b": 3,
+        "function": "cache_landau_1_3"
+      },
+      {
+        "a": 1,
+        "b": 4,
+        "function": "cache_landau_1_4"
+      },
+      {
+        "a": 1,
+        "b": 5,
+        "function": "cache_landau_1_5"
+      },
+      {
+        "a": 1,
+        "b": 6,
+        "function": "cache_landau_1_6"
+      },
+      {
+        "a": 1,
+        "b": 7,
+        "function": "cache_landau_1_7"
+      },
+      {
+        "a": 1,
+        "b": 8,
+        "function": "cache_landau_1_8"
+      },
+      {
+        "a": 1,
+        "b": 9,
+        "function": "cache_landau_1_9"
+      },
+      {
+        "a": 1,
+        "b": 10,
+        "function": "cache_landau_1_10"
+      },
+      {
+        "a": 1,
+        "b": 11,
+        "function": "cache_landau_1_11"
+      },
+      {
+        "a": 1,
+        "b": 12,
+        "function": "cache_landau_1_12"
+      },
+      {
+        "a": 2,
+        "b": 3,
+        "function": "cache_landau_2_3"
+      },
+      {
+        "a": 2,
+        "b": 4,
+        "function": "cache_landau_2_4"
+      },
+      {
+        "a": 2,
+        "b": 5,
+        "function": "cache_landau_2_5"
+      },
+      {
+        "a": 2,
+        "b": 6,
+        "function": "cache_landau_2_6"
+      },
+      {
+        "a": 2,
+        "b": 7,
+        "function": "cache_landau_2_7"
+      },
+      {
+        "a": 2,
+        "b": 8,
+        "function": "cache_landau_2_8"
+      },
+      {
+        "a": 2,
+        "b": 9,
+        "function": "cache_landau_2_9"
+      },
+      {
+        "a": 2,
+        "b": 10,
+        "function": "cache_landau_2_10"
+      },
+      {
+        "a": 2,
+        "b": 11,
+        "function": "cache_landau_2_11"
+      },
+      {
+        "a": 2,
+        "b": 12,
+        "function": "cache_landau_2_12"
+      },
+      {
+        "a": 3,
+        "b": 4,
+        "function": "cache_landau_3_4"
+      },
+      {
+        "a": 3,
+        "b": 5,
+        "function": "cache_landau_3_5"
+      },
+      {
+        "a": 3,
+        "b": 6,
+        "function": "cache_landau_3_6"
+      },
+      {
+        "a": 3,
+        "b": 7,
+        "function": "cache_landau_3_7"
+      },
+      {
+        "a": 3,
+        "b": 8,
+        "function": "cache_landau_3_8"
+      },
+      {
+        "a": 3,
+        "b": 9,
+        "function": "cache_landau_3_9"
+      },
+      {
+        "a": 3,
+        "b": 10,
+        "function": "cache_landau_3_10"
+      },
+      {
+        "a": 3,
+        "b": 11,
+        "function": "cache_landau_3_11"
+      },
+      {
+        "a": 3,
+        "b": 12,
+        "function": "cache_landau_3_12"
+      },
+      {
+        "a": 4,
+        "b": 5,
+        "function": "cache_landau_4_5"
+      },
+      {
+        "a": 4,
+        "b": 6,
+        "function": "cache_landau_4_6"
+      },
+      {
+        "a": 4,
+        "b": 7,
+        "function": "cache_landau_4_7"
+      },
+      {
+        "a": 4,
+        "b": 8,
+        "function": "cache_landau_4_8"
+      },
+      {
+        "a": 4,
+        "b": 9,
+        "function": "cache_landau_4_9"
+      },
+      {
+        "a": 4,
+        "b": 10,
+        "function": "cache_landau_4_10"
+      },
+      {
+        "a": 4,
+        "b": 11,
+        "function": "cache_landau_4_11"
+      },
+      {
+        "a": 4,
+        "b": 12,
+        "function": "cache_landau_4_12"
+      },
+      {
+        "a": 5,
+        "b": 6,
+        "function": "cache_landau_5_6"
+      },
+      {
+        "a": 5,
+        "b": 7,
+        "function": "cache_landau_5_7"
+      },
+      {
+        "a": 5,
+        "b": 8,
+        "function": "cache_landau_5_8"
+      },
+      {
+        "a": 5,
+        "b": 9,
+        "function": "cache_landau_5_9"
+      },
+      {
+        "a": 5,
+        "b": 10,
+        "function": "cache_landau_5_10"
+      },
+      {
+        "a": 5,
+        "b": 11,
+        "function": "cache_landau_5_11"
+      },
+      {
+        "a": 5,
+        "b": 12,
+        "function": "cache_landau_5_12"
+      },
+      {
+        "a": 6,
+        "b": 7,
+        "function": "cache_landau_6_7"
+      },
+      {
+        "a": 6,
+        "b": 8,
+        "function": "cache_landau_6_8"
+      },
+      {
+        "a": 6,
+        "b": 9,
+        "function": "cache_landau_6_9"
+      },
+      {
+        "a": 6,
+        "b": 10,
+        "function": "cache_landau_6_10"
+      },
+      {
+        "a": 6,
+        "b": 11,
+        "function": "cache_landau_6_11"
+      },
+      {
+        "a": 6,
+        "b": 12,
+        "function": "cache_landau_6_12"
+      },
+      {
+        "a": 7,
+        "b": 8,
+        "function": "cache_landau_7_8"
+      },
+      {
+        "a": 7,
+        "b": 9,
+        "function": "cache_landau_7_9"
+      },
+      {
+        "a": 7,
+        "b": 10,
+        "function": "cache_landau_7_10"
+      },
+      {
+        "a": 7,
+        "b": 11,
+        "function": "cache_landau_7_11"
+      },
+      {
+        "a": 7,
+        "b": 12,
+        "function": "cache_landau_7_12"
+      },
+      {
+        "a": 8,
+        "b": 9,
+        "function": "cache_landau_8_9"
+      },
+      {
+        "a": 8,
+        "b": 10,
+        "function": "cache_landau_8_10"
+      },
+      {
+        "a": 8,
+        "b": 11,
+        "function": "cache_landau_8_11"
+      },
+      {
+        "a": 8,
+        "b": 12,
+        "function": "cache_landau_8_12"
+      },
+      {
+        "a": 9,
+        "b": 10,
+        "function": "cache_landau_9_10"
+      },
+      {
+        "a": 9,
+        "b": 11,
+        "function": "cache_landau_9_11"
+      },
+      {
+        "a": 9,
+        "b": 12,
+        "function": "cache_landau_9_12"
+      },
+      {
+        "a": 10,
+        "b": 11,
+        "function": "cache_landau_10_11"
+      },
+      {
+        "a": 10,
+        "b": 12,
+        "function": "cache_landau_10_12"
+      },
+      {
+        "a": 11,
+        "b": 12,
+        "function": "cache_landau_11_12"
+      }
+    ],
+    "dispatch": "cache_landau_dispatch",
+    "conditions": [
+      "p >= 0.375",
+      "p >= 0.25",
+      "p >= 0.125",
+      "ilogb(p) >= -4",
+      "ilogb(p) >= -8",
+      "ilogb(p) >= -16",
+      "ilogb(p) >= -32",
+      "ilogb(p) >= -64",
+      "ilogb(p) >= -128",
+      "ilogb(p) >= -256",
+      "ilogb(p) >= -512",
+      "ilogb(p) >= -1024",
+      null
+    ]
+  },
+  "scope": "complete public API kernel; original selected 53-bit helper leaves; fallback never selected for merging"
+}

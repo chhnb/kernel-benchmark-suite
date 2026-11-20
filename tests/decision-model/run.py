@@ -34,6 +34,7 @@ with tempfile.TemporaryDirectory() as tmp:
  d=pathlib.Path(tmp)
  variants={
  'chain':base,
+ 'inverse-second-predicate':base.replace('%c1 = icmp slt', '%c1 = icmp sge').replace('br i1 %c1, label %b, label %test2', 'br i1 %c1, label %test2, label %b'),
  'reverse-second':base.replace('br i1 %c1, label %b, label %test2','br i1 %c1, label %test2, label %b'),
  'reverse':base.replace('br i1 %c0, label %a, label %test1','br i1 %c0, label %test1, label %a'),
  'guarded-div':base.replace('icmp slt i32 %x, 0','icmp eq i32 %x, 0').replace('%c1 = icmp slt i32 %x, 5','%quot = sdiv i32 100, %x\n  %c1 = icmp slt i32 %quot, 5').replace('%bv = mul i32 %x, 7','%bv = mul i32 %quot, 7'),
@@ -44,6 +45,21 @@ with tempfile.TemporaryDirectory() as tmp:
   old=before.read_bytes();catalog=json.loads(run(binary,before,'case'));assert before.read_bytes()==old
   assert len(catalog[0]['arms'])==4,(label,catalog)
   run(binary,before,'case',0,0,after)
+  text=after.read_text()
+  if label in ("chain", "inverse-second-predicate"):
+   entry=text.split("entry:", 1)[1].split("\n\n", 1)[0]
+   dispatch=text.split("decision.dispatch:", 1)[1].split("\n\n", 1)[0]
+   assert "%c0 =" not in entry and "%c0 =" in dispatch, label
+   assert "label %decision.dispatch" in entry, label
+  if label == "inverse-second-predicate":
+   assert "%c1 =" not in text, "superseded comparison survived condition cleanup"
+   assert "%c0 =" in text, "live dispatch selector was incorrectly deleted"
+  assert "decision.was_left" not in text,label
+  if label in ("guarded-load","guarded-div"):
+   assert "decision.take = phi" in text,label
+  else:
+   assert "decision.take = phi" not in text,label
+   assert "decision.gate:" not in text,label
   assert execute(before)==execute(after),label
   new=json.loads(run(binary,after,'case'))
   assert len(new[0]['arms'])==3,(label,new[0])
@@ -55,6 +71,26 @@ with tempfile.TemporaryDirectory() as tmp:
   assert len(rebound['arms'])==2,(label,rebound)
   assert len(rebound['arms'][0]['merged_from'])==3,(label,rebound)
   print(label,'execution equivalence OK')
+ # Build the right group first. Its unsafe second test creates a multi-block
+ # prefix; the old selector c1 escapes into the group and must be bridged
+ # when the next normalization adds an entry that bypasses that prefix.
+ src=base.replace('%c2 = icmp slt i32 %x, 12', '%quot = sdiv i32 100, %x\n  %c2 = icmp slt i32 %quot, 12')
+ before=d/'prefix.ll';before.write_text(src+harness)
+ right=d/'prefix-right.ll';run(binary,before,'case',0,1,right)
+ merged=d/'prefix-merged.ll';run(binary,right,'case',0,0,merged)
+ assert execute(before)==execute(right)==execute(merged)
+ assert len(json.loads(run(binary,merged,'case'))[0]['arms'])==2
+ assert 'decision.value = phi i1' in merged.read_text()
+ print('multi-block prefix selector dominance and execution OK')
+ # A reversed first predicate needs a live NOT outside its branch slice.
+ # Rediscovery must still expand this condition-only prefix.
+ src=variants['guarded-div'].replace('%c0 = icmp eq','%c0 = icmp ne').replace('br i1 %c0, label %a, label %test1','br i1 %c0, label %test1, label %a')
+ before=d/'inverted-prefix.ll';before.write_text(src+harness)
+ after=d/'inverted-prefix-after.ll';run(binary,before,'case',0,0,after)
+ cat=json.loads(run(binary,after,'case'))[0]
+ assert len(cat['arms'])==3 and len(cat['arms'][0]['merged_from'])==2
+ assert execute(before)==execute(after)
+ print('inverted short-circuit prefix identity OK')
  # Switch aliases must be one logical arm, with both edge alternatives retained.
  sw='''define i32 @case(i32 %x) {
 e: switch i32 %x, label %c [i32 0, label %a i32 1, label %a i32 2, label %b]

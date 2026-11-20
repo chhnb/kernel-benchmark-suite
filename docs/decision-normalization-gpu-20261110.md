@@ -1,5 +1,7 @@
 # Decision/Arm：关键分支核对与仅规范化 GPU 验收
 
+> Historical stage record. For the current implementation, see [the checkpoint](decision-fusion-checkpoint-20261110.md).
+
 2026-11-10，musa，AMD gfx906。独立实验路径；没有接入默认搜索，没有调用 RegionMelder，没有更新冻结 reference。
 
 结论：本次指定范围的规范化通过 GPU 正确性验证。Map-Airy 基本持平；vLLM 全部 32 处量化树各规范化 L0/L1 后，在同批随机 64K/128K 输入上耗时下降约 4.6%。这不是新融合引擎或新评分器的收益。

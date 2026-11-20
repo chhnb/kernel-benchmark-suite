@@ -1,11 +1,19 @@
+#include "fusion_profile.h"
+#include <fcntl.h>
+#include <unistd.h>
+#include <cerrno>
+#include <csignal>
+#include <optional>
+#include <limits>
 #include "fusion_search.h"
+#include "ir_pressure.h"
 #include "logical_region_state.h"
-#include "postopt_scorer.h"
 #include "llvm24_scorer.h"
 #include "llvm/IR/LLVMContext.h"
 #include "llvm/IRReader/IRReader.h"
 #include "llvm/IR/Verifier.h"
 #include "llvm/Support/SourceMgr.h"
+#include "llvm/Support/CommandLine.h"
 #include "llvm/Support/Signals.h"
 #include "llvm/Support/FileSystem.h"
 #include "llvm/Support/Path.h"
@@ -31,7 +39,7 @@ static json::Object stats(const Features&f) {
 static json::Object scoreJson(const ScoreResult&s) {
  json::Array cs;for(auto&c:s.contributions){auto o=op(c.operation);o["control_count"]=c.controlCount;o["after_count"]=c.afterCount;o["gain"]=c.gain;cs.push_back(std::move(o));}
  bool scored=s.status==ScoreStatus::Scored;
- json::Object o{{"status",scored?"scored":"not_evaluable"},{"reason",s.reason},{"contributions",std::move(cs)},
+ json::Object o{{"status",scored?"scored":"not_evaluable"},{"reason",s.reason},{"profitability_rejection",s.profitabilityRejection},{"contributions",std::move(cs)},
  {"coverage",json::Object{{"dependency",s.coverage.dependency},{"liveness",s.coverage.liveness},{"divergence",s.coverage.divergence},{"provenance",s.coverage.provenance},{"hardware_costs",s.coverage.hardwareCosts},{"legacy_counts_complete",s.coverage.legacyCountsComplete},{"operand_context_model","not_modeled; inspect retained IR"}}}};
  for(auto&kv:std::vector<std::pair<std::string,double>>{{"static_gain",s.staticGain},{"cleanup_gain",s.cleanupGain},{"parent_gain",s.parentGain},{"static_score",s.staticScore},{"dependency_penalty_applied",s.dependencyPenalty},{"liveness_penalty_applied",s.livenessPenalty},{"total",s.total}})
   o[kv.first]=scored?json::Value(kv.second):json::Value(nullptr);
@@ -50,23 +58,46 @@ static void jsonFile(const std::string&p,json::Object o) {
   std::error_code ec;raw_fd_ostream out(p,ec);if(ec)throw std::runtime_error(ec.message());out<<formatv("{0:2}\n",json::Value(std::move(o)));
 }
 struct DebugObserver final:Observer {
-  std::string dir;unsigned n=0;
-  explicit DebugObserver(std::string d):dir(std::move(d)) {
+  std::string dir;
+  std::string inputPath, outputPath;
+  bool fullSnapshots;
+  unsigned n=0;
+  DebugObserver(std::string d, bool full, StringRef input, StringRef output)
+      : dir(std::move(d)), fullSnapshots(full) {
+    if (!fullSnapshots) {
+      SmallString<256> absoluteInput(input), absoluteOutput(output);
+      if (auto ec=sys::fs::make_absolute(absoluteInput))throw std::runtime_error(ec.message());
+      if (auto ec=sys::fs::make_absolute(absoluteOutput))throw std::runtime_error(ec.message());
+      inputPath=absoluteInput.str().str();
+      outputPath=absoluteOutput.str().str();
+    }
     if(sys::fs::exists(dir))throw std::runtime_error("debug directory already exists");
     auto ec=sys::fs::create_directories(dir);if(ec)throw std::runtime_error(ec.message());
   }
   void logical(unsigned version,const std::string &value)override {
     std::error_code ec;raw_fd_ostream out(dir+"/logical-state-"+std::to_string(version)+".json",ec);if(ec)throw std::runtime_error(ec.message());out<<value;
   }
-  void initial(const Module&m)override { writeIR(m,dir+"/state-0.ll"); }
+  void initial(const Module&m)override { if(fullSnapshots)writeIR(m,dir+"/state-0.ll"); }
   void round(const RoundContext&r)override {
     auto stem=dir+"/round-"+std::to_string(r.parentVersion);
-    writeIR(*r.control,stem+"-control.ll");
+    if(fullSnapshots)writeIR(*r.control,stem+"-control.ll");
     jsonFile(stem+".json",json::Object{{"schema","incremental-score-round-v1"},{"hash_algorithm","llvm-sha1-printed-module"},{"parent_version",int64_t(r.parentVersion)},{"function",r.function},{"parent_hash",r.parentHash},{"control_hash",r.controlHash},{"llvm_version",r.llvmVersion},{"target_triple",r.targetTriple},{"data_layout",r.dataLayout},{"target_attributes",r.targetAttributes},{"cleanup",r.cleanup},{"feature_schema",r.featureSchema},{"weight_version",r.weightVersion},{"normalization_scale",r.normalizationScale},{"parent",stats(r.parentFeatures)},{"control",stats(r.controlFeatures)},{"control_ms",r.controlMs},{"control_cleanup_iterations",int64_t(r.controlCleanupIterations)}});
   }
   void trial(const Trial&t,const RoundContext&r,const ScoreResult&score,bool eligible)override {
     auto path=dir+"/trial-"+std::to_string(n++);auto ec=sys::fs::create_directory(path);if(ec)throw std::runtime_error(ec.message());
-    if(t.raw)writeIR(*t.raw,path+"/after-raw.ll");if(t.normalized)writeIR(*t.normalized,path+"/after.ll");
+    if(t.valid) {
+      auto pressure = [](const Function &function) {
+        auto value = irPressure(function);
+        return json::Object{{"complete",value.complete},{"peak_slots32",int64_t(value.peakSlots32)}};
+      };
+      jsonFile(path+"/pressure.json",json::Object{
+        {"before",pressure(*r.control->getFunction(r.function))},
+        {"after",pressure(*t.normalized->getFunction(r.function))}});
+    }
+    if (fullSnapshots) {
+      if(t.raw)writeIR(*t.raw,path+"/after-raw.ll");
+      if(t.normalized)writeIR(*t.normalized,path+"/after.ll");
+    }
     if(t.logicalState){std::error_code ec;raw_fd_ostream out(path+"/logical-state.json",ec);if(ec)throw std::runtime_error(ec.message());out<<t.logicalState->json();}
     json::Array Origins;for(auto &P:t.blockProvenance)Origins.push_back(json::Object{
       {"left_source_id",P.leftID},{"right_source_id",P.rightID},
@@ -76,38 +107,67 @@ struct DebugObserver final:Observer {
     jsonFile(path+"/block-provenance.json",json::Object{{"schema","melding-block-provenance-v1"},
       {"logical_decision",t.candidate.logicalDecision},{"logical_left",t.candidate.logicalLeft},{"logical_right",t.candidate.logicalRight},{"candidate",t.candidate.key()},{"parent_hash",r.parentHash},
       {"cleaned_hash",t.normalized?moduleHash(*t.normalized):""},{"blocks",std::move(Origins)}});
-    jsonFile(path+"/trial.json",json::Object{{"schema","incremental-score-trial-v1"},{"logical_decision",t.candidate.logicalDecision},{"logical_left",t.candidate.logicalLeft},{"logical_right",t.candidate.logicalRight},{"candidate",t.candidate.key()},{"version",int64_t(t.candidate.version)},{"parent_hash",r.parentHash},{"control_hash",r.controlHash},{"round_context","../round-"+std::to_string(r.parentVersion)+".json"},{"valid",t.valid},{"decision",!t.valid?"reject":score.status!=ScoreStatus::Scored?"unsupported":eligible?"accept":"reject"},{"reason",t.reason},{"merge_path",t.mergePath},{"cross_decision_leaves",t.candidate.crossDecisionLeaves},{"complete_leaf_plan",t.candidate.completeLeafPlan},{"moved_leaf_instructions",int64_t(t.movedLeafInstructions)},{"leaf_anchors",int64_t(t.leafAnchors)},{"leaf_anchor_pairs",[&](){json::Array a;for(auto &p:t.leafAnchorPairs)a.push_back(p);return a;}()},{"coalesce_gaps",t.candidate.coalesceGaps},{"coalesced_gap_groups",int64_t(t.coalescedGapGroups)},{"fusion_plan",json::Object{{"kind",t.planKind},{"matched_left",t.matchedLeft},{"matched_right",t.matchedRight},{"left_context",bound(t.leftContext)},{"right_context",bound(t.rightContext)},{"split_is_loop_header",t.loopHeaderSplit},{"replication_required",t.replication}}},{"local_reject_reason",t.localRejectReason},{"score_result",scoreJson(score)},{"eligible",eligible},{"cleanup_iterations",int64_t(t.cleanupIterations)},{"alignment_order","function_order_v1"},{"original_darm_similarity",t.originalSimilarity},{"original_darm_profitable",t.originalProfitable},{"replication_required",t.replication},{"orientation_swapped",t.swapped},{"left",bound(t.left)},{"right",bound(t.right)},{"after_raw",stats(t.afterRaw)},{"after",stats(t.after)},{"cleaned_hash",t.normalized?moduleHash(*t.normalized):""},{"parent_ir","../state-"+std::to_string(t.candidate.version)+".ll"},{"timings_ms",json::Object{{"merge",t.mergeMs},{"normalization",t.normalizeMs},{"features",t.featuresMs},{"trial_total",t.totalMs},{"score_with_analysis",t.scoreMs}}},{"semantic_validation","not_run"}});
+    json::Object report{{"schema","incremental-score-trial-v1"},{"logical_decision",t.candidate.logicalDecision},{"logical_left",t.candidate.logicalLeft},{"logical_right",t.candidate.logicalRight},{"candidate",t.candidate.key()},{"version",int64_t(t.candidate.version)},{"parent_hash",r.parentHash},{"control_hash",r.controlHash},{"round_context","../round-"+std::to_string(r.parentVersion)+".json"},{"valid",t.valid},{"rewrite_started",t.rewriteStarted},{"decision",!t.valid?"reject":score.status!=ScoreStatus::Scored?"unsupported":eligible?"accept":"reject"},{"reason",t.reason},{"merge_path",t.mergePath},{"layout_profitability",json::Array(t.layoutProfitability)},{"cross_decision_leaves",false},{"complete_leaf_plan",false},{"moved_leaf_instructions",int64_t(t.movedLeafInstructions)},{"leaf_anchors",int64_t(t.leafAnchors)},{"leaf_anchor_pairs",[&](){json::Array a;for(auto &p:t.leafAnchorPairs)a.push_back(p);return a;}()},{"fusion_plan",json::Object{{"kind",t.planKind},{"matched_left",t.matchedLeft},{"matched_right",t.matchedRight},{"left_context",bound(t.leftContext)},{"right_context",bound(t.rightContext)},{"split_is_loop_header",t.loopHeaderSplit},{"replication_required",t.replication}}},{"local_reject_reason",t.localRejectReason},{"score_result",scoreJson(score)},{"eligible",eligible},{"cleanup_iterations",int64_t(t.cleanupIterations)},{"alignment_order","function_order_v1"},{"original_darm_similarity",t.originalSimilarity},{"original_darm_profitable",t.originalProfitable},{"replication_required",t.replication},{"orientation_swapped",t.swapped},{"left",bound(t.left)},{"right",bound(t.right)},{"after_raw",stats(t.afterRaw)},{"after",stats(t.after)},{"cleaned_hash",t.normalized?moduleHash(*t.normalized):""},{"parent_ir",fullSnapshots?"../state-"+std::to_string(t.candidate.version)+".ll":inputPath},{"snapshot_mode",fullSnapshots?"full":"compact"},{"cleaned_ir",t.valid?(fullSnapshots?"after.ll":outputPath):""},{"timings_ms",json::Object{{"merge",t.mergeMs},{"normalization",t.normalizeMs},{"features",t.featuresMs},{"trial_total",t.totalMs},{"score_with_analysis",t.scoreMs}}},{"semantic_validation","not_run"}};
+    if (!t.anchorStats.empty()) report["anchor"] = json::Object(t.anchorStats);
+    jsonFile(path+"/trial.json", std::move(report));
   }
   void commit(unsigned version,const Candidate&c,const ScoreResult&score,const Module&m)override {
     writeIR(m,dir+"/state-"+std::to_string(version)+".ll");
     jsonFile(dir+"/commit-"+std::to_string(version)+".json",json::Object{{"logical_decision",c.logicalDecision},{"logical_left",c.logicalLeft},{"logical_right",c.logicalRight},{"candidate",c.key()},{"parent_version",int64_t(c.version)},{"version",int64_t(version)},{"score_result",scoreJson(score)},{"committed_hash",moduleHash(m)}});
   }
 };
-int main(int argc,char**argv) {
-  sys::PrintStackTraceOnErrorSignal(argv[0]);
+// A worker caches one immutable parent at a time and retains its TTI process
+// across requests. Changing parent or cleanup invalidates the round cache.
+struct TrialWorker {
+  std::unique_ptr<LLVMContext> context = std::make_unique<LLVMContext>();
+  std::unique_ptr<Module> parent;
+  std::optional<RoundContext> round;
+  std::unique_ptr<LLVM24Scorer> scorer;
+  std::string input, function, worker;
+  unsigned level = 0;
+  CleanupMode cleanup = CleanupMode::None;
+  std::string quoteMode;
+};
+
+static int runSearch(int argc, const char *const *argv, TrialWorker *batch = nullptr) {
+  fusion::requestProfile.clear();
   try {
-    std::string input,function,output,debug,split,left,right,replayParentHash,profileBundle,policy="llvm24";Options options;PostOptConfig config;bool controlOnly=false,catalogOnly=false;std::string ttiWorker="/home/chh/kernel-benchmark-suite/tools/run-llvm24-tti";
+    std::string input,function,output,debug,split,left,right,replayParentHash,policy="llvm24";Options options;options.cleanupMode=CleanupMode::DarmCFGInstCombine;
+    bool useArtifactB2B=false, useAnchorB2B=true;
+    B2RStrategy b2rStrategy = B2RStrategy::Darm;
+    std::string quoteMode="on";
+    bool fullSnapshots=true;
+    bool controlOnly=false,catalogOnly=false;std::string ttiWorker="/home/chh/kernel-benchmark-suite/tools/run-llvm24-tti";
     for(int i=1;i<argc;++i){std::string k=argv[i];
-      if(k=="--help"){outs()<<"fusion-search --ir FILE --function NAME --out FILE [--control-only 0|1] [--catalog-only 0|1 (requires debug-dir)] [--replay-parent-hash SHA1 (explicit snapshot pair only)] [--cross-decision-leaves 0|1 (default 0; permits complete leaves with different or unknown SSA discriminator)] [--complete-leaf-plan 0|1 (experimental mandatory-load motion and multiple guarded anchors)] [--structural 0|1 (B2B/R2R/B2R dispatch; adjacent-only 0; hybrid is a compatibility alias)] [--adjacent-only 0|1] [--local-union 0|1] [--local-compute 0|1 (alias of local-copysign)] [--local-copysign 0|1 (requires adjacent-only 1, cleanup none or scoped-local)] [--scorer llvm24|legacy|v1|v2|v5] [--tti-worker EXECUTABLE] [--profile-bundle FILE (experimental v5 only)] [--work-absolute 0] [--work-relative 0] [--pressure-weight 0] [--dependency-features 0|1] [--static-alloca-cost POSITIVE_INT (disabled by default)] [--rounds 8] [--trials 256] [--threshold 0] [--opt-level 3] [--debug-dir DIR] [--require-parent-gain 1] [--cleanup none|scoped-local|scoped-cfg|scoped-cfg-triangles|structural-cfg|postopt-fp|darm-cfg-scalar-fp|darm-cfg-earlycse|darm-cfg|o3]\nExplicit pair: add --split B# --left B#/R#/Eentry_exit --right B#/R#/Eentry_exit. Complete E leaves require --structural 1. Optional --coalesce-gaps 0|1 (default 0) groups adjacent unmatched runs before unpredication. IDs refer to the input state (O3-normalized only in o3 mode). Default cleanup: darm-cfg-earlycse. Final codegen O3 is separate.\n";return 0;}
+      if(k=="--help"){outs()<<"fusion-search v1 --ir FILE --function NAME --out FILE [--b2b-strategy anchor|darm|darm-artifact] [--b2r-strategy darm|guarded] [--structural 0|1] [--split ID --left ID --right ID] [--debug-dir DIR] [--ir-snapshots full|compact] [--tti-worker EXECUTABLE] [--catalog-only 0|1] [--control-only 0|1] [--rounds N] [--trials N]\n";return 0;}
       if(i+1==argc)throw std::runtime_error("missing option value");std::string v=argv[++i];
       if(k=="--control-only"){if(v!="0"&&v!="1")throw std::runtime_error("control-only must be 0 or 1");controlOnly=v=="1";}
       else if(k=="--catalog-only"){if(v!="0"&&v!="1")throw std::runtime_error("catalog-only must be 0 or 1");catalogOnly=v=="1";}
-      else if(k=="--scorer"){if(v!="llvm24"&&v!="legacy"&&v!="v1"&&v!="v2"&&v!="v5")throw std::runtime_error("scorer must be llvm24, legacy, v1, v2 or experimental v5");policy=v;}
-      else if(k=="--work-absolute"||k=="--work-relative"||k=="--pressure-weight"){size_t pos=0;double n=std::stod(v,&pos);if(pos!=v.size()||!std::isfinite(n)||n<0)throw std::runtime_error("invalid postopt parameter");if(k=="--work-absolute")config.absoluteThreshold=n;else if(k=="--work-relative")config.relativeThreshold=n;else config.pressureWeight=n;}
-      else if(k=="--dependency-features"){if(v!="0"&&v!="1")throw std::runtime_error("dependency-features must be 0 or 1");config.dependencyFeatures=v=="1";}
-      else if(k=="--static-alloca-cost"){size_t pos=0;int n=std::stoi(v,&pos);if(pos!=v.size()||n<=0)throw std::runtime_error("static alloca cost must be a positive integer");config.staticAllocaCost=n;}
-      else if(k=="--adjacent-only"){if(v!="0"&&v!="1")throw std::runtime_error("adjacent-only must be 0 or 1");options.adjacentOnly=v=="1";}
+      else if(k=="--darm-region-candidates"){if(v!="1")throw std::runtime_error("v1 uses DARM region alignment");}
+      else if(k=="--ir-snapshots"){
+        if(v!="full" && v!="compact")throw std::runtime_error("ir-snapshots must be full or compact");
+        fullSnapshots=v=="full";
+      }
       else if(k=="--tti-worker")ttiWorker=v;
-      else if(k=="--profile-bundle")profileBundle=v;
-      else if(k=="--cross-decision-leaves"){if(v!="0"&&v!="1")throw std::runtime_error("cross-decision-leaves must be 0 or 1");options.crossDecisionLeaves=v=="1";}
+      else if(k=="--tti-quote-cache") {
+        if(v!="off" && v!="audit" && v!="on") throw std::runtime_error("invalid TTI quote cache mode");
+        quoteMode=v;
+      }
+      else if(k=="--b2r-strategy"){
+        if(v!="darm" && v!="guarded")
+          throw std::runtime_error("b2r-strategy must be darm or guarded");
+        b2rStrategy=v=="guarded"?B2RStrategy::Guarded:B2RStrategy::Darm;
+      }
       else if(k=="--replay-parent-hash")replayParentHash=v;
       else if(k=="--ir")input=v;else if(k=="--function")function=v;else if(k=="--out")output=v;
-      else if(k=="--complete-leaf-plan"){if(v!="0"&&v!="1")throw std::runtime_error("complete-leaf-plan must be 0 or 1");options.completeLeafPlan=v=="1";}
-      else if(k=="--coalesce-gaps"){if(v!="0"&&v!="1")throw std::runtime_error("coalesce-gaps must be 0 or 1");options.coalesceGaps=v=="1";}
-      else if(k=="--structural"||k=="--hybrid"){if(v!="0"&&v!="1")throw std::runtime_error("hybrid must be 0 or 1");options.hybrid=v=="1";}
-      else if(k=="--local-union"){if(v!="0"&&v!="1")throw std::runtime_error("local-union must be 0 or 1");options.localUnion=v=="1";}
-      else if(k=="--local-copysign"||k=="--local-compute"){if(v!="0"&&v!="1")throw std::runtime_error("local-copysign must be 0 or 1");options.localCopysign=v=="1";}
-      else if(k=="--cleanup"){if(v=="scoped-cfg-triangles")options.cleanupMode=CleanupMode::ScopedCFGTriangles;else if(v=="scoped-cfg")options.cleanupMode=CleanupMode::ScopedCFG;else if(v=="scoped-local")options.cleanupMode=CleanupMode::ScopedLocal;else if(v=="structural-cfg")options.cleanupMode=CleanupMode::StructuralCFG;else if(v=="none")options.cleanupMode=CleanupMode::None;else if(v=="postopt-fp")options.cleanupMode=CleanupMode::PostOptFixedPoint;else if(v=="darm-cfg-scalar-fp")options.cleanupMode=CleanupMode::DarmCFGScalarFixedPoint;else if(v=="darm-cfg-earlycse")options.cleanupMode=CleanupMode::DarmCFGEarlyCSE;else if(v=="darm-cfg")options.cleanupMode=CleanupMode::DarmCFG;else if(v=="o3")options.cleanupMode=CleanupMode::O3;else throw std::runtime_error("cleanup must be none, scoped-local, scoped-cfg, scoped-cfg-triangles, structural-cfg, postopt-fp, darm-cfg-scalar-fp, darm-cfg-earlycse, darm-cfg or o3");}
+      else if(k=="--b2b-strategy"){
+        if(v!="darm" && v!="darm-artifact" && v!="anchor")
+          throw std::runtime_error("b2b-strategy must be anchor, darm or darm-artifact");
+        useArtifactB2B=v=="darm-artifact";
+        useAnchorB2B=v=="anchor";
+      }
+      else if(k=="--structural"){if(v!="1")throw std::runtime_error("v1 uses structural enumeration");}
+      else if(k=="--cleanup"){if(v!="darm-cfg-dce-instcombine")throw std::runtime_error("v1 cleanup is fixed to darm-cfg-dce-instcombine");}
       else if(k=="--debug-dir")debug=v;else if(k=="--split")split=v;else if(k=="--left")left=v;else if(k=="--right")right=v;
       else if(k=="--rounds"||k=="--trials"||k=="--opt-level"){
         size_t pos=0;auto n=std::stoul(v,&pos);if(v.empty()||v[0]=='-'||pos!=v.size()||n>1000000)throw std::runtime_error("invalid integer option");
@@ -119,7 +179,57 @@ int main(int argc,char**argv) {
     if(options.optLevel!=2&&options.optLevel!=3)throw std::runtime_error("opt-level must be 2 or 3");
     if(sys::fs::exists(output))throw std::runtime_error("output already exists");
     bool pair=!split.empty()||!left.empty()||!right.empty();if(pair&&(split.empty()||left.empty()||right.empty()))throw std::runtime_error("explicit pair requires all three IDs");
-    LLVMContext context;SMDiagnostic error;auto buffer=MemoryBuffer::getFile(input);if(!buffer)throw std::runtime_error("cannot read input IR");auto module=parseIR(buffer.get()->getMemBufferRef(),error,context);if(!module){error.print(argv[0],errs());return 2;}
+    if (options.cleanupMode == CleanupMode::DarmCFGInstCombine) {
+      // LLVM 12 reads this registered option inside SimplifyCFG. Initialize it
+      // once per process, including when a worker evaluates a batch of pairs.
+      static const bool configured = [] {
+        const StringRef name = "two-entry-phi-node-folding-threshold";
+        auto &registered = cl::getRegisteredOptions();
+        auto entry = registered.find(name);
+        return entry != registered.end() && !entry->second->addOccurrence(0, name, "7");
+      }();
+      if (!configured) throw std::runtime_error("cannot configure v1 PHI fold threshold");
+    }
+    std::unique_ptr<LLVMContext> context = std::make_unique<LLVMContext>();
+    std::unique_ptr<MemoryBuffer> buffer;
+    std::unique_ptr<Module> parsedModule;
+    if (batch) {
+      if (!pair || catalogOnly || controlOnly ||
+          !replayParentHash.empty())
+        throw std::runtime_error("worker requires explicit pair with LLVM24 scoring");
+      if (batch->parent && (batch->input != input || batch->function != function ||
+          batch->worker != ttiWorker || batch->level != options.optLevel ||
+          batch->cleanup != options.cleanupMode || batch->quoteMode != quoteMode))
+      {
+        batch->round.reset();
+        batch->parent.reset();
+        batch->context = std::make_unique<LLVMContext>();
+        if (batch->function != function || batch->worker != ttiWorker || batch->quoteMode != quoteMode)
+          batch->scorer.reset();
+      }
+    }
+    const bool reuseParent = batch && batch->parent;
+    if (!reuseParent) {
+      auto file = MemoryBuffer::getFile(input);
+      if (!file) throw std::runtime_error("cannot read input IR");
+      buffer = std::move(*file);
+      SMDiagnostic error;
+      parsedModule = parseIR(buffer->getMemBufferRef(), error, batch ? *batch->context : *context);
+      if (!parsedModule) { error.print(argv[0], errs()); return 2; }
+      if (batch) {
+        if (verifyModule(*parsedModule, &errs())) return 2;
+        batch->input = input;
+        batch->function = function;
+        batch->worker = ttiWorker;
+        batch->level = options.optLevel;
+        batch->cleanup = options.cleanupMode;
+        batch->quoteMode = quoteMode;
+        batch->parent = std::move(parsedModule);
+        if (!batch->scorer) batch->scorer = std::make_unique<LLVM24Scorer>(ttiWorker, quoteMode);
+      }
+    }
+    auto *module = batch ? batch->parent.get() : parsedModule.get();
+
     if(!replayParentHash.empty()) {
       if(!pair||catalogOnly||controlOnly)throw std::runtime_error("snapshot replay requires explicit pair only");
       if(replayParentHash.size()!=40||replayParentHash.find_first_not_of("0123456789abcdef")!=std::string::npos)
@@ -135,23 +245,19 @@ int main(int argc,char**argv) {
       // The authenticated serialized origin is distinct from the parsed parent:
       // LLVM can reorder predecessor comments/use lists when reading legacy text.
     }
-    if(options.completeLeafPlan&&!options.hybrid)throw std::runtime_error("complete-leaf-plan requires structural 1");
-    if(options.hybrid&&(options.adjacentOnly||options.localCopysign||options.localUnion))throw std::runtime_error("hybrid requires general CFG enumeration and no local-only switches");
-    if(options.localUnion&&!options.localCopysign)throw std::runtime_error("local-union requires local-copysign 1");
-    if(options.localCopysign&&(!options.adjacentOnly||(options.cleanupMode!=CleanupMode::None&&options.cleanupMode!=CleanupMode::ScopedLocal)))throw std::runtime_error("local-copysign requires adjacent-only 1 and cleanup none or scoped-local");
-    if(verifyModule(*module,&errs()))return 2;
+    if(!batch && verifyModule(*module,&errs()))return 2;
     auto*f=module->getFunction(function);if(!f||f->isDeclaration())throw std::runtime_error("function missing");
-    std::unique_ptr<DebugObserver> observer;if(!debug.empty())observer=std::make_unique<DebugObserver>(debug);
+    std::unique_ptr<DebugObserver> observer;if(!debug.empty())observer=std::make_unique<DebugObserver>(debug,fullSnapshots,input,output);
     if(catalogOnly){
       if(pair||controlOnly||!observer)throw std::runtime_error("catalog-only requires debug-dir and excludes pair/control-only");
-      if(options.cleanupMode==CleanupMode::O3)normalize(*module,options.optLevel);
       if(verifyModule(*module,&errs()))return 2;
       observer->initial(*module);
-      const char*cleanupName=options.cleanupMode==CleanupMode::ScopedCFGTriangles?"scoped-cfg-triangles":options.cleanupMode==CleanupMode::ScopedCFG?"scoped-cfg":options.cleanupMode==CleanupMode::ScopedLocal?"scoped-local":options.cleanupMode==CleanupMode::None?"none":options.cleanupMode==CleanupMode::PostOptFixedPoint?"postopt-fp":options.cleanupMode==CleanupMode::O3?"o3":options.cleanupMode==CleanupMode::DarmCFGEarlyCSE?"darm-cfg-earlycse":options.cleanupMode==CleanupMode::DarmCFGScalarFixedPoint?"darm-cfg-scalar-fp":"darm-cfg";
+      const char*cleanupName="darm-cfg-dce-instcombine";
       if(options.adjacentOnly){auto st=LogicalRegionState::initialize(*module->getFunction(function));observer->logical(0,st->json());}
-      auto candidates=options.adjacentOnly?enumerateAdjacent(*module->getFunction(function),0):enumerate(*module->getFunction(function),0,options.crossDecisionLeaves);json::Array entries;
-      for(const auto&c:candidates)entries.push_back(json::Object{{"logical_decision",c.logicalDecision},{"logical_left",c.logicalLeft},{"logical_right",c.logicalRight},{"candidate",c.key()},{"function",c.function},{"split",c.split},{"left",c.left},{"right",c.right}});
-      jsonFile(debug+"/catalog.json",json::Object{{"schema","postopt-candidate-catalog-v1"},{"adjacent_only",options.adjacentOnly},{"cross_decision_leaves",options.crossDecisionLeaves},{"source_ir",input},{"function",function},
+      auto candidates=enumerate(*module->getFunction(function),0);json::Array entries;
+      const auto rejected=crossLevelCatalogRejections(*f,candidates);
+      for(const auto&c:candidates)entries.push_back(json::Object{{"logical_decision",c.logicalDecision},{"logical_left",c.logicalLeft},{"logical_right",c.logicalRight},{"candidate",c.key()},{"function",c.function},{"split",c.split},{"left",c.left},{"right",c.right},{"preflight_rejection",rejected.count(c.key())?"b2r_replicates_same_decision_chain_requires_opt_in":""}});
+      jsonFile(debug+"/catalog.json",json::Object{{"schema","postopt-candidate-catalog-v1"},{"adjacent_only",options.adjacentOnly},{"cross_decision_leaves",false},{"source_ir",input},{"function",function},
         {"parent_hash",moduleHash(*module)},{"cleanup",cleanupName},{"opt_level",int64_t(options.optLevel)},{"count",int64_t(candidates.size())},{"candidates",std::move(entries)},
         {"legality","not_tested"},{"score","not_evaluated"},{"semantic_validation","not_run"}});
       writeIR(*module,output);outs()<<"catalog candidates="<<candidates.size()<<"; no trials or commits\n";return 0;
@@ -163,45 +269,165 @@ int main(int argc,char**argv) {
       writeIR(*round.control,output);outs()<<"verified no-meld control exported\n";return 0;
     }
     // All scoring compares equally normalized parent/candidate states.
-    if(pair){if(options.cleanupMode==CleanupMode::O3&&replayParentHash.empty())normalize(*module,options.optLevel);if(verifyModule(*module,&errs()))return 2;
+    if(pair){if(!batch && verifyModule(*module,&errs()))return 2;
       if(observer)observer->initial(*module);
     }
-    if(!profileBundle.empty()&&policy!="v5")throw std::runtime_error("profile-bundle requires experimental v5 scorer");
-    config.profileEnabled=policy=="v5";
-    if(config.profileEnabled){
-      config.profileParsedParent=moduleHash(*module);config.profileSerializedParent=replayParentHash;
-      // This alias is valid only for the parsed initial state, before any O3
-      // normalization or accepted melding. The raw bytes are the buffer parsed
-      // above, not a second file read.
-      if(config.profileSerializedParent.empty()&&options.cleanupMode!=CleanupMode::O3){
-        auto Raw=buffer.get()->getBuffer();config.profileSerializedParent=toHex(SHA1::hash(ArrayRef<uint8_t>(reinterpret_cast<const uint8_t*>(Raw.data()),Raw.size())),true);
-      }
-      if(profileBundle.empty())config.profileReadError="profile_missing";
-      else {auto PB=MemoryBuffer::getFile(profileBundle);if(!PB)config.profileReadError="profile_unreadable";else config.profileBundleText=PB.get()->getBuffer().str();}
-    }
-    if(policy=="llvm24"&&(config.absoluteThreshold!=0||config.relativeThreshold!=0||config.pressureWeight!=0||config.staticAllocaCost!=-1||config.dependencyFeatures))throw std::runtime_error("llvm24 scorer does not accept legacy/postopt penalties or fallback options");
-    LLVM24Scorer llvm24Scorer(ttiWorker);
-    StaticCostScorer legacyScorer;
-    if(policy=="v1")config.pressureWeight=0;
+    LLVM24Scorer standaloneScorer(ttiWorker, quoteMode);
+    auto &llvm24Scorer = batch ? *batch->scorer : standaloneScorer;
     if(observer)jsonFile(debug+"/run.json",json::Object{
-      {"schema","postopt-scoring-run-v1"},{"adjacent_only",options.adjacentOnly},{"mode",pair?"explicit_pair":"greedy"},
-      {"cross_decision_leaves",options.crossDecisionLeaves},{"complete_leaf_boundary_policy","same_ssa_constant_compare_or_explicit_opt_in"},{"hybrid",options.hybrid},{"complete_leaf_plan",options.completeLeafPlan},{"local_union",options.localUnion},{"local_copysign",options.localCopysign},{"policy",policy},{"profile_bundle",profileBundle},{"profile_bundle_sha1",toHex(SHA1::hash(ArrayRef<uint8_t>(reinterpret_cast<const uint8_t*>(config.profileBundleText.data()),config.profileBundleText.size())),true)},{"function",function},{"initial_parent_hash",moduleHash(*module)},{"replay_parent_hash",replayParentHash},
-      {"work_absolute",config.absoluteThreshold},{"work_relative",config.relativeThreshold},
-      {"dependency_features",config.dependencyFeatures},{"pressure_weight",config.pressureWeight},{"static_alloca_cost",int64_t(config.staticAllocaCost)},{"threshold",options.threshold},
-      {"require_parent_gain",options.requireParentGain},{"opt_level",int64_t(options.optLevel)},
+      {"schema","fusion-v1"},{"function",function},{"policy","llvm24"},
+      {"b2b_strategy",useAnchorB2B?"anchor":useArtifactB2B?"darm-artifact":"darm"},{"b2r_strategy",b2rStrategy==B2RStrategy::Guarded?"guarded":"darm"},{"r2r_strategy","darm"},
+      {"cleanup","darm-cfg-dce-instcombine"},{"phi_fold_threshold",7},
+      {"initial_parent_hash",moduleHash(*module)},{"replay_parent_hash",replayParentHash},
       {"semantic_validation","not_run"}});
-    PostOptScorer postScorer(config);
-    const Scorer&scorer=policy=="llvm24"?static_cast<const Scorer&>(llvm24Scorer):policy=="legacy"?static_cast<const Scorer&>(legacyScorer):static_cast<const Scorer&>(postScorer);
-    if(pair){Candidate c{function,split,left,right,0};std::shared_ptr<LogicalRegionState> logical;if(options.adjacentOnly){logical=LogicalRegionState::initialize(*module->getFunction(function));if(observer)observer->logical(0,logical->json());auto adjacent=logical->filter(*module->getFunction(function),enumerate(*module->getFunction(function),0));bool found=false;for(auto &a:adjacent)if(a.key()==c.key()){found=true;c=a;}if(!found)throw std::runtime_error("explicit_pair_not_adjacent");}const auto round=makeRound(*module,function,0,options.optLevel,options.cleanupMode);if(observer)observer->round(round);
-      c.localCopysign=options.localCopysign;c.localUnion=options.localUnion;c.hybrid=options.hybrid;c.coalesceGaps=options.coalesceGaps;c.completeLeafPlan=options.completeLeafPlan;c.crossDecisionLeaves=options.crossDecisionLeaves;auto t=tryPair(*module,c,0,options.optLevel,options.cleanupMode,logical.get());auto score=evaluateTrial(*module,t,round,scorer);
+    const Scorer &scorer=llvm24Scorer;
+    if(pair){Candidate c{function,split,left,right,0};std::shared_ptr<LogicalRegionState> logical;if(options.adjacentOnly){logical=LogicalRegionState::initialize(*module->getFunction(function));if(observer)observer->logical(0,logical->json());auto adjacent=logical->filter(*module->getFunction(function),enumerate(*module->getFunction(function),0));bool found=false;for(auto &a:adjacent)if(a.key()==c.key()){found=true;c=a;}if(!found)throw std::runtime_error("explicit_pair_not_adjacent");}      std::optional<RoundContext> standaloneRound;
+      auto &roundStorage = batch ? batch->round : standaloneRound;
+      if (!roundStorage)
+        roundStorage.emplace(makeRound(*module,function,0,options.optLevel,options.cleanupMode));
+      const auto &round = *roundStorage;
+      if(observer)observer->round(round);
+      std::vector<Trial> plans;
+      if (!logical && useAnchorB2B)
+        plans = llvm24Scorer.planAnchorB2B(*module, c, options.cleanupMode);
+      const bool plannedB2B = !plans.empty();
+      Trial t;
+      ScoreResult score;
+      if (plannedB2B) {
+        json::Array profitability;
+        std::set<std::string> seenCleanedIR;
+        for (auto &plan : plans) {
+          if (plan.valid && !seenCleanedIR.insert(moduleHash(*plan.normalized)).second)
+            continue;
+          auto result = profileCall("evaluate_score",[&](){return evaluateTrial(*module, plan, round, scorer);});
+          if (StringRef(result.reason).startswith("tti_quote_")) throw std::runtime_error(result.reason);
+          const bool allowed = eligible(plan, result, options);
+          if (useAnchorB2B)
+            profitability.push_back(json::Object{{"layout",plan.mergePath},{"valid",plan.valid},
+                {"eligible",allowed},{"anchor",json::Object(plan.anchorStats)},
+                {"score_result",scoreJson(result)}});
+          if (t.mergePath.empty() ||
+              ((plan.valid && !t.valid) ||
+                (result.status == ScoreStatus::Scored &&
+                 (score.status != ScoreStatus::Scored || result.total > score.total)))) {
+            t = std::move(plan);
+            score = std::move(result);
+          }
+        }
+        if (useAnchorB2B) {
+          t.anchorStats["generated"] = int64_t(plans.size());
+          t.anchorStats["unique_normalized"] = int64_t(seenCleanedIR.size());
+        }
+        t.layoutProfitability = std::move(profitability);
+      }
+      const bool allowDarmB2B = !useAnchorB2B;
+      if (!plannedB2B) {
+        Trial boundaryFold;
+        t = tryPair(*module, c, 0, options.optLevel, options.cleanupMode,
+                    logical.get(), allowDarmB2B, b2rStrategy, &boundaryFold, useArtifactB2B);
+        if (t.valid) score = profileCall("evaluate_score",[&](){return evaluateTrial(*module, t, round, scorer);});
+        if (boundaryFold.valid) {
+          if (StringRef(score.reason).startswith("tti_quote_")) throw std::runtime_error(score.reason);
+          auto alternate = profileCall("evaluate_score",[&](){return evaluateTrial(*module, boundaryFold, round, scorer);});
+          if (StringRef(alternate.reason).startswith("tti_quote_")) throw std::runtime_error(alternate.reason);
+          json::Array layouts;
+          auto record = [&](const Trial &trial, const ScoreResult &scored) {
+            auto cost = scored.metrics.find("work_after");
+            layouts.push_back(json::Object{{"layout",trial.mergePath},
+                {"eligible",eligible(trial,scored,options)},
+                {"cost",cost==scored.metrics.end()?json::Value(nullptr):json::Value(cost->second)}});
+          };
+          record(t,score);
+          record(boundaryFold,alternate);
+          const bool originalEligible = eligible(t,score,options);
+          const bool alternateEligible = eligible(boundaryFold,alternate,options);
+          const bool betterScore = alternate.status == ScoreStatus::Scored &&
+              (score.status != ScoreStatus::Scored || alternate.total > score.total);
+          if (alternateEligible != originalEligible ? alternateEligible : betterScore) {
+            t = std::move(boundaryFold);
+            score = std::move(alternate);
+          }
+          t.layoutProfitability = std::move(layouts);
+        }
+      }
+      if (StringRef(score.reason).startswith("tti_quote_")) throw std::runtime_error(score.reason);
+      if(observer)jsonFile(debug+"/tti-quote-cache.json",llvm24Scorer.quoteCacheStats());
       if(observer)observer->trial(t,round,score,eligible(t,score,options));
+      if(observer)jsonFile(debug+"/request-profile.json",profileJSON());
       if(!t.valid){errs()<<"rejected: "<<t.reason<<"\n";return 4;}
       if(score.status!=ScoreStatus::Scored)errs()<<"score unsupported; exporting legal trial: "<<score.reason<<"\n";
       writeIR(*t.normalized,output);outs()<<"pair trial verified; static_score="<<score.total<<"; eligible="<<eligible(t,score,options)<<"; semantic validation not run\n";return 0;
     }
-    auto result=greedy(*module,function,options,scorer,observer.get());writeIR(*result.module,output);
-    outs()<<"commits="<<result.commits<<" trials="<<result.trials<<" stop="<<result.stop<<"; semantic validation not run\n";
-    if(observer)jsonFile(debug+"/result.json",json::Object{{"commits",int64_t(result.commits)},{"trials",int64_t(result.trials)},{"stop",result.stop},{"policy",policy},{"require_parent_gain",options.requireParentGain},{"output_on_stop","last_committed_parent_or_initial_normalized_state"},{"semantic_validation","not_run"}});
-    return 0;
+    throw std::runtime_error("use decision-greedy for automatic search; fusion-search evaluates explicit pairs");
   }catch(const std::exception&e){errs()<<"error: "<<e.what()<<"\n";return 2;}
+}
+
+
+int main(int argc, char **argv) {
+  sys::PrintStackTraceOnErrorSignal(argv[0]);
+  const bool queue = argc == 3 && StringRef(argv[1]) == "--trial-queue";
+  if (!queue && (argc != 3 || StringRef(argv[1]) != "--r2r-batch"))
+    return runSearch(argc, argv);
+  try {
+    auto file = MemoryBuffer::getFile(argv[2]);
+    if (!file) throw std::runtime_error("cannot read R2R batch manifest");
+    auto manifest = json::parse((*file)->getBuffer());
+    if (!manifest) throw std::runtime_error(toString(manifest.takeError()));
+    auto *requests = manifest->getAsArray();
+    if (!requests) throw std::runtime_error("invalid R2R batch manifest");
+    TrialWorker batch;
+    for (const auto &entry : *requests) {
+      const auto *request = entry.getAsObject();
+      const auto *args = request ? request->getArray("argv") : nullptr;
+      const auto status = request ? request->getString("status") : None;
+      if (!args || args->empty() || !status) throw std::runtime_error("invalid R2R batch request");
+      if (queue) {
+        const std::string claim = status->str() + ".claim";
+        const int fd = ::open(claim.c_str(), O_CREAT | O_EXCL | O_WRONLY | O_CLOEXEC, 0600);
+        if (fd < 0) {
+          if (errno == EEXIST) continue;
+          throw std::runtime_error("cannot claim trial: " + claim);
+        }
+        ::close(fd);
+      }
+      std::vector<std::string> arguments;
+      for (const auto &arg : *args) {
+        const auto value = arg.getAsString();
+        if (!value) throw std::runtime_error("invalid R2R batch argument");
+        arguments.push_back(value->str());
+      }
+      std::vector<const char *> refs;
+      for (const auto &arg : arguments) refs.push_back(arg.c_str());
+      int savedOut = -1, savedErr = -1;
+      if (queue) {
+        auto output = request->getString("stdout"), error = request->getString("stderr");
+        if (!output || !error) throw std::runtime_error("missing trial log paths");
+        outs().flush(); errs().flush();
+        savedOut = ::dup(STDOUT_FILENO); savedErr = ::dup(STDERR_FILENO);
+        int out = ::open(output->str().c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0600);
+        int err = ::open(error->str().c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0600);
+        if (savedOut < 0 || savedErr < 0 || out < 0 || err < 0 ||
+            ::dup2(out, STDOUT_FILENO) < 0 || ::dup2(err, STDERR_FILENO) < 0)
+          throw std::runtime_error("cannot redirect trial logs");
+        ::close(out); ::close(err);
+        ::alarm(120);
+      }
+      const int code = runSearch(refs.size(), refs.data(), &batch);
+      if (queue) {
+        ::alarm(0);
+        outs().flush(); errs().flush();
+        ::dup2(savedOut, STDOUT_FILENO); ::dup2(savedErr, STDERR_FILENO);
+        ::close(savedOut); ::close(savedErr);
+      }
+      jsonFile(status->str(), json::Object{{"exit_code", code}, {"worker_pid", int64_t(::getpid())}});
+      if (code != 0 && code != 4) {
+        batch.round.reset(); batch.parent.reset();
+        batch.context = std::make_unique<LLVMContext>();
+      }
+    }
+    return 0;
+  } catch (const std::exception &error) {
+    errs() << "R2R batch: " << error.what() << "\n";
+    return 2;
+  }
 }

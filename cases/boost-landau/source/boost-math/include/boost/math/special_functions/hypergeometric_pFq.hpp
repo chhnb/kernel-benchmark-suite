@@ -1,0 +1,214 @@
+
+///////////////////////////////////////////////////////////////////////////////
+//  Copyright 2018 John Maddock
+//  Distributed under the Boost
+//  Software License, Version 1.0. (See accompanying file
+//  LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+
+#ifndef BOOST_MATH_HYPERGEOMETRIC_PFQ_HPP
+#define BOOST_MATH_HYPERGEOMETRIC_PFQ_HPP
+
+#include <boost/math/special_functions/detail/hypergeometric_pFq_checked_series.hpp>
+#include <boost/math/tools/throw_exception.hpp>
+#ifndef BOOST_MATH_BUILD_MODULE
+#include <chrono>
+#include <initializer_list>
+#endif
+
+BOOST_MATH_NAMESPACE_BEGIN
+
+      namespace detail {
+
+         struct pFq_termination_exception : public std::runtime_error
+         {
+            pFq_termination_exception(const char* p) : std::runtime_error(p) {}
+         };
+
+         struct timed_iteration_terminator
+         {
+            timed_iteration_terminator(std::uintmax_t i, double t) : max_iter(i), max_time(t), start_time(std::chrono::system_clock::now()) {}
+
+            bool operator()(std::uintmax_t iter)const
+            {
+               if (iter > max_iter)
+                  BOOST_MATH_THROW_EXCEPTION(BOOST_MATH_NAMESPACE::detail::pFq_termination_exception("pFq exceeded maximum permitted iterations."));
+               if (std::chrono::duration<double>(std::chrono::system_clock::now() - start_time).count() > max_time)
+                  BOOST_MATH_THROW_EXCEPTION(BOOST_MATH_NAMESPACE::detail::pFq_termination_exception("pFq exceeded maximum permitted evaluation time."));
+               return false;
+            }
+
+            std::uintmax_t max_iter;
+            double max_time;
+            std::chrono::system_clock::time_point start_time;
+         };
+
+      }
+
+      BOOST_MATH_EXPORT template <class Seq, class Real, class Policy>
+      inline typename tools::promote_args<Real, typename Seq::value_type>::type hypergeometric_pFq(const Seq& aj, const Seq& bj, const Real& z, Real* p_abs_error, const Policy& pol)
+      {
+         typedef typename tools::promote_args<Real, typename Seq::value_type>::type result_type;
+         typedef typename policies::evaluation<result_type, Policy>::type value_type;
+         typedef typename policies::normalise<
+            Policy,
+            policies::promote_float<false>,
+            policies::promote_double<false>,
+            policies::discrete_quantile<>,
+            policies::assert_undefined<> >::type forwarding_policy;
+
+         BOOST_MATH_STD_USING
+
+         long long scale = 0;
+         static const char* function = "boost::math::hypergeometric_pFq<%1%>(%1%,%1%,%1%)";
+         std::pair<value_type, value_type> r = BOOST_MATH_NAMESPACE::detail::hypergeometric_pFq_checked_series_impl(aj, bj, value_type(z), pol, BOOST_MATH_NAMESPACE::detail::iteration_terminator(BOOST_MATH_NAMESPACE::policies::get_max_series_iterations<forwarding_policy>()), scale);
+         //
+         // Overflow check:
+         //
+         if (static_cast<Real>(scale) > tools::log_max_value<Real>())
+             return (r.first < 0 ? -1 : 1) * policies::raise_overflow_error<Real, Policy>(function, nullptr, pol);
+         Real mul = exp(Real(scale));
+         if(fabs(r.first) > 1)
+             if(tools::max_value<Real>() / fabs(r.first) < mul)
+                 return (r.first < 0 ? -1 : 1) * policies::raise_overflow_error<Real, Policy>(function, nullptr, pol);
+         r.first *= mul;
+         r.second *= mul;
+         if (p_abs_error)
+            *p_abs_error = static_cast<Real>(r.second) * BOOST_MATH_NAMESPACE::tools::epsilon<Real>();
+         else if ((r.first != 0) && !(r.second * BOOST_MATH_NAMESPACE::tools::epsilon<value_type>() <= BOOST_MATH_NAMESPACE::tools::root_epsilon<result_type>() * fabs(r.first)))
+         {
+            //
+            // The series calculation has lost more than half the digits of the result to cancellation,
+            // and the caller didn't ask for the error estimate so can't know about it: raise an error
+            // rather than return a value that is wrong in most of its digits.
+            //
+            return policies::raise_evaluation_error<result_type>(function, "Cancellation is so severe that fewer than half the digits in the result are correct, last result was %1%", static_cast<result_type>(r.first), pol);
+         }
+         return policies::checked_narrowing_cast<result_type, Policy>(r.first, function);
+      }
+
+      BOOST_MATH_EXPORT template <class Seq, class Real>
+      inline typename tools::promote_args<Real, typename Seq::value_type>::type hypergeometric_pFq(const Seq& aj, const Seq& bj, const Real& z, Real* p_abs_error = 0)
+      {
+         return hypergeometric_pFq(aj, bj, z, p_abs_error, BOOST_MATH_NAMESPACE::policies::policy<>());
+      }
+
+      BOOST_MATH_EXPORT template <class R, class Real, class Policy>
+      inline typename tools::promote_args<Real, R>::type hypergeometric_pFq(const std::initializer_list<R>& aj, const std::initializer_list<R>& bj, const Real& z, Real* p_abs_error, const Policy& pol)
+      {
+         return hypergeometric_pFq<std::initializer_list<R>, Real, Policy>(aj, bj, z, p_abs_error, pol);
+      }
+
+      BOOST_MATH_EXPORT template <class R, class Real>
+      inline typename tools::promote_args<Real, R>::type  hypergeometric_pFq(const std::initializer_list<R>& aj, const std::initializer_list<R>& bj, const Real& z, Real* p_abs_error = nullptr)
+      {
+         return hypergeometric_pFq<std::initializer_list<R>, Real>(aj, bj, z, p_abs_error);
+      }
+
+#ifndef BOOST_MATH_NO_EXCEPTIONS
+      template <class T>
+      struct scoped_precision
+      {
+         scoped_precision(unsigned p)
+         {
+            old_p = T::default_precision();
+            T::default_precision(p);
+         }
+         ~scoped_precision()
+         {
+            T::default_precision(old_p);
+         }
+         unsigned old_p;
+      };
+
+      BOOST_MATH_EXPORT template <class Seq, class Real, class Policy>
+      Real hypergeometric_pFq_precision(const Seq& aj, const Seq& bj, Real z, unsigned digits10, double timeout, const Policy& pol)
+      {
+         unsigned current_precision = digits10 + 5;
+
+         for (auto ai = aj.begin(); ai != aj.end(); ++ai)
+         {
+            current_precision = (std::max)(current_precision, ai->precision());
+         }
+         for (auto bi = bj.begin(); bi != bj.end(); ++bi)
+         {
+            current_precision = (std::max)(current_precision, bi->precision());
+         }
+         current_precision = (std::max)(current_precision, z.precision());
+
+         Real r, norm;
+         std::vector<Real> aa(aj), bb(bj);
+         do
+         {
+            scoped_precision<Real> p(current_precision);
+            for (auto ai = aa.begin(); ai != aa.end(); ++ai)
+               ai->precision(current_precision);
+            for (auto bi = bb.begin(); bi != bb.end(); ++bi)
+               bi->precision(current_precision);
+            z.precision(current_precision);
+            try
+            {
+               long long scale = 0;
+               std::pair<Real, Real> rp = BOOST_MATH_NAMESPACE::detail::hypergeometric_pFq_checked_series_impl(aa, bb, z, pol, BOOST_MATH_NAMESPACE::detail::timed_iteration_terminator(BOOST_MATH_NAMESPACE::policies::get_max_series_iterations<Policy>(), timeout), scale);
+               rp.first *= exp(Real(scale));
+               rp.second *= exp(Real(scale));
+
+               r = rp.first;
+               norm = rp.second;
+
+               unsigned cancellation;
+               try {
+                  cancellation = itrunc(log10(abs(norm / r)));
+               }
+               catch (const BOOST_MATH_NAMESPACE::rounding_error&)
+               {
+                  // Happens when r is near enough zero:
+                  cancellation = UINT_MAX;
+               }
+               if (cancellation >= current_precision - 1)
+               {
+                  current_precision *= 2;
+                  continue;
+               }
+               unsigned precision_obtained = current_precision - 1 - cancellation;
+               if (precision_obtained < digits10)
+               {
+                  current_precision += digits10 - precision_obtained + 5;
+               }
+               else
+                  break;
+            }
+            catch (const BOOST_MATH_NAMESPACE::evaluation_error&)
+            {
+               current_precision *= 2;
+            }
+            catch (const detail::pFq_termination_exception& e)
+            {
+               //
+               // Either we have exhausted the number of series iterations, or the timeout.
+               // Either way we quit now.
+               throw BOOST_MATH_NAMESPACE::evaluation_error(e.what());
+            }
+         } while (true);
+
+         return r;
+      }
+      BOOST_MATH_EXPORT template <class Seq, class Real>
+      Real hypergeometric_pFq_precision(const Seq& aj, const Seq& bj, const Real& z, unsigned digits10, double timeout = 0.5)
+      {
+         return hypergeometric_pFq_precision(aj, bj, z, digits10, timeout, BOOST_MATH_NAMESPACE::policies::policy<>());
+      }
+
+      BOOST_MATH_EXPORT template <class Real, class Policy>
+      Real hypergeometric_pFq_precision(const std::initializer_list<Real>& aj, const std::initializer_list<Real>& bj, const Real& z, unsigned digits10, double timeout, const Policy& pol)
+      {
+         return hypergeometric_pFq_precision< std::initializer_list<Real>, Real>(aj, bj, z, digits10, timeout, pol);
+      }
+      BOOST_MATH_EXPORT template <class Real>
+      Real hypergeometric_pFq_precision(const std::initializer_list<Real>& aj, const std::initializer_list<Real>& bj, const Real& z, unsigned digits10, double timeout = 0.5)
+      {
+         return hypergeometric_pFq_precision< std::initializer_list<Real>, Real>(aj, bj, z, digits10, timeout, BOOST_MATH_NAMESPACE::policies::policy<>());
+      }
+#endif
+   BOOST_MATH_NAMESPACE_END
+
+#endif // BOOST_MATH_BESSEL_ITERATORS_HPP

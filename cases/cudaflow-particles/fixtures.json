@@ -1,0 +1,14 @@
+[
+  {
+    "name": "natural-65536-step0",
+    "path": "inputs/natural-65536-step0",
+    "timing": true,
+    "diagnostic": false
+  },
+  {
+    "name": "natural-1048576-step0",
+    "path": "inputs/natural-1048576-step0",
+    "timing": true,
+    "diagnostic": false
+  }
+]

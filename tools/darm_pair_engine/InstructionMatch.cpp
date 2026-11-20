@@ -299,20 +299,16 @@ bool matchGetElementPtrInsts(const GetElementPtrInst *GEP1,
 }
 
 bool matchSwitchInsts(const SwitchInst *SI1, const SwitchInst *SI2) {
-  if (SI1->getNumCases() == SI2->getNumCases()) {
-    auto CaseIt1 = SI1->case_begin(), CaseEnd1 = SI1->case_end();
-    auto CaseIt2 = SI2->case_begin(), CaseEnd2 = SI2->case_end();
-    do {
-      auto *Case1 = &*CaseIt1;
-      auto *Case2 = &*CaseIt2;
-      if (Case1 != Case2)
-        return false; // TODO: could allow permutation!
-      ++CaseIt1;
-      ++CaseIt2;
-    } while (CaseIt1 != CaseEnd1 && CaseIt2 != CaseEnd2);
-    return true;
+  if (SI1->getCondition()->getType() != SI2->getCondition()->getType() ||
+      SI1->getNumCases() != SI2->getNumCases())
+    return false;
+  auto Right = SI2->case_begin();
+  for (const auto &Left : SI1->cases()) {
+    if (Left.getCaseValue()->getValue() != Right->getCaseValue()->getValue())
+      return false;
+    ++Right;
   }
-  return false;
+  return true;
 }
 
 bool matchCallInsts(const CallInst *CI1, const CallInst *CI2) {

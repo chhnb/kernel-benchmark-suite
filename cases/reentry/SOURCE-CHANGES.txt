@@ -1,0 +1,32 @@
+Authorized assertion/launcher repairs — 2026-11-04
+Independent fixes-v1/source copies of pinned cffb0e8; original source/failures unchanged.
+Native nvccO2/std17/sm70/TITANV; no ROCm/DARM/fusion/performance.
+
+Hypersonic:
+- Two max reductions now allocate256*sizeof(double)=2048 dynamicshared bytes.
+- cons_to_prim applies EPS_P to pressure after gamma-1 multiplication. This is
+  an explicit solver numerical-floor change authorized by user, not tolerance relaxation.
+- Analytic energy-flux expectations use actual gamma, yielding240/-320 atgamma1.1.
+- Original clamp assertions retained.24step write56checks/verify68checks pass.
+-2step compute-sanitizer memcheck completed0errors; target55pass1fail because our
+ initial invocation omitted baseline mode and defaulted to nonexistent reference.
+ That invocation remains failed-preserved; no silent acceptance/retry. Subsequent
+ separate6process native request used explicit write/verify modes.
+
+Reentry:
+- Original device numerical bodies unchanged. Host diagnostic computes maximum
+ absolute inlet Mach error over first interior column; rejects nonfinite values.
+- Free-stream assertion checks actual inlet using same0.5 tolerance, not globalmax.
+- Added rejection checks for0.5001/NaN/Inf; all pass.
+- Globalmax remains printed and included in regression baseline comparison.
+-24steps346write/355verify;1024steps346write/355verify, all0fail.
+- Inlet maxerror3.6273206660553114e-12 atboth24/1024.
+- Aggregate baseline files byteequal pre-fix atboth24/1024.1024globalmax remains
+ 26.463535206323357. Prior failed official result stays historical failed;
+ new result is under explicitly corrected test semantics, not retroactive acceptance.
+
+All6native invocations accepted, noGPUerrors/retries/performance. Write/verify
+establishes repeatability and analytic tests, not independent complete physics proof.
+Original1024maxMach local rise is not resolved physically by this test correction.
+Compiler/GPU slots released, requests retired. See changes.patch/acceptance.json
+and full retained official/validation raw logs. No commits or publication.

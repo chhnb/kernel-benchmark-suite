@@ -1,0 +1,8 @@
+{
+  "status": "completed",
+  "initial_cost": 6402,
+  "final_cost": 4183,
+  "commits": 25,
+  "trials": 99,
+  "final_ir": "/home/chh/kernel-benchmark-suite-review-speculation/build/decision-fuse/map-fix-regression-v1/mapairy-search/final.ll"
+}

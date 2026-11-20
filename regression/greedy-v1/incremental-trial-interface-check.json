@@ -1,0 +1,9 @@
+{
+  "case": "PCM32",
+  "steps": 17,
+  "full_and_cached_step_ir_equal_previous": true,
+  "all_nontiming_metrics_equal": true,
+  "previous": "build/incremental-unit-audit/pcm32-catalog",
+  "current": "build/incremental-unit-audit/pcm32-interface",
+  "final_cost": 1142
+}

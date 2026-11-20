@@ -1,0 +1,33 @@
+{
+  "schema": "mapairy-shared-parent-v2",
+  "parent": "cases/boost-mapairy/start.ll",
+  "parent_sha256": "130d89d31e175129c35386aa68f040556a3addb5c0615a26948b75ee7963dce2",
+  "darm_opt_sha256": "99fcb66d33562b1506a6a1bebaab8de9902f816a2aec9c04ef033c855f888324",
+  "orders": [
+    [
+      "baseline",
+      "auto-darm",
+      "auto-greedy"
+    ],
+    [
+      "auto-darm",
+      "auto-greedy",
+      "baseline"
+    ],
+    [
+      "auto-greedy",
+      "baseline",
+      "auto-darm"
+    ]
+  ],
+  "count": 65539,
+  "seed": 2026110301,
+  "files": {
+    "input.bin": "0018705f2b9c28db1fcc20f4fd6356db8e2ae19972c910029e8978b4baa51125",
+    "input.txt": "48df34fd7c04ececc3d0514491bb267a1b5c43fcc097896ce67f79d5f0ae4157",
+    "output-init.bin": "29030f2cf2b457628ba0d7d2afd24a6666bea024198f23f84e650aa5ce14b9e3",
+    "reference.bin": "584c3a9a5e9d1b20cfb3552b021eb528d8dab34ebc4a091a5599bc09a1c0ec26"
+  },
+  "reference_greedy_to_darm_ratio": 0.6849314889636897,
+  "relative_slowdown_limit_pct": 2
+}

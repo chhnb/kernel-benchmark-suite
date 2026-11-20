@@ -1,0 +1,134 @@
+[
+  {
+    "trial": 1,
+    "old_reason": "unsupported_arm",
+    "rc": 0,
+    "reason": "fused_and_rebound"
+  },
+  {
+    "trial": 2,
+    "old_reason": "scored",
+    "rc": 0,
+    "reason": "fused_and_rebound"
+  },
+  {
+    "trial": 3,
+    "old_reason": "scored",
+    "rc": 0,
+    "reason": "fused_and_rebound"
+  },
+  {
+    "trial": 4,
+    "old_reason": "merged_arm_binding_not_unique",
+    "rc": 0,
+    "reason": "fused_and_rebound"
+  },
+  {
+    "trial": 5,
+    "old_reason": "scored",
+    "rc": 0,
+    "reason": "fused_and_rebound"
+  },
+  {
+    "trial": 6,
+    "old_reason": "scored",
+    "rc": 0,
+    "reason": "fused_and_rebound"
+  },
+  {
+    "trial": 7,
+    "old_reason": "scored",
+    "rc": 0,
+    "reason": "fused_and_rebound"
+  },
+  {
+    "trial": 8,
+    "old_reason": "scored",
+    "rc": 0,
+    "reason": "fused_and_rebound"
+  },
+  {
+    "trial": 9,
+    "old_reason": "scored",
+    "rc": 0,
+    "reason": "fused_and_rebound"
+  },
+  {
+    "trial": 10,
+    "old_reason": "scored",
+    "rc": 0,
+    "reason": "fused_and_rebound"
+  },
+  {
+    "trial": 11,
+    "old_reason": "scored",
+    "rc": 0,
+    "reason": "fused_and_rebound"
+  },
+  {
+    "trial": 15,
+    "old_reason": "merged_arm_binding_not_unique",
+    "rc": 0,
+    "reason": "fused_and_rebound"
+  },
+  {
+    "trial": 26,
+    "old_reason": "merged_arm_binding_not_unique",
+    "rc": 0,
+    "reason": "fused_and_rebound"
+  },
+  {
+    "trial": 36,
+    "old_reason": "merged_arm_binding_not_unique",
+    "rc": 0,
+    "reason": "fused_and_rebound"
+  },
+  {
+    "trial": 45,
+    "old_reason": "merged_arm_binding_not_unique",
+    "rc": 0,
+    "reason": "fused_and_rebound"
+  },
+  {
+    "trial": 53,
+    "old_reason": "merged_arm_binding_not_unique",
+    "rc": 0,
+    "reason": "fused_and_rebound"
+  },
+  {
+    "trial": 60,
+    "old_reason": "merged_arm_binding_not_unique",
+    "rc": 0,
+    "reason": "fused_and_rebound"
+  },
+  {
+    "trial": 66,
+    "old_reason": "merged_arm_binding_not_unique",
+    "rc": 0,
+    "reason": "fused_and_rebound"
+  },
+  {
+    "trial": 71,
+    "old_reason": "verifier_failed_discard_clone",
+    "rc": 0,
+    "reason": "fused_and_rebound"
+  },
+  {
+    "trial": 74,
+    "old_reason": "verifier_failed_discard_clone",
+    "rc": 0,
+    "reason": "fused_and_rebound"
+  },
+  {
+    "trial": 76,
+    "old_reason": "verifier_failed_discard_clone",
+    "rc": 0,
+    "reason": "fused_and_rebound"
+  },
+  {
+    "trial": 77,
+    "old_reason": "verifier_failed_discard_clone",
+    "rc": 0,
+    "reason": "fused_and_rebound"
+  }
+]

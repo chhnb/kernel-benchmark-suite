@@ -1,0 +1,309 @@
+{
+  "name": "boost-landau",
+  "enabled": true,
+  "status": "source_migration_pending_build",
+  "origin": "/home/chh/region-fusion-lab/runs/amd-boost-landau-partition-adjacent-v1",
+  "upstream": "https://github.com/boostorg/math",
+  "upstream_commit": "4a6ce7851dc3e54ca7a6e3db3181e86e39d6d9ce",
+  "scope": "Complete original Boost.Math public API Landau quantile<double>, FP64, original 13-arm lower-tail chain retained; no extracted fusion helpers",
+  "helper_extraction": false,
+  "profiles": {
+    "hip-native-o3": {
+      "argv": [
+        "/opt/rocm/bin/hipcc",
+        "-std=c++17",
+        "-O3",
+        "--offload-arch=gfx906",
+        "-ffp-contract=off",
+        "-DBOOST_MATH_STANDALONE",
+        "-I{case}/source/boost-math/include",
+        "--genco",
+        "{case}/source/kernel.hip",
+        "-o",
+        "{out}/kernel.hsaco"
+      ],
+      "artifact": "kernel.hsaco",
+      "kind": "hsaco",
+      "gpu_execution": false
+    },
+    "hip-native-o3-ir": {
+      "argv": [
+        "/opt/rocm/bin/hipcc",
+        "-std=c++17",
+        "-O3",
+        "--offload-arch=gfx906",
+        "-ffp-contract=off",
+        "-DBOOST_MATH_STANDALONE",
+        "-I{case}/source/boost-math/include",
+        "--genco",
+        "-S",
+        "-emit-llvm",
+        "{case}/source/kernel.hip",
+        "-o",
+        "{out}/start.ll"
+      ],
+      "artifact": "start.ll",
+      "kind": "llvm-ir",
+      "gpu_execution": false,
+      "verify_argv": [
+        "/opt/rocm/llvm/bin/opt",
+        "-passes=verify",
+        "-disable-output",
+        "{artifact}"
+      ]
+    },
+    "hip-llvm12-o3-ir": {
+      "argv": [
+        "/home/chh/region-fusion-lab/toolchains/llvm12/amd-bootstrap/bin/clang",
+        "-cc1",
+        "-triple",
+        "amdgcn-amd-amdhsa",
+        "-aux-triple",
+        "x86_64-unknown-linux-gnu",
+        "-S",
+        "-emit-llvm",
+        "--mrelax-relocations",
+        "-disable-free",
+        "-main-file-name",
+        "main.cu",
+        "-mrelocation-model",
+        "pic",
+        "-pic-level",
+        "1",
+        "-mframe-pointer=none",
+        "-fno-rounding-math",
+        "-mconstructor-aliases",
+        "-aux-target-cpu",
+        "x86-64",
+        "-fcuda-is-device",
+        "-mllvm",
+        "-amdgpu-internalize-symbols",
+        "-fcuda-allow-variadic-functions",
+        "-fvisibility",
+        "hidden",
+        "-fapply-global-visibility-to-externs",
+        "-mlink-builtin-bitcode",
+        "/home/chh/divergence-strategy-search/explorations/darm-artifact-rocm-20260922/rocm4-userspace/opt/rocm-4.0.0/amdgcn/bitcode/hip.bc",
+        "-mlink-builtin-bitcode",
+        "/home/chh/divergence-strategy-search/explorations/darm-artifact-rocm-20260922/rocm4-userspace/opt/rocm-4.0.0/amdgcn/bitcode/ocml.bc",
+        "-mlink-builtin-bitcode",
+        "/home/chh/divergence-strategy-search/explorations/darm-artifact-rocm-20260922/rocm4-userspace/opt/rocm-4.0.0/amdgcn/bitcode/ockl.bc",
+        "-mlink-builtin-bitcode",
+        "/home/chh/divergence-strategy-search/explorations/darm-artifact-rocm-20260922/rocm4-userspace/opt/rocm-4.0.0/amdgcn/bitcode/oclc_daz_opt_off.bc",
+        "-mlink-builtin-bitcode",
+        "/home/chh/divergence-strategy-search/explorations/darm-artifact-rocm-20260922/rocm4-userspace/opt/rocm-4.0.0/amdgcn/bitcode/oclc_unsafe_math_off.bc",
+        "-mlink-builtin-bitcode",
+        "/home/chh/divergence-strategy-search/explorations/darm-artifact-rocm-20260922/rocm4-userspace/opt/rocm-4.0.0/amdgcn/bitcode/oclc_finite_only_off.bc",
+        "-mlink-builtin-bitcode",
+        "/home/chh/divergence-strategy-search/explorations/darm-artifact-rocm-20260922/rocm4-userspace/opt/rocm-4.0.0/amdgcn/bitcode/oclc_correctly_rounded_sqrt_on.bc",
+        "-mlink-builtin-bitcode",
+        "/home/chh/divergence-strategy-search/explorations/darm-artifact-rocm-20260922/rocm4-userspace/opt/rocm-4.0.0/amdgcn/bitcode/oclc_wavefrontsize64_on.bc",
+        "-mlink-builtin-bitcode",
+        "/home/chh/divergence-strategy-search/explorations/darm-artifact-rocm-20260922/rocm4-userspace/opt/rocm-4.0.0/amdgcn/bitcode/oclc_isa_version_906.bc",
+        "-target-cpu",
+        "gfx906",
+        "-fno-split-dwarf-inlining",
+        "-debugger-tuning=gdb",
+        "-resource-dir",
+        "/home/chh/region-fusion-lab/toolchains/llvm12/amd-bootstrap/lib/clang/12.0.0",
+        "-internal-isystem",
+        "/home/chh/region-fusion-lab/toolchains/llvm12/amd-bootstrap/lib/clang/12.0.0",
+        "-isystem",
+        "/home/chh/region-fusion-lab/toolchains/llvm12/amd-bootstrap/lib/clang/12.0.0/include/..",
+        "-isystem",
+        "/home/chh/divergence-strategy-search/explorations/darm-artifact-rocm-20260922/rocm4-userspace/opt/rocm-4.0.0/hsa/include",
+        "-isystem",
+        "/home/chh/divergence-strategy-search/explorations/darm-artifact-rocm-20260922/rocm4-userspace/opt/rocm-4.0.0/hip/include",
+        "-D",
+        "__HIP_ROCclr__",
+        "-internal-isystem",
+        "/usr/lib/gcc/x86_64-linux-gnu/12/../../../../include/c++/12",
+        "-internal-isystem",
+        "/usr/lib/gcc/x86_64-linux-gnu/12/../../../../include/x86_64-linux-gnu/c++/12",
+        "-internal-isystem",
+        "/usr/lib/gcc/x86_64-linux-gnu/12/../../../../include/x86_64-linux-gnu/c++/12",
+        "-internal-isystem",
+        "/usr/lib/gcc/x86_64-linux-gnu/12/../../../../include/c++/12/backward",
+        "-internal-isystem",
+        "/usr/lib/gcc/x86_64-linux-gnu/12/../../../../include/c++/12",
+        "-internal-isystem",
+        "/usr/lib/gcc/x86_64-linux-gnu/12/../../../../include/x86_64-linux-gnu/c++/12",
+        "-internal-isystem",
+        "/usr/lib/gcc/x86_64-linux-gnu/12/../../../../include/x86_64-linux-gnu/c++/12",
+        "-internal-isystem",
+        "/usr/lib/gcc/x86_64-linux-gnu/12/../../../../include/c++/12/backward",
+        "-internal-isystem",
+        "/usr/local/include",
+        "-internal-isystem",
+        "/home/chh/region-fusion-lab/toolchains/llvm12/amd-bootstrap/lib/clang/12.0.0/include",
+        "-internal-externc-isystem",
+        "/usr/include/x86_64-linux-gnu",
+        "-internal-externc-isystem",
+        "/include",
+        "-internal-externc-isystem",
+        "/usr/include",
+        "-internal-isystem",
+        "/usr/local/include",
+        "-internal-isystem",
+        "/home/chh/region-fusion-lab/toolchains/llvm12/amd-bootstrap/lib/clang/12.0.0/include",
+        "-internal-externc-isystem",
+        "/usr/include/x86_64-linux-gnu",
+        "-internal-externc-isystem",
+        "/include",
+        "-internal-externc-isystem",
+        "/usr/include",
+        "-O3",
+        "-disable-O0-optnone",
+        "-std=c++17",
+        "-fdeprecated-macro",
+        "-fno-autolink",
+        "-fdebug-compilation-dir",
+        "/home/chh/divergence-strategy-search/explorations/case-search-20261020",
+        "-ferror-limit",
+        "19",
+        "-fhip-new-launch-api",
+        "-fgnuc-version=4.2.1",
+        "-fcxx-exceptions",
+        "-fexceptions",
+        "-vectorize-loops",
+        "-vectorize-slp",
+        "-mllvm",
+        "-amdgpu-early-inline-all=true",
+        "-mllvm",
+        "-amdgpu-function-calls=false",
+        "-fcuda-allow-variadic-functions",
+        "-faddrsig",
+        "-o",
+        "{out}/start.ll",
+        "-x",
+        "hip",
+        "{case}/source/kernel.hip",
+        "-ffp-contract=off",
+        "-DBOOST_MATH_STANDALONE",
+        "-I",
+        "{case}/source/boost-math/include"
+      ],
+      "artifact": "start.ll",
+      "kind": "llvm-ir",
+      "gpu_execution": false
+    },
+    "hip-llvm12-o3": {
+      "argv": [
+        "sh",
+        "{case}/compile_llvm12.sh",
+        "{case}",
+        "{out}"
+      ],
+      "artifact": "kernel.hsaco",
+      "kind": "hsaco",
+      "gpu_execution": false
+    },
+    "cpu-oracle": {
+      "argv": [
+        "g++",
+        "-std=c++17",
+        "-O2",
+        "-DBOOST_MATH_STANDALONE",
+        "-I{case}/source/boost-math/include",
+        "{case}/source/oracle.cpp",
+        "-o",
+        "{out}/oracle"
+      ],
+      "artifact": "oracle",
+      "kind": "executable",
+      "gpu_execution": false
+    }
+  },
+  "runtime": {
+    "kind": "cpp",
+    "backend": "amd",
+    "runner": "build/bin/bench_hip",
+    "default_kernel": "/home/chh/kernel-benchmark-suite/results/landau-llvm12-baseline-v1/kernel.hsaco",
+    "inputs": [
+      "fixtures-cpp/interval-mixture/input.txt",
+      "fixtures-cpp/coherent-blocks/input.txt"
+    ],
+    "timing_modes": [
+      "event",
+      "graph"
+    ],
+    "scope": "Full public API evaluate; two retained 65539-element finite probability workloads, interval-mixture and coherent-blocks; block256; complete long-double CPU oracle atol1e-14+rtol5e-13, input immutability and guards. Different input set from old 23.8% confirmation.",
+    "environment": {
+      "LD_LIBRARY_PATH": "/opt/rocm/lib:/opt/rocm/lib64",
+      "HIP_VISIBLE_DEVICES": "0",
+      "ROCR_VISIBLE_DEVICES": "0"
+    }
+  },
+  "validation": {
+    "status": "pending"
+  },
+  "benchmark": {
+    "status": "pending"
+  },
+  "acceptance": {
+    "source_build": true,
+    "gpu_correctness": true,
+    "timing": true,
+    "complete_benchmark": true,
+    "llvm12_text_matches_historical": true,
+    "cpu_reference_matches_retained": true
+  },
+  "limitations": [
+    "Historical 2026102507 input files were removed with partition-darm cleanup; retained 2026110301 performance fixtures are used unchanged.",
+    "No automatic BF/DARM transformation performed.",
+    "ROCm18 native is a separate supplemental profile, not pooled with LLVM12."
+  ],
+  "baseline_profile": "hip-llvm12-o3",
+  "verified_builds": [
+    {
+      "profile": "hip-llvm12-o3",
+      "receipt": "results/landau-llvm12-baseline-v1/receipt.json"
+    },
+    {
+      "profile": "hip-native-o3",
+      "receipt": "results/landau-native-baseline-v2/receipt.json"
+    },
+    {
+      "profile": "hip-native-o3-ir",
+      "receipt": "results/landau-native-ir-v1/receipt.json"
+    },
+    {
+      "profile": "cpu-oracle",
+      "receipt": "results/landau-cpu-oracle-v1/receipt.json"
+    }
+  ],
+  "optimization_experiments": [
+    {
+      "path": "experiments/landau-auto-v1",
+      "status": "screened_full_outputs_passed",
+      "roles": [
+        "baseline",
+        "auto-bf",
+        "auto-darm"
+      ],
+      "result": "DARM mixed-input time -39.23%, coherent-input time +16.35%; BF unchanged machine code; no independent confirmation"
+    },
+    {
+      "path": "experiments/landau-selected-tree-v1",
+      "kind": "historical-selected-helper-tree-replay",
+      "scope": "Frozen old tree and controls on current two suite inputs; 3+15; not historical-input replication"
+    }
+  ],
+  "region_analysis": {
+    "llvm_version": 12,
+    "ir": "/home/chh/kernel-benchmark-suite/results/landau-llvm12-baseline-v1/post.ll",
+    "ir_sha256": "02541f8d2705f5edd8c280d06ad4b8ec4bfba97ef38f7777e5c48b8ec61a7165",
+    "optimization": "O3",
+    "report": "/home/chh/kernel-benchmark-suite/analysis/suite-regions-llvm12-v4/boost-landau/inventory.json",
+    "darm_status": "analyzed",
+    "scope": "same LLVM IR used by default code object"
+  },
+  "neighbor_similarity": {
+    "llvm_version": 12,
+    "results": "/home/chh/kernel-benchmark-suite/analysis/neighbor-similarity-llvm12-v2/boost-landau/scores-factored.json",
+    "status": "completed",
+    "fusion_performed": false,
+    "native_darm_scoring": true,
+    "darm_candidate_sorter_used": false
+  }
+}

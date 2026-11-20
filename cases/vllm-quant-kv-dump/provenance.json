@@ -1,0 +1,2505 @@
+{
+  "source_manifest_sha256": "fd6d1d22ecb14e990128fee4a428c465ddbad4fd5a4916870a1d29096fa3460a",
+  "source_manifest": {
+    "model": "HuggingFaceTB/SmolLM2-135M-Instruct",
+    "revision": "12fd25f77366fa6b3b4b768ec3050bf629380bac",
+    "prompt": "Explain how a transformer stores keys and values during autoregressive decoding. Compare prefill with decoding, and describe why quantizing the cache can reduce memory usage. Give a concrete example with several tokens and distinguish accuracy from performance.",
+    "token_ids": [
+      [
+        1,
+        9690,
+        198,
+        2683,
+        359,
+        253,
+        5356,
+        5646,
+        11173,
+        3365,
+        3511,
+        308,
+        34519,
+        28,
+        7018,
+        411,
+        407,
+        19712,
+        8182,
+        2,
+        198,
+        1,
+        4093,
+        198,
+        36971,
+        638,
+        253,
+        26832,
+        7821,
+        8889,
+        284,
+        2396,
+        981,
+        1023,
+        32520,
+        4601,
+        30081,
+        30,
+        19602,
+        4478,
+        388,
+        351,
+        30081,
+        28,
+        284,
+        5125,
+        1701,
+        3324,
+        1829,
+        260,
+        13842,
+        416,
+        2369,
+        3500,
+        6486,
+        30,
+        13843,
+        253,
+        7257,
+        1183,
+        351,
+        1545,
+        17837,
+        284,
+        10196,
+        6564,
+        429,
+        2851,
+        30,
+        2,
+        198,
+        1,
+        520,
+        9531,
+        198
+      ]
+    ],
+    "torch": "2.15.0+cpu",
+    "transformers": "4.46.3",
+    "forward_device": "cpu",
+    "forward_dtype": "float32",
+    "dump_dtype": "float32 and BF16 RNE uint16",
+    "key_semantics": "post-RoPE cache keys",
+    "layout": "token,kv_head,head_dim",
+    "scale_policy": "per-layer per-K/V global multiplier 448*6/amax on BF16 dump; sample-calibrated, not checkpoint scales",
+    "records": [
+      {
+        "file": "prefill-layer00.npz",
+        "phase": "prefill",
+        "layer": 0,
+        "shape": [
+          75,
+          3,
+          64
+        ],
+        "key_global": 268.79998779296875,
+        "value_global": 4411.0771484375
+      },
+      {
+        "file": "prefill-layer01.npz",
+        "phase": "prefill",
+        "layer": 1,
+        "shape": [
+          75,
+          3,
+          64
+        ],
+        "key_global": 171.34661865234375,
+        "value_global": 1036.33740234375
+      },
+      {
+        "file": "prefill-layer02.npz",
+        "phase": "prefill",
+        "layer": 2,
+        "shape": [
+          75,
+          3,
+          64
+        ],
+        "key_global": 158.11764526367188,
+        "value_global": 855.880615234375
+      },
+      {
+        "file": "prefill-layer03.npz",
+        "phase": "prefill",
+        "layer": 3,
+        "shape": [
+          75,
+          3,
+          64
+        ],
+        "key_global": 196.38356018066406,
+        "value_global": 781.963623046875
+      },
+      {
+        "file": "prefill-layer04.npz",
+        "phase": "prefill",
+        "layer": 4,
+        "shape": [
+          75,
+          3,
+          64
+        ],
+        "key_global": 186.99130249023438,
+        "value_global": 722.8235473632812
+      },
+      {
+        "file": "prefill-layer05.npz",
+        "phase": "prefill",
+        "layer": 5,
+        "shape": [
+          75,
+          3,
+          64
+        ],
+        "key_global": 180.7058868408203,
+        "value_global": 710.8760375976562
+      },
+      {
+        "file": "prefill-layer06.npz",
+        "phase": "prefill",
+        "layer": 6,
+        "shape": [
+          75,
+          3,
+          64
+        ],
+        "key_global": 158.11764526367188,
+        "value_global": 966.471923828125
+      },
+      {
+        "file": "prefill-layer07.npz",
+        "phase": "prefill",
+        "layer": 7,
+        "shape": [
+          75,
+          3,
+          64
+        ],
+        "key_global": 168.0,
+        "value_global": 716.7999877929688
+      },
+      {
+        "file": "prefill-layer08.npz",
+        "phase": "prefill",
+        "layer": 8,
+        "shape": [
+          75,
+          3,
+          64
+        ],
+        "key_global": 174.8292694091797,
+        "value_global": 623.3043212890625
+      },
+      {
+        "file": "prefill-layer09.npz",
+        "phase": "prefill",
+        "layer": 9,
+        "shape": [
+          75,
+          3,
+          64
+        ],
+        "key_global": 146.2857208251953,
+        "value_global": 540.9811401367188
+      },
+      {
+        "file": "prefill-layer10.npz",
+        "phase": "prefill",
+        "layer": 10,
+        "shape": [
+          75,
+          3,
+          64
+        ],
+        "key_global": 148.30345153808594,
+        "value_global": 661.6615600585938
+      },
+      {
+        "file": "prefill-layer11.npz",
+        "phase": "prefill",
+        "layer": 11,
+        "shape": [
+          75,
+          3,
+          64
+        ],
+        "key_global": 149.3333282470703,
+        "value_global": 540.9811401367188
+      },
+      {
+        "file": "prefill-layer12.npz",
+        "phase": "prefill",
+        "layer": 12,
+        "shape": [
+          75,
+          3,
+          64
+        ],
+        "key_global": 156.9635009765625,
+        "value_global": 719.7991333007812
+      },
+      {
+        "file": "prefill-layer13.npz",
+        "phase": "prefill",
+        "layer": 13,
+        "shape": [
+          75,
+          3,
+          64
+        ],
+        "key_global": 148.30345153808594,
+        "value_global": 682.6666870117188
+      },
+      {
+        "file": "prefill-layer14.npz",
+        "phase": "prefill",
+        "layer": 14,
+        "shape": [
+          75,
+          3,
+          64
+        ],
+        "key_global": 153.60000610351562,
+        "value_global": 573.4400024414062
+      },
+      {
+        "file": "prefill-layer15.npz",
+        "phase": "prefill",
+        "layer": 15,
+        "shape": [
+          75,
+          3,
+          64
+        ],
+        "key_global": 136.1012725830078,
+        "value_global": 719.7991333007812
+      },
+      {
+        "file": "prefill-layer16.npz",
+        "phase": "prefill",
+        "layer": 16,
+        "shape": [
+          75,
+          3,
+          64
+        ],
+        "key_global": 146.2857208251953,
+        "value_global": 696.48583984375
+      },
+      {
+        "file": "prefill-layer17.npz",
+        "phase": "prefill",
+        "layer": 17,
+        "shape": [
+          75,
+          3,
+          64
+        ],
+        "key_global": 184.5836944580078,
+        "value_global": 547.8726196289062
+      },
+      {
+        "file": "prefill-layer18.npz",
+        "phase": "prefill",
+        "layer": 18,
+        "shape": [
+          75,
+          3,
+          64
+        ],
+        "key_global": 159.2888946533203,
+        "value_global": 296.6069030761719
+      },
+      {
+        "file": "prefill-layer19.npz",
+        "phase": "prefill",
+        "layer": 19,
+        "shape": [
+          75,
+          3,
+          64
+        ],
+        "key_global": 135.2452850341797,
+        "value_global": 562.1961059570312
+      },
+      {
+        "file": "prefill-layer20.npz",
+        "phase": "prefill",
+        "layer": 20,
+        "shape": [
+          75,
+          3,
+          64
+        ],
+        "key_global": 186.99130249023438,
+        "value_global": 400.0744323730469
+      },
+      {
+        "file": "prefill-layer21.npz",
+        "phase": "prefill",
+        "layer": 21,
+        "shape": [
+          75,
+          3,
+          64
+        ],
+        "key_global": 180.7058868408203,
+        "value_global": 411.559814453125
+      },
+      {
+        "file": "prefill-layer22.npz",
+        "phase": "prefill",
+        "layer": 22,
+        "shape": [
+          75,
+          3,
+          64
+        ],
+        "key_global": 160.4776153564453,
+        "value_global": 472.6153869628906
+      },
+      {
+        "file": "prefill-layer23.npz",
+        "phase": "prefill",
+        "layer": 23,
+        "shape": [
+          75,
+          3,
+          64
+        ],
+        "key_global": 162.90908813476562,
+        "value_global": 277.4709777832031
+      },
+      {
+        "file": "prefill-layer24.npz",
+        "phase": "prefill",
+        "layer": 24,
+        "shape": [
+          75,
+          3,
+          64
+        ],
+        "key_global": 191.14666748046875,
+        "value_global": 206.76922607421875
+      },
+      {
+        "file": "prefill-layer25.npz",
+        "phase": "prefill",
+        "layer": 25,
+        "shape": [
+          75,
+          3,
+          64
+        ],
+        "key_global": 143.36000061035156,
+        "value_global": 396.3870849609375
+      },
+      {
+        "file": "prefill-layer26.npz",
+        "phase": "prefill",
+        "layer": 26,
+        "shape": [
+          75,
+          3,
+          64
+        ],
+        "key_global": 153.60000610351562,
+        "value_global": 290.5946044921875
+      },
+      {
+        "file": "prefill-layer27.npz",
+        "phase": "prefill",
+        "layer": 27,
+        "shape": [
+          75,
+          3,
+          64
+        ],
+        "key_global": 137.84616088867188,
+        "value_global": 370.75860595703125
+      },
+      {
+        "file": "prefill-layer28.npz",
+        "phase": "prefill",
+        "layer": 28,
+        "shape": [
+          75,
+          3,
+          64
+        ],
+        "key_global": 152.51063537597656,
+        "value_global": 217.21212768554688
+      },
+      {
+        "file": "prefill-layer29.npz",
+        "phase": "prefill",
+        "layer": 29,
+        "shape": [
+          75,
+          3,
+          64
+        ],
+        "key_global": 201.91549682617188,
+        "value_global": 267.13043212890625
+      },
+      {
+        "file": "decode-layer00.npz",
+        "phase": "decode",
+        "layer": 0,
+        "shape": [
+          1,
+          3,
+          64
+        ],
+        "key_global": 423.7241516113281,
+        "value_global": 10966.18359375
+      },
+      {
+        "file": "decode-layer01.npz",
+        "phase": "decode",
+        "layer": 1,
+        "shape": [
+          1,
+          3,
+          64
+        ],
+        "key_global": 211.86207580566406,
+        "value_global": 1977.3792724609375
+      },
+      {
+        "file": "decode-layer02.npz",
+        "phase": "decode",
+        "layer": 2,
+        "shape": [
+          1,
+          3,
+          64
+        ],
+        "key_global": 169.99209594726562,
+        "value_global": 1088.8101806640625
+      },
+      {
+        "file": "decode-layer03.npz",
+        "phase": "decode",
+        "layer": 3,
+        "shape": [
+          1,
+          3,
+          64
+        ],
+        "key_global": 240.26815795898438,
+        "value_global": 1075.199951171875
+      },
+      {
+        "file": "decode-layer04.npz",
+        "phase": "decode",
+        "layer": 4,
+        "shape": [
+          1,
+          3,
+          64
+        ],
+        "key_global": 201.91549682617188,
+        "value_global": 891.3574829101562
+      },
+      {
+        "file": "decode-layer05.npz",
+        "phase": "decode",
+        "layer": 5,
+        "shape": [
+          1,
+          3,
+          64
+        ],
+        "key_global": 198.19354248046875,
+        "value_global": 1203.02099609375
+      },
+      {
+        "file": "decode-layer06.npz",
+        "phase": "decode",
+        "layer": 6,
+        "shape": [
+          1,
+          3,
+          64
+        ],
+        "key_global": 164.1526641845703,
+        "value_global": 1662.1448974609375
+      },
+      {
+        "file": "decode-layer07.npz",
+        "phase": "decode",
+        "layer": 7,
+        "shape": [
+          1,
+          3,
+          64
+        ],
+        "key_global": 194.60633850097656,
+        "value_global": 771.4439697265625
+      },
+      {
+        "file": "decode-layer08.npz",
+        "phase": "decode",
+        "layer": 8,
+        "shape": [
+          1,
+          3,
+          64
+        ],
+        "key_global": 202.867919921875,
+        "value_global": 839.1804809570312
+      },
+      {
+        "file": "decode-layer09.npz",
+        "phase": "decode",
+        "layer": 9,
+        "shape": [
+          1,
+          3,
+          64
+        ],
+        "key_global": 169.3228302001953,
+        "value_global": 945.2307739257812
+      },
+      {
+        "file": "decode-layer10.npz",
+        "phase": "decode",
+        "layer": 10,
+        "shape": [
+          1,
+          3,
+          64
+        ],
+        "key_global": 154.7050323486328,
+        "value_global": 915.0638427734375
+      },
+      {
+        "file": "decode-layer11.npz",
+        "phase": "decode",
+        "layer": 11,
+        "shape": [
+          1,
+          3,
+          64
+        ],
+        "key_global": 169.99209594726562,
+        "value_global": 1470.3590087890625
+      },
+      {
+        "file": "decode-layer12.npz",
+        "phase": "decode",
+        "layer": 12,
+        "shape": [
+          1,
+          3,
+          64
+        ],
+        "key_global": 186.99130249023438,
+        "value_global": 1313.2213134765625
+      },
+      {
+        "file": "decode-layer13.npz",
+        "phase": "decode",
+        "layer": 13,
+        "shape": [
+          1,
+          3,
+          64
+        ],
+        "key_global": 178.45643615722656,
+        "value_global": 2177.620361328125
+      },
+      {
+        "file": "decode-layer14.npz",
+        "phase": "decode",
+        "layer": 14,
+        "shape": [
+          1,
+          3,
+          64
+        ],
+        "key_global": 194.60633850097656,
+        "value_global": 983.0399780273438
+      },
+      {
+        "file": "decode-layer15.npz",
+        "phase": "decode",
+        "layer": 15,
+        "shape": [
+          1,
+          3,
+          64
+        ],
+        "key_global": 176.26229858398438,
+        "value_global": 1024.0
+      },
+      {
+        "file": "decode-layer16.npz",
+        "phase": "decode",
+        "layer": 16,
+        "shape": [
+          1,
+          3,
+          64
+        ],
+        "key_global": 176.98765563964844,
+        "value_global": 1170.2857666015625
+      },
+      {
+        "file": "decode-layer17.npz",
+        "phase": "decode",
+        "layer": 17,
+        "shape": [
+          1,
+          3,
+          64
+        ],
+        "key_global": 277.4709777832031,
+        "value_global": 1075.199951171875
+      },
+      {
+        "file": "decode-layer18.npz",
+        "phase": "decode",
+        "layer": 18,
+        "shape": [
+          1,
+          3,
+          64
+        ],
+        "key_global": 179.1999969482422,
+        "value_global": 601.510498046875
+      },
+      {
+        "file": "decode-layer19.npz",
+        "phase": "decode",
+        "layer": 19,
+        "shape": [
+          1,
+          3,
+          64
+        ],
+        "key_global": 183.7948760986328,
+        "value_global": 1081.9622802734375
+      },
+      {
+        "file": "decode-layer20.npz",
+        "phase": "decode",
+        "layer": 20,
+        "shape": [
+          1,
+          3,
+          64
+        ],
+        "key_global": 229.9893035888672,
+        "value_global": 512.0
+      },
+      {
+        "file": "decode-layer21.npz",
+        "phase": "decode",
+        "layer": 21,
+        "shape": [
+          1,
+          3,
+          64
+        ],
+        "key_global": 305.0212707519531,
+        "value_global": 618.8201293945312
+      },
+      {
+        "file": "decode-layer22.npz",
+        "phase": "decode",
+        "layer": 22,
+        "shape": [
+          1,
+          3,
+          64
+        ],
+        "key_global": 183.0127716064453,
+        "value_global": 819.2000122070312
+      },
+      {
+        "file": "decode-layer23.npz",
+        "phase": "decode",
+        "layer": 23,
+        "shape": [
+          1,
+          3,
+          64
+        ],
+        "key_global": 202.867919921875,
+        "value_global": 318.5777893066406
+      },
+      {
+        "file": "decode-layer24.npz",
+        "phase": "decode",
+        "layer": 24,
+        "shape": [
+          1,
+          3,
+          64
+        ],
+        "key_global": 235.01638793945312,
+        "value_global": 294.5753479003906
+      },
+      {
+        "file": "decode-layer25.npz",
+        "phase": "decode",
+        "layer": 25,
+        "shape": [
+          1,
+          3,
+          64
+        ],
+        "key_global": 172.72288513183594,
+        "value_global": 436.62945556640625
+      },
+      {
+        "file": "decode-layer26.npz",
+        "phase": "decode",
+        "layer": 26,
+        "shape": [
+          1,
+          3,
+          64
+        ],
+        "key_global": 199.11111450195312,
+        "value_global": 494.3448181152344
+      },
+      {
+        "file": "decode-layer27.npz",
+        "phase": "decode",
+        "layer": 27,
+        "shape": [
+          1,
+          3,
+          64
+        ],
+        "key_global": 180.7058868408203,
+        "value_global": 467.478271484375
+      },
+      {
+        "file": "decode-layer28.npz",
+        "phase": "decode",
+        "layer": 28,
+        "shape": [
+          1,
+          3,
+          64
+        ],
+        "key_global": 197.28440856933594,
+        "value_global": 367.5897521972656
+      },
+      {
+        "file": "decode-layer29.npz",
+        "phase": "decode",
+        "layer": 29,
+        "shape": [
+          1,
+          3,
+          64
+        ],
+        "key_global": 225.1727752685547,
+        "value_global": 477.8666687011719
+      }
+    ],
+    "decode_token_ids": [
+      [
+        8241
+      ]
+    ]
+  },
+  "oracle_sha256": "1f8150f7c336bf0446f9861b6ab9625813070f00e692d49386eac618f1f3e3b3",
+  "records": [
+    {
+      "file": "prefill-layer00.npz",
+      "phase": "prefill",
+      "layer": 0,
+      "shape": [
+        75,
+        3,
+        64
+      ],
+      "key_global": 268.79998779296875,
+      "value_global": 4411.0771484375,
+      "source_sha256": "32417676d4e4a4feb5a45d5b6ac32982ed64c7b0a0bb20dbca54cb2837a13212",
+      "fixture": "fixtures/prefill-layer00/input.txt",
+      "files": {
+        "input.txt": "ca7699fb69a7c7bc90cb5e300677af1e6c5d47899aa36e19449412c225bea2ae",
+        "kd-init.bin": "3fe63463fe0be0bebda840147fa593675163a0000c486d716e29939472769edd",
+        "kd-ref.bin": "79e4a5a7c6e3662998859fce2da317ef309861651d77b876d9bdfcd20f9b65aa",
+        "key.bin": "79fffb91d99fad855e08fe7aaa30abe655949a74dfd6984e4bfe4f1ac9f12bf0",
+        "ks-init.bin": "646a64fc23f5eb0ff4398965ff43ebf718f3a6b4ce1674e41166635fe43ce6bb",
+        "ks-ref.bin": "24f1d633815732876eb1b81b7aed7d21f8955d329a667b12e8742c54a8ac0527",
+        "slots.bin": "b2dcd08745a4691b93a2cee8346844f207b7e15388a91e0477dd86a849540459",
+        "value.bin": "bb9087a19d711d7437f94f345164080119fd535d903662a718fee6b953ee2d9f",
+        "vd-init.bin": "3fe63463fe0be0bebda840147fa593675163a0000c486d716e29939472769edd",
+        "vd-ref.bin": "8c181a53abed4a9e527fc25d428e0a37a23d7ac8ad452ad4276927715886349b",
+        "vs-init.bin": "646a64fc23f5eb0ff4398965ff43ebf718f3a6b4ce1674e41166635fe43ce6bb",
+        "vs-ref.bin": "ccdff46dedb2efbaf18baa666d23de55968d3b10bb95d8b84fc08f743c6954fb"
+      }
+    },
+    {
+      "file": "prefill-layer01.npz",
+      "phase": "prefill",
+      "layer": 1,
+      "shape": [
+        75,
+        3,
+        64
+      ],
+      "key_global": 171.34661865234375,
+      "value_global": 1036.33740234375,
+      "source_sha256": "0531e9f2ad41f9aa061ec9018a0d2aa5e421be974dbd88e004bf0a1428bb7266",
+      "fixture": "fixtures/prefill-layer01/input.txt",
+      "files": {
+        "input.txt": "89b26481e21ce89a3d666e9cc06ca7168c9e26efc1054b41a87dbee774ba2020",
+        "kd-init.bin": "3fe63463fe0be0bebda840147fa593675163a0000c486d716e29939472769edd",
+        "kd-ref.bin": "5c744d1d7252d45026f68c0ece095f0afdbad5910976604b5096cea1056f1d4b",
+        "key.bin": "2c4fecb77d43681bbf23fb492b9049039548a7be1db6b86303bf40a9273a5eee",
+        "ks-init.bin": "646a64fc23f5eb0ff4398965ff43ebf718f3a6b4ce1674e41166635fe43ce6bb",
+        "ks-ref.bin": "a1da1de6d1c34216245954ef71cff1272e9209c5fa4fd6c6ab87fddf8ae12455",
+        "slots.bin": "b2dcd08745a4691b93a2cee8346844f207b7e15388a91e0477dd86a849540459",
+        "value.bin": "eda90df6ace5501746e65629d278b68315e6649b590f9ec02500fe6d264fe1eb",
+        "vd-init.bin": "3fe63463fe0be0bebda840147fa593675163a0000c486d716e29939472769edd",
+        "vd-ref.bin": "415577e9273622eb26b5dddbf7faa1bbd592528a6cce659b291f334209cdbe51",
+        "vs-init.bin": "646a64fc23f5eb0ff4398965ff43ebf718f3a6b4ce1674e41166635fe43ce6bb",
+        "vs-ref.bin": "8ff4b65305f77107b92911f595b355dc282c5237933a66c791076e922893e1cf"
+      }
+    },
+    {
+      "file": "prefill-layer02.npz",
+      "phase": "prefill",
+      "layer": 2,
+      "shape": [
+        75,
+        3,
+        64
+      ],
+      "key_global": 158.11764526367188,
+      "value_global": 855.880615234375,
+      "source_sha256": "e70e0dc6e5b5bc5b4e19f13207117c2f0fad5e50ac558ba2bf533c88700dc82b",
+      "fixture": "fixtures/prefill-layer02/input.txt",
+      "files": {
+        "input.txt": "dd9777f334cb6389d6fe943ad7492351a811150314f1e7d8f1e7644d47de0241",
+        "kd-init.bin": "3fe63463fe0be0bebda840147fa593675163a0000c486d716e29939472769edd",
+        "kd-ref.bin": "aad893f7f4595ee02b5b4bd374da38b0d5d40f988f8995fd38f27041e4129abd",
+        "key.bin": "235bd5907d76ba297f79a1bc15bb4398459957e69fd729c561615324ecc88192",
+        "ks-init.bin": "646a64fc23f5eb0ff4398965ff43ebf718f3a6b4ce1674e41166635fe43ce6bb",
+        "ks-ref.bin": "43f5369d6f5e02cfc9d238cdaa2825bd7d9505125a9b1a80a105d5488219174c",
+        "slots.bin": "b2dcd08745a4691b93a2cee8346844f207b7e15388a91e0477dd86a849540459",
+        "value.bin": "aad63b3a678f64c50c3fed985dbf3f9c28b3a673aa07cf5af7c9868a81b86887",
+        "vd-init.bin": "3fe63463fe0be0bebda840147fa593675163a0000c486d716e29939472769edd",
+        "vd-ref.bin": "2dc3d729c037ac357d5f3b1aa272adab1ae49a60b382dd746a3851d016861359",
+        "vs-init.bin": "646a64fc23f5eb0ff4398965ff43ebf718f3a6b4ce1674e41166635fe43ce6bb",
+        "vs-ref.bin": "4b1a730ea8d4699ee90144d4a10f56d3b6141d1afcbbaff9456b50c70f46906f"
+      }
+    },
+    {
+      "file": "prefill-layer03.npz",
+      "phase": "prefill",
+      "layer": 3,
+      "shape": [
+        75,
+        3,
+        64
+      ],
+      "key_global": 196.38356018066406,
+      "value_global": 781.963623046875,
+      "source_sha256": "184f429fec38e6a7c627d36de8cc59fcaee53ae87f45e26bf3fcafef6a1cf4e0",
+      "fixture": "fixtures/prefill-layer03/input.txt",
+      "files": {
+        "input.txt": "802d29f66e22d9da565c0dc0955955862d31134aa7dd5b60cfc74c1f4cb6e08c",
+        "kd-init.bin": "3fe63463fe0be0bebda840147fa593675163a0000c486d716e29939472769edd",
+        "kd-ref.bin": "d07774136ea1ac9c6a1ad7d9c1d1717d765433fe7783e19af5652b96d1213635",
+        "key.bin": "28b3c34b9a16b79aeffed426efe54e0a84aeda75b7d7ee0b3e3c5495ae84215e",
+        "ks-init.bin": "646a64fc23f5eb0ff4398965ff43ebf718f3a6b4ce1674e41166635fe43ce6bb",
+        "ks-ref.bin": "96bb28cc8237e3c6af7f0342e9318e47f45085c9012296f27d4a00ba75a1f3bb",
+        "slots.bin": "b2dcd08745a4691b93a2cee8346844f207b7e15388a91e0477dd86a849540459",
+        "value.bin": "5e8455e291b704b886be073106124ea2551a8f3c4e4b4b21a7b5a186286620c5",
+        "vd-init.bin": "3fe63463fe0be0bebda840147fa593675163a0000c486d716e29939472769edd",
+        "vd-ref.bin": "be2d42ea4fe941a6a9472dafbaee5143d11959dc6e7bd8286e549954b6bd579e",
+        "vs-init.bin": "646a64fc23f5eb0ff4398965ff43ebf718f3a6b4ce1674e41166635fe43ce6bb",
+        "vs-ref.bin": "85f920f97900f528304e58c658d1ab26c1315be40d0d8350c09a731ff4891910"
+      }
+    },
+    {
+      "file": "prefill-layer04.npz",
+      "phase": "prefill",
+      "layer": 4,
+      "shape": [
+        75,
+        3,
+        64
+      ],
+      "key_global": 186.99130249023438,
+      "value_global": 722.8235473632812,
+      "source_sha256": "5b176e967110b8beca1765f1dc827cb393c26ef6b4ad9eedb32fb34c5d1cfc5e",
+      "fixture": "fixtures/prefill-layer04/input.txt",
+      "files": {
+        "input.txt": "4c1d9669bdb7a7a0489c10af6b4e85849b4e268a766dd7e518163f6dbce45bb2",
+        "kd-init.bin": "3fe63463fe0be0bebda840147fa593675163a0000c486d716e29939472769edd",
+        "kd-ref.bin": "0a9dc712410cee837606ede05c01c0f2f42d659207c0d6644a2e5575160257d5",
+        "key.bin": "803791a909af2e25d6740845f7178b58c4ec0ada887e7c863e41ec2166e5d55a",
+        "ks-init.bin": "646a64fc23f5eb0ff4398965ff43ebf718f3a6b4ce1674e41166635fe43ce6bb",
+        "ks-ref.bin": "e602c5ee1a267b5616e1b72a1506045496a8a8ada45276dd364c74fd2edf1bdb",
+        "slots.bin": "b2dcd08745a4691b93a2cee8346844f207b7e15388a91e0477dd86a849540459",
+        "value.bin": "5141d6da29d5aa4848950b62d4441e6286ced1695c606b250ca86a90a4ad92cc",
+        "vd-init.bin": "3fe63463fe0be0bebda840147fa593675163a0000c486d716e29939472769edd",
+        "vd-ref.bin": "3f2d3186f30fa82dcd1490ad0bb4ba410da295eb277095b07dc2db04c40235d0",
+        "vs-init.bin": "646a64fc23f5eb0ff4398965ff43ebf718f3a6b4ce1674e41166635fe43ce6bb",
+        "vs-ref.bin": "b5840ce6bfe7faf9ef764adcb700fc3ebf2c889febff5ff93a318e5aa13fd93a"
+      }
+    },
+    {
+      "file": "prefill-layer05.npz",
+      "phase": "prefill",
+      "layer": 5,
+      "shape": [
+        75,
+        3,
+        64
+      ],
+      "key_global": 180.7058868408203,
+      "value_global": 710.8760375976562,
+      "source_sha256": "30763258853f77550796eb4ed5172ca885a8c3dbbb282ad314d9b9dc5794e561",
+      "fixture": "fixtures/prefill-layer05/input.txt",
+      "files": {
+        "input.txt": "bb8dbb99dbf7be3eddd7ffec2c16093157f396700249702b6539e9b08b94cd4d",
+        "kd-init.bin": "3fe63463fe0be0bebda840147fa593675163a0000c486d716e29939472769edd",
+        "kd-ref.bin": "caf43b2d087abedf49cc82922e58e1afe666814214a2cb32fd110004e9cf2a69",
+        "key.bin": "fc1524d30cfdc5a9272a4de87e0cce1e43e234de2fa9ebdab3f7ff8f7998e62f",
+        "ks-init.bin": "646a64fc23f5eb0ff4398965ff43ebf718f3a6b4ce1674e41166635fe43ce6bb",
+        "ks-ref.bin": "4a7b800ed7d6a75423f237c9714d034edea37c81301bee3a9399c60435d6b131",
+        "slots.bin": "b2dcd08745a4691b93a2cee8346844f207b7e15388a91e0477dd86a849540459",
+        "value.bin": "1f7817530be0b0cdf8fa03a9c758a70dbebbb5e426510430bd5dd3e95f0e54df",
+        "vd-init.bin": "3fe63463fe0be0bebda840147fa593675163a0000c486d716e29939472769edd",
+        "vd-ref.bin": "2a99aaa130147f0d3974fcc33cd08bd21ec76984bd2698dddde9f147eb7f5375",
+        "vs-init.bin": "646a64fc23f5eb0ff4398965ff43ebf718f3a6b4ce1674e41166635fe43ce6bb",
+        "vs-ref.bin": "7020356290b693e4fc02c701dc4172e1260bbd3cb6f2213520d3dc3191d60cd1"
+      }
+    },
+    {
+      "file": "prefill-layer06.npz",
+      "phase": "prefill",
+      "layer": 6,
+      "shape": [
+        75,
+        3,
+        64
+      ],
+      "key_global": 158.11764526367188,
+      "value_global": 966.471923828125,
+      "source_sha256": "678cea61b71ba56f42631c22b65f0be71d926a42e3768de38f9455f9501032c6",
+      "fixture": "fixtures/prefill-layer06/input.txt",
+      "files": {
+        "input.txt": "c63e4c8a376a92b26edd5e894bfeeae4df5beabb2ca704b2b3bacc2e65df4652",
+        "kd-init.bin": "3fe63463fe0be0bebda840147fa593675163a0000c486d716e29939472769edd",
+        "kd-ref.bin": "ae8c52b98a025a908fd1c53c797a881633b904673defd78732919549c737832e",
+        "key.bin": "20fee12bc420eb8d67994a5cdfe9cc41dbfaabaeaff565d9523bdfc43b8d90dd",
+        "ks-init.bin": "646a64fc23f5eb0ff4398965ff43ebf718f3a6b4ce1674e41166635fe43ce6bb",
+        "ks-ref.bin": "b2121fc41792e22222761ebdffb96b75d179f833718964f97aee1c304f70e16b",
+        "slots.bin": "b2dcd08745a4691b93a2cee8346844f207b7e15388a91e0477dd86a849540459",
+        "value.bin": "621aa51b34761376a70e8bfc8f417d907609cf3c0945bf07deb284b9850be679",
+        "vd-init.bin": "3fe63463fe0be0bebda840147fa593675163a0000c486d716e29939472769edd",
+        "vd-ref.bin": "cbed981dc8e65069eccc60c879c237750f35f7df73f7b3955020a52cdd957f9b",
+        "vs-init.bin": "646a64fc23f5eb0ff4398965ff43ebf718f3a6b4ce1674e41166635fe43ce6bb",
+        "vs-ref.bin": "db9f5b997df3d73acb89358d68e92cf1c66cb4756b119df7dcd6610c76b736c2"
+      }
+    },
+    {
+      "file": "prefill-layer07.npz",
+      "phase": "prefill",
+      "layer": 7,
+      "shape": [
+        75,
+        3,
+        64
+      ],
+      "key_global": 168.0,
+      "value_global": 716.7999877929688,
+      "source_sha256": "6bbca2198d67416d1c1a3d6d5a0669590d58699a73b13ffff2d3f72dc5485424",
+      "fixture": "fixtures/prefill-layer07/input.txt",
+      "files": {
+        "input.txt": "43dbf3d8e157a3b553c3edcc38e59fbdb202c003ea2cb8fdd2d049f99a9b66d7",
+        "kd-init.bin": "3fe63463fe0be0bebda840147fa593675163a0000c486d716e29939472769edd",
+        "kd-ref.bin": "c98610ba47c48052707b5c6353b69660736e0c84c6da6d0dead6100c605a7f14",
+        "key.bin": "5724b67c5726c082094127b75d577a4140c7b3500b8bf2b5f88c7b3e6f9e93be",
+        "ks-init.bin": "646a64fc23f5eb0ff4398965ff43ebf718f3a6b4ce1674e41166635fe43ce6bb",
+        "ks-ref.bin": "36c1550d1f52314d75d20e11f0f17f36ff00119402d7287f0acbf5cbcad2ee7b",
+        "slots.bin": "b2dcd08745a4691b93a2cee8346844f207b7e15388a91e0477dd86a849540459",
+        "value.bin": "d83cb3db36b08a072a5c9d34c8f1bb17b5f950e353b345948d0a0c2d022b4f71",
+        "vd-init.bin": "3fe63463fe0be0bebda840147fa593675163a0000c486d716e29939472769edd",
+        "vd-ref.bin": "bfc78b099c5af01b0a59f0405aaebedf244a945de54d152fa88fc57f204d3d78",
+        "vs-init.bin": "646a64fc23f5eb0ff4398965ff43ebf718f3a6b4ce1674e41166635fe43ce6bb",
+        "vs-ref.bin": "b5b2bbd131079a404f065412990fd97a5c6590471c2cf1ecfeefeb00f0f2be99"
+      }
+    },
+    {
+      "file": "prefill-layer08.npz",
+      "phase": "prefill",
+      "layer": 8,
+      "shape": [
+        75,
+        3,
+        64
+      ],
+      "key_global": 174.8292694091797,
+      "value_global": 623.3043212890625,
+      "source_sha256": "cb2d8824f60236cb3eae647769dbd91d4658e996bdbfed63aea71bd3711cfa83",
+      "fixture": "fixtures/prefill-layer08/input.txt",
+      "files": {
+        "input.txt": "5560a770c61a76b0b8b0b3ba5e02849f915f1bfa73d4073cd74d4d40837aab45",
+        "kd-init.bin": "3fe63463fe0be0bebda840147fa593675163a0000c486d716e29939472769edd",
+        "kd-ref.bin": "3ba3bcaa973b2040112d557d4c49a99ba88a177168fff57a64845a85d63975d8",
+        "key.bin": "70399be1e67022b5b5314dd5ba83835eeb66d6c3304c17f99c6a9d5d0e2648e6",
+        "ks-init.bin": "646a64fc23f5eb0ff4398965ff43ebf718f3a6b4ce1674e41166635fe43ce6bb",
+        "ks-ref.bin": "d8a41da575eeea50b5e15f6d09d0964cf0286d8248ed9b313d19e647b5000972",
+        "slots.bin": "b2dcd08745a4691b93a2cee8346844f207b7e15388a91e0477dd86a849540459",
+        "value.bin": "7a74bc10b74cd09db9f870ad844cfb398c26c207996b40d75ea635d2883e1f03",
+        "vd-init.bin": "3fe63463fe0be0bebda840147fa593675163a0000c486d716e29939472769edd",
+        "vd-ref.bin": "c293cc517fc93881c2473efac5dee9aeab229330903a91c67c61619859a6bfa9",
+        "vs-init.bin": "646a64fc23f5eb0ff4398965ff43ebf718f3a6b4ce1674e41166635fe43ce6bb",
+        "vs-ref.bin": "13169c157cefcfed91f7606ebacbc22b64524cd6e85b176fdc1665fdd3cb457e"
+      }
+    },
+    {
+      "file": "prefill-layer09.npz",
+      "phase": "prefill",
+      "layer": 9,
+      "shape": [
+        75,
+        3,
+        64
+      ],
+      "key_global": 146.2857208251953,
+      "value_global": 540.9811401367188,
+      "source_sha256": "31f860bf3bfd77d5bf031a2caaf1d02aba536c3e299f968d7647d7f0682c335f",
+      "fixture": "fixtures/prefill-layer09/input.txt",
+      "files": {
+        "input.txt": "5f70034d67981a584077e0cb733e3563b5736e1241fb4d09c9b6c814e4814eec",
+        "kd-init.bin": "3fe63463fe0be0bebda840147fa593675163a0000c486d716e29939472769edd",
+        "kd-ref.bin": "5735bd8807cd7b751ad97ca11564a388170d35a265999a807fae53df71803382",
+        "key.bin": "85bb6808e955e3551b1d9aa02f423f19f8d7cb8efbf6bc6e9cd5c6155dbeca83",
+        "ks-init.bin": "646a64fc23f5eb0ff4398965ff43ebf718f3a6b4ce1674e41166635fe43ce6bb",
+        "ks-ref.bin": "2851be9dffac831bfb9522f158358498a2e8d6607504c77628926438f1aaba4a",
+        "slots.bin": "b2dcd08745a4691b93a2cee8346844f207b7e15388a91e0477dd86a849540459",
+        "value.bin": "65a9018da6d454b2ca393c2eb8e36c454d62448ef5f5b7b8b804bbb48cca7ac0",
+        "vd-init.bin": "3fe63463fe0be0bebda840147fa593675163a0000c486d716e29939472769edd",
+        "vd-ref.bin": "cee57e3201aaa426bf4417f3147be7e4fe615a46fdeeb4428c7cc0ec3b5435fa",
+        "vs-init.bin": "646a64fc23f5eb0ff4398965ff43ebf718f3a6b4ce1674e41166635fe43ce6bb",
+        "vs-ref.bin": "db295909f5ac540669c6a55629a8c9a10068861b0a26e10cc3c4bcd603e6b9cb"
+      }
+    },
+    {
+      "file": "prefill-layer10.npz",
+      "phase": "prefill",
+      "layer": 10,
+      "shape": [
+        75,
+        3,
+        64
+      ],
+      "key_global": 148.30345153808594,
+      "value_global": 661.6615600585938,
+      "source_sha256": "44c0c6c372d566ec760bdedfc98a6edb8170a9c931e5445da07b320946f824b3",
+      "fixture": "fixtures/prefill-layer10/input.txt",
+      "files": {
+        "input.txt": "e935963a072d0c9aae55ba47f214da1bef28f0101acd7426a1d5b86a0558b5c6",
+        "kd-init.bin": "3fe63463fe0be0bebda840147fa593675163a0000c486d716e29939472769edd",
+        "kd-ref.bin": "549db6ae84b85f3aba323e1699a7590a84dcbda6d7552e2c6708d21ee75b392a",
+        "key.bin": "bb738edb323dc1c834e8a2f89d1a38001821c47e166a8ca37a85426b036819dc",
+        "ks-init.bin": "646a64fc23f5eb0ff4398965ff43ebf718f3a6b4ce1674e41166635fe43ce6bb",
+        "ks-ref.bin": "e52552381244a0be9ff4cd634a27ccd4898b59e1481af764856f03c60b02912e",
+        "slots.bin": "b2dcd08745a4691b93a2cee8346844f207b7e15388a91e0477dd86a849540459",
+        "value.bin": "28004e9584b81a8aa44c8ae264c81d71255188c6fdd0b14fc980aac5ce174bc7",
+        "vd-init.bin": "3fe63463fe0be0bebda840147fa593675163a0000c486d716e29939472769edd",
+        "vd-ref.bin": "905ae72c1b230e14aaf6766199af481b87c07cb4bbbac810efbb4b393762f663",
+        "vs-init.bin": "646a64fc23f5eb0ff4398965ff43ebf718f3a6b4ce1674e41166635fe43ce6bb",
+        "vs-ref.bin": "e37b973d107223186d8ccaaddd137b4ab4722fef68d68f4f6eb25d3731592829"
+      }
+    },
+    {
+      "file": "prefill-layer11.npz",
+      "phase": "prefill",
+      "layer": 11,
+      "shape": [
+        75,
+        3,
+        64
+      ],
+      "key_global": 149.3333282470703,
+      "value_global": 540.9811401367188,
+      "source_sha256": "e4e160eddd575a07c024ebf36b6b8020e2733571976b91836cf3d43b75d5c1d9",
+      "fixture": "fixtures/prefill-layer11/input.txt",
+      "files": {
+        "input.txt": "8bc65a6176ab0893c379f22c608eb6d3157ca02f18ab3237197dba55b187864c",
+        "kd-init.bin": "3fe63463fe0be0bebda840147fa593675163a0000c486d716e29939472769edd",
+        "kd-ref.bin": "63f02cb494dc8778794a968d4f3980b55706bf1c7797bc3597279c8d60980e00",
+        "key.bin": "12618559e482150a303a6c2eddcdf507990e81725a17d14deb7f30204d55206a",
+        "ks-init.bin": "646a64fc23f5eb0ff4398965ff43ebf718f3a6b4ce1674e41166635fe43ce6bb",
+        "ks-ref.bin": "685ea36d16f94f20b75ed946ce86d323b9c0749862127c57fa28971aeccc5ec2",
+        "slots.bin": "b2dcd08745a4691b93a2cee8346844f207b7e15388a91e0477dd86a849540459",
+        "value.bin": "7a6bd158d366751ef7c18c7643782f71e71bed251225f1dee85f3bb006b4a04f",
+        "vd-init.bin": "3fe63463fe0be0bebda840147fa593675163a0000c486d716e29939472769edd",
+        "vd-ref.bin": "00bc525049e4019a73c11ab2ddc6d8c6946dd9418e87a993baba19fadb7a2b4e",
+        "vs-init.bin": "646a64fc23f5eb0ff4398965ff43ebf718f3a6b4ce1674e41166635fe43ce6bb",
+        "vs-ref.bin": "dff84b2a00ad3c8f116668667153bae886cf7706cc74487336c166df10cb538b"
+      }
+    },
+    {
+      "file": "prefill-layer12.npz",
+      "phase": "prefill",
+      "layer": 12,
+      "shape": [
+        75,
+        3,
+        64
+      ],
+      "key_global": 156.9635009765625,
+      "value_global": 719.7991333007812,
+      "source_sha256": "1fe1f5b560ad2086c438f256a5e7f2759a848fe7d55a759cfc86c813145d7a1a",
+      "fixture": "fixtures/prefill-layer12/input.txt",
+      "files": {
+        "input.txt": "753622feab4c4e394d1dced3ede890bf3bdda2119b42c50e0eb5674ffd3a8b8b",
+        "kd-init.bin": "3fe63463fe0be0bebda840147fa593675163a0000c486d716e29939472769edd",
+        "kd-ref.bin": "5f924c0263e9d839cda2a8eaba20bedd2fa814340a372f073714e0bf1f288eb3",
+        "key.bin": "92d1204908297c567a8ec96a7ac4d645dc1e135b7a63d39c56bb0176aaa9ea1b",
+        "ks-init.bin": "646a64fc23f5eb0ff4398965ff43ebf718f3a6b4ce1674e41166635fe43ce6bb",
+        "ks-ref.bin": "03b2c87f7e7acb2f553998cf1e58152fc314465b5b009f2c389d313e9ed721e1",
+        "slots.bin": "b2dcd08745a4691b93a2cee8346844f207b7e15388a91e0477dd86a849540459",
+        "value.bin": "cdd613affed6f4fe320d30938a4946431a30cf15c94b0d3f333b0cdbc2ac60ef",
+        "vd-init.bin": "3fe63463fe0be0bebda840147fa593675163a0000c486d716e29939472769edd",
+        "vd-ref.bin": "2168c677e4a3691ad910dcf22eb3af9491b856e62854d1fa92b99141e29c30d9",
+        "vs-init.bin": "646a64fc23f5eb0ff4398965ff43ebf718f3a6b4ce1674e41166635fe43ce6bb",
+        "vs-ref.bin": "8893d28015f79ab5c80f78fb973092dce0c87fe3784076646a3fa5b1c553cb91"
+      }
+    },
+    {
+      "file": "prefill-layer13.npz",
+      "phase": "prefill",
+      "layer": 13,
+      "shape": [
+        75,
+        3,
+        64
+      ],
+      "key_global": 148.30345153808594,
+      "value_global": 682.6666870117188,
+      "source_sha256": "de6ad4b9650015fa8e19b4b78a2949f04ab93d3cc4ca29764b6366f414f3a4d0",
+      "fixture": "fixtures/prefill-layer13/input.txt",
+      "files": {
+        "input.txt": "c050f1343c2ac04656a47f4aa994e143ba6c7b586641ddecf2c3cd2c61122248",
+        "kd-init.bin": "3fe63463fe0be0bebda840147fa593675163a0000c486d716e29939472769edd",
+        "kd-ref.bin": "30ceb124b11d5439adbcfcba8435d543efb2cb7a0a3e3891161120304caac860",
+        "key.bin": "308cd24158e851ab0bfc86b5b2a905424667ea6ac4d0d15da4669a7e3b793623",
+        "ks-init.bin": "646a64fc23f5eb0ff4398965ff43ebf718f3a6b4ce1674e41166635fe43ce6bb",
+        "ks-ref.bin": "dbb9f27b141dd0b02571b74e6706e68fbbe2c5c81bdc11fc0c8d33993e128570",
+        "slots.bin": "b2dcd08745a4691b93a2cee8346844f207b7e15388a91e0477dd86a849540459",
+        "value.bin": "016703fd78e6c0b55afeaeda100c023802797f94fad28f95fb1c3462018a231b",
+        "vd-init.bin": "3fe63463fe0be0bebda840147fa593675163a0000c486d716e29939472769edd",
+        "vd-ref.bin": "585d92200098160d70945701b8e2679a04b9401b6574b29bef5f1dfb70cd1c13",
+        "vs-init.bin": "646a64fc23f5eb0ff4398965ff43ebf718f3a6b4ce1674e41166635fe43ce6bb",
+        "vs-ref.bin": "7e03c98175beb60d07998dcb6a524e35e86d85e3ab6bda1eb055713b6aa1460b"
+      }
+    },
+    {
+      "file": "prefill-layer14.npz",
+      "phase": "prefill",
+      "layer": 14,
+      "shape": [
+        75,
+        3,
+        64
+      ],
+      "key_global": 153.60000610351562,
+      "value_global": 573.4400024414062,
+      "source_sha256": "2e1e7b5d360958b978480e0dc48fa439a220a5c64d4ebb1bdf3fabfeca9f6823",
+      "fixture": "fixtures/prefill-layer14/input.txt",
+      "files": {
+        "input.txt": "cbcd53805ba69e813ecb8ba5c482ca68aea1944622d9c07e6da8e866520fe620",
+        "kd-init.bin": "3fe63463fe0be0bebda840147fa593675163a0000c486d716e29939472769edd",
+        "kd-ref.bin": "776b82b4f30f0bba1c6b37a9bda7ee80f7d6c5047a37605125b44bbc4baeee81",
+        "key.bin": "657ba262370cf6bb3c2346a01eed5d93ba4a71fbc480ef82a0b7b4b950832f36",
+        "ks-init.bin": "646a64fc23f5eb0ff4398965ff43ebf718f3a6b4ce1674e41166635fe43ce6bb",
+        "ks-ref.bin": "a702e72efa8cfec21de2dd15651331c765f5b77688759558080bdddc83ec19b0",
+        "slots.bin": "b2dcd08745a4691b93a2cee8346844f207b7e15388a91e0477dd86a849540459",
+        "value.bin": "7d988fced76c81af17f4a4a487f9dc89e90b27721cca6384a25fbe62fdced717",
+        "vd-init.bin": "3fe63463fe0be0bebda840147fa593675163a0000c486d716e29939472769edd",
+        "vd-ref.bin": "1653c3a0eae29d7001340b13127af74d7e1b6ecc007d25ff0fe7189301bcdcba",
+        "vs-init.bin": "646a64fc23f5eb0ff4398965ff43ebf718f3a6b4ce1674e41166635fe43ce6bb",
+        "vs-ref.bin": "51a39341822ae8146a9c89eb35ad7a2c7a192546735d55fd03103415a4338d59"
+      }
+    },
+    {
+      "file": "prefill-layer15.npz",
+      "phase": "prefill",
+      "layer": 15,
+      "shape": [
+        75,
+        3,
+        64
+      ],
+      "key_global": 136.1012725830078,
+      "value_global": 719.7991333007812,
+      "source_sha256": "ff6d531cf2056464afb4fefe7518133a3b5ef6852e6c6bf28061d8465cda13e0",
+      "fixture": "fixtures/prefill-layer15/input.txt",
+      "files": {
+        "input.txt": "eb32e3907ddf79c73614841569bfd151d21a43264e221daeae3b364a85b1acb8",
+        "kd-init.bin": "3fe63463fe0be0bebda840147fa593675163a0000c486d716e29939472769edd",
+        "kd-ref.bin": "d7150796fbdc9aac0c160a43edaf41741be1dcdcdeedb50d9135caee7f91a4e8",
+        "key.bin": "2ba25d42e5bfc78f6cdb2fb3515e251eee4403691b80dde5135af8f5b870bbc6",
+        "ks-init.bin": "646a64fc23f5eb0ff4398965ff43ebf718f3a6b4ce1674e41166635fe43ce6bb",
+        "ks-ref.bin": "41592592b1a02233e59cb96b2818956c3b1a1a37a04e2c6e079ca4ab80057c64",
+        "slots.bin": "b2dcd08745a4691b93a2cee8346844f207b7e15388a91e0477dd86a849540459",
+        "value.bin": "30fc06dc5203580ac33fbcc7b567010f14e3b720a5ac195b614003040b110edf",
+        "vd-init.bin": "3fe63463fe0be0bebda840147fa593675163a0000c486d716e29939472769edd",
+        "vd-ref.bin": "9b7d578528717b938b458e99927b5c53616fd4f7be2f6a2847ec23cd02bcd2b7",
+        "vs-init.bin": "646a64fc23f5eb0ff4398965ff43ebf718f3a6b4ce1674e41166635fe43ce6bb",
+        "vs-ref.bin": "e08327b14030f1089c6893836cbad244b26f386a4e72fba90656eca19af89b55"
+      }
+    },
+    {
+      "file": "prefill-layer16.npz",
+      "phase": "prefill",
+      "layer": 16,
+      "shape": [
+        75,
+        3,
+        64
+      ],
+      "key_global": 146.2857208251953,
+      "value_global": 696.48583984375,
+      "source_sha256": "9c6fb4a0b53014b5437a8384948d5cc474c97e8cf32c23b0b0bff6776b43eba6",
+      "fixture": "fixtures/prefill-layer16/input.txt",
+      "files": {
+        "input.txt": "74bbe188405de1cd7e17239c14070ab8327895b6210212a273940ea798c7ca01",
+        "kd-init.bin": "3fe63463fe0be0bebda840147fa593675163a0000c486d716e29939472769edd",
+        "kd-ref.bin": "fb90af183285316146964a0edd713c9060d4fe141d7d45ed039a79525d60a0a8",
+        "key.bin": "1ac319d92b062c17779af213fe960f4c96fe6a6463d96fe7006465c7b2d191c6",
+        "ks-init.bin": "646a64fc23f5eb0ff4398965ff43ebf718f3a6b4ce1674e41166635fe43ce6bb",
+        "ks-ref.bin": "54d85624c3afab4ae2c76150b7e49aacfd54c4f22a836502d701636c3b9e83d1",
+        "slots.bin": "b2dcd08745a4691b93a2cee8346844f207b7e15388a91e0477dd86a849540459",
+        "value.bin": "8114b9bd270c62a540e7b23b58c9776bff353f51ca88e70f43d7d227bde5e4b0",
+        "vd-init.bin": "3fe63463fe0be0bebda840147fa593675163a0000c486d716e29939472769edd",
+        "vd-ref.bin": "411888b06239de6c35df1dd484f498d1bc0691e3ab55f7bc152557d9a09d7811",
+        "vs-init.bin": "646a64fc23f5eb0ff4398965ff43ebf718f3a6b4ce1674e41166635fe43ce6bb",
+        "vs-ref.bin": "229b209f104d0a7bca7579cff01646cfec4613757c921ab7f68aff7e6c53c5c7"
+      }
+    },
+    {
+      "file": "prefill-layer17.npz",
+      "phase": "prefill",
+      "layer": 17,
+      "shape": [
+        75,
+        3,
+        64
+      ],
+      "key_global": 184.5836944580078,
+      "value_global": 547.8726196289062,
+      "source_sha256": "98c08daf7238407eeb35a3d1bc92641cb62c5e44fe4b9fbbdaa8f8b65cf7fdc8",
+      "fixture": "fixtures/prefill-layer17/input.txt",
+      "files": {
+        "input.txt": "a6ee87af5f183d108ecb1d238964d5bbbd6dfa4c7079acbc67ecd09938c2b686",
+        "kd-init.bin": "3fe63463fe0be0bebda840147fa593675163a0000c486d716e29939472769edd",
+        "kd-ref.bin": "53e9b296e035413d7c044f28c54aa59ceb01126960249c65ecb98f48750d5ca1",
+        "key.bin": "65c40f6ea1ed836be1523f1164ae0b4bf6a1a75ece589d86755f2eba5c600ddd",
+        "ks-init.bin": "646a64fc23f5eb0ff4398965ff43ebf718f3a6b4ce1674e41166635fe43ce6bb",
+        "ks-ref.bin": "33cbd3fe524ee30707c46045a360fc2abf8cab2d0c9ca6f1cac9faf09ab6631c",
+        "slots.bin": "b2dcd08745a4691b93a2cee8346844f207b7e15388a91e0477dd86a849540459",
+        "value.bin": "ad5478f18154c22bdc5146ce43e8c20f676b291a6ab5c51797a7f53c50cc2de5",
+        "vd-init.bin": "3fe63463fe0be0bebda840147fa593675163a0000c486d716e29939472769edd",
+        "vd-ref.bin": "f63eb76e5571b701a41ebe3751c34dc183f170f744552eaf190fdeeff1b92b70",
+        "vs-init.bin": "646a64fc23f5eb0ff4398965ff43ebf718f3a6b4ce1674e41166635fe43ce6bb",
+        "vs-ref.bin": "6aff103db394149380ed34fa23be99db910241fc68417a3a8c4edcc0b8f7e677"
+      }
+    },
+    {
+      "file": "prefill-layer18.npz",
+      "phase": "prefill",
+      "layer": 18,
+      "shape": [
+        75,
+        3,
+        64
+      ],
+      "key_global": 159.2888946533203,
+      "value_global": 296.6069030761719,
+      "source_sha256": "760d00ab370b4ed22e1c2921c63b00f367b4e13d848991e552d53cbd9ccc0166",
+      "fixture": "fixtures/prefill-layer18/input.txt",
+      "files": {
+        "input.txt": "45509cf70e41e7be5b0820906ddaf3120475f347f057c337b38d9c635b33d68a",
+        "kd-init.bin": "3fe63463fe0be0bebda840147fa593675163a0000c486d716e29939472769edd",
+        "kd-ref.bin": "b001a34c4bd04db9a333abec59ba3153fd34c134f800ae063050cdc2c60ed206",
+        "key.bin": "db2e27f15e04795746dc3177bc3fd48b18ed183db5e05e16733de7a9996ab4ae",
+        "ks-init.bin": "646a64fc23f5eb0ff4398965ff43ebf718f3a6b4ce1674e41166635fe43ce6bb",
+        "ks-ref.bin": "165c77e220d9015d87fc64bee6ef983a661f58523ae9c3f61db5ed3b5bad182e",
+        "slots.bin": "b2dcd08745a4691b93a2cee8346844f207b7e15388a91e0477dd86a849540459",
+        "value.bin": "4b89109e72e0f8e3a53383d669e55e4d49c29c3fa561e172ac99bb003bf006a1",
+        "vd-init.bin": "3fe63463fe0be0bebda840147fa593675163a0000c486d716e29939472769edd",
+        "vd-ref.bin": "4fff9ad41356b194a0b4822989488028ff2b535ff475203bd04f277a90de0b51",
+        "vs-init.bin": "646a64fc23f5eb0ff4398965ff43ebf718f3a6b4ce1674e41166635fe43ce6bb",
+        "vs-ref.bin": "5e2b8436c5699bfaf3cf6e66eb9ae2d703d6728afc2b273b2eee598edca41136"
+      }
+    },
+    {
+      "file": "prefill-layer19.npz",
+      "phase": "prefill",
+      "layer": 19,
+      "shape": [
+        75,
+        3,
+        64
+      ],
+      "key_global": 135.2452850341797,
+      "value_global": 562.1961059570312,
+      "source_sha256": "0cf7e85d58c97f94953e4484d0599f07becc7c5bef15bf97d61ee7c920d5a9f3",
+      "fixture": "fixtures/prefill-layer19/input.txt",
+      "files": {
+        "input.txt": "25ec9762e85ad0054f6d87663af5b77a455de36be5de96a722b3169aff2947db",
+        "kd-init.bin": "3fe63463fe0be0bebda840147fa593675163a0000c486d716e29939472769edd",
+        "kd-ref.bin": "093bf16bcfb0528c8a9bc19120486560c1f6d4fa893339a8fc04a9f254e8518c",
+        "key.bin": "9377b12b47f2fb4669d923d0f90dee1e8bf4769475abb318f70b9656323306ab",
+        "ks-init.bin": "646a64fc23f5eb0ff4398965ff43ebf718f3a6b4ce1674e41166635fe43ce6bb",
+        "ks-ref.bin": "c47fdd835ab10c73b39e9625da212fbef5e7ca4beabe57fa7b9f566308a962b6",
+        "slots.bin": "b2dcd08745a4691b93a2cee8346844f207b7e15388a91e0477dd86a849540459",
+        "value.bin": "4a2cd887f0c5e9737b6f7eb932ef43c9ab745419ab8e5662ae034da989d9c77e",
+        "vd-init.bin": "3fe63463fe0be0bebda840147fa593675163a0000c486d716e29939472769edd",
+        "vd-ref.bin": "ca7d719cb0d635b3516a3f2b2f1d3dc3d8b95ead9c4640363dc7f6f6b8e44b9d",
+        "vs-init.bin": "646a64fc23f5eb0ff4398965ff43ebf718f3a6b4ce1674e41166635fe43ce6bb",
+        "vs-ref.bin": "3dd217a23cbfb618a99a16b95838bbcc0c178c13499bf98e873c7d57b4412f7b"
+      }
+    },
+    {
+      "file": "prefill-layer20.npz",
+      "phase": "prefill",
+      "layer": 20,
+      "shape": [
+        75,
+        3,
+        64
+      ],
+      "key_global": 186.99130249023438,
+      "value_global": 400.0744323730469,
+      "source_sha256": "fa0d949ea9358f48edf1006b937e40659edf882b785a1e8e3729b6643e9cc735",
+      "fixture": "fixtures/prefill-layer20/input.txt",
+      "files": {
+        "input.txt": "8377d3b4c747f8a3c0cd63c3fa8e84aa9375a35400b14e898a1f4d769adabc40",
+        "kd-init.bin": "3fe63463fe0be0bebda840147fa593675163a0000c486d716e29939472769edd",
+        "kd-ref.bin": "a0869e9fd5840927f61983719e99e940ad644621b5014bfbfbbc875e0af548b1",
+        "key.bin": "3dc12f221d1de690b80db914f220d7f7d588013a8add02f620c7b49ea8550679",
+        "ks-init.bin": "646a64fc23f5eb0ff4398965ff43ebf718f3a6b4ce1674e41166635fe43ce6bb",
+        "ks-ref.bin": "1f473dfad08bb933968f999c456e1616c0bb78aac8722bfd86661585ba66b8f5",
+        "slots.bin": "b2dcd08745a4691b93a2cee8346844f207b7e15388a91e0477dd86a849540459",
+        "value.bin": "85068c7128b8d6048cd367679516b8c0601863c841dcd2deb5aff7507d028c59",
+        "vd-init.bin": "3fe63463fe0be0bebda840147fa593675163a0000c486d716e29939472769edd",
+        "vd-ref.bin": "22bb52bebadc47337628cb535f930e483d705a13bac6a42df164c65b11072c04",
+        "vs-init.bin": "646a64fc23f5eb0ff4398965ff43ebf718f3a6b4ce1674e41166635fe43ce6bb",
+        "vs-ref.bin": "bdd4188faf6adfcabfa4fcf3b0b8b083ab981dbaf44e946c7771892cad302777"
+      }
+    },
+    {
+      "file": "prefill-layer21.npz",
+      "phase": "prefill",
+      "layer": 21,
+      "shape": [
+        75,
+        3,
+        64
+      ],
+      "key_global": 180.7058868408203,
+      "value_global": 411.559814453125,
+      "source_sha256": "a61ce01f61adb365630296abde06d4284548ec8285dcf64e5a1c5a987b59573f",
+      "fixture": "fixtures/prefill-layer21/input.txt",
+      "files": {
+        "input.txt": "842599b03aacdded80731a1e57e8e6382d624207555fc02359b26edf26f13bce",
+        "kd-init.bin": "3fe63463fe0be0bebda840147fa593675163a0000c486d716e29939472769edd",
+        "kd-ref.bin": "56ef4da96e41680c5e79dd1f8fcd6d02f0a3faf19b4dda23ff95f70fd6659e21",
+        "key.bin": "539ccf122bda8ca09913bc7d77360840afccbb4a3ba040a8f12b932a8619fd1a",
+        "ks-init.bin": "646a64fc23f5eb0ff4398965ff43ebf718f3a6b4ce1674e41166635fe43ce6bb",
+        "ks-ref.bin": "40478f41bb27803a622ea8d2695bf9c928d6b17bef0a3963aa3ff859263a5a57",
+        "slots.bin": "b2dcd08745a4691b93a2cee8346844f207b7e15388a91e0477dd86a849540459",
+        "value.bin": "6b52677feafce0f038a2175fc4a2a904a44cfc136532fa05fb840ec2361cb894",
+        "vd-init.bin": "3fe63463fe0be0bebda840147fa593675163a0000c486d716e29939472769edd",
+        "vd-ref.bin": "f50edb0f54815d28ae2915b30b4ce415f92b01b668ed746eb88fcdb0beb2b5ed",
+        "vs-init.bin": "646a64fc23f5eb0ff4398965ff43ebf718f3a6b4ce1674e41166635fe43ce6bb",
+        "vs-ref.bin": "1ee2ca352f6b6a53cfd75dc5f25de9171eef1344131ed15c4fa7401026da4cd3"
+      }
+    },
+    {
+      "file": "prefill-layer22.npz",
+      "phase": "prefill",
+      "layer": 22,
+      "shape": [
+        75,
+        3,
+        64
+      ],
+      "key_global": 160.4776153564453,
+      "value_global": 472.6153869628906,
+      "source_sha256": "4da2c68de526ccd0dd00ce1edfd033df06ed60ec5182242e2f8ba38294fb9add",
+      "fixture": "fixtures/prefill-layer22/input.txt",
+      "files": {
+        "input.txt": "b9157097f86f1dc9dc328ac564c19730516ed170005964000a2e6e1051a691ea",
+        "kd-init.bin": "3fe63463fe0be0bebda840147fa593675163a0000c486d716e29939472769edd",
+        "kd-ref.bin": "f18eee747404f65be04e8c7df16531d5b8fddc2f3246570a3c90a06c3feee88b",
+        "key.bin": "0d42aeff35229a7a6ea1b79c8bf281160a25d185c87c401d1a986aae4af27472",
+        "ks-init.bin": "646a64fc23f5eb0ff4398965ff43ebf718f3a6b4ce1674e41166635fe43ce6bb",
+        "ks-ref.bin": "534c8a2c3d7ac81a29b84f6b2cc36f9d43a39045f314201d2776629898802ae8",
+        "slots.bin": "b2dcd08745a4691b93a2cee8346844f207b7e15388a91e0477dd86a849540459",
+        "value.bin": "bebfcf31341ee349d875067fb52d94140bd2b91ccc29290deb435317bdd8ad38",
+        "vd-init.bin": "3fe63463fe0be0bebda840147fa593675163a0000c486d716e29939472769edd",
+        "vd-ref.bin": "93460c0512501049d3dddaa56c3fbf25f16dc855e8d1338489b24f7584f59116",
+        "vs-init.bin": "646a64fc23f5eb0ff4398965ff43ebf718f3a6b4ce1674e41166635fe43ce6bb",
+        "vs-ref.bin": "1a91dbb2c3e83e0488f453426bf11a8fa559bd0ccd8f55d4362739193cb674d4"
+      }
+    },
+    {
+      "file": "prefill-layer23.npz",
+      "phase": "prefill",
+      "layer": 23,
+      "shape": [
+        75,
+        3,
+        64
+      ],
+      "key_global": 162.90908813476562,
+      "value_global": 277.4709777832031,
+      "source_sha256": "ec129aeba84c68c1250b1454e9ec61805ce201f6ab61d93aa843049cb1bf0aab",
+      "fixture": "fixtures/prefill-layer23/input.txt",
+      "files": {
+        "input.txt": "8df26e371554165457e26b0576cd7f845ede777a94f93dc21adcdb57f3e4298b",
+        "kd-init.bin": "3fe63463fe0be0bebda840147fa593675163a0000c486d716e29939472769edd",
+        "kd-ref.bin": "77d5a83131970e685965472f00c86c01994f21f950727f7c0696f7efb42dd70d",
+        "key.bin": "4321d8bea6ec12c03aa01023c0340ca3cf88842de73b63dfb536727cc2763cc8",
+        "ks-init.bin": "646a64fc23f5eb0ff4398965ff43ebf718f3a6b4ce1674e41166635fe43ce6bb",
+        "ks-ref.bin": "364325cd7a351b3f6a9b0f1bdc24a22fc4d0cfc85e6bb470f9fc25a710ef647a",
+        "slots.bin": "b2dcd08745a4691b93a2cee8346844f207b7e15388a91e0477dd86a849540459",
+        "value.bin": "3212809b20161876f8ddbfafcc10527f9de47d6ee9a634849971d9d8bbac7a7b",
+        "vd-init.bin": "3fe63463fe0be0bebda840147fa593675163a0000c486d716e29939472769edd",
+        "vd-ref.bin": "7ba087a24238b6ae4e3d3a205b65b7a7108e95c9ad606637129be7f145d83238",
+        "vs-init.bin": "646a64fc23f5eb0ff4398965ff43ebf718f3a6b4ce1674e41166635fe43ce6bb",
+        "vs-ref.bin": "aaa8be2f3351adc9d373b6351224787e86ec77a801f0ad57686fcae17bef4c92"
+      }
+    },
+    {
+      "file": "prefill-layer24.npz",
+      "phase": "prefill",
+      "layer": 24,
+      "shape": [
+        75,
+        3,
+        64
+      ],
+      "key_global": 191.14666748046875,
+      "value_global": 206.76922607421875,
+      "source_sha256": "fe41dcb3b16d0726b202cd8fc940768b81b29713837efadd7dc287a8bd96ee86",
+      "fixture": "fixtures/prefill-layer24/input.txt",
+      "files": {
+        "input.txt": "3e8dd82506b1e9f571a54665264cc00cd4de43b4ed9b6c1687b17d7fa0b10591",
+        "kd-init.bin": "3fe63463fe0be0bebda840147fa593675163a0000c486d716e29939472769edd",
+        "kd-ref.bin": "ceaa77f02c662b8625f08a637089cd6f593ddef6e57c3a9b9827c8b23430a383",
+        "key.bin": "2e3e7c344f27bd3458b113b94d2aa2be9fe335fc65baed522f68136d4db0a6c3",
+        "ks-init.bin": "646a64fc23f5eb0ff4398965ff43ebf718f3a6b4ce1674e41166635fe43ce6bb",
+        "ks-ref.bin": "f5b24f23ac15e2c4354f10699668a86e0cd104f808de4cea823f2a4655c74ca7",
+        "slots.bin": "b2dcd08745a4691b93a2cee8346844f207b7e15388a91e0477dd86a849540459",
+        "value.bin": "a0fbd796d427a52f8683cfc7fec3bd4327d4e6e4506d8bb59bff74cc5470b53a",
+        "vd-init.bin": "3fe63463fe0be0bebda840147fa593675163a0000c486d716e29939472769edd",
+        "vd-ref.bin": "640da79ad1d6af98174d411c92ac62617b57dd66b4fb2a021b4748140d24dc2a",
+        "vs-init.bin": "646a64fc23f5eb0ff4398965ff43ebf718f3a6b4ce1674e41166635fe43ce6bb",
+        "vs-ref.bin": "b76dc38c1346b1434438ec74c6be142ea9dca9bad53e7fc1b29a4c3857c7c917"
+      }
+    },
+    {
+      "file": "prefill-layer25.npz",
+      "phase": "prefill",
+      "layer": 25,
+      "shape": [
+        75,
+        3,
+        64
+      ],
+      "key_global": 143.36000061035156,
+      "value_global": 396.3870849609375,
+      "source_sha256": "c219d91750d4545010b64920a4ea6e59b8fd2ec195f7be5fef7056233d2bac43",
+      "fixture": "fixtures/prefill-layer25/input.txt",
+      "files": {
+        "input.txt": "67bb7440e6a8aa5a6b71d2190951c69d5bd3e0ab7f7c9c1fc4d764892c972e84",
+        "kd-init.bin": "3fe63463fe0be0bebda840147fa593675163a0000c486d716e29939472769edd",
+        "kd-ref.bin": "c500459ca715e959cbdfbf9b078d85d7bf43e1e916debc7ee960340c38bb51a0",
+        "key.bin": "f43ba5909c895fe4a712f87fbb0664ac59a619aef8a063e0fb26ec4a2ce19e10",
+        "ks-init.bin": "646a64fc23f5eb0ff4398965ff43ebf718f3a6b4ce1674e41166635fe43ce6bb",
+        "ks-ref.bin": "b5186dc572d55755bebda8c4bfb40883c598e85976d8e4703ac4ec7bee30fcb9",
+        "slots.bin": "b2dcd08745a4691b93a2cee8346844f207b7e15388a91e0477dd86a849540459",
+        "value.bin": "abe08baae715f6e52e1b28756df81755a5c3c28ab6d32baf7b492f94b350983d",
+        "vd-init.bin": "3fe63463fe0be0bebda840147fa593675163a0000c486d716e29939472769edd",
+        "vd-ref.bin": "255a4e4644fe775cf2099bdba34f61563a1af22670d0736e80ccb6ad427aa192",
+        "vs-init.bin": "646a64fc23f5eb0ff4398965ff43ebf718f3a6b4ce1674e41166635fe43ce6bb",
+        "vs-ref.bin": "4ecfc1cb845bc392b42d5e54aa74c42808585fc4d9a146e6e42fb188a2d9fa85"
+      }
+    },
+    {
+      "file": "prefill-layer26.npz",
+      "phase": "prefill",
+      "layer": 26,
+      "shape": [
+        75,
+        3,
+        64
+      ],
+      "key_global": 153.60000610351562,
+      "value_global": 290.5946044921875,
+      "source_sha256": "5d8bd455cccbc3e4b7a50150f69506baf79fd923ac8169f9dcdd82917c2a19c6",
+      "fixture": "fixtures/prefill-layer26/input.txt",
+      "files": {
+        "input.txt": "b5805208a2956af3eb4ac8cdb78b3ce5709cae72141edb01e07c34b5d9abbe47",
+        "kd-init.bin": "3fe63463fe0be0bebda840147fa593675163a0000c486d716e29939472769edd",
+        "kd-ref.bin": "2e6aadaa4068ed631e54d921b7b0d484799ccf8029c900da4261ab027ebadd84",
+        "key.bin": "09e66264a4c53df14184263c6f48a480a8d126b5534a81015f1462f4ff672525",
+        "ks-init.bin": "646a64fc23f5eb0ff4398965ff43ebf718f3a6b4ce1674e41166635fe43ce6bb",
+        "ks-ref.bin": "b6540b196a9acd9155a89f61b9acd94870319b72d90b505aa8dad05fa272f487",
+        "slots.bin": "b2dcd08745a4691b93a2cee8346844f207b7e15388a91e0477dd86a849540459",
+        "value.bin": "b353a4fbc64850ed15bf530fa61db67dc892f5ff89aaf720bdef9c6d7f0382c0",
+        "vd-init.bin": "3fe63463fe0be0bebda840147fa593675163a0000c486d716e29939472769edd",
+        "vd-ref.bin": "63be890eb9d58ec8001d94b582b4835e40bc7b9c6e1ef5bf3bd042bb3d8fbe9a",
+        "vs-init.bin": "646a64fc23f5eb0ff4398965ff43ebf718f3a6b4ce1674e41166635fe43ce6bb",
+        "vs-ref.bin": "958a6ded702c4408cb91fdc826c39bee43894b1d0acde0a67eda649135e5ba29"
+      }
+    },
+    {
+      "file": "prefill-layer27.npz",
+      "phase": "prefill",
+      "layer": 27,
+      "shape": [
+        75,
+        3,
+        64
+      ],
+      "key_global": 137.84616088867188,
+      "value_global": 370.75860595703125,
+      "source_sha256": "627761340ddfc064a81d72a88e63717d7cff7264700dee1d51a77ecd85112707",
+      "fixture": "fixtures/prefill-layer27/input.txt",
+      "files": {
+        "input.txt": "9b7b1af62317ffcd466998e50a2f8ee29a7fb5e15b9a4139e35000772a0e416a",
+        "kd-init.bin": "3fe63463fe0be0bebda840147fa593675163a0000c486d716e29939472769edd",
+        "kd-ref.bin": "27fe1f046a335b8fc61c0c249096c04749a6d12e1d38c4862479dcba9494ce91",
+        "key.bin": "002a192c7ef19e48de85430b7975a5c2d07258546464be7e597316a0e187a1d1",
+        "ks-init.bin": "646a64fc23f5eb0ff4398965ff43ebf718f3a6b4ce1674e41166635fe43ce6bb",
+        "ks-ref.bin": "5a8c58b1be492cd154cb45910b70ceef7ad135169bdcd2606e872332ce85f1f4",
+        "slots.bin": "b2dcd08745a4691b93a2cee8346844f207b7e15388a91e0477dd86a849540459",
+        "value.bin": "f613d19713ee23ee4c85fde1beaf7bd62241ecc30e5caef376680310c45b60cf",
+        "vd-init.bin": "3fe63463fe0be0bebda840147fa593675163a0000c486d716e29939472769edd",
+        "vd-ref.bin": "1dd3ce5b4fea8f4ac0afc43a9e1290acafcefeee871677991d08e75345d90d3d",
+        "vs-init.bin": "646a64fc23f5eb0ff4398965ff43ebf718f3a6b4ce1674e41166635fe43ce6bb",
+        "vs-ref.bin": "d23e728731592ac53b0a4482e35fc746b635d0f041a0a71609189d479f100f6e"
+      }
+    },
+    {
+      "file": "prefill-layer28.npz",
+      "phase": "prefill",
+      "layer": 28,
+      "shape": [
+        75,
+        3,
+        64
+      ],
+      "key_global": 152.51063537597656,
+      "value_global": 217.21212768554688,
+      "source_sha256": "155cd88c26d69fe04bc6d8959db3489049086cca29bd5f04113c24b9a44a56dc",
+      "fixture": "fixtures/prefill-layer28/input.txt",
+      "files": {
+        "input.txt": "45acbd6d62083364de009b8ef22804a1b8c46cf244585f9c1b8660c4bf2b09c8",
+        "kd-init.bin": "3fe63463fe0be0bebda840147fa593675163a0000c486d716e29939472769edd",
+        "kd-ref.bin": "103144abed4876f34cedbb302c1aaef7f3a75ca618e4874759308a7c43fb5bb2",
+        "key.bin": "6c58c1c0a106477b62544563e5285c5b039d876e82975e1878a20ae515a9641f",
+        "ks-init.bin": "646a64fc23f5eb0ff4398965ff43ebf718f3a6b4ce1674e41166635fe43ce6bb",
+        "ks-ref.bin": "3a111741921f2a72a8381266847e4a77c8a911b4a41153b11aa60ae20f3c07f8",
+        "slots.bin": "b2dcd08745a4691b93a2cee8346844f207b7e15388a91e0477dd86a849540459",
+        "value.bin": "fcdd66631f87f888b8b8e3803a03178a38dab3c637ef602ff5b6e3fca45c4125",
+        "vd-init.bin": "3fe63463fe0be0bebda840147fa593675163a0000c486d716e29939472769edd",
+        "vd-ref.bin": "8f31cc0532faaef9d25cd5644fb29411c347fb42397150204dacda566ba7fa1c",
+        "vs-init.bin": "646a64fc23f5eb0ff4398965ff43ebf718f3a6b4ce1674e41166635fe43ce6bb",
+        "vs-ref.bin": "4aef186053affda8f43607b331573d74a27167c7363848d6612b93021cc227b6"
+      }
+    },
+    {
+      "file": "prefill-layer29.npz",
+      "phase": "prefill",
+      "layer": 29,
+      "shape": [
+        75,
+        3,
+        64
+      ],
+      "key_global": 201.91549682617188,
+      "value_global": 267.13043212890625,
+      "source_sha256": "c1ae22e229fde7e1b3f416c5963c444ce20b51d25ce2c029334045db4b1b2b7f",
+      "fixture": "fixtures/prefill-layer29/input.txt",
+      "files": {
+        "input.txt": "56f74300884ca9958297d3105cd32cefb3b559af1e22e2c54c94fbb76d7927cd",
+        "kd-init.bin": "3fe63463fe0be0bebda840147fa593675163a0000c486d716e29939472769edd",
+        "kd-ref.bin": "b7d763c9bdee0585234fbc829791980239acf5de659c7038c535ec5ec9ea67fe",
+        "key.bin": "b504738f1ce8c55ba08beee01c8b1b498398d038fff8ca14f873627db1dfd49f",
+        "ks-init.bin": "646a64fc23f5eb0ff4398965ff43ebf718f3a6b4ce1674e41166635fe43ce6bb",
+        "ks-ref.bin": "3719a1fafa10d56e3c6d21e71d8f72b38935fffc68861ba0e46ad6c050bbf122",
+        "slots.bin": "b2dcd08745a4691b93a2cee8346844f207b7e15388a91e0477dd86a849540459",
+        "value.bin": "b3b888c3ca8e24448ed1c30635a4bc6e15653793ca02b5f948111db28763ce9f",
+        "vd-init.bin": "3fe63463fe0be0bebda840147fa593675163a0000c486d716e29939472769edd",
+        "vd-ref.bin": "a1759f620ae25c550d6eef87fa0518623220082691750034a4aefb3a82e81020",
+        "vs-init.bin": "646a64fc23f5eb0ff4398965ff43ebf718f3a6b4ce1674e41166635fe43ce6bb",
+        "vs-ref.bin": "c6d514e006f716f8382239cbec07824381a607ecc1ee668a8e70f04168a3f435"
+      }
+    },
+    {
+      "file": "decode-layer00.npz",
+      "phase": "decode",
+      "layer": 0,
+      "shape": [
+        1,
+        3,
+        64
+      ],
+      "key_global": 423.7241516113281,
+      "value_global": 10966.18359375,
+      "source_sha256": "4dee7c437bdf3b5630c5afb0bb7e592e802dfb574322d0b13bba634f48835e3d",
+      "fixture": "fixtures/decode-layer00/input.txt",
+      "files": {
+        "input.txt": "a893ad7bbf907a8e485230eebec82fff2d2438381277fa9b138eb71157c91629",
+        "kd-init.bin": "c582aa734359dc3855358fbf81be96a8adf57a45e14c4f6246d74800ebffab73",
+        "kd-ref.bin": "1d7b1fa251470df43bbc43e3688ca5c445e10110013a3cefe0df679139fdf929",
+        "key.bin": "703cc8504982a98df54a2ac772a572ea7e674192268f586356460ed9bc30ddd1",
+        "ks-init.bin": "591db8212761667b7d96cec1d83be701764c49f18869bd93eefd3fa14b8fc876",
+        "ks-ref.bin": "9482b6235b3b4ee5f13ea493fb3c2086a7ace53250ca97a5815cb83a34a8e072",
+        "slots.bin": "af5570f5a1810b7af78caf4bc70a660f0df51e42baf91d4de5b2328de0e83dfc",
+        "value.bin": "a7b5e0345535a030a14605e9851e1a0e353ad16e35535bbaa4e5b8db2f0a0c76",
+        "vd-init.bin": "c582aa734359dc3855358fbf81be96a8adf57a45e14c4f6246d74800ebffab73",
+        "vd-ref.bin": "6e9af2564dff28fc9727ac64dd6029c2c907c4f8d4194fc9b3f9275ba8624f22",
+        "vs-init.bin": "591db8212761667b7d96cec1d83be701764c49f18869bd93eefd3fa14b8fc876",
+        "vs-ref.bin": "549f5f3808a3e3d62adda222d75c3d1eb5ce4e8901796e0f5d50c8972683e0e2"
+      }
+    },
+    {
+      "file": "decode-layer01.npz",
+      "phase": "decode",
+      "layer": 1,
+      "shape": [
+        1,
+        3,
+        64
+      ],
+      "key_global": 211.86207580566406,
+      "value_global": 1977.3792724609375,
+      "source_sha256": "3628d930fa1dfde244da00bb9efc733c5383c37aef9385ac5f02297e1ab1dbdc",
+      "fixture": "fixtures/decode-layer01/input.txt",
+      "files": {
+        "input.txt": "8b509d310e76ce4a0402e175ad76ffba352af8a57472b16a398dd2c94e332fa8",
+        "kd-init.bin": "c582aa734359dc3855358fbf81be96a8adf57a45e14c4f6246d74800ebffab73",
+        "kd-ref.bin": "77a79740216b348a24e3261535bfde85763bfb292710869ec61860cbafced255",
+        "key.bin": "c7de78a9cd0f1dcd36b6457044c469c61285aeae19f17de29fe9d3138aba7834",
+        "ks-init.bin": "591db8212761667b7d96cec1d83be701764c49f18869bd93eefd3fa14b8fc876",
+        "ks-ref.bin": "c84c43b44599812de20b683c9240130347d665fc358befa1f9f87c7a4e0c50e3",
+        "slots.bin": "af5570f5a1810b7af78caf4bc70a660f0df51e42baf91d4de5b2328de0e83dfc",
+        "value.bin": "49433b4f3e94d44e331bef20ae3ccdac7881a2df482793e1c94ac7d7d0307667",
+        "vd-init.bin": "c582aa734359dc3855358fbf81be96a8adf57a45e14c4f6246d74800ebffab73",
+        "vd-ref.bin": "4559837f4c28d8a25ac9804ee20b8c9df7f64c2ccda01afa8ab3433a582ab964",
+        "vs-init.bin": "591db8212761667b7d96cec1d83be701764c49f18869bd93eefd3fa14b8fc876",
+        "vs-ref.bin": "c3e20b173bc241b159d806f15adb2461e30d5791d1f436010fe798c3b46740a4"
+      }
+    },
+    {
+      "file": "decode-layer02.npz",
+      "phase": "decode",
+      "layer": 2,
+      "shape": [
+        1,
+        3,
+        64
+      ],
+      "key_global": 169.99209594726562,
+      "value_global": 1088.8101806640625,
+      "source_sha256": "8f3ed3bec65781c307337f72b781aea5b73409ed70075d4d1a4c814e286eebdc",
+      "fixture": "fixtures/decode-layer02/input.txt",
+      "files": {
+        "input.txt": "64315edc2926562df6f2ca4dc0b8d073b342685fe220204aa53403a5c512ed16",
+        "kd-init.bin": "c582aa734359dc3855358fbf81be96a8adf57a45e14c4f6246d74800ebffab73",
+        "kd-ref.bin": "c293f4e32ac1b4c1ab0175a6ef046d7b781ec5fe02f79a5da0826b5a213c7476",
+        "key.bin": "e84c448a46d3d08ca7217c788f9af478793604cc3efd2a12d9c234c0969bfebb",
+        "ks-init.bin": "591db8212761667b7d96cec1d83be701764c49f18869bd93eefd3fa14b8fc876",
+        "ks-ref.bin": "daa088ebf995983079951762e8eff148524d891ff1882455442972c44dee2cd5",
+        "slots.bin": "af5570f5a1810b7af78caf4bc70a660f0df51e42baf91d4de5b2328de0e83dfc",
+        "value.bin": "4401c196898f6eda93b74f2779650497893f3d3ee12877d53b04a262a61db2c3",
+        "vd-init.bin": "c582aa734359dc3855358fbf81be96a8adf57a45e14c4f6246d74800ebffab73",
+        "vd-ref.bin": "53125e40e19778c5879073d229c0e77ec17d5156515296718b0e0c4223b28aa4",
+        "vs-init.bin": "591db8212761667b7d96cec1d83be701764c49f18869bd93eefd3fa14b8fc876",
+        "vs-ref.bin": "c608d8601f7f0ac863dec1a84fa172be519562d8c87dc1c9b1f364d8914dc8ff"
+      }
+    },
+    {
+      "file": "decode-layer03.npz",
+      "phase": "decode",
+      "layer": 3,
+      "shape": [
+        1,
+        3,
+        64
+      ],
+      "key_global": 240.26815795898438,
+      "value_global": 1075.199951171875,
+      "source_sha256": "c697a22b4ac88d0f2a1f5cd050c1dcda179cfa39ce0764370ab7444b06b6e6bf",
+      "fixture": "fixtures/decode-layer03/input.txt",
+      "files": {
+        "input.txt": "e487a28a88673a19d560deca12cacaba9e9ce57e2fefdf2c0783bd856dfe552d",
+        "kd-init.bin": "c582aa734359dc3855358fbf81be96a8adf57a45e14c4f6246d74800ebffab73",
+        "kd-ref.bin": "fa18811d9d9ba9d947e0d61c19d0dc3db4cf72d1e8c98b6cf5c68cd373797215",
+        "key.bin": "f6caca126499163a8ab0ce179f7153e851c35e4008539394737d7088fabcd0a9",
+        "ks-init.bin": "591db8212761667b7d96cec1d83be701764c49f18869bd93eefd3fa14b8fc876",
+        "ks-ref.bin": "20f037f0092e73c04f754f89f25b550dbdbfb11e46839f2702546b4da7276521",
+        "slots.bin": "af5570f5a1810b7af78caf4bc70a660f0df51e42baf91d4de5b2328de0e83dfc",
+        "value.bin": "4296bdd473839b1a1a7af89b6670d4f0da6b1d20a137cfcb43b76d3a5df62441",
+        "vd-init.bin": "c582aa734359dc3855358fbf81be96a8adf57a45e14c4f6246d74800ebffab73",
+        "vd-ref.bin": "746834bcc345df75a532b329e91cfcea0c28bf223d0f0aabdca2ee9ba96e889e",
+        "vs-init.bin": "591db8212761667b7d96cec1d83be701764c49f18869bd93eefd3fa14b8fc876",
+        "vs-ref.bin": "8b6da554efd485d1486c8f9455efcf419ee67d16118782f54db118d77b7f6fee"
+      }
+    },
+    {
+      "file": "decode-layer04.npz",
+      "phase": "decode",
+      "layer": 4,
+      "shape": [
+        1,
+        3,
+        64
+      ],
+      "key_global": 201.91549682617188,
+      "value_global": 891.3574829101562,
+      "source_sha256": "686925968576c8a6acebf72e3c439b3cdc89b9b11a7c78f90b59f7ddaef5714a",
+      "fixture": "fixtures/decode-layer04/input.txt",
+      "files": {
+        "input.txt": "d224d1daf17072fa9be455a55e58eeef3fb13753b9c4047f5cd7ee9ecc67f344",
+        "kd-init.bin": "c582aa734359dc3855358fbf81be96a8adf57a45e14c4f6246d74800ebffab73",
+        "kd-ref.bin": "5c979483ad59072d0a62488e2791924f8349ef1d00c7cc71cec9545f5b3c086a",
+        "key.bin": "ccb734976396ae140952b1be544f5d011a580434cec44e701e203d83d526ca38",
+        "ks-init.bin": "591db8212761667b7d96cec1d83be701764c49f18869bd93eefd3fa14b8fc876",
+        "ks-ref.bin": "33beb63f1f552cefde338c30342894d7609a802bac49ff91d3f638201b7633cc",
+        "slots.bin": "af5570f5a1810b7af78caf4bc70a660f0df51e42baf91d4de5b2328de0e83dfc",
+        "value.bin": "0cf17f0e0e18206dd3f9883163b7e90fb56258239a1e7b8e2021f10028cc150d",
+        "vd-init.bin": "c582aa734359dc3855358fbf81be96a8adf57a45e14c4f6246d74800ebffab73",
+        "vd-ref.bin": "c03a80e4abb267d220c4d3d4cb7a3d1f3ae597108eee3a35fd6bdd1c6e265e00",
+        "vs-init.bin": "591db8212761667b7d96cec1d83be701764c49f18869bd93eefd3fa14b8fc876",
+        "vs-ref.bin": "08e28a90edce76b0a2f6e442a083b27cb2fdecfc081a56be9ff319d8e06e7697"
+      }
+    },
+    {
+      "file": "decode-layer05.npz",
+      "phase": "decode",
+      "layer": 5,
+      "shape": [
+        1,
+        3,
+        64
+      ],
+      "key_global": 198.19354248046875,
+      "value_global": 1203.02099609375,
+      "source_sha256": "be22845cf4b89f8a578ec86379b69c71e9288b95836372b427c20a5021e9ad1a",
+      "fixture": "fixtures/decode-layer05/input.txt",
+      "files": {
+        "input.txt": "29af30933c2ec7cb979cc157869a4c4cb1343b376b00d55dd5eb66b5f77274f9",
+        "kd-init.bin": "c582aa734359dc3855358fbf81be96a8adf57a45e14c4f6246d74800ebffab73",
+        "kd-ref.bin": "219fe908622881c4c785459ca044c83516fd1515891f5f5b0a1ff8b39345cb10",
+        "key.bin": "4c54b0b766a199788c559a7b2c3207175cfded2bdfd84fa2125dce191706773f",
+        "ks-init.bin": "591db8212761667b7d96cec1d83be701764c49f18869bd93eefd3fa14b8fc876",
+        "ks-ref.bin": "f72a2ad0bf78c156df28877608305064b4f44cab23b791a2a091070405ca3eca",
+        "slots.bin": "af5570f5a1810b7af78caf4bc70a660f0df51e42baf91d4de5b2328de0e83dfc",
+        "value.bin": "866412bd6e9abd0ba8c501e55799cf791e01d229d9431a15be89a35b8a9d7817",
+        "vd-init.bin": "c582aa734359dc3855358fbf81be96a8adf57a45e14c4f6246d74800ebffab73",
+        "vd-ref.bin": "9bfb20c5a2a825e9ccda75136ad5af4fdae480fa033d19ef8b941d037eb2149f",
+        "vs-init.bin": "591db8212761667b7d96cec1d83be701764c49f18869bd93eefd3fa14b8fc876",
+        "vs-ref.bin": "1b2e43a957332847fbf01ca56b4e69f2aa54785da45098ee63786fa48ae5e357"
+      }
+    },
+    {
+      "file": "decode-layer06.npz",
+      "phase": "decode",
+      "layer": 6,
+      "shape": [
+        1,
+        3,
+        64
+      ],
+      "key_global": 164.1526641845703,
+      "value_global": 1662.1448974609375,
+      "source_sha256": "2cf5686d2863d1deed489b8feeadbb94c2a95fae2cadbb50321de92e808e76cb",
+      "fixture": "fixtures/decode-layer06/input.txt",
+      "files": {
+        "input.txt": "5b1537ec650adc9f263d9c6abd8b5ac35af410dffcba03ebeca5768cda0ffd4c",
+        "kd-init.bin": "c582aa734359dc3855358fbf81be96a8adf57a45e14c4f6246d74800ebffab73",
+        "kd-ref.bin": "d2b08ac2f0197427ea7e8b231d5d7743795d9b6f6a1e8326edb51789af67e825",
+        "key.bin": "3a45700c54b916b588fead4dc7019b7d709b1a23462a12c3e70fcb1bcaeaf996",
+        "ks-init.bin": "591db8212761667b7d96cec1d83be701764c49f18869bd93eefd3fa14b8fc876",
+        "ks-ref.bin": "ed775bdacd0c8e3d8fb741d0c5d431282753ddb3b71427079bea40b653b09421",
+        "slots.bin": "af5570f5a1810b7af78caf4bc70a660f0df51e42baf91d4de5b2328de0e83dfc",
+        "value.bin": "33260e6bdf31205a81deca27df7334c3748c3308d94d75a1895df35ef6ddc956",
+        "vd-init.bin": "c582aa734359dc3855358fbf81be96a8adf57a45e14c4f6246d74800ebffab73",
+        "vd-ref.bin": "a5a9e16cb65cde30b45daaa0d272c9ec7fdf5182068274646918e40fef7f129b",
+        "vs-init.bin": "591db8212761667b7d96cec1d83be701764c49f18869bd93eefd3fa14b8fc876",
+        "vs-ref.bin": "68bf52ae15a26c016a56fcc4136f53143df3fa2febca85d2552680bf28e15236"
+      }
+    },
+    {
+      "file": "decode-layer07.npz",
+      "phase": "decode",
+      "layer": 7,
+      "shape": [
+        1,
+        3,
+        64
+      ],
+      "key_global": 194.60633850097656,
+      "value_global": 771.4439697265625,
+      "source_sha256": "45ab9846b762457cecc7074fd65cbc7a44274e5c55a8eff3fe5eeba7eb0e1668",
+      "fixture": "fixtures/decode-layer07/input.txt",
+      "files": {
+        "input.txt": "844fd861f758a50be89c0f580c450396faca1a608129aa691e5c9da737aa3392",
+        "kd-init.bin": "c582aa734359dc3855358fbf81be96a8adf57a45e14c4f6246d74800ebffab73",
+        "kd-ref.bin": "31146290c9886bde4d214453eac792facebdf059bec6e70e9fc6d10094403cbf",
+        "key.bin": "13d0bc436dba19edb25d3fbae3cbadc4cb8855e864349cfec95d0a9ad996413b",
+        "ks-init.bin": "591db8212761667b7d96cec1d83be701764c49f18869bd93eefd3fa14b8fc876",
+        "ks-ref.bin": "fa44245ebc928557439e75bc132b5b8647aae61edb0e3fb6adf8189911dbff89",
+        "slots.bin": "af5570f5a1810b7af78caf4bc70a660f0df51e42baf91d4de5b2328de0e83dfc",
+        "value.bin": "275ab6f2f41be94446d3a71e28a63253a8939bf39830c7d17cfccb96dc64b170",
+        "vd-init.bin": "c582aa734359dc3855358fbf81be96a8adf57a45e14c4f6246d74800ebffab73",
+        "vd-ref.bin": "3d5eea98032dd82ae32cb8710881412c32ba770b49a94faa52cb056ce415ef50",
+        "vs-init.bin": "591db8212761667b7d96cec1d83be701764c49f18869bd93eefd3fa14b8fc876",
+        "vs-ref.bin": "8db1ad1d1c1c1f031529977956dfa417d93cc383cde15914307b5ae3b72a20ea"
+      }
+    },
+    {
+      "file": "decode-layer08.npz",
+      "phase": "decode",
+      "layer": 8,
+      "shape": [
+        1,
+        3,
+        64
+      ],
+      "key_global": 202.867919921875,
+      "value_global": 839.1804809570312,
+      "source_sha256": "9c4de9b1ee1ce2844f9af9f1dec2daed2427d15e78565577630c8e1020d8bd62",
+      "fixture": "fixtures/decode-layer08/input.txt",
+      "files": {
+        "input.txt": "9f17e33019ad0ce9c5cd13c3e5dd53abde79d3df0221bb28785d456a28c31bcf",
+        "kd-init.bin": "c582aa734359dc3855358fbf81be96a8adf57a45e14c4f6246d74800ebffab73",
+        "kd-ref.bin": "29bbad31b7fa6f51c701dd1b3e12a6793651f6d3b6eb168416da754a0e65a023",
+        "key.bin": "1e91e1534f896b2ba3943bb429469a7ac9e173d3d81c510abd52eef6abe12af5",
+        "ks-init.bin": "591db8212761667b7d96cec1d83be701764c49f18869bd93eefd3fa14b8fc876",
+        "ks-ref.bin": "f650be77c82de7bc29cf9f0879ecab85dedbbb923014be86e0a813b2a5c0f4f1",
+        "slots.bin": "af5570f5a1810b7af78caf4bc70a660f0df51e42baf91d4de5b2328de0e83dfc",
+        "value.bin": "c8abce88c5d8aefe7077dda711ef6853f8d150f832d219aada84da20d1a3e70d",
+        "vd-init.bin": "c582aa734359dc3855358fbf81be96a8adf57a45e14c4f6246d74800ebffab73",
+        "vd-ref.bin": "98454243b1af418384409cb432ef560f2eb252f7994cd3013f23968bf4d8e25b",
+        "vs-init.bin": "591db8212761667b7d96cec1d83be701764c49f18869bd93eefd3fa14b8fc876",
+        "vs-ref.bin": "7295c348b441f4e3f5c847d35b74a05d914ce25c9b77fbdc805d9b2ef0c8f633"
+      }
+    },
+    {
+      "file": "decode-layer09.npz",
+      "phase": "decode",
+      "layer": 9,
+      "shape": [
+        1,
+        3,
+        64
+      ],
+      "key_global": 169.3228302001953,
+      "value_global": 945.2307739257812,
+      "source_sha256": "14dd8aaa7e3e42a8aeaf6905530ead1940658d3360eb7cfede826aba2bf8cc54",
+      "fixture": "fixtures/decode-layer09/input.txt",
+      "files": {
+        "input.txt": "7d31aa22e7b2077cc44769759b2674a10dd19c836fed21f5d8c4dfb503a5adc0",
+        "kd-init.bin": "c582aa734359dc3855358fbf81be96a8adf57a45e14c4f6246d74800ebffab73",
+        "kd-ref.bin": "a4af5c0b811bd4d7dedc99e3d761de925deb868ccfa62a5e79fb119a87e3d5b2",
+        "key.bin": "9342e0a1492f7f1056c1f4753d792d8766953c8514ae79570d7a23a9f0235eac",
+        "ks-init.bin": "591db8212761667b7d96cec1d83be701764c49f18869bd93eefd3fa14b8fc876",
+        "ks-ref.bin": "a39116fc884d3222785323d304ec9b507f674ea7a5e964d05afd9fa0abd3e64a",
+        "slots.bin": "af5570f5a1810b7af78caf4bc70a660f0df51e42baf91d4de5b2328de0e83dfc",
+        "value.bin": "9447517888e69cd7d5ddf70c493a239681b9085917e3f67e1d6ef802745cc475",
+        "vd-init.bin": "c582aa734359dc3855358fbf81be96a8adf57a45e14c4f6246d74800ebffab73",
+        "vd-ref.bin": "9639d6167f4772179e95555186f55dd2cb009a29c6db214fd9fc2ab0424b7026",
+        "vs-init.bin": "591db8212761667b7d96cec1d83be701764c49f18869bd93eefd3fa14b8fc876",
+        "vs-ref.bin": "e4672d7fc1de72d9d42bb0610113e35385bd56242a3ca6c8f16f47c5643ddc5d"
+      }
+    },
+    {
+      "file": "decode-layer10.npz",
+      "phase": "decode",
+      "layer": 10,
+      "shape": [
+        1,
+        3,
+        64
+      ],
+      "key_global": 154.7050323486328,
+      "value_global": 915.0638427734375,
+      "source_sha256": "14ed70dd21a0e823c0bc91dd197a1187c07fdc53c7b5b1301d76715b74be9d51",
+      "fixture": "fixtures/decode-layer10/input.txt",
+      "files": {
+        "input.txt": "8f854591fd72d7309b42c3e71b306de99a18970eff9fc3515a1b7d86fad5a8f7",
+        "kd-init.bin": "c582aa734359dc3855358fbf81be96a8adf57a45e14c4f6246d74800ebffab73",
+        "kd-ref.bin": "3d2b329508966bb482358b0008c6a66e5506800731fb6821ac8686c8ab34630c",
+        "key.bin": "3e5b71cd3a8e4ddd9e39110687c0bf08ea5b710b1380eb5cc8895432d9b62b22",
+        "ks-init.bin": "591db8212761667b7d96cec1d83be701764c49f18869bd93eefd3fa14b8fc876",
+        "ks-ref.bin": "0d6eec61c7380e279febc3825daf1408dd1209e95683355ef67f5f5c416c027b",
+        "slots.bin": "af5570f5a1810b7af78caf4bc70a660f0df51e42baf91d4de5b2328de0e83dfc",
+        "value.bin": "f4f052115144ebf8d7e1e9e354b7d47b26b87052e8d4fef8ec4f0c2117aa5455",
+        "vd-init.bin": "c582aa734359dc3855358fbf81be96a8adf57a45e14c4f6246d74800ebffab73",
+        "vd-ref.bin": "4acc0936c12347b7c3afc4b8216640d666356b5690230324a0894b5bc165360b",
+        "vs-init.bin": "591db8212761667b7d96cec1d83be701764c49f18869bd93eefd3fa14b8fc876",
+        "vs-ref.bin": "cc99100af086e5b4b03f10d20ece6ab818c12a70b0ebf8031b0de13a848abd3e"
+      }
+    },
+    {
+      "file": "decode-layer11.npz",
+      "phase": "decode",
+      "layer": 11,
+      "shape": [
+        1,
+        3,
+        64
+      ],
+      "key_global": 169.99209594726562,
+      "value_global": 1470.3590087890625,
+      "source_sha256": "c69f0487243840f024ec678cf8ec437781bcd49bd6b261f8560c0aceff74e6a0",
+      "fixture": "fixtures/decode-layer11/input.txt",
+      "files": {
+        "input.txt": "6447333abfb1720b8bac00f5e352aef4cdb1210e063c8d02dca43c832eb49c8b",
+        "kd-init.bin": "c582aa734359dc3855358fbf81be96a8adf57a45e14c4f6246d74800ebffab73",
+        "kd-ref.bin": "da77a10e812f64ac9d35f2603e46a5aef4b12359c11b393d28afbda9821b4ecb",
+        "key.bin": "0bc706f8969a59a653442eaf9379e05b558295037b3596c19764ea149c5939f6",
+        "ks-init.bin": "591db8212761667b7d96cec1d83be701764c49f18869bd93eefd3fa14b8fc876",
+        "ks-ref.bin": "b323a36dfc2e1b479abdc1d09fe5ac36a041c06505afd3b3a464381d636f4105",
+        "slots.bin": "af5570f5a1810b7af78caf4bc70a660f0df51e42baf91d4de5b2328de0e83dfc",
+        "value.bin": "6717e6342e689b0ced09c844b837c263b1c013ee99a3f323823584fec6215f2d",
+        "vd-init.bin": "c582aa734359dc3855358fbf81be96a8adf57a45e14c4f6246d74800ebffab73",
+        "vd-ref.bin": "5d791e649936d1dc92b3fe7211d0a0f9bc69c8591cbf199b96bde180dd4e3b33",
+        "vs-init.bin": "591db8212761667b7d96cec1d83be701764c49f18869bd93eefd3fa14b8fc876",
+        "vs-ref.bin": "31b68a432c13ceb7a7f49207ec7ee83ca1b6d52bc6153d2d4524b62f3f93822e"
+      }
+    },
+    {
+      "file": "decode-layer12.npz",
+      "phase": "decode",
+      "layer": 12,
+      "shape": [
+        1,
+        3,
+        64
+      ],
+      "key_global": 186.99130249023438,
+      "value_global": 1313.2213134765625,
+      "source_sha256": "6e9aaa5f73da1f790b80c0525671300e32cf6919e4cdde9491ce64647eb718d8",
+      "fixture": "fixtures/decode-layer12/input.txt",
+      "files": {
+        "input.txt": "81bbc24302ed2634e756ba40ec290a701411f29f75f8d424bd7444a418f3d996",
+        "kd-init.bin": "c582aa734359dc3855358fbf81be96a8adf57a45e14c4f6246d74800ebffab73",
+        "kd-ref.bin": "6782bbf40696bece4526bb7b3449bac384844ab88081c2eeeb204ad9a1cbf21f",
+        "key.bin": "917514e701d3470a1a2927632195fede0ba526794cf92a8b9f4335a0ad7b4e73",
+        "ks-init.bin": "591db8212761667b7d96cec1d83be701764c49f18869bd93eefd3fa14b8fc876",
+        "ks-ref.bin": "229732bc2aadefc3cf2384a571506e930e7b39620663ed34207252dbde5ea64b",
+        "slots.bin": "af5570f5a1810b7af78caf4bc70a660f0df51e42baf91d4de5b2328de0e83dfc",
+        "value.bin": "aaa499020367af2b585f7551c013b3c8fbe71659e27e0446e2ae43a35df84e17",
+        "vd-init.bin": "c582aa734359dc3855358fbf81be96a8adf57a45e14c4f6246d74800ebffab73",
+        "vd-ref.bin": "8dbf63e06140427948ad9f3e4871fa18368d2831248f3a928378b28deb59fcfb",
+        "vs-init.bin": "591db8212761667b7d96cec1d83be701764c49f18869bd93eefd3fa14b8fc876",
+        "vs-ref.bin": "e55b5f0266b7815ef3feef17b5b1d1130103b522377356fd71717cdb5cddfd36"
+      }
+    },
+    {
+      "file": "decode-layer13.npz",
+      "phase": "decode",
+      "layer": 13,
+      "shape": [
+        1,
+        3,
+        64
+      ],
+      "key_global": 178.45643615722656,
+      "value_global": 2177.620361328125,
+      "source_sha256": "51bad598b59f26d1283c3dd3c87b39a13feab47f511942be85645a1051c6829f",
+      "fixture": "fixtures/decode-layer13/input.txt",
+      "files": {
+        "input.txt": "53be2ce49eee2bc85999bc189ab84e23502044a6babeca192c3d6470aa6ec088",
+        "kd-init.bin": "c582aa734359dc3855358fbf81be96a8adf57a45e14c4f6246d74800ebffab73",
+        "kd-ref.bin": "6af2e45bf8c325f9be74df1d23743374c04bd4ad7cd2cdce1a89a41070e207bb",
+        "key.bin": "05fd41675c050c89ca455ba33070463ea5515ab62bdefb2c97f2fd5c0f5b2fe9",
+        "ks-init.bin": "591db8212761667b7d96cec1d83be701764c49f18869bd93eefd3fa14b8fc876",
+        "ks-ref.bin": "74b51e05815004937039478bf04c20d7750b0c516e517fde3bbd949f0bc0d8c0",
+        "slots.bin": "af5570f5a1810b7af78caf4bc70a660f0df51e42baf91d4de5b2328de0e83dfc",
+        "value.bin": "039933986c85e8bf348dcd64cd5185ed91a08525bf700184c8d5c5bb72b51f5e",
+        "vd-init.bin": "c582aa734359dc3855358fbf81be96a8adf57a45e14c4f6246d74800ebffab73",
+        "vd-ref.bin": "1501e358988604b18ff12a8785d1b12afb970bf212f8050777553a4e2640398c",
+        "vs-init.bin": "591db8212761667b7d96cec1d83be701764c49f18869bd93eefd3fa14b8fc876",
+        "vs-ref.bin": "9bb72decd395e246750bd85af8eb8744a8d096cf49f12c33603319c52dd990f9"
+      }
+    },
+    {
+      "file": "decode-layer14.npz",
+      "phase": "decode",
+      "layer": 14,
+      "shape": [
+        1,
+        3,
+        64
+      ],
+      "key_global": 194.60633850097656,
+      "value_global": 983.0399780273438,
+      "source_sha256": "3f3d36c7ca646d1b4927d531ca51e23821dde953dcc57c4005183c2004641d1e",
+      "fixture": "fixtures/decode-layer14/input.txt",
+      "files": {
+        "input.txt": "2315ac18a9e43ba61814d5a515b475879ca8d8e1779103ac373dd8c77c082b85",
+        "kd-init.bin": "c582aa734359dc3855358fbf81be96a8adf57a45e14c4f6246d74800ebffab73",
+        "kd-ref.bin": "059f05c7892fab819285ef0ee50033b7e5b4db115baa9fbfab54c241a07edc30",
+        "key.bin": "1b82c6196b21868207d4e17c6927dd829bb3798e27ccae224a781920c2160c57",
+        "ks-init.bin": "591db8212761667b7d96cec1d83be701764c49f18869bd93eefd3fa14b8fc876",
+        "ks-ref.bin": "3f10c7a07e89ff70573b4d15cf5d0265466d3685b3b56783ed886793f7dd4608",
+        "slots.bin": "af5570f5a1810b7af78caf4bc70a660f0df51e42baf91d4de5b2328de0e83dfc",
+        "value.bin": "67a3777da4eb80fb2e43c5159f1ea178eb933bcd75e87e9fa1c53514a3d97ec4",
+        "vd-init.bin": "c582aa734359dc3855358fbf81be96a8adf57a45e14c4f6246d74800ebffab73",
+        "vd-ref.bin": "fe74583756ce473a9e7c5c09dfb555fd0de4a99536c2e4e4be38b11ac3269c76",
+        "vs-init.bin": "591db8212761667b7d96cec1d83be701764c49f18869bd93eefd3fa14b8fc876",
+        "vs-ref.bin": "d42467d9f21f30be8fca35dfdd1b5fa02446a86906f0a0a544cb1c7cf6df7d39"
+      }
+    },
+    {
+      "file": "decode-layer15.npz",
+      "phase": "decode",
+      "layer": 15,
+      "shape": [
+        1,
+        3,
+        64
+      ],
+      "key_global": 176.26229858398438,
+      "value_global": 1024.0,
+      "source_sha256": "0126fe813d83237ff2319e4b3ebf52e264a8b187c73eaa6da21dbfd83afd2bf6",
+      "fixture": "fixtures/decode-layer15/input.txt",
+      "files": {
+        "input.txt": "7f1d1174af46a1b3caa48c42279ab4c812bb64e24f63b6bb8ef7ec56ff14e6b9",
+        "kd-init.bin": "c582aa734359dc3855358fbf81be96a8adf57a45e14c4f6246d74800ebffab73",
+        "kd-ref.bin": "b1526885535870d6165ffa59868bb7382cb29b3bfe165b15f8e3508c55a26c98",
+        "key.bin": "052ed56a7e7fc14dc569e80a35801c1880f525121f67976a5c6a4e1f971a3970",
+        "ks-init.bin": "591db8212761667b7d96cec1d83be701764c49f18869bd93eefd3fa14b8fc876",
+        "ks-ref.bin": "ce55b67dc55a7eb4d5e3aaafdd7253b8e2a081e302330dc02d189c7c35c8c39b",
+        "slots.bin": "af5570f5a1810b7af78caf4bc70a660f0df51e42baf91d4de5b2328de0e83dfc",
+        "value.bin": "1b9b299dd1b872e7e9a20bc71eaa65eea2f215ccdb2c738000d7d40711f146ed",
+        "vd-init.bin": "c582aa734359dc3855358fbf81be96a8adf57a45e14c4f6246d74800ebffab73",
+        "vd-ref.bin": "5d94082073abdc807e84e3da8dcf3dd74193ac2c25cca95b047b96f0a01f5f7c",
+        "vs-init.bin": "591db8212761667b7d96cec1d83be701764c49f18869bd93eefd3fa14b8fc876",
+        "vs-ref.bin": "14d9f466b6baa0ba1db05fa3d02a7b8c5419002ebbc6510cd4502a0715144513"
+      }
+    },
+    {
+      "file": "decode-layer16.npz",
+      "phase": "decode",
+      "layer": 16,
+      "shape": [
+        1,
+        3,
+        64
+      ],
+      "key_global": 176.98765563964844,
+      "value_global": 1170.2857666015625,
+      "source_sha256": "ed13b24d346725becec6ad17dbf52d74dd1aba74033bb195e2c376fd82d2589d",
+      "fixture": "fixtures/decode-layer16/input.txt",
+      "files": {
+        "input.txt": "394799746953feaace8bf72150771ecf764e258d98ad9547735e97fcdb7199e8",
+        "kd-init.bin": "c582aa734359dc3855358fbf81be96a8adf57a45e14c4f6246d74800ebffab73",
+        "kd-ref.bin": "f313fe9ddf2940564c98d9bd653db5a2cb870633f2783e0ad8f7b424b1c3821d",
+        "key.bin": "93631eb4c2d4af3aa8ac7396716694bf5ff28cb4f683488dbe04022002356cc1",
+        "ks-init.bin": "591db8212761667b7d96cec1d83be701764c49f18869bd93eefd3fa14b8fc876",
+        "ks-ref.bin": "e01c1fab3bb9202e9bc7adc0d53ebddc5569626de7bad860209fe86dda499339",
+        "slots.bin": "af5570f5a1810b7af78caf4bc70a660f0df51e42baf91d4de5b2328de0e83dfc",
+        "value.bin": "bd153d16413b0676866b07be58d06ed4dd2aa7e9c140514c2387d8a59744f001",
+        "vd-init.bin": "c582aa734359dc3855358fbf81be96a8adf57a45e14c4f6246d74800ebffab73",
+        "vd-ref.bin": "c9b79ed2480326f7df5e2f3f55874daf786b523d658e7116fa6993a4d3fde4fd",
+        "vs-init.bin": "591db8212761667b7d96cec1d83be701764c49f18869bd93eefd3fa14b8fc876",
+        "vs-ref.bin": "7909a8531e61b3d58aa95b74a77030c0f19d3d8e4a03e1a2cf9db13dd621bd6a"
+      }
+    },
+    {
+      "file": "decode-layer17.npz",
+      "phase": "decode",
+      "layer": 17,
+      "shape": [
+        1,
+        3,
+        64
+      ],
+      "key_global": 277.4709777832031,
+      "value_global": 1075.199951171875,
+      "source_sha256": "990b073a811e1297271daf18f1fd2c8bcd5678efec9dcf8876c5a7cd79adcdc0",
+      "fixture": "fixtures/decode-layer17/input.txt",
+      "files": {
+        "input.txt": "996486bcf64e3157016123736cda959499ac7412462260d7b38e9dca5c1b1136",
+        "kd-init.bin": "c582aa734359dc3855358fbf81be96a8adf57a45e14c4f6246d74800ebffab73",
+        "kd-ref.bin": "fa1fe167fe230fc83560e795aaef29b84754463e40294f538c953765ec35a5cc",
+        "key.bin": "c3bdda81c28dba71aa1fc594cf5cd3d7379b849bf92125f7188221752c69ff38",
+        "ks-init.bin": "591db8212761667b7d96cec1d83be701764c49f18869bd93eefd3fa14b8fc876",
+        "ks-ref.bin": "e805bd9d03fd8e93371d3a0f29166548dc75fbd264f0a3a7aaa412022ab57fbc",
+        "slots.bin": "af5570f5a1810b7af78caf4bc70a660f0df51e42baf91d4de5b2328de0e83dfc",
+        "value.bin": "75c3287e3bfadb6d2de9229d25b0aae58127b847e8461f259c11b170cd3dcb81",
+        "vd-init.bin": "c582aa734359dc3855358fbf81be96a8adf57a45e14c4f6246d74800ebffab73",
+        "vd-ref.bin": "f027c40b1d467901a7a3c6d35620f2fcd211ef80d2cd306a19baee116d2d5d05",
+        "vs-init.bin": "591db8212761667b7d96cec1d83be701764c49f18869bd93eefd3fa14b8fc876",
+        "vs-ref.bin": "ba85a64396706dd1c2cefdca9e925c83e7057696e7a4e5f1a9d132bd1bfddfbc"
+      }
+    },
+    {
+      "file": "decode-layer18.npz",
+      "phase": "decode",
+      "layer": 18,
+      "shape": [
+        1,
+        3,
+        64
+      ],
+      "key_global": 179.1999969482422,
+      "value_global": 601.510498046875,
+      "source_sha256": "e6bd757e3e880f59888f8fb738f1936a3cbd430113b1c7b321927c2ee3f50a3d",
+      "fixture": "fixtures/decode-layer18/input.txt",
+      "files": {
+        "input.txt": "99329c70d0572379a3239984047d684fecbe2b7aa2a22980c584eb1c1c7c2a7f",
+        "kd-init.bin": "c582aa734359dc3855358fbf81be96a8adf57a45e14c4f6246d74800ebffab73",
+        "kd-ref.bin": "7d6b556069a635b8bb73fda6e2e251a2e085fb36f1e15e73cd123c84bf127aad",
+        "key.bin": "73884aee01d431f478ab628f36a6bea9b985b9411601a7a698e413101ee87ad4",
+        "ks-init.bin": "591db8212761667b7d96cec1d83be701764c49f18869bd93eefd3fa14b8fc876",
+        "ks-ref.bin": "7e060eb9a2da199834f2a199d8db84528db1682f9cb3d5ae3d55c67250d8f275",
+        "slots.bin": "af5570f5a1810b7af78caf4bc70a660f0df51e42baf91d4de5b2328de0e83dfc",
+        "value.bin": "06494dc4d9e722f8944406875533d71fb73c64d9da3e2a518aee3caf39aa5089",
+        "vd-init.bin": "c582aa734359dc3855358fbf81be96a8adf57a45e14c4f6246d74800ebffab73",
+        "vd-ref.bin": "68ca0427fbe19d21efe4e7de758a0a75c70ffe998b69a6917e61b4ec9ca0a6a2",
+        "vs-init.bin": "591db8212761667b7d96cec1d83be701764c49f18869bd93eefd3fa14b8fc876",
+        "vs-ref.bin": "c98b6e7a1e061546a5afbefd0b5ee090d423751c78318b1a6619a84e39c6f027"
+      }
+    },
+    {
+      "file": "decode-layer19.npz",
+      "phase": "decode",
+      "layer": 19,
+      "shape": [
+        1,
+        3,
+        64
+      ],
+      "key_global": 183.7948760986328,
+      "value_global": 1081.9622802734375,
+      "source_sha256": "e4190c70bc851c291b27d506520d62c91b2918a3c4bdd660f803d06311aeff05",
+      "fixture": "fixtures/decode-layer19/input.txt",
+      "files": {
+        "input.txt": "229d829386f38f3cef7de280b92f43a2407e93151b1017a8acc9867194fefff3",
+        "kd-init.bin": "c582aa734359dc3855358fbf81be96a8adf57a45e14c4f6246d74800ebffab73",
+        "kd-ref.bin": "ed292db2fb46ac117604b5047d546bfec6a1ac4d4efcf31c6ada24ec63d90de4",
+        "key.bin": "9d94aed4f57782a03eeb94f4b97fd0b8ee4d09467b16e9b84f74c3b64fa7cfb3",
+        "ks-init.bin": "591db8212761667b7d96cec1d83be701764c49f18869bd93eefd3fa14b8fc876",
+        "ks-ref.bin": "2585cf85072a56b27db670682f1c486eca36ccb315ab4bc3837adc4d58bc2485",
+        "slots.bin": "af5570f5a1810b7af78caf4bc70a660f0df51e42baf91d4de5b2328de0e83dfc",
+        "value.bin": "9d7f2e9d8bd9b738b7cbd2ff5309c8d7940f79486a0cb5d6a5161ba9adb37af7",
+        "vd-init.bin": "c582aa734359dc3855358fbf81be96a8adf57a45e14c4f6246d74800ebffab73",
+        "vd-ref.bin": "b1bf04053eacf650812ac28f23a7dc606ab3a8a48adec23af4d659028423e2d3",
+        "vs-init.bin": "591db8212761667b7d96cec1d83be701764c49f18869bd93eefd3fa14b8fc876",
+        "vs-ref.bin": "102436c465593d222d22c19285de0613c100ba59e775b951525c9dc433359e80"
+      }
+    },
+    {
+      "file": "decode-layer20.npz",
+      "phase": "decode",
+      "layer": 20,
+      "shape": [
+        1,
+        3,
+        64
+      ],
+      "key_global": 229.9893035888672,
+      "value_global": 512.0,
+      "source_sha256": "0663f49da7d1609281d37c4933a88195939906b68a4c80db39825e217406186d",
+      "fixture": "fixtures/decode-layer20/input.txt",
+      "files": {
+        "input.txt": "c1dab35db3d8ea029b627e326b913002470d28251369b9f2d3374da3d7f1d2a4",
+        "kd-init.bin": "c582aa734359dc3855358fbf81be96a8adf57a45e14c4f6246d74800ebffab73",
+        "kd-ref.bin": "6e3a8ce90bc569cfb54caedc05946030d8193f5458e28caf3afbecba6c25af89",
+        "key.bin": "2c6033ca8a8a1522334177676a7f3ed2da717ccebbb25ac129e551dbebb2514c",
+        "ks-init.bin": "591db8212761667b7d96cec1d83be701764c49f18869bd93eefd3fa14b8fc876",
+        "ks-ref.bin": "3fe42c68a32f011d62f6815d866b568584455e415387bc0a3e51708858590bce",
+        "slots.bin": "af5570f5a1810b7af78caf4bc70a660f0df51e42baf91d4de5b2328de0e83dfc",
+        "value.bin": "c18d2d9557eb8f13920697dd18b26aa3657e4d394d3224dcb253f98c03d96bd5",
+        "vd-init.bin": "c582aa734359dc3855358fbf81be96a8adf57a45e14c4f6246d74800ebffab73",
+        "vd-ref.bin": "50bd126ab9337641be8e0abe2e06f67051aba27789b025f3c8764e1dd46e0088",
+        "vs-init.bin": "591db8212761667b7d96cec1d83be701764c49f18869bd93eefd3fa14b8fc876",
+        "vs-ref.bin": "ac59249b8ee5292198f89101ebe9fb9d2d0edeac1bff338e086be08707b16904"
+      }
+    },
+    {
+      "file": "decode-layer21.npz",
+      "phase": "decode",
+      "layer": 21,
+      "shape": [
+        1,
+        3,
+        64
+      ],
+      "key_global": 305.0212707519531,
+      "value_global": 618.8201293945312,
+      "source_sha256": "3996aca36f83a0f07ec770de5613a88a4ee705526b7a190730423aad92975ab8",
+      "fixture": "fixtures/decode-layer21/input.txt",
+      "files": {
+        "input.txt": "ee69b3df2e3aa79140423f1a88ed821fe144a21ba7390235832f8036f2ce0e69",
+        "kd-init.bin": "c582aa734359dc3855358fbf81be96a8adf57a45e14c4f6246d74800ebffab73",
+        "kd-ref.bin": "3f78b18e13b6571e352a7c92e2d16df5a04b384aba99945a8ab865ac6684d646",
+        "key.bin": "acd2179ed28581a8136db4eb06c2c7e688ab552a93440ede3250d7ea5ea54a1b",
+        "ks-init.bin": "591db8212761667b7d96cec1d83be701764c49f18869bd93eefd3fa14b8fc876",
+        "ks-ref.bin": "98f14ca0ff867c4b8bc2d1235949ecba883601bc165c01d54b2adb7a83f43488",
+        "slots.bin": "af5570f5a1810b7af78caf4bc70a660f0df51e42baf91d4de5b2328de0e83dfc",
+        "value.bin": "a051cb8df58e061bc343a83f18036b5280c2c74ce449f681f16739ec2aa2afb0",
+        "vd-init.bin": "c582aa734359dc3855358fbf81be96a8adf57a45e14c4f6246d74800ebffab73",
+        "vd-ref.bin": "858c1b36aefcaa91e578ced1c6d469030d8d314612a8671610b47dff5cd77d93",
+        "vs-init.bin": "591db8212761667b7d96cec1d83be701764c49f18869bd93eefd3fa14b8fc876",
+        "vs-ref.bin": "5a1f25772c9e3854ee1b270e0ba3c6da566d3bb45f0b824eaeec60fe5e3e0d1e"
+      }
+    },
+    {
+      "file": "decode-layer22.npz",
+      "phase": "decode",
+      "layer": 22,
+      "shape": [
+        1,
+        3,
+        64
+      ],
+      "key_global": 183.0127716064453,
+      "value_global": 819.2000122070312,
+      "source_sha256": "d0dd7b84eaec6d8582278696a70b0b5e224cd796d700b646100368aefa0aa48d",
+      "fixture": "fixtures/decode-layer22/input.txt",
+      "files": {
+        "input.txt": "7e8ab978bd6c654e0e1a623d7abe564dac57eeef75800faa858d340bfcb912cf",
+        "kd-init.bin": "c582aa734359dc3855358fbf81be96a8adf57a45e14c4f6246d74800ebffab73",
+        "kd-ref.bin": "5c7380675534f64bc2f233f9b65a89e84552e02357a833e7e4e29a97297747b0",
+        "key.bin": "d630926eff858bd5e04860d35d7aa588cd8a5db154320aa220d6dd00eef679bb",
+        "ks-init.bin": "591db8212761667b7d96cec1d83be701764c49f18869bd93eefd3fa14b8fc876",
+        "ks-ref.bin": "35555aabdc662853bd6da61b21d0319e644bc526ef0fddfe76f3a47933cbc345",
+        "slots.bin": "af5570f5a1810b7af78caf4bc70a660f0df51e42baf91d4de5b2328de0e83dfc",
+        "value.bin": "010158fe32c2d879fb8c2ca7a4cc1865492e0c0e650937c168924ad0e5f22355",
+        "vd-init.bin": "c582aa734359dc3855358fbf81be96a8adf57a45e14c4f6246d74800ebffab73",
+        "vd-ref.bin": "7227df78a60704ba6b5da852daf9df00502191b1e71735c1b70b836e98e69393",
+        "vs-init.bin": "591db8212761667b7d96cec1d83be701764c49f18869bd93eefd3fa14b8fc876",
+        "vs-ref.bin": "b0326bd2775f867d116790bf5ff7217efc78dc1ee5becd6de4ea0efca64c4fbc"
+      }
+    },
+    {
+      "file": "decode-layer23.npz",
+      "phase": "decode",
+      "layer": 23,
+      "shape": [
+        1,
+        3,
+        64
+      ],
+      "key_global": 202.867919921875,
+      "value_global": 318.5777893066406,
+      "source_sha256": "c5d286faa7125628cee75693c9e0042d811126f3f35505b140eb26c577a9a7c3",
+      "fixture": "fixtures/decode-layer23/input.txt",
+      "files": {
+        "input.txt": "aa7371e2a7c1c8947b11b4e7902dbf9dffc1791c696ad3451442bcc18845ce88",
+        "kd-init.bin": "c582aa734359dc3855358fbf81be96a8adf57a45e14c4f6246d74800ebffab73",
+        "kd-ref.bin": "44439f9bcb44ff62c4f6293512a32e9b6f73adf9836b962f4517de76561da664",
+        "key.bin": "61b3c7fdbdcd316e8490d9650476468196fed2b66bd8ea53cc676a553e3dca2d",
+        "ks-init.bin": "591db8212761667b7d96cec1d83be701764c49f18869bd93eefd3fa14b8fc876",
+        "ks-ref.bin": "dcf1b40809e071033e24b3f0dad8e64100dbdbb96e50ab52115032d3469d6ed5",
+        "slots.bin": "af5570f5a1810b7af78caf4bc70a660f0df51e42baf91d4de5b2328de0e83dfc",
+        "value.bin": "dad2f08b0b28bc477499009406884c6bc1c076293f48e2d3dd733fc63a7e29a2",
+        "vd-init.bin": "c582aa734359dc3855358fbf81be96a8adf57a45e14c4f6246d74800ebffab73",
+        "vd-ref.bin": "6d4263a4b53e38bb738d9129d363a1927c23ba5ab29a7a2dd90581cbf4ca9f8a",
+        "vs-init.bin": "591db8212761667b7d96cec1d83be701764c49f18869bd93eefd3fa14b8fc876",
+        "vs-ref.bin": "30130e4f674d2314603a637fc3870ebdeff126018598bde343d1b06356f666c8"
+      }
+    },
+    {
+      "file": "decode-layer24.npz",
+      "phase": "decode",
+      "layer": 24,
+      "shape": [
+        1,
+        3,
+        64
+      ],
+      "key_global": 235.01638793945312,
+      "value_global": 294.5753479003906,
+      "source_sha256": "866ea2b2b48169127c33b11cf36952b3062a40d5eb1f8ddc674f178009b3219f",
+      "fixture": "fixtures/decode-layer24/input.txt",
+      "files": {
+        "input.txt": "7076beb4d1ec48e7a81de3c33ea3ef8b0163316f0105ea368ac7cfca08d5647d",
+        "kd-init.bin": "c582aa734359dc3855358fbf81be96a8adf57a45e14c4f6246d74800ebffab73",
+        "kd-ref.bin": "6c3f8479240ac70c2dcf00c47c512cc17a77753178b19af62ca371b008af4f12",
+        "key.bin": "e5dd8f42d36153eca73e85f8c9e2d39c52bf99a29bf1865e930b640cc1fa31ef",
+        "ks-init.bin": "591db8212761667b7d96cec1d83be701764c49f18869bd93eefd3fa14b8fc876",
+        "ks-ref.bin": "a7fd76be1252efdf87b5b2acb4a1a4a80c07cfdae1f635a0a85a46fa85be0f6d",
+        "slots.bin": "af5570f5a1810b7af78caf4bc70a660f0df51e42baf91d4de5b2328de0e83dfc",
+        "value.bin": "15a1bf2ac80e60184de33a0569e18b4e56e18ab5358bb26f2623df4cd8a2c471",
+        "vd-init.bin": "c582aa734359dc3855358fbf81be96a8adf57a45e14c4f6246d74800ebffab73",
+        "vd-ref.bin": "8b2ebb3c99e42a817a9ed1c0fbd9a580cea32d2c2c29e40e0f2f12ff716d51c6",
+        "vs-init.bin": "591db8212761667b7d96cec1d83be701764c49f18869bd93eefd3fa14b8fc876",
+        "vs-ref.bin": "b3f38880ad8cd733d9a3186fd267625ccf7f475438927c96201ce43708e3a354"
+      }
+    },
+    {
+      "file": "decode-layer25.npz",
+      "phase": "decode",
+      "layer": 25,
+      "shape": [
+        1,
+        3,
+        64
+      ],
+      "key_global": 172.72288513183594,
+      "value_global": 436.62945556640625,
+      "source_sha256": "78afabdd520b2d7023b70a07cab75ae6dd15e3e9ce54c1b858d5547e411beba1",
+      "fixture": "fixtures/decode-layer25/input.txt",
+      "files": {
+        "input.txt": "a9b2b932ccca727a2b14f2912db45851871a363d100dc0b3a22f2f570d46d869",
+        "kd-init.bin": "c582aa734359dc3855358fbf81be96a8adf57a45e14c4f6246d74800ebffab73",
+        "kd-ref.bin": "cae25785e379db3e11bcafee166ecd9c885cab8f814d72955bbb21d9723e7261",
+        "key.bin": "6ea4ee15471d263219c813dda86697e28c663d410b3034a4ff14f0b4192400d0",
+        "ks-init.bin": "591db8212761667b7d96cec1d83be701764c49f18869bd93eefd3fa14b8fc876",
+        "ks-ref.bin": "4ab815e31a40ce6ece7775a51ef2a3a2539ed3a38c58d56239ce25f725c892bd",
+        "slots.bin": "af5570f5a1810b7af78caf4bc70a660f0df51e42baf91d4de5b2328de0e83dfc",
+        "value.bin": "c246e271f095b1d75718f2fed618ed0895e7469ad578a47bb8bdcf1d522a0d9b",
+        "vd-init.bin": "c582aa734359dc3855358fbf81be96a8adf57a45e14c4f6246d74800ebffab73",
+        "vd-ref.bin": "e4aaa28d5797d94a656ac100d21091195352e2293872930dd69bace62df1d734",
+        "vs-init.bin": "591db8212761667b7d96cec1d83be701764c49f18869bd93eefd3fa14b8fc876",
+        "vs-ref.bin": "5f7892a4d4fb5e22205ab1b66e8ca08f44b75cc384f86a13526d3fc57a3119da"
+      }
+    },
+    {
+      "file": "decode-layer26.npz",
+      "phase": "decode",
+      "layer": 26,
+      "shape": [
+        1,
+        3,
+        64
+      ],
+      "key_global": 199.11111450195312,
+      "value_global": 494.3448181152344,
+      "source_sha256": "32fe8cc3ec00e7067c88ef2ba988f80c0662eaaf10b6849ffb533ff0a9ccea93",
+      "fixture": "fixtures/decode-layer26/input.txt",
+      "files": {
+        "input.txt": "321df5a6f4e111adc53316abb31eeab54a427c0f14ca45101c33b8b3e6892bd8",
+        "kd-init.bin": "c582aa734359dc3855358fbf81be96a8adf57a45e14c4f6246d74800ebffab73",
+        "kd-ref.bin": "735c5d130f1fee3fe57f94e424fe86921fa9316e64cabe5cc9a994121050901e",
+        "key.bin": "5ceecbdcf739fceb955c875397eaee99a6cc92a6cc45f4cb1811e7fa7db38107",
+        "ks-init.bin": "591db8212761667b7d96cec1d83be701764c49f18869bd93eefd3fa14b8fc876",
+        "ks-ref.bin": "71ee1ef9864ecc9d3445eaf7860aadf76889f9132ba320f9819f0ba08522e949",
+        "slots.bin": "af5570f5a1810b7af78caf4bc70a660f0df51e42baf91d4de5b2328de0e83dfc",
+        "value.bin": "2f86bf47a8d957eff77f9ea28e1828c619ace5ff39637230fccb8f290715fffc",
+        "vd-init.bin": "c582aa734359dc3855358fbf81be96a8adf57a45e14c4f6246d74800ebffab73",
+        "vd-ref.bin": "77834e88e70e65f1546bb139db5e4abb3221ee1f05d0769c1dd50b30336125a7",
+        "vs-init.bin": "591db8212761667b7d96cec1d83be701764c49f18869bd93eefd3fa14b8fc876",
+        "vs-ref.bin": "ec046e5d24fc522382e17f31b10f2123d45d02a7e12efe5c15e95db5423c4485"
+      }
+    },
+    {
+      "file": "decode-layer27.npz",
+      "phase": "decode",
+      "layer": 27,
+      "shape": [
+        1,
+        3,
+        64
+      ],
+      "key_global": 180.7058868408203,
+      "value_global": 467.478271484375,
+      "source_sha256": "432669e0b4903ca36f418ba68196cb87cad154441add767482057ead47a03a98",
+      "fixture": "fixtures/decode-layer27/input.txt",
+      "files": {
+        "input.txt": "c0339505bd82bc02e9f09f2691446a9a2fbf53423e0fe4723b85076aabe68c97",
+        "kd-init.bin": "c582aa734359dc3855358fbf81be96a8adf57a45e14c4f6246d74800ebffab73",
+        "kd-ref.bin": "702c8dc395f93aa634611d7cc6555d38a31da1f7576521fa69497b31a8c1df07",
+        "key.bin": "3924be5b4662eb87a5424f0cb1af35b06b517a0f8725306d3fd0f3fe3d4c0721",
+        "ks-init.bin": "591db8212761667b7d96cec1d83be701764c49f18869bd93eefd3fa14b8fc876",
+        "ks-ref.bin": "629835bd1483265559d3d9cf9479fd28bdb301c40fffbff7f5d85d99022f408e",
+        "slots.bin": "af5570f5a1810b7af78caf4bc70a660f0df51e42baf91d4de5b2328de0e83dfc",
+        "value.bin": "c80a8bb9cd526ee5cc5aeb21cf5beecb11ed5890b4c40e48afe9fcde636bc261",
+        "vd-init.bin": "c582aa734359dc3855358fbf81be96a8adf57a45e14c4f6246d74800ebffab73",
+        "vd-ref.bin": "b46ba448bf1b6c753f9a8f9b7c619fb5f42ca03038f269823105d8227084d554",
+        "vs-init.bin": "591db8212761667b7d96cec1d83be701764c49f18869bd93eefd3fa14b8fc876",
+        "vs-ref.bin": "b01712f0d398132b9529cd2e96e8818f13c30232b9bd619270edaa10e71ce29a"
+      }
+    },
+    {
+      "file": "decode-layer28.npz",
+      "phase": "decode",
+      "layer": 28,
+      "shape": [
+        1,
+        3,
+        64
+      ],
+      "key_global": 197.28440856933594,
+      "value_global": 367.5897521972656,
+      "source_sha256": "a439d90f36be50f662686be771e453482bfe1faa7c4903a5f1dfca561e1672e8",
+      "fixture": "fixtures/decode-layer28/input.txt",
+      "files": {
+        "input.txt": "fdbeb1f7c23dc19bcfeca92876aec00a42bbf9a04481bb2d0ad1a2a3c398c4b1",
+        "kd-init.bin": "c582aa734359dc3855358fbf81be96a8adf57a45e14c4f6246d74800ebffab73",
+        "kd-ref.bin": "f0a21a1a73dd723782f683a45be13fad11bbcf68104e86b05a72b50f6b38a33f",
+        "key.bin": "b46e9ff1081719e1211712faf76d5e2c6d8ba99f7404129a296df3683b4913f6",
+        "ks-init.bin": "591db8212761667b7d96cec1d83be701764c49f18869bd93eefd3fa14b8fc876",
+        "ks-ref.bin": "74b113481027f8630830e937917e0ed804f7634ceef136b53d4f5d0ebf2c2f23",
+        "slots.bin": "af5570f5a1810b7af78caf4bc70a660f0df51e42baf91d4de5b2328de0e83dfc",
+        "value.bin": "aca71ef20f12b76be1050f6c3b341b16b32f737603f845f90d2532fa6bafac69",
+        "vd-init.bin": "c582aa734359dc3855358fbf81be96a8adf57a45e14c4f6246d74800ebffab73",
+        "vd-ref.bin": "6d5f19a5dfa33c9769a3d345350d6b52f82456df3bd7c6a003f21efd309c636f",
+        "vs-init.bin": "591db8212761667b7d96cec1d83be701764c49f18869bd93eefd3fa14b8fc876",
+        "vs-ref.bin": "01856bd0abd5d4f2c02ed408cf0392928ed3ffe1198de53a2d0de4ab42695c1b"
+      }
+    },
+    {
+      "file": "decode-layer29.npz",
+      "phase": "decode",
+      "layer": 29,
+      "shape": [
+        1,
+        3,
+        64
+      ],
+      "key_global": 225.1727752685547,
+      "value_global": 477.8666687011719,
+      "source_sha256": "ed46ed8fd3c71e8fd16c748c08318521b456f52cff6b29ad80d583fc9d0c3f80",
+      "fixture": "fixtures/decode-layer29/input.txt",
+      "files": {
+        "input.txt": "1252012412cb1145354294cdb4d9a4a6c46f694f9775bbad669be6af369bf9ba",
+        "kd-init.bin": "c582aa734359dc3855358fbf81be96a8adf57a45e14c4f6246d74800ebffab73",
+        "kd-ref.bin": "870d58120a995d73d63ebb1ce6b5b484d4946bc9f38994f1d09a7ded6d9ed66f",
+        "key.bin": "52df052f4d86b900223ee7bcb5771002cc15d5ee04e51f9dbdc95bc761ff978d",
+        "ks-init.bin": "591db8212761667b7d96cec1d83be701764c49f18869bd93eefd3fa14b8fc876",
+        "ks-ref.bin": "3c3b91c914c31dc19b3e4d4429707d15c6dd5c4e4c8660822b6d583d39f25929",
+        "slots.bin": "af5570f5a1810b7af78caf4bc70a660f0df51e42baf91d4de5b2328de0e83dfc",
+        "value.bin": "4984ff4b9cd45c2bd87b04369b9f843bd198b7daf5982b2e19f453e69ea451af",
+        "vd-init.bin": "c582aa734359dc3855358fbf81be96a8adf57a45e14c4f6246d74800ebffab73",
+        "vd-ref.bin": "770e9fc81f227218bb5538c7ed3d280838abb08eae6a49cfc8bdbd4a28190fde",
+        "vs-init.bin": "591db8212761667b7d96cec1d83be701764c49f18869bd93eefd3fa14b8fc876",
+        "vs-ref.bin": "9376a5f92a1e561de39f74a74d8c0c444c58861e7a9b1da86e553aa5109db0ed"
+      }
+    }
+  ]
+}
