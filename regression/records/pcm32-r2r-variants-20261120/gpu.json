@@ -1,0 +1,206 @@
+{
+  "status": "complete",
+  "roles": [
+    "P",
+    "M",
+    "spec",
+    "clean",
+    "spec-clean",
+    "align"
+  ],
+  "sha256": {
+    "P": "35a2c062b54b056a4b3c8e6e513e75abfce5a59edba2e7b1330a21d693a952c1",
+    "M": "6a0f71b49a5856d08e1d2af6f085b5b0f4865c362c11cd1aee7f2008a747c66e",
+    "spec": "020c38833d485cf4cd543010912cf13aed0e35549542c44090fd1419f31865f7",
+    "clean": "6a0f71b49a5856d08e1d2af6f085b5b0f4865c362c11cd1aee7f2008a747c66e",
+    "spec-clean": "020c38833d485cf4cd543010912cf13aed0e35549542c44090fd1419f31865f7",
+    "align": "e522a9e8acec71a9d588433053046340509f5275c0a9e81b878e992da50dee36"
+  },
+  "aa": [
+    [
+      {
+        "summary": {
+          "median": 0.9999674302339034,
+          "minimum": 0.9997436044349752,
+          "maximum": 1.0283249036635076,
+          "confidence_interval_95": [
+            0.9998823383801447,
+            1.0000638711697056
+          ],
+          "verdict": "passed",
+          "rule": "bootstrap"
+        },
+        "spread": 0.02858862922627603,
+        "passed": true
+      },
+      {
+        "summary": {
+          "median": 0.9999535093974548,
+          "minimum": 0.9997796219572098,
+          "maximum": 1.0000813339957202,
+          "confidence_interval_95": [
+            0.9998765820793512,
+            1.0000386808774482
+          ],
+          "verdict": "passed",
+          "rule": "all_rounds"
+        },
+        "spread": 0.00030177854387525294,
+        "passed": true
+      }
+    ]
+  ],
+  "full_output_passed": true,
+  "results": {
+    "P": {
+      "ms": 785.0711669921875,
+      "over_P": {
+        "median": 1.0,
+        "minimum": 1.0,
+        "maximum": 1.0,
+        "confidence_interval_95": [
+          1.0,
+          1.0
+        ],
+        "verdict": "passed",
+        "rule": "all_rounds"
+      },
+      "over_M": {
+        "median": 1.0609037357558846,
+        "minimum": 1.0605711975114689,
+        "maximum": 1.0610222971240828,
+        "confidence_interval_95": [
+          1.0607761118040901,
+          1.0609455704335273
+        ],
+        "verdict": "performance_regression",
+        "rule": "all_rounds"
+      }
+    },
+    "M": {
+      "ms": 740.063812255859,
+      "over_P": {
+        "median": 0.9425925900033665,
+        "minimum": 0.9424872622474715,
+        "maximum": 0.9428881364555313,
+        "confidence_interval_95": [
+          0.9425554222404318,
+          0.9427059959512016
+        ],
+        "verdict": "passed",
+        "rule": "all_rounds"
+      },
+      "over_M": {
+        "median": 1.0,
+        "minimum": 1.0,
+        "maximum": 1.0,
+        "confidence_interval_95": [
+          1.0,
+          1.0
+        ],
+        "verdict": "passed",
+        "rule": "all_rounds"
+      }
+    },
+    "spec": {
+      "ms": 747.923553466797,
+      "over_P": {
+        "median": 0.9526719646816801,
+        "minimum": 0.9523351010954764,
+        "maximum": 0.9527912137531862,
+        "confidence_interval_95": [
+          0.9526325554091244,
+          0.9527415537558795
+        ],
+        "verdict": "passed",
+        "rule": "all_rounds"
+      },
+      "over_M": {
+        "median": 1.0106692196736395,
+        "minimum": 1.010381878764597,
+        "maximum": 1.010842637644299,
+        "confidence_interval_95": [
+          1.0104779789251652,
+          1.010739474872337
+        ],
+        "verdict": "passed",
+        "rule": "all_rounds"
+      }
+    },
+    "clean": {
+      "ms": 739.9920043945315,
+      "over_P": {
+        "median": 0.9426010457373476,
+        "minimum": 0.9423289853572889,
+        "maximum": 0.9427760129635455,
+        "confidence_interval_95": [
+          0.942495674982972,
+          0.9426689838576916
+        ],
+        "verdict": "passed",
+        "rule": "all_rounds"
+      },
+      "over_M": {
+        "median": 0.9999188364388459,
+        "minimum": 0.9997386648453751,
+        "maximum": 1.0002001075928866,
+        "confidence_interval_95": [
+          0.999787253139437,
+          1.0000932065408847
+        ],
+        "verdict": "passed",
+        "rule": "all_rounds"
+      }
+    },
+    "spec-clean": {
+      "ms": 747.9291076660155,
+      "over_P": {
+        "median": 0.9526745506430161,
+        "minimum": 0.9524477328108814,
+        "maximum": 0.9527867935286881,
+        "confidence_interval_95": [
+          0.952596174466931,
+          0.9527460343757793
+        ],
+        "verdict": "passed",
+        "rule": "all_rounds"
+      },
+      "over_M": {
+        "median": 1.010661166949831,
+        "minimum": 1.0103546689100775,
+        "maximum": 1.010863177629795,
+        "confidence_interval_95": [
+          1.0104242592137398,
+          1.010831109332136
+        ],
+        "verdict": "passed",
+        "rule": "all_rounds"
+      }
+    },
+    "align": {
+      "ms": 744.10205078125,
+      "over_P": {
+        "median": 0.9477850193382271,
+        "minimum": 0.9474793588977464,
+        "maximum": 0.9479670360684123,
+        "confidence_interval_95": [
+          0.9476960090767838,
+          0.9479026405138988
+        ],
+        "verdict": "passed",
+        "rule": "all_rounds"
+      },
+      "over_M": {
+        "median": 1.0054681958916447,
+        "minimum": 1.0051277383111203,
+        "maximum": 1.005730685260455,
+        "confidence_interval_95": [
+          1.0053314546185654,
+          1.005633220333781
+        ],
+        "verdict": "passed",
+        "rule": "all_rounds"
+      }
+    }
+  }
+}

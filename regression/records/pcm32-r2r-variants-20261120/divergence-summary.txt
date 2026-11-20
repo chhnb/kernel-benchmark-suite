@@ -1,0 +1,84 @@
+divergence
+DIVERGENT:       %130 = and i32 %1, 1
+DIVERGENT:       %131 = icmp ne i32 %130, 0
+DIVERGENT:       %132 = icmp ult i32 %1, 31
+DIVERGENT:       %133 = xor i1 %131, true
+DIVERGENT:       %134 = and i1 %132, %133
+DIVERGENT:       %135 = add nsw i32 %128, -256
+DIVERGENT:       %136 = add nuw nsw i32 %128, 256
+DIVERGENT:       %137 = icmp ult i32 %1, 32
+DIVERGENT:       %138 = and i1 %132, %131
+DIVERGENT:       %139 = icmp eq i32 %1, 0
+DIVERGENT:       %705 = icmp sgt i32 %701, %704
+DIVERGENT:       br i1 %134, label %predication.first, label %predication.second
+DIVERGENT:       br i1 %134, label %predication.split, label %predication.tail
+DIVERGENT:       br i1 %134, label %predication.split66, label %predication.tail67
+DIVERGENT:       br i1 %134, label %predication.second69, label %predication.first68
+DIVERGENT:       br i1 %134, label %predication.tail75, label %predication.split74
+DIVERGENT:       br i1 %134, label %predication.first76, label %predication.second77
+DIVERGENT:       br i1 %134, label %predication.tail84, label %predication.split83
+DIVERGENT:       br i1 %134, label %predication.second86, label %predication.first85
+DIVERGENT:       br i1 %134, label %predication.tail92, label %predication.split91
+DIVERGENT:       br i1 %134, label %predication.first93, label %predication.second94
+DIVERGENT:       br i1 %134, label %predication.tail101, label %predication.split100
+DIVERGENT:       br i1 %134, label %predication.second103, label %predication.first102
+DIVERGENT:       br i1 %134, label %predication.tail109, label %predication.split108
+DIVERGENT:       br i1 %134, label %predication.first110, label %predication.second111
+DIVERGENT:       br i1 %134, label %predication.tail118, label %predication.split117
+DIVERGENT:       br i1 %134, label %predication.second120, label %predication.first119
+DIVERGENT:       br i1 %134, label %predication.tail126, label %predication.split125
+DIVERGENT:       br i1 %134, label %predication.first127, label %predication.second128
+DIVERGENT:       br i1 %134, label %predication.tail135, label %predication.split134
+DIVERGENT:       br i1 %134, label %predication.second137, label %predication.first136
+DIVERGENT:       br i1 %134, label %predication.tail143, label %predication.split142
+DIVERGENT:       br i1 %134, label %predication.first144, label %predication.second145
+DIVERGENT:       br i1 %134, label %predication.tail152, label %predication.split151
+DIVERGENT:       br i1 %134, label %predication.second154, label %predication.first153
+DIVERGENT:       br i1 %134, label %predication.tail160, label %predication.split159
+DIVERGENT:       br i1 %134, label %predication.first161, label %predication.second162
+DIVERGENT:       br i1 %134, label %predication.tail169, label %predication.split168
+DIVERGENT:       br i1 %134, label %predication.tail171, label %predication.split170
+DIVERGENT:       %895 = icmp eq i32 %894, 256
+DIVERGENT:       br i1 %134, label %merged.branch.split61, label %merged.branch.split62
+gpu-divergence
+DIVERGENT:       %130 = and i32 %1, 1
+DIVERGENT:       %131 = icmp ne i32 %130, 0
+DIVERGENT:       %132 = icmp ult i32 %1, 31
+DIVERGENT:       %133 = xor i1 %131, true
+DIVERGENT:       %134 = and i1 %132, %133
+DIVERGENT:       %135 = add nsw i32 %128, -256
+DIVERGENT:       %136 = add nuw nsw i32 %128, 256
+DIVERGENT:       %137 = icmp ult i32 %1, 32
+DIVERGENT:       %138 = and i1 %132, %131
+DIVERGENT:       %139 = icmp eq i32 %1, 0
+DIVERGENT:       %705 = icmp sgt i32 %701, %704
+DIVERGENT:       br i1 %134, label %predication.first, label %predication.second
+DIVERGENT:       br i1 %134, label %predication.split, label %predication.tail
+DIVERGENT:       br i1 %134, label %predication.split66, label %predication.tail67
+DIVERGENT:       br i1 %134, label %predication.second69, label %predication.first68
+DIVERGENT:       br i1 %134, label %predication.tail75, label %predication.split74
+DIVERGENT:       br i1 %134, label %predication.first76, label %predication.second77
+DIVERGENT:       br i1 %134, label %predication.tail84, label %predication.split83
+DIVERGENT:       br i1 %134, label %predication.second86, label %predication.first85
+DIVERGENT:       br i1 %134, label %predication.tail92, label %predication.split91
+DIVERGENT:       br i1 %134, label %predication.first93, label %predication.second94
+DIVERGENT:       br i1 %134, label %predication.tail101, label %predication.split100
+DIVERGENT:       br i1 %134, label %predication.second103, label %predication.first102
+DIVERGENT:       br i1 %134, label %predication.tail109, label %predication.split108
+DIVERGENT:       br i1 %134, label %predication.first110, label %predication.second111
+DIVERGENT:       br i1 %134, label %predication.tail118, label %predication.split117
+DIVERGENT:       br i1 %134, label %predication.second120, label %predication.first119
+DIVERGENT:       br i1 %134, label %predication.tail126, label %predication.split125
+DIVERGENT:       br i1 %134, label %predication.first127, label %predication.second128
+DIVERGENT:       br i1 %134, label %predication.tail135, label %predication.split134
+DIVERGENT:       br i1 %134, label %predication.second137, label %predication.first136
+DIVERGENT:       br i1 %134, label %predication.tail143, label %predication.split142
+DIVERGENT:       br i1 %134, label %predication.first144, label %predication.second145
+DIVERGENT:       br i1 %134, label %predication.tail152, label %predication.split151
+DIVERGENT:       br i1 %134, label %predication.second154, label %predication.first153
+DIVERGENT:       br i1 %134, label %predication.tail160, label %predication.split159
+DIVERGENT:       br i1 %134, label %predication.first161, label %predication.second162
+DIVERGENT:       br i1 %134, label %predication.tail169, label %predication.split168
+DIVERGENT:       br i1 %134, label %predication.tail171, label %predication.split170
+DIVERGENT:       %895 = icmp eq i32 %894, 256
+DIVERGENT:       br i1 %134, label %merged.branch.split61, label %merged.branch.split62

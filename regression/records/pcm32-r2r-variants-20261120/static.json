@@ -1,0 +1,455 @@
+{
+  "P": {
+    "raw_ir": {
+      "145": {
+        "lds_load": 16,
+        "lds_store": 8,
+        "select": 8,
+        "phi": 3,
+        "conditional": 1
+      },
+      "unify.bb2": {
+        "lds_load": 16,
+        "lds_store": 8,
+        "select": 32,
+        "phi": 3,
+        "conditional": 1
+      }
+    },
+    "o3_ir": {
+      ".preheader26": {
+        "lds_load": 16,
+        "lds_store": 8,
+        "select": 8,
+        "phi": 3,
+        "conditional": 1
+      },
+      "unify.bb2": {
+        "lds_load": 16,
+        "lds_store": 8,
+        "select": 32,
+        "phi": 3,
+        "conditional": 1
+      }
+    },
+    "loops": [
+      {
+        "header": "0x1c04",
+        "latches": [
+          "0x1c04"
+        ],
+        "depth": 2,
+        "blocks": [
+          "0x1c04"
+        ],
+        "stats": {
+          "instructions": 110,
+          "conditional": 1,
+          "exec": 0,
+          "valu": 81,
+          "salu": 2,
+          "memory": 18,
+          "unconditional": 0,
+          "flow_wait_other": 9,
+          "execz": 0,
+          "execnz": 0,
+          "mask": 0,
+          "lds": 18,
+          "waitcnt": 8,
+          "cndmask": 20,
+          "bytes": 776
+        }
+      },
+      {
+        "header": "0x196c",
+        "latches": [
+          "0x196c"
+        ],
+        "depth": 2,
+        "blocks": [
+          "0x196c"
+        ],
+        "stats": {
+          "instructions": 94,
+          "conditional": 1,
+          "exec": 0,
+          "valu": 65,
+          "salu": 2,
+          "memory": 18,
+          "unconditional": 0,
+          "flow_wait_other": 9,
+          "execz": 0,
+          "execnz": 0,
+          "mask": 0,
+          "lds": 18,
+          "waitcnt": 8,
+          "cndmask": 24,
+          "bytes": 640
+        }
+      }
+    ],
+    "machine": {
+      "valu": 146,
+      "salu": 4,
+      "lds": 36,
+      "mask": 0,
+      "conditional": 2
+    },
+    "resources": {
+      "vgpr_count": 23,
+      "sgpr_count": 24,
+      "vgpr_spill_count": 0,
+      "sgpr_spill_count": 0,
+      "group_segment_fixed_size": 65536,
+      "wavefront_size": 64,
+      "waves_per_simd": 0.25,
+      "threads": 32
+    }
+  },
+  "M": {
+    "raw_ir": {
+      "merged.bb": {
+        "lds_load": 18,
+        "lds_store": 9,
+        "select": 78,
+        "phi": 73,
+        "conditional": 29
+      }
+    },
+    "o3_ir": {
+      "merged.bb": {
+        "lds_load": 18,
+        "lds_store": 9,
+        "select": 78,
+        "phi": 39,
+        "conditional": 10
+      }
+    },
+    "loops": [
+      {
+        "header": "0x19b8",
+        "latches": [
+          "0x199c"
+        ],
+        "depth": 2,
+        "blocks": [
+          "0x199c",
+          "0x19b8",
+          "0x1a4c",
+          "0x1a94",
+          "0x1f38"
+        ],
+        "stats": {
+          "instructions": 251,
+          "conditional": 3,
+          "exec": 44,
+          "valu": 142,
+          "salu": 69,
+          "memory": 27,
+          "unconditional": 1,
+          "flow_wait_other": 13,
+          "execz": 2,
+          "execnz": 0,
+          "mask": 42,
+          "lds": 27,
+          "waitcnt": 9,
+          "cndmask": 67,
+          "bytes": 1552
+        }
+      }
+    ],
+    "machine": {
+      "valu": 142,
+      "salu": 69,
+      "lds": 27,
+      "mask": 42,
+      "conditional": 3
+    },
+    "resources": {
+      "vgpr_count": 25,
+      "sgpr_count": 28,
+      "vgpr_spill_count": 0,
+      "sgpr_spill_count": 0,
+      "group_segment_fixed_size": 65536,
+      "wavefront_size": 64,
+      "waves_per_simd": 0.25,
+      "threads": 32
+    }
+  },
+  "spec": {
+    "raw_ir": {
+      "merged.bb": {
+        "lds_load": 18,
+        "lds_store": 9,
+        "select": 139,
+        "phi": 12,
+        "conditional": 3
+      }
+    },
+    "o3_ir": {
+      "merged.bb": {
+        "lds_load": 18,
+        "lds_store": 9,
+        "select": 87,
+        "phi": 11,
+        "conditional": 3
+      }
+    },
+    "loops": [
+      {
+        "header": "0x19d0",
+        "latches": [
+          "0x199c"
+        ],
+        "depth": 2,
+        "blocks": [
+          "0x199c",
+          "0x19d0",
+          "0x1a4c",
+          "0x1a9c",
+          "0x1f24"
+        ],
+        "stats": {
+          "instructions": 225,
+          "conditional": 3,
+          "exec": 9,
+          "valu": 158,
+          "salu": 27,
+          "memory": 27,
+          "unconditional": 1,
+          "flow_wait_other": 13,
+          "execz": 2,
+          "execnz": 0,
+          "mask": 7,
+          "lds": 27,
+          "waitcnt": 9,
+          "cndmask": 77,
+          "bytes": 1532
+        }
+      }
+    ],
+    "machine": {
+      "valu": 158,
+      "salu": 27,
+      "lds": 27,
+      "mask": 7,
+      "conditional": 3
+    },
+    "resources": {
+      "vgpr_count": 25,
+      "sgpr_count": 30,
+      "vgpr_spill_count": 0,
+      "sgpr_spill_count": 0,
+      "group_segment_fixed_size": 65536,
+      "wavefront_size": 64,
+      "waves_per_simd": 0.25,
+      "threads": 32
+    }
+  },
+  "clean": {
+    "raw_ir": {
+      "merged.bb": {
+        "lds_load": 18,
+        "lds_store": 9,
+        "select": 78,
+        "phi": 73,
+        "conditional": 29
+      }
+    },
+    "o3_ir": {
+      "merged.bb": {
+        "lds_load": 18,
+        "lds_store": 9,
+        "select": 78,
+        "phi": 39,
+        "conditional": 10
+      }
+    },
+    "loops": [
+      {
+        "header": "0x19b8",
+        "latches": [
+          "0x199c"
+        ],
+        "depth": 2,
+        "blocks": [
+          "0x199c",
+          "0x19b8",
+          "0x1a4c",
+          "0x1a94",
+          "0x1f38"
+        ],
+        "stats": {
+          "instructions": 251,
+          "conditional": 3,
+          "exec": 44,
+          "valu": 142,
+          "salu": 69,
+          "memory": 27,
+          "unconditional": 1,
+          "flow_wait_other": 13,
+          "execz": 2,
+          "execnz": 0,
+          "mask": 42,
+          "lds": 27,
+          "waitcnt": 9,
+          "cndmask": 67,
+          "bytes": 1552
+        }
+      }
+    ],
+    "machine": {
+      "valu": 142,
+      "salu": 69,
+      "lds": 27,
+      "mask": 42,
+      "conditional": 3
+    },
+    "resources": {
+      "vgpr_count": 25,
+      "sgpr_count": 28,
+      "vgpr_spill_count": 0,
+      "sgpr_spill_count": 0,
+      "group_segment_fixed_size": 65536,
+      "wavefront_size": 64,
+      "waves_per_simd": 0.25,
+      "threads": 32
+    }
+  },
+  "spec-clean": {
+    "raw_ir": {
+      "merged.bb": {
+        "lds_load": 18,
+        "lds_store": 9,
+        "select": 139,
+        "phi": 12,
+        "conditional": 3
+      }
+    },
+    "o3_ir": {
+      "merged.bb": {
+        "lds_load": 18,
+        "lds_store": 9,
+        "select": 87,
+        "phi": 11,
+        "conditional": 3
+      }
+    },
+    "loops": [
+      {
+        "header": "0x19d0",
+        "latches": [
+          "0x199c"
+        ],
+        "depth": 2,
+        "blocks": [
+          "0x199c",
+          "0x19d0",
+          "0x1a4c",
+          "0x1a9c",
+          "0x1f24"
+        ],
+        "stats": {
+          "instructions": 225,
+          "conditional": 3,
+          "exec": 9,
+          "valu": 158,
+          "salu": 27,
+          "memory": 27,
+          "unconditional": 1,
+          "flow_wait_other": 13,
+          "execz": 2,
+          "execnz": 0,
+          "mask": 7,
+          "lds": 27,
+          "waitcnt": 9,
+          "cndmask": 77,
+          "bytes": 1532
+        }
+      }
+    ],
+    "machine": {
+      "valu": 158,
+      "salu": 27,
+      "lds": 27,
+      "mask": 7,
+      "conditional": 3
+    },
+    "resources": {
+      "vgpr_count": 25,
+      "sgpr_count": 30,
+      "vgpr_spill_count": 0,
+      "sgpr_spill_count": 0,
+      "group_segment_fixed_size": 65536,
+      "wavefront_size": 64,
+      "waves_per_simd": 0.25,
+      "threads": 32
+    }
+  },
+  "align": {
+    "raw_ir": {
+      "merged.bb": {
+        "lds_load": 16,
+        "lds_store": 8,
+        "select": 79,
+        "phi": 6,
+        "conditional": 1
+      }
+    },
+    "o3_ir": {
+      "merged.bb": {
+        "lds_load": 16,
+        "lds_store": 8,
+        "select": 76,
+        "phi": 5,
+        "conditional": 1
+      }
+    },
+    "loops": [
+      {
+        "header": "0x1974",
+        "latches": [
+          "0x1974"
+        ],
+        "depth": 2,
+        "blocks": [
+          "0x1974"
+        ],
+        "stats": {
+          "instructions": 243,
+          "conditional": 1,
+          "exec": 0,
+          "valu": 193,
+          "salu": 17,
+          "memory": 24,
+          "unconditional": 0,
+          "flow_wait_other": 9,
+          "execz": 0,
+          "execnz": 0,
+          "mask": 0,
+          "lds": 24,
+          "waitcnt": 8,
+          "cndmask": 84,
+          "bytes": 1712
+        }
+      }
+    ],
+    "machine": {
+      "valu": 193,
+      "salu": 17,
+      "lds": 24,
+      "mask": 0,
+      "conditional": 1
+    },
+    "resources": {
+      "vgpr_count": 23,
+      "sgpr_count": 24,
+      "vgpr_spill_count": 0,
+      "sgpr_spill_count": 0,
+      "group_segment_fixed_size": 65536,
+      "wavefront_size": 64,
+      "waves_per_simd": 0.25,
+      "threads": 32
+    }
+  }
+}
