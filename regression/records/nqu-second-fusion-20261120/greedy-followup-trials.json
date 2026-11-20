@@ -1,0 +1,20 @@
+{
+  "G1": {
+    "work_before": 274,
+    "work_after": 274,
+    "total_tti_gain": 0,
+    "uniform_gain_false": 12,
+    "uniform_gain_true": 10,
+    "layout": "b2b-anchor-1",
+    "candidate": "_Z24solve_nqueen_cuda_kerneliiPjS_S_S_i:B21:B20:B19"
+  },
+  "G2": {
+    "work_before": 274,
+    "work_after": 275,
+    "total_tti_gain": -1,
+    "uniform_gain_false": 11,
+    "uniform_gain_true": 9,
+    "layout": "darm-B2B",
+    "candidate": "_Z24solve_nqueen_cuda_kerneliiPjS_S_S_i:B21:B20:B19"
+  }
+}
