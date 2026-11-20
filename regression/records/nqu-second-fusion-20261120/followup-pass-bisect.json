@@ -1,0 +1,313 @@
+{
+  "boundary": [
+    12,
+    13
+  ],
+  "last_pass": "BISECT: running pass (13) Combine redundant instructions on function (_Z24solve_nqueen_cuda_kerneliiPjS_S_S_i)",
+  "tested": [
+    {
+      "limit": 49,
+      "passed": true,
+      "untagged": 0,
+      "select": 0,
+      "last": "BISECT: running pass (49) Simplify the CFG on function (_Z24solve_nqueen_cuda_kerneliiPjS_S_S_i)"
+    },
+    {
+      "limit": 24,
+      "passed": true,
+      "untagged": 0,
+      "select": 0,
+      "last": "BISECT: running pass (24) Remove unused exception handling info on SCC (llvm.amdgcn.dispatch.ptr)"
+    },
+    {
+      "limit": 12,
+      "passed": false,
+      "untagged": 4,
+      "select": 0,
+      "last": "BISECT: running pass (12) Dead Argument Elimination on module (/data/home/chh/simplify-v2-study-nqu/build/nqu-second-fusion/followup/C.ll)"
+    },
+    {
+      "limit": 18,
+      "passed": true,
+      "untagged": 0,
+      "select": 0,
+      "last": "BISECT: running pass (18) Promote 'by reference' arguments to scalars on SCC (_Z24solve_nqueen_cuda_kerneliiPjS_S_S_i)"
+    },
+    {
+      "limit": 15,
+      "passed": true,
+      "untagged": 0,
+      "select": 0,
+      "last": "BISECT: running pass (15) Remove unused exception handling info on SCC (_Z24solve_nqueen_cuda_kerneliiPjS_S_S_i)"
+    },
+    {
+      "limit": 13,
+      "passed": true,
+      "untagged": 0,
+      "select": 0,
+      "last": "BISECT: running pass (13) Combine redundant instructions on function (_Z24solve_nqueen_cuda_kerneliiPjS_S_S_i)"
+    }
+  ],
+  "previous_pass": "BISECT: running pass (12) Dead Argument Elimination on module (/data/home/chh/simplify-v2-study-nqu/build/nqu-second-fusion/followup/C.ll)",
+  "sources": {
+    "P": {
+      "raw": {
+        "tti": 292,
+        "untagged": 5,
+        "select": 9,
+        "branches": 11,
+        "loads": 26
+      },
+      "gvn": {
+        "tti": 281,
+        "untagged": 0,
+        "select": 4,
+        "branches": 11,
+        "loads": 21
+      },
+      "gvn-no-pre": {
+        "tti": 281,
+        "untagged": 0,
+        "select": 4,
+        "branches": 11,
+        "loads": 21
+      },
+      "early-cse+instcombine": {
+        "tti": 282,
+        "untagged": 1,
+        "select": 3,
+        "branches": 11,
+        "loads": 22
+      },
+      "O3": {
+        "tti": 281,
+        "untagged": 0,
+        "select": 3,
+        "branches": 11,
+        "loads": 21
+      }
+    },
+    "C": {
+      "raw": {
+        "tti": 294,
+        "untagged": 8,
+        "select": 8,
+        "branches": 10,
+        "loads": 30
+      },
+      "gvn": {
+        "tti": 275,
+        "untagged": 0,
+        "select": 0,
+        "branches": 10,
+        "loads": 21
+      },
+      "gvn-no-pre": {
+        "tti": 275,
+        "untagged": 0,
+        "select": 0,
+        "branches": 10,
+        "loads": 21
+      },
+      "early-cse+instcombine": {
+        "tti": 274,
+        "untagged": 0,
+        "select": 0,
+        "branches": 10,
+        "loads": 22
+      },
+      "O3": {
+        "tti": 273,
+        "untagged": 0,
+        "select": 0,
+        "branches": 10,
+        "loads": 21
+      }
+    },
+    "G": {
+      "raw": {
+        "tti": 282,
+        "untagged": 0,
+        "select": 3,
+        "branches": 11,
+        "loads": 21
+      },
+      "gvn": {
+        "tti": 282,
+        "untagged": 0,
+        "select": 3,
+        "branches": 11,
+        "loads": 21
+      },
+      "gvn-no-pre": {
+        "tti": 282,
+        "untagged": 0,
+        "select": 3,
+        "branches": 11,
+        "loads": 21
+      },
+      "early-cse+instcombine": {
+        "tti": 282,
+        "untagged": 0,
+        "select": 3,
+        "branches": 11,
+        "loads": 21
+      },
+      "O3": {
+        "tti": 282,
+        "untagged": 0,
+        "select": 3,
+        "branches": 11,
+        "loads": 21
+      }
+    },
+    "G1": {
+      "raw": {
+        "tti": 274,
+        "untagged": 0,
+        "select": 5,
+        "branches": 10,
+        "loads": 21
+      },
+      "gvn": {
+        "tti": 274,
+        "untagged": 0,
+        "select": 5,
+        "branches": 10,
+        "loads": 21
+      },
+      "gvn-no-pre": {
+        "tti": 274,
+        "untagged": 0,
+        "select": 5,
+        "branches": 10,
+        "loads": 21
+      },
+      "early-cse+instcombine": {
+        "tti": 274,
+        "untagged": 0,
+        "select": 5,
+        "branches": 10,
+        "loads": 21
+      },
+      "O3": {
+        "tti": 274,
+        "untagged": 0,
+        "select": 5,
+        "branches": 10,
+        "loads": 21
+      }
+    },
+    "G2": {
+      "raw": {
+        "tti": 275,
+        "untagged": 0,
+        "select": 5,
+        "branches": 10,
+        "loads": 21
+      },
+      "gvn": {
+        "tti": 275,
+        "untagged": 0,
+        "select": 5,
+        "branches": 10,
+        "loads": 21
+      },
+      "gvn-no-pre": {
+        "tti": 275,
+        "untagged": 0,
+        "select": 5,
+        "branches": 10,
+        "loads": 21
+      },
+      "early-cse+instcombine": {
+        "tti": 275,
+        "untagged": 0,
+        "select": 5,
+        "branches": 10,
+        "loads": 21
+      },
+      "O3": {
+        "tti": 275,
+        "untagged": 0,
+        "select": 5,
+        "branches": 10,
+        "loads": 21
+      }
+    },
+    "G1-control": {
+      "raw": {
+        "tti": 274,
+        "untagged": 0,
+        "select": 5,
+        "branches": 10,
+        "loads": 21
+      },
+      "gvn": {
+        "tti": 274,
+        "untagged": 0,
+        "select": 5,
+        "branches": 10,
+        "loads": 21
+      },
+      "gvn-no-pre": {
+        "tti": 274,
+        "untagged": 0,
+        "select": 5,
+        "branches": 10,
+        "loads": 21
+      },
+      "early-cse+instcombine": {
+        "tti": 274,
+        "untagged": 0,
+        "select": 5,
+        "branches": 10,
+        "loads": 21
+      },
+      "O3": {
+        "tti": 274,
+        "untagged": 0,
+        "select": 5,
+        "branches": 10,
+        "loads": 21
+      }
+    },
+    "G2-control": {
+      "raw": {
+        "tti": 274,
+        "untagged": 0,
+        "select": 5,
+        "branches": 10,
+        "loads": 21
+      },
+      "gvn": {
+        "tti": 274,
+        "untagged": 0,
+        "select": 5,
+        "branches": 10,
+        "loads": 21
+      },
+      "gvn-no-pre": {
+        "tti": 274,
+        "untagged": 0,
+        "select": 5,
+        "branches": 10,
+        "loads": 21
+      },
+      "early-cse+instcombine": {
+        "tti": 274,
+        "untagged": 0,
+        "select": 5,
+        "branches": 10,
+        "loads": 21
+      },
+      "O3": {
+        "tti": 274,
+        "untagged": 0,
+        "select": 5,
+        "branches": 10,
+        "loads": 21
+      }
+    }
+  }
+}
