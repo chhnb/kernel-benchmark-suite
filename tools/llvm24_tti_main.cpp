@@ -41,7 +41,8 @@ struct TargetCache {
   }
 };
 static int score(StringRef input,StringRef function,bool summaryOnly,bool compact,
-                 TargetCache &targets, TargetTransformInfo::TargetCostKind costKind) {
+                 TargetCache &targets, TargetTransformInfo::TargetCostKind costKind,
+                 bool repriceLoads) {
  try {
   LLVMContext ctx;SMDiagnostic diagnostic;
   auto m=parseIRFile(input,diagnostic,ctx);
@@ -80,6 +81,14 @@ static int score(StringRef input,StringRef function,bool summaryOnly,bool compac
     auto cost=tti.getInstructionCost(&i,costKind);
     bool ttiValid=cost.isValid();
     auto v=ttiValid?cost.getValue():0;
+    const auto nativeCost=v;
+    if (repriceLoads && ttiValid && v>=0 &&
+        (triple.isAMDGPU() || triple.isNVPTX()))
+      if (const auto *load=dyn_cast<LoadInst>(&i)) {
+        unsigned addressSpace=load->getPointerAddressSpace();
+        if (addressSpace==1) v=4;
+        if (addressSpace==3) v=2;
+      }
     std::string reason;
     if(auto*c=dyn_cast<CallBase>(&i))if(!c->getCalledFunction()||!c->getCalledFunction()->isIntrinsic())reason="opaque_call_cost_not_whole_callee_cost";
     if(!ttiValid||v<0)reason="invalid_tti_cost";
@@ -94,7 +103,7 @@ static int score(StringRef input,StringRef function,bool summaryOnly,bool compac
     std::string type;raw_string_ostream ts(type);i.getType()->print(ts);ts.flush();key+=":"+type;
     if(valid)++histogram[key+":cost"+std::to_string(v)];
     instructions.push_back(json::Object{{"block_index",bid},{"instruction_index",iid++},{"key",key},
-      {"tti_cost",ttiValid?json::Value(v):json::Value(nullptr)},
+      {"tti_cost",ttiValid?json::Value(nativeCost):json::Value(nullptr)},
       {"accepted_cost",valid?json::Value(v):json::Value(nullptr)},
       {"reason",reason},{"ir",ir}});
    }
@@ -110,6 +119,7 @@ static int score(StringRef input,StringRef function,bool summaryOnly,bool compac
     output["histogram"]=std::move(hist);
     output["instruction_costs"]=std::move(instructions);
   }
+  if(repriceLoads)output["load_cost_profile"]="as1-4-as3-2";
   json::Value result(std::move(output));
   if(compact)outs()<<result<<'\n';
   else outs()<<formatv("{0:2}\n",result);
@@ -125,6 +135,12 @@ int main(int argc,char **argv) {
     errs()<<error.what()<<"\n";
     return 2;
   }
+  const char *loadProfile=std::getenv("FUSION_TTI_LOAD_COST_PROFILE");
+  if(loadProfile && StringRef(loadProfile)!="native" && StringRef(loadProfile)!="as1-4-as3-2") {
+    errs()<<"FUSION_TTI_LOAD_COST_PROFILE must be native or as1-4-as3-2\n";
+    return 2;
+  }
+  const bool repriceLoads=loadProfile && StringRef(loadProfile)=="as1-4-as3-2";
   const bool fullServer=argc==3&&StringRef(argv[1])=="--serve-full";
   const bool server=fullServer||(argc==3&&StringRef(argv[1])=="--serve-summary");
   const bool summaryOnly=argc==4&&StringRef(argv[3])=="--summary-only";
@@ -134,10 +150,10 @@ int main(int argc,char **argv) {
   }
   InitializeAllTargetInfos();InitializeAllTargets();InitializeAllTargetMCs();
   TargetCache targets;
-  if(!server)return score(argv[1],argv[2],summaryOnly,false,targets,costKind);
+  if(!server)return score(argv[1],argv[2],summaryOnly,false,targets,costKind,repriceLoads);
   std::string input;
   while(std::getline(std::cin,input)){
-    if(score(input,argv[2],!fullServer,true,targets,costKind))outs()<<"null\n";
+    if(score(input,argv[2],!fullServer,true,targets,costKind,repriceLoads))outs()<<"null\n";
     outs().flush();
   }
   return 0;
