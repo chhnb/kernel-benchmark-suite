@@ -142,6 +142,7 @@ public:
   std::function<std::optional<BlockAlignment>(BasicBlock *, BasicBlock *,
       const BlockMap &, BasicBlock *, BasicBlock *)> alignBlocks;
   std::function<void(BasicBlock *, BasicBlock *, const BlockAlignment &)> onAlignment;
+  std::function<void(Instruction &, const Instruction &)> onCloneShared;
   std::function<void(const Instruction &, unsigned, Type *)> onOperandSelect;
   std::function<void(const ValueToValueMapTy&)> onValueMapping;
   const std::vector<BlockOrigin>& blockOrigins() const { return BlockOrigins; }

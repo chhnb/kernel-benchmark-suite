@@ -136,12 +136,12 @@ static int runSearch(int argc, const char *const *argv, TrialWorker *batch = nul
     std::string input,function,output,debug,split,left,right,replayParentHash,policy="llvm24";Options options;options.cleanupMode=CleanupMode::DarmCFGInstCombine;
     bool useArtifactB2B=false, useAnchorB2B=true;
     B2RStrategy b2rStrategy = B2RStrategy::Darm;
-    bool regionAnchor = false, regionTrace = false;
+    bool regionAnchor = false, regionTrace = false, intersectMemoryMetadata = false;
     std::string quoteMode="on";
     bool fullSnapshots=true;
     bool controlOnly=false,catalogOnly=false;std::string ttiWorker="/home/chh/kernel-benchmark-suite/tools/run-llvm24-tti";
     for(int i=1;i<argc;++i){std::string k=argv[i];
-      if(k=="--help"){outs()<<"fusion-search v1 --ir FILE --function NAME --out FILE [--b2b-strategy anchor|darm|darm-artifact] [--b2r-strategy darm|guarded] [--region-align darm|anchor] [--structural 0|1] [--split ID --left ID --right ID] [--debug-dir DIR] [--ir-snapshots full|compact] [--tti-worker EXECUTABLE] [--catalog-only 0|1] [--control-only 0|1] [--rounds N] [--trials N]\n";return 0;}
+      if(k=="--help"){outs()<<"fusion-search v1 --ir FILE --function NAME --out FILE [--b2b-strategy anchor|darm|darm-artifact] [--b2r-strategy darm|guarded] [--region-align darm|anchor] [--merge-metadata strict|intersect] [--structural 0|1] [--split ID --left ID --right ID] [--debug-dir DIR] [--ir-snapshots full|compact] [--tti-worker EXECUTABLE] [--catalog-only 0|1] [--control-only 0|1] [--rounds N] [--trials N]\n";return 0;}
       if(i+1==argc)throw std::runtime_error("missing option value");std::string v=argv[++i];
       if(k=="--control-only"){if(v!="0"&&v!="1")throw std::runtime_error("control-only must be 0 or 1");controlOnly=v=="1";}
       else if(k=="--catalog-only"){if(v!="0"&&v!="1")throw std::runtime_error("catalog-only must be 0 or 1");catalogOnly=v=="1";}
@@ -164,6 +164,11 @@ static int runSearch(int argc, const char *const *argv, TrialWorker *batch = nul
         if(v!="darm" && v!="anchor")
           throw std::runtime_error("region-align must be darm or anchor");
         regionAnchor=v=="anchor";
+      }
+      else if(k=="--merge-metadata"){
+        if(v!="strict" && v!="intersect")
+          throw std::runtime_error("merge-metadata must be strict or intersect");
+        intersectMemoryMetadata=v=="intersect";
       }
       else if(k=="--region-align-trace"){
         if(v!="0" && v!="1")
@@ -301,7 +306,7 @@ static int runSearch(int argc, const char *const *argv, TrialWorker *batch = nul
       if(observer)observer->round(round);
       std::vector<Trial> plans;
       if (!logical && useAnchorB2B)
-        plans = llvm24Scorer.planAnchorB2B(*module, c, options.cleanupMode);
+        plans = llvm24Scorer.planAnchorB2B(*module, c, options.cleanupMode, intersectMemoryMetadata);
       const bool plannedB2B = !plans.empty();
       Trial t;
       ScoreResult score;
@@ -348,7 +353,7 @@ static int runSearch(int argc, const char *const *argv, TrialWorker *batch = nul
           auto found = table.find(type);
           return found == table.end() ? -1 : found->second;
         };
-        RegionAlignmentOptions region{regionAnchor, false, instructionCost, transferCost};
+        RegionAlignmentOptions region{regionAnchor, false, instructionCost, transferCost, intersectMemoryMetadata};
         auto attempt = [&](Trial &fold) {
           return tryPair(*module, c, 0, options.optLevel, options.cleanupMode,
                          logical.get(), allowDarmB2B, b2rStrategy, &fold, useArtifactB2B,

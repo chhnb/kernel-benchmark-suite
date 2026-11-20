@@ -171,6 +171,7 @@ struct RegionAlignmentOptions {
   bool anchor = false, pairTies = false;
   llvm::function_ref<int(const llvm::Instruction &)> instructionCost;
   llvm::function_ref<int(llvm::Type *, bool)> transferCost;
+  bool intersectMemoryMetadata = false;
 };
 
 Trial tryPair(const llvm::Module &, const Candidate &, unsigned currentVersion,
@@ -183,5 +184,6 @@ std::vector<Trial> planSingleBranchB2B(const llvm::Module &, const Candidate &, 
                                        llvm::function_ref<int(const llvm::Instruction &)> intrinsicCost,
                                        llvm::function_ref<int(const llvm::Instruction &)> anchorCost,
                                        llvm::function_ref<int(llvm::Type *)> anchorSelectCost,
-                                       llvm::function_ref<int(llvm::Type *)> anchorPhiCost);
+                                       llvm::function_ref<int(llvm::Type *)> anchorPhiCost,
+                                       bool intersectMemoryMetadata = false);
 }

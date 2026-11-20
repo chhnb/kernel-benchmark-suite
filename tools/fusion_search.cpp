@@ -27,6 +27,7 @@
 #include "llvm/Support/TargetSelect.h"
 #include "llvm/Target/TargetMachine.h"
 #include "llvm/Transforms/Utils/Local.h"
+#include "llvm/Analysis/VectorUtils.h"
 #include "llvm/Transforms/Scalar.h"
 #include "llvm/Transforms/InstCombine/InstCombine.h"
 #include <array>
@@ -908,7 +909,36 @@ static bool foldGuardedReadBoundary(BasicBlock &entry, Value *trialSide, Dominat
 // Share identical trailing arithmetic by redirecting the short arm to
 // the existing anchor. All other edges, including the long arm's memory
 // paths, keep their original execution conditions.
-static bool compatibleB2BPrefix(Instruction &, Instruction &);
+static bool compatibleB2BPrefix(Instruction &, Instruction &, bool intersectMemoryMetadata);
+static void mergeSharedMemoryMetadata(Instruction &shared, const Instruction &right) {
+  if (!isa<LoadInst, StoreInst>(shared)) return;
+  SmallVector<std::pair<unsigned, MDNode *>, 8> leftMD;
+  shared.getAllMetadataOtherThanDebugLoc(leftMD);
+  for (auto [kind, left] : leftMD) {
+    auto *other = right.getMetadata(kind);
+    if (left == other) continue;
+    MDNode *common = nullptr;
+    if (other) {
+      switch (kind) {
+      case LLVMContext::MD_tbaa:
+        common = MDNode::getMostGenericTBAA(other, left);
+        break;
+      case LLVMContext::MD_alias_scope:
+        common = MDNode::getMostGenericAliasScope(other, left);
+        break;
+      case LLVMContext::MD_noalias:
+        common = MDNode::intersect(other, left);
+        break;
+      case LLVMContext::MD_access_group:
+        common = intersectAccessGroups(&shared, &right);
+        break;
+      }
+    }
+    shared.setMetadata(kind, common);
+  }
+  if (shared.getDebugLoc() != right.getDebugLoc())
+    shared.setDebugLoc(DebugLoc());
+}
 static Trial tryPairImpl(const Module&parent,const Candidate&c,unsigned version,CleanupMode mode,const LogicalRegionState *logical,bool nested,bool allowB2B,B2RStrategy b2rStrategy,Trial *boundaryFold,bool artifactB2B,const RegionAlignmentOptions *regionAlignment);
 // Public entry. The outermost call owns the side tag and removes it from every
 // IR it returns, so committed modules, debug dumps and hashes never carry it.
@@ -1336,6 +1366,8 @@ static Trial tryPairImpl(const Module&parent,const Candidate&c,unsigned version,
       else ++otherSelects;
     };
     if (regionAlignment->anchor) {
+      if (regionAlignment->intersectMemoryMetadata)
+        melder.onCloneShared = mergeSharedMemoryMetadata;
       melder.alignBlocks = [&](BasicBlock *left, BasicBlock *right,
                               const RegionMelder::BlockMap &mapping,
                               BasicBlock *leftExit, BasicBlock *rightExit) {
@@ -1345,8 +1377,9 @@ static Trial tryPairImpl(const Module&parent,const Candidate&c,unsigned version,
           ++missingPrices;
           return 1;
         };
-        auto compatible = [](Instruction &l, Instruction &r) {
-          return compatibleB2BPrefix(l, r) && InstructionMatch::match(&l, &r);
+        auto compatible = [&](Instruction &l, Instruction &r) {
+          return compatibleB2BPrefix(l, r, regionAlignment->intersectMemoryMetadata) &&
+                 InstructionMatch::match(&l, &r);
         };
         auto select = [&](Type *type) { return typedCost(type, false); };
         auto phi = [&](Type *type) { return typedCost(type, true); };
@@ -1625,7 +1658,8 @@ static int b2bWeight(const Instruction &inst,
   return fusionInstructionWeight(inst);
 }
 
-static bool compatibleB2BPrefix(Instruction &left, Instruction &right) {
+static bool compatibleB2BPrefix(Instruction &left, Instruction &right,
+                                bool intersectMemoryMetadata) {
     if (compatibleB2BArithmetic(left, right)) return true;
     if (isB2BPairableIntrinsic(left) && isB2BPairableIntrinsic(right)) {
       const auto &l = cast<CallInst>(left);
@@ -1650,6 +1684,7 @@ static bool compatibleB2BPrefix(Instruction &left, Instruction &right) {
     if (!simpleMemory(left) || !simpleMemory(right) ||
         !left.isSameOperationAs(&right))
       return false;
+    if (intersectMemoryMetadata) return true;
     SmallVector<std::pair<unsigned, MDNode *>, 4> lm, rm;
     left.getAllMetadataOtherThanDebugLoc(lm);
     right.getAllMetadataOtherThanDebugLoc(rm);
@@ -1657,11 +1692,12 @@ static bool compatibleB2BPrefix(Instruction &left, Instruction &right) {
 }
 
 static SmallVector<B2BMatch, 8> commonB2BPrefix(BasicBlock &left, BasicBlock &right,
-                                                BranchInst &split, DominatorTree &dt) {
+                                                BranchInst &split, DominatorTree &dt,
+                                                bool intersectMemoryMetadata) {
   SmallVector<B2BMatch, 8> result;
   DenseMap<Value *, Value *> earlier;
   auto l = left.begin(), r = right.begin();
-  while (compatibleB2BPrefix(*l, *r)) {
+  while (compatibleB2BPrefix(*l, *r, intersectMemoryMetadata)) {
     bool available = true;
     for (unsigned n = 0; n < l->getNumOperands(); ++n) {
       auto *lv = l->getOperand(n), *rv = r->getOperand(n);
@@ -1682,7 +1718,7 @@ static SmallVector<B2BMatch, 8> commonB2BPrefix(BasicBlock &left, BasicBlock &ri
 static void emitB2BSegments(BranchInst &split, BasicBlock &left,
                             BasicBlock &right, BasicBlock &join,
                             ArrayRef<AnchorMatch> matches,
-                            bool independentExits) {
+                            bool independentExits, bool intersectMemoryMetadata) {
   auto *function = split.getFunction();
   auto &context = function->getContext();
   SmallVector<Instruction *, 16> work[2];
@@ -1796,6 +1832,7 @@ static void emitB2BSegments(BranchInst &split, BasicBlock &left,
     auto *l = consume(0, match.left);
     auto *r = consume(1, match.right);
     auto *shared = l->clone();
+    if (intersectMemoryMetadata) mergeSharedMemoryMetadata(*shared, *r);
     for (unsigned n = 0; n < shared->getNumOperands(); ++n) {
       auto *lv = value(0, l->getOperand(n));
       auto *rv = value(1, r->getOperand(n ^ unsigned(match.swapped)));
@@ -1845,7 +1882,8 @@ std::vector<Trial> planSingleBranchB2B(const Module &parent, const Candidate &c,
                                        function_ref<int(const Instruction &)> intrinsicCost,
                                        function_ref<int(const Instruction &)> anchorCost,
                                        function_ref<int(Type *)> anchorSelectCost,
-                                       function_ref<int(Type *)> anchorPhiCost) {
+                                       function_ref<int(Type *)> anchorPhiCost,
+                                       bool intersectMemoryMetadata) {
   ProfileScope planningScope("b2b_plan_generate_clean_total");
   std::vector<Trial> trials;
   if (!usesDarmDCE(mode))
@@ -1990,7 +2028,10 @@ std::vector<Trial> planSingleBranchB2B(const Module &parent, const Candidate &c,
     if (cost >= 0) return cost;
     return f->getParent()->getDataLayout().getTypeSizeInBits(ty).getKnownMinValue() <= 32 ? 1 : 2;
   };
-  const auto safePrefix = commonB2BPrefix(*left, *right, *branch, dt);
+  const auto safePrefix = commonB2BPrefix(*left, *right, *branch, dt, intersectMemoryMetadata);
+  auto compatible = [&](Instruction &l, Instruction &r) {
+    return compatibleB2BPrefix(l, r, intersectMemoryMetadata);
+  };
   SmallVector<Layout, 2> mergeExits;
   auto addUnique = [&](auto &list, Layout layout) {
     if (llvm::any_of(list, [&](const Layout &old) {
@@ -2003,7 +2044,7 @@ std::vector<Trial> planSingleBranchB2B(const Module &parent, const Candidate &c,
   };
   for (bool pairTies : {false, true}) {
     auto plans = planB2BAnchors(segmentWork[0], segmentWork[1], *left, *right, join,
-                              pairTies, compatibleB2BPrefix, instructionCost, selectCost, phiCost);
+                              pairTies, compatible, instructionCost, selectCost, phiCost);
     for (const auto &plan : plans) {
       auto buildLayout = [&]() -> std::optional<Layout> {
         ArrayRef<AnchorMatch> front = plan.matches;
@@ -2100,7 +2141,7 @@ std::vector<Trial> planSingleBranchB2B(const Module &parent, const Candidate &c,
     if (segmented) {
       try {
         emitB2BSegments(*rawBranch, *rawLeft, *rawRight, *rawJoin, layout.segments,
-                        independentExits);
+                        independentExits, intersectMemoryMetadata);
       } catch (const std::runtime_error &error) {
         t.reason = error.what();
         trials.push_back(std::move(t));
@@ -2127,6 +2168,7 @@ std::vector<Trial> planSingleBranchB2B(const Module &parent, const Candidate &c,
         const bool swap = llvm::is_contained(layout.swappedBefore, item.index());
         auto *lc = cast<Instruction>(clone[l]), *rc = cast<Instruction>(clone[r]);
         auto *shared = lc->clone();
+        if (intersectMemoryMetadata) mergeSharedMemoryMetadata(*shared, *rc);
         for (unsigned n = 0; n < shared->getNumOperands(); ++n) {
           auto *lv = lc->getOperand(n), *rv = rc->getOperand(n ^ unsigned(swap));
           if (lv != rv) {

@@ -129,11 +129,11 @@ int main(int argc,char**argv){try{
  auto timingReport=[&](){json::Object phases;for(const auto &kv:phaseMilliseconds)phases[kv.first]=json::Object{{"milliseconds",kv.second},{"calls",phaseCalls[kv.first]}};return phases;};
 
  if(argc==2&&StringRef(argv[1])=="--help"){
-   outs()<<"usage: decision-greedy INPUT FUNCTION [TOOL_ROOT] NEW_OUTPUT [--b2b-strategy anchor|darm|darm-artifact] [--b2r-strategy darm|guarded] [--region-align darm|anchor] [--domain-schedule ordered] [--ir-snapshots full|compact] [--tti-quote-cache off|audit|on]\n";
+   outs()<<"usage: decision-greedy INPUT FUNCTION [TOOL_ROOT] NEW_OUTPUT [--b2b-strategy anchor|darm|darm-artifact] [--b2r-strategy darm|guarded] [--region-align darm|anchor] [--merge-metadata strict|intersect] [--domain-schedule ordered] [--ir-snapshots full|compact] [--tti-quote-cache off|audit|on]\n";
    outs()<<"Default schedule: ordered for whole-function trials (Auto Greedy v2).\n";
    return 0;
  }
- std::string b2bStrategy="anchor", b2rStrategy="darm", regionAlign="darm", quoteMode="on", snapshotMode;
+ std::string b2bStrategy="anchor", b2rStrategy="darm", regionAlign="darm", mergeMetadata="strict", quoteMode="on", snapshotMode;
  while (argc >= 3) {
    StringRef option(argv[argc-2]), value(argv[argc-1]);
    if(option == "--domain-schedule" && value == "ordered") { argc-=2;continue; }
@@ -143,17 +143,19 @@ int main(int argc,char**argv){try{
      b2rStrategy = value.str();
    else if (option == "--region-align" && (value == "darm" || value == "anchor"))
      regionAlign = value.str();
+   else if (option == "--merge-metadata" && (value == "strict" || value == "intersect"))
+     mergeMetadata = value.str();
    else if (option == "--tti-quote-cache" && (value == "off" || value == "audit" || value == "on"))
      quoteMode = value.str();
    else if (option == "--b2b-strategy" && (value == "darm" || value == "darm-artifact" || value == "anchor"))
      b2bStrategy = value.str();
-   else if (option == "--ir-snapshots" || option == "--domain-schedule" || option == "--b2r-strategy" || option == "--b2b-strategy" || option == "--region-align" || option == "--tti-quote-cache")
+   else if (option == "--ir-snapshots" || option == "--domain-schedule" || option == "--b2r-strategy" || option == "--b2b-strategy" || option == "--region-align" || option == "--merge-metadata" || option == "--tti-quote-cache")
      throw std::runtime_error("invalid value for " + option.str());
    else break;
    argc -= 2;
  }
  if(argc!=4&&argc!=5)
-   throw std::runtime_error("usage: decision-greedy INPUT FUNCTION [TOOL_ROOT] NEW_OUTPUT [--b2b-strategy anchor|darm|darm-artifact] [--b2r-strategy darm|guarded] [--region-align darm|anchor] [--domain-schedule ordered] [--ir-snapshots full|compact] [--tti-quote-cache off|audit|on]");
+   throw std::runtime_error("usage: decision-greedy INPUT FUNCTION [TOOL_ROOT] NEW_OUTPUT [--b2b-strategy anchor|darm|darm-artifact] [--b2r-strategy darm|guarded] [--region-align darm|anchor] [--merge-metadata strict|intersect] [--domain-schedule ordered] [--ir-snapshots full|compact] [--tti-quote-cache off|audit|on]");
  if(snapshotMode.empty())snapshotMode="compact";
  const bool implicitRoot=argc==4;
  std::string root;
@@ -425,6 +427,8 @@ int main(int argc,char**argv){try{
       trialArgs.insert(trialArgs.end(), {"--b2b-strategy", b2bStrategy, "--b2r-strategy", b2rStrategy});
       if (regionAlign == "anchor")
         trialArgs.insert(trialArgs.end(), {"--region-align", regionAlign});
+      if (mergeMetadata == "intersect")
+        trialArgs.insert(trialArgs.end(), {"--merge-metadata", mergeMetadata});
       // IDs locate a prior recipe; current planner facts certify its reuse.
       json::Array replayArgs;
       for(const auto &argument:trialArgs)replayArgs.push_back(argument);
