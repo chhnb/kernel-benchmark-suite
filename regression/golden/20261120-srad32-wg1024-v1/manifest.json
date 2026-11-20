@@ -1,0 +1,67 @@
+{
+  "source": "anchor-release-20261120",
+  "source_manifest": "regression/golden/20261120-anchor-release/manifest.json",
+  "compiler_flag": "--gpu-max-threads-per-block=1024",
+  "fixture": {
+    "block": [
+      32,
+      32,
+      1
+    ],
+    "size": [
+      256,
+      256
+    ],
+    "files": {
+      "S-ref.bin": "30eab8f9e642f5822c2fb955c5c2c3cfd899cfe3253ce6ecf6aedfbfd7d6d2a4",
+      "E-ref.bin": "4be1c42c345a5a71584ecfc0859c23d87011284d2f75c0b0c8cb8aa238f014da",
+      "W-ref.bin": "75d7755b6297c7c8c3a95bd49f6fe24dd541b6ec6c243e28fe8663db2e64fccc",
+      "input.txt": "c1f0df5f6678df45589297274269906b49fd926e03f88ee2f958b27857aa2b16",
+      "C-ref.bin": "ee8ce7059396d16a6795c7f68034c308e8a8c990a404b09ec31e998f99f2aee7",
+      "J.bin": "8588f16b7af91a0ced3709d496ea714a4cad7be7ab8a850191418b2778c2e840",
+      "zero.bin": "8a39d2abd3999ab73c34db2476849cddf303ce389b35826850f9a700589b4a90",
+      "N-ref.bin": "25a906629cfaa193f7bd30996e61b06c34d39bbe1f717c24548e4a47dc5536bc"
+    }
+  },
+  "roles": {
+    "baseline": {
+      "old_ir_sha256": "b0825b893b165dd4e82a34c7cfbe85e6d7e3226d9d28b33765d5521981af22ee",
+      "ir_sha256": "7f2d964e63c12f7773fa703ef6806115adf6b794b7253b40e3b963161a5b85f5",
+      "hsaco_sha256": "080421a67869991ffac44f1aa9f4084e8f94fdbb77b4da32ec60c31792ab2a91",
+      "verified": true,
+      "replaced_attribute_groups": 1,
+      "validation": {
+        "passed": true,
+        "launches": 1,
+        "timing": "event",
+        "graph_nodes": 0
+      }
+    },
+    "anchor": {
+      "old_ir_sha256": "3195a5d7dcea8d3345c2c0e855bf3ea73113f6d8e50b41e411f6257e63b63bb5",
+      "ir_sha256": "17f156216eab0e8442e1f0d49d48c8e5ee9b23fdffeb1c0f1055cb6cffcfeca9",
+      "hsaco_sha256": "d7a53d5860abb8177c7beefc47b54b8be0df858069db738ec8780e744e316e23",
+      "verified": true,
+      "replaced_attribute_groups": 1,
+      "validation": {
+        "passed": true,
+        "launches": 1,
+        "timing": "event",
+        "graph_nodes": 0
+      }
+    },
+    "darm": {
+      "old_ir_sha256": "18f51e6df53f7ab5e8082dbee7594e2ce61f42fe10410e36bcfa4a78bdade4f6",
+      "ir_sha256": "2649d90d8abfafe871600728672f50c53c2a4219f6cd3a49fac8545ea1ea9870",
+      "hsaco_sha256": "8611892dd7ad26394705eb7dd157cafb1c52f18899886babfe3ca548630d2381",
+      "verified": true,
+      "replaced_attribute_groups": 1,
+      "validation": {
+        "passed": true,
+        "launches": 1,
+        "timing": "event",
+        "graph_nodes": 0
+      }
+    }
+  }
+}
