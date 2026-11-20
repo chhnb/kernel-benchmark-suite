@@ -1,0 +1,252 @@
+[
+  {
+    "case": "CED",
+    "commit": 1,
+    "layout": "darm-R2R",
+    "same_ir": false,
+    "pairs": 27,
+    "affected_instructions": 0,
+    "findings": {}
+  },
+  {
+    "case": "HLLD",
+    "commit": 1,
+    "layout": "darm-B2R",
+    "same_ir": true,
+    "pairs": 33,
+    "affected_instructions": 0,
+    "findings": {}
+  },
+  {
+    "case": "HLLD",
+    "commit": 3,
+    "layout": "darm-R2B",
+    "same_ir": true,
+    "pairs": 49,
+    "affected_instructions": 1,
+    "findings": {
+      "metadata fusion.logical.arm br": 1
+    }
+  },
+  {
+    "case": "HLLD",
+    "commit": 4,
+    "layout": "darm-R2B",
+    "same_ir": true,
+    "pairs": 52,
+    "affected_instructions": 1,
+    "findings": {
+      "metadata fusion.logical.arm br": 1
+    }
+  },
+  {
+    "case": "Landau",
+    "commit": 7,
+    "layout": "darm-R2R",
+    "same_ir": true,
+    "pairs": 114,
+    "affected_instructions": 0,
+    "findings": {}
+  },
+  {
+    "case": "Landau",
+    "commit": 8,
+    "layout": "darm-R2R",
+    "same_ir": true,
+    "pairs": 114,
+    "affected_instructions": 0,
+    "findings": {}
+  },
+  {
+    "case": "Landau",
+    "commit": 9,
+    "layout": "darm-R2R",
+    "same_ir": true,
+    "pairs": 114,
+    "affected_instructions": 0,
+    "findings": {}
+  },
+  {
+    "case": "Landau",
+    "commit": 10,
+    "layout": "darm-R2R",
+    "same_ir": true,
+    "pairs": 98,
+    "affected_instructions": 0,
+    "findings": {}
+  },
+  {
+    "case": "Landau",
+    "commit": 17,
+    "layout": "darm-R2R",
+    "same_ir": true,
+    "pairs": 117,
+    "affected_instructions": 0,
+    "findings": {}
+  },
+  {
+    "case": "MapAiry",
+    "commit": 5,
+    "layout": "darm-R2R",
+    "same_ir": true,
+    "pairs": 114,
+    "affected_instructions": 0,
+    "findings": {}
+  },
+  {
+    "case": "MapAiry",
+    "commit": 6,
+    "layout": "darm-R2R",
+    "same_ir": true,
+    "pairs": 114,
+    "affected_instructions": 0,
+    "findings": {}
+  },
+  {
+    "case": "MapAiry",
+    "commit": 7,
+    "layout": "darm-R2R",
+    "same_ir": true,
+    "pairs": 98,
+    "affected_instructions": 0,
+    "findings": {}
+  },
+  {
+    "case": "MapAiry",
+    "commit": 12,
+    "layout": "darm-R2B",
+    "same_ir": true,
+    "pairs": 4,
+    "affected_instructions": 0,
+    "findings": {}
+  },
+  {
+    "case": "MapAiry",
+    "commit": 14,
+    "layout": "darm-R2B",
+    "same_ir": true,
+    "pairs": 4,
+    "affected_instructions": 0,
+    "findings": {}
+  },
+  {
+    "case": "MapAiry",
+    "commit": 16,
+    "layout": "darm-R2B",
+    "same_ir": true,
+    "pairs": 4,
+    "affected_instructions": 0,
+    "findings": {}
+  },
+  {
+    "case": "MapAiry",
+    "commit": 18,
+    "layout": "darm-R2B",
+    "same_ir": true,
+    "pairs": 4,
+    "affected_instructions": 0,
+    "findings": {}
+  },
+  {
+    "case": "MapAiry",
+    "commit": 20,
+    "layout": "darm-R2B",
+    "same_ir": true,
+    "pairs": 4,
+    "affected_instructions": 0,
+    "findings": {}
+  },
+  {
+    "case": "MapAiry",
+    "commit": 22,
+    "layout": "darm-R2B",
+    "same_ir": true,
+    "pairs": 4,
+    "affected_instructions": 0,
+    "findings": {}
+  },
+  {
+    "case": "MapAiry",
+    "commit": 24,
+    "layout": "darm-R2R",
+    "same_ir": true,
+    "pairs": 8,
+    "affected_instructions": 0,
+    "findings": {}
+  },
+  {
+    "case": "MapAiry",
+    "commit": 26,
+    "layout": "darm-R2R",
+    "same_ir": true,
+    "pairs": 117,
+    "affected_instructions": 0,
+    "findings": {}
+  },
+  {
+    "case": "MapAiry",
+    "commit": 29,
+    "layout": "darm-R2R",
+    "same_ir": true,
+    "pairs": 8,
+    "affected_instructions": 0,
+    "findings": {}
+  },
+  {
+    "case": "NQU64",
+    "commit": 1,
+    "layout": "darm-B2R",
+    "same_ir": true,
+    "pairs": 7,
+    "affected_instructions": 0,
+    "findings": {}
+  },
+  {
+    "case": "TPACF",
+    "commit": 1,
+    "layout": "darm-B2R",
+    "same_ir": true,
+    "pairs": 64,
+    "affected_instructions": 2,
+    "findings": {
+      "flag nsw shl": 2,
+      "flag nuw shl": 2
+    }
+  },
+  {
+    "case": "TPACF",
+    "commit": 9,
+    "layout": "darm-B2R",
+    "same_ir": true,
+    "pairs": 6,
+    "affected_instructions": 0,
+    "findings": {}
+  },
+  {
+    "case": "tigre",
+    "commit": 1,
+    "layout": "darm-R2R",
+    "same_ir": true,
+    "pairs": 9,
+    "affected_instructions": 0,
+    "findings": {}
+  },
+  {
+    "case": "tigre",
+    "commit": 2,
+    "layout": "darm-R2R",
+    "same_ir": true,
+    "pairs": 9,
+    "affected_instructions": 0,
+    "findings": {}
+  },
+  {
+    "case": "tigre",
+    "commit": 3,
+    "layout": "darm-R2R",
+    "same_ir": true,
+    "pairs": 9,
+    "affected_instructions": 0,
+    "findings": {}
+  }
+]

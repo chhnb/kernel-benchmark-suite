@@ -1,0 +1,326 @@
+{
+  "greedy": {
+    "CED": {
+      "strict": {
+        "ir_sha": "595f62ff52ffe7c360bb13f38fff382caa799e3bce192d654d0c16fbf99be55b",
+        "binary_sha": "a213f9bb1677d2079917ec3398dcb902cc5eabda8dd04353c8aa8799bfd5a93b",
+        "commits": 5,
+        "tti": 280,
+        "seconds": 0.478468537
+      },
+      "intersect": {
+        "ir_sha": "595f62ff52ffe7c360bb13f38fff382caa799e3bce192d654d0c16fbf99be55b",
+        "binary_sha": "a213f9bb1677d2079917ec3398dcb902cc5eabda8dd04353c8aa8799bfd5a93b",
+        "commits": 5,
+        "tti": 280,
+        "seconds": 0.485898665
+      },
+      "first_divergence": null
+    },
+    "HLLD": {
+      "strict": {
+        "ir_sha": "78237b59abce8dd50600a3faec059cae9818bf8c08f4f1e070ec0a19c97134aa",
+        "binary_sha": "3aa2cad420017f246aa3f3f148eb23baa0d834dd92611c3bf68196393ceaf9a3",
+        "commits": 5,
+        "tti": 1696,
+        "seconds": 0.912867585
+      },
+      "intersect": {
+        "ir_sha": "78237b59abce8dd50600a3faec059cae9818bf8c08f4f1e070ec0a19c97134aa",
+        "binary_sha": "3aa2cad420017f246aa3f3f148eb23baa0d834dd92611c3bf68196393ceaf9a3",
+        "commits": 5,
+        "tti": 1696,
+        "seconds": 0.886389085
+      },
+      "first_divergence": null
+    },
+    "HiPIMS-George": {
+      "strict": {
+        "ir_sha": "8359aaaa1de0ccdb7d757f4b321af809cc0b72b6df14f9274f2d370de1e076cd",
+        "binary_sha": "5775bc0c9c040ba7b55d84bd29d0719342a2f38043dff855fea723a9c5510b3b",
+        "commits": 4,
+        "tti": 5572,
+        "seconds": 22.312592337999998
+      },
+      "intersect": {
+        "ir_sha": "8359aaaa1de0ccdb7d757f4b321af809cc0b72b6df14f9274f2d370de1e076cd",
+        "binary_sha": "5775bc0c9c040ba7b55d84bd29d0719342a2f38043dff855fea723a9c5510b3b",
+        "commits": 4,
+        "tti": 5572,
+        "seconds": 22.46014232
+      },
+      "first_divergence": null
+    },
+    "Landau": {
+      "strict": {
+        "ir_sha": "e7617ca5482ee00c0c05cab548e7d3dd6f4134041b362fee354cf4e76c1b0de7",
+        "binary_sha": "2c49a3bcb7798476672355fa5c579a6c917d3ad84668f8d302b8e065ae21d669",
+        "commits": 20,
+        "tti": 1708,
+        "seconds": 16.191848936
+      },
+      "intersect": {
+        "ir_sha": "e7617ca5482ee00c0c05cab548e7d3dd6f4134041b362fee354cf4e76c1b0de7",
+        "binary_sha": "2c49a3bcb7798476672355fa5c579a6c917d3ad84668f8d302b8e065ae21d669",
+        "commits": 20,
+        "tti": 1708,
+        "seconds": 15.612963621
+      },
+      "first_divergence": null
+    },
+    "MS32": {
+      "strict": {
+        "ir_sha": "077db63bbb806621cd55dde9359950f6fda9fe790d81646bc0c795fee160f2b5",
+        "binary_sha": "1021292447be6660cf0366d7f785167c629f2b384a386f146568fa20eb2eaa9f",
+        "commits": 1,
+        "tti": 212,
+        "seconds": 0.324522211
+      },
+      "intersect": {
+        "ir_sha": "077db63bbb806621cd55dde9359950f6fda9fe790d81646bc0c795fee160f2b5",
+        "binary_sha": "1021292447be6660cf0366d7f785167c629f2b384a386f146568fa20eb2eaa9f",
+        "commits": 1,
+        "tti": 212,
+        "seconds": 0.328719217
+      },
+      "first_divergence": null
+    },
+    "MapAiry": {
+      "strict": {
+        "ir_sha": "860a6ffaffc03080484e40ad417795f70a3cc6e3b8f5455c657bd9d86cb8cd70",
+        "binary_sha": "51c13dcce91306bb0c84aae7a3e4a1facc70d448d718483fbdb685f1fb48918d",
+        "commits": 29,
+        "tti": 4099,
+        "seconds": 30.077029995
+      },
+      "intersect": {
+        "ir_sha": "860a6ffaffc03080484e40ad417795f70a3cc6e3b8f5455c657bd9d86cb8cd70",
+        "binary_sha": "51c13dcce91306bb0c84aae7a3e4a1facc70d448d718483fbdb685f1fb48918d",
+        "commits": 29,
+        "tti": 4099,
+        "seconds": 30.814717657000003
+      },
+      "first_divergence": null
+    },
+    "NQU64": {
+      "strict": {
+        "ir_sha": "57d5c232299189c2b537ed51b2fe8de04dfce37d9ff2872c849151c743c282d4",
+        "binary_sha": "42b2bda66286d3c3b437dd6fe78ecba602f6718f4f75659fe101bb5dc2c6865c",
+        "commits": 1,
+        "tti": 282,
+        "seconds": 0.190155662
+      },
+      "intersect": {
+        "ir_sha": "57d5c232299189c2b537ed51b2fe8de04dfce37d9ff2872c849151c743c282d4",
+        "binary_sha": "42b2bda66286d3c3b437dd6fe78ecba602f6718f4f75659fe101bb5dc2c6865c",
+        "commits": 1,
+        "tti": 282,
+        "seconds": 0.206271921
+      },
+      "first_divergence": null
+    },
+    "PCM32": {
+      "strict": {
+        "ir_sha": "b35648e90ca12b9b527363e39f19352a47987ae07582826575f06d5922b290a7",
+        "binary_sha": "a0a8df33ee604bc77519a3887af2c8663afa6c7f0cd609dd392d136a815ec116",
+        "commits": 17,
+        "tti": 1138,
+        "seconds": 3.434006103
+      },
+      "intersect": {
+        "ir_sha": "b35648e90ca12b9b527363e39f19352a47987ae07582826575f06d5922b290a7",
+        "binary_sha": "a0a8df33ee604bc77519a3887af2c8663afa6c7f0cd609dd392d136a815ec116",
+        "commits": 17,
+        "tti": 1138,
+        "seconds": 3.513148975
+      },
+      "first_divergence": null
+    },
+    "SRAD-stage2": {
+      "strict": {
+        "ir_sha": "1fa2ae82a945b3d922eefab4f0b69e652f8e8f1177363e360500a1fa973278a1",
+        "binary_sha": "67e86ccd15676d38fb247efa7f161ac6f0cb42dc6a040973de329a86763f296a",
+        "commits": 2,
+        "tti": 210,
+        "seconds": 0.259500389
+      },
+      "intersect": {
+        "ir_sha": "1fa2ae82a945b3d922eefab4f0b69e652f8e8f1177363e360500a1fa973278a1",
+        "binary_sha": "67e86ccd15676d38fb247efa7f161ac6f0cb42dc6a040973de329a86763f296a",
+        "commits": 2,
+        "tti": 210,
+        "seconds": 0.246506312
+      },
+      "first_divergence": null
+    },
+    "SRAD16": {
+      "strict": {
+        "ir_sha": "8877d8d651d30f090848af6440690063a478eed6cf42ea257a418fed9d1c3591",
+        "binary_sha": "2a6a3d958d37e110a4ca5107ca9346c31aa7e8393524dd4b95de2df56385e16e",
+        "commits": 4,
+        "tti": 452,
+        "seconds": 0.79206488
+      },
+      "intersect": {
+        "ir_sha": "8877d8d651d30f090848af6440690063a478eed6cf42ea257a418fed9d1c3591",
+        "binary_sha": "2a6a3d958d37e110a4ca5107ca9346c31aa7e8393524dd4b95de2df56385e16e",
+        "commits": 4,
+        "tti": 452,
+        "seconds": 0.773223047
+      },
+      "first_divergence": null
+    },
+    "SRAD32": {
+      "strict": {
+        "ir_sha": "3195a5d7dcea8d3345c2c0e855bf3ea73113f6d8e50b41e411f6257e63b63bb5",
+        "binary_sha": "6d603103809374c6fe65a05a39dd3fb5ea2b190cf2944ba4495b57fe391041e6",
+        "commits": 4,
+        "tti": 452,
+        "seconds": 0.794354218
+      },
+      "intersect": {
+        "ir_sha": "3195a5d7dcea8d3345c2c0e855bf3ea73113f6d8e50b41e411f6257e63b63bb5",
+        "binary_sha": "6d603103809374c6fe65a05a39dd3fb5ea2b190cf2944ba4495b57fe391041e6",
+        "commits": 4,
+        "tti": 452,
+        "seconds": 0.787697434
+      },
+      "first_divergence": null
+    },
+    "SW2D": {
+      "strict": {
+        "ir_sha": "8468fbe02c5276b65129a84a4d84ea2b36c887e2088341c9475a72609ec9ef5e",
+        "binary_sha": "cd0e00d276836e765fe1dba400bfab62312a79121226fcc8ef4e4d7fa95b3518",
+        "commits": 0,
+        "tti": 1926,
+        "seconds": 0.757542505
+      },
+      "intersect": {
+        "ir_sha": "8468fbe02c5276b65129a84a4d84ea2b36c887e2088341c9475a72609ec9ef5e",
+        "binary_sha": "cd0e00d276836e765fe1dba400bfab62312a79121226fcc8ef4e4d7fa95b3518",
+        "commits": 0,
+        "tti": 1926,
+        "seconds": 0.752882201
+      },
+      "first_divergence": null
+    },
+    "SasPoint5": {
+      "strict": {
+        "ir_sha": "59ccd0e14e265309af938399da0f52fcfd4550c8b8e9379d7b40fcd8840627e3",
+        "binary_sha": "d79a4f5f5b6cff913644f66bba6a958b3541a810ffe83a8de5f9ababbe43456d",
+        "commits": 8,
+        "tti": 491,
+        "seconds": 1.9566588919999999
+      },
+      "intersect": {
+        "ir_sha": "59ccd0e14e265309af938399da0f52fcfd4550c8b8e9379d7b40fcd8840627e3",
+        "binary_sha": "d79a4f5f5b6cff913644f66bba6a958b3541a810ffe83a8de5f9ababbe43456d",
+        "commits": 8,
+        "tti": 491,
+        "seconds": 2.0238025889999998
+      },
+      "first_divergence": null
+    },
+    "TPACF": {
+      "strict": {
+        "ir_sha": "0c2d53c8572879a010939a4c0db4b944878469a43ac855610af5df77fc262266",
+        "binary_sha": "7b805ab747a196bae398d1df12d58ba34fb9f2f2dd4fbc29ec5b2c6daa408986",
+        "commits": 12,
+        "tti": 483,
+        "seconds": 17.470913291000002
+      },
+      "intersect": {
+        "ir_sha": "0c2d53c8572879a010939a4c0db4b944878469a43ac855610af5df77fc262266",
+        "binary_sha": "7b805ab747a196bae398d1df12d58ba34fb9f2f2dd4fbc29ec5b2c6daa408986",
+        "commits": 12,
+        "tti": 483,
+        "seconds": 16.994600006
+      },
+      "first_divergence": null
+    },
+    "tigre": {
+      "strict": {
+        "ir_sha": "420e5b216b5a97291a2cd89414acee8a298a57b9e5c351660196468a3783cb48",
+        "binary_sha": "02452bc591290cb318b1ed9d876a907a56fd849fa9094e4efd74a76892e83a9a",
+        "commits": 6,
+        "tti": 946,
+        "seconds": 1.107464102
+      },
+      "intersect": {
+        "ir_sha": "420e5b216b5a97291a2cd89414acee8a298a57b9e5c351660196468a3783cb48",
+        "binary_sha": "02452bc591290cb318b1ed9d876a907a56fd849fa9094e4efd74a76892e83a9a",
+        "commits": 6,
+        "tti": 946,
+        "seconds": 1.1057195819999999
+      },
+      "first_divergence": null
+    },
+    "vllm": {
+      "strict": {
+        "ir_sha": "36a74e727eaa9f71deeff97510180882c19b6269fcabbd59e2322a7f2b355135",
+        "binary_sha": "9aa97bca3906c0d31452e4594b5fc17c535bce25ba5e7e4df92e5ff6841c5fa6",
+        "commits": 224,
+        "tti": 2619,
+        "seconds": 108.66940516300001
+      },
+      "intersect": {
+        "ir_sha": "36a74e727eaa9f71deeff97510180882c19b6269fcabbd59e2322a7f2b355135",
+        "binary_sha": "9aa97bca3906c0d31452e4594b5fc17c535bce25ba5e7e4df92e5ff6841c5fa6",
+        "commits": 224,
+        "tti": 2619,
+        "seconds": 103.561319169
+      },
+      "first_divergence": null
+    }
+  },
+  "gpu": {
+    "NQU64": {
+      "status": "ir_alias"
+    },
+    "MS32": {
+      "status": "ir_alias"
+    },
+    "vllm": {
+      "status": "ir_alias"
+    },
+    "MapAiry": {
+      "status": "ir_alias"
+    },
+    "TPACF": {
+      "status": "ir_alias"
+    },
+    "SW2D": {
+      "status": "ir_alias"
+    },
+    "HiPIMS-George": {
+      "status": "ir_alias"
+    },
+    "CED": {
+      "status": "ir_alias"
+    },
+    "HLLD": {
+      "status": "ir_alias"
+    },
+    "Landau": {
+      "status": "ir_alias"
+    },
+    "PCM32": {
+      "status": "ir_alias"
+    },
+    "SRAD-stage2": {
+      "status": "ir_alias"
+    },
+    "SRAD16": {
+      "status": "ir_alias"
+    },
+    "SRAD32": {
+      "status": "ir_alias"
+    },
+    "SasPoint5": {
+      "status": "ir_alias"
+    },
+    "tigre": {
+      "status": "ir_alias"
+    }
+  }
+}
