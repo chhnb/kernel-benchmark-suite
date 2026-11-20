@@ -1,14 +1,15 @@
-# Anchor 发布准备
+# Anchor 发布
 
-范围为 `feature/anchor-default`。Auto Greedy 默认 B2B 为冻结的 anchor V2+P。DP1 已删除，`darm` 和 `darm-artifact` 保留。
+Auto Greedy 默认 B2B 为冻结的 anchor V2+P。DP1 已删除，`darm` 仍可显式选用。
+`darm-artifact` 是论文中“原版 DARM”的对照基线，仅在显式选择时运行。
 `pre-dp1-removal` 固定在 `97227b3`，可构建完整 DP1 和原版 DARM 对照，也可用
-`git checkout pre-dp1-removal -- <path>` 恢复相应源码。发布 tag 待确认。
+`git checkout pre-dp1-removal -- <path>` 恢复相应源码。发布 tag 为 `anchor-release-20261120`。
 
 ## 三层验收
 
 1. **正确性，必须通过。** 完整校验所有可运行的冻结 GPU 输出及 guard。核对 LLVM verifier、已知测试状态和从源码重建的最终 IR／代码对象。SasPoint5 和 SRAD stage2 1024 的输出校验通过，性能计时见排除表。
 2. **相对上一版 DP1，必须通过或有记录的例外。** 使用存档的 DP1（A，`4a91a50`）与冻结 anchor 性能数据。Landau coherent 是唯一例外。GPU case 有逐字节相同的最终 HSACO 时可登记为字节别名。
-3. **相对不融合，仅报告。** 下表的 baseline 是同输入的未融合版本。比值小于 1 表示 anchor 更快。SRAD16／32 stage1 只进入正确性与报告层。
+3. **相对不融合，仅报告。** 下表的 baseline 是同输入的未融合版本。比值小于 1 表示 anchor 更快。计时不稳定的用例在排除表中保留正确性结果。
 
 GPU 使用已固定的规则。每批计划 12 轮，轮内交错 baseline、A、N。所有完整轮次的 N/A 都 ≤1.02 时通过，都 >1.02 时不通过。混合结果使用 10,000 次配对中位数 bootstrap。95% 区间上限 ≤1.02 为通过，下限 >1.02 为不通过，其余为不确定。角色相对 baseline 与 N/A 的跨度都记录，判定明确时跨度不改变结论。输出校验失败立即停止。选择计时方式时，同二进制 A/A 的中位数须在 1±1% 内、跨度 ≤3%，按已冻结的方式选择顺序执行。独立进程入口见 [GPU 判定脚本](../regression/measure_anchor_gpu.py)，逐轮中位数和归档来源见 [GPU 样本](../regression/golden/20261120-anchor-release/gpu-paired.json)。
 
@@ -33,11 +34,10 @@ GPU 使用已固定的规则。每批计划 12 轮，轮内交错 baseline、A�
 | TPACF | 通过 | 0.94792 | [0.94701, 0.94908] | 通过 | 1.19971 |
 | SRAD stage2 256 | 通过 | 0.99528 | [0.98122, 1.00943] | 通过 | 1.00435 |
 | HiPIMS-George | 通过 | 1.00002 | [1.00000, 1.00072] | 通过 | 1.00000 |
-| SRAD16 stage1 | 通过 | — | — | 仅报告 | 1.00709 |
 | SRAD32 stage1 | 兼容构建通过，冻结件仅核对字节 | — | — | 仅在报告层 | — |
 
-TIGRE 使用与当前 N 字节相同的存档 A 和同轮 baseline；该值不是 v3 实验二进制 N 的比值。NQU64 同样是 A 的字节别名，新补的 12 轮只用于相对 baseline 报告，15 皇后的解数为 2,279,184，存档含全部 GPU 分块输出。PCM32 的比例来自采用分块 pinned-host 回读的存档 12 轮，本轮独立核对了新版本的完整输出。HLLD 使用旧同批 N/A 判定。进程内逐状态复测相对不融合为 1.152，记录在区域审计中。Landau coherent 的逐状态批次相对不融合为 1.021–1.027。
-SRAD16 的报告批次 anchor/baseline 跨度为 54.84%。SRAD32 冻结件的工作组上限为 256，原内核需要 32×32，baseline 首次启动即被拒绝。另行只调整 launch 上限的诊断构建通过 baseline 和 anchor 的五路 CPU 参考校验。冻结 IR 和 HSACO 保持一致，未使用诊断构建给出性能比。
+TIGRE 的相对 baseline 比值来自与当前 N 字节相同的存档 A 及同轮 baseline。NQU64 同样是 A 的字节别名，新补的 12 轮只用于相对 baseline 报告，15 皇后的解数为 2,279,184，存档含全部 GPU 分块输出。PCM32 的比例来自采用分块 pinned-host 回读的存档 12 轮，本轮独立核对了新版本的完整输出。HLLD 使用旧同批 N/A 判定。进程内逐状态复测相对不融合为 1.152，记录在区域审计中。Landau coherent 的逐状态批次相对不融合为 1.021–1.027。
+SRAD32 stage1 的冻结件启动限制和诊断结果见[已知问题](KNOWN_ISSUES.md#anchor-默认版本的性能与测量状态)。
 
 ## 性能排除
 
@@ -47,20 +47,21 @@ SRAD16 的报告批次 anchor/baseline 跨度为 54.84%。SRAD32 冻结件的工
 | SasPoint5 coherent-blocks | 轮间波动 | 1.00000／4.40% | 0.98077／4.82% |
 | SasPoint5 uniform-01 | 轮间波动 | 1.00000／5.48% | 1.00000／4.99% |
 | SRAD stage2 1024 | 两种方式均不通过 A/A | 0.99282／11.32% | 0.92221／179.14% |
+| SRAD16 stage1 | 计时不稳定（报告批次跨度 54.84%），只报告正确性 | — | — |
 | CUDAflow | 无法报价设备调用及 inline asm | — | — |
 | HiPIMS-HLLC | 未报价的 opaque `__internal_accurate_pow` 调用 | — | — |
 | Reentry | 归档 IR 使用 LLVM12 不接受的 opaque pointer，LLVM12 设备构建也未通过 | — | — |
 
-SasPoint5 和 SRAD stage2 1024 可报告正确性，没有批准的 anchor/baseline 性能比。CUDAflow、HiPIMS-HLLC、Reentry 没有可纳入本清单的 Greedy 产物。
+SasPoint5、SRAD stage2 1024 和 SRAD16 stage1 均通过完整输出校验，只报告正确性。CUDAflow、HiPIMS-HLLC、Reentry 没有可纳入本清单的 Greedy 产物。
 
 ## 冻结材料与重建
 
 [冻结 manifest](../regression/golden/20261120-anchor-release/manifest.json) 包含 16 个 IR 用例的输入、anchor／DP1／DARM 参考及 SHA-256。随清单提交的压缩归档含这些 IR 和机器码。GPU 部分固定输入和参考输出的版本、路径和 SHA-256。大体积 GPU 数据保留在 manifest 指向的 EPYC 归档上。SRAD16／32 报告使用新增 256×256 的固定输入和五输出 CPU 参考，种子为 20261120。原 vLLM 和 TIGRE 冻结版本继续保留，[Map-Airy 的 anchor 参考](../regression/golden/20261120-mapairy-anchor-gfx906-v1/manifest.json)继续使用。
 
-在 EPYC 上从干净源码运行下列命令。外部工具及路径由 manifest 固定。正式发布时可用批准后的发布 tag 作为 `source_ref`。历史对照用 `pre-dp1-removal`，本次候选源码用 `8d380af`。
+在 EPYC 上从干净源码运行下列命令。外部工具及路径由 manifest 固定。发布重建用 `anchor-release-20261120`。历史对照用 `pre-dp1-removal`。
 
 ```sh
-source_ref=8d380af
+source_ref=anchor-release-20261120
 release_repo="$PWD"
 mkdir -p /path/to/clean-anchor-source
 git archive "$source_ref" | tar -xf - -C /path/to/clean-anchor-source

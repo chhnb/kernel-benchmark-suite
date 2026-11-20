@@ -1,6 +1,8 @@
 # 已知问题与优先级
 
-截至2026-11-10。已解决的Map-Airy回退与仍未解决的通用问题分开记录，不将历史失败抹掉。
+本文先保留 2026-11-10 的问题快照，再列出本次发布的有效问题。
+
+## 2026-11-10 问题快照
 
 | 优先级 | 问题 | 当前证据/影响 | 下一步与完成标准 |
 |---|---|---|---|
@@ -19,7 +21,7 @@
 | P2 | IR/trial数据膨胀 | experiments约8.2GB、work约2.5GB、build约2.3GB；很多拒绝trial保留全IR | 支持摘要默认、选中/失败诊断按需保留；先确认再生链和依赖后清理 |
 | P2 | 统计与回归范围有限 | 2%是工程门槛非显著性检验；Map连续分块慢；SRAD部分批次波动 | 保留输入敏感反例、原始样本、漂移信息，不只发布成功case |
 
-## 各case仍缺什么
+### 2026-11-10 各 case 的待补项
 
 - vLLM：随机数据日常回归已完成；仍是HIP软件移植，补原始DARM同批对照与完整source→baseline复现。
 - Map-Airy：本次默认边界修复后混合回归24.64 μs通过；连续分块退化仍存在，跨层级收益评分尚未解决。
@@ -29,9 +31,8 @@
 - HLLC：23个有效候选均负的最新prepared baseline，对应GPU比较尚未完成。
 - Cholla/Reentry：当前复杂结构/副作用支持范围有限，尚无新路径已确认GPU收益。
 
-## HLLD 和 NQU64 的 uniform-wave 回归
+## 历史 NQU64 uniform-wave 回归
 
-- HLLD 的 65,536 单元历史输入上，当前 A（`4a91a50` 默认产物）比未融合版慢约 6.9%。[逐次提交消融](../regression/records/hlld-regression-bisect-20261119.md)的五轮部分样本显示，主要退化来自第 3 次提交 `darm-R2B`，轮中位耗时从 59.839 µs 升至 68.320 µs（+14.17%）。两种 uniform 情形下，估计成本分别增加 133 和 29。本阶段只记录，留给后续的 uniform-wave 损失上限工作。
 - NQU64 的 DP2 第 3 次融合属于同一类问题。该次 B2B 的总 TTI 从 275 降至 270，GPU 耗时却增加 4.46%，原本单侧的两条运算扩展到整个到达分支的活动 lane。历史分析可用 `git show 5959ee1:regression/records/nqu-dp2-analysis-20261115.md` 查阅。
 
 ## 已解决但仍保留证据
@@ -43,11 +44,17 @@ vLLM/Map-Airy输入已改为运行时生成；随机输入不纳入Git。旧Qwen
 
 ## Anchor 默认版本的性能与测量状态
 
-- **HLLD** · `pending-regression`。相对不融合慢约 7%–15%（历史 DP1 约 7%，anchor 的独立进程批次约 9%，本进程逐状态批次约 15%）。第 3 次带复制的 R2B 是主要台阶，uniform gain 为 −133／−29，第 4 次 R2B 又增加约 3.5%。后续用稳健接受规则限制单侧波前的损失。
-- **Landau coherent** · anchor 比 DP1 慢 4.4%，比不融合慢约 2%–6%。逐状态定位到第 17 次 R2R，uniform gain 为 −63／−59。后续用稳健接受规则约束单侧退化。这是发布第二层门槛的唯一性能例外。
-- **TPACF** · anchor 比不融合慢约 20%，DP1 慢约 27%。第 2、3 次 B2B 合并了条件，同时 SGPR spill 槽从 34 增至 52，`v_readlane` 从 34 条增至 276 条。后续用编译期 spill 信息做静态提交检查。
-- SasPoint5 与 SRAD stage2 1024×1024 的 A/A 轮间不稳定，按既定规则无法判定性能。SRAD stage2 256×256 的历史判定通过。
+| 问题 | 现象 | 定位 | 原因 | 后续计划 |
+| --- | --- | --- | --- | --- |
+| HLLD · `pending-regression` | 相对不融合慢约 7%–15%。历史 DP1 约 7%，anchor 独立进程约 9%，进程内逐状态批次约 15% | 第 3 次带复制的 R2B 是主要台阶，第 4 次 R2B 再增加约 3.5% | 第 3 次提交的两侧 uniform gain 为 −133／−29，受影响的单侧波前增加工作量 | 用稳健接受规则限制单侧波前损失 |
+| Landau coherent | anchor 比 DP1 慢 4.4%，比不融合慢约 2%–6%。这是发布第二层门槛的唯一例外 | 第 17 次 R2R | 两侧 uniform gain 为 −63／−59，逐状态计时在同一步出现退化 | 用稳健接受规则约束单侧退化 |
+| TPACF | anchor 比不融合慢约 20%，DP1 慢约 27% | 第 2、3 次 B2B | 条件合并后，SGPR spill 槽从 34 增至 52，`v_readlane` 从 34 条增至 276 条 | 用编译期 spill 信息做静态提交检查 |
+| SRAD32 stage1 冻结件 | baseline 也无法启动 | 冻结 code object 的工作组上限为 256，kernel 需要 1,024 线程 | 冻结时的构建参数设置有误，与融合策略无关。仅调整 launch 上限的诊断构建已通过 baseline 和 anchor 的五路 CPU 参考校验 | 用正确的 launch 上限另建冻结版本，保留旧版本 |
+| SasPoint5、SRAD stage2 1024 | 完整输出通过，性能不可判定 | 两种候选计时方式的 A/A 对照均未达到 case 的稳定性要求 | 同一二进制也会出现轮间波动，硬件层原因尚未确认 | 保留 A/A 原始数据，后续用通过稳定性门槛的方式复测 |
+| SRAD16 stage1 | 完整输出通过，计时不稳定 | 报告批次的 anchor/baseline 跨度为 54.84% | 批次轮间波动较大，根因尚未确认 | 发布只报告正确性，后续用通过稳定性门槛的方式复测 |
 
 实测和输入对应关系见 [anchor 留出记录](../regression/records/b2b-anchor-heldout-20261120.md)。
 
 逐状态计时、提交及机器码证据见[区域融合审计](../regression/records/region-fusion-audit-20261120.md)。
+
+SRAD32 的冻结件和诊断构建见[重建核验记录](../regression/records/anchor-release-rebuild-20261120.md)。
