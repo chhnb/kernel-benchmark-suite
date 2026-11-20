@@ -4,6 +4,8 @@
 #include "ordered_arms.h"
 #include "llvm/Analysis/PostDominators.h"
 #include "decision_checkpoint.h"
+#include "llvm24_scorer.h"
+#include "fusion_cleanup_config.h"
 #include "llvm/IRReader/IRReader.h"
 #include "llvm/IR/Verifier.h"
 #include "llvm/IR/Instructions.h"
@@ -15,6 +17,7 @@
 #include "llvm/Support/Program.h"
 #include "llvm/Support/Path.h"
 #include "llvm/Support/FormatVariadic.h"
+#include <iterator>
 #include <set>
 #include <chrono>
 #include <cstdlib>
@@ -71,7 +74,7 @@ static decision::Decision cloneDecision(const decision::Decision &source,
 static bool prepareArmPairs(Function &f, decision::Decision &d, unsigned left,
                             unsigned conditionBudget, std::string &reason,
                             std::vector<std::array<std::string,3>> &coordinates,
-                            bool track) {
+                            bool track, BasicBlock **dispatchOut=nullptr) {
   if (track) decision::OrderedArms::stamp(d, left);
   auto *leftEntry=d.arms.at(left).entry;
   auto *rightEntry=d.arms.at(left+1).entry;
@@ -117,7 +120,153 @@ static bool prepareArmPairs(Function &f, decision::Decision &d, unsigned left,
     reason="no_must_execute_anchor_pair";
     return false;
   }
+  if (dispatchOut) *dispatchOut = dispatch;
   return true;
+}
+
+// Only diagnostic facts are copied out. Cleanup and scoring use the same
+// pipeline and worker as structural trials.
+static json::Value branchShape(const BasicBlock *block) {
+  if (!block) return nullptr;
+  auto operand = [](const Value *value) {
+    std::string text;
+    raw_string_ostream stream(text);
+    value->printAsOperand(stream, false);
+    return stream.str();
+  };
+  json::Array successors;
+  for (const auto *successor : llvm::successors(block))
+    successors.push_back(operand(successor));
+  json::Object shape{{"block", operand(block)}, {"successors", std::move(successors)}};
+  if (const auto *branch = dyn_cast<BranchInst>(block->getTerminator()))
+    if (branch->isConditional()) {
+      std::string text;
+      raw_string_ostream stream(text);
+      branch->getCondition()->print(stream);
+      shape["condition"] = stream.str();
+    }
+  return shape;
+}
+
+// The fusion worker parses the prepared file before cleanup. In particular,
+// parsing restores LLVM's textual use-list order, which can affect CFG folding.
+// Refer to blocks and instructions by their serialized positions, including
+// unnamed SSA values, while tracking the predicate across cleanup.
+static BasicBlock *reparsedBlock(Function &parsed, const BasicBlock *original) {
+  if (!original) return nullptr;
+  const Function &source = *original->getParent();
+  return &*std::next(parsed.begin(), std::distance(source.begin(), Function::const_iterator(original->getIterator())));
+}
+
+static Value *reparsedCondition(Function &parsed, Value *original) {
+  if (auto *argument = dyn_cast_or_null<Argument>(original))
+    return parsed.getArg(argument->getArgNo());
+  if (auto *instruction = dyn_cast_or_null<Instruction>(original)) {
+    auto *block = instruction->getParent();
+    return &*std::next(reparsedBlock(parsed, block)->begin(),
+                       std::distance(block->begin(), instruction->getIterator()));
+  }
+  return nullptr;
+}
+
+static json::Object scoreNormalization(Module &parent,
+    const fusion::RoundContext &parentRound, const fusion::LLVM24Scorer &scorer,
+    const std::string &fn, const std::string &input, const std::string &dir,
+    const decision::Decision &decision, StringRef prepareReason,
+    const BasicBlock *preparedRoot, const BasicBlock *preparedDispatch,
+    Value *conditionBefore, Value *conditionPrepared, int64_t parentCost) {
+  using namespace fusion;
+  auto *before = parent.getFunction(fn);
+  SMDiagnostic diagnostic;
+  LLVMContext preparedContext;
+  auto prepared = parseIRFile(input, diagnostic, preparedContext);
+  if (!prepared)
+    throw std::runtime_error("cannot read prepared normalization: " + input);
+  auto &parsed = *prepared->getFunction(fn);
+  conditionPrepared = reparsedCondition(parsed, conditionPrepared);
+  preparedRoot = reparsedBlock(parsed, preparedRoot);
+  preparedDispatch = reparsedBlock(parsed, preparedDispatch);
+  ValueToValueMapTy values;
+  auto preparedRound = makeRound(*prepared, fn, 0, 3, CleanupMode::DarmCFGInstCombine, &values);
+  auto &control = *preparedRound.control;
+  auto *after = control.getFunction(fn);
+  Trial trial;
+  trial.candidate = {fn, "normalize", decision.arms.front().id, input, 0};
+  trial.valid = preparedRound.controlFeatures.loops <= parentRound.parentFeatures.loops;
+  trial.reason = trial.valid ? "verified_normalization" : "normalization_increased_loop_count";
+  if (conditionBefore && conditionPrepared && !isa<Constant>(conditionBefore)) {
+    trial.sideBeforeOk = sideBlocksBoth(*before, conditionBefore, trial.sideBefore, trial.sideReason);
+    if (trial.sideBeforeOk) {
+      if (Value *conditionAfter = values.lookup(conditionPrepared); conditionAfter && !isa<Constant>(conditionAfter))
+        trial.sideAfterOk = sideBlocksBoth(*after, conditionAfter, trial.sideAfter, trial.sideReason);
+      else
+        trial.sideReason = "side_condition_lost_during_cleanup";
+    }
+  } else {
+    trial.sideReason = "side_condition_unavailable_after_normalization";
+  }
+
+  ScoreResult score;
+  if (trial.valid)
+    score = scorer.evaluatePair(trial.candidate, *before, *after, parentRound, &trial);
+  if (StringRef(score.reason).startswith("tti_quote_"))
+    throw std::runtime_error("TTI quote audit failed for normalization: " + score.reason);
+  const bool scored = score.status == ScoreStatus::Scored;
+  if (scored && score.metrics.at("work_before") != parentCost)
+    throw std::runtime_error("normalization parent cost differs from Greedy parent");
+  const int64_t cost = scored ? score.metrics.at("work_after") : parentCost;
+  const bool accepted = eligible(trial, score, Options()) && cost < parentCost;
+  const auto reason = accepted ? "" : !trial.valid ? trial.reason : !scored ? score.reason :
+      !score.profitabilityRejection.empty() ? score.profitabilityRejection : "nonpositive_gain";
+
+  const auto candidate = decision.id + ":normalize:" + sys::path::filename(input).str();
+  json::Object attempt{{"candidate", candidate}, {"directory", dir},
+      {"kind", "normalize"}, {"prepared_decision", decision.id}, {"prepared_input", input},
+      {"eligible", accepted}, {"reason", reason},
+      {"stage", scored ? "scored" : trial.valid ? "score_rejected" : "legality_rejected"}};
+  json::Object metrics;
+  for (const auto &entry : score.metrics)
+    metrics[entry.first] = entry.second;
+  if (scored) {
+    attempt["cost"] = cost;
+    attempt["control_cost"] = cost;
+    attempt["gain"] = parentCost - cost;
+    for (auto key : {"uniform_gain_false", "uniform_gain_true"})
+      if (auto value = metrics.getNumber(key))
+        attempt[key] = *value;
+  }
+  if (!metrics.getNumber("uniform_gain_false"))
+    attempt["side_metrics_reason"] = trial.sideReason.empty() ? "side_metrics_unavailable_from_scorer" : trial.sideReason;
+
+  json::Array originalTests;
+  for (const auto *block : decision.tests)
+    originalTests.push_back(branchShape(block));
+  auto cleanedBlock = [&](const BasicBlock *block) {
+    Value *mapped = block ? values.lookup(block) : nullptr;
+    return dyn_cast_or_null<BasicBlock>(mapped);
+  };
+  const auto details = dir + "/structural/trial-0";
+  if (auto ec = sys::fs::create_directories(details))
+    throw std::runtime_error(ec.message());
+  save(details + "/trial.json", json::Object{
+      {"candidate", candidate}, {"decision", decision.id}, {"prepared_input", input},
+      {"prepare_reason", prepareReason}, {"planKind", "normalize"}, {"merge_path", "normalize-only"},
+      {"fusion_plan", json::Object{{"kind", "normalize"}, {"replication_required", false}}},
+      {"condition_before", std::move(originalTests)},
+      {"condition_prepared", json::Object{{"root", branchShape(preparedRoot)}, {"dispatch", branchShape(preparedDispatch)}}},
+      {"condition_after", json::Object{{"root", branchShape(cleanedBlock(preparedRoot))},
+                                        {"dispatch", branchShape(cleanedBlock(preparedDispatch))}}},
+      {"valid", trial.valid}, {"eligible", accepted}, {"reason", reason},
+      {"side_metrics_reason", attempt.getString("side_metrics_reason").getValueOr("")},
+      {"score_result", json::Object{{"status", scored ? "scored" : "not_evaluable"},
+          {"reason", score.reason}, {"profitability_rejection", score.profitabilityRejection},
+          {"metrics", std::move(metrics)}}}});
+  std::error_code error;
+  raw_fd_ostream stream(dir + "/fused.ll", error);
+  if (error)
+    throw std::runtime_error(error.message());
+  control.print(stream, nullptr);
+  return attempt;
 }
 
 int main(int argc,char**argv){try{
@@ -129,10 +278,11 @@ int main(int argc,char**argv){try{
  auto timingReport=[&](){json::Object phases;for(const auto &kv:phaseMilliseconds)phases[kv.first]=json::Object{{"milliseconds",kv.second},{"calls",phaseCalls[kv.first]}};return phases;};
 
  if(argc==2&&StringRef(argv[1])=="--help"){
-   outs()<<"usage: decision-greedy INPUT FUNCTION [TOOL_ROOT] NEW_OUTPUT [--b2b-strategy anchor|darm|darm-artifact] [--b2r-strategy darm|guarded] [--domain-schedule ordered] [--ir-snapshots full|compact] [--tti-quote-cache off|audit|on]\n";
+   outs()<<"usage: decision-greedy INPUT FUNCTION [TOOL_ROOT] NEW_OUTPUT [--b2b-strategy anchor|darm|darm-artifact] [--b2r-strategy darm|guarded] [--domain-schedule ordered] [--ir-snapshots full|compact] [--tti-quote-cache off|audit|on] [--normalize-candidate on|off]\n";
    outs()<<"Default schedule: ordered for whole-function trials (Auto Greedy v2).\n";
    return 0;
  }
+ bool normalizeCandidate = false;
  std::string b2bStrategy="anchor", b2rStrategy="darm", quoteMode="on", snapshotMode;
  while (argc >= 3) {
    StringRef option(argv[argc-2]), value(argv[argc-1]);
@@ -143,15 +293,17 @@ int main(int argc,char**argv){try{
      b2rStrategy = value.str();
    else if (option == "--tti-quote-cache" && (value == "off" || value == "audit" || value == "on"))
      quoteMode = value.str();
+   else if (option == "--normalize-candidate" && (value == "on" || value == "off"))
+     normalizeCandidate = value == "on";
    else if (option == "--b2b-strategy" && (value == "darm" || value == "darm-artifact" || value == "anchor"))
      b2bStrategy = value.str();
-   else if (option == "--ir-snapshots" || option == "--domain-schedule" || option == "--b2r-strategy" || option == "--b2b-strategy" || option == "--tti-quote-cache")
+   else if (option == "--ir-snapshots" || option == "--domain-schedule" || option == "--b2r-strategy" || option == "--b2b-strategy" || option == "--tti-quote-cache" || option == "--normalize-candidate")
      throw std::runtime_error("invalid value for " + option.str());
    else break;
    argc -= 2;
  }
  if(argc!=4&&argc!=5)
-   throw std::runtime_error("usage: decision-greedy INPUT FUNCTION [TOOL_ROOT] NEW_OUTPUT [--b2b-strategy anchor|darm|darm-artifact] [--b2r-strategy darm|guarded] [--domain-schedule ordered] [--ir-snapshots full|compact] [--tti-quote-cache off|audit|on]");
+   throw std::runtime_error("usage: decision-greedy INPUT FUNCTION [TOOL_ROOT] NEW_OUTPUT [--b2b-strategy anchor|darm|darm-artifact] [--b2r-strategy darm|guarded] [--domain-schedule ordered] [--ir-snapshots full|compact] [--tti-quote-cache off|audit|on] [--normalize-candidate on|off]");
  if(snapshotMode.empty())snapshotMode="compact";
  const bool implicitRoot=argc==4;
  std::string root;
@@ -194,6 +346,12 @@ int main(int argc,char**argv){try{
  targets.emplace_back();
  auto cost=[&](const std::string&input,const std::string&prefix){if(run({root+"/tools/run-llvm24-tti",input,fn},prefix+".json",prefix+".stderr"))throw std::runtime_error("TTI worker failed: "+prefix);auto v=read(prefix+".json");auto*o=v.getAsObject();if(!o||o->getInteger("unknown")!=Optional<int64_t>(0)||o->getString("source_revision")!=Optional<StringRef>("6be16f356d3e"))throw std::runtime_error("TTI unknown cost or revision mismatch");if(o->getString("cost_kind")!=Optional<StringRef>(fusion::ttiCostKindName()))throw std::runtime_error("TTI cost kind mismatch");auto n=o->getInteger("cost");if(!n)throw std::runtime_error("missing cost");return *n;};
  int64_t parentCost=cost(current,out+"/initial-tti"),initialCost=parentCost;unsigned commits=0,trials=0;json::Array rounds,stops;
+ std::unique_ptr<fusion::LLVM24Scorer> normalizationScorer;
+ if (normalizeCandidate) {
+   fusion::configureDarmCFGCleanup();
+   normalizationScorer = std::make_unique<fusion::LLVM24Scorer>(root+"/tools/run-llvm24-tti", quoteMode);
+ }
+ unsigned normalizationTrials = 0;
  const char *checkpoint=std::getenv("DECISION_CHECKPOINT_TOOL");
  auto recordResources=[&](const std::string &ir,const std::string &prefix,json::Object &record){
    if(!checkpoint)return;
@@ -305,6 +463,8 @@ int main(int argc,char**argv){try{
   int64_t bestCost=parentCost;
   std::string best;
   Optional<unsigned> bestPreparedOrdinal;
+  bool bestIsNormalization = false;
+  std::optional<fusion::RoundContext> normalizationParent;
   json::Array attempts, preparationRejections;
   struct PreparedPair {
     unsigned owner, left;
@@ -323,7 +483,19 @@ int main(int argc,char**argv){try{
       auto clonedDecision=cloneDecision(d, values);
       std::string reason;
       std::vector<std::array<std::string,3>> coordinates;
-      if(prepareArmPairs(*prepared->getFunction(fn),clonedDecision,left,conditionBudget,reason,coordinates,track)){
+      BasicBlock *dispatch = nullptr;
+      auto *rootBefore = clonedDecision.root;
+      Value *conditionBefore = nullptr;
+      WeakTrackingVH conditionPrepared;
+      if (normalizeCandidate) {
+        auto *test = d.arms[left].predicate.empty() ? nullptr : d.arms[left].predicate.back().test;
+        auto *branch = test ? dyn_cast<BranchInst>(test->getTerminator()) : nullptr;
+        if (branch && branch->isConditional()) {
+          conditionBefore = branch->getCondition();
+          conditionPrepared = values.lookup(conditionBefore);
+        }
+      }
+      if(prepareArmPairs(*prepared->getFunction(fn),clonedDecision,left,conditionBudget,reason,coordinates,track,&dispatch)){
         const std::string decisionSuffix="-"+std::to_string(owner);
         const auto input=out+"/prepared-"+std::to_string(rounds.size())+decisionSuffix+"-"+std::to_string(left)+".ll";
         std::error_code ec;
@@ -331,6 +503,24 @@ int main(int argc,char**argv){try{
         if(ec)throw std::runtime_error(ec.message());
         prepared->print(stream,nullptr);
         stream.close();
+        if (normalizeCandidate) {
+          if (normalizationTrials >= 100000)
+            throw std::runtime_error("normalization trial budget exceeded");
+          if (!normalizationParent)
+            normalizationParent.emplace(fusion::makeRound(*m, fn, 0, 3, fusion::CleanupMode::None));
+          const auto dir = out + "/normalize-" + std::to_string(normalizationTrials++);
+          auto attempt = scoreNormalization(*m, *normalizationParent, *normalizationScorer,
+              fn, input, dir, d, reason, rootBefore, dispatch, conditionBefore, conditionPrepared, parentCost);
+          if (attempt.getBoolean("eligible") == Optional<bool>(true)) {
+            const int64_t trialCost = *attempt.getInteger("cost");
+            if (trialCost < bestCost) {
+              bestCost = trialCost;
+              best = dir;
+              bestIsNormalization = true;
+            }
+          }
+          attempts.push_back(std::move(attempt));
+        }
         const bool containsRegion=d.arms[left].kind==decision::ArmKind::SESE||
                                   d.arms[left+1].kind==decision::ArmKind::SESE;
         preparedPairs.push_back({owner,left,input,std::move(coordinates),containsRegion});
@@ -558,8 +748,10 @@ int main(int argc,char**argv){try{
       }
       const bool canCommit = attempt.getBoolean("eligible") == Optional<bool>(true);
       const auto cost = attempt.getInteger("cost");
-      if (canCommit && cost && *cost < bestCost) {
-        // Results are visited in enumeration order, so the first tie wins.
+      // On a tie prefer a fusion: it performs the preparation and also melds
+      // the two arms. For ties among fusions the first in enumeration still wins.
+      if (canCommit && cost && (*cost < bestCost || (bestIsNormalization && *cost == bestCost))) {
+        bestIsNormalization = false;
         bestCost = *cost;
         best = dir;
         bestPreparedOrdinal = trial.preparedOrdinal;
@@ -607,6 +799,11 @@ int main(int argc,char**argv){try{
       table.retired=true;table.nextDecision.reset();
       record["ordered_update"]="structural_winner_rediscover";
     }
+  }
+  if (bestIsNormalization) {
+    record["selected_plan_kind"] = "normalize";
+    if (bestCost >= parentCost)
+      throw std::runtime_error("normalization commit must strictly reduce parent cost");
   }
   recordResources(best+"/fused.ll",best+"/resources",record);
   record["selected_cost"]=bestCost;record["score"]=double(parentCost-bestCost)/std::max<int64_t>(parentCost,1);rounds.push_back(std::move(record));parentCost=bestCost;current=best+"/fused.ll";attemptedStructural.clear();attemptedPreparation.clear();++commits;report("running");outs()<<"commit="<<commits<<" cost="<<parentCost<<" decision="<<target<<"\n";outs().flush();mark("record_and_commit");

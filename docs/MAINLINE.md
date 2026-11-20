@@ -49,6 +49,7 @@ B2B 可配对普通访存及受支持的 intrinsic。单侧副作用保持分支
 - `--domain-schedule ordered`，可省略。
 - `--ir-snapshots full|compact`，默认 `compact`。
 - `--tti-quote-cache off|audit|on`，默认 `on`。
+- `--normalize-candidate on|off`，默认 `off`。开启后，成功归一化的 prepared control 可作为独立候选。
 
 ## 构建与验收
 

@@ -700,7 +700,7 @@ static bool sideBlocks(Function &f,Value *cond,bool value,std::vector<unsigned> 
   std::sort(out.begin(),out.end());
   return true;
 }
-static bool sideBlocksBoth(Function &f,Value *cond,std::vector<unsigned> (&sides)[2],std::string &why) {
+bool sideBlocksBoth(Function &f,Value *cond,std::vector<unsigned> (&sides)[2],std::string &why) {
   return sideBlocks(f,cond,false,sides[0],why)&&sideBlocks(f,cond,true,sides[1],why);
 }
 
@@ -2127,7 +2127,7 @@ std::vector<Trial> planSingleBranchB2B(const Module &parent, const Candidate &c,
   return trials;
 }
 
-RoundContext makeRound(const Module&parent,const std::string&function,unsigned version,unsigned,CleanupMode mode) {
+RoundContext makeRound(const Module&parent,const std::string&function,unsigned version,unsigned,CleanupMode mode,ValueToValueMapTy *values) {
   ProfileScope roundScope("round_control_analysis_cleanup");
   RoundContext r;r.cleanupMode=mode;r.parentVersion=version;r.function=function;r.parentHash=moduleHash(parent);
   r.targetTriple=parent.getTargetTriple();r.dataLayout=parent.getDataLayoutStr();r.llvmVersion=LLVM_VERSION_STRING;
@@ -2135,7 +2135,7 @@ RoundContext makeRound(const Module&parent,const std::string&function,unsigned v
       "darm-simplifycfg-phi7-condbranch0-sink0-hoist0;earlycse-dce-instcombine;phi-edge-function-order-v1";
   auto*f=parent.getFunction(function);if(!f||f->isDeclaration())throw std::runtime_error("round function missing");
   r.targetAttributes=attributes(f->getAttributes(),f->arg_size());
-  auto start=Clock::now();r.parentFeatures=features(*f);r.control=CloneModule(parent);r.controlCleanupIterations=cleanup(*r.control,function,mode);
+  auto start=Clock::now();r.parentFeatures=features(*f);r.control=values?CloneModule(parent,*values):CloneModule(parent);r.controlCleanupIterations=cleanup(*r.control,function,mode);
   canonicalPhiOrder(*r.control,function);
   if(verifyModule(*r.control,&errs()))throw std::runtime_error("control verifier failed");
   auto*control=r.control->getFunction(function);if(!control||control->isDeclaration())throw std::runtime_error("control function missing");

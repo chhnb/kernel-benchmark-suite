@@ -13,6 +13,8 @@ Auto Greedy 默认 B2B 为冻结的 anchor V2+P。DP1 已删除，`darm` 仍可�
 
 GPU 使用已固定的规则。每批计划 12 轮，轮内交错 baseline、A、N。所有完整轮次的 N/A 都 ≤1.02 时通过，都 >1.02 时不通过。混合结果使用 10,000 次配对中位数 bootstrap。95% 区间上限 ≤1.02 为通过，下限 >1.02 为不通过，其余为不确定。角色相对 baseline 与 N/A 的跨度都记录，判定明确时跨度不改变结论。输出校验失败立即停止。选择计时方式时，同二进制 A/A 的中位数须在 1±1% 内、跨度 ≤3%，按已冻结的方式选择顺序执行。独立进程入口见 [GPU 判定脚本](../regression/measure_anchor_gpu.py)，逐轮中位数和归档来源见 [GPU 样本](../regression/golden/20261120-anchor-release/gpu-paired.json)。
 
+A/A 重测规则自 `065cfdb` 之后生效，适用于所有 case。首次 A/A 未通过时，允许在同一测量会话中按相同条件立即重测一次，两次的数据与结论均归档。第二次通过才进入正式计时，仍未通过则将该 case 记为本轮无法测量，结束其 GPU 部分。门槛继续使用中位数偏离 1 不超过 1%、轮间跨度不超过 3%。此前的发布判定没有使用过这项重测规则。输出校验失败仍立即停止。
+
 ## 结果
 
 16 个 IR case（九个设计 case 和七个可运行留出 case）的完整 Greedy 均获 LLVM verifier 通过。与 `97227b3` 对应策略相比，默认 anchor 和显式 `darm` 各 16/16 的最终 IR、HSACO 或 CUDA cubin 逐字节一致。测试 26 项通过，四个已知缺件测试按 KNOWN_FAILURES 跳过，专用 recipe 测试随 DP1 删除。

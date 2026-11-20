@@ -1,6 +1,7 @@
 #pragma once
 #include "llvm/Support/JSON.h"
 #include "llvm/IR/Module.h"
+#include "llvm/Transforms/Utils/ValueMapper.h"
 #include "llvm/Analysis/RegionInfo.h"
 #include "llvm/Analysis/DominanceFrontier.h"
 #include "llvm/Analysis/LoopInfo.h"
@@ -147,7 +148,9 @@ struct Observer {
 std::string moduleHash(const llvm::Module &);
 Features features(llvm::Function &);
 RoundContext makeRound(const llvm::Module &, const std::string &function,
-                       unsigned version, unsigned optLevel, CleanupMode mode=CleanupMode::DarmCFGInstCombine);
+                       unsigned version, unsigned optLevel, CleanupMode mode=CleanupMode::DarmCFGInstCombine,
+                       llvm::ValueToValueMapTy *values=nullptr);
+bool sideBlocksBoth(llvm::Function &, llvm::Value *, std::vector<unsigned> (&sides)[2], std::string &reason);
 ScoreResult evaluateTrial(const llvm::Module &, Trial &, const RoundContext &, const Scorer &);
 bool eligible(const Trial &, const ScoreResult &, const Options &);
 // Complete E-leaves require same-SSA constant predicates unless explicitly enabled.

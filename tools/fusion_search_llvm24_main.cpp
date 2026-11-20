@@ -1,4 +1,5 @@
 #include "fusion_profile.h"
+#include "fusion_cleanup_config.h"
 #include <fcntl.h>
 #include <unistd.h>
 #include <cerrno>
@@ -13,7 +14,6 @@
 #include "llvm/IRReader/IRReader.h"
 #include "llvm/IR/Verifier.h"
 #include "llvm/Support/SourceMgr.h"
-#include "llvm/Support/CommandLine.h"
 #include "llvm/Support/Signals.h"
 #include "llvm/Support/FileSystem.h"
 #include "llvm/Support/Path.h"
@@ -179,17 +179,8 @@ static int runSearch(int argc, const char *const *argv, TrialWorker *batch = nul
     if(options.optLevel!=2&&options.optLevel!=3)throw std::runtime_error("opt-level must be 2 or 3");
     if(sys::fs::exists(output))throw std::runtime_error("output already exists");
     bool pair=!split.empty()||!left.empty()||!right.empty();if(pair&&(split.empty()||left.empty()||right.empty()))throw std::runtime_error("explicit pair requires all three IDs");
-    if (options.cleanupMode == CleanupMode::DarmCFGInstCombine) {
-      // LLVM 12 reads this registered option inside SimplifyCFG. Initialize it
-      // once per process, including when a worker evaluates a batch of pairs.
-      static const bool configured = [] {
-        const StringRef name = "two-entry-phi-node-folding-threshold";
-        auto &registered = cl::getRegisteredOptions();
-        auto entry = registered.find(name);
-        return entry != registered.end() && !entry->second->addOccurrence(0, name, "7");
-      }();
-      if (!configured) throw std::runtime_error("cannot configure v1 PHI fold threshold");
-    }
+    if (options.cleanupMode == CleanupMode::DarmCFGInstCombine)
+      configureDarmCFGCleanup();
     std::unique_ptr<LLVMContext> context = std::make_unique<LLVMContext>();
     std::unique_ptr<MemoryBuffer> buffer;
     std::unique_ptr<Module> parsedModule;
