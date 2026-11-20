@@ -21,3 +21,5 @@
 两个被采样的 HSACO 的 SHA-256 分别为 `35a2c062b54b056a4b3c8e6e513e75abfce5a59edba2e7b1330a21d693a952c1` 与 `6a0f71b49a5856d08e1d2af6f085b5b0f4865c362c11cd1aee7f2008a747c66e`。
 
 [原始计数、trace 和完整输出校验结果](pcm32-r2r-runtime-20261120/)
+
+[PCM32 第 10 步的同父前后 IR](pcm32-r2r-ir-20261120/)
