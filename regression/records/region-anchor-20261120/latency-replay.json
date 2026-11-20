@@ -1,0 +1,4922 @@
+[
+  {
+    "case": "MapAiry",
+    "commit": 5,
+    "trial": "trial-70",
+    "type": "R2R",
+    "extra": false,
+    "hsaco_equal": false,
+    "o3_equal": false,
+    "hot_machine_edits": 0,
+    "darm": {
+      "tti_throughput": 5205,
+      "tti_latency": 5153,
+      "latency_control": 5340,
+      "latency_gain": 187,
+      "same_hsaco_as_throughput": true,
+      "alignment": {
+        "blocks": [
+          {
+            "fallback": "",
+            "left": "%decision.dispatch",
+            "pairs": 97,
+            "right": "%decision.dispatch1"
+          },
+          {
+            "fallback": "",
+            "left": "%fusion.side",
+            "pairs": 8,
+            "right": "%fusion.side2"
+          },
+          {
+            "fallback": "",
+            "left": "%fusion.side1",
+            "pairs": 8,
+            "right": "%fusion.side3"
+          },
+          {
+            "fallback": "",
+            "left": "%new.exit",
+            "pairs": 1,
+            "right": "%new.exit16"
+          }
+        ],
+        "branch_conditions": 0,
+        "other_selects": 3,
+        "select_conditions": 0,
+        "tie_pairs": false,
+        "unquoted_instruction_lookups": 0
+      },
+      "hot_loop": {
+        "instructions": 439,
+        "conditional": 14,
+        "exec": 28,
+        "valu": 390,
+        "salu": 35,
+        "memory": 0,
+        "unconditional": 0,
+        "flow_wait_other": 14,
+        "execz": 0,
+        "execnz": 14,
+        "mask": 14,
+        "lds": 0,
+        "waitcnt": 0,
+        "cndmask": 0,
+        "bytes": 3204
+      },
+      "resources": {
+        "sgpr_count": 44,
+        "vgpr_count": 44,
+        "sgpr_spill_count": 0,
+        "vgpr_spill_count": 0,
+        "group_segment_fixed_size": 0,
+        "wavefront_size": 64,
+        "max_flat_workgroup_size": 256,
+        "threads": 256,
+        "dynamic_lds": 0,
+        "waves_per_simd": 5.0
+      },
+      "cleanup_phis": 94,
+      "cleanup_selects": 53
+    },
+    "anchor": {
+      "tti_throughput": 5237,
+      "tti_latency": 5183,
+      "latency_control": 5340,
+      "latency_gain": 157,
+      "same_hsaco_as_throughput": true,
+      "alignment": {
+        "blocks": [
+          {
+            "fallback": "",
+            "left": "%decision.dispatch",
+            "pairs": 96,
+            "right": "%decision.dispatch1"
+          },
+          {
+            "fallback": "",
+            "left": "%fusion.side",
+            "pairs": 1,
+            "right": "%fusion.side2"
+          },
+          {
+            "fallback": "",
+            "left": "%fusion.side1",
+            "pairs": 1,
+            "right": "%fusion.side3"
+          },
+          {
+            "fallback": "",
+            "left": "%new.exit",
+            "pairs": 1,
+            "right": "%new.exit16"
+          }
+        ],
+        "branch_conditions": 0,
+        "other_selects": 2,
+        "select_conditions": 0,
+        "tie_pairs": false,
+        "unquoted_instruction_lookups": 0
+      },
+      "hot_loop": {
+        "instructions": 439,
+        "conditional": 14,
+        "exec": 28,
+        "valu": 390,
+        "salu": 35,
+        "memory": 0,
+        "unconditional": 0,
+        "flow_wait_other": 14,
+        "execz": 0,
+        "execnz": 14,
+        "mask": 14,
+        "lds": 0,
+        "waitcnt": 0,
+        "cndmask": 0,
+        "bytes": 3204
+      },
+      "resources": {
+        "sgpr_count": 44,
+        "vgpr_count": 56,
+        "sgpr_spill_count": 0,
+        "vgpr_spill_count": 0,
+        "group_segment_fixed_size": 0,
+        "wavefront_size": 64,
+        "max_flat_workgroup_size": 256,
+        "threads": 256,
+        "dynamic_lds": 0,
+        "waves_per_simd": 4.0
+      },
+      "cleanup_phis": 96,
+      "cleanup_selects": 53
+    }
+  },
+  {
+    "case": "MapAiry",
+    "commit": 6,
+    "trial": "trial-96",
+    "type": "R2R",
+    "extra": false,
+    "hsaco_equal": false,
+    "o3_equal": false,
+    "hot_machine_edits": 0,
+    "darm": {
+      "tti_throughput": 5016,
+      "tti_latency": 4966,
+      "latency_control": 5153,
+      "latency_gain": 187,
+      "same_hsaco_as_throughput": true,
+      "alignment": {
+        "blocks": [
+          {
+            "fallback": "",
+            "left": "%decision.dispatch2",
+            "pairs": 97,
+            "right": "%decision.dispatch3"
+          },
+          {
+            "fallback": "",
+            "left": "%fusion.side4",
+            "pairs": 8,
+            "right": "%fusion.side6"
+          },
+          {
+            "fallback": "",
+            "left": "%fusion.side5",
+            "pairs": 8,
+            "right": "%fusion.side7"
+          },
+          {
+            "fallback": "",
+            "left": "%new.exit",
+            "pairs": 1,
+            "right": "%new.exit16"
+          }
+        ],
+        "branch_conditions": 0,
+        "other_selects": 3,
+        "select_conditions": 0,
+        "tie_pairs": false,
+        "unquoted_instruction_lookups": 0
+      },
+      "hot_loop": {
+        "instructions": 439,
+        "conditional": 14,
+        "exec": 28,
+        "valu": 390,
+        "salu": 35,
+        "memory": 0,
+        "unconditional": 0,
+        "flow_wait_other": 14,
+        "execz": 0,
+        "execnz": 14,
+        "mask": 14,
+        "lds": 0,
+        "waitcnt": 0,
+        "cndmask": 0,
+        "bytes": 3204
+      },
+      "resources": {
+        "sgpr_count": 44,
+        "vgpr_count": 37,
+        "sgpr_spill_count": 0,
+        "vgpr_spill_count": 0,
+        "group_segment_fixed_size": 0,
+        "wavefront_size": 64,
+        "max_flat_workgroup_size": 256,
+        "threads": 256,
+        "dynamic_lds": 0,
+        "waves_per_simd": 6.0
+      },
+      "cleanup_phis": 92,
+      "cleanup_selects": 55
+    },
+    "anchor": {
+      "tti_throughput": 5048,
+      "tti_latency": 4996,
+      "latency_control": 5153,
+      "latency_gain": 157,
+      "same_hsaco_as_throughput": true,
+      "alignment": {
+        "blocks": [
+          {
+            "fallback": "",
+            "left": "%decision.dispatch2",
+            "pairs": 96,
+            "right": "%decision.dispatch3"
+          },
+          {
+            "fallback": "",
+            "left": "%fusion.side4",
+            "pairs": 1,
+            "right": "%fusion.side6"
+          },
+          {
+            "fallback": "",
+            "left": "%fusion.side5",
+            "pairs": 1,
+            "right": "%fusion.side7"
+          },
+          {
+            "fallback": "",
+            "left": "%new.exit",
+            "pairs": 1,
+            "right": "%new.exit16"
+          }
+        ],
+        "branch_conditions": 0,
+        "other_selects": 2,
+        "select_conditions": 0,
+        "tie_pairs": false,
+        "unquoted_instruction_lookups": 0
+      },
+      "hot_loop": {
+        "instructions": 439,
+        "conditional": 14,
+        "exec": 28,
+        "valu": 390,
+        "salu": 35,
+        "memory": 0,
+        "unconditional": 0,
+        "flow_wait_other": 14,
+        "execz": 0,
+        "execnz": 14,
+        "mask": 14,
+        "lds": 0,
+        "waitcnt": 0,
+        "cndmask": 0,
+        "bytes": 3204
+      },
+      "resources": {
+        "sgpr_count": 44,
+        "vgpr_count": 58,
+        "sgpr_spill_count": 0,
+        "vgpr_spill_count": 0,
+        "group_segment_fixed_size": 0,
+        "wavefront_size": 64,
+        "max_flat_workgroup_size": 256,
+        "threads": 256,
+        "dynamic_lds": 0,
+        "waves_per_simd": 4.0
+      },
+      "cleanup_phis": 94,
+      "cleanup_selects": 55
+    }
+  },
+  {
+    "case": "MapAiry",
+    "commit": 7,
+    "trial": "trial-108",
+    "type": "R2R",
+    "extra": false,
+    "hsaco_equal": true,
+    "o3_equal": true,
+    "hot_machine_edits": 0,
+    "darm": {
+      "tti_throughput": 4763,
+      "tti_latency": 4738,
+      "latency_control": 4966,
+      "latency_gain": 228,
+      "same_hsaco_as_throughput": true,
+      "alignment": {
+        "blocks": [
+          {
+            "fallback": "",
+            "left": "%new.exit",
+            "pairs": 1,
+            "right": "%new.exit1"
+          },
+          {
+            "fallback": "",
+            "left": "%merged.bb35",
+            "pairs": 1,
+            "right": "%merged.bb38"
+          },
+          {
+            "fallback": "",
+            "left": "%merged.branch.split",
+            "pairs": 48,
+            "right": "%merged.branch.split42"
+          },
+          {
+            "fallback": "",
+            "left": "%merged.branch.split38",
+            "pairs": 48,
+            "right": "%merged.branch.split43"
+          }
+        ],
+        "branch_conditions": 1,
+        "other_selects": 50,
+        "select_conditions": 0,
+        "tie_pairs": false,
+        "unquoted_instruction_lookups": 0
+      },
+      "hot_loop": {
+        "instructions": 439,
+        "conditional": 14,
+        "exec": 28,
+        "valu": 390,
+        "salu": 35,
+        "memory": 0,
+        "unconditional": 0,
+        "flow_wait_other": 14,
+        "execz": 0,
+        "execnz": 14,
+        "mask": 14,
+        "lds": 0,
+        "waitcnt": 0,
+        "cndmask": 0,
+        "bytes": 3204
+      },
+      "resources": {
+        "sgpr_count": 44,
+        "vgpr_count": 102,
+        "sgpr_spill_count": 0,
+        "vgpr_spill_count": 0,
+        "group_segment_fixed_size": 0,
+        "wavefront_size": 64,
+        "max_flat_workgroup_size": 256,
+        "threads": 256,
+        "dynamic_lds": 0,
+        "waves_per_simd": 2.0
+      },
+      "cleanup_phis": 67,
+      "cleanup_selects": 49
+    },
+    "anchor": {
+      "tti_throughput": 4763,
+      "tti_latency": 4738,
+      "latency_control": 4966,
+      "latency_gain": 228,
+      "same_hsaco_as_throughput": true,
+      "alignment": {
+        "blocks": [
+          {
+            "fallback": "",
+            "left": "%new.exit",
+            "pairs": 1,
+            "right": "%new.exit1"
+          },
+          {
+            "fallback": "",
+            "left": "%merged.bb35",
+            "pairs": 1,
+            "right": "%merged.bb38"
+          },
+          {
+            "fallback": "",
+            "left": "%merged.branch.split",
+            "pairs": 48,
+            "right": "%merged.branch.split42"
+          },
+          {
+            "fallback": "",
+            "left": "%merged.branch.split38",
+            "pairs": 48,
+            "right": "%merged.branch.split43"
+          }
+        ],
+        "branch_conditions": 1,
+        "other_selects": 50,
+        "select_conditions": 0,
+        "tie_pairs": true,
+        "unquoted_instruction_lookups": 0
+      },
+      "hot_loop": {
+        "instructions": 439,
+        "conditional": 14,
+        "exec": 28,
+        "valu": 390,
+        "salu": 35,
+        "memory": 0,
+        "unconditional": 0,
+        "flow_wait_other": 14,
+        "execz": 0,
+        "execnz": 14,
+        "mask": 14,
+        "lds": 0,
+        "waitcnt": 0,
+        "cndmask": 0,
+        "bytes": 3204
+      },
+      "resources": {
+        "sgpr_count": 44,
+        "vgpr_count": 102,
+        "sgpr_spill_count": 0,
+        "vgpr_spill_count": 0,
+        "group_segment_fixed_size": 0,
+        "wavefront_size": 64,
+        "max_flat_workgroup_size": 256,
+        "threads": 256,
+        "dynamic_lds": 0,
+        "waves_per_simd": 2.0
+      },
+      "cleanup_phis": 67,
+      "cleanup_selects": 49
+    }
+  },
+  {
+    "case": "MapAiry",
+    "commit": 12,
+    "trial": "trial-133",
+    "type": "R2B",
+    "extra": false,
+    "hsaco_equal": true,
+    "o3_equal": true,
+    "hot_machine_edits": 0,
+    "darm": {
+      "tti_throughput": 4577,
+      "tti_latency": 4542,
+      "latency_control": 4548,
+      "latency_gain": 6,
+      "same_hsaco_as_throughput": true,
+      "alignment": {
+        "blocks": [
+          {
+            "fallback": "",
+            "left": "%if.then12.i.i.i622.i.i.i.i",
+            "pairs": 1,
+            "right": "%replicated.bb"
+          },
+          {
+            "fallback": "",
+            "left": "%fusion.side6",
+            "pairs": 1,
+            "right": "%if.else21.i.i.i634.i.i.i.i"
+          },
+          {
+            "fallback": "",
+            "left": "%fusion.side7",
+            "pairs": 1,
+            "right": "%replicated.bb1"
+          },
+          {
+            "fallback": "",
+            "left": "%new.exit",
+            "pairs": 1,
+            "right": "%replicated.bb2"
+          }
+        ],
+        "branch_conditions": 1,
+        "other_selects": 0,
+        "select_conditions": 0,
+        "tie_pairs": false,
+        "unquoted_instruction_lookups": 0
+      },
+      "hot_loop": {
+        "instructions": 439,
+        "conditional": 14,
+        "exec": 28,
+        "valu": 390,
+        "salu": 35,
+        "memory": 0,
+        "unconditional": 0,
+        "flow_wait_other": 14,
+        "execz": 0,
+        "execnz": 14,
+        "mask": 14,
+        "lds": 0,
+        "waitcnt": 0,
+        "cndmask": 0,
+        "bytes": 3204
+      },
+      "resources": {
+        "sgpr_count": 42,
+        "vgpr_count": 102,
+        "sgpr_spill_count": 0,
+        "vgpr_spill_count": 0,
+        "group_segment_fixed_size": 0,
+        "wavefront_size": 64,
+        "max_flat_workgroup_size": 256,
+        "threads": 256,
+        "dynamic_lds": 0,
+        "waves_per_simd": 2.0
+      },
+      "cleanup_phis": 77,
+      "cleanup_selects": 85
+    },
+    "anchor": {
+      "tti_throughput": 4577,
+      "tti_latency": 4542,
+      "latency_control": 4548,
+      "latency_gain": 6,
+      "same_hsaco_as_throughput": true,
+      "alignment": {
+        "blocks": [
+          {
+            "fallback": "",
+            "left": "%if.then12.i.i.i622.i.i.i.i",
+            "pairs": 1,
+            "right": "%replicated.bb"
+          },
+          {
+            "fallback": "",
+            "left": "%fusion.side6",
+            "pairs": 1,
+            "right": "%if.else21.i.i.i634.i.i.i.i"
+          },
+          {
+            "fallback": "",
+            "left": "%fusion.side7",
+            "pairs": 1,
+            "right": "%replicated.bb1"
+          },
+          {
+            "fallback": "",
+            "left": "%new.exit",
+            "pairs": 1,
+            "right": "%replicated.bb2"
+          }
+        ],
+        "branch_conditions": 1,
+        "other_selects": 0,
+        "select_conditions": 0,
+        "tie_pairs": false,
+        "unquoted_instruction_lookups": 0
+      },
+      "hot_loop": {
+        "instructions": 439,
+        "conditional": 14,
+        "exec": 28,
+        "valu": 390,
+        "salu": 35,
+        "memory": 0,
+        "unconditional": 0,
+        "flow_wait_other": 14,
+        "execz": 0,
+        "execnz": 14,
+        "mask": 14,
+        "lds": 0,
+        "waitcnt": 0,
+        "cndmask": 0,
+        "bytes": 3204
+      },
+      "resources": {
+        "sgpr_count": 42,
+        "vgpr_count": 102,
+        "sgpr_spill_count": 0,
+        "vgpr_spill_count": 0,
+        "group_segment_fixed_size": 0,
+        "wavefront_size": 64,
+        "max_flat_workgroup_size": 256,
+        "threads": 256,
+        "dynamic_lds": 0,
+        "waves_per_simd": 2.0
+      },
+      "cleanup_phis": 77,
+      "cleanup_selects": 85
+    }
+  },
+  {
+    "case": "MapAiry",
+    "commit": 14,
+    "trial": "trial-145",
+    "type": "R2B",
+    "extra": false,
+    "hsaco_equal": true,
+    "o3_equal": true,
+    "hot_machine_edits": 0,
+    "darm": {
+      "tti_throughput": 4563,
+      "tti_latency": 4527,
+      "latency_control": 4533,
+      "latency_gain": 6,
+      "same_hsaco_as_throughput": true,
+      "alignment": {
+        "blocks": [
+          {
+            "fallback": "",
+            "left": "%if.then12.i.i.i501.i.i.i.i",
+            "pairs": 1,
+            "right": "%replicated.bb"
+          },
+          {
+            "fallback": "",
+            "left": "%fusion.side4",
+            "pairs": 1,
+            "right": "%if.else21.i.i.i513.i.i.i.i"
+          },
+          {
+            "fallback": "",
+            "left": "%fusion.side5",
+            "pairs": 1,
+            "right": "%replicated.bb1"
+          },
+          {
+            "fallback": "",
+            "left": "%new.exit",
+            "pairs": 1,
+            "right": "%replicated.bb2"
+          }
+        ],
+        "branch_conditions": 1,
+        "other_selects": 0,
+        "select_conditions": 0,
+        "tie_pairs": false,
+        "unquoted_instruction_lookups": 0
+      },
+      "hot_loop": {
+        "instructions": 439,
+        "conditional": 14,
+        "exec": 28,
+        "valu": 390,
+        "salu": 35,
+        "memory": 0,
+        "unconditional": 0,
+        "flow_wait_other": 14,
+        "execz": 0,
+        "execnz": 14,
+        "mask": 14,
+        "lds": 0,
+        "waitcnt": 0,
+        "cndmask": 0,
+        "bytes": 3204
+      },
+      "resources": {
+        "sgpr_count": 42,
+        "vgpr_count": 102,
+        "sgpr_spill_count": 0,
+        "vgpr_spill_count": 0,
+        "group_segment_fixed_size": 0,
+        "wavefront_size": 64,
+        "max_flat_workgroup_size": 256,
+        "threads": 256,
+        "dynamic_lds": 0,
+        "waves_per_simd": 2.0
+      },
+      "cleanup_phis": 78,
+      "cleanup_selects": 89
+    },
+    "anchor": {
+      "tti_throughput": 4563,
+      "tti_latency": 4527,
+      "latency_control": 4533,
+      "latency_gain": 6,
+      "same_hsaco_as_throughput": true,
+      "alignment": {
+        "blocks": [
+          {
+            "fallback": "",
+            "left": "%if.then12.i.i.i501.i.i.i.i",
+            "pairs": 1,
+            "right": "%replicated.bb"
+          },
+          {
+            "fallback": "",
+            "left": "%fusion.side4",
+            "pairs": 1,
+            "right": "%if.else21.i.i.i513.i.i.i.i"
+          },
+          {
+            "fallback": "",
+            "left": "%fusion.side5",
+            "pairs": 1,
+            "right": "%replicated.bb1"
+          },
+          {
+            "fallback": "",
+            "left": "%new.exit",
+            "pairs": 1,
+            "right": "%replicated.bb2"
+          }
+        ],
+        "branch_conditions": 1,
+        "other_selects": 0,
+        "select_conditions": 0,
+        "tie_pairs": false,
+        "unquoted_instruction_lookups": 0
+      },
+      "hot_loop": {
+        "instructions": 439,
+        "conditional": 14,
+        "exec": 28,
+        "valu": 390,
+        "salu": 35,
+        "memory": 0,
+        "unconditional": 0,
+        "flow_wait_other": 14,
+        "execz": 0,
+        "execnz": 14,
+        "mask": 14,
+        "lds": 0,
+        "waitcnt": 0,
+        "cndmask": 0,
+        "bytes": 3204
+      },
+      "resources": {
+        "sgpr_count": 42,
+        "vgpr_count": 102,
+        "sgpr_spill_count": 0,
+        "vgpr_spill_count": 0,
+        "group_segment_fixed_size": 0,
+        "wavefront_size": 64,
+        "max_flat_workgroup_size": 256,
+        "threads": 256,
+        "dynamic_lds": 0,
+        "waves_per_simd": 2.0
+      },
+      "cleanup_phis": 78,
+      "cleanup_selects": 89
+    }
+  },
+  {
+    "case": "MapAiry",
+    "commit": 16,
+    "trial": "trial-157",
+    "type": "R2B",
+    "extra": false,
+    "hsaco_equal": true,
+    "o3_equal": true,
+    "hot_machine_edits": 0,
+    "darm": {
+      "tti_throughput": 4549,
+      "tti_latency": 4512,
+      "latency_control": 4518,
+      "latency_gain": 6,
+      "same_hsaco_as_throughput": true,
+      "alignment": {
+        "blocks": [
+          {
+            "fallback": "",
+            "left": "%if.then12.i.i.i388.i.i.i.i",
+            "pairs": 1,
+            "right": "%replicated.bb"
+          },
+          {
+            "fallback": "",
+            "left": "%fusion.side4",
+            "pairs": 1,
+            "right": "%if.else21.i.i.i400.i.i.i.i"
+          },
+          {
+            "fallback": "",
+            "left": "%fusion.side5",
+            "pairs": 1,
+            "right": "%replicated.bb1"
+          },
+          {
+            "fallback": "",
+            "left": "%new.exit",
+            "pairs": 1,
+            "right": "%replicated.bb2"
+          }
+        ],
+        "branch_conditions": 1,
+        "other_selects": 0,
+        "select_conditions": 0,
+        "tie_pairs": false,
+        "unquoted_instruction_lookups": 0
+      },
+      "hot_loop": {
+        "instructions": 439,
+        "conditional": 14,
+        "exec": 28,
+        "valu": 390,
+        "salu": 35,
+        "memory": 0,
+        "unconditional": 0,
+        "flow_wait_other": 14,
+        "execz": 0,
+        "execnz": 14,
+        "mask": 14,
+        "lds": 0,
+        "waitcnt": 0,
+        "cndmask": 0,
+        "bytes": 3204
+      },
+      "resources": {
+        "sgpr_count": 42,
+        "vgpr_count": 102,
+        "sgpr_spill_count": 0,
+        "vgpr_spill_count": 0,
+        "group_segment_fixed_size": 0,
+        "wavefront_size": 64,
+        "max_flat_workgroup_size": 256,
+        "threads": 256,
+        "dynamic_lds": 0,
+        "waves_per_simd": 2.0
+      },
+      "cleanup_phis": 79,
+      "cleanup_selects": 93
+    },
+    "anchor": {
+      "tti_throughput": 4549,
+      "tti_latency": 4512,
+      "latency_control": 4518,
+      "latency_gain": 6,
+      "same_hsaco_as_throughput": true,
+      "alignment": {
+        "blocks": [
+          {
+            "fallback": "",
+            "left": "%if.then12.i.i.i388.i.i.i.i",
+            "pairs": 1,
+            "right": "%replicated.bb"
+          },
+          {
+            "fallback": "",
+            "left": "%fusion.side4",
+            "pairs": 1,
+            "right": "%if.else21.i.i.i400.i.i.i.i"
+          },
+          {
+            "fallback": "",
+            "left": "%fusion.side5",
+            "pairs": 1,
+            "right": "%replicated.bb1"
+          },
+          {
+            "fallback": "",
+            "left": "%new.exit",
+            "pairs": 1,
+            "right": "%replicated.bb2"
+          }
+        ],
+        "branch_conditions": 1,
+        "other_selects": 0,
+        "select_conditions": 0,
+        "tie_pairs": false,
+        "unquoted_instruction_lookups": 0
+      },
+      "hot_loop": {
+        "instructions": 439,
+        "conditional": 14,
+        "exec": 28,
+        "valu": 390,
+        "salu": 35,
+        "memory": 0,
+        "unconditional": 0,
+        "flow_wait_other": 14,
+        "execz": 0,
+        "execnz": 14,
+        "mask": 14,
+        "lds": 0,
+        "waitcnt": 0,
+        "cndmask": 0,
+        "bytes": 3204
+      },
+      "resources": {
+        "sgpr_count": 42,
+        "vgpr_count": 102,
+        "sgpr_spill_count": 0,
+        "vgpr_spill_count": 0,
+        "group_segment_fixed_size": 0,
+        "wavefront_size": 64,
+        "max_flat_workgroup_size": 256,
+        "threads": 256,
+        "dynamic_lds": 0,
+        "waves_per_simd": 2.0
+      },
+      "cleanup_phis": 79,
+      "cleanup_selects": 93
+    }
+  },
+  {
+    "case": "MapAiry",
+    "commit": 18,
+    "trial": "trial-169",
+    "type": "R2B",
+    "extra": false,
+    "hsaco_equal": true,
+    "o3_equal": true,
+    "hot_machine_edits": 0,
+    "darm": {
+      "tti_throughput": 4535,
+      "tti_latency": 4497,
+      "latency_control": 4503,
+      "latency_gain": 6,
+      "same_hsaco_as_throughput": true,
+      "alignment": {
+        "blocks": [
+          {
+            "fallback": "",
+            "left": "%if.then12.i.i.i275.i.i.i.i",
+            "pairs": 1,
+            "right": "%replicated.bb"
+          },
+          {
+            "fallback": "",
+            "left": "%fusion.side4",
+            "pairs": 1,
+            "right": "%if.else21.i.i.i287.i.i.i.i"
+          },
+          {
+            "fallback": "",
+            "left": "%fusion.side5",
+            "pairs": 1,
+            "right": "%replicated.bb1"
+          },
+          {
+            "fallback": "",
+            "left": "%new.exit",
+            "pairs": 1,
+            "right": "%replicated.bb2"
+          }
+        ],
+        "branch_conditions": 1,
+        "other_selects": 0,
+        "select_conditions": 0,
+        "tie_pairs": false,
+        "unquoted_instruction_lookups": 0
+      },
+      "hot_loop": {
+        "instructions": 439,
+        "conditional": 14,
+        "exec": 28,
+        "valu": 390,
+        "salu": 35,
+        "memory": 0,
+        "unconditional": 0,
+        "flow_wait_other": 14,
+        "execz": 0,
+        "execnz": 14,
+        "mask": 14,
+        "lds": 0,
+        "waitcnt": 0,
+        "cndmask": 0,
+        "bytes": 3204
+      },
+      "resources": {
+        "sgpr_count": 42,
+        "vgpr_count": 102,
+        "sgpr_spill_count": 0,
+        "vgpr_spill_count": 0,
+        "group_segment_fixed_size": 0,
+        "wavefront_size": 64,
+        "max_flat_workgroup_size": 256,
+        "threads": 256,
+        "dynamic_lds": 0,
+        "waves_per_simd": 2.0
+      },
+      "cleanup_phis": 80,
+      "cleanup_selects": 97
+    },
+    "anchor": {
+      "tti_throughput": 4535,
+      "tti_latency": 4497,
+      "latency_control": 4503,
+      "latency_gain": 6,
+      "same_hsaco_as_throughput": true,
+      "alignment": {
+        "blocks": [
+          {
+            "fallback": "",
+            "left": "%if.then12.i.i.i275.i.i.i.i",
+            "pairs": 1,
+            "right": "%replicated.bb"
+          },
+          {
+            "fallback": "",
+            "left": "%fusion.side4",
+            "pairs": 1,
+            "right": "%if.else21.i.i.i287.i.i.i.i"
+          },
+          {
+            "fallback": "",
+            "left": "%fusion.side5",
+            "pairs": 1,
+            "right": "%replicated.bb1"
+          },
+          {
+            "fallback": "",
+            "left": "%new.exit",
+            "pairs": 1,
+            "right": "%replicated.bb2"
+          }
+        ],
+        "branch_conditions": 1,
+        "other_selects": 0,
+        "select_conditions": 0,
+        "tie_pairs": false,
+        "unquoted_instruction_lookups": 0
+      },
+      "hot_loop": {
+        "instructions": 439,
+        "conditional": 14,
+        "exec": 28,
+        "valu": 390,
+        "salu": 35,
+        "memory": 0,
+        "unconditional": 0,
+        "flow_wait_other": 14,
+        "execz": 0,
+        "execnz": 14,
+        "mask": 14,
+        "lds": 0,
+        "waitcnt": 0,
+        "cndmask": 0,
+        "bytes": 3204
+      },
+      "resources": {
+        "sgpr_count": 42,
+        "vgpr_count": 102,
+        "sgpr_spill_count": 0,
+        "vgpr_spill_count": 0,
+        "group_segment_fixed_size": 0,
+        "wavefront_size": 64,
+        "max_flat_workgroup_size": 256,
+        "threads": 256,
+        "dynamic_lds": 0,
+        "waves_per_simd": 2.0
+      },
+      "cleanup_phis": 80,
+      "cleanup_selects": 97
+    }
+  },
+  {
+    "case": "MapAiry",
+    "commit": 20,
+    "trial": "trial-181",
+    "type": "R2B",
+    "extra": false,
+    "hsaco_equal": true,
+    "o3_equal": true,
+    "hot_machine_edits": 0,
+    "darm": {
+      "tti_throughput": 4521,
+      "tti_latency": 4482,
+      "latency_control": 4488,
+      "latency_gain": 6,
+      "same_hsaco_as_throughput": true,
+      "alignment": {
+        "blocks": [
+          {
+            "fallback": "",
+            "left": "%if.then12.i.i.i194.i.i.i.i",
+            "pairs": 1,
+            "right": "%replicated.bb"
+          },
+          {
+            "fallback": "",
+            "left": "%fusion.side4",
+            "pairs": 1,
+            "right": "%if.else21.i.i.i206.i.i.i.i"
+          },
+          {
+            "fallback": "",
+            "left": "%fusion.side5",
+            "pairs": 1,
+            "right": "%replicated.bb1"
+          },
+          {
+            "fallback": "",
+            "left": "%new.exit",
+            "pairs": 1,
+            "right": "%replicated.bb2"
+          }
+        ],
+        "branch_conditions": 1,
+        "other_selects": 0,
+        "select_conditions": 0,
+        "tie_pairs": false,
+        "unquoted_instruction_lookups": 0
+      },
+      "hot_loop": {
+        "instructions": 439,
+        "conditional": 14,
+        "exec": 28,
+        "valu": 390,
+        "salu": 35,
+        "memory": 0,
+        "unconditional": 0,
+        "flow_wait_other": 14,
+        "execz": 0,
+        "execnz": 14,
+        "mask": 14,
+        "lds": 0,
+        "waitcnt": 0,
+        "cndmask": 0,
+        "bytes": 3204
+      },
+      "resources": {
+        "sgpr_count": 42,
+        "vgpr_count": 102,
+        "sgpr_spill_count": 0,
+        "vgpr_spill_count": 0,
+        "group_segment_fixed_size": 0,
+        "wavefront_size": 64,
+        "max_flat_workgroup_size": 256,
+        "threads": 256,
+        "dynamic_lds": 0,
+        "waves_per_simd": 2.0
+      },
+      "cleanup_phis": 81,
+      "cleanup_selects": 101
+    },
+    "anchor": {
+      "tti_throughput": 4521,
+      "tti_latency": 4482,
+      "latency_control": 4488,
+      "latency_gain": 6,
+      "same_hsaco_as_throughput": true,
+      "alignment": {
+        "blocks": [
+          {
+            "fallback": "",
+            "left": "%if.then12.i.i.i194.i.i.i.i",
+            "pairs": 1,
+            "right": "%replicated.bb"
+          },
+          {
+            "fallback": "",
+            "left": "%fusion.side4",
+            "pairs": 1,
+            "right": "%if.else21.i.i.i206.i.i.i.i"
+          },
+          {
+            "fallback": "",
+            "left": "%fusion.side5",
+            "pairs": 1,
+            "right": "%replicated.bb1"
+          },
+          {
+            "fallback": "",
+            "left": "%new.exit",
+            "pairs": 1,
+            "right": "%replicated.bb2"
+          }
+        ],
+        "branch_conditions": 1,
+        "other_selects": 0,
+        "select_conditions": 0,
+        "tie_pairs": false,
+        "unquoted_instruction_lookups": 0
+      },
+      "hot_loop": {
+        "instructions": 439,
+        "conditional": 14,
+        "exec": 28,
+        "valu": 390,
+        "salu": 35,
+        "memory": 0,
+        "unconditional": 0,
+        "flow_wait_other": 14,
+        "execz": 0,
+        "execnz": 14,
+        "mask": 14,
+        "lds": 0,
+        "waitcnt": 0,
+        "cndmask": 0,
+        "bytes": 3204
+      },
+      "resources": {
+        "sgpr_count": 42,
+        "vgpr_count": 102,
+        "sgpr_spill_count": 0,
+        "vgpr_spill_count": 0,
+        "group_segment_fixed_size": 0,
+        "wavefront_size": 64,
+        "max_flat_workgroup_size": 256,
+        "threads": 256,
+        "dynamic_lds": 0,
+        "waves_per_simd": 2.0
+      },
+      "cleanup_phis": 81,
+      "cleanup_selects": 101
+    }
+  },
+  {
+    "case": "MapAiry",
+    "commit": 22,
+    "trial": "trial-193",
+    "type": "R2B",
+    "extra": false,
+    "hsaco_equal": true,
+    "o3_equal": true,
+    "hot_machine_edits": 0,
+    "darm": {
+      "tti_throughput": 4506,
+      "tti_latency": 4466,
+      "latency_control": 4473,
+      "latency_gain": 7,
+      "same_hsaco_as_throughput": true,
+      "alignment": {
+        "blocks": [
+          {
+            "fallback": "",
+            "left": "%if.then12.i.i.i113.i.i.i.i",
+            "pairs": 1,
+            "right": "%replicated.bb"
+          },
+          {
+            "fallback": "",
+            "left": "%fusion.side4",
+            "pairs": 1,
+            "right": "%if.else21.i.i.i125.i.i.i.i"
+          },
+          {
+            "fallback": "",
+            "left": "%fusion.side5",
+            "pairs": 1,
+            "right": "%replicated.bb1"
+          },
+          {
+            "fallback": "",
+            "left": "%new.exit",
+            "pairs": 1,
+            "right": "%replicated.bb2"
+          }
+        ],
+        "branch_conditions": 1,
+        "other_selects": 0,
+        "select_conditions": 0,
+        "tie_pairs": false,
+        "unquoted_instruction_lookups": 0
+      },
+      "hot_loop": {
+        "instructions": 438,
+        "conditional": 14,
+        "exec": 28,
+        "valu": 389,
+        "salu": 35,
+        "memory": 0,
+        "unconditional": 0,
+        "flow_wait_other": 14,
+        "execz": 0,
+        "execnz": 14,
+        "mask": 14,
+        "lds": 0,
+        "waitcnt": 0,
+        "cndmask": 0,
+        "bytes": 3196
+      },
+      "resources": {
+        "sgpr_count": 44,
+        "vgpr_count": 102,
+        "sgpr_spill_count": 0,
+        "vgpr_spill_count": 0,
+        "group_segment_fixed_size": 0,
+        "wavefront_size": 64,
+        "max_flat_workgroup_size": 256,
+        "threads": 256,
+        "dynamic_lds": 0,
+        "waves_per_simd": 2.0
+      },
+      "cleanup_phis": 82,
+      "cleanup_selects": 105
+    },
+    "anchor": {
+      "tti_throughput": 4506,
+      "tti_latency": 4466,
+      "latency_control": 4473,
+      "latency_gain": 7,
+      "same_hsaco_as_throughput": true,
+      "alignment": {
+        "blocks": [
+          {
+            "fallback": "",
+            "left": "%if.then12.i.i.i113.i.i.i.i",
+            "pairs": 1,
+            "right": "%replicated.bb"
+          },
+          {
+            "fallback": "",
+            "left": "%fusion.side4",
+            "pairs": 1,
+            "right": "%if.else21.i.i.i125.i.i.i.i"
+          },
+          {
+            "fallback": "",
+            "left": "%fusion.side5",
+            "pairs": 1,
+            "right": "%replicated.bb1"
+          },
+          {
+            "fallback": "",
+            "left": "%new.exit",
+            "pairs": 1,
+            "right": "%replicated.bb2"
+          }
+        ],
+        "branch_conditions": 1,
+        "other_selects": 0,
+        "select_conditions": 0,
+        "tie_pairs": false,
+        "unquoted_instruction_lookups": 0
+      },
+      "hot_loop": {
+        "instructions": 438,
+        "conditional": 14,
+        "exec": 28,
+        "valu": 389,
+        "salu": 35,
+        "memory": 0,
+        "unconditional": 0,
+        "flow_wait_other": 14,
+        "execz": 0,
+        "execnz": 14,
+        "mask": 14,
+        "lds": 0,
+        "waitcnt": 0,
+        "cndmask": 0,
+        "bytes": 3196
+      },
+      "resources": {
+        "sgpr_count": 44,
+        "vgpr_count": 102,
+        "sgpr_spill_count": 0,
+        "vgpr_spill_count": 0,
+        "group_segment_fixed_size": 0,
+        "wavefront_size": 64,
+        "max_flat_workgroup_size": 256,
+        "threads": 256,
+        "dynamic_lds": 0,
+        "waves_per_simd": 2.0
+      },
+      "cleanup_phis": 82,
+      "cleanup_selects": 105
+    }
+  },
+  {
+    "case": "MapAiry",
+    "commit": 24,
+    "trial": "trial-228",
+    "type": "R2R",
+    "extra": false,
+    "hsaco_equal": false,
+    "o3_equal": false,
+    "hot_machine_edits": 148,
+    "darm": {
+      "tti_throughput": 4481,
+      "tti_latency": 4437,
+      "latency_control": 4446,
+      "latency_gain": 9,
+      "same_hsaco_as_throughput": true,
+      "alignment": {
+        "blocks": [
+          {
+            "fallback": "",
+            "left": "%do.body.i.i.i61.i.i.i.i",
+            "pairs": 7,
+            "right": "%do.body40.i.i.i72.i.i.i.i"
+          },
+          {
+            "fallback": "",
+            "left": "%new.exit",
+            "pairs": 1,
+            "right": "%new.exit1"
+          }
+        ],
+        "branch_conditions": 1,
+        "other_selects": 10,
+        "select_conditions": 0,
+        "tie_pairs": false,
+        "unquoted_instruction_lookups": 0
+      },
+      "hot_loop": {
+        "instructions": 458,
+        "conditional": 17,
+        "exec": 40,
+        "valu": 396,
+        "salu": 43,
+        "memory": 0,
+        "unconditional": 2,
+        "flow_wait_other": 19,
+        "execz": 5,
+        "execnz": 12,
+        "mask": 23,
+        "lds": 0,
+        "waitcnt": 0,
+        "cndmask": 11,
+        "bytes": 3272
+      },
+      "resources": {
+        "sgpr_count": 46,
+        "vgpr_count": 102,
+        "sgpr_spill_count": 0,
+        "vgpr_spill_count": 0,
+        "group_segment_fixed_size": 0,
+        "wavefront_size": 64,
+        "max_flat_workgroup_size": 256,
+        "threads": 256,
+        "dynamic_lds": 0,
+        "waves_per_simd": 2.0
+      },
+      "cleanup_phis": 86,
+      "cleanup_selects": 112
+    },
+    "anchor": {
+      "tti_throughput": 4482,
+      "tti_latency": 4439,
+      "latency_control": 4446,
+      "latency_gain": 7,
+      "same_hsaco_as_throughput": false,
+      "alignment": {
+        "blocks": [
+          {
+            "fallback": "",
+            "left": "%do.body.i.i.i61.i.i.i.i",
+            "pairs": 4,
+            "right": "%do.body40.i.i.i72.i.i.i.i"
+          },
+          {
+            "fallback": "",
+            "left": "%new.exit",
+            "pairs": 1,
+            "right": "%new.exit1"
+          }
+        ],
+        "branch_conditions": 1,
+        "other_selects": 5,
+        "select_conditions": 0,
+        "tie_pairs": false,
+        "unquoted_instruction_lookups": 0
+      },
+      "hot_loop": {
+        "instructions": 452,
+        "conditional": 15,
+        "exec": 43,
+        "valu": 385,
+        "salu": 51,
+        "memory": 0,
+        "unconditional": 1,
+        "flow_wait_other": 16,
+        "execz": 3,
+        "execnz": 12,
+        "mask": 28,
+        "lds": 0,
+        "waitcnt": 0,
+        "cndmask": 2,
+        "bytes": 3216
+      },
+      "resources": {
+        "sgpr_count": 46,
+        "vgpr_count": 102,
+        "sgpr_spill_count": 0,
+        "vgpr_spill_count": 0,
+        "group_segment_fixed_size": 0,
+        "wavefront_size": 64,
+        "max_flat_workgroup_size": 256,
+        "threads": 256,
+        "dynamic_lds": 0,
+        "waves_per_simd": 2.0
+      },
+      "cleanup_phis": 88,
+      "cleanup_selects": 106
+    }
+  },
+  {
+    "case": "MapAiry",
+    "commit": 26,
+    "trial": "trial-281",
+    "type": "R2R",
+    "extra": false,
+    "hsaco_equal": false,
+    "o3_equal": false,
+    "hot_machine_edits": 0,
+    "darm": {
+      "tti_throughput": 4350,
+      "tti_latency": 4254,
+      "latency_control": 4436,
+      "latency_gain": 182,
+      "same_hsaco_as_throughput": true,
+      "alignment": {
+        "blocks": [
+          {
+            "fallback": "",
+            "left": "%decision.dispatch4",
+            "pairs": 100,
+            "right": "%decision.dispatch"
+          },
+          {
+            "fallback": "",
+            "left": "%merged.bb33",
+            "pairs": 8,
+            "right": "%merged.bb36"
+          },
+          {
+            "fallback": "",
+            "left": "%merged.bb34",
+            "pairs": 8,
+            "right": "%merged.bb37"
+          },
+          {
+            "fallback": "",
+            "left": "%new.exit",
+            "pairs": 1,
+            "right": "%new.exit34"
+          }
+        ],
+        "branch_conditions": 0,
+        "other_selects": 7,
+        "select_conditions": 0,
+        "tie_pairs": false,
+        "unquoted_instruction_lookups": 0
+      },
+      "hot_loop": {
+        "instructions": 458,
+        "conditional": 17,
+        "exec": 40,
+        "valu": 396,
+        "salu": 43,
+        "memory": 0,
+        "unconditional": 2,
+        "flow_wait_other": 19,
+        "execz": 5,
+        "execnz": 12,
+        "mask": 23,
+        "lds": 0,
+        "waitcnt": 0,
+        "cndmask": 11,
+        "bytes": 3272
+      },
+      "resources": {
+        "sgpr_count": 46,
+        "vgpr_count": 78,
+        "sgpr_spill_count": 0,
+        "vgpr_spill_count": 0,
+        "group_segment_fixed_size": 0,
+        "wavefront_size": 64,
+        "max_flat_workgroup_size": 256,
+        "threads": 256,
+        "dynamic_lds": 0,
+        "waves_per_simd": 3.0
+      },
+      "cleanup_phis": 138,
+      "cleanup_selects": 116
+    },
+    "anchor": {
+      "tti_throughput": 4384,
+      "tti_latency": 4284,
+      "latency_control": 4436,
+      "latency_gain": 152,
+      "same_hsaco_as_throughput": true,
+      "alignment": {
+        "blocks": [
+          {
+            "fallback": "",
+            "left": "%decision.dispatch4",
+            "pairs": 97,
+            "right": "%decision.dispatch"
+          },
+          {
+            "fallback": "",
+            "left": "%merged.bb33",
+            "pairs": 1,
+            "right": "%merged.bb36"
+          },
+          {
+            "fallback": "",
+            "left": "%merged.bb34",
+            "pairs": 1,
+            "right": "%merged.bb37"
+          },
+          {
+            "fallback": "",
+            "left": "%new.exit",
+            "pairs": 1,
+            "right": "%new.exit34"
+          }
+        ],
+        "branch_conditions": 0,
+        "other_selects": 4,
+        "select_conditions": 0,
+        "tie_pairs": false,
+        "unquoted_instruction_lookups": 0
+      },
+      "hot_loop": {
+        "instructions": 458,
+        "conditional": 17,
+        "exec": 40,
+        "valu": 396,
+        "salu": 43,
+        "memory": 0,
+        "unconditional": 2,
+        "flow_wait_other": 19,
+        "execz": 5,
+        "execnz": 12,
+        "mask": 23,
+        "lds": 0,
+        "waitcnt": 0,
+        "cndmask": 11,
+        "bytes": 3272
+      },
+      "resources": {
+        "sgpr_count": 46,
+        "vgpr_count": 104,
+        "sgpr_spill_count": 0,
+        "vgpr_spill_count": 0,
+        "group_segment_fixed_size": 0,
+        "wavefront_size": 64,
+        "max_flat_workgroup_size": 256,
+        "threads": 256,
+        "dynamic_lds": 0,
+        "waves_per_simd": 2.0
+      },
+      "cleanup_phis": 142,
+      "cleanup_selects": 116
+    }
+  },
+  {
+    "case": "MapAiry",
+    "commit": 29,
+    "trial": "trial-348",
+    "type": "R2R",
+    "extra": false,
+    "hsaco_equal": false,
+    "o3_equal": false,
+    "hot_machine_edits": 323,
+    "darm": {
+      "tti_throughput": 4099,
+      "tti_latency": 3994,
+      "latency_control": 4003,
+      "latency_gain": 9,
+      "same_hsaco_as_throughput": true,
+      "alignment": {
+        "blocks": [
+          {
+            "fallback": "",
+            "left": "%do.body.i.i.i142.i.i.i.i",
+            "pairs": 7,
+            "right": "%do.body40.i.i.i153.i.i.i.i"
+          },
+          {
+            "fallback": "",
+            "left": "%new.exit",
+            "pairs": 1,
+            "right": "%new.exit1"
+          }
+        ],
+        "branch_conditions": 1,
+        "other_selects": 10,
+        "select_conditions": 0,
+        "tie_pairs": false,
+        "unquoted_instruction_lookups": 0
+      },
+      "hot_loop": {
+        "instructions": 479,
+        "conditional": 20,
+        "exec": 52,
+        "valu": 404,
+        "salu": 51,
+        "memory": 0,
+        "unconditional": 4,
+        "flow_wait_other": 24,
+        "execz": 10,
+        "execnz": 10,
+        "mask": 32,
+        "lds": 0,
+        "waitcnt": 0,
+        "cndmask": 22,
+        "bytes": 3356
+      },
+      "resources": {
+        "sgpr_count": 46,
+        "vgpr_count": 75,
+        "sgpr_spill_count": 0,
+        "vgpr_spill_count": 0,
+        "group_segment_fixed_size": 0,
+        "wavefront_size": 64,
+        "max_flat_workgroup_size": 256,
+        "threads": 256,
+        "dynamic_lds": 0,
+        "waves_per_simd": 3.0
+      },
+      "cleanup_phis": 147,
+      "cleanup_selects": 135
+    },
+    "anchor": {
+      "tti_throughput": 4100,
+      "tti_latency": 3996,
+      "latency_control": 4003,
+      "latency_gain": 7,
+      "same_hsaco_as_throughput": false,
+      "alignment": {
+        "blocks": [
+          {
+            "fallback": "",
+            "left": "%do.body.i.i.i142.i.i.i.i",
+            "pairs": 4,
+            "right": "%do.body40.i.i.i153.i.i.i.i"
+          },
+          {
+            "fallback": "",
+            "left": "%new.exit",
+            "pairs": 1,
+            "right": "%new.exit1"
+          }
+        ],
+        "branch_conditions": 1,
+        "other_selects": 5,
+        "select_conditions": 0,
+        "tie_pairs": false,
+        "unquoted_instruction_lookups": 0
+      },
+      "hot_loop": {
+        "instructions": 472,
+        "conditional": 18,
+        "exec": 55,
+        "valu": 392,
+        "salu": 59,
+        "memory": 0,
+        "unconditional": 3,
+        "flow_wait_other": 21,
+        "execz": 8,
+        "execnz": 10,
+        "mask": 37,
+        "lds": 0,
+        "waitcnt": 0,
+        "cndmask": 13,
+        "bytes": 3292
+      },
+      "resources": {
+        "sgpr_count": 48,
+        "vgpr_count": 75,
+        "sgpr_spill_count": 0,
+        "vgpr_spill_count": 0,
+        "group_segment_fixed_size": 0,
+        "wavefront_size": 64,
+        "max_flat_workgroup_size": 256,
+        "threads": 256,
+        "dynamic_lds": 0,
+        "waves_per_simd": 3.0
+      },
+      "cleanup_phis": 149,
+      "cleanup_selects": 129
+    }
+  },
+  {
+    "case": "tigre",
+    "commit": 1,
+    "trial": "trial-0",
+    "type": "R2R",
+    "extra": false,
+    "hsaco_equal": false,
+    "o3_equal": false,
+    "hot_machine_edits": 0,
+    "darm": {
+      "tti_throughput": 1152,
+      "tti_latency": 1228,
+      "latency_control": 1255,
+      "latency_gain": 27,
+      "same_hsaco_as_throughput": true,
+      "alignment": {
+        "blocks": [
+          {
+            "fallback": "",
+            "left": "%if.then185",
+            "pairs": 7,
+            "right": "%if.else"
+          },
+          {
+            "fallback": "",
+            "left": "%cond.false200",
+            "pairs": 1,
+            "right": "%cond.false223"
+          },
+          {
+            "fallback": "",
+            "left": "%new.exit",
+            "pairs": 1,
+            "right": "%new.exit3"
+          }
+        ],
+        "branch_conditions": 0,
+        "other_selects": 2,
+        "select_conditions": 0,
+        "tie_pairs": false,
+        "unquoted_instruction_lookups": 0
+      },
+      "hot_loop": {
+        "instructions": 511,
+        "conditional": 6,
+        "exec": 19,
+        "valu": 430,
+        "salu": 37,
+        "memory": 24,
+        "unconditional": 1,
+        "flow_wait_other": 20,
+        "execz": 6,
+        "execnz": 0,
+        "mask": 13,
+        "lds": 0,
+        "waitcnt": 13,
+        "cndmask": 84,
+        "bytes": 2556
+      },
+      "resources": {
+        "sgpr_count": 54,
+        "vgpr_count": 45,
+        "sgpr_spill_count": 0,
+        "vgpr_spill_count": 0,
+        "group_segment_fixed_size": 0,
+        "wavefront_size": 64,
+        "max_flat_workgroup_size": 729,
+        "threads": 256,
+        "dynamic_lds": 0,
+        "waves_per_simd": 5.0
+      },
+      "cleanup_phis": 29,
+      "cleanup_selects": 63
+    },
+    "anchor": {
+      "tti_throughput": 1152,
+      "tti_latency": 1238,
+      "latency_control": 1255,
+      "latency_gain": 17,
+      "same_hsaco_as_throughput": false,
+      "alignment": {
+        "blocks": [
+          {
+            "fallback": "",
+            "left": "%if.then185",
+            "pairs": 6,
+            "right": "%if.else"
+          },
+          {
+            "fallback": "",
+            "left": "%cond.false200",
+            "pairs": 1,
+            "right": "%cond.false223"
+          },
+          {
+            "fallback": "",
+            "left": "%new.exit",
+            "pairs": 1,
+            "right": "%new.exit3"
+          }
+        ],
+        "branch_conditions": 0,
+        "other_selects": 0,
+        "select_conditions": 0,
+        "tie_pairs": false,
+        "unquoted_instruction_lookups": 0
+      },
+      "hot_loop": {
+        "instructions": 511,
+        "conditional": 6,
+        "exec": 19,
+        "valu": 430,
+        "salu": 37,
+        "memory": 24,
+        "unconditional": 1,
+        "flow_wait_other": 20,
+        "execz": 6,
+        "execnz": 0,
+        "mask": 13,
+        "lds": 0,
+        "waitcnt": 13,
+        "cndmask": 84,
+        "bytes": 2556
+      },
+      "resources": {
+        "sgpr_count": 54,
+        "vgpr_count": 45,
+        "sgpr_spill_count": 0,
+        "vgpr_spill_count": 0,
+        "group_segment_fixed_size": 0,
+        "wavefront_size": 64,
+        "max_flat_workgroup_size": 729,
+        "threads": 256,
+        "dynamic_lds": 0,
+        "waves_per_simd": 5.0
+      },
+      "cleanup_phis": 31,
+      "cleanup_selects": 62
+    }
+  },
+  {
+    "case": "tigre",
+    "commit": 2,
+    "trial": "trial-3",
+    "type": "R2R",
+    "extra": false,
+    "hsaco_equal": false,
+    "o3_equal": false,
+    "hot_machine_edits": 48,
+    "darm": {
+      "tti_throughput": 1122,
+      "tti_latency": 1201,
+      "latency_control": 1228,
+      "latency_gain": 27,
+      "same_hsaco_as_throughput": true,
+      "alignment": {
+        "blocks": [
+          {
+            "fallback": "",
+            "left": "%if.then235",
+            "pairs": 5,
+            "right": "%if.else258"
+          },
+          {
+            "fallback": "",
+            "left": "%cond.false250",
+            "pairs": 3,
+            "right": "%cond.false274"
+          },
+          {
+            "fallback": "",
+            "left": "%new.exit",
+            "pairs": 1,
+            "right": "%new.exit3"
+          }
+        ],
+        "branch_conditions": 0,
+        "other_selects": 2,
+        "select_conditions": 0,
+        "tie_pairs": false,
+        "unquoted_instruction_lookups": 0
+      },
+      "hot_loop": {
+        "instructions": 511,
+        "conditional": 6,
+        "exec": 19,
+        "valu": 430,
+        "salu": 37,
+        "memory": 24,
+        "unconditional": 1,
+        "flow_wait_other": 20,
+        "execz": 6,
+        "execnz": 0,
+        "mask": 13,
+        "lds": 0,
+        "waitcnt": 13,
+        "cndmask": 84,
+        "bytes": 2556
+      },
+      "resources": {
+        "sgpr_count": 54,
+        "vgpr_count": 45,
+        "sgpr_spill_count": 0,
+        "vgpr_spill_count": 0,
+        "group_segment_fixed_size": 0,
+        "wavefront_size": 64,
+        "max_flat_workgroup_size": 729,
+        "threads": 256,
+        "dynamic_lds": 0,
+        "waves_per_simd": 5.0
+      },
+      "cleanup_phis": 26,
+      "cleanup_selects": 70
+    },
+    "anchor": {
+      "tti_throughput": 1122,
+      "tti_latency": 1202,
+      "latency_control": 1228,
+      "latency_gain": 26,
+      "same_hsaco_as_throughput": false,
+      "alignment": {
+        "blocks": [
+          {
+            "fallback": "",
+            "left": "%if.then235",
+            "pairs": 4,
+            "right": "%if.else258"
+          },
+          {
+            "fallback": "",
+            "left": "%cond.false250",
+            "pairs": 3,
+            "right": "%cond.false274"
+          },
+          {
+            "fallback": "",
+            "left": "%new.exit",
+            "pairs": 1,
+            "right": "%new.exit3"
+          }
+        ],
+        "branch_conditions": 0,
+        "other_selects": 0,
+        "select_conditions": 0,
+        "tie_pairs": false,
+        "unquoted_instruction_lookups": 0
+      },
+      "hot_loop": {
+        "instructions": 511,
+        "conditional": 6,
+        "exec": 19,
+        "valu": 430,
+        "salu": 37,
+        "memory": 24,
+        "unconditional": 1,
+        "flow_wait_other": 20,
+        "execz": 6,
+        "execnz": 0,
+        "mask": 13,
+        "lds": 0,
+        "waitcnt": 13,
+        "cndmask": 84,
+        "bytes": 2556
+      },
+      "resources": {
+        "sgpr_count": 54,
+        "vgpr_count": 45,
+        "sgpr_spill_count": 0,
+        "vgpr_spill_count": 0,
+        "group_segment_fixed_size": 0,
+        "wavefront_size": 64,
+        "max_flat_workgroup_size": 729,
+        "threads": 256,
+        "dynamic_lds": 0,
+        "waves_per_simd": 5.0
+      },
+      "cleanup_phis": 26,
+      "cleanup_selects": 71
+    }
+  },
+  {
+    "case": "tigre",
+    "commit": 3,
+    "trial": "trial-6",
+    "type": "R2R",
+    "extra": false,
+    "hsaco_equal": false,
+    "o3_equal": false,
+    "hot_machine_edits": 0,
+    "darm": {
+      "tti_throughput": 1092,
+      "tti_latency": 1174,
+      "latency_control": 1201,
+      "latency_gain": 27,
+      "same_hsaco_as_throughput": true,
+      "alignment": {
+        "blocks": [
+          {
+            "fallback": "",
+            "left": "%if.then286",
+            "pairs": 5,
+            "right": "%if.else309"
+          },
+          {
+            "fallback": "",
+            "left": "%cond.false301",
+            "pairs": 3,
+            "right": "%cond.false325"
+          },
+          {
+            "fallback": "",
+            "left": "%new.exit",
+            "pairs": 1,
+            "right": "%new.exit3"
+          }
+        ],
+        "branch_conditions": 0,
+        "other_selects": 2,
+        "select_conditions": 0,
+        "tie_pairs": false,
+        "unquoted_instruction_lookups": 0
+      },
+      "hot_loop": {
+        "instructions": 511,
+        "conditional": 6,
+        "exec": 19,
+        "valu": 430,
+        "salu": 37,
+        "memory": 24,
+        "unconditional": 1,
+        "flow_wait_other": 20,
+        "execz": 6,
+        "execnz": 0,
+        "mask": 13,
+        "lds": 0,
+        "waitcnt": 13,
+        "cndmask": 84,
+        "bytes": 2556
+      },
+      "resources": {
+        "sgpr_count": 54,
+        "vgpr_count": 45,
+        "sgpr_spill_count": 0,
+        "vgpr_spill_count": 0,
+        "group_segment_fixed_size": 0,
+        "wavefront_size": 64,
+        "max_flat_workgroup_size": 729,
+        "threads": 256,
+        "dynamic_lds": 0,
+        "waves_per_simd": 5.0
+      },
+      "cleanup_phis": 23,
+      "cleanup_selects": 77
+    },
+    "anchor": {
+      "tti_throughput": 1092,
+      "tti_latency": 1175,
+      "latency_control": 1201,
+      "latency_gain": 26,
+      "same_hsaco_as_throughput": false,
+      "alignment": {
+        "blocks": [
+          {
+            "fallback": "",
+            "left": "%if.then286",
+            "pairs": 4,
+            "right": "%if.else309"
+          },
+          {
+            "fallback": "",
+            "left": "%cond.false301",
+            "pairs": 3,
+            "right": "%cond.false325"
+          },
+          {
+            "fallback": "",
+            "left": "%new.exit",
+            "pairs": 1,
+            "right": "%new.exit3"
+          }
+        ],
+        "branch_conditions": 0,
+        "other_selects": 0,
+        "select_conditions": 0,
+        "tie_pairs": false,
+        "unquoted_instruction_lookups": 0
+      },
+      "hot_loop": {
+        "instructions": 511,
+        "conditional": 6,
+        "exec": 19,
+        "valu": 430,
+        "salu": 37,
+        "memory": 24,
+        "unconditional": 1,
+        "flow_wait_other": 20,
+        "execz": 6,
+        "execnz": 0,
+        "mask": 13,
+        "lds": 0,
+        "waitcnt": 13,
+        "cndmask": 84,
+        "bytes": 2556
+      },
+      "resources": {
+        "sgpr_count": 54,
+        "vgpr_count": 45,
+        "sgpr_spill_count": 0,
+        "vgpr_spill_count": 0,
+        "group_segment_fixed_size": 0,
+        "wavefront_size": 64,
+        "max_flat_workgroup_size": 729,
+        "threads": 256,
+        "dynamic_lds": 0,
+        "waves_per_simd": 5.0
+      },
+      "cleanup_phis": 23,
+      "cleanup_selects": 78
+    }
+  },
+  {
+    "case": "HLLD",
+    "commit": 1,
+    "trial": "trial-0",
+    "type": "B2R",
+    "extra": false,
+    "hsaco_equal": true,
+    "o3_equal": true,
+    "hot_machine_edits": 0,
+    "darm": {
+      "tti_throughput": 1847,
+      "tti_latency": 1876,
+      "latency_control": 1883,
+      "latency_gain": 7,
+      "same_hsaco_as_throughput": true,
+      "alignment": {
+        "blocks": [
+          {
+            "fallback": "",
+            "left": "%261",
+            "pairs": 15,
+            "right": "%296"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb",
+            "pairs": 1,
+            "right": "%269"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb1",
+            "pairs": 1,
+            "right": "%304"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb2",
+            "pairs": 1,
+            "right": "%new.exit"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb3",
+            "pairs": 1,
+            "right": "%352"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb4",
+            "pairs": 1,
+            "right": "%335"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb5",
+            "pairs": 1,
+            "right": "%425"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb6",
+            "pairs": 1,
+            "right": "%391"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb7",
+            "pairs": 1,
+            "right": "%449"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb8",
+            "pairs": 1,
+            "right": "%432"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb9",
+            "pairs": 1,
+            "right": "%519"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb10",
+            "pairs": 1,
+            "right": "%485"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb11",
+            "pairs": 1,
+            "right": "%522"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb12",
+            "pairs": 1,
+            "right": "%525"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb13",
+            "pairs": 1,
+            "right": "%524"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb14",
+            "pairs": 1,
+            "right": "%615"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb15",
+            "pairs": 1,
+            "right": "%683"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb16",
+            "pairs": 1,
+            "right": "%625"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb17",
+            "pairs": 1,
+            "right": "%687"
+          }
+        ],
+        "branch_conditions": 9,
+        "other_selects": 7,
+        "select_conditions": 0,
+        "tie_pairs": false,
+        "unquoted_instruction_lookups": 0
+      },
+      "hot_loop": {
+        "instructions": 0,
+        "conditional": 0,
+        "exec": 0,
+        "valu": 0,
+        "salu": 0,
+        "memory": 0,
+        "unconditional": 0,
+        "flow_wait_other": 0,
+        "execz": 0,
+        "execnz": 0,
+        "mask": 0,
+        "lds": 0,
+        "waitcnt": 0,
+        "cndmask": 0,
+        "bytes": 0
+      },
+      "resources": {
+        "sgpr_count": 29,
+        "vgpr_count": 126,
+        "sgpr_spill_count": 0,
+        "vgpr_spill_count": 0,
+        "group_segment_fixed_size": 0,
+        "wavefront_size": 64,
+        "max_flat_workgroup_size": 256,
+        "threads": 128,
+        "dynamic_lds": 0,
+        "waves_per_simd": 2.0
+      },
+      "cleanup_phis": 19,
+      "cleanup_selects": 27
+    },
+    "anchor": {
+      "tti_throughput": 1847,
+      "tti_latency": 1876,
+      "latency_control": 1883,
+      "latency_gain": 7,
+      "same_hsaco_as_throughput": true,
+      "alignment": {
+        "blocks": [
+          {
+            "fallback": "",
+            "left": "%261",
+            "pairs": 15,
+            "right": "%296"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb",
+            "pairs": 1,
+            "right": "%269"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb1",
+            "pairs": 1,
+            "right": "%304"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb2",
+            "pairs": 1,
+            "right": "%new.exit"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb3",
+            "pairs": 1,
+            "right": "%352"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb4",
+            "pairs": 1,
+            "right": "%335"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb5",
+            "pairs": 1,
+            "right": "%425"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb6",
+            "pairs": 1,
+            "right": "%391"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb7",
+            "pairs": 1,
+            "right": "%449"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb8",
+            "pairs": 1,
+            "right": "%432"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb9",
+            "pairs": 1,
+            "right": "%519"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb10",
+            "pairs": 1,
+            "right": "%485"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb11",
+            "pairs": 1,
+            "right": "%522"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb12",
+            "pairs": 1,
+            "right": "%525"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb13",
+            "pairs": 1,
+            "right": "%524"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb14",
+            "pairs": 1,
+            "right": "%615"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb15",
+            "pairs": 1,
+            "right": "%683"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb16",
+            "pairs": 1,
+            "right": "%625"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb17",
+            "pairs": 1,
+            "right": "%687"
+          }
+        ],
+        "branch_conditions": 9,
+        "other_selects": 7,
+        "select_conditions": 0,
+        "tie_pairs": false,
+        "unquoted_instruction_lookups": 0
+      },
+      "hot_loop": {
+        "instructions": 0,
+        "conditional": 0,
+        "exec": 0,
+        "valu": 0,
+        "salu": 0,
+        "memory": 0,
+        "unconditional": 0,
+        "flow_wait_other": 0,
+        "execz": 0,
+        "execnz": 0,
+        "mask": 0,
+        "lds": 0,
+        "waitcnt": 0,
+        "cndmask": 0,
+        "bytes": 0
+      },
+      "resources": {
+        "sgpr_count": 29,
+        "vgpr_count": 126,
+        "sgpr_spill_count": 0,
+        "vgpr_spill_count": 0,
+        "group_segment_fixed_size": 0,
+        "wavefront_size": 64,
+        "max_flat_workgroup_size": 256,
+        "threads": 128,
+        "dynamic_lds": 0,
+        "waves_per_simd": 2.0
+      },
+      "cleanup_phis": 19,
+      "cleanup_selects": 27
+    }
+  },
+  {
+    "case": "HLLD",
+    "commit": 3,
+    "trial": "trial-21",
+    "type": "R2B",
+    "extra": false,
+    "hsaco_equal": true,
+    "o3_equal": true,
+    "hot_machine_edits": 0,
+    "darm": {
+      "tti_throughput": 1706,
+      "tti_latency": 1728,
+      "latency_control": 1776,
+      "latency_gain": 48,
+      "same_hsaco_as_throughput": true,
+      "alignment": {
+        "blocks": [
+          {
+            "fallback": "",
+            "left": "%new.exit",
+            "pairs": 1,
+            "right": "%replicated.bb4"
+          },
+          {
+            "fallback": "",
+            "left": "%merged.bb79",
+            "pairs": 1,
+            "right": "%replicated.bb"
+          },
+          {
+            "fallback": "",
+            "left": "%merged.bb81",
+            "pairs": 1,
+            "right": "%replicated.bb1"
+          },
+          {
+            "fallback": "",
+            "left": "%merged.bb82",
+            "pairs": 41,
+            "right": "%merged.bb78"
+          },
+          {
+            "fallback": "",
+            "left": "%merged.bb83",
+            "pairs": 1,
+            "right": "%replicated.bb2"
+          },
+          {
+            "fallback": "",
+            "left": "%merged.bb84",
+            "pairs": 1,
+            "right": "%replicated.bb3"
+          },
+          {
+            "fallback": "",
+            "left": "%merged.bb85",
+            "pairs": 1,
+            "right": "%replicated.bb5"
+          },
+          {
+            "fallback": "",
+            "left": "%merged.bb86",
+            "pairs": 1,
+            "right": "%replicated.bb6"
+          },
+          {
+            "fallback": "",
+            "left": "%leaf.union",
+            "pairs": 1,
+            "right": "%replicated.bb7"
+          }
+        ],
+        "branch_conditions": 4,
+        "other_selects": 32,
+        "select_conditions": 0,
+        "tie_pairs": false,
+        "unquoted_instruction_lookups": 0
+      },
+      "hot_loop": {
+        "instructions": 0,
+        "conditional": 0,
+        "exec": 0,
+        "valu": 0,
+        "salu": 0,
+        "memory": 0,
+        "unconditional": 0,
+        "flow_wait_other": 0,
+        "execz": 0,
+        "execnz": 0,
+        "mask": 0,
+        "lds": 0,
+        "waitcnt": 0,
+        "cndmask": 0,
+        "bytes": 0
+      },
+      "resources": {
+        "sgpr_count": 29,
+        "vgpr_count": 134,
+        "sgpr_spill_count": 0,
+        "vgpr_spill_count": 0,
+        "group_segment_fixed_size": 0,
+        "wavefront_size": 64,
+        "max_flat_workgroup_size": 256,
+        "threads": 128,
+        "dynamic_lds": 0,
+        "waves_per_simd": 1.0
+      },
+      "cleanup_phis": 26,
+      "cleanup_selects": 64
+    },
+    "anchor": {
+      "tti_throughput": 1706,
+      "tti_latency": 1728,
+      "latency_control": 1776,
+      "latency_gain": 48,
+      "same_hsaco_as_throughput": true,
+      "alignment": {
+        "blocks": [
+          {
+            "fallback": "",
+            "left": "%new.exit",
+            "pairs": 1,
+            "right": "%replicated.bb4"
+          },
+          {
+            "fallback": "",
+            "left": "%merged.bb79",
+            "pairs": 1,
+            "right": "%replicated.bb"
+          },
+          {
+            "fallback": "",
+            "left": "%merged.bb81",
+            "pairs": 1,
+            "right": "%replicated.bb1"
+          },
+          {
+            "fallback": "",
+            "left": "%merged.bb82",
+            "pairs": 41,
+            "right": "%merged.bb78"
+          },
+          {
+            "fallback": "",
+            "left": "%merged.bb83",
+            "pairs": 1,
+            "right": "%replicated.bb2"
+          },
+          {
+            "fallback": "",
+            "left": "%merged.bb84",
+            "pairs": 1,
+            "right": "%replicated.bb3"
+          },
+          {
+            "fallback": "",
+            "left": "%merged.bb85",
+            "pairs": 1,
+            "right": "%replicated.bb5"
+          },
+          {
+            "fallback": "",
+            "left": "%merged.bb86",
+            "pairs": 1,
+            "right": "%replicated.bb6"
+          },
+          {
+            "fallback": "",
+            "left": "%leaf.union",
+            "pairs": 1,
+            "right": "%replicated.bb7"
+          }
+        ],
+        "branch_conditions": 4,
+        "other_selects": 32,
+        "select_conditions": 0,
+        "tie_pairs": false,
+        "unquoted_instruction_lookups": 0
+      },
+      "hot_loop": {
+        "instructions": 0,
+        "conditional": 0,
+        "exec": 0,
+        "valu": 0,
+        "salu": 0,
+        "memory": 0,
+        "unconditional": 0,
+        "flow_wait_other": 0,
+        "execz": 0,
+        "execnz": 0,
+        "mask": 0,
+        "lds": 0,
+        "waitcnt": 0,
+        "cndmask": 0,
+        "bytes": 0
+      },
+      "resources": {
+        "sgpr_count": 29,
+        "vgpr_count": 134,
+        "sgpr_spill_count": 0,
+        "vgpr_spill_count": 0,
+        "group_segment_fixed_size": 0,
+        "wavefront_size": 64,
+        "max_flat_workgroup_size": 256,
+        "threads": 128,
+        "dynamic_lds": 0,
+        "waves_per_simd": 1.0
+      },
+      "cleanup_phis": 26,
+      "cleanup_selects": 64
+    }
+  },
+  {
+    "case": "HLLD",
+    "commit": 4,
+    "trial": "trial-28",
+    "type": "R2B",
+    "extra": false,
+    "hsaco_equal": false,
+    "o3_equal": false,
+    "hot_machine_edits": 0,
+    "darm": {
+      "tti_throughput": 1699,
+      "tti_latency": 1721,
+      "latency_control": 1728,
+      "latency_gain": 7,
+      "same_hsaco_as_throughput": true,
+      "alignment": {
+        "blocks": [
+          {
+            "fallback": "",
+            "left": "%new.exit",
+            "pairs": 1,
+            "right": "%replicated.bb1"
+          },
+          {
+            "fallback": "",
+            "left": "%merged.bb33",
+            "pairs": 1,
+            "right": "%replicated.bb"
+          },
+          {
+            "fallback": "",
+            "left": "%merged.bb34",
+            "pairs": 50,
+            "right": "%merged.bb29"
+          }
+        ],
+        "branch_conditions": 1,
+        "other_selects": 68,
+        "select_conditions": 12,
+        "tie_pairs": false,
+        "unquoted_instruction_lookups": 0
+      },
+      "hot_loop": {
+        "instructions": 0,
+        "conditional": 0,
+        "exec": 0,
+        "valu": 0,
+        "salu": 0,
+        "memory": 0,
+        "unconditional": 0,
+        "flow_wait_other": 0,
+        "execz": 0,
+        "execnz": 0,
+        "mask": 0,
+        "lds": 0,
+        "waitcnt": 0,
+        "cndmask": 0,
+        "bytes": 0
+      },
+      "resources": {
+        "sgpr_count": 30,
+        "vgpr_count": 134,
+        "sgpr_spill_count": 0,
+        "vgpr_spill_count": 0,
+        "group_segment_fixed_size": 0,
+        "wavefront_size": 64,
+        "max_flat_workgroup_size": 256,
+        "threads": 128,
+        "dynamic_lds": 0,
+        "waves_per_simd": 1.0
+      },
+      "cleanup_phis": 26,
+      "cleanup_selects": 121
+    },
+    "anchor": {
+      "tti_throughput": 1715,
+      "tti_latency": 1737,
+      "latency_control": 1728,
+      "latency_gain": -9,
+      "same_hsaco_as_throughput": true,
+      "alignment": {
+        "blocks": [
+          {
+            "fallback": "",
+            "left": "%new.exit",
+            "pairs": 1,
+            "right": "%replicated.bb1"
+          },
+          {
+            "fallback": "",
+            "left": "%merged.bb33",
+            "pairs": 1,
+            "right": "%replicated.bb"
+          },
+          {
+            "fallback": "",
+            "left": "%merged.bb34",
+            "pairs": 1,
+            "right": "%merged.bb29"
+          }
+        ],
+        "branch_conditions": 1,
+        "other_selects": 0,
+        "select_conditions": 0,
+        "tie_pairs": false,
+        "unquoted_instruction_lookups": 0
+      },
+      "hot_loop": {
+        "instructions": 0,
+        "conditional": 0,
+        "exec": 0,
+        "valu": 0,
+        "salu": 0,
+        "memory": 0,
+        "unconditional": 0,
+        "flow_wait_other": 0,
+        "execz": 0,
+        "execnz": 0,
+        "mask": 0,
+        "lds": 0,
+        "waitcnt": 0,
+        "cndmask": 0,
+        "bytes": 0
+      },
+      "resources": {
+        "sgpr_count": 30,
+        "vgpr_count": 134,
+        "sgpr_spill_count": 0,
+        "vgpr_spill_count": 0,
+        "group_segment_fixed_size": 0,
+        "wavefront_size": 64,
+        "max_flat_workgroup_size": 256,
+        "threads": 128,
+        "dynamic_lds": 0,
+        "waves_per_simd": 1.0
+      },
+      "cleanup_phis": 26,
+      "cleanup_selects": 64
+    }
+  },
+  {
+    "case": "NQU64",
+    "commit": 1,
+    "trial": "trial-0",
+    "type": "B2R",
+    "extra": false,
+    "hsaco_equal": true,
+    "o3_equal": true,
+    "hot_machine_edits": 0,
+    "darm": {
+      "tti_throughput": 282,
+      "tti_latency": 338,
+      "latency_control": 345,
+      "latency_gain": 7,
+      "same_hsaco_as_throughput": true,
+      "alignment": {
+        "blocks": [
+          {
+            "fallback": "",
+            "left": "%40",
+            "pairs": 2,
+            "right": "%53"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb",
+            "pairs": 1,
+            "right": "%42"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb2",
+            "pairs": 1,
+            "right": "%74"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb3",
+            "pairs": 1,
+            "right": "%50"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb4",
+            "pairs": 1,
+            "right": "%new.exit"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb5",
+            "pairs": 1,
+            "right": "%56"
+          }
+        ],
+        "branch_conditions": 2,
+        "other_selects": 0,
+        "select_conditions": 0,
+        "tie_pairs": false,
+        "unquoted_instruction_lookups": 0
+      },
+      "hot_loop": {
+        "instructions": 68,
+        "conditional": 4,
+        "exec": 20,
+        "valu": 32,
+        "salu": 21,
+        "memory": 7,
+        "unconditional": 1,
+        "flow_wait_other": 8,
+        "execz": 4,
+        "execnz": 0,
+        "mask": 16,
+        "lds": 7,
+        "waitcnt": 3,
+        "cndmask": 2,
+        "bytes": 336
+      },
+      "resources": {
+        "sgpr_count": 22,
+        "vgpr_count": 10,
+        "sgpr_spill_count": 0,
+        "vgpr_spill_count": 0,
+        "group_segment_fixed_size": 10496,
+        "wavefront_size": 64,
+        "max_flat_workgroup_size": 256,
+        "threads": 64,
+        "dynamic_lds": 0,
+        "waves_per_simd": 1.5
+      },
+      "cleanup_phis": 7,
+      "cleanup_selects": 3
+    },
+    "anchor": {
+      "tti_throughput": 282,
+      "tti_latency": 338,
+      "latency_control": 345,
+      "latency_gain": 7,
+      "same_hsaco_as_throughput": true,
+      "alignment": {
+        "blocks": [
+          {
+            "fallback": "",
+            "left": "%40",
+            "pairs": 2,
+            "right": "%53"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb",
+            "pairs": 1,
+            "right": "%42"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb2",
+            "pairs": 1,
+            "right": "%74"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb3",
+            "pairs": 1,
+            "right": "%50"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb4",
+            "pairs": 1,
+            "right": "%new.exit"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb5",
+            "pairs": 1,
+            "right": "%56"
+          }
+        ],
+        "branch_conditions": 2,
+        "other_selects": 0,
+        "select_conditions": 0,
+        "tie_pairs": false,
+        "unquoted_instruction_lookups": 0
+      },
+      "hot_loop": {
+        "instructions": 68,
+        "conditional": 4,
+        "exec": 20,
+        "valu": 32,
+        "salu": 21,
+        "memory": 7,
+        "unconditional": 1,
+        "flow_wait_other": 8,
+        "execz": 4,
+        "execnz": 0,
+        "mask": 16,
+        "lds": 7,
+        "waitcnt": 3,
+        "cndmask": 2,
+        "bytes": 336
+      },
+      "resources": {
+        "sgpr_count": 22,
+        "vgpr_count": 10,
+        "sgpr_spill_count": 0,
+        "vgpr_spill_count": 0,
+        "group_segment_fixed_size": 10496,
+        "wavefront_size": 64,
+        "max_flat_workgroup_size": 256,
+        "threads": 64,
+        "dynamic_lds": 0,
+        "waves_per_simd": 1.5
+      },
+      "cleanup_phis": 7,
+      "cleanup_selects": 3
+    }
+  },
+  {
+    "case": "TPACF",
+    "commit": 1,
+    "trial": "trial-28",
+    "type": "B2R",
+    "extra": false,
+    "hsaco_equal": true,
+    "o3_equal": false,
+    "hot_machine_edits": 0,
+    "darm": {
+      "tti_throughput": 582,
+      "tti_latency": 715,
+      "latency_control": 726,
+      "latency_gain": 11,
+      "same_hsaco_as_throughput": true,
+      "alignment": {
+        "blocks": [
+          {
+            "fallback": "",
+            "left": "%105",
+            "pairs": 4,
+            "right": "%111"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb",
+            "pairs": 1,
+            "right": "%109"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb1",
+            "pairs": 1,
+            "right": "%115"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb2",
+            "pairs": 1,
+            "right": "%new.exit"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb3",
+            "pairs": 1,
+            "right": "%117"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb4",
+            "pairs": 1,
+            "right": "%121"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb5",
+            "pairs": 1,
+            "right": "%123"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb6",
+            "pairs": 1,
+            "right": "%127"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb7",
+            "pairs": 1,
+            "right": "%129"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb8",
+            "pairs": 1,
+            "right": "%133"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb9",
+            "pairs": 1,
+            "right": "%135"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb10",
+            "pairs": 1,
+            "right": "%139"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb11",
+            "pairs": 1,
+            "right": "%141"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb12",
+            "pairs": 1,
+            "right": "%145"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb13",
+            "pairs": 1,
+            "right": "%147"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb14",
+            "pairs": 1,
+            "right": "%151"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb15",
+            "pairs": 1,
+            "right": "%153"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb16",
+            "pairs": 1,
+            "right": "%157"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb17",
+            "pairs": 1,
+            "right": "%159"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb18",
+            "pairs": 1,
+            "right": "%163"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb19",
+            "pairs": 1,
+            "right": "%165"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb20",
+            "pairs": 1,
+            "right": "%169"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb21",
+            "pairs": 1,
+            "right": "%171"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb22",
+            "pairs": 1,
+            "right": "%175"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb23",
+            "pairs": 1,
+            "right": "%177"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb24",
+            "pairs": 1,
+            "right": "%181"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb25",
+            "pairs": 1,
+            "right": "%183"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb26",
+            "pairs": 1,
+            "right": "%187"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb27",
+            "pairs": 1,
+            "right": "%189"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb28",
+            "pairs": 1,
+            "right": "%193"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb29",
+            "pairs": 1,
+            "right": "%195"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb30",
+            "pairs": 1,
+            "right": "%199"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb31",
+            "pairs": 1,
+            "right": "%201"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb32",
+            "pairs": 1,
+            "right": "%205"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb33",
+            "pairs": 1,
+            "right": "%207"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb34",
+            "pairs": 1,
+            "right": "%211"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb35",
+            "pairs": 1,
+            "right": "%213"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb36",
+            "pairs": 1,
+            "right": "%217"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb37",
+            "pairs": 1,
+            "right": "%219"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb38",
+            "pairs": 1,
+            "right": "%223"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb39",
+            "pairs": 1,
+            "right": "%225"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb40",
+            "pairs": 1,
+            "right": "%229"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb41",
+            "pairs": 1,
+            "right": "%231"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb42",
+            "pairs": 1,
+            "right": "%235"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb43",
+            "pairs": 1,
+            "right": "%237"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb44",
+            "pairs": 1,
+            "right": "%241"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb45",
+            "pairs": 1,
+            "right": "%243"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb46",
+            "pairs": 1,
+            "right": "%247"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb47",
+            "pairs": 1,
+            "right": "%249"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb48",
+            "pairs": 1,
+            "right": "%253"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb49",
+            "pairs": 1,
+            "right": "%255"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb50",
+            "pairs": 1,
+            "right": "%259"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb51",
+            "pairs": 1,
+            "right": "%261"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb52",
+            "pairs": 1,
+            "right": "%265"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb53",
+            "pairs": 1,
+            "right": "%267"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb54",
+            "pairs": 1,
+            "right": "%271"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb55",
+            "pairs": 1,
+            "right": "%273"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb56",
+            "pairs": 1,
+            "right": "%277"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb57",
+            "pairs": 1,
+            "right": "%279"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb58",
+            "pairs": 1,
+            "right": "%283"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb59",
+            "pairs": 1,
+            "right": "%285"
+          }
+        ],
+        "branch_conditions": 30,
+        "other_selects": 1,
+        "select_conditions": 0,
+        "tie_pairs": false,
+        "unquoted_instruction_lookups": 0
+      },
+      "hot_loop": {
+        "instructions": 367,
+        "conditional": 32,
+        "exec": 178,
+        "valu": 149,
+        "salu": 179,
+        "memory": 3,
+        "unconditional": 2,
+        "flow_wait_other": 36,
+        "execz": 30,
+        "execnz": 0,
+        "mask": 148,
+        "lds": 2,
+        "waitcnt": 2,
+        "cndmask": 2,
+        "bytes": 2028
+      },
+      "resources": {
+        "sgpr_count": 104,
+        "vgpr_count": 16,
+        "sgpr_spill_count": 34,
+        "vgpr_spill_count": 0,
+        "group_segment_fixed_size": 0,
+        "wavefront_size": 64,
+        "max_flat_workgroup_size": 256,
+        "threads": 128,
+        "dynamic_lds": 3072,
+        "waves_per_simd": 7.0
+      },
+      "cleanup_phis": 5,
+      "cleanup_selects": 2
+    },
+    "anchor": {
+      "tti_throughput": 582,
+      "tti_latency": 715,
+      "latency_control": 726,
+      "latency_gain": 11,
+      "same_hsaco_as_throughput": true,
+      "alignment": {
+        "blocks": [
+          {
+            "fallback": "",
+            "left": "%105",
+            "pairs": 2,
+            "right": "%111"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb",
+            "pairs": 1,
+            "right": "%109"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb1",
+            "pairs": 1,
+            "right": "%115"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb2",
+            "pairs": 1,
+            "right": "%new.exit"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb3",
+            "pairs": 1,
+            "right": "%117"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb4",
+            "pairs": 1,
+            "right": "%121"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb5",
+            "pairs": 1,
+            "right": "%123"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb6",
+            "pairs": 1,
+            "right": "%127"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb7",
+            "pairs": 1,
+            "right": "%129"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb8",
+            "pairs": 1,
+            "right": "%133"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb9",
+            "pairs": 1,
+            "right": "%135"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb10",
+            "pairs": 1,
+            "right": "%139"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb11",
+            "pairs": 1,
+            "right": "%141"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb12",
+            "pairs": 1,
+            "right": "%145"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb13",
+            "pairs": 1,
+            "right": "%147"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb14",
+            "pairs": 1,
+            "right": "%151"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb15",
+            "pairs": 1,
+            "right": "%153"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb16",
+            "pairs": 1,
+            "right": "%157"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb17",
+            "pairs": 1,
+            "right": "%159"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb18",
+            "pairs": 1,
+            "right": "%163"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb19",
+            "pairs": 1,
+            "right": "%165"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb20",
+            "pairs": 1,
+            "right": "%169"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb21",
+            "pairs": 1,
+            "right": "%171"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb22",
+            "pairs": 1,
+            "right": "%175"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb23",
+            "pairs": 1,
+            "right": "%177"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb24",
+            "pairs": 1,
+            "right": "%181"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb25",
+            "pairs": 1,
+            "right": "%183"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb26",
+            "pairs": 1,
+            "right": "%187"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb27",
+            "pairs": 1,
+            "right": "%189"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb28",
+            "pairs": 1,
+            "right": "%193"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb29",
+            "pairs": 1,
+            "right": "%195"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb30",
+            "pairs": 1,
+            "right": "%199"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb31",
+            "pairs": 1,
+            "right": "%201"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb32",
+            "pairs": 1,
+            "right": "%205"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb33",
+            "pairs": 1,
+            "right": "%207"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb34",
+            "pairs": 1,
+            "right": "%211"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb35",
+            "pairs": 1,
+            "right": "%213"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb36",
+            "pairs": 1,
+            "right": "%217"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb37",
+            "pairs": 1,
+            "right": "%219"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb38",
+            "pairs": 1,
+            "right": "%223"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb39",
+            "pairs": 1,
+            "right": "%225"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb40",
+            "pairs": 1,
+            "right": "%229"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb41",
+            "pairs": 1,
+            "right": "%231"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb42",
+            "pairs": 1,
+            "right": "%235"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb43",
+            "pairs": 1,
+            "right": "%237"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb44",
+            "pairs": 1,
+            "right": "%241"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb45",
+            "pairs": 1,
+            "right": "%243"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb46",
+            "pairs": 1,
+            "right": "%247"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb47",
+            "pairs": 1,
+            "right": "%249"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb48",
+            "pairs": 1,
+            "right": "%253"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb49",
+            "pairs": 1,
+            "right": "%255"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb50",
+            "pairs": 1,
+            "right": "%259"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb51",
+            "pairs": 1,
+            "right": "%261"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb52",
+            "pairs": 1,
+            "right": "%265"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb53",
+            "pairs": 1,
+            "right": "%267"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb54",
+            "pairs": 1,
+            "right": "%271"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb55",
+            "pairs": 1,
+            "right": "%273"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb56",
+            "pairs": 1,
+            "right": "%277"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb57",
+            "pairs": 1,
+            "right": "%279"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb58",
+            "pairs": 1,
+            "right": "%283"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb59",
+            "pairs": 1,
+            "right": "%285"
+          }
+        ],
+        "branch_conditions": 30,
+        "other_selects": 1,
+        "select_conditions": 0,
+        "tie_pairs": true,
+        "unquoted_instruction_lookups": 0
+      },
+      "hot_loop": {
+        "instructions": 367,
+        "conditional": 32,
+        "exec": 178,
+        "valu": 149,
+        "salu": 179,
+        "memory": 3,
+        "unconditional": 2,
+        "flow_wait_other": 36,
+        "execz": 30,
+        "execnz": 0,
+        "mask": 148,
+        "lds": 2,
+        "waitcnt": 2,
+        "cndmask": 2,
+        "bytes": 2028
+      },
+      "resources": {
+        "sgpr_count": 104,
+        "vgpr_count": 16,
+        "sgpr_spill_count": 34,
+        "vgpr_spill_count": 0,
+        "group_segment_fixed_size": 0,
+        "wavefront_size": 64,
+        "max_flat_workgroup_size": 256,
+        "threads": 128,
+        "dynamic_lds": 3072,
+        "waves_per_simd": 7.0
+      },
+      "cleanup_phis": 5,
+      "cleanup_selects": 2
+    }
+  },
+  {
+    "case": "TPACF",
+    "commit": 9,
+    "trial": "trial-2902",
+    "type": "B2R",
+    "extra": false,
+    "hsaco_equal": true,
+    "o3_equal": true,
+    "hot_machine_edits": 0,
+    "darm": {
+      "tti_throughput": 492,
+      "tti_latency": 625,
+      "latency_control": 635,
+      "latency_gain": 10,
+      "same_hsaco_as_throughput": true,
+      "alignment": {
+        "blocks": [
+          {
+            "fallback": "",
+            "left": "%merged.bb117",
+            "pairs": 4,
+            "right": "%merged.bb119"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb",
+            "pairs": 1,
+            "right": "%merged.bb118"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb2",
+            "pairs": 1,
+            "right": "%new.exit"
+          }
+        ],
+        "branch_conditions": 1,
+        "other_selects": 1,
+        "select_conditions": 0,
+        "tie_pairs": false,
+        "unquoted_instruction_lookups": 0
+      },
+      "hot_loop": {
+        "instructions": 442,
+        "conditional": 25,
+        "exec": 131,
+        "valu": 280,
+        "salu": 130,
+        "memory": 3,
+        "unconditional": 2,
+        "flow_wait_other": 29,
+        "execz": 23,
+        "execnz": 0,
+        "mask": 108,
+        "lds": 2,
+        "waitcnt": 2,
+        "cndmask": 11,
+        "bytes": 2856
+      },
+      "resources": {
+        "sgpr_count": 104,
+        "vgpr_count": 16,
+        "sgpr_spill_count": 48,
+        "vgpr_spill_count": 0,
+        "group_segment_fixed_size": 0,
+        "wavefront_size": 64,
+        "max_flat_workgroup_size": 256,
+        "threads": 128,
+        "dynamic_lds": 3072,
+        "waves_per_simd": 7.0
+      },
+      "cleanup_phis": 5,
+      "cleanup_selects": 13
+    },
+    "anchor": {
+      "tti_throughput": 492,
+      "tti_latency": 625,
+      "latency_control": 635,
+      "latency_gain": 10,
+      "same_hsaco_as_throughput": true,
+      "alignment": {
+        "blocks": [
+          {
+            "fallback": "",
+            "left": "%merged.bb117",
+            "pairs": 4,
+            "right": "%merged.bb119"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb",
+            "pairs": 1,
+            "right": "%merged.bb118"
+          },
+          {
+            "fallback": "",
+            "left": "%replicated.bb2",
+            "pairs": 1,
+            "right": "%new.exit"
+          }
+        ],
+        "branch_conditions": 1,
+        "other_selects": 1,
+        "select_conditions": 0,
+        "tie_pairs": false,
+        "unquoted_instruction_lookups": 0
+      },
+      "hot_loop": {
+        "instructions": 442,
+        "conditional": 25,
+        "exec": 131,
+        "valu": 280,
+        "salu": 130,
+        "memory": 3,
+        "unconditional": 2,
+        "flow_wait_other": 29,
+        "execz": 23,
+        "execnz": 0,
+        "mask": 108,
+        "lds": 2,
+        "waitcnt": 2,
+        "cndmask": 11,
+        "bytes": 2856
+      },
+      "resources": {
+        "sgpr_count": 104,
+        "vgpr_count": 16,
+        "sgpr_spill_count": 48,
+        "vgpr_spill_count": 0,
+        "group_segment_fixed_size": 0,
+        "wavefront_size": 64,
+        "max_flat_workgroup_size": 256,
+        "threads": 128,
+        "dynamic_lds": 3072,
+        "waves_per_simd": 7.0
+      },
+      "cleanup_phis": 5,
+      "cleanup_selects": 13
+    }
+  },
+  {
+    "case": "Landau",
+    "commit": 7,
+    "trial": "trial-152",
+    "type": "R2R",
+    "extra": false,
+    "hsaco_equal": false,
+    "o3_equal": false,
+    "hot_machine_edits": 0,
+    "darm": {
+      "tti_throughput": 3022,
+      "tti_latency": 2930,
+      "latency_control": 3117,
+      "latency_gain": 187,
+      "same_hsaco_as_throughput": true,
+      "alignment": {
+        "blocks": [
+          {
+            "fallback": "",
+            "left": "%decision.dispatch",
+            "pairs": 97,
+            "right": "%decision.dispatch1"
+          },
+          {
+            "fallback": "",
+            "left": "%fusion.side",
+            "pairs": 8,
+            "right": "%fusion.side2"
+          },
+          {
+            "fallback": "",
+            "left": "%fusion.side1",
+            "pairs": 8,
+            "right": "%fusion.side3"
+          },
+          {
+            "fallback": "",
+            "left": "%new.exit",
+            "pairs": 1,
+            "right": "%new.exit19"
+          }
+        ],
+        "branch_conditions": 0,
+        "other_selects": 3,
+        "select_conditions": 0,
+        "tie_pairs": false,
+        "unquoted_instruction_lookups": 0
+      },
+      "hot_loop": {
+        "instructions": 0,
+        "conditional": 0,
+        "exec": 0,
+        "valu": 0,
+        "salu": 0,
+        "memory": 0,
+        "unconditional": 0,
+        "flow_wait_other": 0,
+        "execz": 0,
+        "execnz": 0,
+        "mask": 0,
+        "lds": 0,
+        "waitcnt": 0,
+        "cndmask": 0,
+        "bytes": 0
+      },
+      "resources": {
+        "sgpr_count": 32,
+        "vgpr_count": 44,
+        "sgpr_spill_count": 0,
+        "vgpr_spill_count": 0,
+        "group_segment_fixed_size": 0,
+        "wavefront_size": 64,
+        "max_flat_workgroup_size": 256,
+        "threads": 256,
+        "dynamic_lds": 0,
+        "waves_per_simd": 5.0
+      },
+      "cleanup_phis": 98,
+      "cleanup_selects": 38
+    },
+    "anchor": {
+      "tti_throughput": 3054,
+      "tti_latency": 2960,
+      "latency_control": 3117,
+      "latency_gain": 157,
+      "same_hsaco_as_throughput": true,
+      "alignment": {
+        "blocks": [
+          {
+            "fallback": "",
+            "left": "%decision.dispatch",
+            "pairs": 96,
+            "right": "%decision.dispatch1"
+          },
+          {
+            "fallback": "",
+            "left": "%fusion.side",
+            "pairs": 1,
+            "right": "%fusion.side2"
+          },
+          {
+            "fallback": "",
+            "left": "%fusion.side1",
+            "pairs": 1,
+            "right": "%fusion.side3"
+          },
+          {
+            "fallback": "",
+            "left": "%new.exit",
+            "pairs": 1,
+            "right": "%new.exit19"
+          }
+        ],
+        "branch_conditions": 0,
+        "other_selects": 2,
+        "select_conditions": 0,
+        "tie_pairs": false,
+        "unquoted_instruction_lookups": 0
+      },
+      "hot_loop": {
+        "instructions": 0,
+        "conditional": 0,
+        "exec": 0,
+        "valu": 0,
+        "salu": 0,
+        "memory": 0,
+        "unconditional": 0,
+        "flow_wait_other": 0,
+        "execz": 0,
+        "execnz": 0,
+        "mask": 0,
+        "lds": 0,
+        "waitcnt": 0,
+        "cndmask": 0,
+        "bytes": 0
+      },
+      "resources": {
+        "sgpr_count": 42,
+        "vgpr_count": 59,
+        "sgpr_spill_count": 0,
+        "vgpr_spill_count": 0,
+        "group_segment_fixed_size": 0,
+        "wavefront_size": 64,
+        "max_flat_workgroup_size": 256,
+        "threads": 256,
+        "dynamic_lds": 0,
+        "waves_per_simd": 4.0
+      },
+      "cleanup_phis": 100,
+      "cleanup_selects": 38
+    }
+  },
+  {
+    "case": "Landau",
+    "commit": 8,
+    "trial": "trial-191",
+    "type": "R2R",
+    "extra": false,
+    "hsaco_equal": false,
+    "o3_equal": false,
+    "hot_machine_edits": 0,
+    "darm": {
+      "tti_throughput": 2833,
+      "tti_latency": 2743,
+      "latency_control": 2930,
+      "latency_gain": 187,
+      "same_hsaco_as_throughput": true,
+      "alignment": {
+        "blocks": [
+          {
+            "fallback": "",
+            "left": "%decision.dispatch2",
+            "pairs": 97,
+            "right": "%decision.dispatch3"
+          },
+          {
+            "fallback": "",
+            "left": "%fusion.side4",
+            "pairs": 8,
+            "right": "%fusion.side6"
+          },
+          {
+            "fallback": "",
+            "left": "%fusion.side5",
+            "pairs": 8,
+            "right": "%fusion.side7"
+          },
+          {
+            "fallback": "",
+            "left": "%new.exit",
+            "pairs": 1,
+            "right": "%new.exit16"
+          }
+        ],
+        "branch_conditions": 0,
+        "other_selects": 3,
+        "select_conditions": 0,
+        "tie_pairs": false,
+        "unquoted_instruction_lookups": 0
+      },
+      "hot_loop": {
+        "instructions": 0,
+        "conditional": 0,
+        "exec": 0,
+        "valu": 0,
+        "salu": 0,
+        "memory": 0,
+        "unconditional": 0,
+        "flow_wait_other": 0,
+        "execz": 0,
+        "execnz": 0,
+        "mask": 0,
+        "lds": 0,
+        "waitcnt": 0,
+        "cndmask": 0,
+        "bytes": 0
+      },
+      "resources": {
+        "sgpr_count": 30,
+        "vgpr_count": 44,
+        "sgpr_spill_count": 0,
+        "vgpr_spill_count": 0,
+        "group_segment_fixed_size": 0,
+        "wavefront_size": 64,
+        "max_flat_workgroup_size": 256,
+        "threads": 256,
+        "dynamic_lds": 0,
+        "waves_per_simd": 5.0
+      },
+      "cleanup_phis": 96,
+      "cleanup_selects": 40
+    },
+    "anchor": {
+      "tti_throughput": 2865,
+      "tti_latency": 2773,
+      "latency_control": 2930,
+      "latency_gain": 157,
+      "same_hsaco_as_throughput": true,
+      "alignment": {
+        "blocks": [
+          {
+            "fallback": "",
+            "left": "%decision.dispatch2",
+            "pairs": 96,
+            "right": "%decision.dispatch3"
+          },
+          {
+            "fallback": "",
+            "left": "%fusion.side4",
+            "pairs": 1,
+            "right": "%fusion.side6"
+          },
+          {
+            "fallback": "",
+            "left": "%fusion.side5",
+            "pairs": 1,
+            "right": "%fusion.side7"
+          },
+          {
+            "fallback": "",
+            "left": "%new.exit",
+            "pairs": 1,
+            "right": "%new.exit16"
+          }
+        ],
+        "branch_conditions": 0,
+        "other_selects": 2,
+        "select_conditions": 0,
+        "tie_pairs": false,
+        "unquoted_instruction_lookups": 0
+      },
+      "hot_loop": {
+        "instructions": 0,
+        "conditional": 0,
+        "exec": 0,
+        "valu": 0,
+        "salu": 0,
+        "memory": 0,
+        "unconditional": 0,
+        "flow_wait_other": 0,
+        "execz": 0,
+        "execnz": 0,
+        "mask": 0,
+        "lds": 0,
+        "waitcnt": 0,
+        "cndmask": 0,
+        "bytes": 0
+      },
+      "resources": {
+        "sgpr_count": 30,
+        "vgpr_count": 56,
+        "sgpr_spill_count": 0,
+        "vgpr_spill_count": 0,
+        "group_segment_fixed_size": 0,
+        "wavefront_size": 64,
+        "max_flat_workgroup_size": 256,
+        "threads": 256,
+        "dynamic_lds": 0,
+        "waves_per_simd": 4.0
+      },
+      "cleanup_phis": 98,
+      "cleanup_selects": 40
+    }
+  },
+  {
+    "case": "Landau",
+    "commit": 9,
+    "trial": "trial-223",
+    "type": "R2R",
+    "extra": false,
+    "hsaco_equal": false,
+    "o3_equal": false,
+    "hot_machine_edits": 0,
+    "darm": {
+      "tti_throughput": 2644,
+      "tti_latency": 2556,
+      "latency_control": 2743,
+      "latency_gain": 187,
+      "same_hsaco_as_throughput": true,
+      "alignment": {
+        "blocks": [
+          {
+            "fallback": "",
+            "left": "%decision.dispatch4",
+            "pairs": 97,
+            "right": "%decision.dispatch5"
+          },
+          {
+            "fallback": "",
+            "left": "%fusion.side8",
+            "pairs": 8,
+            "right": "%fusion.side10"
+          },
+          {
+            "fallback": "",
+            "left": "%fusion.side9",
+            "pairs": 8,
+            "right": "%fusion.side11"
+          },
+          {
+            "fallback": "",
+            "left": "%new.exit",
+            "pairs": 1,
+            "right": "%new.exit16"
+          }
+        ],
+        "branch_conditions": 0,
+        "other_selects": 3,
+        "select_conditions": 0,
+        "tie_pairs": false,
+        "unquoted_instruction_lookups": 0
+      },
+      "hot_loop": {
+        "instructions": 0,
+        "conditional": 0,
+        "exec": 0,
+        "valu": 0,
+        "salu": 0,
+        "memory": 0,
+        "unconditional": 0,
+        "flow_wait_other": 0,
+        "execz": 0,
+        "execnz": 0,
+        "mask": 0,
+        "lds": 0,
+        "waitcnt": 0,
+        "cndmask": 0,
+        "bytes": 0
+      },
+      "resources": {
+        "sgpr_count": 28,
+        "vgpr_count": 35,
+        "sgpr_spill_count": 0,
+        "vgpr_spill_count": 0,
+        "group_segment_fixed_size": 0,
+        "wavefront_size": 64,
+        "max_flat_workgroup_size": 256,
+        "threads": 256,
+        "dynamic_lds": 0,
+        "waves_per_simd": 7.0
+      },
+      "cleanup_phis": 94,
+      "cleanup_selects": 42
+    },
+    "anchor": {
+      "tti_throughput": 2676,
+      "tti_latency": 2586,
+      "latency_control": 2743,
+      "latency_gain": 157,
+      "same_hsaco_as_throughput": true,
+      "alignment": {
+        "blocks": [
+          {
+            "fallback": "",
+            "left": "%decision.dispatch4",
+            "pairs": 96,
+            "right": "%decision.dispatch5"
+          },
+          {
+            "fallback": "",
+            "left": "%fusion.side8",
+            "pairs": 1,
+            "right": "%fusion.side10"
+          },
+          {
+            "fallback": "",
+            "left": "%fusion.side9",
+            "pairs": 1,
+            "right": "%fusion.side11"
+          },
+          {
+            "fallback": "",
+            "left": "%new.exit",
+            "pairs": 1,
+            "right": "%new.exit16"
+          }
+        ],
+        "branch_conditions": 0,
+        "other_selects": 2,
+        "select_conditions": 0,
+        "tie_pairs": false,
+        "unquoted_instruction_lookups": 0
+      },
+      "hot_loop": {
+        "instructions": 0,
+        "conditional": 0,
+        "exec": 0,
+        "valu": 0,
+        "salu": 0,
+        "memory": 0,
+        "unconditional": 0,
+        "flow_wait_other": 0,
+        "execz": 0,
+        "execnz": 0,
+        "mask": 0,
+        "lds": 0,
+        "waitcnt": 0,
+        "cndmask": 0,
+        "bytes": 0
+      },
+      "resources": {
+        "sgpr_count": 28,
+        "vgpr_count": 58,
+        "sgpr_spill_count": 0,
+        "vgpr_spill_count": 0,
+        "group_segment_fixed_size": 0,
+        "wavefront_size": 64,
+        "max_flat_workgroup_size": 256,
+        "threads": 256,
+        "dynamic_lds": 0,
+        "waves_per_simd": 4.0
+      },
+      "cleanup_phis": 96,
+      "cleanup_selects": 42
+    }
+  },
+  {
+    "case": "Landau",
+    "commit": 10,
+    "trial": "trial-241",
+    "type": "R2R",
+    "extra": false,
+    "hsaco_equal": true,
+    "o3_equal": true,
+    "hot_machine_edits": 0,
+    "darm": {
+      "tti_throughput": 2391,
+      "tti_latency": 2328,
+      "latency_control": 2556,
+      "latency_gain": 228,
+      "same_hsaco_as_throughput": true,
+      "alignment": {
+        "blocks": [
+          {
+            "fallback": "",
+            "left": "%new.exit",
+            "pairs": 1,
+            "right": "%new.exit1"
+          },
+          {
+            "fallback": "",
+            "left": "%merged.bb38",
+            "pairs": 1,
+            "right": "%merged.bb41"
+          },
+          {
+            "fallback": "",
+            "left": "%merged.branch.split43",
+            "pairs": 48,
+            "right": "%merged.branch.split46"
+          },
+          {
+            "fallback": "",
+            "left": "%merged.branch.split44",
+            "pairs": 48,
+            "right": "%merged.branch.split47"
+          }
+        ],
+        "branch_conditions": 1,
+        "other_selects": 50,
+        "select_conditions": 0,
+        "tie_pairs": false,
+        "unquoted_instruction_lookups": 0
+      },
+      "hot_loop": {
+        "instructions": 0,
+        "conditional": 0,
+        "exec": 0,
+        "valu": 0,
+        "salu": 0,
+        "memory": 0,
+        "unconditional": 0,
+        "flow_wait_other": 0,
+        "execz": 0,
+        "execnz": 0,
+        "mask": 0,
+        "lds": 0,
+        "waitcnt": 0,
+        "cndmask": 0,
+        "bytes": 0
+      },
+      "resources": {
+        "sgpr_count": 42,
+        "vgpr_count": 102,
+        "sgpr_spill_count": 0,
+        "vgpr_spill_count": 0,
+        "group_segment_fixed_size": 0,
+        "wavefront_size": 64,
+        "max_flat_workgroup_size": 256,
+        "threads": 256,
+        "dynamic_lds": 0,
+        "waves_per_simd": 2.0
+      },
+      "cleanup_phis": 69,
+      "cleanup_selects": 36
+    },
+    "anchor": {
+      "tti_throughput": 2391,
+      "tti_latency": 2328,
+      "latency_control": 2556,
+      "latency_gain": 228,
+      "same_hsaco_as_throughput": true,
+      "alignment": {
+        "blocks": [
+          {
+            "fallback": "",
+            "left": "%new.exit",
+            "pairs": 1,
+            "right": "%new.exit1"
+          },
+          {
+            "fallback": "",
+            "left": "%merged.bb38",
+            "pairs": 1,
+            "right": "%merged.bb41"
+          },
+          {
+            "fallback": "",
+            "left": "%merged.branch.split43",
+            "pairs": 48,
+            "right": "%merged.branch.split46"
+          },
+          {
+            "fallback": "",
+            "left": "%merged.branch.split44",
+            "pairs": 48,
+            "right": "%merged.branch.split47"
+          }
+        ],
+        "branch_conditions": 1,
+        "other_selects": 50,
+        "select_conditions": 0,
+        "tie_pairs": true,
+        "unquoted_instruction_lookups": 0
+      },
+      "hot_loop": {
+        "instructions": 0,
+        "conditional": 0,
+        "exec": 0,
+        "valu": 0,
+        "salu": 0,
+        "memory": 0,
+        "unconditional": 0,
+        "flow_wait_other": 0,
+        "execz": 0,
+        "execnz": 0,
+        "mask": 0,
+        "lds": 0,
+        "waitcnt": 0,
+        "cndmask": 0,
+        "bytes": 0
+      },
+      "resources": {
+        "sgpr_count": 42,
+        "vgpr_count": 102,
+        "sgpr_spill_count": 0,
+        "vgpr_spill_count": 0,
+        "group_segment_fixed_size": 0,
+        "wavefront_size": 64,
+        "max_flat_workgroup_size": 256,
+        "threads": 256,
+        "dynamic_lds": 0,
+        "waves_per_simd": 2.0
+      },
+      "cleanup_phis": 69,
+      "cleanup_selects": 36
+    }
+  },
+  {
+    "case": "Landau",
+    "commit": 17,
+    "trial": "trial-322",
+    "type": "R2R",
+    "extra": false,
+    "hsaco_equal": false,
+    "o3_equal": false,
+    "hot_machine_edits": 0,
+    "darm": {
+      "tti_throughput": 1820,
+      "tti_latency": 1694,
+      "latency_control": 1876,
+      "latency_gain": 182,
+      "same_hsaco_as_throughput": true,
+      "alignment": {
+        "blocks": [
+          {
+            "fallback": "",
+            "left": "%decision.dispatch",
+            "pairs": 100,
+            "right": "%decision.dispatch1"
+          },
+          {
+            "fallback": "",
+            "left": "%merged.bb33",
+            "pairs": 8,
+            "right": "%merged.bb39"
+          },
+          {
+            "fallback": "",
+            "left": "%merged.bb34",
+            "pairs": 8,
+            "right": "%merged.bb40"
+          },
+          {
+            "fallback": "",
+            "left": "%new.exit",
+            "pairs": 1,
+            "right": "%new.exit34"
+          }
+        ],
+        "branch_conditions": 0,
+        "other_selects": 7,
+        "select_conditions": 0,
+        "tie_pairs": false,
+        "unquoted_instruction_lookups": 0
+      },
+      "hot_loop": {
+        "instructions": 0,
+        "conditional": 0,
+        "exec": 0,
+        "valu": 0,
+        "salu": 0,
+        "memory": 0,
+        "unconditional": 0,
+        "flow_wait_other": 0,
+        "execz": 0,
+        "execnz": 0,
+        "mask": 0,
+        "lds": 0,
+        "waitcnt": 0,
+        "cndmask": 0,
+        "bytes": 0
+      },
+      "resources": {
+        "sgpr_count": 30,
+        "vgpr_count": 65,
+        "sgpr_spill_count": 0,
+        "vgpr_spill_count": 0,
+        "group_segment_fixed_size": 0,
+        "wavefront_size": 64,
+        "max_flat_workgroup_size": 256,
+        "threads": 256,
+        "dynamic_lds": 0,
+        "waves_per_simd": 3.0
+      },
+      "cleanup_phis": 132,
+      "cleanup_selects": 92
+    },
+    "anchor": {
+      "tti_throughput": 1854,
+      "tti_latency": 1724,
+      "latency_control": 1876,
+      "latency_gain": 152,
+      "same_hsaco_as_throughput": true,
+      "alignment": {
+        "blocks": [
+          {
+            "fallback": "",
+            "left": "%decision.dispatch",
+            "pairs": 97,
+            "right": "%decision.dispatch1"
+          },
+          {
+            "fallback": "",
+            "left": "%merged.bb33",
+            "pairs": 1,
+            "right": "%merged.bb39"
+          },
+          {
+            "fallback": "",
+            "left": "%merged.bb34",
+            "pairs": 1,
+            "right": "%merged.bb40"
+          },
+          {
+            "fallback": "",
+            "left": "%new.exit",
+            "pairs": 1,
+            "right": "%new.exit34"
+          }
+        ],
+        "branch_conditions": 0,
+        "other_selects": 4,
+        "select_conditions": 0,
+        "tie_pairs": false,
+        "unquoted_instruction_lookups": 0
+      },
+      "hot_loop": {
+        "instructions": 0,
+        "conditional": 0,
+        "exec": 0,
+        "valu": 0,
+        "salu": 0,
+        "memory": 0,
+        "unconditional": 0,
+        "flow_wait_other": 0,
+        "execz": 0,
+        "execnz": 0,
+        "mask": 0,
+        "lds": 0,
+        "waitcnt": 0,
+        "cndmask": 0,
+        "bytes": 0
+      },
+      "resources": {
+        "sgpr_count": 30,
+        "vgpr_count": 96,
+        "sgpr_spill_count": 0,
+        "vgpr_spill_count": 0,
+        "group_segment_fixed_size": 0,
+        "wavefront_size": 64,
+        "max_flat_workgroup_size": 256,
+        "threads": 256,
+        "dynamic_lds": 0,
+        "waves_per_simd": 2.0
+      },
+      "cleanup_phis": 136,
+      "cleanup_selects": 92
+    }
+  },
+  {
+    "case": "PCM32",
+    "commit": 10,
+    "trial": "exact-10",
+    "type": "R2R",
+    "extra": true,
+    "hsaco_equal": false,
+    "o3_equal": false,
+    "hot_machine_edits": 912,
+    "darm": {
+      "tti_throughput": 1387,
+      "tti_latency": 1665,
+      "latency_control": 1616,
+      "latency_gain": -49,
+      "same_hsaco_as_throughput": true,
+      "alignment": {
+        "blocks": [
+          {
+            "fallback": "",
+            "left": "%145",
+            "pairs": 67,
+            "right": "%unify.bb2"
+          },
+          {
+            "fallback": "",
+            "left": "%new.exit",
+            "pairs": 1,
+            "right": "%new.exit1"
+          }
+        ],
+        "branch_conditions": 0,
+        "other_selects": 38,
+        "select_conditions": 1,
+        "tie_pairs": false,
+        "unquoted_instruction_lookups": 0
+      },
+      "hot_loop": {
+        "instructions": 662,
+        "conditional": 25,
+        "exec": 113,
+        "valu": 316,
+        "salu": 145,
+        "memory": 113,
+        "unconditional": 6,
+        "flow_wait_other": 88,
+        "execz": 16,
+        "execnz": 1,
+        "mask": 96,
+        "lds": 105,
+        "waitcnt": 53,
+        "cndmask": 87,
+        "bytes": 3916
+      },
+      "resources": {
+        "sgpr_count": 28,
+        "vgpr_count": 25,
+        "sgpr_spill_count": 0,
+        "vgpr_spill_count": 0,
+        "group_segment_fixed_size": 65536,
+        "wavefront_size": 64,
+        "max_flat_workgroup_size": 256,
+        "threads": 32,
+        "dynamic_lds": 0,
+        "waves_per_simd": 0.25
+      },
+      "cleanup_phis": 67,
+      "cleanup_selects": 88
+    },
+    "anchor": {
+      "tti_throughput": 1264,
+      "tti_latency": 1623,
+      "latency_control": 1616,
+      "latency_gain": -7,
+      "same_hsaco_as_throughput": false,
+      "alignment": {
+        "blocks": [
+          {
+            "fallback": "",
+            "left": "%145",
+            "pairs": 59,
+            "right": "%unify.bb2"
+          },
+          {
+            "fallback": "",
+            "left": "%new.exit",
+            "pairs": 1,
+            "right": "%new.exit1"
+          }
+        ],
+        "branch_conditions": 0,
+        "other_selects": 25,
+        "select_conditions": 0,
+        "tie_pairs": true,
+        "unquoted_instruction_lookups": 0
+      },
+      "hot_loop": {
+        "instructions": 630,
+        "conditional": 24,
+        "exec": 110,
+        "valu": 295,
+        "salu": 131,
+        "memory": 118,
+        "unconditional": 6,
+        "flow_wait_other": 86,
+        "execz": 15,
+        "execnz": 1,
+        "mask": 94,
+        "lds": 110,
+        "waitcnt": 52,
+        "cndmask": 70,
+        "bytes": 3724
+      },
+      "resources": {
+        "sgpr_count": 26,
+        "vgpr_count": 24,
+        "sgpr_spill_count": 0,
+        "vgpr_spill_count": 0,
+        "group_segment_fixed_size": 65536,
+        "wavefront_size": 64,
+        "max_flat_workgroup_size": 256,
+        "threads": 32,
+        "dynamic_lds": 0,
+        "waves_per_simd": 0.25
+      },
+      "cleanup_phis": 85,
+      "cleanup_selects": 52
+    }
+  }
+]

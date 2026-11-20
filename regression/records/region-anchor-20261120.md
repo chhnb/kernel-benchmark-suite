@@ -67,3 +67,22 @@ i1 条件列依次为已有 select 的条件位和分支的条件位。两列统
 
 不值得推广，保留 DARM。符合条件的 2 个排名实例中，已测 2 个，95% 区间确认快超过 2% 的有 0 个，确认慢超过 2% 的有 0 个。
 PCM32 第 10 步的 anchor/DARM 中位数为 1.0641。两份对照的父状态和 DARM HSACO 分别与历史 P、M 逐字节一致。anchor 使 cleanup TTI 从 1387 降至 1264，发射的其余传值 select 从 38 降至 4，热循环静态 SALU 从 145 降至 83，执行掩码操作从 96 降至 59，LDS 指令从 105 增至 112。两者都因 64 KiB LDS 限为每 CU 一个工作组。仅凭静态计数无法把性能差异归因到单一变化。
+
+## Latency TTI 补测
+
+复用原型提交 `0a37fe4` 与原来的同父 IR，设置 `FUSION_TTI_COST_KIND=latency`。该设置同时用于 Anchor 的指令、select、PHI 报价和合法试融之后的 TTI 选择。DARM 仍用 Smith–Waterman。未改代码和默认值。
+
+26 次审计回放全部完成，未发生块对回退。Anchor 相对 DARM 的 cleanup TTI 更低／相同／更高为 0／13／13，HSACO 相同 13 次。已有 select 条件位的 i1 select 为 12→0，分支条件位为 57→57，其余传值 select 为 264→169。Latency 改变了 5 个审计实例的 Anchor HSACO（Map-Airy 第 24、29 次，TIGRE 第 1、2、3 次），以及额外的 PCM32 第 10 次。
+
+PCM32 的 latency 对照代价为 1616，DARM 融合后 1665，Anchor 融合后 1623。两者仍高于父状态。主块配对数为 DARM 67、throughput Anchor 10、latency Anchor 59。latency Anchor 相对 DARM 的热循环 LDS 指令为 105→110，其中 `ds_read_b32` 50→48，`ds_write_b32` 25→32，`s_waitcnt` 53→52。两者均为 64 KiB LDS、每 CU 一个工作组。LLVM24 对这个函数报告的 LDS load 报价从吞吐量口径的 1 变为 latency 的 4，PHI 从 1 变为 0，LDS store 和 select 都保持 1，条件分支保持 7。
+
+| 实例 | A/A 中位数／跨度 | 父 / DARM / Anchor（ms） | Anchor/DARM [95% 区间] | DARM/父 [95% 区间] |
+|---|---|---:|---:|---:|
+| MapAiry 第 29 次 | 1.0085／0.49% | 0.03216 / 0.03216 / 0.03216 | 1.0000 [1.0000, 1.0000] | 1.0000 [1.0000, 1.0000] |
+| MapAiry 第 24 次 | 1.0000／0.37% | 0.04400 / 0.04400 / 0.04400 | 1.0000 [0.9964, 1.0000] | 1.0000 [1.0000, 1.0000] |
+| tigre 第 2 次 | 1.0017／0.74% | 6.30096 / 6.30120 / 6.28008 | 0.9971 [0.9935, 0.9981] | 1.0014 [0.9992, 1.0032] |
+| PCM32 第 10 次 | 1.0000／0.06% | 785.06223 / 740.00253 / 753.58212 | 1.0183 [1.0183, 1.0184] | 0.9426 [0.9425, 0.9427] |
+
+按原门槛，确认快超过 2% 的主样本有 0 个，确认慢超过 2% 的有 0 个。PCM32 额外对照通过。未达到推广门槛，保留 DARM。
+
+[Latency 同父回放](region-anchor-20261120/latency-replay.json)和 [GPU 逐轮数据](region-anchor-20261120/latency-gpu-paired.json)。
