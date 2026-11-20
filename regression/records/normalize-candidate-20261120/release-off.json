@@ -1,0 +1,98 @@
+[
+  {
+    "case": "MapAiry",
+    "verified": true,
+    "ir_sha256": "860a6ffaffc03080484e40ad417795f70a3cc6e3b8f5455c657bd9d86cb8cd70",
+    "binary_sha256": "51c13dcce91306bb0c84aae7a3e4a1facc70d448d718483fbdb685f1fb48918d"
+  },
+  {
+    "case": "tigre",
+    "verified": true,
+    "ir_sha256": "420e5b216b5a97291a2cd89414acee8a298a57b9e5c351660196468a3783cb48",
+    "binary_sha256": "02452bc591290cb318b1ed9d876a907a56fd849fa9094e4efd74a76892e83a9a"
+  },
+  {
+    "case": "HLLD",
+    "verified": true,
+    "ir_sha256": "78237b59abce8dd50600a3faec059cae9818bf8c08f4f1e070ec0a19c97134aa",
+    "binary_sha256": "3aa2cad420017f246aa3f3f148eb23baa0d834dd92611c3bf68196393ceaf9a3"
+  },
+  {
+    "case": "NQU64",
+    "verified": true,
+    "ir_sha256": "57d5c232299189c2b537ed51b2fe8de04dfce37d9ff2872c849151c743c282d4",
+    "binary_sha256": "42b2bda66286d3c3b437dd6fe78ecba602f6718f4f75659fe101bb5dc2c6865c"
+  },
+  {
+    "case": "MS32",
+    "verified": true,
+    "ir_sha256": "077db63bbb806621cd55dde9359950f6fda9fe790d81646bc0c795fee160f2b5",
+    "binary_sha256": "1021292447be6660cf0366d7f785167c629f2b384a386f146568fa20eb2eaa9f"
+  },
+  {
+    "case": "PCM32",
+    "verified": true,
+    "ir_sha256": "b35648e90ca12b9b527363e39f19352a47987ae07582826575f06d5922b290a7",
+    "binary_sha256": "a0a8df33ee604bc77519a3887af2c8663afa6c7f0cd609dd392d136a815ec116"
+  },
+  {
+    "case": "SRAD16",
+    "verified": true,
+    "ir_sha256": "8877d8d651d30f090848af6440690063a478eed6cf42ea257a418fed9d1c3591",
+    "binary_sha256": "2a6a3d958d37e110a4ca5107ca9346c31aa7e8393524dd4b95de2df56385e16e"
+  },
+  {
+    "case": "SRAD32",
+    "verified": true,
+    "ir_sha256": "3195a5d7dcea8d3345c2c0e855bf3ea73113f6d8e50b41e411f6257e63b63bb5",
+    "binary_sha256": "6d603103809374c6fe65a05a39dd3fb5ea2b190cf2944ba4495b57fe391041e6"
+  },
+  {
+    "case": "Landau",
+    "verified": true,
+    "ir_sha256": "e7617ca5482ee00c0c05cab548e7d3dd6f4134041b362fee354cf4e76c1b0de7",
+    "binary_sha256": "2c49a3bcb7798476672355fa5c579a6c917d3ad84668f8d302b8e065ae21d669"
+  },
+  {
+    "case": "SW2D",
+    "verified": true,
+    "ir_sha256": "8468fbe02c5276b65129a84a4d84ea2b36c887e2088341c9475a72609ec9ef5e",
+    "binary_sha256": "cd0e00d276836e765fe1dba400bfab62312a79121226fcc8ef4e4d7fa95b3518"
+  },
+  {
+    "case": "CED",
+    "verified": true,
+    "ir_sha256": "595f62ff52ffe7c360bb13f38fff382caa799e3bce192d654d0c16fbf99be55b",
+    "binary_sha256": "a213f9bb1677d2079917ec3398dcb902cc5eabda8dd04353c8aa8799bfd5a93b"
+  },
+  {
+    "case": "TPACF",
+    "verified": true,
+    "ir_sha256": "0c2d53c8572879a010939a4c0db4b944878469a43ac855610af5df77fc262266",
+    "binary_sha256": "7b805ab747a196bae398d1df12d58ba34fb9f2f2dd4fbc29ec5b2c6daa408986"
+  },
+  {
+    "case": "SRAD-stage2",
+    "verified": true,
+    "ir_sha256": "1fa2ae82a945b3d922eefab4f0b69e652f8e8f1177363e360500a1fa973278a1",
+    "binary_sha256": "67e86ccd15676d38fb247efa7f161ac6f0cb42dc6a040973de329a86763f296a"
+  },
+  {
+    "case": "SasPoint5",
+    "verified": true,
+    "ir_sha256": "59ccd0e14e265309af938399da0f52fcfd4550c8b8e9379d7b40fcd8840627e3",
+    "binary_sha256": "d79a4f5f5b6cff913644f66bba6a958b3541a810ffe83a8de5f9ababbe43456d"
+  },
+  {
+    "case": "HiPIMS-George",
+    "verified": true,
+    "ir_sha256": "8359aaaa1de0ccdb7d757f4b321af809cc0b72b6df14f9274f2d370de1e076cd",
+    "binary_sha256": "5775bc0c9c040ba7b55d84bd29d0719342a2f38043dff855fea723a9c5510b3b"
+  },
+  {
+    "case": "vllm",
+    "verified": true,
+    "ir_sha256": "36a74e727eaa9f71deeff97510180882c19b6269fcabbd59e2322a7f2b355135",
+    "binary_sha256": "9aa97bca3906c0d31452e4594b5fc17c535bce25ba5e7e4df92e5ff6841c5fa6"
+  }
+]

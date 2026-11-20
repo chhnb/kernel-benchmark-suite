@@ -1,0 +1,22 @@
+Build: succeeded
+tests/run-v1 exit: 0
+Supplemental tests exit: 0
+condition 77
+pair-trial 77
+regions 77
+similarity 77
+guarded 0
+offline-tti 0
+domain-driver 0
+domain-quant8 0
+domain-benchmark 0
+check-domain-competition 0
+check-fusion-domains 0
+check-ir-identity 0
+check-ir-snapshot 0
+check-metadata-graph 0
+check-ordered-arms 0
+check-b2b-unit 0
+Decision model: all decision-model checks passed
+Default release rebuild: 16/16 IR and code-object SHA-256 matches
+Control scores matched: 1894
