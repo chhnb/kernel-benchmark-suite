@@ -1,0 +1,38 @@
+{
+  "global_coalesced": [
+    0,
+    16
+  ],
+  "global_strided": [
+    0,
+    16
+  ],
+  "global_store": [
+    1,
+    17
+  ],
+  "lds_load": [
+    0,
+    16
+  ],
+  "lds_store": [
+    1,
+    17
+  ],
+  "select32": [
+    0,
+    16
+  ],
+  "select64": [
+    0,
+    32
+  ],
+  "add": [
+    1,
+    17
+  ],
+  "scalar_load": [
+    1,
+    17
+  ]
+}
