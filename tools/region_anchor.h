@@ -14,7 +14,7 @@ inline std::optional<llvm::RegionMelder::BlockAlignment> alignRegionBlocks(
     llvm::function_ref<bool(llvm::Instruction &, llvm::Instruction &)> compatible,
     llvm::function_ref<int(const llvm::Instruction &)> instructionCost,
     llvm::function_ref<int(llvm::Type *)> selectCost,
-    llvm::function_ref<int(llvm::Type *)> phiCost, std::string &fallback) {
+    llvm::function_ref<int(llvm::Type *)> phiCost, std::string &fallback, int forkCost) {
   using namespace llvm;
   auto *lt = dyn_cast<BranchInst>(left->getTerminator());
   auto *rt = dyn_cast<BranchInst>(right->getTerminator());
@@ -108,7 +108,7 @@ inline std::optional<llvm::RegionMelder::BlockAlignment> alignRegionBlocks(
   // DARM consumes the original operand order. It has no representation for
   // the swapped operands that the B2B emitter can accept.
   const auto plans = planB2BAnchors(lwork, rwork, *left, *right, nullptr, pairTies,
-                                   compatible, instructionCost, selectCost, phiCost, seeds, false);
+                                   compatible, instructionCost, selectCost, phiCost, seeds, false, forkCost);
   RegionMelder::BlockAlignment result;
   result.emplace_back(left, right);
   for (auto &phi : left->phis()) result.emplace_back(&phi, nullptr);

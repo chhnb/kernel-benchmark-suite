@@ -909,7 +909,8 @@ static bool foldGuardedReadBoundary(BasicBlock &entry, Value *trialSide, Dominat
 // Share identical trailing arithmetic by redirecting the short arm to
 // the existing anchor. All other edges, including the long arm's memory
 // paths, keep their original execution conditions.
-static bool compatibleB2BPrefix(Instruction &, Instruction &, bool intersectMemoryMetadata);
+static bool compatibleB2BPrefix(Instruction &, Instruction &, bool intersectMemoryMetadata,
+                                bool allowMixedAlignment = false);
 static void mergeSharedMemoryMetadata(Instruction &shared, const Instruction &right) {
   if (!isa<LoadInst, StoreInst>(shared)) return;
   SmallVector<std::pair<unsigned, MDNode *>, 8> leftMD;
@@ -1339,6 +1340,11 @@ static Trial tryPairImpl(const Module&parent,const Candidate&c,unsigned version,
   const bool artifact = artifactB2B && t.planKind == "B2B";
   std::vector<darm_artifact::Origin> artifactOrigins;
   RegionMelder melder(directLeaves?*leafAnalyzer:ma,true);
+  const auto memoryPairing = regionAlignment ? regionAlignment->memoryPairing : RegionMemoryPairing::Native;
+  const bool mixedAlignment = memoryPairing == RegionMemoryPairing::E2;
+  // Fixed-point hundredths preserve the measured prices and the scale of the
+  // unchanged select, PHI and fork charges.
+  const int scale = memoryPairing == RegionMemoryPairing::Native ? 1 : 100;
   json::Array blockAlignment;
   int64_t selectConditions = 0, branchConditions = 0, otherSelects = 0, missingPrices = 0;
   std::string alignmentFallback;
@@ -1352,12 +1358,39 @@ static Trial tryPairImpl(const Module&parent,const Candidate&c,unsigned version,
     melder.onAlignment = [&](BasicBlock *left, BasicBlock *right,
                              const RegionMelder::BlockAlignment &alignment) {
       int64_t pairs = 0;
-      for (const auto &pair : alignment)
-        if (pair.match() && isa<Instruction>(pair.getLeft()) &&
-            !isa<PHINode>(pair.getLeft()))
-          ++pairs;
-      blockAlignment.push_back(json::Object{{"left", name(left)}, {"right", name(right)},
-          {"pairs", pairs}, {"fallback", std::exchange(alignmentFallback, "")}});
+      json::Array memoryPairs;
+      unsigned loadOrdinal[2] = {}, storeOrdinal[2] = {};
+      for (const auto &pair : alignment) {
+        auto *l = dyn_cast_or_null<Instruction>(pair.getLeft());
+        auto *r = dyn_cast_or_null<Instruction>(pair.getRight());
+        if (l && r && !isa<PHINode>(l)) ++pairs;
+        if (!regionAlignment->traceMemoryPairs) continue;
+        for (unsigned side = 0; side != 2; ++side) {
+          if (isa_and_nonnull<LoadInst>(side == 0 ? l : r)) ++loadOrdinal[side];
+          if (isa_and_nonnull<StoreInst>(side == 0 ? l : r)) ++storeOrdinal[side];
+        }
+        if (auto *lLoad = dyn_cast_or_null<LoadInst>(l)) {
+          if (auto *rLoad = dyn_cast_or_null<LoadInst>(r))
+            memoryPairs.push_back(json::Object{{"op", "load"},
+                {"ordinals", json::Array{loadOrdinal[0], loadOrdinal[1]}},
+                {"address_space", lLoad->getPointerAddressSpace()},
+                {"source_align", json::Array{lLoad->getAlign().value(), rLoad->getAlign().value()}}});
+        } else if (auto *lStore = dyn_cast_or_null<StoreInst>(l)) {
+          if (auto *rStore = dyn_cast_or_null<StoreInst>(r))
+            memoryPairs.push_back(json::Object{{"op", "store"},
+                {"ordinals", json::Array{storeOrdinal[0], storeOrdinal[1]}},
+                {"address_space", lStore->getPointerAddressSpace()},
+                {"source_align", json::Array{lStore->getAlign().value(), rStore->getAlign().value()}}});
+        }
+      }
+      json::Object stats{{"left", name(left)}, {"right", name(right)}, {"pairs", pairs},
+                         {"fallback", std::exchange(alignmentFallback, "")}};
+      if (regionAlignment->traceMemoryPairs) {
+        stats["memory_pairs"] = std::move(memoryPairs);
+        stats["source_loads"] = json::Array{loadOrdinal[0], loadOrdinal[1]};
+        stats["source_stores"] = json::Array{storeOrdinal[0], storeOrdinal[1]};
+      }
+      blockAlignment.push_back(std::move(stats));
     };
     melder.onOperandSelect = [&](const Instruction &consumer, unsigned operand, Type *type) {
       if (isa<BranchInst>(consumer)) ++branchConditions;
@@ -1367,25 +1400,54 @@ static Trial tryPairImpl(const Module&parent,const Candidate&c,unsigned version,
     };
     if (regionAlignment->anchor) {
       if (regionAlignment->intersectMemoryMetadata)
-        melder.onCloneShared = mergeSharedMemoryMetadata;
+        melder.onCloneShared = [&](Instruction &shared, const Instruction &right) {
+          mergeSharedMemoryMetadata(shared, right);
+          if (!mixedAlignment) return;
+          // The selected address satisfies its original side's alignment.
+          // The minimum is therefore valid for either selected address.
+          if (auto *l = dyn_cast<LoadInst>(&shared))
+            l->setAlignment(std::min(l->getAlign(), cast<LoadInst>(right).getAlign()));
+          if (auto *l = dyn_cast<StoreInst>(&shared))
+            l->setAlignment(std::min(l->getAlign(), cast<StoreInst>(right).getAlign()));
+        };
       melder.alignBlocks = [&](BasicBlock *left, BasicBlock *right,
                               const RegionMelder::BlockMap &mapping,
                               BasicBlock *leftExit, BasicBlock *rightExit) {
         auto cost = [&](const Instruction &inst) {
+          const auto *load = dyn_cast<LoadInst>(&inst);
+          const auto *store = dyn_cast<StoreInst>(&inst);
+          if ((load || store) && memoryPairing != RegionMemoryPairing::Native) {
+            const unsigned as = load ? load->getPointerAddressSpace() : store->getPointerAddressSpace();
+            if (memoryPairing == RegionMemoryPairing::E0) {
+              if (store && as == 3) return 400;
+            } else {
+              if (memoryPairing == RegionMemoryPairing::E3) return 10000;
+              if (as == 3) return load ? 188 : 393;
+              if (as == 1) return load ? 5811 : 7235;
+            }
+          }
           int price = regionPrices.lookup(&inst);
-          if (price >= 0 && regionPrices.count(&inst)) return price;
+          if (price >= 0 && regionPrices.count(&inst)) return price * scale;
           ++missingPrices;
-          return 1;
+          return scale;
         };
         auto compatible = [&](Instruction &l, Instruction &r) {
-          return compatibleB2BPrefix(l, r, regionAlignment->intersectMemoryMetadata) &&
-                 InstructionMatch::match(&l, &r);
+          if (!compatibleB2BPrefix(l, r, regionAlignment->intersectMemoryMetadata, mixedAlignment))
+            return false;
+          // For simple loads/stores, operation equivalence already checks all
+          // of InstructionMatch's requirements except the alignment we relaxed.
+          return (mixedAlignment && isa<LoadInst, StoreInst>(l)) || InstructionMatch::match(&l, &r);
         };
-        auto select = [&](Type *type) { return typedCost(type, false); };
-        auto phi = [&](Type *type) { return typedCost(type, true); };
+        auto select = [&](Type *type) {
+          if (memoryPairing != RegionMemoryPairing::Native && memoryPairing != RegionMemoryPairing::E0 &&
+              type->isPointerTy() && f->getParent()->getDataLayout().getPointerTypeSizeInBits(type) == 64)
+            return 212;
+          return typedCost(type, false) * scale;
+        };
+        auto phi = [&](Type *type) { return typedCost(type, true) * scale; };
         return alignRegionBlocks(left, right, mapping, leftExit, rightExit,
                                  regionAlignment->pairTies, compatible, cost, select, phi,
-                                 alignmentFallback);
+                                 alignmentFallback, 2 * scale);
       };
     }
   }
@@ -1659,7 +1721,7 @@ static int b2bWeight(const Instruction &inst,
 }
 
 static bool compatibleB2BPrefix(Instruction &left, Instruction &right,
-                                bool intersectMemoryMetadata) {
+                                bool intersectMemoryMetadata, bool allowMixedAlignment) {
     if (compatibleB2BArithmetic(left, right)) return true;
     if (isB2BPairableIntrinsic(left) && isB2BPairableIntrinsic(right)) {
       const auto &l = cast<CallInst>(left);
@@ -1682,7 +1744,7 @@ static bool compatibleB2BPrefix(Instruction &left, Instruction &right,
       return false;
     };
     if (!simpleMemory(left) || !simpleMemory(right) ||
-        !left.isSameOperationAs(&right))
+        !left.isSameOperationAs(&right, allowMixedAlignment ? Instruction::CompareIgnoringAlignment : 0))
       return false;
     if (intersectMemoryMetadata) return true;
     SmallVector<std::pair<unsigned, MDNode *>, 4> lm, rm;

@@ -167,11 +167,15 @@ std::vector<ResolvedCandidate> resolveCandidateCatalog(llvm::Function &, unsigne
 
 enum class B2RStrategy { Darm, Guarded };
 
+enum class RegionMemoryPairing { Native, E0, E1, E2, E3 };
+
 struct RegionAlignmentOptions {
   bool anchor = false, pairTies = false;
   llvm::function_ref<int(const llvm::Instruction &)> instructionCost;
   llvm::function_ref<int(llvm::Type *, bool)> transferCost;
   bool intersectMemoryMetadata = false;
+  RegionMemoryPairing memoryPairing = RegionMemoryPairing::Native;
+  bool traceMemoryPairs = false;
 };
 
 Trial tryPair(const llvm::Module &, const Candidate &, unsigned currentVersion,

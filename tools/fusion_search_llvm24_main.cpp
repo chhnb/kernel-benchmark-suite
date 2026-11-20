@@ -137,11 +137,12 @@ static int runSearch(int argc, const char *const *argv, TrialWorker *batch = nul
     bool useArtifactB2B=false, useAnchorB2B=true;
     B2RStrategy b2rStrategy = B2RStrategy::Darm;
     bool regionAnchor = false, regionTrace = false, intersectMemoryMetadata = false;
+    RegionMemoryPairing memoryPairing = RegionMemoryPairing::Native;
     std::string quoteMode="on";
     bool fullSnapshots=true;
     bool controlOnly=false,catalogOnly=false;std::string ttiWorker="/home/chh/kernel-benchmark-suite/tools/run-llvm24-tti";
     for(int i=1;i<argc;++i){std::string k=argv[i];
-      if(k=="--help"){outs()<<"fusion-search v1 --ir FILE --function NAME --out FILE [--b2b-strategy anchor|darm|darm-artifact] [--b2r-strategy darm|guarded] [--region-align darm|anchor] [--merge-metadata strict|intersect] [--structural 0|1] [--split ID --left ID --right ID] [--debug-dir DIR] [--ir-snapshots full|compact] [--tti-worker EXECUTABLE] [--catalog-only 0|1] [--control-only 0|1] [--rounds N] [--trials N]\n";return 0;}
+      if(k=="--help"){outs()<<"fusion-search v1 --ir FILE --function NAME --out FILE [--b2b-strategy anchor|darm|darm-artifact] [--b2r-strategy darm|guarded] [--region-align darm|anchor] [--merge-metadata strict|intersect] [--region-memory-pairing native|e0|e1|e2|e3] [--structural 0|1] [--split ID --left ID --right ID] [--debug-dir DIR] [--ir-snapshots full|compact] [--tti-worker EXECUTABLE] [--catalog-only 0|1] [--control-only 0|1] [--rounds N] [--trials N]\n";return 0;}
       if(i+1==argc)throw std::runtime_error("missing option value");std::string v=argv[++i];
       if(k=="--control-only"){if(v!="0"&&v!="1")throw std::runtime_error("control-only must be 0 or 1");controlOnly=v=="1";}
       else if(k=="--catalog-only"){if(v!="0"&&v!="1")throw std::runtime_error("catalog-only must be 0 or 1");catalogOnly=v=="1";}
@@ -170,6 +171,14 @@ static int runSearch(int argc, const char *const *argv, TrialWorker *batch = nul
           throw std::runtime_error("merge-metadata must be strict or intersect");
         intersectMemoryMetadata=v=="intersect";
       }
+      else if(k=="--region-memory-pairing"){
+        if(v=="native") memoryPairing=RegionMemoryPairing::Native;
+        else if(v=="e0") memoryPairing=RegionMemoryPairing::E0;
+        else if(v=="e1") memoryPairing=RegionMemoryPairing::E1;
+        else if(v=="e2") memoryPairing=RegionMemoryPairing::E2;
+        else if(v=="e3") memoryPairing=RegionMemoryPairing::E3;
+        else throw std::runtime_error("region-memory-pairing must be native, e0, e1, e2 or e3");
+      }
       else if(k=="--region-align-trace"){
         if(v!="0" && v!="1")
           throw std::runtime_error("region-align-trace must be 0 or 1");
@@ -192,6 +201,9 @@ static int runSearch(int argc, const char *const *argv, TrialWorker *batch = nul
       }else if(k=="--require-parent-gain"){if(v!="0"&&v!="1")throw std::runtime_error("require-parent-gain must be 0 or 1");options.requireParentGain=v=="1";}else if(k=="--threshold"){size_t pos=0;options.threshold=std::stod(v,&pos);if(pos!=v.size()||!std::isfinite(options.threshold)||options.threshold<0)throw std::runtime_error("threshold must be finite and nonnegative");}
       else throw std::runtime_error("unknown option: "+k);
     }
+    if (memoryPairing != RegionMemoryPairing::Native &&
+        (!regionAnchor || !intersectMemoryMetadata || ttiCostKindName() != "TCK_Latency"))
+      throw std::runtime_error("region-memory-pairing experiments require region anchor, intersect and latency TTI");
     if(input.empty()||function.empty()||output.empty())throw std::runtime_error("--ir, --function, --out required");
     if(options.optLevel!=2&&options.optLevel!=3)throw std::runtime_error("opt-level must be 2 or 3");
     if(sys::fs::exists(output))throw std::runtime_error("output already exists");
@@ -353,7 +365,8 @@ static int runSearch(int argc, const char *const *argv, TrialWorker *batch = nul
           auto found = table.find(type);
           return found == table.end() ? -1 : found->second;
         };
-        RegionAlignmentOptions region{regionAnchor, false, instructionCost, transferCost, intersectMemoryMetadata};
+        RegionAlignmentOptions region{regionAnchor, false, instructionCost, transferCost,
+                                      intersectMemoryMetadata, memoryPairing, regionTrace};
         auto attempt = [&](Trial &fold) {
           return tryPair(*module, c, 0, options.optLevel, options.cleanupMode,
                          logical.get(), allowDarmB2B, b2rStrategy, &fold, useArtifactB2B,

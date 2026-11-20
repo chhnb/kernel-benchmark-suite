@@ -40,5 +40,5 @@ llvm::SmallVector<AnchorPlan, 3> planB2BAnchors(
     llvm::function_ref<int(const llvm::Instruction &)> instructionCost,
     llvm::function_ref<int(llvm::Type *)> selectCost,
     llvm::function_ref<int(llvm::Type *)> phiCost,
-    llvm::ArrayRef<AnchorSeed> seeds = {}, bool allowSwap = true);
+    llvm::ArrayRef<AnchorSeed> seeds = {}, bool allowSwap = true, int forkCost = 2);
 }

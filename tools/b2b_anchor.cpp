@@ -41,7 +41,7 @@ SmallVector<AnchorPlan, 3> planB2BAnchors(
     BasicBlock *join, bool pairTies, function_ref<bool(Instruction &, Instruction &)> compatible,
     function_ref<int(const Instruction &)> instructionCost,
     function_ref<int(Type *)> selectCost, function_ref<int(Type *)> phiCost,
-    ArrayRef<AnchorSeed> seeds, bool allowSwap) {
+    ArrayRef<AnchorSeed> seeds, bool allowSwap, int forkCost) {
   const std::array<Work, 2> work{left, right};
   DenseMap<const Value *, unsigned> indices[2];
   for (unsigned side = 0; side != 2; ++side)
@@ -207,7 +207,7 @@ SmallVector<AnchorPlan, 3> planB2BAnchors(
     if (begin[0] == le && begin[1] == re)
       return;
     ++state.chargedSegments;
-    state.score -= 2; // Match DP1's penalty for starting a fork.
+    state.score -= forkCost;
     if (!rejoins)
       return; // The original exit PHIs already receive values from both arms.
     int64_t charge = 0;
