@@ -1,0 +1,2892 @@
+{
+  "aa": {
+    "SRAD16": {
+      "existing-paired": {
+        "case": "SRAD16",
+        "mode": "paired",
+        "method": "existing",
+        "batch": 1,
+        "prewarm_ms": 0,
+        "median_ratio": 1.0,
+        "spread": 0.014337367076987073,
+        "passed": true,
+        "single_launch_us": {
+          "min": 20.0,
+          "median": 22.39999962,
+          "max": 27.03999901
+        },
+        "min_batch_ms": 0.02,
+        "rounds": [
+          {
+            "baseline": 22.7179985,
+            "A": 22.71999931,
+            "N": 22.71999931,
+            "telemetry": [
+              {
+                "window": 0,
+                "edge": "start",
+                "time": "2026-11-20T13:45:17.937",
+                "sclk": 1178.0,
+                "mclk": 800.0,
+                "edge_c": 32.0,
+                "junction_c": 33.0,
+                "memory_c": 37.0,
+                "power_w": 18.0,
+                "amd_processes": 1,
+                "other_amd_processes": 0,
+                "unknown_amd_processes": 0
+              },
+              {
+                "window": 0,
+                "edge": "end",
+                "time": "2026-11-20T13:45:18.142",
+                "sclk": 1050.0,
+                "mclk": 800.0,
+                "edge_c": 32.0,
+                "junction_c": 33.0,
+                "memory_c": 37.0,
+                "power_w": 24.0,
+                "amd_processes": 1,
+                "other_amd_processes": 0,
+                "unknown_amd_processes": 0
+              }
+            ]
+          },
+          {
+            "baseline": 20.47999954,
+            "A": 20.6400013,
+            "N": 20.6400013,
+            "telemetry": [
+              {
+                "window": 1,
+                "edge": "start",
+                "time": "2026-11-20T13:45:18.143",
+                "sclk": 1050.0,
+                "mclk": 800.0,
+                "edge_c": 32.0,
+                "junction_c": 33.0,
+                "memory_c": 37.0,
+                "power_w": 24.0,
+                "amd_processes": 1,
+                "other_amd_processes": 0,
+                "unknown_amd_processes": 0
+              },
+              {
+                "window": 1,
+                "edge": "end",
+                "time": "2026-11-20T13:45:18.297",
+                "sclk": 1048.0,
+                "mclk": 800.0,
+                "edge_c": 32.0,
+                "junction_c": 33.0,
+                "memory_c": 37.0,
+                "power_w": 24.0,
+                "amd_processes": 1,
+                "other_amd_processes": 0,
+                "unknown_amd_processes": 0
+              }
+            ]
+          },
+          {
+            "baseline": 22.39999962,
+            "A": 22.39999962,
+            "N": 22.23999977,
+            "telemetry": [
+              {
+                "window": 2,
+                "edge": "start",
+                "time": "2026-11-20T13:45:18.298",
+                "sclk": 1048.0,
+                "mclk": 800.0,
+                "edge_c": 32.0,
+                "junction_c": 33.0,
+                "memory_c": 37.0,
+                "power_w": 24.0,
+                "amd_processes": 1,
+                "other_amd_processes": 0,
+                "unknown_amd_processes": 0
+              },
+              {
+                "window": 2,
+                "edge": "end",
+                "time": "2026-11-20T13:45:18.468",
+                "sclk": 1010.0,
+                "mclk": 800.0,
+                "edge_c": 32.0,
+                "junction_c": 34.0,
+                "memory_c": 37.0,
+                "power_w": 24.0,
+                "amd_processes": 1,
+                "other_amd_processes": 0,
+                "unknown_amd_processes": 0
+              }
+            ]
+          },
+          {
+            "baseline": 20.79999924,
+            "A": 20.6400013,
+            "N": 20.6400013,
+            "telemetry": [
+              {
+                "window": 3,
+                "edge": "start",
+                "time": "2026-11-20T13:45:18.469",
+                "sclk": 1010.0,
+                "mclk": 800.0,
+                "edge_c": 32.0,
+                "junction_c": 34.0,
+                "memory_c": 37.0,
+                "power_w": 24.0,
+                "amd_processes": 1,
+                "other_amd_processes": 0,
+                "unknown_amd_processes": 0
+              },
+              {
+                "window": 3,
+                "edge": "end",
+                "time": "2026-11-20T13:45:18.631",
+                "sclk": 1055.0,
+                "mclk": 800.0,
+                "edge_c": 32.0,
+                "junction_c": 34.0,
+                "memory_c": 37.0,
+                "power_w": 24.0,
+                "amd_processes": 1,
+                "other_amd_processes": 0,
+                "unknown_amd_processes": 0
+              }
+            ]
+          },
+          {
+            "baseline": 20.47999954,
+            "A": 20.79999924,
+            "N": 20.79999924,
+            "telemetry": [
+              {
+                "window": 4,
+                "edge": "start",
+                "time": "2026-11-20T13:45:18.631",
+                "sclk": 1055.0,
+                "mclk": 800.0,
+                "edge_c": 32.0,
+                "junction_c": 34.0,
+                "memory_c": 37.0,
+                "power_w": 24.0,
+                "amd_processes": 1,
+                "other_amd_processes": 0,
+                "unknown_amd_processes": 0
+              },
+              {
+                "window": 4,
+                "edge": "end",
+                "time": "2026-11-20T13:45:18.800",
+                "sclk": 1045.0,
+                "mclk": 800.0,
+                "edge_c": 32.0,
+                "junction_c": 34.0,
+                "memory_c": 37.0,
+                "power_w": 24.0,
+                "amd_processes": 1,
+                "other_amd_processes": 0,
+                "unknown_amd_processes": 0
+              }
+            ]
+          },
+          {
+            "baseline": 20.6400013,
+            "A": 20.6400013,
+            "N": 20.6400013,
+            "telemetry": [
+              {
+                "window": 5,
+                "edge": "start",
+                "time": "2026-11-20T13:45:18.801",
+                "sclk": 1045.0,
+                "mclk": 800.0,
+                "edge_c": 32.0,
+                "junction_c": 34.0,
+                "memory_c": 37.0,
+                "power_w": 24.0,
+                "amd_processes": 1,
+                "other_amd_processes": 0,
+                "unknown_amd_processes": 0
+              },
+              {
+                "window": 5,
+                "edge": "end",
+                "time": "2026-11-20T13:45:18.961",
+                "sclk": 1047.0,
+                "mclk": 800.0,
+                "edge_c": 32.0,
+                "junction_c": 34.0,
+                "memory_c": 37.0,
+                "power_w": 24.0,
+                "amd_processes": 1,
+                "other_amd_processes": 0,
+                "unknown_amd_processes": 0
+              }
+            ]
+          },
+          {
+            "baseline": 20.6400013,
+            "A": 20.6400013,
+            "N": 20.63899994,
+            "telemetry": [
+              {
+                "window": 6,
+                "edge": "start",
+                "time": "2026-11-20T13:45:18.962",
+                "sclk": 1047.0,
+                "mclk": 800.0,
+                "edge_c": 32.0,
+                "junction_c": 34.0,
+                "memory_c": 37.0,
+                "power_w": 24.0,
+                "amd_processes": 1,
+                "other_amd_processes": 0,
+                "unknown_amd_processes": 0
+              },
+              {
+                "window": 6,
+                "edge": "end",
+                "time": "2026-11-20T13:45:19.120",
+                "sclk": 1051.0,
+                "mclk": 800.0,
+                "edge_c": 32.0,
+                "junction_c": 34.0,
+                "memory_c": 37.0,
+                "power_w": 24.0,
+                "amd_processes": 1,
+                "other_amd_processes": 0,
+                "unknown_amd_processes": 0
+              }
+            ]
+          },
+          {
+            "baseline": 22.56000137,
+            "A": 22.56000137,
+            "N": 22.39999962,
+            "telemetry": [
+              {
+                "window": 7,
+                "edge": "start",
+                "time": "2026-11-20T13:45:19.120",
+                "sclk": 1051.0,
+                "mclk": 800.0,
+                "edge_c": 32.0,
+                "junction_c": 34.0,
+                "memory_c": 37.0,
+                "power_w": 24.0,
+                "amd_processes": 1,
+                "other_amd_processes": 0,
+                "unknown_amd_processes": 0
+              },
+              {
+                "window": 7,
+                "edge": "end",
+                "time": "2026-11-20T13:45:19.298",
+                "sclk": 1057.0,
+                "mclk": 800.0,
+                "edge_c": 32.0,
+                "junction_c": 34.0,
+                "memory_c": 35.0,
+                "power_w": 24.0,
+                "amd_processes": 1,
+                "other_amd_processes": 0,
+                "unknown_amd_processes": 0
+              }
+            ]
+          },
+          {
+            "baseline": 22.39999962,
+            "A": 22.56000137,
+            "N": 22.71999931,
+            "telemetry": [
+              {
+                "window": 8,
+                "edge": "start",
+                "time": "2026-11-20T13:45:19.299",
+                "sclk": 1057.0,
+                "mclk": 800.0,
+                "edge_c": 32.0,
+                "junction_c": 34.0,
+                "memory_c": 35.0,
+                "power_w": 24.0,
+                "amd_processes": 1,
+                "other_amd_processes": 0,
+                "unknown_amd_processes": 0
+              },
+              {
+                "window": 8,
+                "edge": "end",
+                "time": "2026-11-20T13:45:19.474",
+                "sclk": 1011.0,
+                "mclk": 800.0,
+                "edge_c": 32.0,
+                "junction_c": 33.0,
+                "memory_c": 37.0,
+                "power_w": 24.0,
+                "amd_processes": 1,
+                "other_amd_processes": 0,
+                "unknown_amd_processes": 0
+              }
+            ]
+          },
+          {
+            "baseline": 22.71999931,
+            "A": 22.56000137,
+            "N": 22.56000137,
+            "telemetry": [
+              {
+                "window": 9,
+                "edge": "start",
+                "time": "2026-11-20T13:45:19.475",
+                "sclk": 1011.0,
+                "mclk": 800.0,
+                "edge_c": 32.0,
+                "junction_c": 33.0,
+                "memory_c": 37.0,
+                "power_w": 24.0,
+                "amd_processes": 1,
+                "other_amd_processes": 0,
+                "unknown_amd_processes": 0
+              },
+              {
+                "window": 9,
+                "edge": "end",
+                "time": "2026-11-20T13:45:19.669",
+                "sclk": 987.0,
+                "mclk": 800.0,
+                "edge_c": 32.0,
+                "junction_c": 34.0,
+                "memory_c": 37.0,
+                "power_w": 23.0,
+                "amd_processes": 1,
+                "other_amd_processes": 0,
+                "unknown_amd_processes": 0
+              }
+            ]
+          },
+          {
+            "baseline": 22.56000137,
+            "A": 22.71999931,
+            "N": 22.56000137,
+            "telemetry": [
+              {
+                "window": 10,
+                "edge": "start",
+                "time": "2026-11-20T13:45:19.670",
+                "sclk": 987.0,
+                "mclk": 800.0,
+                "edge_c": 32.0,
+                "junction_c": 34.0,
+                "memory_c": 37.0,
+                "power_w": 23.0,
+                "amd_processes": 1,
+                "other_amd_processes": 0,
+                "unknown_amd_processes": 0
+              },
+              {
+                "window": 10,
+                "edge": "end",
+                "time": "2026-11-20T13:45:19.861",
+                "sclk": 855.0,
+                "mclk": 800.0,
+                "edge_c": 32.0,
+                "junction_c": 34.0,
+                "memory_c": 37.0,
+                "power_w": 23.0,
+                "amd_processes": 1,
+                "other_amd_processes": 0,
+                "unknown_amd_processes": 0
+              }
+            ]
+          },
+          {
+            "baseline": 22.56000137,
+            "A": 22.56000137,
+            "N": 22.71999931,
+            "telemetry": [
+              {
+                "window": 11,
+                "edge": "start",
+                "time": "2026-11-20T13:45:19.862",
+                "sclk": 855.0,
+                "mclk": 800.0,
+                "edge_c": 32.0,
+                "junction_c": 34.0,
+                "memory_c": 37.0,
+                "power_w": 23.0,
+                "amd_processes": 1,
+                "other_amd_processes": 0,
+                "unknown_amd_processes": 0
+              },
+              {
+                "window": 11,
+                "edge": "end",
+                "time": "2026-11-20T13:45:20.053",
+                "sclk": 1013.0,
+                "mclk": 800.0,
+                "edge_c": 32.0,
+                "junction_c": 34.0,
+                "memory_c": 37.0,
+                "power_w": 24.0,
+                "amd_processes": 1,
+                "other_amd_processes": 0,
+                "unknown_amd_processes": 0
+              }
+            ]
+          }
+        ],
+        "round_ratios": [
+          1.0,
+          1.0,
+          0.9928571494323981,
+          1.0,
+          1.0,
+          1.0,
+          0.9999514844991797,
+          0.9929077242782101,
+          1.0070921068388214,
+          1.0,
+          0.9929578369340188,
+          1.0070921068388214
+        ],
+        "total_launches_per_role": 18,
+        "timed_per_role": 15,
+        "outer_telemetry": [
+          {
+            "window": -1,
+            "edge": "whole-start",
+            "time": "2026-11-20T13:45:13.767",
+            "sclk": 867.0,
+            "mclk": 350.0,
+            "edge_c": 32.0,
+            "junction_c": 33.0,
+            "memory_c": 37.0,
+            "power_w": 21.0,
+            "amd_processes": 1,
+            "other_amd_processes": 0,
+            "unknown_amd_processes": 0,
+            "nvidia_compute_processes": 1
+          },
+          {
+            "window": -1,
+            "edge": "whole-end",
+            "time": "2026-11-20T13:45:20.095",
+            "sclk": 858.0,
+            "mclk": 350.0,
+            "edge_c": 32.0,
+            "junction_c": 33.0,
+            "memory_c": 37.0,
+            "power_w": 19.0,
+            "amd_processes": 1,
+            "other_amd_processes": 0,
+            "unknown_amd_processes": 1,
+            "nvidia_compute_processes": 1
+          }
+        ]
+      },
+      "existing-separate": {
+        "case": "SRAD16",
+        "mode": "separate",
+        "method": "existing",
+        "batch": 1,
+        "prewarm_ms": 0,
+        "median_ratio": 0.9957264998424833,
+        "spread": 0.08845590305496875,
+        "passed": false,
+        "single_launch_us": {
+          "min": 17.60000038,
+          "median": 18.55999947,
+          "max": 21.92000008
+        },
+        "min_batch_ms": 0.01760000038,
+        "rounds": [
+          {
+            "baseline": 18.23999977,
+            "A": 18.55999947,
+            "N": 18.39999962,
+            "telemetry": [
+              {
+                "window": 0,
+                "edge": "start",
+                "time": "2026-11-20T13:45:28.210",
+                "sclk": 871.0,
+                "mclk": 350.0,
+                "edge_c": 32.0,
+                "junction_c": 33.0,
+                "memory_c": 37.0,
+                "power_w": 19.0,
+                "amd_processes": 1,
+                "other_amd_processes": 0,
+                "unknown_amd_processes": 1
+              },
+              {
+                "window": 0,
+                "edge": "end",
+                "time": "2026-11-20T13:45:29.623",
+                "sclk": 840.0,
+                "mclk": 350.0,
+                "edge_c": 32.0,
+                "junction_c": 33.0,
+                "memory_c": 37.0,
+                "power_w": 18.0,
+                "amd_processes": 1,
+                "other_amd_processes": 0,
+                "unknown_amd_processes": 1
+              }
+            ]
+          },
+          {
+            "A": 18.71999931,
+            "N": 18.39999962,
+            "baseline": 18.55999947,
+            "telemetry": [
+              {
+                "window": 1,
+                "edge": "start",
+                "time": "2026-11-20T13:45:29.624",
+                "sclk": 840.0,
+                "mclk": 350.0,
+                "edge_c": 32.0,
+                "junction_c": 33.0,
+                "memory_c": 37.0,
+                "power_w": 18.0,
+                "amd_processes": 1,
+                "other_amd_processes": 0,
+                "unknown_amd_processes": 1
+              },
+              {
+                "window": 1,
+                "edge": "end",
+                "time": "2026-11-20T13:45:30.922",
+                "sclk": 1171.0,
+                "mclk": 350.0,
+                "edge_c": 32.0,
+                "junction_c": 33.0,
+                "memory_c": 37.0,
+                "power_w": 18.0,
+                "amd_processes": 1,
+                "other_amd_processes": 0,
+                "unknown_amd_processes": 1
+              }
+            ]
+          },
+          {
+            "N": 18.71999931,
+            "baseline": 18.39999962,
+            "A": 18.39999962,
+            "telemetry": [
+              {
+                "window": 2,
+                "edge": "start",
+                "time": "2026-11-20T13:45:30.924",
+                "sclk": 1171.0,
+                "mclk": 350.0,
+                "edge_c": 32.0,
+                "junction_c": 33.0,
+                "memory_c": 37.0,
+                "power_w": 18.0,
+                "amd_processes": 1,
+                "other_amd_processes": 0,
+                "unknown_amd_processes": 1
+              },
+              {
+                "window": 2,
+                "edge": "end",
+                "time": "2026-11-20T13:45:32.194",
+                "sclk": 871.0,
+                "mclk": 350.0,
+                "edge_c": 32.0,
+                "junction_c": 33.0,
+                "memory_c": 37.0,
+                "power_w": 18.0,
+                "amd_processes": 1,
+                "other_amd_processes": 0,
+                "unknown_amd_processes": 1
+              }
+            ]
+          },
+          {
+            "N": 18.39999962,
+            "A": 18.55999947,
+            "baseline": 18.55999947,
+            "telemetry": [
+              {
+                "window": 3,
+                "edge": "start",
+                "time": "2026-11-20T13:45:32.195",
+                "sclk": 871.0,
+                "mclk": 350.0,
+                "edge_c": 32.0,
+                "junction_c": 33.0,
+                "memory_c": 37.0,
+                "power_w": 18.0,
+                "amd_processes": 1,
+                "other_amd_processes": 0,
+                "unknown_amd_processes": 1
+              },
+              {
+                "window": 3,
+                "edge": "end",
+                "time": "2026-11-20T13:45:33.494",
+                "sclk": 901.0,
+                "mclk": 350.0,
+                "edge_c": 32.0,
+                "junction_c": 33.0,
+                "memory_c": 37.0,
+                "power_w": 18.0,
+                "amd_processes": 1,
+                "other_amd_processes": 0,
+                "unknown_amd_processes": 1
+              }
+            ]
+          },
+          {
+            "baseline": 18.39999962,
+            "N": 19.03999901,
+            "A": 18.71999931,
+            "telemetry": [
+              {
+                "window": 4,
+                "edge": "start",
+                "time": "2026-11-20T13:45:33.495",
+                "sclk": 901.0,
+                "mclk": 350.0,
+                "edge_c": 32.0,
+                "junction_c": 33.0,
+                "memory_c": 37.0,
+                "power_w": 18.0,
+                "amd_processes": 1,
+                "other_amd_processes": 0,
+                "unknown_amd_processes": 1
+              },
+              {
+                "window": 4,
+                "edge": "end",
+                "time": "2026-11-20T13:45:34.731",
+                "sclk": 884.0,
+                "mclk": 350.0,
+                "edge_c": 32.0,
+                "junction_c": 33.0,
+                "memory_c": 37.0,
+                "power_w": 18.0,
+                "amd_processes": 1,
+                "other_amd_processes": 0,
+                "unknown_amd_processes": 1
+              }
+            ]
+          },
+          {
+            "A": 18.71999931,
+            "baseline": 18.55999947,
+            "N": 18.55999947,
+            "telemetry": [
+              {
+                "window": 5,
+                "edge": "start",
+                "time": "2026-11-20T13:45:34.732",
+                "sclk": 884.0,
+                "mclk": 350.0,
+                "edge_c": 32.0,
+                "junction_c": 33.0,
+                "memory_c": 37.0,
+                "power_w": 18.0,
+                "amd_processes": 1,
+                "other_amd_processes": 0,
+                "unknown_amd_processes": 1
+              },
+              {
+                "window": 5,
+                "edge": "end",
+                "time": "2026-11-20T13:45:36.010",
+                "sclk": 826.0,
+                "mclk": 350.0,
+                "edge_c": 32.0,
+                "junction_c": 33.0,
+                "memory_c": 37.0,
+                "power_w": 18.0,
+                "amd_processes": 1,
+                "other_amd_processes": 0,
+                "unknown_amd_processes": 1
+              }
+            ]
+          },
+          {
+            "baseline": 18.55999947,
+            "A": 19.36000061,
+            "N": 18.39999962,
+            "telemetry": [
+              {
+                "window": 6,
+                "edge": "start",
+                "time": "2026-11-20T13:45:36.011",
+                "sclk": 826.0,
+                "mclk": 350.0,
+                "edge_c": 32.0,
+                "junction_c": 33.0,
+                "memory_c": 37.0,
+                "power_w": 18.0,
+                "amd_processes": 1,
+                "other_amd_processes": 0,
+                "unknown_amd_processes": 1
+              },
+              {
+                "window": 6,
+                "edge": "end",
+                "time": "2026-11-20T13:45:37.266",
+                "sclk": 854.0,
+                "mclk": 350.0,
+                "edge_c": 31.0,
+                "junction_c": 33.0,
+                "memory_c": 37.0,
+                "power_w": 18.0,
+                "amd_processes": 1,
+                "other_amd_processes": 0,
+                "unknown_amd_processes": 1
+              }
+            ]
+          },
+          {
+            "A": 18.55999947,
+            "N": 19.20000076,
+            "baseline": 18.71999931,
+            "telemetry": [
+              {
+                "window": 7,
+                "edge": "start",
+                "time": "2026-11-20T13:45:37.267",
+                "sclk": 854.0,
+                "mclk": 350.0,
+                "edge_c": 31.0,
+                "junction_c": 33.0,
+                "memory_c": 37.0,
+                "power_w": 18.0,
+                "amd_processes": 1,
+                "other_amd_processes": 0,
+                "unknown_amd_processes": 1
+              },
+              {
+                "window": 7,
+                "edge": "end",
+                "time": "2026-11-20T13:45:38.514",
+                "sclk": 830.0,
+                "mclk": 350.0,
+                "edge_c": 32.0,
+                "junction_c": 33.0,
+                "memory_c": 37.0,
+                "power_w": 18.0,
+                "amd_processes": 1,
+                "other_amd_processes": 0,
+                "unknown_amd_processes": 1
+              }
+            ]
+          },
+          {
+            "N": 18.55999947,
+            "baseline": 18.55999947,
+            "A": 18.55999947,
+            "telemetry": [
+              {
+                "window": 8,
+                "edge": "start",
+                "time": "2026-11-20T13:45:38.516",
+                "sclk": 830.0,
+                "mclk": 350.0,
+                "edge_c": 32.0,
+                "junction_c": 33.0,
+                "memory_c": 37.0,
+                "power_w": 18.0,
+                "amd_processes": 1,
+                "other_amd_processes": 0,
+                "unknown_amd_processes": 1
+              },
+              {
+                "window": 8,
+                "edge": "end",
+                "time": "2026-11-20T13:45:39.826",
+                "sclk": 832.0,
+                "mclk": 350.0,
+                "edge_c": 32.0,
+                "junction_c": 33.0,
+                "memory_c": 37.0,
+                "power_w": 18.0,
+                "amd_processes": 1,
+                "other_amd_processes": 0,
+                "unknown_amd_processes": 1
+              }
+            ]
+          },
+          {
+            "N": 18.88000107,
+            "A": 18.71999931,
+            "baseline": 18.55999947,
+            "telemetry": [
+              {
+                "window": 9,
+                "edge": "start",
+                "time": "2026-11-20T13:45:39.828",
+                "sclk": 832.0,
+                "mclk": 350.0,
+                "edge_c": 32.0,
+                "junction_c": 33.0,
+                "memory_c": 37.0,
+                "power_w": 18.0,
+                "amd_processes": 1,
+                "other_amd_processes": 0,
+                "unknown_amd_processes": 1
+              },
+              {
+                "window": 9,
+                "edge": "end",
+                "time": "2026-11-20T13:45:41.094",
+                "sclk": 1166.0,
+                "mclk": 350.0,
+                "edge_c": 31.0,
+                "junction_c": 33.0,
+                "memory_c": 37.0,
+                "power_w": 18.0,
+                "amd_processes": 1,
+                "other_amd_processes": 0,
+                "unknown_amd_processes": 1
+              }
+            ]
+          },
+          {
+            "baseline": 18.55999947,
+            "N": 18.07999992,
+            "A": 18.39999962,
+            "telemetry": [
+              {
+                "window": 10,
+                "edge": "start",
+                "time": "2026-11-20T13:45:41.096",
+                "sclk": 1166.0,
+                "mclk": 350.0,
+                "edge_c": 31.0,
+                "junction_c": 33.0,
+                "memory_c": 37.0,
+                "power_w": 18.0,
+                "amd_processes": 1,
+                "other_amd_processes": 0,
+                "unknown_amd_processes": 1
+              },
+              {
+                "window": 10,
+                "edge": "end",
+                "time": "2026-11-20T13:45:42.330",
+                "sclk": 1170.0,
+                "mclk": 350.0,
+                "edge_c": 32.0,
+                "junction_c": 33.0,
+                "memory_c": 37.0,
+                "power_w": 18.0,
+                "amd_processes": 1,
+                "other_amd_processes": 0,
+                "unknown_amd_processes": 1
+              }
+            ]
+          },
+          {
+            "A": 18.55999947,
+            "baseline": 18.23999977,
+            "N": 18.55999947,
+            "telemetry": [
+              {
+                "window": 11,
+                "edge": "start",
+                "time": "2026-11-20T13:45:42.332",
+                "sclk": 1170.0,
+                "mclk": 350.0,
+                "edge_c": 32.0,
+                "junction_c": 33.0,
+                "memory_c": 37.0,
+                "power_w": 18.0,
+                "amd_processes": 1,
+                "other_amd_processes": 0,
+                "unknown_amd_processes": 1
+              },
+              {
+                "window": 11,
+                "edge": "end",
+                "time": "2026-11-20T13:45:43.510",
+                "sclk": 1045.0,
+                "mclk": 350.0,
+                "edge_c": 32.0,
+                "junction_c": 33.0,
+                "memory_c": 37.0,
+                "power_w": 18.0,
+                "amd_processes": 1,
+                "other_amd_processes": 0,
+                "unknown_amd_processes": 1
+              }
+            ]
+          }
+        ],
+        "round_ratios": [
+          0.9913793181805516,
+          0.9829059988357446,
+          1.0173912878591678,
+          0.9913793181805516,
+          1.0170940016984436,
+          0.9914529996849665,
+          0.950413173566527,
+          1.0344828291096928,
+          1.0,
+          1.00854710287914,
+          0.9826087115973539,
+          1.0
+        ],
+        "total_launches_per_role": 18,
+        "timed_per_role": 15,
+        "outer_telemetry": [
+          {
+            "window": -1,
+            "edge": "whole-start",
+            "time": "2026-11-20T13:45:20.359",
+            "sclk": 805.0,
+            "mclk": 350.0,
+            "edge_c": 32.0,
+            "junction_c": 33.0,
+            "memory_c": 37.0,
+            "power_w": 18.0,
+            "amd_processes": 1,
+            "other_amd_processes": 0,
+            "unknown_amd_processes": 0,
+            "nvidia_compute_processes": 1
+          },
+          {
+            "window": -1,
+            "edge": "whole-end",
+            "time": "2026-11-20T13:45:43.512",
+            "sclk": 1045.0,
+            "mclk": 350.0,
+            "edge_c": 32.0,
+            "junction_c": 33.0,
+            "memory_c": 37.0,
+            "power_w": 18.0,
+            "amd_processes": 1,
+            "other_amd_processes": 0,
+            "unknown_amd_processes": 1,
+            "nvidia_compute_processes": 1
+          }
+        ]
+      },
+      "prewarm-paired": {
+        "case": "SRAD16",
+        "mode": "paired",
+        "method": "prewarm",
+        "batch": 1,
+        "prewarm_ms": 200,
+        "median_ratio": 1.0,
+        "spread": 0.02571592953518298,
+        "passed": true,
+        "single_launch_us": {
+          "min": 16.79999924,
+          "median": 19.03999901,
+          "max": 33.92000198
+        },
+        "min_batch_ms": 0.01679999924,
+        "rounds": [
+          {
+            "baseline": 18.55999947,
+            "A": 18.55999947,
+            "N": 18.71999931,
+            "telemetry": []
+          },
+          {
+            "baseline": 19.20000076,
+            "A": 19.20000076,
+            "N": 19.03999901,
+            "telemetry": []
+          },
+          {
+            "baseline": 19.03999901,
+            "A": 19.03999901,
+            "N": 19.03999901,
+            "telemetry": []
+          },
+          {
+            "baseline": 19.03999901,
+            "A": 19.03999901,
+            "N": 19.20000076,
+            "telemetry": []
+          },
+          {
+            "baseline": 19.20000076,
+            "A": 19.03999901,
+            "N": 19.03999901,
+            "telemetry": []
+          },
+          {
+            "baseline": 19.20000076,
+            "A": 19.20000076,
+            "N": 19.20000076,
+            "telemetry": []
+          },
+          {
+            "baseline": 19.19900131,
+            "A": 19.20000076,
+            "N": 18.88000107,
+            "telemetry": []
+          },
+          {
+            "baseline": 19.03999901,
+            "A": 19.03999901,
+            "N": 19.03999901,
+            "telemetry": []
+          },
+          {
+            "baseline": 19.03999901,
+            "A": 19.03999901,
+            "N": 19.03999901,
+            "telemetry": []
+          },
+          {
+            "baseline": 19.20000076,
+            "A": 19.20000076,
+            "N": 19.20000076,
+            "telemetry": []
+          },
+          {
+            "baseline": 19.03999901,
+            "A": 19.03999901,
+            "N": 19.03999901,
+            "telemetry": []
+          },
+          {
+            "baseline": 18.88000107,
+            "A": 19.03999901,
+            "N": 19.03999901,
+            "telemetry": []
+          }
+        ],
+        "round_ratios": [
+          1.008620681280655,
+          0.9916665758506978,
+          1.0,
+          1.008403453693247,
+          1.0,
+          1.0,
+          0.9833333501388881,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "total_launches_per_role": 18,
+        "timed_per_role": 15
+      },
+      "prewarm-separate": {
+        "case": "SRAD16",
+        "mode": "separate",
+        "method": "prewarm",
+        "batch": 1,
+        "prewarm_ms": 200,
+        "median_ratio": 1.0,
+        "spread": 0.052934221978304885,
+        "passed": false,
+        "single_launch_us": {
+          "min": 16.96000099,
+          "median": 19.03999901,
+          "max": 24.15999985
+        },
+        "min_batch_ms": 0.01696000099,
+        "rounds": [
+          {
+            "baseline": 18.88000107,
+            "A": 18.88000107,
+            "N": 18.88000107,
+            "telemetry": []
+          },
+          {
+            "A": 19.20000076,
+            "N": 19.03800011,
+            "baseline": 18.71999931,
+            "telemetry": []
+          },
+          {
+            "N": 18.23999977,
+            "baseline": 18.71999931,
+            "A": 18.88000107,
+            "telemetry": []
+          },
+          {
+            "N": 18.88000107,
+            "A": 19.20000076,
+            "baseline": 19.20000076,
+            "telemetry": []
+          },
+          {
+            "baseline": 18.88000107,
+            "N": 18.88000107,
+            "A": 18.55999947,
+            "telemetry": []
+          },
+          {
+            "A": 19.03800011,
+            "baseline": 19.03999901,
+            "N": 19.03999901,
+            "telemetry": []
+          },
+          {
+            "baseline": 18.88000107,
+            "A": 19.20000076,
+            "N": 18.88000107,
+            "telemetry": []
+          },
+          {
+            "A": 19.03999901,
+            "N": 19.19900131,
+            "baseline": 19.03999901,
+            "telemetry": []
+          },
+          {
+            "N": 18.71999931,
+            "baseline": 19.03999901,
+            "A": 19.20000076,
+            "telemetry": []
+          },
+          {
+            "N": 19.20000076,
+            "A": 19.20000076,
+            "baseline": 19.19900131,
+            "telemetry": []
+          },
+          {
+            "baseline": 19.19900131,
+            "N": 18.88000107,
+            "A": 18.88000107,
+            "telemetry": []
+          },
+          {
+            "A": 19.20000076,
+            "baseline": 18.88000107,
+            "N": 19.20000076,
+            "telemetry": []
+          }
+        ],
+        "round_ratios": [
+          1.0,
+          0.9915624664798188,
+          0.9661016279804693,
+          0.9833333501388881,
+          1.0172414660095892,
+          1.000104995272006,
+          0.9833333501388881,
+          1.0083509615686688,
+          0.9749999254687528,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "total_launches_per_role": 18,
+        "timed_per_role": 15
+      },
+      "batch-paired": {
+        "case": "SRAD16",
+        "mode": "paired",
+        "method": "batch",
+        "batch": 1050,
+        "prewarm_ms": 0,
+        "median_ratio": 0.9996650966186933,
+        "spread": 0.04065687679665819,
+        "passed": false,
+        "single_launch_us": {
+          "min": 8.929509163,
+          "median": 9.605624676,
+          "max": 20.91087723
+        },
+        "min_batch_ms": 9.375984621150002,
+        "rounds": [
+          {
+            "baseline": 9.551214218,
+            "A": 9.580165863,
+            "N": 9.548462868,
+            "telemetry": []
+          },
+          {
+            "baseline": 9.564933777,
+            "A": 9.551525116,
+            "N": 9.552284241,
+            "telemetry": []
+          },
+          {
+            "baseline": 9.54314518,
+            "A": 9.557315826,
+            "N": 9.550154686,
+            "telemetry": []
+          },
+          {
+            "baseline": 9.560060501,
+            "A": 9.54878521,
+            "N": 9.562041283,
+            "telemetry": []
+          },
+          {
+            "baseline": 9.584290504,
+            "A": 9.557624817,
+            "N": 9.558995247,
+            "telemetry": []
+          },
+          {
+            "baseline": 9.628024101,
+            "A": 9.639148712,
+            "N": 9.623758316,
+            "telemetry": []
+          },
+          {
+            "baseline": 9.636100769,
+            "A": 9.60928154,
+            "N": 9.650578499,
+            "telemetry": []
+          },
+          {
+            "baseline": 9.629854202,
+            "A": 9.625434875,
+            "N": 9.61720562,
+            "telemetry": []
+          },
+          {
+            "baseline": 9.633206367,
+            "A": 9.618883133,
+            "N": 9.622387886,
+            "telemetry": []
+          },
+          {
+            "baseline": 9.608521461,
+            "A": 9.611721039,
+            "N": 9.62299633,
+            "telemetry": []
+          },
+          {
+            "baseline": 9.62421608,
+            "A": 9.642196655,
+            "N": 9.608215332,
+            "telemetry": []
+          },
+          {
+            "baseline": 9.241130829,
+            "A": 9.560063362,
+            "N": 9.226046562,
+            "telemetry": []
+          }
+        ],
+        "round_ratios": [
+          0.9966907676283099,
+          1.0000794768365031,
+          0.9992507164008834,
+          1.0013882470605913,
+          1.0001433860426874,
+          0.9984033448948826,
+          1.0042976115152935,
+          0.9991450510956784,
+          1.0003643617404994,
+          1.0011730772204321,
+          0.9964757695558535,
+          0.9650612357520901
+        ],
+        "total_launches_per_role": 18900,
+        "timed_per_role": 15750,
+        "under_minimum_batch": true
+      },
+      "batch-separate": {
+        "case": "SRAD16",
+        "mode": "separate",
+        "method": "batch",
+        "batch": 1050,
+        "prewarm_ms": 0,
+        "median_ratio": 1.0035242459159095,
+        "spread": 0.12340117405931905,
+        "passed": false,
+        "single_launch_us": {
+          "min": 8.539700508,
+          "median": 9.532778263,
+          "max": 10.04156685
+        },
+        "min_batch_ms": 8.9666855334,
+        "rounds": [
+          {
+            "baseline": 9.507621765,
+            "A": 9.015144348,
+            "N": 9.534440994,
+            "telemetry": []
+          },
+          {
+            "A": 9.481142998,
+            "N": 9.585068703,
+            "baseline": 9.537937164,
+            "telemetry": []
+          },
+          {
+            "N": 9.467728615,
+            "baseline": 9.600264549,
+            "A": 9.566675186,
+            "telemetry": []
+          },
+          {
+            "N": 9.688337326,
+            "A": 9.576057434,
+            "baseline": 9.53306675,
+            "telemetry": []
+          },
+          {
+            "baseline": 9.524106979,
+            "N": 9.573916435,
+            "A": 9.529122353,
+            "telemetry": []
+          },
+          {
+            "A": 9.543889999,
+            "baseline": 9.472278595,
+            "N": 9.591768265,
+            "telemetry": []
+          },
+          {
+            "baseline": 9.530350685,
+            "A": 9.535054207,
+            "N": 8.976578712,
+            "telemetry": []
+          },
+          {
+            "A": 9.570690155,
+            "N": 9.464045525,
+            "baseline": 9.585816383,
+            "telemetry": []
+          },
+          {
+            "N": 9.530345917,
+            "baseline": 9.486621857,
+            "A": 9.604867935,
+            "telemetry": []
+          },
+          {
+            "N": 9.550437927,
+            "A": 9.528068542,
+            "baseline": 9.622216225,
+            "telemetry": []
+          },
+          {
+            "baseline": 9.622542381,
+            "N": 9.542387009,
+            "A": 9.534166336,
+            "telemetry": []
+          },
+          {
+            "A": 9.488722801,
+            "baseline": 9.600447655,
+            "N": 9.541751862,
+            "telemetry": []
+          }
+        ],
+        "round_ratios": [
+          1.0576026989645713,
+          1.010961305511574,
+          0.9896571620676744,
+          1.0117250645971845,
+          1.0047007563068908,
+          1.005016640594665,
+          0.9414292270525316,
+          0.9888571640840044,
+          0.9922412240850869,
+          1.002347735524928,
+          1.0008622330165313,
+          1.00558864054859
+        ],
+        "total_launches_per_role": 18900,
+        "timed_per_role": 15750,
+        "under_minimum_batch": true
+      },
+      "combined-paired": {
+        "case": "SRAD16",
+        "mode": "paired",
+        "method": "combined",
+        "batch": 1050,
+        "prewarm_ms": 200,
+        "median_ratio": 1.0006121726677408,
+        "spread": 0.006173215144402278,
+        "passed": true,
+        "single_launch_us": {
+          "min": 8.958912849,
+          "median": 9.558999538,
+          "max": 10.06825352
+        },
+        "min_batch_ms": 9.40685849145,
+        "rounds": [
+          {
+            "baseline": 9.622077942,
+            "A": 9.595413208,
+            "N": 9.595870018,
+            "telemetry": []
+          },
+          {
+            "baseline": 9.531718254,
+            "A": 9.551224709,
+            "N": 9.556711197,
+            "telemetry": []
+          },
+          {
+            "baseline": 9.596788406,
+            "A": 9.612787247,
+            "N": 9.619034767,
+            "telemetry": []
+          },
+          {
+            "baseline": 9.554578781,
+            "A": 9.542388916,
+            "N": 9.583226204,
+            "telemetry": []
+          },
+          {
+            "baseline": 9.53324604,
+            "A": 9.520750046,
+            "N": 9.527151108,
+            "telemetry": []
+          },
+          {
+            "baseline": 9.521209717,
+            "A": 9.553817749,
+            "N": 9.535837173,
+            "telemetry": []
+          },
+          {
+            "baseline": 9.53842926,
+            "A": 9.553667068,
+            "N": 9.538580894,
+            "telemetry": []
+          },
+          {
+            "baseline": 9.541017532,
+            "A": 9.552751541,
+            "N": 9.566466331,
+            "telemetry": []
+          },
+          {
+            "baseline": 9.547265053,
+            "A": 9.560371399,
+            "N": 9.58033371,
+            "telemetry": []
+          },
+          {
+            "baseline": 9.580181122,
+            "A": 9.537056923,
+            "N": 9.572865486,
+            "telemetry": []
+          },
+          {
+            "baseline": 9.555646896,
+            "A": 9.548485756,
+            "N": 9.539800644,
+            "telemetry": []
+          },
+          {
+            "baseline": 9.569971085,
+            "A": 9.541628838,
+            "N": 9.537514687,
+            "telemetry": []
+          }
+        ],
+        "round_ratios": [
+          1.000047607121246,
+          1.0005744276956263,
+          1.0006499176398551,
+          1.0042795665068238,
+          1.0006723274919596,
+          0.998117969541351,
+          0.9984209022679333,
+          1.0014356900146664,
+          1.0020880267268788,
+          1.0037546764467393,
+          0.9990904199658525,
+          0.9995688208931777
+        ],
+        "total_launches_per_role": 18900,
+        "timed_per_role": 15750,
+        "under_minimum_batch": true
+      },
+      "combined-separate": {
+        "case": "SRAD16",
+        "mode": "separate",
+        "method": "combined",
+        "batch": 1050,
+        "prewarm_ms": 200,
+        "median_ratio": 1.0030378993099092,
+        "spread": 0.41580511130719233,
+        "passed": false,
+        "single_launch_us": {
+          "min": 8.944126129,
+          "median": 9.571410179499999,
+          "max": 21.15045547
+        },
+        "min_batch_ms": 9.39133243545,
+        "rounds": [
+          {
+            "baseline": 9.520431519,
+            "A": 9.49772644,
+            "N": 9.635012627,
+            "telemetry": []
+          },
+          {
+            "A": 9.440598488,
+            "N": 13.17527199,
+            "baseline": 13.17512989,
+            "telemetry": []
+          },
+          {
+            "N": 13.171772,
+            "baseline": 13.18061924,
+            "A": 13.14145279,
+            "telemetry": []
+          },
+          {
+            "N": 13.21627998,
+            "A": 9.565705299,
+            "baseline": 9.348849297,
+            "telemetry": []
+          },
+          {
+            "baseline": 9.071380615,
+            "N": 9.542390823,
+            "A": 9.558396339,
+            "telemetry": []
+          },
+          {
+            "A": 8.996395111,
+            "baseline": 9.111748695,
+            "N": 9.599228859,
+            "telemetry": []
+          },
+          {
+            "baseline": 9.551217079,
+            "A": 9.535979271,
+            "N": 9.616895676,
+            "telemetry": []
+          },
+          {
+            "A": 9.585827827,
+            "N": 9.573155403,
+            "baseline": 9.5666008,
+            "telemetry": []
+          },
+          {
+            "N": 9.502901077,
+            "baseline": 9.578021049,
+            "A": 9.487808228,
+            "telemetry": []
+          },
+          {
+            "N": 9.624360085,
+            "A": 9.588225365,
+            "baseline": 9.551827431,
+            "telemetry": []
+          },
+          {
+            "baseline": 9.571335793,
+            "N": 9.492534637,
+            "A": 9.629984856,
+            "telemetry": []
+          },
+          {
+            "A": 9.568725586,
+            "baseline": 9.561123848,
+            "N": 9.479755402,
+            "telemetry": []
+          }
+        ],
+        "round_ratios": [
+          1.0144546368930796,
+          1.395597112486795,
+          1.0023071429380375,
+          1.3816315229135934,
+          0.9983255019532205,
+          1.067008367302911,
+          1.0084853797077848,
+          0.9986780042132297,
+          1.0015907624434754,
+          1.0037686556817806,
+          0.9857268499322343,
+          0.9907019818678705
+        ],
+        "total_launches_per_role": 18900,
+        "timed_per_role": 15750,
+        "under_minimum_batch": true
+      }
+    },
+    "SRAD1024": {
+      "existing-paired": {
+        "case": "SRAD1024",
+        "mode": "paired",
+        "method": "existing",
+        "batch": 1,
+        "prewarm_ms": 0,
+        "median_ratio": 1.0054846004249254,
+        "spread": 0.15183746937925657,
+        "passed": false,
+        "single_launch_us": {
+          "min": 253.6000061,
+          "median": 263.51948545000005,
+          "max": 307.678009
+        },
+        "min_batch_ms": 0.2536000061,
+        "rounds": [
+          {
+            "baseline": 280.7990112,
+            "A": 260.4799805,
+            "N": 268.9589844,
+            "telemetry": [
+              {
+                "window": 0,
+                "edge": "start",
+                "time": "2026-11-20T13:47:36.701",
+                "sclk": 757.0,
+                "mclk": 800.0,
+                "edge_c": 42.0,
+                "junction_c": 42.0,
+                "memory_c": 46.0,
+                "power_w": 18.0,
+                "amd_processes": 1,
+                "other_amd_processes": 0,
+                "unknown_amd_processes": 0
+              },
+              {
+                "window": 0,
+                "edge": "end",
+                "time": "2026-11-20T13:47:37.740",
+                "sclk": 1476.0,
+                "mclk": 800.0,
+                "edge_c": 41.0,
+                "junction_c": 43.0,
+                "memory_c": 45.0,
+                "power_w": 23.0,
+                "amd_processes": 1,
+                "other_amd_processes": 0,
+                "unknown_amd_processes": 0
+              }
+            ]
+          },
+          {
+            "baseline": 261.2789917,
+            "A": 279.9980164,
+            "N": 261.9190063,
+            "telemetry": [
+              {
+                "window": 1,
+                "edge": "start",
+                "time": "2026-11-20T13:47:37.741",
+                "sclk": 1476.0,
+                "mclk": 800.0,
+                "edge_c": 41.0,
+                "junction_c": 43.0,
+                "memory_c": 45.0,
+                "power_w": 23.0,
+                "amd_processes": 1,
+                "other_amd_processes": 0,
+                "unknown_amd_processes": 0
+              },
+              {
+                "window": 1,
+                "edge": "end",
+                "time": "2026-11-20T13:47:38.788",
+                "sclk": 1452.0,
+                "mclk": 800.0,
+                "edge_c": 41.0,
+                "junction_c": 42.0,
+                "memory_c": 45.0,
+                "power_w": 23.0,
+                "amd_processes": 1,
+                "other_amd_processes": 0,
+                "unknown_amd_processes": 0
+              }
+            ]
+          },
+          {
+            "baseline": 262.2399902,
+            "A": 262.881012,
+            "N": 261.7579956,
+            "telemetry": [
+              {
+                "window": 2,
+                "edge": "start",
+                "time": "2026-11-20T13:47:38.789",
+                "sclk": 1452.0,
+                "mclk": 800.0,
+                "edge_c": 41.0,
+                "junction_c": 42.0,
+                "memory_c": 45.0,
+                "power_w": 23.0,
+                "amd_processes": 1,
+                "other_amd_processes": 0,
+                "unknown_amd_processes": 0
+              },
+              {
+                "window": 2,
+                "edge": "end",
+                "time": "2026-11-20T13:47:39.808",
+                "sclk": 1422.0,
+                "mclk": 800.0,
+                "edge_c": 41.0,
+                "junction_c": 42.0,
+                "memory_c": 45.0,
+                "power_w": 22.0,
+                "amd_processes": 1,
+                "other_amd_processes": 0,
+                "unknown_amd_processes": 0
+              }
+            ]
+          },
+          {
+            "baseline": 280.3179932,
+            "A": 261.2799988,
+            "N": 262.7200012,
+            "telemetry": [
+              {
+                "window": 3,
+                "edge": "start",
+                "time": "2026-11-20T13:47:39.808",
+                "sclk": 1422.0,
+                "mclk": 800.0,
+                "edge_c": 41.0,
+                "junction_c": 42.0,
+                "memory_c": 45.0,
+                "power_w": 22.0,
+                "amd_processes": 1,
+                "other_amd_processes": 0,
+                "unknown_amd_processes": 0
+              },
+              {
+                "window": 3,
+                "edge": "end",
+                "time": "2026-11-20T13:47:40.827",
+                "sclk": 1466.0,
+                "mclk": 800.0,
+                "edge_c": 41.0,
+                "junction_c": 42.0,
+                "memory_c": 45.0,
+                "power_w": 23.0,
+                "amd_processes": 1,
+                "other_amd_processes": 0,
+                "unknown_amd_processes": 0
+              }
+            ]
+          },
+          {
+            "baseline": 261.7590027,
+            "A": 261.2780151,
+            "N": 264.8000183,
+            "telemetry": [
+              {
+                "window": 4,
+                "edge": "start",
+                "time": "2026-11-20T13:47:40.828",
+                "sclk": 1466.0,
+                "mclk": 800.0,
+                "edge_c": 41.0,
+                "junction_c": 42.0,
+                "memory_c": 45.0,
+                "power_w": 23.0,
+                "amd_processes": 1,
+                "other_amd_processes": 0,
+                "unknown_amd_processes": 0
+              },
+              {
+                "window": 4,
+                "edge": "end",
+                "time": "2026-11-20T13:47:41.865",
+                "sclk": 1335.0,
+                "mclk": 800.0,
+                "edge_c": 40.0,
+                "junction_c": 42.0,
+                "memory_c": 45.0,
+                "power_w": 23.0,
+                "amd_processes": 1,
+                "other_amd_processes": 0,
+                "unknown_amd_processes": 0
+              }
+            ]
+          },
+          {
+            "baseline": 263.0400085,
+            "A": 261.7600098,
+            "N": 281.1180115,
+            "telemetry": [
+              {
+                "window": 5,
+                "edge": "start",
+                "time": "2026-11-20T13:47:41.865",
+                "sclk": 1335.0,
+                "mclk": 800.0,
+                "edge_c": 40.0,
+                "junction_c": 42.0,
+                "memory_c": 45.0,
+                "power_w": 23.0,
+                "amd_processes": 1,
+                "other_amd_processes": 0,
+                "unknown_amd_processes": 0
+              },
+              {
+                "window": 5,
+                "edge": "end",
+                "time": "2026-11-20T13:47:42.902",
+                "sclk": 1452.0,
+                "mclk": 800.0,
+                "edge_c": 41.0,
+                "junction_c": 42.0,
+                "memory_c": 45.0,
+                "power_w": 23.0,
+                "amd_processes": 1,
+                "other_amd_processes": 0,
+                "unknown_amd_processes": 0
+              }
+            ]
+          },
+          {
+            "baseline": 263.6789856,
+            "A": 262.2390137,
+            "N": 261.2780151,
+            "telemetry": [
+              {
+                "window": 6,
+                "edge": "start",
+                "time": "2026-11-20T13:47:42.903",
+                "sclk": 1452.0,
+                "mclk": 800.0,
+                "edge_c": 41.0,
+                "junction_c": 42.0,
+                "memory_c": 45.0,
+                "power_w": 23.0,
+                "amd_processes": 1,
+                "other_amd_processes": 0,
+                "unknown_amd_processes": 0
+              },
+              {
+                "window": 6,
+                "edge": "end",
+                "time": "2026-11-20T13:47:43.931",
+                "sclk": 1425.0,
+                "mclk": 800.0,
+                "edge_c": 40.0,
+                "junction_c": 42.0,
+                "memory_c": 44.0,
+                "power_w": 22.0,
+                "amd_processes": 1,
+                "other_amd_processes": 0,
+                "unknown_amd_processes": 0
+              }
+            ]
+          },
+          {
+            "baseline": 266.0799866,
+            "A": 279.5180054,
+            "N": 281.4389954,
+            "telemetry": [
+              {
+                "window": 7,
+                "edge": "start",
+                "time": "2026-11-20T13:47:43.932",
+                "sclk": 1425.0,
+                "mclk": 350.0,
+                "edge_c": 40.0,
+                "junction_c": 42.0,
+                "memory_c": 44.0,
+                "power_w": 22.0,
+                "amd_processes": 1,
+                "other_amd_processes": 0,
+                "unknown_amd_processes": 0
+              },
+              {
+                "window": 7,
+                "edge": "end",
+                "time": "2026-11-20T13:47:44.963",
+                "sclk": 1463.0,
+                "mclk": 800.0,
+                "edge_c": 41.0,
+                "junction_c": 42.0,
+                "memory_c": 44.0,
+                "power_w": 23.0,
+                "amd_processes": 1,
+                "other_amd_processes": 0,
+                "unknown_amd_processes": 0
+              }
+            ]
+          },
+          {
+            "baseline": 279.6789856,
+            "A": 260.960022,
+            "N": 263.0400085,
+            "telemetry": [
+              {
+                "window": 8,
+                "edge": "start",
+                "time": "2026-11-20T13:47:44.964",
+                "sclk": 1463.0,
+                "mclk": 800.0,
+                "edge_c": 41.0,
+                "junction_c": 42.0,
+                "memory_c": 44.0,
+                "power_w": 23.0,
+                "amd_processes": 1,
+                "other_amd_processes": 0,
+                "unknown_amd_processes": 0
+              },
+              {
+                "window": 8,
+                "edge": "end",
+                "time": "2026-11-20T13:47:46.007",
+                "sclk": 1463.0,
+                "mclk": 800.0,
+                "edge_c": 40.0,
+                "junction_c": 42.0,
+                "memory_c": 44.0,
+                "power_w": 23.0,
+                "amd_processes": 1,
+                "other_amd_processes": 0,
+                "unknown_amd_processes": 0
+              }
+            ]
+          },
+          {
+            "baseline": 263.2000122,
+            "A": 281.598999,
+            "N": 262.5580139,
+            "telemetry": [
+              {
+                "window": 9,
+                "edge": "start",
+                "time": "2026-11-20T13:47:46.008",
+                "sclk": 1463.0,
+                "mclk": 800.0,
+                "edge_c": 40.0,
+                "junction_c": 42.0,
+                "memory_c": 44.0,
+                "power_w": 23.0,
+                "amd_processes": 1,
+                "other_amd_processes": 0,
+                "unknown_amd_processes": 0
+              },
+              {
+                "window": 9,
+                "edge": "end",
+                "time": "2026-11-20T13:47:47.052",
+                "sclk": 1437.0,
+                "mclk": 800.0,
+                "edge_c": 40.0,
+                "junction_c": 42.0,
+                "memory_c": 44.0,
+                "power_w": 22.0,
+                "amd_processes": 1,
+                "other_amd_processes": 0,
+                "unknown_amd_processes": 0
+              }
+            ]
+          },
+          {
+            "baseline": 267.5180054,
+            "A": 262.8790283,
+            "N": 260.6390076,
+            "telemetry": [
+              {
+                "window": 10,
+                "edge": "start",
+                "time": "2026-11-20T13:47:47.052",
+                "sclk": 1437.0,
+                "mclk": 800.0,
+                "edge_c": 40.0,
+                "junction_c": 42.0,
+                "memory_c": 44.0,
+                "power_w": 22.0,
+                "amd_processes": 1,
+                "other_amd_processes": 0,
+                "unknown_amd_processes": 0
+              },
+              {
+                "window": 10,
+                "edge": "end",
+                "time": "2026-11-20T13:47:48.076",
+                "sclk": 1457.0,
+                "mclk": 800.0,
+                "edge_c": 40.0,
+                "junction_c": 41.0,
+                "memory_c": 44.0,
+                "power_w": 23.0,
+                "amd_processes": 1,
+                "other_amd_processes": 0,
+                "unknown_amd_processes": 0
+              }
+            ]
+          },
+          {
+            "baseline": 264.6400146,
+            "A": 263.8399963,
+            "N": 265.2799988,
+            "telemetry": [
+              {
+                "window": 11,
+                "edge": "start",
+                "time": "2026-11-20T13:47:48.077",
+                "sclk": 1457.0,
+                "mclk": 800.0,
+                "edge_c": 40.0,
+                "junction_c": 41.0,
+                "memory_c": 44.0,
+                "power_w": 23.0,
+                "amd_processes": 1,
+                "other_amd_processes": 0,
+                "unknown_amd_processes": 0
+              },
+              {
+                "window": 11,
+                "edge": "end",
+                "time": "2026-11-20T13:47:49.088",
+                "sclk": 1347.0,
+                "mclk": 800.0,
+                "edge_c": 40.0,
+                "junction_c": 41.0,
+                "memory_c": 44.0,
+                "power_w": 23.0,
+                "amd_processes": 1,
+                "other_amd_processes": 0,
+                "unknown_amd_processes": 0
+              }
+            ]
+          }
+        ],
+        "round_ratios": [
+          1.032551460898163,
+          0.9354316493650703,
+          0.9957280429215634,
+          1.0055113380534815,
+          1.013479906446212,
+          1.0739532433345746,
+          0.9963354094936485,
+          1.0068725089721895,
+          1.0079705177983163,
+          0.9323826250532943,
+          0.9914788915856625,
+          1.0054578627963693
+        ],
+        "total_launches_per_role": 18,
+        "timed_per_role": 15,
+        "outer_telemetry": [
+          {
+            "window": -1,
+            "edge": "whole-start",
+            "time": "2026-11-20T13:47:35.919",
+            "sclk": 861.0,
+            "mclk": 350.0,
+            "edge_c": 44.0,
+            "junction_c": 50.0,
+            "memory_c": 46.0,
+            "power_w": 19.0,
+            "amd_processes": 1,
+            "other_amd_processes": 0,
+            "unknown_amd_processes": 1,
+            "nvidia_compute_processes": 1
+          },
+          {
+            "window": -1,
+            "edge": "whole-end",
+            "time": "2026-11-20T13:47:49.135",
+            "sclk": 954.0,
+            "mclk": 350.0,
+            "edge_c": 40.0,
+            "junction_c": 41.0,
+            "memory_c": 44.0,
+            "power_w": 19.0,
+            "amd_processes": 1,
+            "other_amd_processes": 0,
+            "unknown_amd_processes": 1,
+            "nvidia_compute_processes": 1
+          }
+        ]
+      },
+      "existing-separate": {
+        "case": "SRAD1024",
+        "mode": "separate",
+        "method": "existing",
+        "batch": 1,
+        "prewarm_ms": 0,
+        "median_ratio": 0.9669556683094638,
+        "spread": 0.708232269397272,
+        "passed": false,
+        "single_launch_us": {
+          "min": 117.4400024,
+          "median": 224.87900539999998,
+          "max": 417.9199829
+        },
+        "min_batch_ms": 0.1174400024,
+        "rounds": [
+          {
+            "baseline": 221.9190063,
+            "A": 279.8399963,
+            "N": 264.6380005,
+            "telemetry": [
+              {
+                "window": 0,
+                "edge": "start",
+                "time": "2026-11-20T13:47:49.387",
+                "sclk": 805.0,
+                "mclk": 350.0,
+                "edge_c": 39.0,
+                "junction_c": 40.0,
+                "memory_c": 44.0,
+                "power_w": 18.0,
+                "amd_processes": 0,
+                "other_amd_processes": 0,
+                "unknown_amd_processes": 0
+              },
+              {
+                "window": 0,
+                "edge": "end",
+                "time": "2026-11-20T13:47:51.734",
+                "sclk": 1031.0,
+                "mclk": 350.0,
+                "edge_c": 40.0,
+                "junction_c": 40.0,
+                "memory_c": 44.0,
+                "power_w": 18.0,
+                "amd_processes": 1,
+                "other_amd_processes": 0,
+                "unknown_amd_processes": 1
+              }
+            ]
+          },
+          {
+            "A": 221.9179993,
+            "N": 195.8390045,
+            "baseline": 277.4389954,
+            "telemetry": [
+              {
+                "window": 1,
+                "edge": "start",
+                "time": "2026-11-20T13:47:51.734",
+                "sclk": 1031.0,
+                "mclk": 350.0,
+                "edge_c": 40.0,
+                "junction_c": 40.0,
+                "memory_c": 44.0,
+                "power_w": 18.0,
+                "amd_processes": 1,
+                "other_amd_processes": 0,
+                "unknown_amd_processes": 1
+              },
+              {
+                "window": 1,
+                "edge": "end",
+                "time": "2026-11-20T13:47:54.048",
+                "sclk": 1099.0,
+                "mclk": 350.0,
+                "edge_c": 39.0,
+                "junction_c": 40.0,
+                "memory_c": 42.0,
+                "power_w": 18.0,
+                "amd_processes": 1,
+                "other_amd_processes": 0,
+                "unknown_amd_processes": 1
+              }
+            ]
+          },
+          {
+            "N": 188.3190002,
+            "baseline": 152.1580048,
+            "A": 187.5200043,
+            "telemetry": [
+              {
+                "window": 2,
+                "edge": "start",
+                "time": "2026-11-20T13:47:54.049",
+                "sclk": 1099.0,
+                "mclk": 350.0,
+                "edge_c": 39.0,
+                "junction_c": 40.0,
+                "memory_c": 42.0,
+                "power_w": 18.0,
+                "amd_processes": 1,
+                "other_amd_processes": 0,
+                "unknown_amd_processes": 1
+              },
+              {
+                "window": 2,
+                "edge": "end",
+                "time": "2026-11-20T13:47:56.422",
+                "sclk": 968.0,
+                "mclk": 350.0,
+                "edge_c": 39.0,
+                "junction_c": 40.0,
+                "memory_c": 42.0,
+                "power_w": 18.0,
+                "amd_processes": 1,
+                "other_amd_processes": 0,
+                "unknown_amd_processes": 1
+              }
+            ]
+          },
+          {
+            "N": 121.2799988,
+            "A": 157.7599945,
+            "baseline": 226.3969879,
+            "telemetry": [
+              {
+                "window": 3,
+                "edge": "start",
+                "time": "2026-11-20T13:47:56.423",
+                "sclk": 968.0,
+                "mclk": 350.0,
+                "edge_c": 39.0,
+                "junction_c": 40.0,
+                "memory_c": 42.0,
+                "power_w": 18.0,
+                "amd_processes": 1,
+                "other_amd_processes": 0,
+                "unknown_amd_processes": 1
+              },
+              {
+                "window": 3,
+                "edge": "end",
+                "time": "2026-11-20T13:47:58.646",
+                "sclk": 1060.0,
+                "mclk": 350.0,
+                "edge_c": 39.0,
+                "junction_c": 39.0,
+                "memory_c": 42.0,
+                "power_w": 18.0,
+                "amd_processes": 1,
+                "other_amd_processes": 0,
+                "unknown_amd_processes": 1
+              }
+            ]
+          },
+          {
+            "baseline": 248.9600067,
+            "N": 188.798996,
+            "A": 188.9589996,
+            "telemetry": [
+              {
+                "window": 4,
+                "edge": "start",
+                "time": "2026-11-20T13:47:58.647",
+                "sclk": 1060.0,
+                "mclk": 350.0,
+                "edge_c": 39.0,
+                "junction_c": 39.0,
+                "memory_c": 42.0,
+                "power_w": 18.0,
+                "amd_processes": 1,
+                "other_amd_processes": 0,
+                "unknown_amd_processes": 1
+              },
+              {
+                "window": 4,
+                "edge": "end",
+                "time": "2026-11-20T13:48:00.870",
+                "sclk": 977.0,
+                "mclk": 350.0,
+                "edge_c": 39.0,
+                "junction_c": 39.0,
+                "memory_c": 43.0,
+                "power_w": 18.0,
+                "amd_processes": 1,
+                "other_amd_processes": 0,
+                "unknown_amd_processes": 1
+              }
+            ]
+          },
+          {
+            "A": 190.397995,
+            "baseline": 261.7590027,
+            "N": 188.1580048,
+            "telemetry": [
+              {
+                "window": 5,
+                "edge": "start",
+                "time": "2026-11-20T13:48:00.871",
+                "sclk": 977.0,
+                "mclk": 350.0,
+                "edge_c": 39.0,
+                "junction_c": 39.0,
+                "memory_c": 43.0,
+                "power_w": 18.0,
+                "amd_processes": 1,
+                "other_amd_processes": 0,
+                "unknown_amd_processes": 1
+              },
+              {
+                "window": 5,
+                "edge": "end",
+                "time": "2026-11-20T13:48:03.106",
+                "sclk": 1059.0,
+                "mclk": 350.0,
+                "edge_c": 38.0,
+                "junction_c": 39.0,
+                "memory_c": 43.0,
+                "power_w": 18.0,
+                "amd_processes": 1,
+                "other_amd_processes": 0,
+                "unknown_amd_processes": 1
+              }
+            ]
+          },
+          {
+            "baseline": 185.9190063,
+            "A": 261.9200134,
+            "N": 261.4380188,
+            "telemetry": [
+              {
+                "window": 6,
+                "edge": "start",
+                "time": "2026-11-20T13:48:03.107",
+                "sclk": 1059.0,
+                "mclk": 350.0,
+                "edge_c": 38.0,
+                "junction_c": 39.0,
+                "memory_c": 43.0,
+                "power_w": 18.0,
+                "amd_processes": 1,
+                "other_amd_processes": 0,
+                "unknown_amd_processes": 1
+              },
+              {
+                "window": 6,
+                "edge": "end",
+                "time": "2026-11-20T13:48:05.298",
+                "sclk": 914.0,
+                "mclk": 350.0,
+                "edge_c": 38.0,
+                "junction_c": 39.0,
+                "memory_c": 41.0,
+                "power_w": 18.0,
+                "amd_processes": 1,
+                "other_amd_processes": 0,
+                "unknown_amd_processes": 1
+              }
+            ]
+          },
+          {
+            "A": 223.9989929,
+            "N": 226.5590057,
+            "baseline": 221.2789917,
+            "telemetry": [
+              {
+                "window": 7,
+                "edge": "start",
+                "time": "2026-11-20T13:48:05.299",
+                "sclk": 914.0,
+                "mclk": 350.0,
+                "edge_c": 38.0,
+                "junction_c": 39.0,
+                "memory_c": 41.0,
+                "power_w": 18.0,
+                "amd_processes": 1,
+                "other_amd_processes": 0,
+                "unknown_amd_processes": 1
+              },
+              {
+                "window": 7,
+                "edge": "end",
+                "time": "2026-11-20T13:48:07.494",
+                "sclk": 816.0,
+                "mclk": 350.0,
+                "edge_c": 39.0,
+                "junction_c": 39.0,
+                "memory_c": 41.0,
+                "power_w": 18.0,
+                "amd_processes": 1,
+                "other_amd_processes": 0,
+                "unknown_amd_processes": 1
+              }
+            ]
+          },
+          {
+            "N": 185.5999908,
+            "baseline": 222.397995,
+            "A": 261.4380188,
+            "telemetry": [
+              {
+                "window": 8,
+                "edge": "start",
+                "time": "2026-11-20T13:48:07.496",
+                "sclk": 816.0,
+                "mclk": 350.0,
+                "edge_c": 39.0,
+                "junction_c": 39.0,
+                "memory_c": 41.0,
+                "power_w": 18.0,
+                "amd_processes": 1,
+                "other_amd_processes": 0,
+                "unknown_amd_processes": 1
+              },
+              {
+                "window": 8,
+                "edge": "end",
+                "time": "2026-11-20T13:48:09.701",
+                "sclk": 783.0,
+                "mclk": 350.0,
+                "edge_c": 37.0,
+                "junction_c": 39.0,
+                "memory_c": 41.0,
+                "power_w": 18.0,
+                "amd_processes": 1,
+                "other_amd_processes": 0,
+                "unknown_amd_processes": 1
+              }
+            ]
+          },
+          {
+            "N": 228.9579926,
+            "A": 188.798996,
+            "baseline": 261.9179993,
+            "telemetry": [
+              {
+                "window": 9,
+                "edge": "start",
+                "time": "2026-11-20T13:48:09.703",
+                "sclk": 783.0,
+                "mclk": 350.0,
+                "edge_c": 37.0,
+                "junction_c": 39.0,
+                "memory_c": 41.0,
+                "power_w": 18.0,
+                "amd_processes": 1,
+                "other_amd_processes": 0,
+                "unknown_amd_processes": 1
+              },
+              {
+                "window": 9,
+                "edge": "end",
+                "time": "2026-11-20T13:48:11.877",
+                "sclk": 1022.0,
+                "mclk": 350.0,
+                "edge_c": 37.0,
+                "junction_c": 39.0,
+                "memory_c": 41.0,
+                "power_w": 18.0,
+                "amd_processes": 1,
+                "other_amd_processes": 0,
+                "unknown_amd_processes": 1
+              }
+            ]
+          },
+          {
+            "baseline": 261.4380188,
+            "N": 220.6390076,
+            "A": 264.4790039,
+            "telemetry": [
+              {
+                "window": 10,
+                "edge": "start",
+                "time": "2026-11-20T13:48:11.878",
+                "sclk": 1022.0,
+                "mclk": 350.0,
+                "edge_c": 37.0,
+                "junction_c": 39.0,
+                "memory_c": 41.0,
+                "power_w": 18.0,
+                "amd_processes": 1,
+                "other_amd_processes": 0,
+                "unknown_amd_processes": 1
+              },
+              {
+                "window": 10,
+                "edge": "end",
+                "time": "2026-11-20T13:48:14.042",
+                "sclk": 1050.0,
+                "mclk": 350.0,
+                "edge_c": 37.0,
+                "junction_c": 39.0,
+                "memory_c": 41.0,
+                "power_w": 18.0,
+                "amd_processes": 1,
+                "other_amd_processes": 0,
+                "unknown_amd_processes": 1
+              }
+            ]
+          },
+          {
+            "A": 251.3589783,
+            "baseline": 261.2780151,
+            "N": 227.6790009,
+            "telemetry": [
+              {
+                "window": 11,
+                "edge": "start",
+                "time": "2026-11-20T13:48:14.043",
+                "sclk": 1050.0,
+                "mclk": 350.0,
+                "edge_c": 37.0,
+                "junction_c": 39.0,
+                "memory_c": 41.0,
+                "power_w": 18.0,
+                "amd_processes": 1,
+                "other_amd_processes": 0,
+                "unknown_amd_processes": 1
+              },
+              {
+                "window": 11,
+                "edge": "end",
+                "time": "2026-11-20T13:48:16.226",
+                "sclk": 989.0,
+                "mclk": 350.0,
+                "edge_c": 37.0,
+                "junction_c": 39.0,
+                "memory_c": 41.0,
+                "power_w": 18.0,
+                "amd_processes": 1,
+                "other_amd_processes": 0,
+                "unknown_amd_processes": 1
+              }
+            ]
+          }
+        ],
+        "round_ratios": [
+          0.9456761149192453,
+          0.8824836431372783,
+          1.0042608568775506,
+          0.768762696679734,
+          0.9991532364145729,
+          0.9882352216996821,
+          0.9981597641442392,
+          1.0114286799545695,
+          0.709919665287794,
+          1.2127076809243202,
+          0.834240164045022,
+          0.905792195846143
+        ],
+        "total_launches_per_role": 18,
+        "timed_per_role": 15,
+        "outer_telemetry": [
+          {
+            "window": -1,
+            "edge": "whole-start",
+            "time": "2026-11-20T13:47:49.261",
+            "sclk": 805.0,
+            "mclk": 350.0,
+            "edge_c": 40.0,
+            "junction_c": 40.0,
+            "memory_c": 44.0,
+            "power_w": 18.0,
+            "amd_processes": 0,
+            "other_amd_processes": 0,
+            "unknown_amd_processes": 0,
+            "nvidia_compute_processes": 1
+          },
+          {
+            "window": -1,
+            "edge": "whole-end",
+            "time": "2026-11-20T13:48:16.227",
+            "sclk": 989.0,
+            "mclk": 350.0,
+            "edge_c": 37.0,
+            "junction_c": 39.0,
+            "memory_c": 41.0,
+            "power_w": 18.0,
+            "amd_processes": 1,
+            "other_amd_processes": 0,
+            "unknown_amd_processes": 1,
+            "nvidia_compute_processes": 1
+          }
+        ]
+      },
+      "prewarm-paired": {
+        "case": "SRAD1024",
+        "mode": "paired",
+        "method": "prewarm",
+        "batch": 1,
+        "prewarm_ms": 200,
+        "median_ratio": 1.0043124147658897,
+        "spread": 0.019114276076455328,
+        "passed": true,
+        "single_launch_us": {
+          "min": 154.4000092,
+          "median": 186.7189941,
+          "max": 233.4400024
+        },
+        "min_batch_ms": 0.1544000092,
+        "rounds": [
+          {
+            "baseline": 185.9190063,
+            "A": 186.5590057,
+            "N": 186.5599976,
+            "telemetry": []
+          },
+          {
+            "baseline": 185.7589874,
+            "A": 185.1199951,
+            "N": 185.9190063,
+            "telemetry": []
+          },
+          {
+            "baseline": 186.8789978,
+            "A": 184.798996,
+            "N": 187.1989899,
+            "telemetry": []
+          },
+          {
+            "baseline": 188.1580048,
+            "A": 186.3990021,
+            "N": 185.7600098,
+            "telemetry": []
+          },
+          {
+            "baseline": 187.9980011,
+            "A": 186.7200012,
+            "N": 186.0789948,
+            "telemetry": []
+          },
+          {
+            "baseline": 185.7600098,
+            "A": 185.2799988,
+            "N": 187.5200043,
+            "telemetry": []
+          },
+          {
+            "baseline": 185.5999908,
+            "A": 187.1989899,
+            "N": 187.0380096,
+            "telemetry": []
+          },
+          {
+            "baseline": 188.1600037,
+            "A": 185.4400024,
+            "N": 186.2389984,
+            "telemetry": []
+          },
+          {
+            "baseline": 188.9580078,
+            "A": 184.798996,
+            "N": 185.5980072,
+            "telemetry": []
+          },
+          {
+            "baseline": 188.6390076,
+            "A": 186.5590057,
+            "N": 185.7600098,
+            "telemetry": []
+          },
+          {
+            "baseline": 186.7200012,
+            "A": 187.1999969,
+            "N": 189.9189911,
+            "telemetry": []
+          },
+          {
+            "baseline": 186.8789978,
+            "A": 184.4790039,
+            "N": 187.1999969,
+            "telemetry": []
+          }
+        ],
+        "round_ratios": [
+          1.0000053168165015,
+          1.0043161798895273,
+          1.0129870505357075,
+          0.9965719113686179,
+          0.9965670180169214,
+          1.0120898397803748,
+          0.9991400578598957,
+          1.0043086496422522,
+          1.0043236771697615,
+          0.9957171946912879,
+          1.0145245419071907,
+          1.014749608044691
+        ],
+        "total_launches_per_role": 18,
+        "timed_per_role": 15
+      },
+      "prewarm-separate": {
+        "case": "SRAD1024",
+        "mode": "separate",
+        "method": "prewarm",
+        "batch": 1,
+        "prewarm_ms": 200,
+        "median_ratio": 0.9939631547370167,
+        "spread": 1.0439531437817156,
+        "passed": false,
+        "single_launch_us": {
+          "min": 115.8379974,
+          "median": 224.79950715,
+          "max": 355.3589783
+        },
+        "min_batch_ms": 0.1158379974,
+        "rounds": [
+          {
+            "baseline": 152.4779968,
+            "A": 259.9989929,
+            "N": 226.7179871,
+            "telemetry": []
+          },
+          {
+            "A": 263.1990051,
+            "N": 262.2390137,
+            "baseline": 151.3590088,
+            "telemetry": []
+          },
+          {
+            "N": 263.5180054,
+            "baseline": 264.8000183,
+            "A": 225.7590027,
+            "telemetry": []
+          },
+          {
+            "N": 264.1600037,
+            "A": 263.8390198,
+            "baseline": 118.7189941,
+            "telemetry": []
+          },
+          {
+            "baseline": 188.4790039,
+            "N": 259.6789856,
+            "A": 188.7979889,
+            "telemetry": []
+          },
+          {
+            "A": 187.0390015,
+            "baseline": 263.6789856,
+            "N": 262.8790283,
+            "telemetry": []
+          },
+          {
+            "baseline": 221.9199982,
+            "A": 229.1199951,
+            "N": 188.9580078,
+            "telemetry": []
+          },
+          {
+            "A": 210.3990021,
+            "N": 184.1589966,
+            "baseline": 262.3989868,
+            "telemetry": []
+          },
+          {
+            "N": 159.197998,
+            "baseline": 188.8000031,
+            "A": 231.5180054,
+            "telemetry": []
+          },
+          {
+            "N": 185.9179993,
+            "A": 215.8390045,
+            "baseline": 188.798996,
+            "telemetry": []
+          },
+          {
+            "baseline": 263.1990051,
+            "N": 263.3599854,
+            "A": 265.5979919,
+            "telemetry": []
+          },
+          {
+            "A": 187.6789856,
+            "baseline": 152.7999878,
+            "N": 223.9989929,
+            "telemetry": []
+          }
+        ],
+        "round_ratios": [
+          0.8719956357184796,
+          0.99635260247418,
+          1.1672535856750574,
+          1.0012165899503542,
+          1.3754330070620788,
+          1.4054770726521442,
+          0.8247119930215117,
+          0.8752845534527371,
+          0.6876268553063477,
+          0.8613735025821063,
+          0.9915737069998534,
+          1.193521971487041
+        ],
+        "total_launches_per_role": 18,
+        "timed_per_role": 15
+      }
+    },
+    "TIGRE": {}
+  },
+  "artifact": {
+    "4096": {
+      "values_ms": [
+        5.449097,
+        5.446061,
+        5.440141,
+        5.424942,
+        5.494864,
+        5.457421,
+        5.45294,
+        5.505115,
+        5.499822,
+        5.526395,
+        5.463034,
+        5.493276,
+        5.352474,
+        5.447341,
+        5.636945,
+        5.447516,
+        5.591659,
+        5.475022,
+        5.464781,
+        5.462544
+      ],
+      "median_ms": 5.462789000000001,
+      "spread": 0.05314757250572355
+    },
+    "1024": {
+      "values_ms": [
+        0.8216,
+        0.72032,
+        0.747038,
+        0.75952,
+        0.791838,
+        0.78784,
+        0.821593,
+        0.822395,
+        0.790877,
+        0.856956,
+        0.763678,
+        0.855195,
+        0.75792,
+        0.73488,
+        0.775353,
+        0.736635,
+        0.759998,
+        0.753756,
+        0.785915,
+        0.82752
+      ],
+      "median_ms": 0.780634,
+      "spread": 0.1896879164815639
+    },
+    "256": {
+      "values_ms": [
+        0.477277,
+        0.449116,
+        0.469918,
+        0.503357,
+        0.466718,
+        0.475678,
+        0.467357,
+        0.444958,
+        0.507677,
+        0.458717,
+        0.471677,
+        0.46832,
+        0.480157,
+        0.458717,
+        0.512637,
+        0.514397,
+        0.489117,
+        0.469917,
+        0.477917,
+        0.644795
+      ],
+      "median_ms": 0.4736775,
+      "spread": 0.4491142984281662
+    }
+  },
+  "stop": {
+    "case": "SRAD1024",
+    "phase": "batch-calibration",
+    "batch": 86,
+    "message": "batch J output mismatch",
+    "diagnosis": "byte offsets passed to float element accessor in diagnostic harness"
+  }
+}
