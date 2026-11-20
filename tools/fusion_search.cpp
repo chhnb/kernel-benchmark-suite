@@ -2,6 +2,7 @@
 #include <optional>
 #include "fusion_search.h"
 #include "b2b_anchor.h"
+#include "region_anchor.h"
 #include "darm_artifact/bridge.h"
 #include "darm_pair_engine/InstructionMatch.h"
 #include "logical_region_state.h"
@@ -907,15 +908,16 @@ static bool foldGuardedReadBoundary(BasicBlock &entry, Value *trialSide, Dominat
 // Share identical trailing arithmetic by redirecting the short arm to
 // the existing anchor. All other edges, including the long arm's memory
 // paths, keep their original execution conditions.
-static Trial tryPairImpl(const Module&parent,const Candidate&c,unsigned version,CleanupMode mode,const LogicalRegionState *logical,bool nested,bool allowB2B,B2RStrategy b2rStrategy,Trial *boundaryFold,bool artifactB2B);
+static bool compatibleB2BPrefix(Instruction &, Instruction &);
+static Trial tryPairImpl(const Module&parent,const Candidate&c,unsigned version,CleanupMode mode,const LogicalRegionState *logical,bool nested,bool allowB2B,B2RStrategy b2rStrategy,Trial *boundaryFold,bool artifactB2B,const RegionAlignmentOptions *regionAlignment);
 // Public entry. The outermost call owns the side tag and removes it from every
 // IR it returns, so committed modules, debug dumps and hashes never carry it.
 Trial tryPair(const Module&parent,const Candidate&c,unsigned version,unsigned level,CleanupMode mode,const LogicalRegionState *logical) {
   return tryPair(parent,c,version,level,mode,logical,true);
 }
-Trial tryPair(const Module&parent,const Candidate&c,unsigned version,unsigned,CleanupMode mode,const LogicalRegionState *logical,bool allowB2B,B2RStrategy b2rStrategy,Trial *boundaryFold,bool artifactB2B) {
+Trial tryPair(const Module&parent,const Candidate&c,unsigned version,unsigned,CleanupMode mode,const LogicalRegionState *logical,bool allowB2B,B2RStrategy b2rStrategy,Trial *boundaryFold,bool artifactB2B,const RegionAlignmentOptions *regionAlignment) {
   bool nested=hasSideTag(parent.getFunction(c.function));
-  Trial t=tryPairImpl(parent,c,version,mode,logical,nested,allowB2B,b2rStrategy,boundaryFold,artifactB2B);
+  Trial t=tryPairImpl(parent,c,version,mode,logical,nested,allowB2B,b2rStrategy,boundaryFold,artifactB2B,regionAlignment);
   if(!nested){
     stripSideTag(t.raw.get());stripSideTag(t.normalized.get());
     if (boundaryFold && boundaryFold->valid) {
@@ -925,7 +927,7 @@ Trial tryPair(const Module&parent,const Candidate&c,unsigned version,unsigned,Cl
   }
   return t;
 }
-static Trial tryPairImpl(const Module&parent,const Candidate&c,unsigned version,CleanupMode mode,const LogicalRegionState *logical,bool nested,bool allowB2B,B2RStrategy b2rStrategy,Trial *boundaryFold,bool artifactB2B) {
+static Trial tryPairImpl(const Module&parent,const Candidate&c,unsigned version,CleanupMode mode,const LogicalRegionState *logical,bool nested,bool allowB2B,B2RStrategy b2rStrategy,Trial *boundaryFold,bool artifactB2B,const RegionAlignmentOptions *regionAlignment) {
   auto started=Clock::now();Trial t;t.candidate=c;t.cleanupMode=mode;auto reject=[&](const char*reason){t.reason=reason;t.totalMs=millis(started);return std::move(t);};
   // After-side reachability on the final cleaned IR, before the tag is stripped.
   auto finishSides=[&](Function *after){
@@ -935,7 +937,14 @@ static Trial tryPairImpl(const Module&parent,const Candidate&c,unsigned version,
   };
   if(c.version!=version)return reject("stale_candidate_version");
   ValueToValueMapTy parentMap;
-  t.raw=CloneModule(parent,parentMap);if(logical)t.logicalState=logical->clone(parentMap);parentMap.clear();auto*f=t.raw->getFunction(c.function);
+  t.raw=CloneModule(parent,parentMap);if(logical)t.logicalState=logical->clone(parentMap);
+  ValueMap<const Value *, int> regionPrices;
+  if (regionAlignment && regionAlignment->anchor)
+    if (auto *source = parent.getFunction(c.function))
+      for (const auto &block : *source)
+        for (const auto &inst : block)
+          regionPrices[parentMap.lookup(&inst)] = regionAlignment->instructionCost(inst);
+  parentMap.clear();auto*f=t.raw->getFunction(c.function);
   if(!f||f->isDeclaration())return reject("function_missing");
   if(verifyModule(*t.raw,&errs()))return reject("input_verifier_failed");
   Analysis a(*f);Inventory inv(*f,a);
@@ -1300,6 +1309,60 @@ static Trial tryPairImpl(const Module&parent,const Candidate&c,unsigned version,
   const bool artifact = artifactB2B && t.planKind == "B2B";
   std::vector<darm_artifact::Origin> artifactOrigins;
   RegionMelder melder(directLeaves?*leafAnalyzer:ma,true);
+  json::Array blockAlignment;
+  int64_t selectConditions = 0, branchConditions = 0, otherSelects = 0, missingPrices = 0;
+  std::string alignmentFallback;
+  auto typedCost = [&](Type *type, bool phi) {
+    if (!type->isSingleValueType() || type->isTokenTy()) return 0;
+    const int exact = regionAlignment->transferCost(type, phi);
+    if (exact >= 0) return exact;
+    return f->getParent()->getDataLayout().getTypeSizeInBits(type).getKnownMinValue() <= 32 ? 1 : 2;
+  };
+  if (regionAlignment && t.planKind != "B2B") {
+    melder.onAlignment = [&](BasicBlock *left, BasicBlock *right,
+                             const RegionMelder::BlockAlignment &alignment) {
+      int64_t pairs = 0;
+      for (const auto &pair : alignment)
+        if (pair.match() && isa<Instruction>(pair.getLeft()) &&
+            !isa<PHINode>(pair.getLeft()))
+          ++pairs;
+      blockAlignment.push_back(json::Object{{"left", name(left)}, {"right", name(right)},
+          {"pairs", pairs}, {"fallback", std::exchange(alignmentFallback, "")}});
+    };
+    melder.onOperandSelect = [&](const Instruction &consumer, unsigned operand, Type *type) {
+      if (isa<BranchInst>(consumer)) ++branchConditions;
+      else if (isa<SelectInst>(consumer) && operand == 0 && type->isIntOrIntVectorTy(1))
+        ++selectConditions;
+      else ++otherSelects;
+    };
+    if (regionAlignment->anchor) {
+      melder.alignBlocks = [&](BasicBlock *left, BasicBlock *right,
+                              const RegionMelder::BlockMap &mapping,
+                              BasicBlock *leftExit, BasicBlock *rightExit) {
+        auto cost = [&](const Instruction &inst) {
+          int price = regionPrices.lookup(&inst);
+          if (price >= 0 && regionPrices.count(&inst)) return price;
+          ++missingPrices;
+          return 1;
+        };
+        auto compatible = [](Instruction &l, Instruction &r) {
+          return compatibleB2BPrefix(l, r) && InstructionMatch::match(&l, &r);
+        };
+        auto select = [&](Type *type) { return typedCost(type, false); };
+        auto phi = [&](Type *type) { return typedCost(type, true); };
+        return alignRegionBlocks(left, right, mapping, leftExit, rightExit,
+                                 regionAlignment->pairTies, compatible, cost, select, phi,
+                                 alignmentFallback);
+      };
+    }
+  }
+  auto recordRegionAlignment = [&]() {
+    if (regionAlignment && t.planKind != "B2B")
+      t.regionAlignment = json::Object{{"blocks", std::move(blockAlignment)},
+          {"tie_pairs", regionAlignment->pairTies}, {"select_conditions", selectConditions},
+          {"branch_conditions", branchConditions}, {"other_selects", otherSelects},
+          {"unquoted_instruction_lookups", missingPrices}};
+  };
   if(t.logicalState)melder.onValueMapping=[&](const ValueToValueMapTy &m){t.logicalState->transfer(m);};
   {
     if(!regionStores.empty()){
@@ -1345,8 +1408,9 @@ static Trial tryPairImpl(const Module&parent,const Candidate&c,unsigned version,
             analysis.dt, analysis.pdt, melder.onValueMapping);
       } else melder.merge(0);
     }
-    catch(const std::exception &error) { return reject(error.what()); }
+    catch(const std::exception &error) { recordRegionAlignment(); return reject(error.what()); }
   }
+  recordRegionAlignment();
   canonicalPhiOrder(*t.raw,c.function);t.mergeMs=millis(mt);
   for(const auto &entry:continuationStores){
     Instruction *previous=nullptr;

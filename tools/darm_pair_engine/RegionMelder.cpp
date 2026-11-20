@@ -31,6 +31,9 @@ STATISTIC(InstrAlignTime, "Time spent in instruction alignment in microseconds")
 
 AlignedSeq<Value *> RegionMelder::getAlignmentOfBlocks(BasicBlock *LeftBb,
                                                        BasicBlock *RightBb) {
+  if (alignBlocks)
+    if (auto Result = alignBlocks(LeftBb, RightBb, CurrMapping, ExitBlockL, ExitBlockR))
+      return std::move(*Result);
   // do sequence aligment
   SmallVector<Value *, 32> LSeq;
   SmallVector<Value *, 32> RSeq;
@@ -63,7 +66,10 @@ void RegionMelder::computeRegionSeqAlignment(
     BasicBlock *LBB = It->first;
     BasicBlock *RBB = It->second;
 
-    RegionInstrAlignement.concat(getAlignmentOfBlocks(LBB, RBB));
+    auto Alignment = getAlignmentOfBlocks(LBB, RBB);
+    if (onAlignment)
+      onAlignment(LBB, RBB, Alignment);
+    RegionInstrAlignement.concat(Alignment);
   }
   if (DumpSeqAlignStats) {
     InstrMeldingProfitabilityModel ScoringFunc;
@@ -376,6 +382,9 @@ void RegionMelder::setOperendsForBr(BranchInst *LeftBr, BranchInst *RightBr,
         IRBuilder<> Builder(MergedBr);
         MergedCond = Builder.CreateSelect(MA.getDivergentCondition(), LeftCond,
                                           RightCond);
+        if (onOperandSelect && MergedCond != LeftCond && MergedCond != RightCond &&
+            isa<SelectInst>(MergedCond))
+          onOperandSelect(*LeftBr, 0, MergedCond->getType());
       }
       MergedBr->setCondition(MergedCond);
     }
@@ -449,6 +458,8 @@ void RegionMelder::setOperends(Instruction *LeftI, Instruction *RightI,
           SelectInst::Create(MA.getDivergentCondition(), LeftOp, RightOp,
                              "merged.select", MergedI);
       NewOp = dyn_cast<Value>(Select);
+      if (onOperandSelect)
+        onOperandSelect(*LeftI, I, Select->getType());
     }
 
     // set the new operenf

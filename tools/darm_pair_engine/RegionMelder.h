@@ -6,6 +6,7 @@
 
 #include "RegionAnalyzer.h"
 #include "InstructionMatch.h"
+#include <optional>
 #include "SmithWaterman.h"
 #include "llvm/ADT/SmallSet.h"
 #include "llvm/ADT/SmallVector.h"
@@ -135,6 +136,13 @@ public:
   bool GuardReplicatedMemory=false;
   bool NativeReplicationPredication=false;
   bool hasGuardedGap(const Instruction *instruction, bool left) const;
+  using BlockAlignment = AlignedSeq<Value *>;
+  using BlockMap = DenseMap<BasicBlock *, BasicBlock *>;
+  // An empty result leaves Smith-Waterman in charge of this block pair.
+  std::function<std::optional<BlockAlignment>(BasicBlock *, BasicBlock *,
+      const BlockMap &, BasicBlock *, BasicBlock *)> alignBlocks;
+  std::function<void(BasicBlock *, BasicBlock *, const BlockAlignment &)> onAlignment;
+  std::function<void(const Instruction &, unsigned, Type *)> onOperandSelect;
   std::function<void(const ValueToValueMapTy&)> onValueMapping;
   const std::vector<BlockOrigin>& blockOrigins() const { return BlockOrigins; }
   // meld I'th region pair

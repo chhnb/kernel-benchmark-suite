@@ -40,7 +40,8 @@ SmallVector<AnchorPlan, 3> planB2BAnchors(
     Work left, Work right, BasicBlock &leftBlock, BasicBlock &rightBlock,
     BasicBlock *join, bool pairTies, function_ref<bool(Instruction &, Instruction &)> compatible,
     function_ref<int(const Instruction &)> instructionCost,
-    function_ref<int(Type *)> selectCost, function_ref<int(Type *)> phiCost) {
+    function_ref<int(Type *)> selectCost, function_ref<int(Type *)> phiCost,
+    ArrayRef<AnchorSeed> seeds, bool allowSwap) {
   const std::array<Work, 2> work{left, right};
   DenseMap<const Value *, unsigned> indices[2];
   for (unsigned side = 0; side != 2; ++side)
@@ -73,7 +74,7 @@ SmallVector<AnchorPlan, 3> planB2BAnchors(
     }
     auto *li = left[i], *ri = right[j];
     bool swapped = false;
-    if (li->isBinaryOp() && li->isCommutative() && ri->isCommutative()) {
+    if (allowSwap && li->isBinaryOp() && li->isCommutative() && ri->isCommutative()) {
       auto count = [&](unsigned offset) {
         return unsigned(couldPropagate(li->getOperand(0), ri->getOperand(offset))) +
                unsigned(couldPropagate(li->getOperand(1), ri->getOperand(1 ^ offset)));
@@ -96,6 +97,8 @@ SmallVector<AnchorPlan, 3> planB2BAnchors(
     partners[1][j] = i;
     proposed.push_back({i, j, swapped});
   };
+  for (const auto &root : seeds)
+    seed(root.left, root.right, root.outputCost);
   if (join)
     for (auto &phi : join->phis())
       seed(phi.getIncomingValueForBlock(&leftBlock),

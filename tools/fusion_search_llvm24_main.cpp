@@ -109,6 +109,7 @@ struct DebugObserver final:Observer {
       {"cleaned_hash",t.normalized?moduleHash(*t.normalized):""},{"blocks",std::move(Origins)}});
     json::Object report{{"schema","incremental-score-trial-v1"},{"logical_decision",t.candidate.logicalDecision},{"logical_left",t.candidate.logicalLeft},{"logical_right",t.candidate.logicalRight},{"candidate",t.candidate.key()},{"version",int64_t(t.candidate.version)},{"parent_hash",r.parentHash},{"control_hash",r.controlHash},{"round_context","../round-"+std::to_string(r.parentVersion)+".json"},{"valid",t.valid},{"rewrite_started",t.rewriteStarted},{"decision",!t.valid?"reject":score.status!=ScoreStatus::Scored?"unsupported":eligible?"accept":"reject"},{"reason",t.reason},{"merge_path",t.mergePath},{"layout_profitability",json::Array(t.layoutProfitability)},{"cross_decision_leaves",false},{"complete_leaf_plan",false},{"moved_leaf_instructions",int64_t(t.movedLeafInstructions)},{"leaf_anchors",int64_t(t.leafAnchors)},{"leaf_anchor_pairs",[&](){json::Array a;for(auto &p:t.leafAnchorPairs)a.push_back(p);return a;}()},{"fusion_plan",json::Object{{"kind",t.planKind},{"matched_left",t.matchedLeft},{"matched_right",t.matchedRight},{"left_context",bound(t.leftContext)},{"right_context",bound(t.rightContext)},{"split_is_loop_header",t.loopHeaderSplit},{"replication_required",t.replication}}},{"local_reject_reason",t.localRejectReason},{"score_result",scoreJson(score)},{"eligible",eligible},{"cleanup_iterations",int64_t(t.cleanupIterations)},{"alignment_order","function_order_v1"},{"original_darm_similarity",t.originalSimilarity},{"original_darm_profitable",t.originalProfitable},{"replication_required",t.replication},{"orientation_swapped",t.swapped},{"left",bound(t.left)},{"right",bound(t.right)},{"after_raw",stats(t.afterRaw)},{"after",stats(t.after)},{"cleaned_hash",t.normalized?moduleHash(*t.normalized):""},{"parent_ir",fullSnapshots?"../state-"+std::to_string(t.candidate.version)+".ll":inputPath},{"snapshot_mode",fullSnapshots?"full":"compact"},{"cleaned_ir",t.valid?(fullSnapshots?"after.ll":outputPath):""},{"timings_ms",json::Object{{"merge",t.mergeMs},{"normalization",t.normalizeMs},{"features",t.featuresMs},{"trial_total",t.totalMs},{"score_with_analysis",t.scoreMs}}},{"semantic_validation","not_run"}};
     if (!t.anchorStats.empty()) report["anchor"] = json::Object(t.anchorStats);
+    if (!t.regionAlignment.empty()) report["region_alignment"] = json::Object(t.regionAlignment);
     jsonFile(path+"/trial.json", std::move(report));
   }
   void commit(unsigned version,const Candidate&c,const ScoreResult&score,const Module&m)override {
@@ -135,11 +136,12 @@ static int runSearch(int argc, const char *const *argv, TrialWorker *batch = nul
     std::string input,function,output,debug,split,left,right,replayParentHash,policy="llvm24";Options options;options.cleanupMode=CleanupMode::DarmCFGInstCombine;
     bool useArtifactB2B=false, useAnchorB2B=true;
     B2RStrategy b2rStrategy = B2RStrategy::Darm;
+    bool regionAnchor = false, regionTrace = false;
     std::string quoteMode="on";
     bool fullSnapshots=true;
     bool controlOnly=false,catalogOnly=false;std::string ttiWorker="/home/chh/kernel-benchmark-suite/tools/run-llvm24-tti";
     for(int i=1;i<argc;++i){std::string k=argv[i];
-      if(k=="--help"){outs()<<"fusion-search v1 --ir FILE --function NAME --out FILE [--b2b-strategy anchor|darm|darm-artifact] [--b2r-strategy darm|guarded] [--structural 0|1] [--split ID --left ID --right ID] [--debug-dir DIR] [--ir-snapshots full|compact] [--tti-worker EXECUTABLE] [--catalog-only 0|1] [--control-only 0|1] [--rounds N] [--trials N]\n";return 0;}
+      if(k=="--help"){outs()<<"fusion-search v1 --ir FILE --function NAME --out FILE [--b2b-strategy anchor|darm|darm-artifact] [--b2r-strategy darm|guarded] [--region-align darm|anchor] [--structural 0|1] [--split ID --left ID --right ID] [--debug-dir DIR] [--ir-snapshots full|compact] [--tti-worker EXECUTABLE] [--catalog-only 0|1] [--control-only 0|1] [--rounds N] [--trials N]\n";return 0;}
       if(i+1==argc)throw std::runtime_error("missing option value");std::string v=argv[++i];
       if(k=="--control-only"){if(v!="0"&&v!="1")throw std::runtime_error("control-only must be 0 or 1");controlOnly=v=="1";}
       else if(k=="--catalog-only"){if(v!="0"&&v!="1")throw std::runtime_error("catalog-only must be 0 or 1");catalogOnly=v=="1";}
@@ -157,6 +159,16 @@ static int runSearch(int argc, const char *const *argv, TrialWorker *batch = nul
         if(v!="darm" && v!="guarded")
           throw std::runtime_error("b2r-strategy must be darm or guarded");
         b2rStrategy=v=="guarded"?B2RStrategy::Guarded:B2RStrategy::Darm;
+      }
+      else if(k=="--region-align"){
+        if(v!="darm" && v!="anchor")
+          throw std::runtime_error("region-align must be darm or anchor");
+        regionAnchor=v=="anchor";
+      }
+      else if(k=="--region-align-trace"){
+        if(v!="0" && v!="1")
+          throw std::runtime_error("region-align-trace must be 0 or 1");
+        regionTrace=v=="1";
       }
       else if(k=="--replay-parent-hash")replayParentHash=v;
       else if(k=="--ir")input=v;else if(k=="--function")function=v;else if(k=="--out")output=v;
@@ -323,8 +335,45 @@ static int runSearch(int argc, const char *const *argv, TrialWorker *batch = nul
       const bool allowDarmB2B = !useAnchorB2B;
       if (!plannedB2B) {
         Trial boundaryFold;
-        t = tryPair(*module, c, 0, options.optLevel, options.cleanupMode,
-                    logical.get(), allowDarmB2B, b2rStrategy, &boundaryFold, useArtifactB2B);
+        std::optional<DenseMap<const Instruction *, int>> prices;
+        std::optional<LLVM24Scorer::TransferCosts> transfers;
+        auto instructionCost = [&](const Instruction &inst) {
+          if (!prices) prices = llvm24Scorer.instructionCosts(*module->getFunction(function));
+          auto found = prices->find(&inst);
+          return found == prices->end() ? -1 : found->second;
+        };
+        auto transferCost = [&](Type *type, bool phi) {
+          if (!transfers) transfers = llvm24Scorer.anchorTransferCosts(*module->getFunction(function));
+          const auto &table = phi ? transfers->phis : transfers->selects;
+          auto found = table.find(type);
+          return found == table.end() ? -1 : found->second;
+        };
+        RegionAlignmentOptions region{regionAnchor, false, instructionCost, transferCost};
+        auto attempt = [&](Trial &fold) {
+          return tryPair(*module, c, 0, options.optLevel, options.cleanupMode,
+                         logical.get(), allowDarmB2B, b2rStrategy, &fold, useArtifactB2B,
+                         regionAnchor || regionTrace ? &region : nullptr);
+        };
+        t = attempt(boundaryFold);
+        if (regionAnchor && !t.regionAlignment.empty()) {
+          region.pairTies = true;
+          Trial tiedFold;
+          auto tied = attempt(tiedFold);
+          auto selectedScore = t.valid ? evaluateTrial(*module, t, round, scorer) : ScoreResult{};
+          auto tiedScore = tied.valid ? evaluateTrial(*module, tied, round, scorer) : ScoreResult{};
+          if (StringRef(selectedScore.reason).startswith("tti_quote_"))
+            throw std::runtime_error(selectedScore.reason);
+          if (StringRef(tiedScore.reason).startswith("tti_quote_"))
+            throw std::runtime_error(tiedScore.reason);
+          auto rank = [&](const Trial &trial, const ScoreResult &result) {
+            return std::make_tuple(eligible(trial, result, options), trial.valid,
+                                   result.status == ScoreStatus::Scored, result.total);
+          };
+          if (rank(tied, tiedScore) > rank(t, selectedScore)) {
+            t = std::move(tied);
+            boundaryFold = std::move(tiedFold);
+          }
+        }
         if (t.valid) score = profileCall("evaluate_score",[&](){return evaluateTrial(*module, t, round, scorer);});
         if (boundaryFold.valid) {
           if (StringRef(score.reason).startswith("tti_quote_")) throw std::runtime_error(score.reason);

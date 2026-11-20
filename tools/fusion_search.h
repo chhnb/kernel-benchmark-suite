@@ -105,6 +105,7 @@ struct Trial {
   bool insideLoop=false;
   llvm::json::Array layoutProfitability;
   llvm::json::Object anchorStats;
+  llvm::json::Object regionAlignment;
   double mergeMs=0, normalizeMs=0, featuresMs=0, totalMs=0, scoreMs=0;
 };
 struct ScoreInput {
@@ -166,12 +167,18 @@ std::vector<ResolvedCandidate> resolveCandidateCatalog(llvm::Function &, unsigne
 
 enum class B2RStrategy { Darm, Guarded };
 
+struct RegionAlignmentOptions {
+  bool anchor = false, pairTies = false;
+  llvm::function_ref<int(const llvm::Instruction &)> instructionCost;
+  llvm::function_ref<int(llvm::Type *, bool)> transferCost;
+};
+
 Trial tryPair(const llvm::Module &, const Candidate &, unsigned currentVersion,
               unsigned optLevel, CleanupMode mode=CleanupMode::DarmCFGInstCombine, const LogicalRegionState *logical=nullptr);
 Trial tryPair(const llvm::Module &, const Candidate &, unsigned currentVersion,
               unsigned optLevel, CleanupMode, const LogicalRegionState *, bool allowB2B,
               B2RStrategy b2rStrategy=B2RStrategy::Darm, Trial *boundaryFold=nullptr,
-              bool artifactB2B=false);
+              bool artifactB2B=false, const RegionAlignmentOptions *regionAlignment=nullptr);
 std::vector<Trial> planSingleBranchB2B(const llvm::Module &, const Candidate &, CleanupMode,
                                        llvm::function_ref<int(const llvm::Instruction &)> intrinsicCost,
                                        llvm::function_ref<int(const llvm::Instruction &)> anchorCost,

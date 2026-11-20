@@ -19,6 +19,10 @@ struct AnchorMatch {
     return left == other.left && right == other.right && swapped == other.swapped;
   }
 };
+struct AnchorSeed {
+  llvm::Instruction *left, *right;
+  int outputCost;
+};
 struct AnchorPlan {
   llvm::SmallVector<AnchorMatch, 8> matches;
   llvm::SmallVector<AnchorMatch, 8> anchors;
@@ -35,5 +39,6 @@ llvm::SmallVector<AnchorPlan, 3> planB2BAnchors(
     llvm::function_ref<bool(llvm::Instruction &, llvm::Instruction &)> compatible,
     llvm::function_ref<int(const llvm::Instruction &)> instructionCost,
     llvm::function_ref<int(llvm::Type *)> selectCost,
-    llvm::function_ref<int(llvm::Type *)> phiCost);
+    llvm::function_ref<int(llvm::Type *)> phiCost,
+    llvm::ArrayRef<AnchorSeed> seeds = {}, bool allowSwap = true);
 }
