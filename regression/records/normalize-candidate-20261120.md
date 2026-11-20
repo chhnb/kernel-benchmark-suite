@@ -146,3 +146,25 @@ vLLM、Map-Airy、SW2D、HiPIMS-George 的最终 IR 有变化，代码对象与 
 [重测逐轮数据](normalize-candidate-20261120/gpu-retest-v2.json) · [GPU 环境快照](normalize-candidate-20261120/gpu-retest-v2-environment.json) · [NQU64 完整输出校验](normalize-candidate-20261120/nqu64-output-validation-retest-v2.csv)
 
 NQU64 的重测独立确认了 G1 的历史收益。按逐轮中位数，on 较 off 快约 12.8%，较不融合快约 16.1%。
+
+## 7. 动态频率下的计时诊断
+
+EPYC 的 Radeon VII 原先处在 auto 模式。设备的 performance level、核心和显存 DPM 控制文件均由 root 持有，当前账号没有写权限，非交互 sudo 也不可用。这次没有改变频率设置。
+
+沿用冻结输入和已有 baseline/off/on 代码对象。进程内每轮每个角色预热一次、计时三次，取中位数，每次启动完整校验输出。两种测量共用 12 轮交错和原来的 A/A 门槛，首次失败最多重做一次。本节是采样方式诊断，与正式发布结果分开。
+
+| 工作负载 | 原 A/A 中位数／跨度 | 三次中位数 A/A 中位数／跨度 | on/off［95% 区间］ | on/baseline | off/baseline | baseline / off / on（ms） | 判定 |
+| --- | --- | --- | --- | ---: | ---: | --- | --- |
+| MS32/release | 1.00002／3.96%；1.00035／4.02% | 1.00005／0.12% | 0.97819 [0.97730, 0.97863] | 0.89403 | 0.91412 | 1038.571 / 950.045 / 928.590 | 通过 |
+| vllm/64K | 1.00352／6.57%；1.00124／3.31% | 0.99989／5.77%；1.00087／5.93% | — | — | — | — | 无法测量 |
+
+每 500 ms 读取一次 sysfs 当前 DPM 档位和设备忙碌率。下表只列忙碌率 ≥90% 的采样。档位采样可检查运行期间是否存在明显的频率切换，分辨率不足以将某个短窗口的耗时归因到具体档位。
+
+| 工作负载 | 高忙碌采样 / 总采样 | 高忙碌时核心 / 显存档位及次数 | 频率模式 |
+| --- | ---: | --- | --- |
+| [MS32/release](normalize-candidate-20261120/gpu-dpm-diagnostic-v3-ms32-clocks.csv) | 566 / 572 | 1801Mhz/800Mhz ×565、1801Mhz/1000Mhz ×1 | auto |
+| [vllm/64K](normalize-candidate-20261120/gpu-dpm-diagnostic-v3-vllm-64k-clocks.csv) | 0 / 325 | — | auto |
+
+vllm/64K 未采到 ≥90% 忙碌窗口。跨整个批次（包含空闲）的档位为 700Mhz/350Mhz ×276、700Mhz/800Mhz ×25、1546Mhz/800Mhz ×15、808Mhz/350Mhz ×9。不能用这些样本推断该短 kernel 启动期间的频率。
+
+[A/A 和正式计时逐轮数据](normalize-candidate-20261120/gpu-dpm-diagnostic-v3.json)
