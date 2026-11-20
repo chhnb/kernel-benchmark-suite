@@ -1,0 +1,2437 @@
+{
+  "released": {
+    "vllm": {
+      "group_segment_fixed_size": 512,
+      "private_segment_fixed_size": 0,
+      "max_flat_workgroup_size": 256,
+      "sgpr_count": 76,
+      "vgpr_count": 55,
+      "wavefront_size": 64,
+      "sgpr_spill_count": 0,
+      "vgpr_spill_count": 0,
+      "arch": "gfx906",
+      "threads": 64,
+      "dynamic_lds": 0,
+      "allocated_lds": 512,
+      "waves_per_group": 1,
+      "group_caps": {
+        "LDS": 128,
+        "VGPR": 16,
+        "SGPR": 40,
+        "hardware": 40
+      },
+      "groups": 16,
+      "avg_waves_per_simd": 4.0,
+      "limiting": [
+        "VGPR"
+      ],
+      "launch_valid": true,
+      "binary_sha256": "9aa97bca3906c0d31452e4594b5fc17c535bce25ba5e7e4df92e5ff6841c5fa6",
+      "source": "/data/home/chh/simplify-v2/build/b2b-layouts/k16-gpu/generated-vllm/65536/input.txt, /data/home/chh/simplify-v2/build/b2b-layouts/k16-gpu/generated-vllm/131072/input.txt",
+      "function": "cache_eval"
+    },
+    "MapAiry": {
+      "group_segment_fixed_size": 0,
+      "private_segment_fixed_size": 0,
+      "max_flat_workgroup_size": 256,
+      "sgpr_count": 46,
+      "vgpr_count": 75,
+      "wavefront_size": 64,
+      "sgpr_spill_count": 0,
+      "vgpr_spill_count": 0,
+      "arch": "gfx906",
+      "threads": 256,
+      "dynamic_lds": 0,
+      "allocated_lds": 0,
+      "waves_per_group": 4,
+      "group_caps": {
+        "LDS": null,
+        "VGPR": 3,
+        "SGPR": 16,
+        "hardware": 10
+      },
+      "groups": 3,
+      "avg_waves_per_simd": 3.0,
+      "limiting": [
+        "VGPR"
+      ],
+      "launch_valid": true,
+      "binary_sha256": "51c13dcce91306bb0c84aae7a3e4a1facc70d448d718483fbdb685f1fb48918d",
+      "source": "/data/home/chh/v2-runtime/cases/mapairy/inputs/65539/input.txt",
+      "function": "evaluate"
+    },
+    "tigre": {
+      "group_segment_fixed_size": 0,
+      "private_segment_fixed_size": 0,
+      "max_flat_workgroup_size": 729,
+      "sgpr_count": 50,
+      "vgpr_count": 44,
+      "wavefront_size": 64,
+      "sgpr_spill_count": 0,
+      "vgpr_spill_count": 0,
+      "arch": "gfx906",
+      "threads": 729,
+      "dynamic_lds": 0,
+      "allocated_lds": 0,
+      "waves_per_group": 12,
+      "group_caps": {
+        "LDS": null,
+        "VGPR": 1,
+        "SGPR": 4,
+        "hardware": 3
+      },
+      "groups": 1,
+      "avg_waves_per_simd": 3.0,
+      "limiting": [
+        "VGPR"
+      ],
+      "launch_valid": true,
+      "binary_sha256": "02452bc591290cb318b1ed9d876a907a56fd849fa9094e4efd74a76892e83a9a",
+      "source": "cases/tigre-siddon/harness/bench.hip; 9×9×9",
+      "function": "_Z19kernelPixelDetector8GeometryPfiiP13__hip_texture"
+    },
+    "HLLD": {
+      "group_segment_fixed_size": 0,
+      "private_segment_fixed_size": 0,
+      "max_flat_workgroup_size": 256,
+      "sgpr_count": 32,
+      "vgpr_count": 134,
+      "wavefront_size": 64,
+      "sgpr_spill_count": 0,
+      "vgpr_spill_count": 0,
+      "arch": "gfx906",
+      "threads": 128,
+      "dynamic_lds": 0,
+      "allocated_lds": 0,
+      "waves_per_group": 2,
+      "group_caps": {
+        "LDS": null,
+        "VGPR": 2,
+        "SGPR": 50,
+        "hardware": 16
+      },
+      "groups": 2,
+      "avg_waves_per_simd": 1.0,
+      "limiting": [
+        "VGPR"
+      ],
+      "launch_valid": true,
+      "binary_sha256": "3aa2cad420017f246aa3f3f148eb23baa0d834dd92611c3bf68196393ceaf9a3",
+      "source": "/data/home/chh/simplify-v2/build/b2b-layouts/frozen-v2-continuity-20261119/hlld/65536/input.txt",
+      "function": "_ZN3mhd26Calculate_HLLD_Fluxes_CUDAEPKdS1_S1_Pdidii"
+    },
+    "NQU64": {
+      "group_segment_fixed_size": 10496,
+      "private_segment_fixed_size": 0,
+      "max_flat_workgroup_size": 256,
+      "sgpr_count": 22,
+      "vgpr_count": 10,
+      "wavefront_size": 64,
+      "sgpr_spill_count": 0,
+      "vgpr_spill_count": 0,
+      "arch": "gfx906",
+      "threads": 64,
+      "dynamic_lds": 0,
+      "allocated_lds": 10752,
+      "waves_per_group": 1,
+      "group_caps": {
+        "LDS": 6,
+        "VGPR": 84,
+        "SGPR": 100,
+        "hardware": 40
+      },
+      "groups": 6,
+      "avg_waves_per_simd": 1.5,
+      "limiting": [
+        "LDS"
+      ],
+      "launch_valid": true,
+      "binary_sha256": "42b2bda66286d3c3b437dd6fe78ecba602f6718f4f75659fe101bb5dc2c6865c",
+      "source": "build/dp1-removal/nqu/runner.hip",
+      "function": "_Z24solve_nqueen_cuda_kerneliiPjS_S_S_i"
+    },
+    "MS32": {
+      "group_segment_fixed_size": 0,
+      "private_segment_fixed_size": 24,
+      "max_flat_workgroup_size": 256,
+      "sgpr_count": 44,
+      "vgpr_count": 34,
+      "wavefront_size": 64,
+      "sgpr_spill_count": 0,
+      "vgpr_spill_count": 0,
+      "arch": "gfx906",
+      "threads": 32,
+      "dynamic_lds": 0,
+      "allocated_lds": 0,
+      "waves_per_group": 1,
+      "group_caps": {
+        "LDS": null,
+        "VGPR": 28,
+        "SGPR": 64,
+        "hardware": 40
+      },
+      "groups": 28,
+      "avg_waves_per_simd": 7.0,
+      "limiting": [
+        "VGPR"
+      ],
+      "launch_valid": true,
+      "binary_sha256": "1021292447be6660cf0366d7f785167c629f2b384a386f146568fa20eb2eaa9f",
+      "source": "build/cost-model-unbiased/20261120-v1/pcm-replay.hip",
+      "function": "_Z13gpu_mergesortPlS_lllP4dim3S1_"
+    },
+    "PCM32": {
+      "group_segment_fixed_size": 65536,
+      "private_segment_fixed_size": 0,
+      "max_flat_workgroup_size": 256,
+      "sgpr_count": 24,
+      "vgpr_count": 23,
+      "wavefront_size": 64,
+      "sgpr_spill_count": 0,
+      "vgpr_spill_count": 0,
+      "arch": "gfx906",
+      "threads": 32,
+      "dynamic_lds": 0,
+      "allocated_lds": 65536,
+      "waves_per_group": 1,
+      "group_caps": {
+        "LDS": 1,
+        "VGPR": 40,
+        "SGPR": 100,
+        "hardware": 40
+      },
+      "groups": 1,
+      "avg_waves_per_simd": 0.25,
+      "limiting": [
+        "LDS"
+      ],
+      "launch_valid": true,
+      "binary_sha256": "a0a8df33ee604bc77519a3887af2c8663afa6c7f0cd609dd392d136a815ec116",
+      "source": "build/cost-model-unbiased/20261120-v1/pcm-replay.hip",
+      "function": "_Z3pcmPi"
+    },
+    "SRAD16": {
+      "group_segment_fixed_size": 6144,
+      "private_segment_fixed_size": 0,
+      "max_flat_workgroup_size": 256,
+      "sgpr_count": 30,
+      "vgpr_count": 19,
+      "wavefront_size": 64,
+      "sgpr_spill_count": 0,
+      "vgpr_spill_count": 0,
+      "arch": "gfx906",
+      "threads": 256,
+      "dynamic_lds": 0,
+      "allocated_lds": 6144,
+      "waves_per_group": 4,
+      "group_caps": {
+        "LDS": 10,
+        "VGPR": 12,
+        "SGPR": 25,
+        "hardware": 10
+      },
+      "groups": 10,
+      "avg_waves_per_simd": 10.0,
+      "limiting": [
+        "LDS",
+        "hardware"
+      ],
+      "launch_valid": true,
+      "binary_sha256": "2a6a3d958d37e110a4ca5107ca9346c31aa7e8393524dd4b95de2df56385e16e",
+      "source": "build/dp1-removal/srad1/16/input.txt",
+      "function": "_Z11srad_cuda_1PfS_S_S_S_S_iif"
+    },
+    "SRAD32": {
+      "group_segment_fixed_size": 24576,
+      "private_segment_fixed_size": 0,
+      "max_flat_workgroup_size": 256,
+      "sgpr_count": 30,
+      "vgpr_count": 20,
+      "wavefront_size": 64,
+      "sgpr_spill_count": 0,
+      "vgpr_spill_count": 0,
+      "arch": "gfx906",
+      "threads": 1024,
+      "dynamic_lds": 0,
+      "allocated_lds": 24576,
+      "waves_per_group": 16,
+      "group_caps": {
+        "LDS": 2,
+        "VGPR": 3,
+        "SGPR": 6,
+        "hardware": 2
+      },
+      "groups": null,
+      "avg_waves_per_simd": null,
+      "limiting": [
+        "launch_limit"
+      ],
+      "launch_valid": false,
+      "binary_sha256": "6d603103809374c6fe65a05a39dd3fb5ea2b190cf2944ba4495b57fe391041e6",
+      "source": "build/dp1-removal/srad1/32/input.txt",
+      "function": "_Z11srad_cuda_1PfS_S_S_S_S_iif"
+    },
+    "Landau": {
+      "group_segment_fixed_size": 0,
+      "private_segment_fixed_size": 0,
+      "max_flat_workgroup_size": 256,
+      "sgpr_count": 30,
+      "vgpr_count": 66,
+      "wavefront_size": 64,
+      "sgpr_spill_count": 0,
+      "vgpr_spill_count": 0,
+      "arch": "gfx906",
+      "threads": 256,
+      "dynamic_lds": 0,
+      "allocated_lds": 0,
+      "waves_per_group": 4,
+      "group_caps": {
+        "LDS": null,
+        "VGPR": 3,
+        "SGPR": 25,
+        "hardware": 10
+      },
+      "groups": 3,
+      "avg_waves_per_simd": 3.0,
+      "limiting": [
+        "VGPR"
+      ],
+      "launch_valid": true,
+      "binary_sha256": "2c49a3bcb7798476672355fa5c579a6c917d3ad84668f8d302b8e065ae21d669",
+      "source": "/data/home/chh/kernel-benchmark-suite/build/fluid-sims/landau-next.6rQgJC/mixed/input.txt, /data/home/chh/kernel-benchmark-suite/build/fluid-sims/landau-next.6rQgJC/coherent/input.txt",
+      "function": "evaluate"
+    },
+    "SW2D": {
+      "group_segment_fixed_size": 0,
+      "private_segment_fixed_size": 196,
+      "max_flat_workgroup_size": 1024,
+      "sgpr_count": 104,
+      "vgpr_count": 64,
+      "wavefront_size": 64,
+      "sgpr_spill_count": 62,
+      "vgpr_spill_count": 34,
+      "arch": "gfx906",
+      "threads": 1024,
+      "dynamic_lds": 0,
+      "allocated_lds": 0,
+      "waves_per_group": 16,
+      "group_caps": {
+        "LDS": null,
+        "VGPR": 1,
+        "SGPR": 1,
+        "hardware": 2
+      },
+      "groups": 1,
+      "avg_waves_per_simd": 4.0,
+      "limiting": [
+        "VGPR",
+        "SGPR"
+      ],
+      "launch_valid": true,
+      "binary_sha256": "cd0e00d276836e765fe1dba400bfab62312a79121226fcc8ef4e4d7fa95b3518",
+      "source": "/data/home/chh/simplify-v2/build/b2b-layouts/anchor-ablation/heldout/SW2D/anchor-holdout-synthetic-v1/input.txt",
+      "function": "_Z4fluxPdddPiS_S0_S0_S_S_S_S_S_S_S_S_S_S_S_S_iiiddd"
+    },
+    "CED": {
+      "group_segment_fixed_size": 0,
+      "private_segment_fixed_size": 0,
+      "max_flat_workgroup_size": 256,
+      "sgpr_count": 18,
+      "vgpr_count": 14,
+      "wavefront_size": 64,
+      "sgpr_spill_count": 0,
+      "vgpr_spill_count": 0,
+      "arch": "gfx906",
+      "threads": 256,
+      "dynamic_lds": 1296,
+      "allocated_lds": 1536,
+      "waves_per_group": 4,
+      "group_caps": {
+        "LDS": 42,
+        "VGPR": 16,
+        "SGPR": 25,
+        "hardware": 10
+      },
+      "groups": 10,
+      "avg_waves_per_simd": 10.0,
+      "limiting": [
+        "hardware"
+      ],
+      "launch_valid": true,
+      "binary_sha256": "a213f9bb1677d2079917ec3398dcb902cc5eabda8dd04353c8aa8799bfd5a93b",
+      "source": "cases/ced/case.json; 16×16",
+      "function": "_Z19non_max_supp_kernelPKhPhS0_ii"
+    },
+    "TPACF": {
+      "group_segment_fixed_size": 0,
+      "private_segment_fixed_size": 0,
+      "max_flat_workgroup_size": 256,
+      "sgpr_count": 104,
+      "vgpr_count": 16,
+      "wavefront_size": 64,
+      "sgpr_spill_count": 42,
+      "vgpr_spill_count": 0,
+      "arch": "gfx906",
+      "threads": 128,
+      "dynamic_lds": 3072,
+      "allocated_lds": 3072,
+      "waves_per_group": 2,
+      "group_caps": {
+        "LDS": 21,
+        "VGPR": 32,
+        "SGPR": 14,
+        "hardware": 16
+      },
+      "groups": 14,
+      "avg_waves_per_simd": 7.0,
+      "limiting": [
+        "SGPR"
+      ],
+      "launch_valid": true,
+      "binary_sha256": "7b805ab747a196bae398d1df12d58ba34fb9f2f2dd4fbc29ec5b2c6daa408986",
+      "source": "build/region-audit/tpacf.hip; 128 × sizeof(double3)",
+      "function": "ACFKernel"
+    },
+    "SRAD-stage2": {
+      "group_segment_fixed_size": 5120,
+      "private_segment_fixed_size": 0,
+      "max_flat_workgroup_size": 256,
+      "sgpr_count": 26,
+      "vgpr_count": 16,
+      "wavefront_size": 64,
+      "sgpr_spill_count": 0,
+      "vgpr_spill_count": 0,
+      "arch": "gfx906",
+      "threads": 256,
+      "dynamic_lds": 0,
+      "allocated_lds": 5120,
+      "waves_per_group": 4,
+      "group_caps": {
+        "LDS": 12,
+        "VGPR": 16,
+        "SGPR": 25,
+        "hardware": 10
+      },
+      "groups": 10,
+      "avg_waves_per_simd": 10.0,
+      "limiting": [
+        "hardware"
+      ],
+      "launch_valid": true,
+      "binary_sha256": "67e86ccd15676d38fb247efa7f161ac6f0cb42dc6a040973de329a86763f296a",
+      "source": "/data/home/chh/simplify-v2/build/b2b-layouts/anchor-ablation/heldout/SRAD-stage2/anchor-holdout-synthetic-v1/256/input.txt, /data/home/chh/simplify-v2/build/b2b-layouts/anchor-ablation/heldout/SRAD-stage2/anchor-holdout-synthetic-v1/1024/input.txt",
+      "function": "_Z11srad_cuda_2PfS_S_S_S_S_iiff"
+    },
+    "SasPoint5": {
+      "arch": "sm_86",
+      "threads": 256,
+      "registers_per_thread": 36,
+      "group_segment_fixed_size": 0,
+      "dynamic_lds": 0,
+      "waves_per_group": 8,
+      "group_caps": {
+        "shared_memory": 100,
+        "registers": 6,
+        "hardware": 6
+      },
+      "groups": 6,
+      "warps_per_sm": 48,
+      "avg_warps_per_partition": 12.0,
+      "limiting": [
+        "registers",
+        "hardware"
+      ],
+      "launch_valid": true,
+      "binary_sha256": "d79a4f5f5b6cff913644f66bba6a958b3541a810ffe83a8de5f9ababbe43456d",
+      "source": "/data/home/chh/simplify-v2/build/b2b-layouts/anchor-ablation/heldout/SasPoint5/anchor-holdout-synthetic-v1/interval-mixture/input.txt, /data/home/chh/simplify-v2/build/b2b-layouts/anchor-ablation/heldout/SasPoint5/anchor-holdout-synthetic-v1/coherent-blocks/input.txt, /data/home/chh/simplify-v2/build/b2b-layouts/anchor-ablation/heldout/SasPoint5/anchor-holdout-synthetic-v1/uniform-01/input.txt",
+      "function": "evaluate"
+    },
+    "HiPIMS-George": {
+      "arch": "sm_86",
+      "threads": 128,
+      "registers_per_thread": 130,
+      "group_segment_fixed_size": 0,
+      "dynamic_lds": 0,
+      "waves_per_group": 4,
+      "group_caps": {
+        "shared_memory": 100,
+        "registers": 3,
+        "hardware": 12
+      },
+      "groups": 3,
+      "warps_per_sm": 12,
+      "avg_warps_per_partition": 3.0,
+      "limiting": [
+        "registers"
+      ],
+      "launch_valid": true,
+      "binary_sha256": "5775bc0c9c040ba7b55d84bd29d0719342a2f38043dff855fea723a9c5510b3b",
+      "source": "/data/home/chh/simplify-v2/build/b2b-layouts/anchor-ablation/heldout/HiPIMS-George/anchor-holdout-synthetic-v1/input.txt",
+      "function": "_ZN2GC2fv36cuAdvectionSWEsGeorgeCartesianKernelEPdS1_S1_S1_S1_PNS_7Vector2ES3_jPNS_15ShortDualHandleEjS1_S1_S3_"
+    },
+    "SRAD32 (wg1024)": {
+      "group_segment_fixed_size": 24576,
+      "private_segment_fixed_size": 0,
+      "max_flat_workgroup_size": 1024,
+      "sgpr_count": 30,
+      "vgpr_count": 19,
+      "wavefront_size": 64,
+      "sgpr_spill_count": 0,
+      "vgpr_spill_count": 0,
+      "arch": "gfx906",
+      "threads": 1024,
+      "dynamic_lds": 0,
+      "allocated_lds": 24576,
+      "waves_per_group": 16,
+      "group_caps": {
+        "LDS": 2,
+        "VGPR": 3,
+        "SGPR": 6,
+        "hardware": 2
+      },
+      "groups": 2,
+      "avg_waves_per_simd": 8.0,
+      "limiting": [
+        "LDS",
+        "hardware"
+      ],
+      "launch_valid": true,
+      "binary_sha256": "d7a53d5860abb8177c7beefc47b54b8be0df858069db738ec8780e744e316e23",
+      "source": "/data/home/chh/simplify-v2/build/srad-stability/20261120-v1/wg1024/inputs/input.txt"
+    }
+  },
+  "pcm": {
+    "raw": {
+      "before": {
+        "ir_sha256": "3fa569c2f5aed52b7cdeb800c99581fb04b04a8bf56009a1c709ec35570e3502",
+        "path": "/data/home/chh/simplify-v2-normalize/regression/records/pcm32-r2r-ir-20261120/before-r2r.ll",
+        "throughput": {
+          "total": 1264,
+          "quote_counts": {
+            "select": {
+              "1": 49
+            },
+            "br.conditional": {
+              "7": 24
+            },
+            "phi": {
+              "1": 34
+            },
+            "store.AS3": {
+              "1": 88
+            },
+            "br.unconditional": {
+              "4": 18
+            },
+            "load.AS3": {
+              "1": 112
+            }
+          }
+        },
+        "latency": {
+          "total": 1617,
+          "quote_counts": {
+            "select": {
+              "1": 49
+            },
+            "br.conditional": {
+              "7": 24
+            },
+            "phi": {
+              "0": 34
+            },
+            "store.AS3": {
+              "1": 88
+            },
+            "br.unconditional": {
+              "4": 18
+            },
+            "load.AS3": {
+              "4": 112
+            }
+          }
+        }
+      },
+      "after": {
+        "ir_sha256": "a31518a1597c8b0e2528f5bdaf6e254a11779eaced27de97426615d4c97afce7",
+        "path": "/data/home/chh/simplify-v2-normalize/regression/records/pcm32-r2r-ir-20261120/after-r2r.ll",
+        "throughput": {
+          "total": 1673,
+          "quote_counts": {
+            "select": {
+              "1": 87
+            },
+            "br.conditional": {
+              "7": 51
+            },
+            "phi": {
+              "1": 101
+            },
+            "store.AS3": {
+              "1": 81
+            },
+            "br.unconditional": {
+              "4": 63
+            },
+            "load.AS3": {
+              "1": 98
+            }
+          }
+        },
+        "latency": {
+          "total": 1917,
+          "quote_counts": {
+            "select": {
+              "1": 87
+            },
+            "br.conditional": {
+              "7": 51
+            },
+            "phi": {
+              "0": 101
+            },
+            "store.AS3": {
+              "1": 81
+            },
+            "br.unconditional": {
+              "4": 63
+            },
+            "load.AS3": {
+              "4": 98
+            }
+          }
+        }
+      }
+    },
+    "cleanup": {
+      "before": {
+        "ir_sha256": "2f2be56397052eb7e68b51f3872755fa44a42200e428490655353b153bfff2d8",
+        "path": "/data/home/chh/simplify-v2-normalize/regression/records/pcm32-r2r-ir-20261120/before-r2r-cleanup.ll",
+        "throughput": {
+          "total": 1262,
+          "quote_counts": {
+            "select": {
+              "1": 49
+            },
+            "br.conditional": {
+              "7": 24
+            },
+            "phi": {
+              "1": 33
+            },
+            "store.AS3": {
+              "1": 88
+            },
+            "br.unconditional": {
+              "4": 18
+            },
+            "load.AS3": {
+              "1": 112
+            }
+          }
+        },
+        "latency": {
+          "total": 1616,
+          "quote_counts": {
+            "select": {
+              "1": 49
+            },
+            "br.conditional": {
+              "7": 24
+            },
+            "phi": {
+              "0": 33
+            },
+            "store.AS3": {
+              "1": 88
+            },
+            "br.unconditional": {
+              "4": 18
+            },
+            "load.AS3": {
+              "4": 112
+            }
+          }
+        }
+      },
+      "after": {
+        "ir_sha256": "871acb03405d6be769a70bb6c25a12546165c8a01218579282bc90fc5eb20804",
+        "path": "/data/home/chh/simplify-v2-normalize/regression/records/pcm32-r2r-ir-20261120/after-r2r-cleanup.ll",
+        "throughput": {
+          "total": 1387,
+          "quote_counts": {
+            "select": {
+              "1": 88
+            },
+            "br.conditional": {
+              "7": 31
+            },
+            "phi": {
+              "1": 67
+            },
+            "store.AS3": {
+              "1": 81
+            },
+            "br.unconditional": {
+              "4": 35
+            },
+            "load.AS3": {
+              "1": 98
+            }
+          }
+        },
+        "latency": {
+          "total": 1665,
+          "quote_counts": {
+            "select": {
+              "1": 88
+            },
+            "br.conditional": {
+              "7": 31
+            },
+            "phi": {
+              "0": 67
+            },
+            "store.AS3": {
+              "1": 81
+            },
+            "br.unconditional": {
+              "4": 35
+            },
+            "load.AS3": {
+              "4": 98
+            }
+          }
+        }
+      }
+    },
+    "o3": {
+      "before": {
+        "ir_sha256": "92b9f73b5ac6f3e6f66a49d9f81ae61c547ea34cadfa8b2415fdf84ded38db77",
+        "path": "/data/home/chh/simplify-v2-normalize/regression/records/pcm32-r2r-ir-20261120/before-r2r-o3.ll",
+        "throughput": {
+          "total": 1272,
+          "quote_counts": {
+            "select": {
+              "1": 49
+            },
+            "br.conditional": {
+              "7": 24
+            },
+            "phi": {
+              "1": 47
+            },
+            "store.AS3": {
+              "1": 88
+            },
+            "br.unconditional": {
+              "4": 17
+            },
+            "load.AS3": {
+              "1": 112
+            }
+          }
+        },
+        "latency": {
+          "total": 1612,
+          "quote_counts": {
+            "select": {
+              "1": 49
+            },
+            "br.conditional": {
+              "7": 24
+            },
+            "phi": {
+              "0": 47
+            },
+            "store.AS3": {
+              "1": 88
+            },
+            "br.unconditional": {
+              "4": 17
+            },
+            "load.AS3": {
+              "4": 112
+            }
+          }
+        }
+      },
+      "after": {
+        "ir_sha256": "51c93665b9a9763c30414ddd75b174bcedc0ff86f6c49a278af95e1f6b97626a",
+        "path": "/data/home/chh/simplify-v2-normalize/regression/records/pcm32-r2r-ir-20261120/after-r2r-o3.ll",
+        "throughput": {
+          "total": 1396,
+          "quote_counts": {
+            "select": {
+              "1": 88
+            },
+            "br.conditional": {
+              "7": 31
+            },
+            "phi": {
+              "1": 80
+            },
+            "store.AS3": {
+              "1": 81
+            },
+            "br.unconditional": {
+              "4": 34
+            },
+            "load.AS3": {
+              "1": 98
+            }
+          }
+        },
+        "latency": {
+          "total": 1661,
+          "quote_counts": {
+            "select": {
+              "1": 88
+            },
+            "br.conditional": {
+              "7": 31
+            },
+            "phi": {
+              "0": 80
+            },
+            "store.AS3": {
+              "1": 81
+            },
+            "br.unconditional": {
+              "4": 34
+            },
+            "load.AS3": {
+              "4": 98
+            }
+          }
+        }
+      }
+    }
+  },
+  "transitions": {
+    "PCM": {
+      "gpu_ratio": 0.942614572162638,
+      "source": "PCM32 exact R2R 10",
+      "existing_t0": [
+        1262,
+        1387
+      ],
+      "parent": {
+        "resources": {
+          "group_segment_fixed_size": 65536,
+          "private_segment_fixed_size": 0,
+          "max_flat_workgroup_size": 256,
+          "sgpr_count": 24,
+          "vgpr_count": 23,
+          "wavefront_size": 64,
+          "sgpr_spill_count": 0,
+          "vgpr_spill_count": 0,
+          "arch": "gfx906",
+          "threads": 32,
+          "dynamic_lds": 0,
+          "allocated_lds": 65536,
+          "waves_per_group": 1,
+          "group_caps": {
+            "LDS": 1,
+            "VGPR": 40,
+            "SGPR": 100,
+            "hardware": 40
+          },
+          "groups": 1,
+          "avg_waves_per_simd": 0.25,
+          "limiting": [
+            "LDS"
+          ],
+          "launch_valid": true,
+          "binary_sha256": "35a2c062b54b056a4b3c8e6e513e75abfce5a59edba2e7b1330a21d693a952c1"
+        },
+        "score": {
+          "ir_sha256": "2f2be56397052eb7e68b51f3872755fa44a42200e428490655353b153bfff2d8",
+          "path": "/data/home/chh/simplify-v2/build/cleanup-passes/20261120-v1/exact/round-0-control.ll",
+          "throughput": {
+            "total": 1262,
+            "quote_counts": {
+              "select": {
+                "1": 49
+              },
+              "br.conditional": {
+                "7": 24
+              },
+              "phi": {
+                "1": 33
+              },
+              "store.AS3": {
+                "1": 88
+              },
+              "br.unconditional": {
+                "4": 18
+              },
+              "load.AS3": {
+                "1": 112
+              }
+            }
+          },
+          "latency": {
+            "total": 1616,
+            "quote_counts": {
+              "select": {
+                "1": 49
+              },
+              "br.conditional": {
+                "7": 24
+              },
+              "phi": {
+                "0": 33
+              },
+              "store.AS3": {
+                "1": 88
+              },
+              "br.unconditional": {
+                "4": 18
+              },
+              "load.AS3": {
+                "4": 112
+              }
+            }
+          }
+        }
+      },
+      "child": {
+        "resources": {
+          "group_segment_fixed_size": 65536,
+          "private_segment_fixed_size": 0,
+          "max_flat_workgroup_size": 256,
+          "sgpr_count": 28,
+          "vgpr_count": 25,
+          "wavefront_size": 64,
+          "sgpr_spill_count": 0,
+          "vgpr_spill_count": 0,
+          "arch": "gfx906",
+          "threads": 32,
+          "dynamic_lds": 0,
+          "allocated_lds": 65536,
+          "waves_per_group": 1,
+          "group_caps": {
+            "LDS": 1,
+            "VGPR": 36,
+            "SGPR": 100,
+            "hardware": 40
+          },
+          "groups": 1,
+          "avg_waves_per_simd": 0.25,
+          "limiting": [
+            "LDS"
+          ],
+          "launch_valid": true,
+          "binary_sha256": "6a0f71b49a5856d08e1d2af6f085b5b0f4865c362c11cd1aee7f2008a747c66e"
+        },
+        "score": {
+          "ir_sha256": "871acb03405d6be769a70bb6c25a12546165c8a01218579282bc90fc5eb20804",
+          "path": "/data/home/chh/simplify-v2/build/cleanup-passes/20261120-v1/exact/trial-0/after.ll",
+          "throughput": {
+            "total": 1387,
+            "quote_counts": {
+              "select": {
+                "1": 88
+              },
+              "br.conditional": {
+                "7": 31
+              },
+              "phi": {
+                "1": 67
+              },
+              "store.AS3": {
+                "1": 81
+              },
+              "br.unconditional": {
+                "4": 35
+              },
+              "load.AS3": {
+                "1": 98
+              }
+            }
+          },
+          "latency": {
+            "total": 1665,
+            "quote_counts": {
+              "select": {
+                "1": 88
+              },
+              "br.conditional": {
+                "7": 31
+              },
+              "phi": {
+                "0": 67
+              },
+              "store.AS3": {
+                "1": 81
+              },
+              "br.unconditional": {
+                "4": 35
+              },
+              "load.AS3": {
+                "4": 98
+              }
+            }
+          }
+        }
+      },
+      "throughput_delta": 125,
+      "latency_delta": 49,
+      "parent_policy": {
+        "selected": "latency",
+        "delta": 49
+      },
+      "either_below_policy": {
+        "selected": "latency",
+        "delta": 49
+      },
+      "agrees_with_gpu": {
+        "throughput": false,
+        "latency": false,
+        "occupancy": false,
+        "either_below": false
+      }
+    },
+    "HLLD": {
+      "gpu_ratio": 1.1830088138767278,
+      "source": "HLLD 2→3",
+      "existing_t0": [
+        1747,
+        1706
+      ],
+      "parent": {
+        "resources": {
+          "group_segment_fixed_size": 0,
+          "private_segment_fixed_size": 0,
+          "max_flat_workgroup_size": 256,
+          "sgpr_count": 29,
+          "vgpr_count": 126,
+          "wavefront_size": 64,
+          "sgpr_spill_count": 0,
+          "vgpr_spill_count": 0,
+          "arch": "gfx906",
+          "threads": 128,
+          "dynamic_lds": 0,
+          "allocated_lds": 0,
+          "waves_per_group": 2,
+          "group_caps": {
+            "LDS": null,
+            "VGPR": 4,
+            "SGPR": 50,
+            "hardware": 16
+          },
+          "groups": 4,
+          "avg_waves_per_simd": 2.0,
+          "limiting": [
+            "VGPR"
+          ],
+          "launch_valid": true,
+          "binary_sha256": "551479d3672068ce526a1e5e33603ef79974fd0d9ce81c9738f3605d0fe5e7b9"
+        },
+        "score": {
+          "ir_sha256": "b8bad63ff26682e830439c37bb7fa2c4c0bd0e6f1389da32f0dd9b59ad6b0f72",
+          "path": "/data/home/chh/simplify-v2/build/b2b-layouts/anchor-default/verified/HLLD/N/trial-7/fused.ll",
+          "throughput": {
+            "total": 1747,
+            "quote_counts": {
+              "br.conditional": {
+                "7": 9
+              },
+              "br.unconditional": {
+                "4": 10
+              },
+              "phi": {
+                "1": 19
+              },
+              "select": {
+                "1": 49
+              }
+            }
+          },
+          "latency": {
+            "total": 1776,
+            "quote_counts": {
+              "br.conditional": {
+                "7": 9
+              },
+              "br.unconditional": {
+                "4": 10
+              },
+              "phi": {
+                "0": 19
+              },
+              "select": {
+                "1": 49
+              }
+            }
+          }
+        }
+      },
+      "child": {
+        "resources": {
+          "group_segment_fixed_size": 0,
+          "private_segment_fixed_size": 0,
+          "max_flat_workgroup_size": 256,
+          "sgpr_count": 29,
+          "vgpr_count": 134,
+          "wavefront_size": 64,
+          "sgpr_spill_count": 0,
+          "vgpr_spill_count": 0,
+          "arch": "gfx906",
+          "threads": 128,
+          "dynamic_lds": 0,
+          "allocated_lds": 0,
+          "waves_per_group": 2,
+          "group_caps": {
+            "LDS": null,
+            "VGPR": 2,
+            "SGPR": 50,
+            "hardware": 16
+          },
+          "groups": 2,
+          "avg_waves_per_simd": 1.0,
+          "limiting": [
+            "VGPR"
+          ],
+          "launch_valid": true,
+          "binary_sha256": "5db8456c10546338015db4ddf67f83295953eff1a91f2fb0f70f6ea569484700"
+        },
+        "score": {
+          "ir_sha256": "ed538359cc60b132a36344dabbb621e91012c7d54c01cdb17053ac5ab736e206",
+          "path": "/data/home/chh/simplify-v2/build/b2b-layouts/anchor-default/verified/HLLD/N/trial-21/fused.ll",
+          "throughput": {
+            "total": 1706,
+            "quote_counts": {
+              "br.conditional": {
+                "7": 9
+              },
+              "br.unconditional": {
+                "4": 8
+              },
+              "phi": {
+                "1": 26
+              },
+              "select": {
+                "1": 64
+              }
+            }
+          },
+          "latency": {
+            "total": 1728,
+            "quote_counts": {
+              "br.conditional": {
+                "7": 9
+              },
+              "br.unconditional": {
+                "4": 8
+              },
+              "phi": {
+                "0": 26
+              },
+              "select": {
+                "1": 64
+              }
+            }
+          }
+        }
+      },
+      "throughput_delta": -41,
+      "latency_delta": -48,
+      "parent_policy": {
+        "selected": "throughput",
+        "delta": -41
+      },
+      "either_below_policy": {
+        "selected": "latency",
+        "delta": -48
+      },
+      "agrees_with_gpu": {
+        "throughput": false,
+        "latency": false,
+        "occupancy": false,
+        "either_below": false
+      }
+    },
+    "Landau": {
+      "gpu_ratio": 1.0205479249771305,
+      "source": "Landau coherent 16→17",
+      "existing_t0": [
+        1950,
+        1820
+      ],
+      "parent": {
+        "resources": {
+          "group_segment_fixed_size": 0,
+          "private_segment_fixed_size": 0,
+          "max_flat_workgroup_size": 256,
+          "sgpr_count": 38,
+          "vgpr_count": 102,
+          "wavefront_size": 64,
+          "sgpr_spill_count": 0,
+          "vgpr_spill_count": 0,
+          "arch": "gfx906",
+          "threads": 256,
+          "dynamic_lds": 0,
+          "allocated_lds": 0,
+          "waves_per_group": 4,
+          "group_caps": {
+            "LDS": null,
+            "VGPR": 2,
+            "SGPR": 16,
+            "hardware": 10
+          },
+          "groups": 2,
+          "avg_waves_per_simd": 2.0,
+          "limiting": [
+            "VGPR"
+          ],
+          "launch_valid": true,
+          "binary_sha256": "149da436a1915379f5a60168f82a3fcd1b8ec4e968318cdaf84d670b08fdf6ee"
+        },
+        "score": {
+          "ir_sha256": "4c3a301f9d816ebf2fd667db3f2932c2b86a4e12d9b34959834d2415bda82ee5",
+          "path": "/data/home/chh/simplify-v2/build/b2b-layouts/anchor-default/verified/Landau/N/trial-307/fused.ll",
+          "throughput": {
+            "total": 1950,
+            "quote_counts": {
+              "br.conditional": {
+                "7": 19
+              },
+              "select": {
+                "1": 89
+              },
+              "br.unconditional": {
+                "4": 22
+              },
+              "phi": {
+                "1": 80
+              }
+            }
+          },
+          "latency": {
+            "total": 1876,
+            "quote_counts": {
+              "br.conditional": {
+                "7": 19
+              },
+              "select": {
+                "1": 89
+              },
+              "br.unconditional": {
+                "4": 22
+              },
+              "phi": {
+                "0": 80
+              }
+            }
+          }
+        }
+      },
+      "child": {
+        "resources": {
+          "group_segment_fixed_size": 0,
+          "private_segment_fixed_size": 0,
+          "max_flat_workgroup_size": 256,
+          "sgpr_count": 30,
+          "vgpr_count": 65,
+          "wavefront_size": 64,
+          "sgpr_spill_count": 0,
+          "vgpr_spill_count": 0,
+          "arch": "gfx906",
+          "threads": 256,
+          "dynamic_lds": 0,
+          "allocated_lds": 0,
+          "waves_per_group": 4,
+          "group_caps": {
+            "LDS": null,
+            "VGPR": 3,
+            "SGPR": 25,
+            "hardware": 10
+          },
+          "groups": 3,
+          "avg_waves_per_simd": 3.0,
+          "limiting": [
+            "VGPR"
+          ],
+          "launch_valid": true,
+          "binary_sha256": "fd4670b540258ffe2618a303515239be586289a1280d4c9b42f13bcc2e6eb8ef"
+        },
+        "score": {
+          "ir_sha256": "a7ac3f875e69e82c24dd8e40778ec9c336382c947ac0d2130188c37fd12450c1",
+          "path": "/data/home/chh/simplify-v2/build/b2b-layouts/anchor-default/verified/Landau/N/trial-322/fused.ll",
+          "throughput": {
+            "total": 1820,
+            "quote_counts": {
+              "br.conditional": {
+                "7": 18
+              },
+              "select": {
+                "1": 92
+              },
+              "br.unconditional": {
+                "4": 21
+              },
+              "phi": {
+                "1": 132
+              }
+            }
+          },
+          "latency": {
+            "total": 1694,
+            "quote_counts": {
+              "br.conditional": {
+                "7": 18
+              },
+              "select": {
+                "1": 92
+              },
+              "br.unconditional": {
+                "4": 21
+              },
+              "phi": {
+                "0": 132
+              }
+            }
+          }
+        }
+      },
+      "throughput_delta": -130,
+      "latency_delta": -182,
+      "parent_policy": {
+        "selected": "throughput",
+        "delta": -130
+      },
+      "either_below_policy": {
+        "selected": "throughput",
+        "delta": -130
+      },
+      "agrees_with_gpu": {
+        "throughput": false,
+        "latency": false,
+        "occupancy": false,
+        "either_below": false
+      }
+    },
+    "TP2": {
+      "gpu_ratio": 1.5522773327626989,
+      "source": "TPACF 1→2",
+      "existing_t0": [
+        582,
+        571
+      ],
+      "parent": {
+        "resources": {
+          "group_segment_fixed_size": 0,
+          "private_segment_fixed_size": 0,
+          "max_flat_workgroup_size": 256,
+          "sgpr_count": 104,
+          "vgpr_count": 16,
+          "wavefront_size": 64,
+          "sgpr_spill_count": 34,
+          "vgpr_spill_count": 0,
+          "arch": "gfx906",
+          "threads": 128,
+          "dynamic_lds": 3072,
+          "allocated_lds": 3072,
+          "waves_per_group": 2,
+          "group_caps": {
+            "LDS": 21,
+            "VGPR": 32,
+            "SGPR": 14,
+            "hardware": 16
+          },
+          "groups": 14,
+          "avg_waves_per_simd": 7.0,
+          "limiting": [
+            "SGPR"
+          ],
+          "launch_valid": true,
+          "binary_sha256": "59711e83fb24734a0ce7d95587a84e3768c3216b52e97190625f3c1ffc88b77c"
+        },
+        "score": {
+          "ir_sha256": "e76cd7f50b982cc11491ebfa2a6727cd4d0b9f3658a9350ef9e1088868957e66",
+          "path": "/data/home/chh/simplify-v2/build/b2b-layouts/anchor-default/verified/TPACF/N/trial-28/fused.ll",
+          "throughput": {
+            "total": 582,
+            "quote_counts": {
+              "store.AS3": {
+                "1": 3
+              },
+              "br.unconditional": {
+                "4": 32
+              },
+              "phi": {
+                "1": 5
+              },
+              "br.conditional": {
+                "7": 32
+              },
+              "load.AS3": {
+                "1": 3
+              },
+              "select": {
+                "1": 2
+              }
+            }
+          },
+          "latency": {
+            "total": 715,
+            "quote_counts": {
+              "store.AS3": {
+                "1": 3
+              },
+              "br.unconditional": {
+                "4": 32
+              },
+              "phi": {
+                "0": 5
+              },
+              "br.conditional": {
+                "7": 32
+              },
+              "load.AS3": {
+                "4": 3
+              },
+              "select": {
+                "1": 2
+              }
+            }
+          }
+        }
+      },
+      "child": {
+        "resources": {
+          "group_segment_fixed_size": 0,
+          "private_segment_fixed_size": 0,
+          "max_flat_workgroup_size": 256,
+          "sgpr_count": 104,
+          "vgpr_count": 16,
+          "wavefront_size": 64,
+          "sgpr_spill_count": 46,
+          "vgpr_spill_count": 0,
+          "arch": "gfx906",
+          "threads": 128,
+          "dynamic_lds": 3072,
+          "allocated_lds": 3072,
+          "waves_per_group": 2,
+          "group_caps": {
+            "LDS": 21,
+            "VGPR": 32,
+            "SGPR": 14,
+            "hardware": 16
+          },
+          "groups": 14,
+          "avg_waves_per_simd": 7.0,
+          "limiting": [
+            "SGPR"
+          ],
+          "launch_valid": true,
+          "binary_sha256": "e8a509c6fefdaa6b8d40c7156665a04668e7aeb8911e3f6e214a9da7af7e4734"
+        },
+        "score": {
+          "ir_sha256": "47dda12e2c4e7b07f39951dfff21f166e78676bbff0e7b841517957a51fb3980",
+          "path": "/data/home/chh/simplify-v2/build/b2b-layouts/anchor-default/verified/TPACF/N/trial-495/fused.ll",
+          "throughput": {
+            "total": 571,
+            "quote_counts": {
+              "store.AS3": {
+                "1": 3
+              },
+              "br.unconditional": {
+                "4": 31
+              },
+              "phi": {
+                "1": 5
+              },
+              "br.conditional": {
+                "7": 31
+              },
+              "load.AS3": {
+                "1": 3
+              },
+              "select": {
+                "1": 4
+              }
+            }
+          },
+          "latency": {
+            "total": 704,
+            "quote_counts": {
+              "store.AS3": {
+                "1": 3
+              },
+              "br.unconditional": {
+                "4": 31
+              },
+              "phi": {
+                "0": 5
+              },
+              "br.conditional": {
+                "7": 31
+              },
+              "load.AS3": {
+                "4": 3
+              },
+              "select": {
+                "1": 4
+              }
+            }
+          }
+        }
+      },
+      "throughput_delta": -11,
+      "latency_delta": -11,
+      "parent_policy": {
+        "selected": "throughput",
+        "delta": -11
+      },
+      "either_below_policy": {
+        "selected": "throughput",
+        "delta": -11
+      },
+      "agrees_with_gpu": {
+        "throughput": false,
+        "latency": false,
+        "occupancy": false,
+        "either_below": false
+      }
+    },
+    "TP3": {
+      "gpu_ratio": 1.1985154228878183,
+      "source": "TPACF 2→3",
+      "existing_t0": [
+        571,
+        559
+      ],
+      "parent": {
+        "resources": {
+          "group_segment_fixed_size": 0,
+          "private_segment_fixed_size": 0,
+          "max_flat_workgroup_size": 256,
+          "sgpr_count": 104,
+          "vgpr_count": 16,
+          "wavefront_size": 64,
+          "sgpr_spill_count": 46,
+          "vgpr_spill_count": 0,
+          "arch": "gfx906",
+          "threads": 128,
+          "dynamic_lds": 3072,
+          "allocated_lds": 3072,
+          "waves_per_group": 2,
+          "group_caps": {
+            "LDS": 21,
+            "VGPR": 32,
+            "SGPR": 14,
+            "hardware": 16
+          },
+          "groups": 14,
+          "avg_waves_per_simd": 7.0,
+          "limiting": [
+            "SGPR"
+          ],
+          "launch_valid": true,
+          "binary_sha256": "e8a509c6fefdaa6b8d40c7156665a04668e7aeb8911e3f6e214a9da7af7e4734"
+        },
+        "score": {
+          "ir_sha256": "47dda12e2c4e7b07f39951dfff21f166e78676bbff0e7b841517957a51fb3980",
+          "path": "/data/home/chh/simplify-v2/build/b2b-layouts/anchor-default/verified/TPACF/N/trial-495/fused.ll",
+          "throughput": {
+            "total": 571,
+            "quote_counts": {
+              "store.AS3": {
+                "1": 3
+              },
+              "br.unconditional": {
+                "4": 31
+              },
+              "phi": {
+                "1": 5
+              },
+              "br.conditional": {
+                "7": 31
+              },
+              "load.AS3": {
+                "1": 3
+              },
+              "select": {
+                "1": 4
+              }
+            }
+          },
+          "latency": {
+            "total": 704,
+            "quote_counts": {
+              "store.AS3": {
+                "1": 3
+              },
+              "br.unconditional": {
+                "4": 31
+              },
+              "phi": {
+                "0": 5
+              },
+              "br.conditional": {
+                "7": 31
+              },
+              "load.AS3": {
+                "4": 3
+              },
+              "select": {
+                "1": 4
+              }
+            }
+          }
+        }
+      },
+      "child": {
+        "resources": {
+          "group_segment_fixed_size": 0,
+          "private_segment_fixed_size": 0,
+          "max_flat_workgroup_size": 256,
+          "sgpr_count": 104,
+          "vgpr_count": 16,
+          "wavefront_size": 64,
+          "sgpr_spill_count": 52,
+          "vgpr_spill_count": 0,
+          "arch": "gfx906",
+          "threads": 128,
+          "dynamic_lds": 3072,
+          "allocated_lds": 3072,
+          "waves_per_group": 2,
+          "group_caps": {
+            "LDS": 21,
+            "VGPR": 32,
+            "SGPR": 14,
+            "hardware": 16
+          },
+          "groups": 14,
+          "avg_waves_per_simd": 7.0,
+          "limiting": [
+            "SGPR"
+          ],
+          "launch_valid": true,
+          "binary_sha256": "2c4d01b1457e21e1ad7c50b1c3a8a8eff5f0774a19896e5c437967e207a640ea"
+        },
+        "score": {
+          "ir_sha256": "41c369afcbe73e5c7059b26720dcf2c9d35ce92aec05812e24e1b9944094fbe5",
+          "path": "/data/home/chh/simplify-v2/build/b2b-layouts/anchor-default/verified/TPACF/N/trial-930/fused.ll",
+          "throughput": {
+            "total": 559,
+            "quote_counts": {
+              "store.AS3": {
+                "1": 3
+              },
+              "br.unconditional": {
+                "4": 30
+              },
+              "phi": {
+                "1": 5
+              },
+              "br.conditional": {
+                "7": 30
+              },
+              "load.AS3": {
+                "1": 3
+              },
+              "select": {
+                "1": 5
+              }
+            }
+          },
+          "latency": {
+            "total": 692,
+            "quote_counts": {
+              "store.AS3": {
+                "1": 3
+              },
+              "br.unconditional": {
+                "4": 30
+              },
+              "phi": {
+                "0": 5
+              },
+              "br.conditional": {
+                "7": 30
+              },
+              "load.AS3": {
+                "4": 3
+              },
+              "select": {
+                "1": 5
+              }
+            }
+          }
+        }
+      },
+      "throughput_delta": -12,
+      "latency_delta": -12,
+      "parent_policy": {
+        "selected": "throughput",
+        "delta": -12
+      },
+      "either_below_policy": {
+        "selected": "throughput",
+        "delta": -12
+      },
+      "agrees_with_gpu": {
+        "throughput": false,
+        "latency": false,
+        "occupancy": false,
+        "either_below": false
+      }
+    },
+    "C": {
+      "gpu_ratio": 0.8738252098789812,
+      "source": "P→C",
+      "existing_t0": [
+        292,
+        294
+      ],
+      "parent": {
+        "resources": {
+          "group_segment_fixed_size": 10496,
+          "private_segment_fixed_size": 0,
+          "max_flat_workgroup_size": 256,
+          "sgpr_count": 22,
+          "vgpr_count": 10,
+          "wavefront_size": 64,
+          "sgpr_spill_count": 0,
+          "vgpr_spill_count": 0,
+          "arch": "gfx906",
+          "threads": 64,
+          "dynamic_lds": 0,
+          "allocated_lds": 10752,
+          "waves_per_group": 1,
+          "group_caps": {
+            "LDS": 6,
+            "VGPR": 84,
+            "SGPR": 100,
+            "hardware": 40
+          },
+          "groups": 6,
+          "avg_waves_per_simd": 1.5,
+          "limiting": [
+            "LDS"
+          ],
+          "launch_valid": true,
+          "binary_sha256": "c2686161a00d17153cd6f384e5e056b92d3dfa43c4b731714274437eb764684b"
+        },
+        "score": {
+          "ir_sha256": "a8526e2252d76857513d017754523fd5c0301aed50ca35eb981bc15789fa923d",
+          "path": "/data/home/chh/simplify-v2-study-nqu/build/nqu-second-fusion/followup/P.ll",
+          "throughput": {
+            "total": 292,
+            "quote_counts": {
+              "br.conditional": {
+                "7": 11
+              },
+              "store.AS3": {
+                "1": 16
+              },
+              "br.unconditional": {
+                "4": 12
+              },
+              "phi": {
+                "1": 7
+              },
+              "load.AS3": {
+                "1": 22
+              },
+              "select": {
+                "1": 9
+              }
+            }
+          },
+          "latency": {
+            "total": 363,
+            "quote_counts": {
+              "br.conditional": {
+                "7": 11
+              },
+              "store.AS3": {
+                "1": 16
+              },
+              "br.unconditional": {
+                "4": 12
+              },
+              "phi": {
+                "0": 7
+              },
+              "load.AS3": {
+                "4": 22
+              },
+              "select": {
+                "1": 9
+              }
+            }
+          }
+        }
+      },
+      "child": {
+        "resources": {
+          "group_segment_fixed_size": 10496,
+          "private_segment_fixed_size": 0,
+          "max_flat_workgroup_size": 256,
+          "sgpr_count": 22,
+          "vgpr_count": 10,
+          "wavefront_size": 64,
+          "sgpr_spill_count": 0,
+          "vgpr_spill_count": 0,
+          "arch": "gfx906",
+          "threads": 64,
+          "dynamic_lds": 0,
+          "allocated_lds": 10752,
+          "waves_per_group": 1,
+          "group_caps": {
+            "LDS": 6,
+            "VGPR": 84,
+            "SGPR": 100,
+            "hardware": 40
+          },
+          "groups": 6,
+          "avg_waves_per_simd": 1.5,
+          "limiting": [
+            "LDS"
+          ],
+          "launch_valid": true,
+          "binary_sha256": "801ca7e3996f2cc93d34ee8f3d560448697a661503bafd7745eb65670bc44476"
+        },
+        "score": {
+          "ir_sha256": "e75f9797b4a7725a4535924a5c184d67893adf786edcda8286963c86ecd63958",
+          "path": "/data/home/chh/simplify-v2-study-nqu/build/nqu-second-fusion/followup/C.ll",
+          "throughput": {
+            "total": 294,
+            "quote_counts": {
+              "br.conditional": {
+                "7": 10
+              },
+              "store.AS3": {
+                "1": 16
+              },
+              "br.unconditional": {
+                "4": 11
+              },
+              "phi": {
+                "1": 8
+              },
+              "load.AS3": {
+                "1": 26
+              },
+              "select": {
+                "1": 18
+              }
+            }
+          },
+          "latency": {
+            "total": 376,
+            "quote_counts": {
+              "br.conditional": {
+                "7": 10
+              },
+              "store.AS3": {
+                "1": 16
+              },
+              "br.unconditional": {
+                "4": 11
+              },
+              "phi": {
+                "0": 8
+              },
+              "load.AS3": {
+                "4": 26
+              },
+              "select": {
+                "1": 18
+              }
+            }
+          }
+        }
+      },
+      "throughput_delta": 2,
+      "latency_delta": 13,
+      "parent_policy": {
+        "selected": "latency",
+        "delta": 13
+      },
+      "either_below_policy": {
+        "selected": "latency",
+        "delta": 13
+      },
+      "agrees_with_gpu": {
+        "throughput": false,
+        "latency": false,
+        "occupancy": false,
+        "either_below": false
+      }
+    },
+    "G1": {
+      "gpu_ratio": 0.8714479456318948,
+      "source": "G→G1",
+      "existing_t0": [
+        282,
+        274
+      ],
+      "parent": {
+        "resources": {
+          "group_segment_fixed_size": 10496,
+          "private_segment_fixed_size": 0,
+          "max_flat_workgroup_size": 256,
+          "sgpr_count": 22,
+          "vgpr_count": 10,
+          "wavefront_size": 64,
+          "sgpr_spill_count": 0,
+          "vgpr_spill_count": 0,
+          "arch": "gfx906",
+          "threads": 64,
+          "dynamic_lds": 0,
+          "allocated_lds": 10752,
+          "waves_per_group": 1,
+          "group_caps": {
+            "LDS": 6,
+            "VGPR": 84,
+            "SGPR": 100,
+            "hardware": 40
+          },
+          "groups": 6,
+          "avg_waves_per_simd": 1.5,
+          "limiting": [
+            "LDS"
+          ],
+          "launch_valid": true,
+          "binary_sha256": "42b2bda66286d3c3b437dd6fe78ecba602f6718f4f75659fe101bb5dc2c6865c"
+        },
+        "score": {
+          "ir_sha256": "57d5c232299189c2b537ed51b2fe8de04dfce37d9ff2872c849151c743c282d4",
+          "path": "/data/home/chh/simplify-v2-study-nqu/build/nqu-second-fusion/followup/G.ll",
+          "throughput": {
+            "total": 282,
+            "quote_counts": {
+              "br.conditional": {
+                "7": 11
+              },
+              "store.AS3": {
+                "1": 16
+              },
+              "br.unconditional": {
+                "4": 12
+              },
+              "phi": {
+                "1": 7
+              },
+              "load.AS3": {
+                "1": 17
+              },
+              "select": {
+                "1": 3
+              }
+            }
+          },
+          "latency": {
+            "total": 338,
+            "quote_counts": {
+              "br.conditional": {
+                "7": 11
+              },
+              "store.AS3": {
+                "1": 16
+              },
+              "br.unconditional": {
+                "4": 12
+              },
+              "phi": {
+                "0": 7
+              },
+              "load.AS3": {
+                "4": 17
+              },
+              "select": {
+                "1": 3
+              }
+            }
+          }
+        }
+      },
+      "child": {
+        "resources": {
+          "group_segment_fixed_size": 10496,
+          "private_segment_fixed_size": 0,
+          "max_flat_workgroup_size": 256,
+          "sgpr_count": 22,
+          "vgpr_count": 10,
+          "wavefront_size": 64,
+          "sgpr_spill_count": 0,
+          "vgpr_spill_count": 0,
+          "arch": "gfx906",
+          "threads": 64,
+          "dynamic_lds": 0,
+          "allocated_lds": 10752,
+          "waves_per_group": 1,
+          "group_caps": {
+            "LDS": 6,
+            "VGPR": 84,
+            "SGPR": 100,
+            "hardware": 40
+          },
+          "groups": 6,
+          "avg_waves_per_simd": 1.5,
+          "limiting": [
+            "LDS"
+          ],
+          "launch_valid": true,
+          "binary_sha256": "83bec1d3bb5b164770921cd52763d70670efa5ea12ab5f04082391abbf74e97b"
+        },
+        "score": {
+          "ir_sha256": "7a5db4cbd1bad7513350ea45ed37208105503298aad90cd652189e7786818c35",
+          "path": "/data/home/chh/simplify-v2-study-nqu/build/nqu-second-fusion/followup/G1.ll",
+          "throughput": {
+            "total": 274,
+            "quote_counts": {
+              "br.conditional": {
+                "7": 10
+              },
+              "store.AS3": {
+                "1": 16
+              },
+              "br.unconditional": {
+                "4": 11
+              },
+              "phi": {
+                "1": 7
+              },
+              "load.AS3": {
+                "1": 17
+              },
+              "select": {
+                "1": 5
+              }
+            }
+          },
+          "latency": {
+            "total": 330,
+            "quote_counts": {
+              "br.conditional": {
+                "7": 10
+              },
+              "store.AS3": {
+                "1": 16
+              },
+              "br.unconditional": {
+                "4": 11
+              },
+              "phi": {
+                "0": 7
+              },
+              "load.AS3": {
+                "4": 17
+              },
+              "select": {
+                "1": 5
+              }
+            }
+          }
+        }
+      },
+      "throughput_delta": -8,
+      "latency_delta": -8,
+      "parent_policy": {
+        "selected": "latency",
+        "delta": -8
+      },
+      "either_below_policy": {
+        "selected": "latency",
+        "delta": -8
+      },
+      "gpu_ci95": [
+        0.8693261627092488,
+        0.875857069553023
+      ],
+      "gpu_source": "14775f2 followup-retry-timing.json",
+      "agrees_with_gpu": {
+        "throughput": true,
+        "latency": true,
+        "occupancy": true,
+        "either_below": true
+      }
+    },
+    "G2": {
+      "gpu_ratio": 0.8707263138725521,
+      "source": "G→G2",
+      "existing_t0": [
+        282,
+        275
+      ],
+      "parent": {
+        "resources": {
+          "group_segment_fixed_size": 10496,
+          "private_segment_fixed_size": 0,
+          "max_flat_workgroup_size": 256,
+          "sgpr_count": 22,
+          "vgpr_count": 10,
+          "wavefront_size": 64,
+          "sgpr_spill_count": 0,
+          "vgpr_spill_count": 0,
+          "arch": "gfx906",
+          "threads": 64,
+          "dynamic_lds": 0,
+          "allocated_lds": 10752,
+          "waves_per_group": 1,
+          "group_caps": {
+            "LDS": 6,
+            "VGPR": 84,
+            "SGPR": 100,
+            "hardware": 40
+          },
+          "groups": 6,
+          "avg_waves_per_simd": 1.5,
+          "limiting": [
+            "LDS"
+          ],
+          "launch_valid": true,
+          "binary_sha256": "42b2bda66286d3c3b437dd6fe78ecba602f6718f4f75659fe101bb5dc2c6865c"
+        },
+        "score": {
+          "ir_sha256": "57d5c232299189c2b537ed51b2fe8de04dfce37d9ff2872c849151c743c282d4",
+          "path": "/data/home/chh/simplify-v2-study-nqu/build/nqu-second-fusion/followup/G.ll",
+          "throughput": {
+            "total": 282,
+            "quote_counts": {
+              "br.conditional": {
+                "7": 11
+              },
+              "store.AS3": {
+                "1": 16
+              },
+              "br.unconditional": {
+                "4": 12
+              },
+              "phi": {
+                "1": 7
+              },
+              "load.AS3": {
+                "1": 17
+              },
+              "select": {
+                "1": 3
+              }
+            }
+          },
+          "latency": {
+            "total": 338,
+            "quote_counts": {
+              "br.conditional": {
+                "7": 11
+              },
+              "store.AS3": {
+                "1": 16
+              },
+              "br.unconditional": {
+                "4": 12
+              },
+              "phi": {
+                "0": 7
+              },
+              "load.AS3": {
+                "4": 17
+              },
+              "select": {
+                "1": 3
+              }
+            }
+          }
+        }
+      },
+      "child": {
+        "resources": {
+          "group_segment_fixed_size": 10496,
+          "private_segment_fixed_size": 0,
+          "max_flat_workgroup_size": 256,
+          "sgpr_count": 22,
+          "vgpr_count": 10,
+          "wavefront_size": 64,
+          "sgpr_spill_count": 0,
+          "vgpr_spill_count": 0,
+          "arch": "gfx906",
+          "threads": 64,
+          "dynamic_lds": 0,
+          "allocated_lds": 10752,
+          "waves_per_group": 1,
+          "group_caps": {
+            "LDS": 6,
+            "VGPR": 84,
+            "SGPR": 100,
+            "hardware": 40
+          },
+          "groups": 6,
+          "avg_waves_per_simd": 1.5,
+          "limiting": [
+            "LDS"
+          ],
+          "launch_valid": true,
+          "binary_sha256": "83bec1d3bb5b164770921cd52763d70670efa5ea12ab5f04082391abbf74e97b"
+        },
+        "score": {
+          "ir_sha256": "02a4983b8ccfd8e2f549ed066f0dc0f65398ea40e4c07d9598eb0f1f579bfd5f",
+          "path": "/data/home/chh/simplify-v2-study-nqu/build/nqu-second-fusion/followup/G2.ll",
+          "throughput": {
+            "total": 275,
+            "quote_counts": {
+              "br.conditional": {
+                "7": 10
+              },
+              "store.AS3": {
+                "1": 16
+              },
+              "br.unconditional": {
+                "4": 11
+              },
+              "phi": {
+                "1": 7
+              },
+              "load.AS3": {
+                "1": 17
+              },
+              "select": {
+                "1": 5
+              }
+            }
+          },
+          "latency": {
+            "total": 331,
+            "quote_counts": {
+              "br.conditional": {
+                "7": 10
+              },
+              "store.AS3": {
+                "1": 16
+              },
+              "br.unconditional": {
+                "4": 11
+              },
+              "phi": {
+                "0": 7
+              },
+              "load.AS3": {
+                "4": 17
+              },
+              "select": {
+                "1": 5
+              }
+            }
+          }
+        }
+      },
+      "throughput_delta": -7,
+      "latency_delta": -7,
+      "parent_policy": {
+        "selected": "latency",
+        "delta": -7
+      },
+      "either_below_policy": {
+        "selected": "latency",
+        "delta": -7
+      },
+      "gpu_ci95": [
+        0.8656919930452348,
+        0.8830709716383079
+      ],
+      "gpu_source": "14775f2 followup-retry-timing.json",
+      "agrees_with_gpu": {
+        "throughput": true,
+        "latency": true,
+        "occupancy": true,
+        "either_below": true
+      }
+    },
+    "DP2": {
+      "gpu_ratio": 1.0446047676808625,
+      "source": "5959ee1 rebuild",
+      "existing_t0": [
+        275,
+        270
+      ],
+      "parent": {
+        "resources": {
+          "group_segment_fixed_size": 10496,
+          "private_segment_fixed_size": 0,
+          "max_flat_workgroup_size": 256,
+          "sgpr_count": 22,
+          "vgpr_count": 10,
+          "wavefront_size": 64,
+          "sgpr_spill_count": 0,
+          "vgpr_spill_count": 0,
+          "arch": "gfx906",
+          "threads": 64,
+          "dynamic_lds": 0,
+          "allocated_lds": 10752,
+          "waves_per_group": 1,
+          "group_caps": {
+            "LDS": 6,
+            "VGPR": 84,
+            "SGPR": 100,
+            "hardware": 40
+          },
+          "groups": 6,
+          "avg_waves_per_simd": 1.5,
+          "limiting": [
+            "LDS"
+          ],
+          "launch_valid": true,
+          "binary_sha256": "25530a471ce5730b87ae68e730092f83663b46223b51f7b29ceaf037afca21c1"
+        },
+        "score": {
+          "ir_sha256": "6ec623904296447b6c9977cb165c90605c4b32210279aa090f97a42f8f35570a",
+          "path": "/data/home/chh/simplify-v2-study-nqu/build/nqu-second-fusion/followup/historical-dp1/final.ll",
+          "throughput": {
+            "total": 275,
+            "quote_counts": {
+              "br.conditional": {
+                "7": 10
+              },
+              "store.AS3": {
+                "1": 16
+              },
+              "br.unconditional": {
+                "4": 11
+              },
+              "phi": {
+                "1": 7
+              },
+              "select": {
+                "1": 10
+              },
+              "load.AS3": {
+                "1": 17
+              }
+            }
+          },
+          "latency": {
+            "total": 331,
+            "quote_counts": {
+              "br.conditional": {
+                "7": 10
+              },
+              "store.AS3": {
+                "1": 16
+              },
+              "br.unconditional": {
+                "4": 11
+              },
+              "phi": {
+                "0": 7
+              },
+              "select": {
+                "1": 10
+              },
+              "load.AS3": {
+                "4": 17
+              }
+            }
+          }
+        }
+      },
+      "child": {
+        "resources": {
+          "group_segment_fixed_size": 10496,
+          "private_segment_fixed_size": 0,
+          "max_flat_workgroup_size": 256,
+          "sgpr_count": 22,
+          "vgpr_count": 10,
+          "wavefront_size": 64,
+          "sgpr_spill_count": 0,
+          "vgpr_spill_count": 0,
+          "arch": "gfx906",
+          "threads": 64,
+          "dynamic_lds": 0,
+          "allocated_lds": 10752,
+          "waves_per_group": 1,
+          "group_caps": {
+            "LDS": 6,
+            "VGPR": 84,
+            "SGPR": 100,
+            "hardware": 40
+          },
+          "groups": 6,
+          "avg_waves_per_simd": 1.5,
+          "limiting": [
+            "LDS"
+          ],
+          "launch_valid": true,
+          "binary_sha256": "ede19e9480d7a0ac2e77839e346afe6392f76c6e2aaa6cde1759697f10b7aaac"
+        },
+        "score": {
+          "ir_sha256": "5fa96d34d648bdeb7956ab55d44bde9c394fb62f1ca14104fb7661226b32560c",
+          "path": "/data/home/chh/simplify-v2-study-nqu/build/nqu-second-fusion/followup/historical-dp2/final.ll",
+          "throughput": {
+            "total": 270,
+            "quote_counts": {
+              "br.conditional": {
+                "7": 10
+              },
+              "store.AS3": {
+                "1": 16
+              },
+              "br.unconditional": {
+                "4": 10
+              },
+              "phi": {
+                "1": 6
+              },
+              "select": {
+                "1": 10
+              },
+              "load.AS3": {
+                "1": 17
+              }
+            }
+          },
+          "latency": {
+            "total": 327,
+            "quote_counts": {
+              "br.conditional": {
+                "7": 10
+              },
+              "store.AS3": {
+                "1": 16
+              },
+              "br.unconditional": {
+                "4": 10
+              },
+              "phi": {
+                "0": 6
+              },
+              "select": {
+                "1": 10
+              },
+              "load.AS3": {
+                "4": 17
+              }
+            }
+          }
+        }
+      },
+      "throughput_delta": -5,
+      "latency_delta": -4,
+      "parent_policy": {
+        "selected": "latency",
+        "delta": -4
+      },
+      "either_below_policy": {
+        "selected": "latency",
+        "delta": -4
+      },
+      "agrees_with_gpu": {
+        "throughput": false,
+        "latency": false,
+        "occupancy": false,
+        "either_below": false
+      }
+    }
+  },
+  "direction_hits": {
+    "throughput": 2,
+    "latency": 2,
+    "occupancy": 2,
+    "either_below": 2
+  }
+}
