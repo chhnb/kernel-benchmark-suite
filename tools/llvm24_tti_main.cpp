@@ -42,7 +42,7 @@ struct TargetCache {
 };
 static int score(StringRef input,StringRef function,bool summaryOnly,bool compact,
                  TargetCache &targets, TargetTransformInfo::TargetCostKind costKind,
-                 bool repriceLoads) {
+                 bool repriceMemory) {
  try {
   LLVMContext ctx;SMDiagnostic diagnostic;
   auto m=parseIRFile(input,diagnostic,ctx);
@@ -82,10 +82,12 @@ static int score(StringRef input,StringRef function,bool summaryOnly,bool compac
     bool ttiValid=cost.isValid();
     auto v=ttiValid?cost.getValue():0;
     const auto nativeCost=v;
-    if (repriceLoads && ttiValid && v>=0 &&
+    if (repriceMemory && ttiValid && v>=0 &&
         (triple.isAMDGPU() || triple.isNVPTX()))
-      if (const auto *load=dyn_cast<LoadInst>(&i)) {
-        unsigned addressSpace=load->getPointerAddressSpace();
+      if (isa<LoadInst>(i) || isa<StoreInst>(i)) {
+        unsigned addressSpace=isa<LoadInst>(i)
+            ? cast<LoadInst>(i).getPointerAddressSpace()
+            : cast<StoreInst>(i).getPointerAddressSpace();
         if (addressSpace==1) v=4;
         if (addressSpace==3) v=2;
       }
@@ -119,7 +121,7 @@ static int score(StringRef input,StringRef function,bool summaryOnly,bool compac
     output["histogram"]=std::move(hist);
     output["instruction_costs"]=std::move(instructions);
   }
-  if(repriceLoads)output["load_cost_profile"]="as1-4-as3-2";
+  if(repriceMemory)output["memory_cost_profile"]="as1-4-as3-2";
   json::Value result(std::move(output));
   if(compact)outs()<<result<<'\n';
   else outs()<<formatv("{0:2}\n",result);
@@ -135,12 +137,12 @@ int main(int argc,char **argv) {
     errs()<<error.what()<<"\n";
     return 2;
   }
-  const char *loadProfile=std::getenv("FUSION_TTI_LOAD_COST_PROFILE");
+  const char *loadProfile=std::getenv("FUSION_TTI_MEMORY_COST_PROFILE");
   if(loadProfile && StringRef(loadProfile)!="native" && StringRef(loadProfile)!="as1-4-as3-2") {
-    errs()<<"FUSION_TTI_LOAD_COST_PROFILE must be native or as1-4-as3-2\n";
+    errs()<<"FUSION_TTI_MEMORY_COST_PROFILE must be native or as1-4-as3-2\n";
     return 2;
   }
-  const bool repriceLoads=loadProfile && StringRef(loadProfile)=="as1-4-as3-2";
+  const bool repriceMemory=loadProfile && StringRef(loadProfile)=="as1-4-as3-2";
   const bool fullServer=argc==3&&StringRef(argv[1])=="--serve-full";
   const bool server=fullServer||(argc==3&&StringRef(argv[1])=="--serve-summary");
   const bool summaryOnly=argc==4&&StringRef(argv[3])=="--summary-only";
@@ -150,10 +152,10 @@ int main(int argc,char **argv) {
   }
   InitializeAllTargetInfos();InitializeAllTargets();InitializeAllTargetMCs();
   TargetCache targets;
-  if(!server)return score(argv[1],argv[2],summaryOnly,false,targets,costKind,repriceLoads);
+  if(!server)return score(argv[1],argv[2],summaryOnly,false,targets,costKind,repriceMemory);
   std::string input;
   while(std::getline(std::cin,input)){
-    if(score(input,argv[2],!fullServer,true,targets,costKind,repriceLoads))outs()<<"null\n";
+    if(score(input,argv[2],!fullServer,true,targets,costKind,repriceMemory))outs()<<"null\n";
     outs().flush();
   }
   return 0;

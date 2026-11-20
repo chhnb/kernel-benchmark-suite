@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 root=$(cd "$(dirname "$0")/.." && pwd)
-if [[ ${FUSION_TTI_LOAD_COST_PROFILE:-native} != native && ${FUSION_TTI_MODE:-llvm24} != llvm24 ]]; then
-  echo "load cost profiles require FUSION_TTI_MODE=llvm24" >&2
+if [[ ${FUSION_TTI_MEMORY_COST_PROFILE:-native} != native && ${FUSION_TTI_MODE:-llvm24} != llvm24 ]]; then
+  echo "memory cost profiles require FUSION_TTI_MODE=llvm24" >&2
   exit 2
 fi
 case ${FUSION_TTI_MODE:-llvm24} in
