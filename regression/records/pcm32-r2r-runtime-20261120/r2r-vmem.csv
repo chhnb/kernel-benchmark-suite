@@ -1,0 +1,5 @@
+Index,KernelName,gpu-id,queue-id,queue-index,pid,tid,grd,wgr,lds,scr,arch_vgpr,accum_vgpr,sgpr,wave_size,sig,obj,SQ_INSTS_VMEM_RD,SQ_INSTS_VMEM_WR,SQ_INSTS_SMEM
+0,"__amd_rocclr_copyBuffer.kd",2,0,0,2772716,2772716,268435712,256,0,0,8,0,32,64,0x0,0x7f6bceca58c0,4194304,4194304,20971534
+1,"pcm(int*) [clone .kd]",2,0,2,2772716,2772716,1048576,32,65536,0,28,0,32,64,0x0,0x7f6c57ce0700,2097152,2097152,65536
+2,"__amd_rocclr_copyBuffer.kd",2,0,4,2772716,2772716,268435712,256,0,0,8,0,32,64,0x0,0x7f6bceca58c0,4194304,4194304,20971534
+3,"pcm(int*) [clone .kd]",2,0,6,2772716,2772716,1048576,32,65536,0,28,0,32,64,0x0,0x7f6c57ce0700,2097152,2097152,65536

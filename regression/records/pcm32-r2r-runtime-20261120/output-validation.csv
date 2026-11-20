@@ -1,0 +1,7 @@
+role,profiling_run,timed_median_us,full_output_passed
+parent,pmc,785044.311523438,1
+parent,trace,785106.872558594,1
+parent,vmem,784952.789306641,1
+r2r,pmc,739901.000976562,1
+r2r,trace,739992.553710938,1
+r2r,vmem,739982.696533203,1
