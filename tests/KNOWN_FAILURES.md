@@ -28,3 +28,5 @@ LLVM12 和 LLVM24 实时吞吐报价确认，原始记录保存在
 - 移除 `check-offline-tti.py`，其覆盖的 SQLite 记录、重放及实验报价档已删除。四个缺件跳过保持不变。
 
 - 移除依赖 SQLite 离线报价的 `check-guarded-b2r.py` 和 `guarded-load.ll`。默认 DARM 的测试保持运行。
+
+- 移除隔离 B2B 原型专用测试 `check-hybrid-priority.py`、`check-region-fallback.py`、`check-incremental-ir.py`，以及它们的四个元数据/活跃性单元测试、probe 和 fixtures。当前 whole-function Greedy 继续由完整发布 case 与 domain driver 测试验证。

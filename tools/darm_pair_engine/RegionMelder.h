@@ -132,7 +132,6 @@ public:
     if(RecordOrigins){unsigned I=0;for(auto &BB:*MA.getParentFunction())
       SourceBlocks.push_back({WeakVH(&BB),"B"+std::to_string(I++)});}
   }
-  bool GuardReplicatedMemory=false;
   bool NativeReplicationPredication=false;
   bool hasGuardedGap(const Instruction *instruction, bool left) const;
   std::function<void(const ValueToValueMapTy&)> onValueMapping;

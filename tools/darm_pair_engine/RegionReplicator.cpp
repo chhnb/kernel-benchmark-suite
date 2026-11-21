@@ -9,7 +9,7 @@ using namespace llvm;
 
 Region *RegionReplicator::replicate(BasicBlock *ExpandedBlock,
                                     BasicBlock *MatchedBlock,
-                                    Region *RegionToReplicate, bool PredicateStores) {
+                                    Region *RegionToReplicate) {
   // replicate the CFG of region and place the ExpandedBlock in right place
   BasicBlock *ReplicatedEntry =
       replicateCFG(ExpandedBlock, MatchedBlock, RegionToReplicate);
@@ -24,8 +24,7 @@ Region *RegionReplicator::replicate(BasicBlock *ExpandedBlock,
   // concretize the branch conditions within the replicated region
   concretizeBranchConditions(ExpandedBlock, ReplicatedR);
 
-  if (PredicateStores)
-    fullPredicateStores(MA.getRI()->getRegionFor(MatchedBlock), MatchedBlock);
+  fullPredicateStores(MA.getRI()->getRegionFor(MatchedBlock), MatchedBlock);
 
   return ReplicatedR;
 }

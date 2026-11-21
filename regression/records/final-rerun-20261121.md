@@ -9,7 +9,7 @@
 | `decision-greedy` 的 INPUT、FUNCTION、可选 TOOL_ROOT、NEW_OUTPUT；`--help` | 默认搜索接口，保留 |
 | `--b2b-strategy anchor`；`b2b_anchor`、`b2b_optimization_unit`、`b2b_unit_capsule` | 默认 B2B，保留 |
 | `--b2b-strategy darm-artifact`；`tools/darm_artifact` 的 bridge、上游工程、patch 与 provenance；独立 Auto DARM 的固定输入和入口 | 基线对照，保留 |
-| `--b2b-strategy darm` | 默认 anchor 失败时仍需项目内 DARM 发射。独立的强制布局入口与默认回退分别核查 |
+| `--b2b-strategy darm` | 发布 manifest 的项目内 DARM 独立基线，保留该入口和对应发射 |
 | 默认 `darm` B2R、R2B、R2R；`fusion_search`、`darm_pair_engine`、`logical_region_state`、`ordered_arms` | 默认路径，保留；单独检查实验分支 |
 | `--darm-legacy-flags` 及三个入口的旧行为传播 | 仅用于正确性修复前后对照，删除；保留交集逻辑及其测试 |
 | `--b2r-strategy guarded` 和对应实验发射；`compile_kernel.py` 的选择入口 | 仅用于 guarded 试验，删除实验入口与仅供该策略的逻辑；共享的安全条件保留 |
@@ -26,7 +26,7 @@
 | `runner/gpu.hpp`、`runner/options.hpp`、`runner/measurement.hpp`、`runner/replay.cpp`、各 case 的验证 harness 和 `regression/measure_anchor_gpu.py` | 进程内计时、A/A、bootstrap、输入与完整输出验证，保留 |
 | `tools/run_case.py`、`run_cpu.py`、`run_portable_benchmark.py`、`suite.py`、`run_*_regression.py`、`verify_anchor_release.py` | 发布或历史验证入口。仅改仍生效的调用，保留已冻结材料 |
 | `pair_trial`、`region_inventory`、`region_similarity` 及 build/run 包装；生成输入的 `export_*`、`migrate_*`、`freeze_*`、`setup_*`、注册/修正脚本 | 逐个检查是否服务于当前输入与历史基线；不动已冻结的结果 |
-| `audit_b2b_layouts.py`、`compact_scores.py`、`review_cpp.py`、`scripts/maintenance/prune_search_ir.py` | 非默认搜索路径。逐项确认当前归档、审计或维护调用后决定 |
+| `audit_b2b_layouts.py`、`compact_scores.py`、`review_cpp.py`、`scripts/maintenance/prune_search_ir.py` | 移除旧 DP1 的布局审计脚本。分解工具仍由历史 region similarity 的复现入口导入。保留计时报告和 IR 维护工具 |
 | DP1／DP2、DP3、DP 布局研究、静态接受规则 RIR/RIRv2/R/RB | 发布线无可选 DP1/DP2/DP3 或预注册接受规则；保留历史记录，核对是否有残留生产入口 |
 
 ## 清理前基准
@@ -38,4 +38,5 @@ EPYC 基准目录为 `/data/home/chh/simplify-v2/build/final-release.kzxLp5/base
 ### 清理提交与复验
 
 - `506e386` 删除旧 DARM 标志开关，只保留交集发射。交集测试继续覆盖整数、浮点及访存 metadata。25 项通过、4 项缺件跳过；16 例 IR、HSACO/cubin 的完整字节均与清理前一致。
-- 下一提交将实时报价固定为原有 reciprocal throughput，删除 latency 及 SQLite 记录、重放、自定义报价的试验路径和专用测试。最初测试检查发现 guarded 实验测试依赖空 SQLite 报价，改为由同一提交移除该测试及其独有的 fixture。保留默认报价的身份核对、缓存以及独立 worker。
+- `2ff9730` 将实时报价固定为原有 reciprocal throughput，删除 latency 及 SQLite 记录、重放、自定义报价的试验路径和专用测试。最初测试检查发现 guarded 实验测试依赖空 SQLite 报价，改为由同一提交移除该测试及其独有的 fixture。保留默认报价的身份核对、缓存以及独立 worker。23 项通过、4 项缺件跳过；16 例 IR、HSACO/cubin 的完整字节均与清理前一致。
+- 第三批清理移除保护 B2R 试验发射、隔离 B2B 原型、对应辅助测试、无调用的 checkpoint 入口，以及只读 worker 中从未被发布路径设定的查询参数。默认 DARM 的共享执行域和访存保护照常保留。同步更新运行文档和 PCM32 已知问题。

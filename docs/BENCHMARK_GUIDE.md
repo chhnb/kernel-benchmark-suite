@@ -47,20 +47,13 @@ python3 tools/run_cpu.py build-search-new bash /home/chh/kernel-benchmark-suite/
 
 公共入口现在位于tools；旧Saspoint5路径保留兼容转发。不要绕开配额运行重编译。
 
-Map-Airy示例（命令中所有输出必须不存在）：
+Map-Airy 完整 Greedy 示例。输出目录需使用一个新路径。
 
 ```sh
-python3 tools/run_cpu.py mapairy-search-new \
-  /home/chh/kernel-benchmark-suite/build/llvm24-tti/fusion-search-llvm24 \
-  --ir /home/chh/kernel-benchmark-suite/results/mapairy-ir-new/start.ll \
-  --function evaluate --structural 1 --scorer llvm24 \
-  --cleanup scoped-cfg --cross-decision-leaves 0 \
-  --rounds 256 --trials 100000 \
-  --debug-dir /home/chh/kernel-benchmark-suite/results/mapairy-search-new \
-  --out /home/chh/kernel-benchmark-suite/results/mapairy-fused-new.ll
+build/decision-fuse/decision-greedy INPUT.ll evaluate NEW_OUTPUT
 ```
 
-这展示使用新构建baseline的接口；正式重放冻结结果需核对IR hash与冻结baseline一致。`--cross-decision-leaves 0`只限制新增完整E叶子候选：不同/未知SSA判别值不默认加入；1显式放开，仍需合法性检查。Hypersonic复合条件的指定区域入口已显式开启。不要把该开关等同于禁止全部B2R。
+正式重放应使用发布清单中的固定输入并核对 SHA-256。 [发布重建说明](RELEASE.md#冻结材料与重建)
 
 ## 4. 统一最终后端
 

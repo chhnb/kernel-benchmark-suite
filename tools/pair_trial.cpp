@@ -59,8 +59,7 @@ int main(int argc,char**argv){
  std::unique_ptr<Module> rewritten;
  if (effectful) {
    fusion::Candidate candidate{get("function"), get("split"), get("left"), get("right")};
-   auto trial = fusion::tryPair(*M, candidate, 0, 0, fusion::CleanupMode::None, nullptr, true,
-                                fusion::B2RStrategy::Darm);
+   auto trial = fusion::tryPair(*M, candidate, 0, 0, fusion::CleanupMode::None, nullptr, true);
    if (!trial.valid) return reject(trial.reason);
    rewritten = std::move(trial.raw);
    F = rewritten->getFunction(get("function"));

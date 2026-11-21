@@ -129,11 +129,7 @@ public:
 };
 struct Options {
   CleanupMode cleanupMode=CleanupMode::DarmCFGInstCombine;
-  unsigned maxRounds=8, maxTrials=256, optLevel=3;
-  double threshold=0;
-  bool requireParentGain=true;
-  bool adjacentOnly=false;
-
+  static constexpr unsigned optLevel=3;
 };
 struct Observer {
   virtual ~Observer() = default;
@@ -149,7 +145,7 @@ Features features(llvm::Function &);
 RoundContext makeRound(const llvm::Module &, const std::string &function,
                        unsigned version, unsigned optLevel, CleanupMode mode=CleanupMode::DarmCFGInstCombine);
 ScoreResult evaluateTrial(const llvm::Module &, Trial &, const RoundContext &, const Scorer &);
-bool eligible(const Trial &, const ScoreResult &, const Options &);
+bool eligible(const Trial &, const ScoreResult &);
 // Complete E-leaves require same-SSA constant predicates unless explicitly enabled.
 std::set<std::string> crossLevelCatalogRejections(llvm::Function &,
     const std::vector<Candidate> &);
@@ -164,13 +160,10 @@ struct ResolvedCandidate {
 };
 std::vector<ResolvedCandidate> resolveCandidateCatalog(llvm::Function &, unsigned version);
 
-enum class B2RStrategy { Darm, Guarded };
-
 Trial tryPair(const llvm::Module &, const Candidate &, unsigned currentVersion,
               unsigned optLevel, CleanupMode mode=CleanupMode::DarmCFGInstCombine, const LogicalRegionState *logical=nullptr);
 Trial tryPair(const llvm::Module &, const Candidate &, unsigned currentVersion,
               unsigned optLevel, CleanupMode, const LogicalRegionState *, bool allowB2B,
-              B2RStrategy b2rStrategy=B2RStrategy::Darm, Trial *boundaryFold=nullptr,
               bool artifactB2B=false);
 std::vector<Trial> planSingleBranchB2B(const llvm::Module &, const Candidate &, CleanupMode,
                                        llvm::function_ref<int(const llvm::Instruction &)> intrinsicCost,

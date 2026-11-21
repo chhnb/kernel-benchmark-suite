@@ -124,7 +124,6 @@ struct TrialWorker {
   std::optional<RoundContext> round;
   std::unique_ptr<LLVM24Scorer> scorer;
   std::string input, function, worker;
-  unsigned level = 0;
   CleanupMode cleanup = CleanupMode::None;
   std::string quoteMode;
 };
@@ -132,14 +131,13 @@ struct TrialWorker {
 static int runSearch(int argc, const char *const *argv, TrialWorker *batch = nullptr) {
   fusion::requestProfile.clear();
   try {
-    std::string input,function,output,debug,split,left,right,replayParentHash,policy="llvm24";Options options;options.cleanupMode=CleanupMode::DarmCFGInstCombine;
+    std::string input,function,output,debug,split,left,right,replayParentHash;Options options;options.cleanupMode=CleanupMode::DarmCFGInstCombine;
     bool useArtifactB2B=false, useAnchorB2B=true;
-    B2RStrategy b2rStrategy = B2RStrategy::Darm;
     std::string quoteMode="on";
     bool fullSnapshots=true;
     bool controlOnly=false,catalogOnly=false;std::string ttiWorker="/home/chh/kernel-benchmark-suite/tools/run-llvm24-tti";
     for(int i=1;i<argc;++i){std::string k=argv[i];
-      if(k=="--help"){outs()<<"fusion-search v1 --ir FILE --function NAME --out FILE [--b2b-strategy anchor|darm|darm-artifact] [--b2r-strategy darm|guarded] [--structural 0|1] [--split ID --left ID --right ID] [--debug-dir DIR] [--ir-snapshots full|compact] [--tti-worker EXECUTABLE] [--catalog-only 0|1] [--control-only 0|1] [--rounds N] [--trials N]\n";return 0;}
+      if(k=="--help"){outs()<<"fusion-search v1 --ir FILE --function NAME --out FILE [--b2b-strategy anchor|darm|darm-artifact] [--structural 1] [--split ID --left ID --right ID] [--debug-dir DIR] [--ir-snapshots full|compact] [--tti-worker EXECUTABLE] [--catalog-only 0|1] [--control-only 0|1]\n";return 0;}
       if(i+1==argc)throw std::runtime_error("missing option value");std::string v=argv[++i];
       if(k=="--control-only"){if(v!="0"&&v!="1")throw std::runtime_error("control-only must be 0 or 1");controlOnly=v=="1";}
       else if(k=="--catalog-only"){if(v!="0"&&v!="1")throw std::runtime_error("catalog-only must be 0 or 1");catalogOnly=v=="1";}
@@ -153,11 +151,6 @@ static int runSearch(int argc, const char *const *argv, TrialWorker *batch = nul
         if(v!="off" && v!="audit" && v!="on") throw std::runtime_error("invalid TTI quote cache mode");
         quoteMode=v;
       }
-      else if(k=="--b2r-strategy"){
-        if(v!="darm" && v!="guarded")
-          throw std::runtime_error("b2r-strategy must be darm or guarded");
-        b2rStrategy=v=="guarded"?B2RStrategy::Guarded:B2RStrategy::Darm;
-      }
       else if(k=="--replay-parent-hash")replayParentHash=v;
       else if(k=="--ir")input=v;else if(k=="--function")function=v;else if(k=="--out")output=v;
       else if(k=="--b2b-strategy"){
@@ -169,14 +162,9 @@ static int runSearch(int argc, const char *const *argv, TrialWorker *batch = nul
       else if(k=="--structural"){if(v!="1")throw std::runtime_error("v1 uses structural enumeration");}
       else if(k=="--cleanup"){if(v!="darm-cfg-dce-instcombine")throw std::runtime_error("v1 cleanup is fixed to darm-cfg-dce-instcombine");}
       else if(k=="--debug-dir")debug=v;else if(k=="--split")split=v;else if(k=="--left")left=v;else if(k=="--right")right=v;
-      else if(k=="--rounds"||k=="--trials"||k=="--opt-level"){
-        size_t pos=0;auto n=std::stoul(v,&pos);if(v.empty()||v[0]=='-'||pos!=v.size()||n>1000000)throw std::runtime_error("invalid integer option");
-        if(k=="--rounds")options.maxRounds=n;else if(k=="--trials")options.maxTrials=n;else options.optLevel=n;
-      }else if(k=="--require-parent-gain"){if(v!="0"&&v!="1")throw std::runtime_error("require-parent-gain must be 0 or 1");options.requireParentGain=v=="1";}else if(k=="--threshold"){size_t pos=0;options.threshold=std::stod(v,&pos);if(pos!=v.size()||!std::isfinite(options.threshold)||options.threshold<0)throw std::runtime_error("threshold must be finite and nonnegative");}
       else throw std::runtime_error("unknown option: "+k);
     }
     if(input.empty()||function.empty()||output.empty())throw std::runtime_error("--ir, --function, --out required");
-    if(options.optLevel!=2&&options.optLevel!=3)throw std::runtime_error("opt-level must be 2 or 3");
     if(sys::fs::exists(output))throw std::runtime_error("output already exists");
     bool pair=!split.empty()||!left.empty()||!right.empty();if(pair&&(split.empty()||left.empty()||right.empty()))throw std::runtime_error("explicit pair requires all three IDs");
     if (options.cleanupMode == CleanupMode::DarmCFGInstCombine) {
@@ -198,7 +186,7 @@ static int runSearch(int argc, const char *const *argv, TrialWorker *batch = nul
           !replayParentHash.empty())
         throw std::runtime_error("worker requires explicit pair with LLVM24 scoring");
       if (batch->parent && (batch->input != input || batch->function != function ||
-          batch->worker != ttiWorker || batch->level != options.optLevel ||
+          batch->worker != ttiWorker ||
           batch->cleanup != options.cleanupMode || batch->quoteMode != quoteMode))
       {
         batch->round.reset();
@@ -221,7 +209,6 @@ static int runSearch(int argc, const char *const *argv, TrialWorker *batch = nul
         batch->input = input;
         batch->function = function;
         batch->worker = ttiWorker;
-        batch->level = options.optLevel;
         batch->cleanup = options.cleanupMode;
         batch->quoteMode = quoteMode;
         batch->parent = std::move(parsedModule);
@@ -253,11 +240,10 @@ static int runSearch(int argc, const char *const *argv, TrialWorker *batch = nul
       if(verifyModule(*module,&errs()))return 2;
       observer->initial(*module);
       const char*cleanupName="darm-cfg-dce-instcombine";
-      if(options.adjacentOnly){auto st=LogicalRegionState::initialize(*module->getFunction(function));observer->logical(0,st->json());}
       auto candidates=enumerate(*module->getFunction(function),0);json::Array entries;
       const auto rejected=crossLevelCatalogRejections(*f,candidates);
       for(const auto&c:candidates)entries.push_back(json::Object{{"logical_decision",c.logicalDecision},{"logical_left",c.logicalLeft},{"logical_right",c.logicalRight},{"candidate",c.key()},{"function",c.function},{"split",c.split},{"left",c.left},{"right",c.right},{"preflight_rejection",rejected.count(c.key())?"b2r_replicates_same_decision_chain_requires_opt_in":""}});
-      jsonFile(debug+"/catalog.json",json::Object{{"schema","postopt-candidate-catalog-v1"},{"adjacent_only",options.adjacentOnly},{"cross_decision_leaves",false},{"source_ir",input},{"function",function},
+      jsonFile(debug+"/catalog.json",json::Object{{"schema","postopt-candidate-catalog-v1"},{"adjacent_only",false},{"cross_decision_leaves",false},{"source_ir",input},{"function",function},
         {"parent_hash",moduleHash(*module)},{"cleanup",cleanupName},{"opt_level",int64_t(options.optLevel)},{"count",int64_t(candidates.size())},{"candidates",std::move(entries)},
         {"legality","not_tested"},{"score","not_evaluated"},{"semantic_validation","not_run"}});
       writeIR(*module,output);outs()<<"catalog candidates="<<candidates.size()<<"; no trials or commits\n";return 0;
@@ -276,19 +262,20 @@ static int runSearch(int argc, const char *const *argv, TrialWorker *batch = nul
     auto &llvm24Scorer = batch ? *batch->scorer : standaloneScorer;
     if(observer)jsonFile(debug+"/run.json",json::Object{
       {"schema","fusion-v1"},{"function",function},{"policy","llvm24"},
-      {"b2b_strategy",useAnchorB2B?"anchor":useArtifactB2B?"darm-artifact":"darm"},{"b2r_strategy",b2rStrategy==B2RStrategy::Guarded?"guarded":"darm"},{"r2r_strategy","darm"},
+      {"b2b_strategy",useAnchorB2B?"anchor":useArtifactB2B?"darm-artifact":"darm"},{"b2r_strategy","darm"},{"r2r_strategy","darm"},
       {"cleanup","darm-cfg-dce-instcombine"},{"phi_fold_threshold",7},
       {"initial_parent_hash",moduleHash(*module)},{"replay_parent_hash",replayParentHash},
       {"semantic_validation","not_run"}});
     const Scorer &scorer=llvm24Scorer;
-    if(pair){Candidate c{function,split,left,right,0};std::shared_ptr<LogicalRegionState> logical;if(options.adjacentOnly){logical=LogicalRegionState::initialize(*module->getFunction(function));if(observer)observer->logical(0,logical->json());auto adjacent=logical->filter(*module->getFunction(function),enumerate(*module->getFunction(function),0));bool found=false;for(auto &a:adjacent)if(a.key()==c.key()){found=true;c=a;}if(!found)throw std::runtime_error("explicit_pair_not_adjacent");}      std::optional<RoundContext> standaloneRound;
+    if(pair){Candidate c{function,split,left,right,0};
+      std::optional<RoundContext> standaloneRound;
       auto &roundStorage = batch ? batch->round : standaloneRound;
       if (!roundStorage)
         roundStorage.emplace(makeRound(*module,function,0,options.optLevel,options.cleanupMode));
       const auto &round = *roundStorage;
       if(observer)observer->round(round);
       std::vector<Trial> plans;
-      if (!logical && useAnchorB2B)
+      if (useAnchorB2B)
         plans = llvm24Scorer.planAnchorB2B(*module, c, options.cleanupMode);
       const bool plannedB2B = !plans.empty();
       Trial t;
@@ -301,7 +288,7 @@ static int runSearch(int argc, const char *const *argv, TrialWorker *batch = nul
             continue;
           auto result = profileCall("evaluate_score",[&](){return evaluateTrial(*module, plan, round, scorer);});
           if (StringRef(result.reason).startswith("tti_quote_")) throw std::runtime_error(result.reason);
-          const bool allowed = eligible(plan, result, options);
+          const bool allowed = eligible(plan, result);
           if (useAnchorB2B)
             profitability.push_back(json::Object{{"layout",plan.mergePath},{"valid",plan.valid},
                 {"eligible",allowed},{"anchor",json::Object(plan.anchorStats)},
@@ -322,41 +309,18 @@ static int runSearch(int argc, const char *const *argv, TrialWorker *batch = nul
       }
       const bool allowDarmB2B = !useAnchorB2B;
       if (!plannedB2B) {
-        Trial boundaryFold;
         t = tryPair(*module, c, 0, options.optLevel, options.cleanupMode,
-                    logical.get(), allowDarmB2B, b2rStrategy, &boundaryFold, useArtifactB2B);
+                    nullptr, allowDarmB2B, useArtifactB2B);
         if (t.valid) score = profileCall("evaluate_score",[&](){return evaluateTrial(*module, t, round, scorer);});
-        if (boundaryFold.valid) {
-          if (StringRef(score.reason).startswith("tti_quote_")) throw std::runtime_error(score.reason);
-          auto alternate = profileCall("evaluate_score",[&](){return evaluateTrial(*module, boundaryFold, round, scorer);});
-          if (StringRef(alternate.reason).startswith("tti_quote_")) throw std::runtime_error(alternate.reason);
-          json::Array layouts;
-          auto record = [&](const Trial &trial, const ScoreResult &scored) {
-            auto cost = scored.metrics.find("work_after");
-            layouts.push_back(json::Object{{"layout",trial.mergePath},
-                {"eligible",eligible(trial,scored,options)},
-                {"cost",cost==scored.metrics.end()?json::Value(nullptr):json::Value(cost->second)}});
-          };
-          record(t,score);
-          record(boundaryFold,alternate);
-          const bool originalEligible = eligible(t,score,options);
-          const bool alternateEligible = eligible(boundaryFold,alternate,options);
-          const bool betterScore = alternate.status == ScoreStatus::Scored &&
-              (score.status != ScoreStatus::Scored || alternate.total > score.total);
-          if (alternateEligible != originalEligible ? alternateEligible : betterScore) {
-            t = std::move(boundaryFold);
-            score = std::move(alternate);
-          }
-          t.layoutProfitability = std::move(layouts);
-        }
+
       }
       if (StringRef(score.reason).startswith("tti_quote_")) throw std::runtime_error(score.reason);
       if(observer)jsonFile(debug+"/tti-quote-cache.json",llvm24Scorer.quoteCacheStats());
-      if(observer)observer->trial(t,round,score,eligible(t,score,options));
+      if(observer)observer->trial(t,round,score,eligible(t,score));
       if(observer)jsonFile(debug+"/request-profile.json",profileJSON());
       if(!t.valid){errs()<<"rejected: "<<t.reason<<"\n";return 4;}
       if(score.status!=ScoreStatus::Scored)errs()<<"score unsupported; exporting legal trial: "<<score.reason<<"\n";
-      writeIR(*t.normalized,output);outs()<<"pair trial verified; static_score="<<score.total<<"; eligible="<<eligible(t,score,options)<<"; semantic validation not run\n";return 0;
+      writeIR(*t.normalized,output);outs()<<"pair trial verified; static_score="<<score.total<<"; eligible="<<eligible(t,score)<<"; semantic validation not run\n";return 0;
     }
     throw std::runtime_error("use decision-greedy for automatic search; fusion-search evaluates explicit pairs");
   }catch(const std::exception&e){errs()<<"error: "<<e.what()<<"\n";return 2;}

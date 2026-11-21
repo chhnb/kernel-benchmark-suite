@@ -64,20 +64,3 @@ The Greedy driver uses the pinned LLVM24 reciprocal-throughput TTI quotes.
 Build LLVM24 independently with `tools/build-llvm24-tti --worker-only`
 when the search host needs a prebuilt worker. See the
 [release rebuild instructions](RELEASE.md#冻结材料与重建).
-
-## B2R strategy
-
-Auto Greedy uses `--b2r-strategy darm` by default. Use
-`--b2r-strategy guarded` with `decision-greedy`, `fusion-search-llvm24`, or
-`tools/compile_kernel.py` to guard unmatched instructions in replicated
-B2R and R2B regions. A branch-only counterpart needs a guard only if its
-side can reach it and the unmatched instruction is unsafe to execute
-unconditionally. Conditional stores stay under control flow, with no
-old-value load or writeback.
-Candidate discovery, instruction alignment, cleanup, and scoring use the
-same pipeline for both strategies.
-
-When a replicated read tail and its boundary arm have matching ordered loads,
-`guarded` also tries sharing the boundary loads. The mask read stays behind
-its original path condition. The trial records both layouts and their costs
-in `layout_profitability`.
