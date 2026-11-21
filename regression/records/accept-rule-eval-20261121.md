@@ -59,7 +59,7 @@ EPYC 上的新运行目录为 `/data/home/chh/simplify-v2/build/accept-rir-v2.QJ
 
 ### 已见实例
 
-旧名单对 NQU64、TPACF 按整个 case 标注，并将区域审计及 PCM32 第 10 步所在轮次的其他候选一并标注。现用 case、融合步骤及候选坐标匹配历史记录。候选去重后仍沿用试融的实例别名。已见从 1,906 调整为 **42**，前瞻从 1,570 调整为 **3,434**，共 **3,476** 个配对。归档 PCM32 第 10 步 R2R P/M 及其变体、NQU64 第二次融合 P/C 保持已见身份，属于单独的历史配对。当前候选名单中能匹配 NQU64 G1/G2（`trial-9`），历史 P/C 及 PCM32 R2R P/M 的原配对未出现在正式名单中。历史 MapAiry #30 未匹配，发布 trace 结束于 #29。
+旧名单对 NQU64、TPACF 按整个 case 标注，并将区域审计及 PCM32 第 10 步所在轮次的其他候选一并标注。现用 case、融合步骤及候选坐标匹配历史记录。候选去重后仍沿用试融的实例别名。第一遍匹配 42 个，第二遍沿历史逐步诊断核对增加 11 个。最终已见从 1,906 调整为 **53**，前瞻从 1,570 调整为 **3,423**，共 **3,476** 个配对。两遍均用历史记录确定标签，沿用完全相同的抽样与免测名单。归档 PCM32 第 10 步 R2R P/M 及其变体、NQU64 第二次融合 P/C 保持已见身份，属于单独的历史配对。当前候选名单中能匹配 NQU64 G1/G2（`trial-9`），历史 P/C 及 PCM32 R2R P/M 的原配对未出现在正式名单中。历史 MapAiry #30 未匹配，发布 trace 结束于 #29。NQU64 历史 DP2 第 3 次 B2B 的父状态也未出现在本次 trace。 [NQU64 DP2 分析](nqu-dp2-analysis-20261115.md)
 
 | 来源 | 匹配的已见实例 |
 | --- | --- |
@@ -71,16 +71,20 @@ EPYC 上的新运行目录为 `/data/home/chh/simplify-v2/build/accept-rir-v2.QJ
 | [B2B Anchor](b2b-anchor-20261119.md)、[统一 DP](b2b-unified-dp-20261119.md) 和 [v2](b2b-anchor-v2-20261119.md) | MapAiry #1/#8/#10/#25/#27（`trial-5/110/121/252/292`） |
 | [B2B Anchor v3](b2b-anchor-v3-20261119.md) | SRAD16 和 SRAD32 各自的 #3（各 `trial-10`） |
 | NQU64 第二次融合记录，提交 `14775f2` | G1/G2（`trial-9`） |
+| [B2B DARM 与 DP1 对照](b2b-darm-vs-dp1-20261119.md) | TIGRE #5（`trial-14`）、MS32 #1（`trial-4`）、PCM32 #1（`trial-0`） |
+| [B2B Anchor 组件消融](b2b-anchor-ablation-20261120.md) | SRAD16 和 SRAD32 各自的 #1（各 `trial-1`） |
+| [Landau coherent 诊断](b2b-anchor-heldout-20261120.md) | Landau #1/#2/#3（`trial-4/26/55`） |
+| [区域融合审计 §2.1](region-fusion-audit-20261120.md) | Landau #18/#19/#20（`trial-335/349/363`）的相邻状态逐步计时 |
 
 ### 免测与排除
 
 | 标签 | 待测 | 字节相同，记为持平 | NVPTX 排除 | 合计 |
 | --- | ---: | ---: | ---: | ---: |
-| 前瞻 | 3,202 | 135 | 97 | 3,434 |
-| 已见 | 42 | 0 | 0 | 42 |
+| 前瞻 | 3,191 | 135 | 97 | 3,423 |
+| 已见 | 53 | 0 | 0 | 53 |
 | 合计 | 3,244 | 135 | 97 | 3,476 |
 
-逐一重编 135 个字节相同的配对，双方 SHA-256 均匹配原记录，并逐字节比对了 HSACO。它们的耗时比记为 1.0，五条规则的结论照常计入评估。免测分布为 MapAiry 76、Landau 43、HLLD 5、NQU64/SRAD16/SRAD32/TPACF/TIGRE 各 2、vLLM 1。NVPTX 排除分布为 SasPoint5 58、HiPIMS-George 39，97 个均跳过 GPU 测量和规则评估。gfx906 有效评估名单为前瞻 3,337、已见 42。
+逐一重编 135 个字节相同的配对，双方 SHA-256 均匹配原记录，并逐字节比对了 HSACO。它们的耗时比记为 1.0，五条规则的结论照常计入评估。免测分布为 MapAiry 76、Landau 43、HLLD 5、NQU64/SRAD16/SRAD32/TPACF/TIGRE 各 2、vLLM 1。NVPTX 排除分布为 SasPoint5 58、HiPIMS-George 39，97 个均跳过 GPU 测量和规则评估。gfx906 有效评估名单为前瞻 3,326、已见 53。
 
 ### 测量协议验证与预算
 
@@ -102,7 +106,7 @@ EPYC 上的新运行目录为 `/data/home/chh/simplify-v2/build/accept-rir-v2.QJ
 
 ### PCM32 超阈值配对
 
-第 19 轮 `trial-33`（`_Z3pcmPi:B4:H5_7:H6_7`）的 throughput TTI 为 +202，超过 128。R 与 RB 绕过预筛选后均接受。正式测量的 12 轮完整输出校验通过，耗时比为 **0.942897**，95% 区间 **[0.942828, 0.942993]**，候选快 **5.71%**。超阈值层抽到的唯一候选为实际收益，R 和 RB 各判对 1/1。该配对属于前瞻样本，单独分析时与主表共用测量。
+第 19 轮 `trial-33`（`_Z3pcmPi:B4:H5_7:H6_7`）的 throughput TTI 为 +202，超过 128。R 与 RB 绕过预筛选后均接受。正式测量的 12 轮完整输出校验通过，耗时比为 **0.942897**，95% 区间 **[0.942828, 0.942993]**，候选快 **5.71%**。超阈值层抽到的唯一候选为实际收益，R 和 RB 各判对 1/1。该配对属于前瞻样本，单独分析时与主表共用测量。正式部署的 R/RB 仍受 128 门槛限制，在主评估中拒绝此配对。
 
 ### 续测原始数据
 
@@ -110,8 +114,10 @@ EPYC 目录为 `/data/home/chh/simplify-v2/build/accept-rir-v2.QJqs83/build/batc
 
 | 文件 | SHA-256 |
 | --- | --- |
-| `relabel-summary.json` | `92d09f0fd3f59caf47950ea8dbd325c0425e846ea277dd581ddbebccc9a76435` |
-| `samples-relabelled.json` | `1464ecd6738861069418195072a8be6351c53aed7191f7a9d94d4b2fa10618e9` |
+| `relabel-summary-final.json` | `93d84d7a5b4f36a022cecf1e1bd573715d304ef3b05fe72509ee1accff0188e6` |
+| `samples-instance-final.json` | `517ca6cd1cc128fa73167caa5675464a610b641a59aab07bfd575b0f885a1e10` |
+| `relabel-summary.json`（第一次匹配） | `92d09f0fd3f59caf47950ea8dbd325c0425e846ea277dd581ddbebccc9a76435` |
+| `samples-relabelled.json`（第一次匹配） | `1464ecd6738861069418195072a8be6351c53aed7191f7a9d94d4b2fa10618e9` |
 | `byte-verified-aliases.json` | `564704ee62b1e2d493e1935b00c7dabaf52e02a14e2ac7c9326461d33f96020b` |
 | `batch-forecast.json` | `dadb69b3abb8575b1c8996ae5a101dba527edb4fc0dd1ba5b0fdf76ac69410ae` |
 | `aa/receipt.json` | `0b9b1f1860c9d33fe6a0ba62a2309234c383067b7b48ade2015068887518c853` |
