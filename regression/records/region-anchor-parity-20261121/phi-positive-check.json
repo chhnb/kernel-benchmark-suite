@@ -1,0 +1,13 @@
+[
+  {
+    "kind": "pair",
+    "left": {
+      "ir": "  %lp = phi i32 [ %moved.phi3, %unify.bb ], [ 1, %left ]",
+      "ordinal": 1
+    },
+    "right": {
+      "ir": "  %rp = phi i32 [ %moved.phi6, %unify.bb ], [ 1, %right ]",
+      "ordinal": 1
+    }
+  }
+]
