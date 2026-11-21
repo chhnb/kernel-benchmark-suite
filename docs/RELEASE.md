@@ -15,6 +15,8 @@ GPU 使用已固定的规则。每批计划 12 轮，轮内交错 baseline、A�
 
 ## 结果
 
+DARM 合并默认对共享指令的 IR 标志和 metadata 取交集。16 个发布用例的 HSACO／CUDA cubin 与旧版逐字节一致。HLLD 的最终 IR 少一条内部逻辑臂附件。`--darm-legacy-flags` 仅用于对照。 [修复记录](../regression/records/darm-merge-flags-20261121.md)
+
 16 个 IR case（九个设计 case 和七个可运行留出 case）的完整 Greedy 均获 LLVM verifier 通过。与 `97227b3` 对应策略相比，默认 anchor 和显式 `darm` 各 16/16 的最终 IR、HSACO 或 CUDA cubin 逐字节一致。测试 26 项通过，四个已知缺件测试按 KNOWN_FAILURES 跳过，专用 recipe 测试随 DP1 删除。
 
 | GPU case | 完整输出 | anchor/DP1 | 95% 区间 | 第二层结果 | anchor/baseline |
