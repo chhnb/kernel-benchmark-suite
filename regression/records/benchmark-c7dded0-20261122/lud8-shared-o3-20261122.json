@@ -1,0 +1,52 @@
+{
+  "status": "complete",
+  "shared_input_sha256": "a52a8746779c561db1be7bc66026508f909e9eeba2223c966d7fe201435782b9",
+  "repeats": 5,
+  "output_fingerprint": "99f686c239322d34",
+  "variants": {
+    "baseline": {
+      "raw_tti": 819,
+      "o3_tti": 664,
+      "o3_ir_sha256": "85cb62d8ab30e8c00243edfd000e34a912961982e70013920d6adfa7cccd4922",
+      "device_sha256": "31832b93fb5c38fdb65702a1a2f57692cb88d17c0757ee9ecb49b438e1d7766a",
+      "samples_ms": [
+        513.176331,
+        524.736572,
+        510.01001,
+        512.936401,
+        510.066406
+      ]
+    },
+    "anchor": {
+      "raw_tti": 735,
+      "o3_tti": 636,
+      "o3_ir_sha256": "634c4c847d29b6709e1708ecc9ef509146c563970f0fd522383cf598478dd2ac",
+      "device_sha256": "391b2842dc1712aa86e5efd6c16b4aa579c27e3f5d55d70235052d7582343972",
+      "samples_ms": [
+        503.127686,
+        505.106598,
+        506.363586,
+        499.384216,
+        503.395996
+      ]
+    },
+    "darm": {
+      "raw_tti": 814,
+      "o3_tti": 590,
+      "o3_ir_sha256": "be6d9e6446e129c2e97111a37f49245e07e2cef2125fcc9b767f83b6baad6eb5",
+      "device_sha256": "be3909b678302105ac8b3e31fed2494f974c726cb219d0b8150dcc285d606195",
+      "samples_ms": [
+        466.336029,
+        460.899719,
+        468.796356,
+        471.687622,
+        472.648438
+      ]
+    }
+  },
+  "medians_ms": {
+    "baseline": 512.936401,
+    "anchor": 503.395996,
+    "darm": 468.796356
+  }
+}

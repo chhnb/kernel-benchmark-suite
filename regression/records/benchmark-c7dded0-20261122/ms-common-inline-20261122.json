@@ -1,0 +1,268 @@
+{
+  "status": "complete",
+  "source_commit": "c7dded07a2a0d528c4a2b7ece1c7493e22d2758e",
+  "repetitions": 5,
+  "profile": "Clang O0 without optnone, GVN/mem2reg, constexpr lowering, getIdx and HIP coordinate accessor always-inline on shared IR",
+  "results": {
+    "MS32": {
+      "status": "validated",
+      "common_ir_sha256": "733e2871eaf3272ed07c2761eae805ac7ce7c78bab6b61d6e7a260cdec3995f6",
+      "precompat_ir_sha256": "c806639c932f7f337e0909f6df56a900a201fb614328ae6f599ca96311100ab3",
+      "compat_ir_sha256": "0c7171872a1098fdaee6a29e3f78822a03b988fdf5601f7fda5c03f76cc018b3",
+      "parts": {
+        "baseline": {
+          "input_ir_sha256": "733e2871eaf3272ed07c2761eae805ac7ce7c78bab6b61d6e7a260cdec3995f6",
+          "final_ir_sha256": "7718520f055f467cdca5f385984497e8fcccf4c85232e115230ae22a0d24dcbb",
+          "application_sha256": "763cdac8e8accdcf8906264ee577acc25b00b208a00214bfe206cb54dcce3dc6",
+          "code_object_sha256": "815bd21b601055495ded47d6862574be825ffdf2783b6325994d62f5ead83b5e"
+        },
+        "anchor": {
+          "input_ir_sha256": "733e2871eaf3272ed07c2761eae805ac7ce7c78bab6b61d6e7a260cdec3995f6",
+          "final_ir_sha256": "cc1b68461373b441153038c18bcb4f221e0f6d0d180278716b0a752ca71aa6da",
+          "application_sha256": "3c5b0266d1c63f8f656ac74a6057c96fc24274cb32f5f53fe3b0e42965c732a8",
+          "code_object_sha256": "c322c6f9059e4e0fc9736968896da7a692f12fdf528bb96198b1aa5e75da2d64",
+          "commits": 2,
+          "trials": 4,
+          "initial_cost": 370,
+          "final_cost": 198
+        },
+        "darm": {
+          "input_ir_sha256": "733e2871eaf3272ed07c2761eae805ac7ce7c78bab6b61d6e7a260cdec3995f6",
+          "final_ir_sha256": "8f5713c548ea220ef27c27a1388b6063df0d2f0cc67450d2ac1991c9245ed7e5",
+          "application_sha256": "62660a2577e5b9fef832428ed1a2784268267df4a65f599f21865a33ae2137a5",
+          "code_object_sha256": "70d7fe4ae1a5595ba3f819ca82ab98ba777d9fd4a6bea167e39b334abbe2bddd"
+        }
+      },
+      "invalid": {},
+      "expected_fingerprint": "fddb14ad974b8b4f",
+      "samples_ms": {
+        "baseline": [
+          1190.77,
+          1184.15,
+          1187.15,
+          1185.01,
+          1186.72
+        ],
+        "anchor": [
+          933.369,
+          928.257,
+          925.825,
+          933.505,
+          928.013
+        ],
+        "darm": [
+          1059.7,
+          1058.1,
+          1052.67,
+          1057.99,
+          1060.78
+        ]
+      },
+      "medians_ms": {
+        "baseline": 1186.72,
+        "anchor": 928.257,
+        "darm": 1058.1
+      },
+      "ratios": {
+        "anchor/darm": 0.8772866458746811,
+        "anchor/baseline": 0.7822038897128218,
+        "darm/baseline": 0.8916172306862612
+      }
+    },
+    "MS64": {
+      "status": "validated",
+      "common_ir_sha256": "ad2c6726fd3cee18f6d277066f2e4af9f5cdaaf4f5a6c0d710ffe707026f3dba",
+      "precompat_ir_sha256": "c806639c932f7f337e0909f6df56a900a201fb614328ae6f599ca96311100ab3",
+      "compat_ir_sha256": "0c7171872a1098fdaee6a29e3f78822a03b988fdf5601f7fda5c03f76cc018b3",
+      "parts": {
+        "baseline": {
+          "input_ir_sha256": "ad2c6726fd3cee18f6d277066f2e4af9f5cdaaf4f5a6c0d710ffe707026f3dba",
+          "final_ir_sha256": "70816ecf55469febbbec1c9dbfe8cb73a7dd51c51a0179ea5cd614f066df980e",
+          "application_sha256": "617aeb15e52154557ad2905a7dda25f175858edfc4da5b792a3de6329e9541e3",
+          "code_object_sha256": "815bd21b601055495ded47d6862574be825ffdf2783b6325994d62f5ead83b5e"
+        },
+        "anchor": {
+          "input_ir_sha256": "ad2c6726fd3cee18f6d277066f2e4af9f5cdaaf4f5a6c0d710ffe707026f3dba",
+          "final_ir_sha256": "e7afe3b7b7886b88bc01d5ec9be78e522440b666f6c49c4c0811628f58458197",
+          "application_sha256": "dd112f3eace8bfaeebd2329a98c25811aec2bdac8205e5a3c57645e659cf0e25",
+          "code_object_sha256": "c322c6f9059e4e0fc9736968896da7a692f12fdf528bb96198b1aa5e75da2d64",
+          "commits": 2,
+          "trials": 4,
+          "initial_cost": 370,
+          "final_cost": 198
+        },
+        "darm": {
+          "input_ir_sha256": "ad2c6726fd3cee18f6d277066f2e4af9f5cdaaf4f5a6c0d710ffe707026f3dba",
+          "final_ir_sha256": "7721fd8b1fa1533b021e3a40499bd7d64d9cfbbb45479eb7732aa2a8d3696b80",
+          "application_sha256": "a64fa0fa60b29a4170a8fb2c8db2e4aeee381b54164d931b973e39a5754c6b12",
+          "code_object_sha256": "70d7fe4ae1a5595ba3f819ca82ab98ba777d9fd4a6bea167e39b334abbe2bddd"
+        }
+      },
+      "invalid": {},
+      "expected_fingerprint": "fddb14ad974b8b4f",
+      "samples_ms": {
+        "baseline": [
+          1191.48,
+          1185.48,
+          1187.47,
+          1193.17,
+          1183.4
+        ],
+        "anchor": [
+          936.27,
+          932.539,
+          934.885,
+          936.418,
+          932.188
+        ],
+        "darm": [
+          1064.09,
+          1059.82,
+          1063.25,
+          1058.42,
+          1063.53
+        ]
+      },
+      "medians_ms": {
+        "baseline": 1187.47,
+        "anchor": 934.885,
+        "darm": 1063.25
+      },
+      "ratios": {
+        "anchor/darm": 0.8792711027509993,
+        "anchor/baseline": 0.7872914684160441,
+        "darm/baseline": 0.8953910414578894
+      }
+    },
+    "MS128": {
+      "status": "validated",
+      "common_ir_sha256": "23bd259b544df89583f5d280c7ee82a2f583d72cff8f603f2f1774c51595dd19",
+      "precompat_ir_sha256": "c806639c932f7f337e0909f6df56a900a201fb614328ae6f599ca96311100ab3",
+      "compat_ir_sha256": "0c7171872a1098fdaee6a29e3f78822a03b988fdf5601f7fda5c03f76cc018b3",
+      "parts": {
+        "baseline": {
+          "input_ir_sha256": "23bd259b544df89583f5d280c7ee82a2f583d72cff8f603f2f1774c51595dd19",
+          "final_ir_sha256": "f3cdbe47451958f4d2745f54e5d45d3b3539642a96907726fbfef4aff4fd21d6",
+          "application_sha256": "5758af75d0d96ee018d05d26ff59450d93f7c3936c7d78cf9d78e6fa1144a9b6",
+          "code_object_sha256": "815bd21b601055495ded47d6862574be825ffdf2783b6325994d62f5ead83b5e"
+        },
+        "anchor": {
+          "input_ir_sha256": "23bd259b544df89583f5d280c7ee82a2f583d72cff8f603f2f1774c51595dd19",
+          "final_ir_sha256": "01c8be0f384bcd6000e4d470bb1c59588433ef266969efe0db252434ffb4825e",
+          "application_sha256": "a2ea3dd958818e95cd7d040815b0b8c6f1bd4f2da2dba1d26c3da189a61397d2",
+          "code_object_sha256": "c322c6f9059e4e0fc9736968896da7a692f12fdf528bb96198b1aa5e75da2d64",
+          "commits": 2,
+          "trials": 4,
+          "initial_cost": 370,
+          "final_cost": 198
+        },
+        "darm": {
+          "input_ir_sha256": "23bd259b544df89583f5d280c7ee82a2f583d72cff8f603f2f1774c51595dd19",
+          "final_ir_sha256": "75a6b67de8a82432baa7c83010260c4479f960339445e0b94ff184ccd0cbda09",
+          "application_sha256": "4d47f5b0df739cff9488b6ddc4ea8ad48520b7b8da03f70749c010f47edb64d7",
+          "code_object_sha256": "70d7fe4ae1a5595ba3f819ca82ab98ba777d9fd4a6bea167e39b334abbe2bddd"
+        }
+      },
+      "invalid": {},
+      "expected_fingerprint": "fddb14ad974b8b4f",
+      "samples_ms": {
+        "baseline": [
+          1202.87,
+          1196.0,
+          1193.4,
+          1192.73,
+          1204.2
+        ],
+        "anchor": [
+          947.702,
+          942.203,
+          942.753,
+          952.709,
+          949.152
+        ],
+        "darm": [
+          1071.08,
+          1071.72,
+          1072.17,
+          1073.56,
+          1071.64
+        ]
+      },
+      "medians_ms": {
+        "baseline": 1196.0,
+        "anchor": 947.702,
+        "darm": 1071.72
+      },
+      "ratios": {
+        "anchor/darm": 0.8842813421416041,
+        "anchor/baseline": 0.7923929765886287,
+        "darm/baseline": 0.8960869565217392
+      }
+    },
+    "MS256": {
+      "status": "validated",
+      "common_ir_sha256": "f9689f0898fce4c1f7630df31ba74bf065995ee7ed8b9ea2e9feea4a715b2fc5",
+      "precompat_ir_sha256": "c806639c932f7f337e0909f6df56a900a201fb614328ae6f599ca96311100ab3",
+      "compat_ir_sha256": "0c7171872a1098fdaee6a29e3f78822a03b988fdf5601f7fda5c03f76cc018b3",
+      "parts": {
+        "baseline": {
+          "input_ir_sha256": "f9689f0898fce4c1f7630df31ba74bf065995ee7ed8b9ea2e9feea4a715b2fc5",
+          "final_ir_sha256": "ab721149188f0c81cee388a2397ef4ee6a866492457f553ea264becd1936d346",
+          "application_sha256": "ffac968738e75ae1d916b2a8381c5d84f4345c9eec60c5a9cd97b0db6b59b761",
+          "code_object_sha256": "815bd21b601055495ded47d6862574be825ffdf2783b6325994d62f5ead83b5e"
+        },
+        "anchor": {
+          "input_ir_sha256": "f9689f0898fce4c1f7630df31ba74bf065995ee7ed8b9ea2e9feea4a715b2fc5",
+          "final_ir_sha256": "16bc60fe6f9fed0c24bfc8f8254e63807b7999ece19cc882be5bf0cda0986012",
+          "application_sha256": "db2528615ffdd89a0e5091f4d73606089559d989df380fc8231f1350bdd0f0e8",
+          "code_object_sha256": "c322c6f9059e4e0fc9736968896da7a692f12fdf528bb96198b1aa5e75da2d64",
+          "commits": 2,
+          "trials": 4,
+          "initial_cost": 370,
+          "final_cost": 198
+        },
+        "darm": {
+          "input_ir_sha256": "f9689f0898fce4c1f7630df31ba74bf065995ee7ed8b9ea2e9feea4a715b2fc5",
+          "final_ir_sha256": "8c72a63c9173eefaf548f44ceca8a9da5b7c0ed06726daf7135ba03312017cb3",
+          "application_sha256": "f6815e6e33d1423b53c9ab52c508208952032f89a7f7b6131b3e7eec031cc69f",
+          "code_object_sha256": "70d7fe4ae1a5595ba3f819ca82ab98ba777d9fd4a6bea167e39b334abbe2bddd"
+        }
+      },
+      "invalid": {},
+      "expected_fingerprint": "fddb14ad974b8b4f",
+      "samples_ms": {
+        "baseline": [
+          1207.5,
+          1206.64,
+          1202.22,
+          1204.5,
+          1211.21
+        ],
+        "anchor": [
+          961.221,
+          957.358,
+          952.665,
+          957.201,
+          955.501
+        ],
+        "darm": [
+          1081.88,
+          1085.81,
+          1084.2,
+          1082.18,
+          1084.75
+        ]
+      },
+      "medians_ms": {
+        "baseline": 1206.64,
+        "anchor": 957.201,
+        "darm": 1084.2
+      },
+      "ratios": {
+        "anchor/darm": 0.8828638627559491,
+        "anchor/baseline": 0.7932780282437181,
+        "darm/baseline": 0.8985281442683816
+      }
+    }
+  }
+}

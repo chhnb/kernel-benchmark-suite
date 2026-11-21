@@ -122,3 +122,7 @@ EPYC 目录为 `/data/home/chh/simplify-v2/build/normalize-commit.cZRDHj/`。逐
 EPYC 重新构建 driver，测试矩阵 16 项通过、4 项按 `tests/KNOWN_FAILURES` 跳过。16 个发布 case 分别以默认配置和显式关闭运行完整 Greedy。32 份最终 IR 均通过 LLVM verifier。每个 case 的默认最终 IR 和 HSACO／cubin 均与本记录原开启档逐字节一致，显式关闭的产物均与原关闭档逐字节一致。复验收据为同一实验目录下的 `default-parity/results.json`。
 
 GPU 时比沿用上面的四角色批次。NQU64 默认产物沿用已核对的 G1 对象。TPACF 新 HSACO 的两次 A/A 均超限，性能方向仍未确定。
+
+## 后续全量性能复验
+
+[基于 `c7dded0` 的两套全量对照、逐次数据和跑法](benchmark-c7dded0-20261122.md)记录了发布套件 3+15 复测、原 DARM artifact 复现、Anchor 对照及同 IR 的 MS 重测。

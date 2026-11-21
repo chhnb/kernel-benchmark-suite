@@ -1,0 +1,896 @@
+{
+  "status": "complete",
+  "roles": [
+    "baseline",
+    "branch_fusion",
+    "darm"
+  ],
+  "build": {
+    "BIT32": {},
+    "BIT64": {},
+    "BIT128": {},
+    "BIT256": {},
+    "PCM32": {},
+    "PCM64": {},
+    "PCM128": {},
+    "PCM256": {},
+    "DCT4": {},
+    "DCT8": {},
+    "DCT16": {},
+    "MS32": {},
+    "MS64": {},
+    "MS128": {},
+    "MS256": {},
+    "LUD8": {},
+    "LUD16": {},
+    "LUD32": {},
+    "LUD64": {},
+    "SRAD16": {},
+    "SRAD32": {},
+    "NQU64": {},
+    "NQU96": {},
+    "NQU128": {},
+    "NQU256": {}
+  },
+  "pass_sha256": "99fcb66d33562b1506a6a1bebaab8de9902f816a2aec9c04ef033c855f888324",
+  "results": {
+    "BIT32": {
+      "measurements_ms": {
+        "baseline": [
+          6.46109,
+          6.47054,
+          6.46686,
+          6.46815,
+          6.4646
+        ],
+        "branch_fusion": [
+          6.47039,
+          6.47213,
+          6.46511,
+          6.46844,
+          6.48751
+        ],
+        "darm": [
+          5.75839,
+          5.79103,
+          5.75183,
+          5.75055,
+          5.7523
+        ]
+      },
+      "status": "validated",
+      "full_output_fingerprint": "47857dcb24b12689",
+      "medians_ms": {
+        "baseline": 6.46686,
+        "branch_fusion": 6.47039,
+        "darm": 5.7523
+      },
+      "speedup": {
+        "branch_fusion": 0.9994544378314135,
+        "darm": 1.1242216157015454
+      }
+    },
+    "BIT64": {
+      "measurements_ms": {
+        "baseline": [
+          4.66655,
+          4.65343,
+          4.65711,
+          4.6579,
+          4.65599
+        ],
+        "branch_fusion": [
+          4.65453,
+          4.65631,
+          4.65805,
+          4.65552,
+          4.65693
+        ],
+        "darm": [
+          3.29583,
+          3.29327,
+          3.30798,
+          3.29183,
+          3.28463
+        ]
+      },
+      "status": "validated",
+      "full_output_fingerprint": "68060d36501bad09",
+      "medians_ms": {
+        "baseline": 4.65711,
+        "branch_fusion": 4.65631,
+        "darm": 3.29327
+      },
+      "speedup": {
+        "branch_fusion": 1.000171809866611,
+        "darm": 1.4141294215172155
+      }
+    },
+    "BIT128": {
+      "measurements_ms": {
+        "baseline": [
+          5.62862,
+          5.62333,
+          5.62573,
+          5.62444,
+          5.62621
+        ],
+        "branch_fusion": [
+          5.63198,
+          5.62287,
+          5.62109,
+          5.62222,
+          5.61965
+        ],
+        "darm": [
+          4.28606,
+          4.28319,
+          4.30351,
+          4.28175,
+          4.28974
+        ]
+      },
+      "status": "validated",
+      "full_output_fingerprint": "1d6afbcccb631009",
+      "medians_ms": {
+        "baseline": 5.62573,
+        "branch_fusion": 5.62222,
+        "darm": 4.28606
+      },
+      "speedup": {
+        "branch_fusion": 1.0006243085471573,
+        "darm": 1.3125644531341139
+      }
+    },
+    "BIT256": {
+      "measurements_ms": {
+        "baseline": [
+          6.51949,
+          6.5246,
+          6.56093,
+          6.52736,
+          6.54092
+        ],
+        "branch_fusion": [
+          6.57613,
+          6.52253,
+          6.56495,
+          6.52093,
+          6.56239
+        ],
+        "darm": [
+          5.26125,
+          5.25662,
+          5.26527,
+          5.26511,
+          5.26975
+        ]
+      },
+      "status": "validated",
+      "full_output_fingerprint": "6a69d276c79d2f09",
+      "medians_ms": {
+        "baseline": 6.52736,
+        "branch_fusion": 6.56239,
+        "darm": 5.26511
+      },
+      "speedup": {
+        "branch_fusion": 0.9946620057631442,
+        "darm": 1.2397385809603219
+      }
+    },
+    "PCM32": {
+      "measurements_ms": {
+        "baseline": [
+          893.335,
+          893.241,
+          893.436,
+          893.408,
+          893.215
+        ],
+        "branch_fusion": [
+          708.194,
+          708.211,
+          708.27,
+          708.21,
+          708.245
+        ],
+        "darm": [
+          650.678,
+          650.578,
+          650.661,
+          650.757,
+          650.544
+        ]
+      },
+      "status": "validated",
+      "full_output_fingerprint": "91086d0f56c9eab2",
+      "medians_ms": {
+        "baseline": 893.335,
+        "branch_fusion": 708.211,
+        "darm": 650.661
+      },
+      "speedup": {
+        "branch_fusion": 1.2613966741550189,
+        "darm": 1.3729653383251803
+      }
+    },
+    "PCM64": {
+      "measurements_ms": {
+        "baseline": [
+          1020.28,
+          1020.28,
+          1020.23,
+          1020.37,
+          1020.31
+        ],
+        "branch_fusion": [
+          863.606,
+          863.575,
+          863.605,
+          863.689,
+          863.544
+        ],
+        "darm": [
+          780.1,
+          780.0,
+          780.071,
+          779.979,
+          780.015
+        ]
+      },
+      "status": "validated",
+      "full_output_fingerprint": "51cedfea4eeeb5db",
+      "medians_ms": {
+        "baseline": 1020.28,
+        "branch_fusion": 863.605,
+        "darm": 780.015
+      },
+      "speedup": {
+        "branch_fusion": 1.1814197462960496,
+        "darm": 1.3080261277026723
+      }
+    },
+    "PCM128": {
+      "measurements_ms": {
+        "baseline": [
+          1140.73,
+          1140.67,
+          1140.6,
+          1140.78,
+          1140.71
+        ],
+        "branch_fusion": [
+          929.352,
+          929.329,
+          929.393,
+          929.357,
+          929.397
+        ],
+        "darm": [
+          943.776,
+          943.746,
+          943.706,
+          953.396,
+          943.762
+        ]
+      },
+      "status": "validated",
+      "full_output_fingerprint": "503155b46b3ff387",
+      "medians_ms": {
+        "baseline": 1140.71,
+        "branch_fusion": 929.357,
+        "darm": 943.762
+      },
+      "speedup": {
+        "branch_fusion": 1.2274185270030786,
+        "darm": 1.2086839690515194
+      }
+    },
+    "PCM256": {
+      "measurements_ms": {
+        "baseline": [
+          1644.58,
+          1644.57,
+          1644.61,
+          1644.58,
+          1644.57
+        ],
+        "branch_fusion": [
+          1604.31,
+          1604.16,
+          1604.2,
+          1604.23,
+          1604.24
+        ],
+        "darm": [
+          1467.52,
+          1467.03,
+          1467.24,
+          1467.24,
+          1467.26
+        ]
+      },
+      "status": "validated",
+      "full_output_fingerprint": "8064b56ceda1c2e6",
+      "medians_ms": {
+        "baseline": 1644.58,
+        "branch_fusion": 1604.23,
+        "darm": 1467.24
+      },
+      "speedup": {
+        "branch_fusion": 1.0251522537292033,
+        "darm": 1.1208663885935497
+      }
+    },
+    "DCT4": {
+      "measurements_ms": {
+        "baseline": [
+          151.044,
+          151.064,
+          151.043,
+          151.16,
+          151.046
+        ],
+        "branch_fusion": [
+          151.111,
+          151.067,
+          151.064,
+          151.05,
+          150.996
+        ],
+        "darm": [
+          151.06,
+          151.072,
+          151.017,
+          150.995,
+          150.991
+        ]
+      },
+      "status": "validated",
+      "full_output_fingerprint": "bc65498b1c428ef4",
+      "medians_ms": {
+        "baseline": 151.046,
+        "branch_fusion": 151.064,
+        "darm": 151.017
+      },
+      "speedup": {
+        "branch_fusion": 0.9998808452046815,
+        "darm": 1.0001920313607078
+      }
+    },
+    "DCT8": {
+      "measurements_ms": {
+        "baseline": [
+          38.9284,
+          38.9114,
+          38.8935,
+          38.9745,
+          38.973
+        ],
+        "branch_fusion": [
+          38.9879,
+          38.9968,
+          38.9984,
+          39.006,
+          38.9211
+        ],
+        "darm": [
+          38.8878,
+          38.9733,
+          38.9944,
+          38.8851,
+          39.0342
+        ]
+      },
+      "status": "validated",
+      "full_output_fingerprint": "db1c8702df93557a",
+      "medians_ms": {
+        "baseline": 38.9284,
+        "branch_fusion": 38.9968,
+        "darm": 38.9733
+      },
+      "speedup": {
+        "branch_fusion": 0.9982460099290199,
+        "darm": 0.9988479292233401
+      }
+    },
+    "DCT16": {
+      "measurements_ms": {
+        "baseline": [
+          14.6485,
+          14.6248,
+          14.6212,
+          14.6136,
+          14.6076
+        ],
+        "branch_fusion": [
+          14.4433,
+          14.4496,
+          14.4457,
+          14.5262,
+          14.5064
+        ],
+        "darm": [
+          14.4844,
+          14.4995,
+          14.552,
+          14.6022,
+          14.4947
+        ]
+      },
+      "status": "validated",
+      "full_output_fingerprint": "6e5938cc35470638",
+      "medians_ms": {
+        "baseline": 14.6212,
+        "branch_fusion": 14.4496,
+        "darm": 14.4995
+      },
+      "speedup": {
+        "branch_fusion": 1.011875761266748,
+        "darm": 1.0083933928756164
+      }
+    },
+    "MS32": {
+      "measurements_ms": {
+        "baseline": [
+          1212.58,
+          1212.25,
+          1211.82,
+          1212.56,
+          1211.5
+        ],
+        "branch_fusion": [
+          955.768,
+          950.45,
+          945.736,
+          950.155,
+          950.699
+        ],
+        "darm": [
+          950.351,
+          954.596,
+          947.645,
+          953.89,
+          952.771
+        ]
+      },
+      "status": "validated",
+      "full_output_fingerprint": "fddb14ad974b8b4f",
+      "medians_ms": {
+        "baseline": 1212.25,
+        "branch_fusion": 950.45,
+        "darm": 952.771
+      },
+      "speedup": {
+        "branch_fusion": 1.2754484717765269,
+        "darm": 1.27234141257448
+      }
+    },
+    "MS64": {
+      "measurements_ms": {
+        "baseline": [
+          1213.15,
+          1216.76,
+          1216.5,
+          1213.72,
+          1216.86
+        ],
+        "branch_fusion": [
+          959.913,
+          948.766,
+          954.448,
+          963.51,
+          961.405
+        ],
+        "darm": [
+          956.48,
+          961.021,
+          960.922,
+          960.144,
+          959.814
+        ]
+      },
+      "status": "validated",
+      "full_output_fingerprint": "fddb14ad974b8b4f",
+      "medians_ms": {
+        "baseline": 1216.5,
+        "branch_fusion": 959.913,
+        "darm": 960.144
+      },
+      "speedup": {
+        "branch_fusion": 1.267302349275403,
+        "darm": 1.2669974503824426
+      }
+    },
+    "MS128": {
+      "measurements_ms": {
+        "baseline": [
+          1214.33,
+          1217.33,
+          1219.49,
+          1217.73,
+          1220.6
+        ],
+        "branch_fusion": [
+          964.782,
+          971.944,
+          969.545,
+          972.079,
+          966.415
+        ],
+        "darm": [
+          960.027,
+          964.661,
+          959.838,
+          960.652,
+          963.792
+        ]
+      },
+      "status": "validated",
+      "full_output_fingerprint": "fddb14ad974b8b4f",
+      "medians_ms": {
+        "baseline": 1217.73,
+        "branch_fusion": 969.545,
+        "darm": 960.652
+      },
+      "speedup": {
+        "branch_fusion": 1.2559808982563987,
+        "darm": 1.2676078330134117
+      }
+    },
+    "MS256": {
+      "measurements_ms": {
+        "baseline": [
+          1223.19,
+          1222.34,
+          1225.83,
+          1222.36,
+          1225.94
+        ],
+        "branch_fusion": [
+          978.813,
+          982.395,
+          979.797,
+          972.396,
+          979.007
+        ],
+        "darm": [
+          978.692,
+          978.207,
+          985.314,
+          983.717,
+          969.569
+        ]
+      },
+      "status": "validated",
+      "full_output_fingerprint": "fddb14ad974b8b4f",
+      "medians_ms": {
+        "baseline": 1223.19,
+        "branch_fusion": 979.007,
+        "darm": 978.692
+      },
+      "speedup": {
+        "branch_fusion": 1.2494190542049242,
+        "darm": 1.2498211899147025
+      }
+    },
+    "LUD8": {
+      "measurements_ms": {
+        "baseline": [
+          524.097046,
+          514.246216,
+          517.070862,
+          526.262024,
+          521.972717
+        ],
+        "branch_fusion": [
+          456.854248,
+          460.08374,
+          455.119354,
+          453.224518,
+          451.508728
+        ],
+        "darm": [
+          451.841583,
+          457.024017,
+          455.134827,
+          455.316925,
+          459.911041
+        ]
+      },
+      "status": "validated",
+      "full_output_fingerprint": "99f686c239322d34",
+      "medians_ms": {
+        "baseline": 521.972717,
+        "branch_fusion": 455.119354,
+        "darm": 455.316925
+      },
+      "speedup": {
+        "branch_fusion": 1.1468919359557712,
+        "darm": 1.1463942769094295
+      }
+    },
+    "LUD16": {
+      "measurements_ms": {
+        "baseline": [
+          262.893036,
+          262.780548,
+          262.602234,
+          262.629395,
+          262.869476
+        ],
+        "branch_fusion": [],
+        "darm": []
+      },
+      "status": "output_mismatch",
+      "full_output_fingerprint": "8707a2327c4af95e",
+      "invalid_roles": {
+        "branch_fusion": "Full output differs: /data/home/chh/simplify-v2/build/darm-paper-repro.AtXc3N/runs/LUD16/branch_fusion-1.log: 4092fb72bf7d2609 versus 8707a2327c4af95e",
+        "darm": "Full output differs: /data/home/chh/simplify-v2/build/darm-paper-repro.AtXc3N/runs/LUD16/darm-1.log: 4092fb72bf7d2609 versus 8707a2327c4af95e"
+      },
+      "medians_ms": {
+        "baseline": 262.780548
+      },
+      "speedup": {}
+    },
+    "LUD32": {
+      "measurements_ms": {
+        "baseline": [
+          289.559753,
+          286.921509,
+          289.939392,
+          290.176178,
+          290.082611
+        ],
+        "branch_fusion": [],
+        "darm": []
+      },
+      "status": "output_mismatch",
+      "full_output_fingerprint": "84dcdb4e8d8926f6",
+      "invalid_roles": {
+        "branch_fusion": "Full output differs: /data/home/chh/simplify-v2/build/darm-paper-repro.AtXc3N/runs/LUD32/branch_fusion-1.log: e87f70930769d8a4 versus 84dcdb4e8d8926f6",
+        "darm": "Full output differs: /data/home/chh/simplify-v2/build/darm-paper-repro.AtXc3N/runs/LUD32/darm-1.log: e87f70930769d8a4 versus 84dcdb4e8d8926f6"
+      },
+      "medians_ms": {
+        "baseline": 289.939392
+      },
+      "speedup": {}
+    },
+    "LUD64": {
+      "measurements_ms": {
+        "baseline": [
+          262.501526,
+          262.77063,
+          262.941772,
+          263.891266,
+          263.412689
+        ],
+        "branch_fusion": [
+          261.805023,
+          260.674438,
+          261.477356,
+          260.912476,
+          261.278412
+        ],
+        "darm": [
+          265.306549,
+          264.657623,
+          264.748688,
+          265.463043,
+          265.208008
+        ]
+      },
+      "status": "validated",
+      "full_output_fingerprint": "e3d055952803a511",
+      "invalid_roles": {},
+      "medians_ms": {
+        "baseline": 262.941772,
+        "branch_fusion": 261.278412,
+        "darm": 265.208008
+      },
+      "speedup": {
+        "branch_fusion": 1.0063662358756222,
+        "darm": 0.991454873413928
+      }
+    },
+    "SRAD16": {
+      "measurements_ms": {
+        "baseline": [
+          5.571975,
+          5.581097,
+          5.580938,
+          5.594537,
+          5.619335
+        ],
+        "branch_fusion": [
+          5.679016,
+          5.67407,
+          5.64175,
+          5.664951,
+          5.674372
+        ],
+        "darm": [
+          5.972613,
+          5.92879,
+          5.979507,
+          5.969898,
+          6.00735
+        ]
+      },
+      "status": "validated",
+      "full_output_fingerprint": "3df46cc377eaf8d7",
+      "invalid_roles": {},
+      "medians_ms": {
+        "baseline": 5.581097,
+        "branch_fusion": 5.67407,
+        "darm": 5.972613
+      },
+      "speedup": {
+        "branch_fusion": 0.9836144072949399,
+        "darm": 0.934448121785222
+      }
+    },
+    "SRAD32": {
+      "measurements_ms": {
+        "baseline": [
+          5.392794,
+          5.405256,
+          5.424299,
+          5.449913,
+          5.414537
+        ],
+        "branch_fusion": [
+          5.736937,
+          5.527976,
+          5.532781,
+          5.531344,
+          5.671031
+        ],
+        "darm": [
+          5.868775,
+          5.85535,
+          5.844469,
+          5.833749,
+          5.863829
+        ]
+      },
+      "status": "validated",
+      "full_output_fingerprint": "3df46cc377eaf8d7",
+      "invalid_roles": {},
+      "medians_ms": {
+        "baseline": 5.414537,
+        "branch_fusion": 5.532781,
+        "darm": 5.85535
+      },
+      "speedup": {
+        "branch_fusion": 0.9786284691188754,
+        "darm": 0.9247161997147908
+      }
+    },
+    "NQU64": {
+      "measurements_ms": {
+        "baseline": [
+          751.258556,
+          751.234711,
+          751.306736,
+          751.256661,
+          751.290061
+        ],
+        "branch_fusion": [
+          751.085572,
+          751.178274,
+          751.421689,
+          751.228386,
+          751.251413
+        ],
+        "darm": [
+          631.360031,
+          631.479265,
+          631.514875,
+          631.510134,
+          631.604339
+        ]
+      },
+      "status": "validated",
+      "full_output_fingerprint": "9e2b00b326a52faa",
+      "invalid_roles": {},
+      "medians_ms": {
+        "baseline": 751.258556,
+        "branch_fusion": 751.228386,
+        "darm": 631.510134
+      },
+      "speedup": {
+        "branch_fusion": 1.0000401608892346,
+        "darm": 1.1896223283726433
+      }
+    },
+    "NQU96": {
+      "measurements_ms": {
+        "baseline": [
+          519.816288,
+          520.025309,
+          519.948739,
+          519.961607,
+          519.943367
+        ],
+        "branch_fusion": [
+          520.111922,
+          520.134091,
+          520.103918,
+          520.11138,
+          520.163544
+        ],
+        "darm": [
+          438.316487,
+          438.25833,
+          438.458297,
+          438.376595,
+          438.49568
+        ]
+      },
+      "status": "validated",
+      "full_output_fingerprint": "98300128186ae812",
+      "invalid_roles": {},
+      "medians_ms": {
+        "baseline": 519.948739,
+        "branch_fusion": 520.111922,
+        "darm": 438.376595
+      },
+      "speedup": {
+        "branch_fusion": 0.9996862540674466,
+        "darm": 1.186077780908901
+      }
+    },
+    "NQU128": {
+      "measurements_ms": {
+        "baseline": [
+          403.724189,
+          403.722283,
+          403.663643,
+          403.747194,
+          403.747628
+        ],
+        "branch_fusion": [
+          403.838421,
+          403.724175,
+          403.719617,
+          403.703969,
+          403.766567
+        ],
+        "darm": [
+          340.26008,
+          340.357918,
+          340.284157,
+          340.314362,
+          340.120333
+        ]
+      },
+      "status": "validated",
+      "full_output_fingerprint": "2e884982c7488bc1",
+      "invalid_roles": {},
+      "medians_ms": {
+        "baseline": 403.724189,
+        "branch_fusion": 403.724175,
+        "darm": 340.284157
+      },
+      "speedup": {
+        "branch_fusion": 1.0000000346771407,
+        "darm": 1.1864325173387371
+      }
+    },
+    "NQU256": {
+      "measurements_ms": {
+        "baseline": [],
+        "branch_fusion": [],
+        "darm": []
+      },
+      "status": "output_mismatch",
+      "invalid_roles": {
+        "baseline": "Output or timing verification failed: /data/home/chh/simplify-v2/build/darm-paper-repro.AtXc3N/runs/NQU256/baseline-1.log"
+      },
+      "medians_ms": {},
+      "speedup": {}
+    }
+  },
+  "initial_stop": "LUD16"
+}

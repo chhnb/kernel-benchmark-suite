@@ -1,0 +1,888 @@
+{
+  "anchor_commit": "c7dded07a2a0d528c4a2b7ece1c7493e22d2758e",
+  "results": {
+    "BIT32": {
+      "status": "validated",
+      "samples_ms": {
+        "baseline": [
+          6.46379,
+          6.48221,
+          6.47948,
+          6.47388,
+          6.46174
+        ],
+        "darm": [
+          5.7558,
+          5.74525,
+          5.79886,
+          5.74814,
+          5.74668
+        ],
+        "anchor": [
+          5.74286,
+          5.74668,
+          5.88975,
+          5.74653,
+          5.74283
+        ]
+      },
+      "medians_ms": {
+        "baseline": 6.47388,
+        "darm": 5.74814,
+        "anchor": 5.74653
+      },
+      "normalized_ir_sha256": "726366090beaa2b678811c080185dfd3fcb1236b202df5d1c92655c2c3215b6c",
+      "ir_profile": "artifact_frontend",
+      "anchor_aliases_baseline": false,
+      "output_fingerprint": "47857dcb24b12689",
+      "time_ratios": {
+        "anchor/baseline": 0.8876485198984225,
+        "darm/baseline": 0.887897211564008,
+        "anchor/darm": 0.9997199093967787
+      }
+    },
+    "BIT64": {
+      "status": "validated",
+      "samples_ms": {
+        "baseline": [
+          4.691,
+          4.6587,
+          4.65741,
+          4.7083,
+          4.66492
+        ],
+        "darm": [
+          3.28238,
+          3.28958,
+          3.3067,
+          3.40062,
+          3.3067
+        ],
+        "anchor": [
+          3.29341,
+          3.28846,
+          3.28878,
+          3.29326,
+          3.2931
+        ]
+      },
+      "medians_ms": {
+        "baseline": 4.66492,
+        "darm": 3.3067,
+        "anchor": 3.2931
+      },
+      "normalized_ir_sha256": "1995cab03997709a7615701070116a9f438ebd6ea7893fd56b1091ae798e0fa6",
+      "ir_profile": "artifact_frontend",
+      "anchor_aliases_baseline": false,
+      "output_fingerprint": "68060d36501bad09",
+      "time_ratios": {
+        "anchor/baseline": 0.7059285046688902,
+        "darm/baseline": 0.7088438815671008,
+        "anchor/darm": 0.9958871382344935
+      }
+    },
+    "BIT128": {
+      "status": "validated",
+      "samples_ms": {
+        "baseline": [
+          5.71388,
+          5.63502,
+          5.62892,
+          5.63181,
+          5.62286
+        ],
+        "darm": [
+          4.28013,
+          4.28173,
+          4.32317,
+          4.27887,
+          4.28877
+        ],
+        "anchor": [
+          4.30014,
+          4.28593,
+          4.32013,
+          4.28092,
+          4.29405
+        ]
+      },
+      "medians_ms": {
+        "baseline": 5.63181,
+        "darm": 4.28173,
+        "anchor": 4.29405
+      },
+      "normalized_ir_sha256": "b18e173289422bca1351002bf221b7253a9629c0cd762b9ae9445f7884a204ba",
+      "ir_profile": "artifact_frontend",
+      "anchor_aliases_baseline": false,
+      "output_fingerprint": "1d6afbcccb631009",
+      "time_ratios": {
+        "anchor/baseline": 0.7624635774289261,
+        "darm/baseline": 0.7602760036293837,
+        "anchor/darm": 1.0028773416352739
+      }
+    },
+    "BIT256": {
+      "status": "validated",
+      "samples_ms": {
+        "baseline": [
+          6.53196,
+          6.52621,
+          6.53163,
+          6.53774,
+          6.5718
+        ],
+        "darm": [
+          5.26428,
+          5.28988,
+          5.26461,
+          5.26046,
+          5.25885
+        ],
+        "anchor": [
+          5.26479,
+          5.25821,
+          5.30126,
+          5.26606,
+          5.27309
+        ]
+      },
+      "medians_ms": {
+        "baseline": 6.53196,
+        "darm": 5.26428,
+        "anchor": 5.26606
+      },
+      "normalized_ir_sha256": "09aa64d2e4935cf61e2c5643085c04006ed6a19149b93901970216530fb58122",
+      "ir_profile": "artifact_frontend",
+      "anchor_aliases_baseline": false,
+      "output_fingerprint": "6a69d276c79d2f09",
+      "time_ratios": {
+        "anchor/baseline": 0.8061990581693704,
+        "darm/baseline": 0.8059265519078501,
+        "anchor/darm": 1.0003381279111294
+      }
+    },
+    "PCM32": {
+      "status": "validated",
+      "samples_ms": {
+        "baseline": [
+          893.215,
+          893.231,
+          893.212,
+          893.281,
+          893.258
+        ],
+        "darm": [
+          650.756,
+          650.675,
+          650.655,
+          650.819,
+          650.696
+        ],
+        "anchor": [
+          705.209,
+          705.042,
+          705.177,
+          705.101,
+          705.099
+        ]
+      },
+      "medians_ms": {
+        "baseline": 893.231,
+        "darm": 650.696,
+        "anchor": 705.101
+      },
+      "normalized_ir_sha256": "08a757881474f3456ba7b82a86aa6403173be1e033858c72fcdc5769d975b571",
+      "ir_profile": "artifact_frontend",
+      "anchor_aliases_baseline": false,
+      "output_fingerprint": "91086d0f56c9eab2",
+      "time_ratios": {
+        "anchor/baseline": 0.7893825897220316,
+        "darm/baseline": 0.728474493160224,
+        "anchor/darm": 1.0836104724786997
+      }
+    },
+    "PCM64": {
+      "status": "validated",
+      "samples_ms": {
+        "baseline": [
+          1020.18,
+          1020.3,
+          1020.47,
+          1020.37,
+          1020.23
+        ],
+        "darm": [
+          780.139,
+          780.123,
+          780.112,
+          780.009,
+          780.163
+        ],
+        "anchor": [
+          860.532,
+          860.561,
+          860.523,
+          860.514,
+          860.581
+        ]
+      },
+      "medians_ms": {
+        "baseline": 1020.3,
+        "darm": 780.123,
+        "anchor": 860.532
+      },
+      "normalized_ir_sha256": "fa51e1490a2471db2bb63734a83790c1288320ea016474ff1d4aca5ab95f6d81",
+      "ir_profile": "artifact_frontend",
+      "anchor_aliases_baseline": false,
+      "output_fingerprint": "51cedfea4eeeb5db",
+      "time_ratios": {
+        "anchor/baseline": 0.8434107615407234,
+        "darm/baseline": 0.7646015877683036,
+        "anchor/darm": 1.1030722078441477
+      }
+    },
+    "PCM128": {
+      "status": "validated",
+      "samples_ms": {
+        "baseline": [
+          1140.95,
+          1140.9,
+          1140.8,
+          1140.87,
+          1140.69
+        ],
+        "darm": [
+          943.65,
+          943.606,
+          943.706,
+          943.592,
+          953.178
+        ],
+        "anchor": [
+          1015.0,
+          1014.63,
+          1015.1,
+          1015.05,
+          1015.02
+        ]
+      },
+      "medians_ms": {
+        "baseline": 1140.87,
+        "darm": 943.65,
+        "anchor": 1015.02
+      },
+      "normalized_ir_sha256": "20128672a995c68404cfef67f171f804380c39fc2465752eeae7fe23e8ea7d14",
+      "ir_profile": "artifact_frontend",
+      "anchor_aliases_baseline": false,
+      "output_fingerprint": "503155b46b3ff387",
+      "time_ratios": {
+        "anchor/baseline": 0.8896894475268874,
+        "darm/baseline": 0.8271319256356992,
+        "anchor/darm": 1.0756318550309967
+      }
+    },
+    "PCM256": {
+      "status": "validated",
+      "samples_ms": {
+        "baseline": [
+          1644.48,
+          1644.57,
+          1644.44,
+          1644.42,
+          1644.29
+        ],
+        "darm": [
+          1467.1,
+          1466.85,
+          1467.17,
+          1467.26,
+          1467.21
+        ],
+        "anchor": [
+          1170.42,
+          1170.49,
+          1170.51,
+          1170.46,
+          1170.47
+        ]
+      },
+      "medians_ms": {
+        "baseline": 1644.44,
+        "darm": 1467.17,
+        "anchor": 1170.47
+      },
+      "normalized_ir_sha256": "bdeadb610859b07b5009633c8895b203adcd5a0ade996eae8254f93d4071a0ec",
+      "ir_profile": "artifact_frontend",
+      "anchor_aliases_baseline": false,
+      "output_fingerprint": "8064b56ceda1c2e6",
+      "time_ratios": {
+        "anchor/baseline": 0.7117742210114081,
+        "darm/baseline": 0.8922003843253631,
+        "anchor/darm": 0.7977739457595234
+      }
+    },
+    "DCT4": {
+      "status": "validated",
+      "samples_ms": {
+        "baseline": [
+          151.008,
+          151.018,
+          150.946,
+          151.02,
+          150.999
+        ],
+        "darm": [
+          151.06,
+          150.962,
+          151.014,
+          150.97,
+          151.04
+        ],
+        "anchor": [
+          151.049,
+          150.948,
+          150.997,
+          151.074,
+          151.054
+        ]
+      },
+      "medians_ms": {
+        "baseline": 151.008,
+        "darm": 151.014,
+        "anchor": 151.049
+      },
+      "normalized_ir_sha256": "ce7321170e2b67904d8b889ffab8d66620c0092e0d20907f5e195a8625302c5c",
+      "ir_profile": "artifact_frontend",
+      "anchor_aliases_baseline": true,
+      "output_fingerprint": "bc65498b1c428ef4",
+      "time_ratios": {
+        "anchor/baseline": 1.000271508794236,
+        "darm/baseline": 1.0000397329942785,
+        "anchor/darm": 1.0002317665911769
+      }
+    },
+    "DCT8": {
+      "status": "anchor_timing_timeout",
+      "samples_ms": {
+        "baseline": [
+          38.8926,
+          38.9598,
+          38.9375,
+          39.0656,
+          39.0542
+        ],
+        "darm": [
+          38.9992,
+          39.0098,
+          38.9221,
+          38.893,
+          38.9606
+        ]
+      },
+      "medians_ms": {
+        "baseline": 38.9598,
+        "darm": 38.9606
+      },
+      "normalized_ir_sha256": "dd510470aa04d9fda8b70322d4d192fef5b731963cf99820dc8ba96e891cd6b3",
+      "ir_profile": "artifact_frontend",
+      "anchor_aliases_baseline": true,
+      "output_fingerprint": "db1c8702df93557a"
+    },
+    "DCT16": {
+      "status": "validated",
+      "samples_ms": {
+        "baseline": [
+          14.6145,
+          14.728,
+          14.6607,
+          14.5755,
+          14.7161
+        ],
+        "darm": [
+          14.4223,
+          14.5505,
+          14.4383,
+          14.446,
+          14.5354
+        ],
+        "anchor": [
+          14.6482,
+          14.6569,
+          14.6695,
+          14.6116,
+          14.6836
+        ]
+      },
+      "medians_ms": {
+        "baseline": 14.6607,
+        "darm": 14.446,
+        "anchor": 14.6569
+      },
+      "normalized_ir_sha256": "208359519ad7b77cffd62e7e2f5f157d8b7c5e01ef21b405939a92850d7f0d12",
+      "ir_profile": "artifact_frontend",
+      "anchor_aliases_baseline": true,
+      "output_fingerprint": "6e5938cc35470638",
+      "time_ratios": {
+        "anchor/baseline": 0.9997408036451193,
+        "darm/baseline": 0.9853554059492384,
+        "anchor/darm": 1.014599197009553
+      }
+    },
+    "MS32": {
+      "status": "validated",
+      "samples_ms": {
+        "baseline": [
+          1190.77,
+          1184.15,
+          1187.15,
+          1185.01,
+          1186.72
+        ],
+        "anchor": [
+          933.369,
+          928.257,
+          925.825,
+          933.505,
+          928.013
+        ],
+        "darm": [
+          1059.7,
+          1058.1,
+          1052.67,
+          1057.99,
+          1060.78
+        ]
+      },
+      "medians_ms": {
+        "baseline": 1186.72,
+        "anchor": 928.257,
+        "darm": 1058.1
+      },
+      "shared_ir_sha256": "733e2871eaf3272ed07c2761eae805ac7ce7c78bab6b61d6e7a260cdec3995f6",
+      "ir_profile": "o0_targeted_inlining",
+      "output_fingerprint": "fddb14ad974b8b4f",
+      "time_ratios": {
+        "anchor/baseline": 0.7822038897128218,
+        "darm/baseline": 0.8916172306862612,
+        "anchor/darm": 0.8772866458746811
+      }
+    },
+    "MS64": {
+      "status": "validated",
+      "samples_ms": {
+        "baseline": [
+          1191.48,
+          1185.48,
+          1187.47,
+          1193.17,
+          1183.4
+        ],
+        "anchor": [
+          936.27,
+          932.539,
+          934.885,
+          936.418,
+          932.188
+        ],
+        "darm": [
+          1064.09,
+          1059.82,
+          1063.25,
+          1058.42,
+          1063.53
+        ]
+      },
+      "medians_ms": {
+        "baseline": 1187.47,
+        "anchor": 934.885,
+        "darm": 1063.25
+      },
+      "shared_ir_sha256": "ad2c6726fd3cee18f6d277066f2e4af9f5cdaaf4f5a6c0d710ffe707026f3dba",
+      "ir_profile": "o0_targeted_inlining",
+      "output_fingerprint": "fddb14ad974b8b4f",
+      "time_ratios": {
+        "anchor/baseline": 0.7872914684160441,
+        "darm/baseline": 0.8953910414578894,
+        "anchor/darm": 0.8792711027509993
+      }
+    },
+    "MS128": {
+      "status": "validated",
+      "samples_ms": {
+        "baseline": [
+          1202.87,
+          1196.0,
+          1193.4,
+          1192.73,
+          1204.2
+        ],
+        "anchor": [
+          947.702,
+          942.203,
+          942.753,
+          952.709,
+          949.152
+        ],
+        "darm": [
+          1071.08,
+          1071.72,
+          1072.17,
+          1073.56,
+          1071.64
+        ]
+      },
+      "medians_ms": {
+        "baseline": 1196.0,
+        "anchor": 947.702,
+        "darm": 1071.72
+      },
+      "shared_ir_sha256": "23bd259b544df89583f5d280c7ee82a2f583d72cff8f603f2f1774c51595dd19",
+      "ir_profile": "o0_targeted_inlining",
+      "output_fingerprint": "fddb14ad974b8b4f",
+      "time_ratios": {
+        "anchor/baseline": 0.7923929765886287,
+        "darm/baseline": 0.8960869565217392,
+        "anchor/darm": 0.8842813421416041
+      }
+    },
+    "MS256": {
+      "status": "validated",
+      "samples_ms": {
+        "baseline": [
+          1207.5,
+          1206.64,
+          1202.22,
+          1204.5,
+          1211.21
+        ],
+        "anchor": [
+          961.221,
+          957.358,
+          952.665,
+          957.201,
+          955.501
+        ],
+        "darm": [
+          1081.88,
+          1085.81,
+          1084.2,
+          1082.18,
+          1084.75
+        ]
+      },
+      "medians_ms": {
+        "baseline": 1206.64,
+        "anchor": 957.201,
+        "darm": 1084.2
+      },
+      "shared_ir_sha256": "f9689f0898fce4c1f7630df31ba74bf065995ee7ed8b9ea2e9feea4a715b2fc5",
+      "ir_profile": "o0_targeted_inlining",
+      "output_fingerprint": "fddb14ad974b8b4f",
+      "time_ratios": {
+        "anchor/baseline": 0.7932780282437181,
+        "darm/baseline": 0.8985281442683816,
+        "anchor/darm": 0.8828638627559491
+      }
+    },
+    "LUD8": {
+      "status": "validated",
+      "samples_ms": {
+        "baseline": [
+          527.284973,
+          523.797241,
+          517.365051,
+          526.49939,
+          524.420227
+        ],
+        "darm": [
+          457.458984,
+          454.13205,
+          456.414642,
+          462.525482,
+          452.562317
+        ],
+        "anchor": [
+          507.03125,
+          505.522949,
+          506.956726,
+          510.460632,
+          505.107941
+        ]
+      },
+      "medians_ms": {
+        "baseline": 524.420227,
+        "darm": 456.414642,
+        "anchor": 506.956726
+      },
+      "normalized_ir_sha256": "841c0cad088d27b0494b95bdd8238a98b76b166229a3ed7e2efe890471f6ca58",
+      "ir_profile": "artifact_frontend",
+      "anchor_aliases_baseline": false,
+      "output_fingerprint": "99f686c239322d34",
+      "time_ratios": {
+        "anchor/baseline": 0.9666994137508735,
+        "darm/baseline": 0.8703223455185303,
+        "anchor/darm": 1.1107372098724213
+      }
+    },
+    "LUD16": {
+      "status": "excluded",
+      "reason": {
+        "branch_fusion": "Full output differs: /data/home/chh/simplify-v2/build/darm-paper-repro.AtXc3N/runs/LUD16/branch_fusion-1.log: 4092fb72bf7d2609 versus 8707a2327c4af95e",
+        "darm": "Full output differs: /data/home/chh/simplify-v2/build/darm-paper-repro.AtXc3N/runs/LUD16/darm-1.log: 4092fb72bf7d2609 versus 8707a2327c4af95e"
+      }
+    },
+    "LUD32": {
+      "status": "excluded",
+      "reason": {
+        "branch_fusion": "Full output differs: /data/home/chh/simplify-v2/build/darm-paper-repro.AtXc3N/runs/LUD32/branch_fusion-1.log: e87f70930769d8a4 versus 84dcdb4e8d8926f6",
+        "darm": "Full output differs: /data/home/chh/simplify-v2/build/darm-paper-repro.AtXc3N/runs/LUD32/darm-1.log: e87f70930769d8a4 versus 84dcdb4e8d8926f6"
+      }
+    },
+    "LUD64": {
+      "status": "validated",
+      "samples_ms": {
+        "baseline": [
+          264.198853,
+          263.667328,
+          264.214691,
+          264.088226,
+          263.887421
+        ],
+        "darm": [
+          266.214386,
+          265.615875,
+          265.41153,
+          265.900421,
+          266.031342
+        ],
+        "anchor": [
+          263.842041,
+          263.465668,
+          263.726105,
+          263.780273,
+          263.878632
+        ]
+      },
+      "medians_ms": {
+        "baseline": 264.088226,
+        "darm": 265.900421,
+        "anchor": 263.780273
+      },
+      "normalized_ir_sha256": "22c57e4b781630004ac30ec18e9d3462b29aa3992bc7cd738000da3b43714630",
+      "ir_profile": "artifact_frontend",
+      "anchor_aliases_baseline": true,
+      "output_fingerprint": "e3d055952803a511",
+      "time_ratios": {
+        "anchor/baseline": 0.9988339010615339,
+        "darm/baseline": 1.0068620817650538,
+        "anchor/darm": 0.9920265338729947
+      }
+    },
+    "SRAD16": {
+      "status": "validated",
+      "samples_ms": {
+        "baseline": [
+          5.615345,
+          5.614533,
+          5.573897,
+          5.595669,
+          5.624949
+        ],
+        "darm": [
+          5.93631,
+          6.014384,
+          6.024777,
+          6.048614,
+          6.081753
+        ],
+        "anchor": [
+          5.676937,
+          5.668132,
+          5.675987,
+          5.648617,
+          5.683347
+        ]
+      },
+      "medians_ms": {
+        "baseline": 5.614533,
+        "darm": 6.024777,
+        "anchor": 5.675987
+      },
+      "normalized_ir_sha256": "c8ca60a3d8f0be8922ec5a31501a7a8d6b2dca3416d07404b680c70eea66f85a",
+      "ir_profile": "artifact_frontend",
+      "anchor_aliases_baseline": false,
+      "output_fingerprint": "3df46cc377eaf8d7",
+      "time_ratios": {
+        "anchor/baseline": 1.0109455229847255,
+        "darm/baseline": 1.0730682320328335,
+        "anchor/darm": 0.9421074008216404
+      }
+    },
+    "SRAD32": {
+      "status": "validated",
+      "samples_ms": {
+        "baseline": [
+          5.460135,
+          5.457269,
+          5.487829,
+          5.466854,
+          5.456775
+        ],
+        "darm": [
+          5.840616,
+          5.924609,
+          5.854072,
+          5.839029,
+          5.822069
+        ],
+        "anchor": [
+          5.528134,
+          5.517894,
+          5.51423,
+          5.557265,
+          5.530696
+        ]
+      },
+      "medians_ms": {
+        "baseline": 5.460135,
+        "darm": 5.840616,
+        "anchor": 5.528134
+      },
+      "normalized_ir_sha256": "41def2c5b18a92de5859a3973870b65dab685e9f2d35c11905b4cbb325891358",
+      "ir_profile": "artifact_frontend",
+      "anchor_aliases_baseline": false,
+      "output_fingerprint": "3df46cc377eaf8d7",
+      "time_ratios": {
+        "anchor/baseline": 1.0124537213823466,
+        "darm/baseline": 1.0696834418929202,
+        "anchor/darm": 0.9464984515331945
+      }
+    },
+    "NQU64": {
+      "status": "validated",
+      "samples_ms": {
+        "baseline": [
+          751.235898,
+          751.340189,
+          751.27023,
+          751.282098,
+          751.292572
+        ],
+        "darm": [
+          631.493526,
+          631.51783,
+          631.482587,
+          631.63291,
+          631.493005
+        ],
+        "anchor": [
+          613.014911,
+          613.08178,
+          613.505146,
+          613.080069,
+          613.104493
+        ]
+      },
+      "medians_ms": {
+        "baseline": 751.282098,
+        "darm": 631.493526,
+        "anchor": 613.08178
+      },
+      "normalized_ir_sha256": "8561a811da0d0d5ddf0f5b73d1baf09484903fca9d22d05ba9343a17a82774e9",
+      "ir_profile": "artifact_frontend",
+      "anchor_aliases_baseline": false,
+      "output_fingerprint": "9e2b00b326a52faa",
+      "time_ratios": {
+        "anchor/baseline": 0.8160473697324809,
+        "darm/baseline": 0.8405544703928244,
+        "anchor/darm": 0.9708441254867275
+      }
+    },
+    "NQU96": {
+      "status": "validated",
+      "samples_ms": {
+        "baseline": [
+          519.955845,
+          519.897647,
+          520.094004,
+          519.956382,
+          519.898304
+        ],
+        "darm": [
+          438.177771,
+          438.128338,
+          438.173729,
+          438.27691,
+          438.199163
+        ],
+        "anchor": [
+          425.515348,
+          425.394406,
+          425.34912,
+          425.380394,
+          425.352133
+        ]
+      },
+      "medians_ms": {
+        "baseline": 519.955845,
+        "darm": 438.177771,
+        "anchor": 425.380394
+      },
+      "normalized_ir_sha256": "6c30b96b1d636d1734360f0ab29c6045aaa8226457fbc5220f574c9f7580edf0",
+      "ir_profile": "artifact_frontend",
+      "anchor_aliases_baseline": false,
+      "output_fingerprint": "98300128186ae812",
+      "time_ratios": {
+        "anchor/baseline": 0.8181086876713543,
+        "darm/baseline": 0.8427211179826242,
+        "anchor/darm": 0.9707940980876458
+      }
+    },
+    "NQU128": {
+      "status": "validated",
+      "samples_ms": {
+        "baseline": [
+          403.740067,
+          403.726213,
+          403.647681,
+          403.656359,
+          403.741761
+        ],
+        "darm": [
+          340.227392,
+          340.344116,
+          340.377046,
+          340.127138,
+          340.220534
+        ],
+        "anchor": [
+          330.433669,
+          330.374971,
+          330.270735,
+          330.273171,
+          330.312534
+        ]
+      },
+      "medians_ms": {
+        "baseline": 403.726213,
+        "darm": 340.227392,
+        "anchor": 330.312534
+      },
+      "normalized_ir_sha256": "f79f7030f7e846e906fe44bae649484ee8a6adc175860635c103579b192320f4",
+      "ir_profile": "artifact_frontend",
+      "anchor_aliases_baseline": false,
+      "output_fingerprint": "2e884982c7488bc1",
+      "time_ratios": {
+        "anchor/baseline": 0.8181597413393618,
+        "darm/baseline": 0.8427181120389625,
+        "anchor/darm": 0.970858143015128
+      }
+    },
+    "NQU256": {
+      "status": "excluded",
+      "reason": {
+        "baseline": "Output or timing verification failed: /data/home/chh/simplify-v2/build/darm-paper-repro.AtXc3N/runs/NQU256/baseline-1.log"
+      }
+    }
+  }
+}

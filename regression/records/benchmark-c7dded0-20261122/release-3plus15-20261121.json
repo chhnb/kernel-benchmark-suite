@@ -1,0 +1,4076 @@
+{
+  "status": "complete",
+  "source_commit": "c7dded07a2a0d528c4a2b7ece1c7493e22d2758e",
+  "warmup": 3,
+  "repeat": 15,
+  "rounds": 12,
+  "cases": {
+    "vllm": {
+      "paths": {
+        "baseline": "/data/home/chh/simplify-v2/build/final-release.kzxLp5/gpu-roles/vllm/baseline.hsaco",
+        "auto": "/data/home/chh/simplify-v2/build/auto-darm-release-compare/20261120-v1/vllm/fallback-auto.hsaco",
+        "on": "/data/home/chh/simplify-v2/build/normalize-commit.cZRDHj/default-parity/vllm/on/kernel.hsaco",
+        "off": "/data/home/chh/simplify-v2/build/normalize-commit.cZRDHj/default-parity/vllm/off/kernel.hsaco"
+      },
+      "hashes": {
+        "baseline": "6b293afa14832b73ab0738a7231ddf842f3e06d2c9aac372e019247726ff5324",
+        "auto": "1f435ef36fb7e3f4076fa17a56c74d2a35023043c693c9168a2931e8873fba1a",
+        "on": "9aa97bca3906c0d31452e4594b5fc17c535bce25ba5e7e4df92e5ff6841c5fa6",
+        "off": "9aa97bca3906c0d31452e4594b5fc17c535bce25ba5e7e4df92e5ff6841c5fa6"
+      },
+      "format": "hsaco",
+      "auto_variant": "no-region-replication",
+      "launch_variant": null
+    },
+    "MapAiry": {
+      "paths": {
+        "baseline": "/data/home/chh/simplify-v2/build/final-release.kzxLp5/gpu-roles/MapAiry/baseline.hsaco",
+        "auto": "/data/home/chh/simplify-v2/build/final-release.kzxLp5/gpu-roles/MapAiry/auto.hsaco",
+        "on": "/data/home/chh/simplify-v2/build/normalize-commit.cZRDHj/default-parity/MapAiry/on/kernel.hsaco",
+        "off": "/data/home/chh/simplify-v2/build/normalize-commit.cZRDHj/default-parity/MapAiry/off/kernel.hsaco"
+      },
+      "hashes": {
+        "baseline": "be310a890bc62b7a5a37621540725627e5ddcae23edf3067835842d2976b13c0",
+        "auto": "9d04e8f3c65bdfcfa39bdd0b9f6c3293d5b389e46780362669423a48fb0fae91",
+        "on": "5cc3f528f4f1f08e51c56f04a73e0593d2ebb703076e2950f275eb5058ccbc21",
+        "off": "51c13dcce91306bb0c84aae7a3e4a1facc70d448d718483fbdb685f1fb48918d"
+      },
+      "format": "hsaco",
+      "auto_variant": "native pass at 0.2",
+      "launch_variant": null
+    },
+    "tigre": {
+      "paths": {
+        "baseline": "/data/home/chh/simplify-v2/build/final-release.kzxLp5/gpu-roles/tigre/baseline.hsaco",
+        "auto": "/data/home/chh/simplify-v2/build/final-release.kzxLp5/gpu-roles/tigre/auto.hsaco",
+        "on": "/data/home/chh/simplify-v2/build/normalize-commit.cZRDHj/default-parity/tigre/on/kernel.hsaco",
+        "off": "/data/home/chh/simplify-v2/build/normalize-commit.cZRDHj/default-parity/tigre/off/kernel.hsaco"
+      },
+      "hashes": {
+        "baseline": "2ace230a3a86141775179de92a0fae8277218b01ddbff1162d10dd2f326933b2",
+        "auto": "51336d521f33040c27507511a9542fa5a0e1874741d2f9af79cbf3f66754845e",
+        "on": "02452bc591290cb318b1ed9d876a907a56fd849fa9094e4efd74a76892e83a9a",
+        "off": "02452bc591290cb318b1ed9d876a907a56fd849fa9094e4efd74a76892e83a9a"
+      },
+      "format": "hsaco",
+      "auto_variant": "native pass at 0.2",
+      "launch_variant": null
+    },
+    "HLLD": {
+      "paths": {
+        "baseline": "/data/home/chh/simplify-v2/build/final-release.kzxLp5/gpu-roles/HLLD/baseline.hsaco",
+        "auto": "/data/home/chh/simplify-v2/build/final-release.kzxLp5/gpu-roles/HLLD/auto.hsaco",
+        "on": "/data/home/chh/simplify-v2/build/normalize-commit.cZRDHj/default-parity/HLLD/on/kernel.hsaco",
+        "off": "/data/home/chh/simplify-v2/build/normalize-commit.cZRDHj/default-parity/HLLD/off/kernel.hsaco"
+      },
+      "hashes": {
+        "baseline": "b5166eae0e745352fb6fd0241b7772b019e58c81d778918fd7c9175727393e42",
+        "auto": "e04262e0e27c5cb75984d84de7307ea9b6be957bab729f7ecfd6b85b60f0b244",
+        "on": "3aa2cad420017f246aa3f3f148eb23baa0d834dd92611c3bf68196393ceaf9a3",
+        "off": "3aa2cad420017f246aa3f3f148eb23baa0d834dd92611c3bf68196393ceaf9a3"
+      },
+      "format": "hsaco",
+      "auto_variant": "native pass at 0.2",
+      "launch_variant": null
+    },
+    "NQU64": {
+      "paths": {
+        "baseline": "/data/home/chh/simplify-v2/build/final-release.kzxLp5/gpu-roles/NQU64/baseline.hsaco",
+        "auto": "/data/home/chh/simplify-v2/build/final-release.kzxLp5/gpu-roles/NQU64/auto.hsaco",
+        "on": "/data/home/chh/simplify-v2/build/normalize-commit.cZRDHj/default-parity/NQU64/on/kernel.hsaco",
+        "off": "/data/home/chh/simplify-v2/build/normalize-commit.cZRDHj/default-parity/NQU64/off/kernel.hsaco"
+      },
+      "hashes": {
+        "baseline": "67425024b9efbed16bf390fa4493eead6a807acbbd6cb08567b09cbd20057fd2",
+        "auto": "801ca7e3996f2cc93d34ee8f3d560448697a661503bafd7745eb65670bc44476",
+        "on": "83bec1d3bb5b164770921cd52763d70670efa5ea12ab5f04082391abbf74e97b",
+        "off": "42b2bda66286d3c3b437dd6fe78ecba602f6718f4f75659fe101bb5dc2c6865c"
+      },
+      "format": "hsaco",
+      "auto_variant": "native pass at 0.2",
+      "launch_variant": null
+    },
+    "MS32": {
+      "paths": {
+        "baseline": "/data/home/chh/simplify-v2/build/final-release.kzxLp5/gpu-roles/MS32/baseline.hsaco",
+        "auto": "/data/home/chh/simplify-v2/build/final-release.kzxLp5/gpu-roles/MS32/auto.hsaco",
+        "on": "/data/home/chh/simplify-v2/build/normalize-commit.cZRDHj/default-parity/MS32/on/kernel.hsaco",
+        "off": "/data/home/chh/simplify-v2/build/normalize-commit.cZRDHj/default-parity/MS32/off/kernel.hsaco"
+      },
+      "hashes": {
+        "baseline": "f9fe5210e10f2b35263161a13bc2e399f858de7fefd054443f14b8ca25dbef8f",
+        "auto": "611f3f734d147f74f10221b81d290ad215a04ade9cc2b4b32370abfc76974621",
+        "on": "1be889a67dbd43dd8d63e0b6d5cee7fe26584fa22bb23da67878cd30b6722054",
+        "off": "1021292447be6660cf0366d7f785167c629f2b384a386f146568fa20eb2eaa9f"
+      },
+      "format": "hsaco",
+      "auto_variant": "native pass at 0.2",
+      "launch_variant": null
+    },
+    "PCM32": {
+      "paths": {
+        "baseline": "/data/home/chh/simplify-v2/build/final-release.kzxLp5/gpu-roles/PCM32/baseline.hsaco",
+        "auto": "/data/home/chh/simplify-v2/build/final-release.kzxLp5/gpu-roles/PCM32/auto.hsaco",
+        "on": "/data/home/chh/simplify-v2/build/normalize-commit.cZRDHj/default-parity/PCM32/on/kernel.hsaco",
+        "off": "/data/home/chh/simplify-v2/build/normalize-commit.cZRDHj/default-parity/PCM32/off/kernel.hsaco"
+      },
+      "hashes": {
+        "baseline": "e08cfd73b8aeddd2ea9069e4a240a5bf299e27fa4ec3c428985a9e2733d60f8a",
+        "auto": "4705c6f829cebfa98e5d312ca47cc1d0f1022cf07a7b097e4b9d39d813111832",
+        "on": "a0a8df33ee604bc77519a3887af2c8663afa6c7f0cd609dd392d136a815ec116",
+        "off": "a0a8df33ee604bc77519a3887af2c8663afa6c7f0cd609dd392d136a815ec116"
+      },
+      "format": "hsaco",
+      "auto_variant": "native pass at 0.2",
+      "launch_variant": null
+    },
+    "SRAD16": {
+      "paths": {
+        "baseline": "/data/home/chh/simplify-v2/build/final-release.kzxLp5/gpu-roles/SRAD16/baseline.hsaco",
+        "auto": "/data/home/chh/simplify-v2/build/final-release.kzxLp5/gpu-roles/SRAD16/auto.hsaco",
+        "on": "/data/home/chh/simplify-v2/build/normalize-commit.cZRDHj/default-parity/SRAD16/on/kernel.hsaco",
+        "off": "/data/home/chh/simplify-v2/build/normalize-commit.cZRDHj/default-parity/SRAD16/off/kernel.hsaco"
+      },
+      "hashes": {
+        "baseline": "97a7470931dc4fae9d54b95ce5f0c8e7b3b7f66a22eb410c01563e9634d660e1",
+        "auto": "23c4ad4ea7b8346aa96999b24f2e11d464ae963c2e2938184620a89b86f75804",
+        "on": "2a6a3d958d37e110a4ca5107ca9346c31aa7e8393524dd4b95de2df56385e16e",
+        "off": "2a6a3d958d37e110a4ca5107ca9346c31aa7e8393524dd4b95de2df56385e16e"
+      },
+      "format": "hsaco",
+      "auto_variant": "native pass at 0.2",
+      "launch_variant": null
+    },
+    "SRAD32": {
+      "paths": {
+        "baseline": "/data/home/chh/simplify-v2/build/final-release.kzxLp5/gpu-roles/SRAD32/baseline.hsaco",
+        "auto": "/data/home/chh/simplify-v2/build/final-release.kzxLp5/gpu-roles/SRAD32/auto.hsaco",
+        "on": "/data/home/chh/simplify-v2/build/final-release.kzxLp5/gpu-roles/SRAD32/release-launch-compat.hsaco",
+        "off": "/data/home/chh/simplify-v2/build/final-release.kzxLp5/gpu-roles/SRAD32/release-launch-compat.hsaco"
+      },
+      "hashes": {
+        "baseline": "080421a67869991ffac44f1aa9f4084e8f94fdbb77b4da32ec60c31792ab2a91",
+        "auto": "995e641eb866fc00f1ac8a034fa14c3e9bf907f3e935d234d540d25e1c127a66",
+        "on": "d7a53d5860abb8177c7beefc47b54b8be0df858069db738ec8780e744e316e23",
+        "off": "d7a53d5860abb8177c7beefc47b54b8be0df858069db738ec8780e744e316e23"
+      },
+      "format": "hsaco",
+      "auto_variant": "native pass at 0.2",
+      "launch_variant": "frozen max flat 256 raised to 1024 for timed roles"
+    },
+    "Landau": {
+      "paths": {
+        "baseline": "/data/home/chh/simplify-v2/build/final-release.kzxLp5/gpu-roles/Landau/baseline.hsaco",
+        "auto": "/data/home/chh/simplify-v2/build/final-release.kzxLp5/gpu-roles/Landau/auto.hsaco",
+        "on": "/data/home/chh/simplify-v2/build/normalize-commit.cZRDHj/default-parity/Landau/on/kernel.hsaco",
+        "off": "/data/home/chh/simplify-v2/build/normalize-commit.cZRDHj/default-parity/Landau/off/kernel.hsaco"
+      },
+      "hashes": {
+        "baseline": "357a67183749741fe7f469061f22bc0afd7395881d32f916c184bc70f5d71a9c",
+        "auto": "a028f56ab829ba28df7bd80bbefde18aeec05151404bd46787dd79b1029c54e0",
+        "on": "2c49a3bcb7798476672355fa5c579a6c917d3ad84668f8d302b8e065ae21d669",
+        "off": "2c49a3bcb7798476672355fa5c579a6c917d3ad84668f8d302b8e065ae21d669"
+      },
+      "format": "hsaco",
+      "auto_variant": "native pass at 0.2",
+      "launch_variant": null
+    },
+    "SW2D": {
+      "paths": {
+        "baseline": "/data/home/chh/simplify-v2/build/final-release.kzxLp5/gpu-roles/SW2D/baseline.hsaco",
+        "auto": "/data/home/chh/simplify-v2/build/auto-darm-release-compare/20261120-v1/SW2D/fallback-auto.hsaco",
+        "on": "/data/home/chh/simplify-v2/build/normalize-commit.cZRDHj/default-parity/SW2D/on/kernel.hsaco",
+        "off": "/data/home/chh/simplify-v2/build/normalize-commit.cZRDHj/default-parity/SW2D/off/kernel.hsaco"
+      },
+      "hashes": {
+        "baseline": "cd0e00d276836e765fe1dba400bfab62312a79121226fcc8ef4e4d7fa95b3518",
+        "auto": "cd0e00d276836e765fe1dba400bfab62312a79121226fcc8ef4e4d7fa95b3518",
+        "on": "cd0e00d276836e765fe1dba400bfab62312a79121226fcc8ef4e4d7fa95b3518",
+        "off": "cd0e00d276836e765fe1dba400bfab62312a79121226fcc8ef4e4d7fa95b3518"
+      },
+      "format": "hsaco",
+      "auto_variant": "G1 parser compatibility",
+      "launch_variant": null
+    },
+    "CED": {
+      "paths": {
+        "baseline": "/data/home/chh/simplify-v2/build/final-release.kzxLp5/gpu-roles/CED/baseline.hsaco",
+        "auto": "/data/home/chh/simplify-v2/build/auto-darm-release-compare/20261120-v1/CED/fallback-auto.hsaco",
+        "on": "/data/home/chh/simplify-v2/build/normalize-commit.cZRDHj/default-parity/CED/on/kernel.hsaco",
+        "off": "/data/home/chh/simplify-v2/build/normalize-commit.cZRDHj/default-parity/CED/off/kernel.hsaco"
+      },
+      "hashes": {
+        "baseline": "fa33576a65fe7848cc5de57b15b0a778ba90dde6e11d674e9ee322e49018592d",
+        "auto": "745f9bc3a1e522c678d5638bb31872b677244b66193f9918ff5247c8b74bb8dd",
+        "on": "a213f9bb1677d2079917ec3398dcb902cc5eabda8dd04353c8aa8799bfd5a93b",
+        "off": "a213f9bb1677d2079917ec3398dcb902cc5eabda8dd04353c8aa8799bfd5a93b"
+      },
+      "format": "hsaco",
+      "auto_variant": "G1 and mustprogress parser compatibility",
+      "launch_variant": null
+    },
+    "TPACF": {
+      "paths": {
+        "baseline": "/data/home/chh/simplify-v2/build/final-release.kzxLp5/gpu-roles/TPACF/baseline.hsaco",
+        "auto": "/data/home/chh/simplify-v2/build/auto-darm-release-compare/20261120-v1/TPACF/fallback-auto.hsaco",
+        "on": "/data/home/chh/simplify-v2/build/normalize-commit.cZRDHj/default-parity/TPACF/on/kernel.hsaco",
+        "off": "/data/home/chh/simplify-v2/build/normalize-commit.cZRDHj/default-parity/TPACF/off/kernel.hsaco"
+      },
+      "hashes": {
+        "baseline": "17f78e587734ac2f0747dfe7c2a3a1eea2e99da429577fab7b3caa084794af99",
+        "auto": "e1d7e6d7524d8737c518f61c1687b45d1495a373ddfb96fac7b5fd41ab432741",
+        "on": "3853cc72321f0c31102fbfe7b9b80a3258275103448e1437e0db0837dce6d65f",
+        "off": "7b805ab747a196bae398d1df12d58ba34fb9f2f2dd4fbc29ec5b2c6daa408986"
+      },
+      "format": "hsaco",
+      "auto_variant": "G1 and mustprogress parser compatibility",
+      "launch_variant": null
+    },
+    "SRAD-stage2": {
+      "paths": {
+        "baseline": "/data/home/chh/simplify-v2/build/final-release.kzxLp5/gpu-roles/SRAD-stage2/baseline.hsaco",
+        "auto": "/data/home/chh/simplify-v2/build/final-release.kzxLp5/gpu-roles/SRAD-stage2/auto.hsaco",
+        "on": "/data/home/chh/simplify-v2/build/normalize-commit.cZRDHj/default-parity/SRAD-stage2/on/kernel.hsaco",
+        "off": "/data/home/chh/simplify-v2/build/normalize-commit.cZRDHj/default-parity/SRAD-stage2/off/kernel.hsaco"
+      },
+      "hashes": {
+        "baseline": "97a7470931dc4fae9d54b95ce5f0c8e7b3b7f66a22eb410c01563e9634d660e1",
+        "auto": "3461ef1da730e086489022091e227e6bc400e4f269aa4838875ac1a9975c11f0",
+        "on": "67e86ccd15676d38fb247efa7f161ac6f0cb42dc6a040973de329a86763f296a",
+        "off": "67e86ccd15676d38fb247efa7f161ac6f0cb42dc6a040973de329a86763f296a"
+      },
+      "format": "hsaco",
+      "auto_variant": "native pass at 0.2",
+      "launch_variant": null
+    },
+    "SasPoint5": {
+      "paths": {
+        "baseline": "/data/home/chh/simplify-v2/build/final-release.kzxLp5/gpu-roles/SasPoint5/baseline.cubin",
+        "auto": "/data/home/chh/simplify-v2/build/final-release.kzxLp5/gpu-roles/SasPoint5/auto.cubin",
+        "on": "/data/home/chh/simplify-v2/build/normalize-commit.cZRDHj/default-parity/SasPoint5/on/kernel.cubin",
+        "off": "/data/home/chh/simplify-v2/build/normalize-commit.cZRDHj/default-parity/SasPoint5/off/kernel.cubin"
+      },
+      "hashes": {
+        "baseline": "204e836b0cdda77448315e1d3682a90711fe6594e842d576ac35b0ae45dcd057",
+        "auto": "204e836b0cdda77448315e1d3682a90711fe6594e842d576ac35b0ae45dcd057",
+        "on": "d79a4f5f5b6cff913644f66bba6a958b3541a810ffe83a8de5f9ababbe43456d",
+        "off": "d79a4f5f5b6cff913644f66bba6a958b3541a810ffe83a8de5f9ababbe43456d"
+      },
+      "format": "cubin",
+      "auto_variant": "native pass at 0.2",
+      "launch_variant": null
+    },
+    "HiPIMS-George": {
+      "paths": {
+        "baseline": "/data/home/chh/simplify-v2/build/final-release.kzxLp5/gpu-roles/HiPIMS-George/baseline.cubin",
+        "auto": "/data/home/chh/simplify-v2/build/final-release.kzxLp5/gpu-roles/HiPIMS-George/auto.cubin",
+        "on": "/data/home/chh/simplify-v2/build/normalize-commit.cZRDHj/default-parity/HiPIMS-George/on/kernel.cubin",
+        "off": "/data/home/chh/simplify-v2/build/normalize-commit.cZRDHj/default-parity/HiPIMS-George/off/kernel.cubin"
+      },
+      "hashes": {
+        "baseline": "d7b72a4da250f838fc124d62f9b654afa6b7c9822867cf701181558ca0884f91",
+        "auto": "d7b72a4da250f838fc124d62f9b654afa6b7c9822867cf701181558ca0884f91",
+        "on": "5775bc0c9c040ba7b55d84bd29d0719342a2f38043dff855fea723a9c5510b3b",
+        "off": "5775bc0c9c040ba7b55d84bd29d0719342a2f38043dff855fea723a9c5510b3b"
+      },
+      "format": "cubin",
+      "auto_variant": "native pass at 0.2",
+      "launch_variant": null
+    }
+  },
+  "scenarios": {
+    "vllm/64K": {
+      "status": "validated",
+      "aa": [
+        {
+          "median": 0.999886965867643,
+          "ci95": [
+            0.9996229609202079,
+            1.0001883923057027
+          ],
+          "spread": 0.001133292957389509,
+          "ratios": [
+            1.000076098166526,
+            0.9995465934175983,
+            1.0005293430268838,
+            0.9999242537710081,
+            1.0001511244308483,
+            0.9996979797884056,
+            1.0003014213955226,
+            0.9998486890874427,
+            0.9993967337468904,
+            0.99954794205201,
+            1.0002256601805573,
+            0.999849677964278
+          ],
+          "passed": true
+        }
+      ],
+      "frozen_runner": "/data/home/chh/simplify-v2/build/b2b-layouts/darm-tti/vllm-runner",
+      "rounds": [
+        {
+          "baseline": 2919.514893,
+          "on": 2122.396973,
+          "auto": 2572.156006,
+          "off": 2123.99707
+        },
+        {
+          "on": 2122.716064,
+          "off": 2122.876953,
+          "baseline": 2921.595215,
+          "auto": 2571.516113
+        },
+        {
+          "off": 2124.635986,
+          "auto": 2573.594971,
+          "on": 2124.156006,
+          "baseline": 2922.39502
+        },
+        {
+          "auto": 2572.155029,
+          "baseline": 2921.433838,
+          "off": 2124.475098,
+          "on": 2125.276123
+        },
+        {
+          "baseline": 2922.39502,
+          "on": 2126.075928,
+          "auto": 2573.434082,
+          "off": 2125.595947
+        },
+        {
+          "on": 2127.35498,
+          "off": 2126.23584,
+          "baseline": 2923.513916,
+          "auto": 2576.314941
+        },
+        {
+          "off": 2126.71582,
+          "auto": 2574.875,
+          "on": 2127.355957,
+          "baseline": 2922.39502
+        },
+        {
+          "auto": 2576.314941,
+          "baseline": 2922.552002,
+          "off": 2129.273926,
+          "on": 2128.635986
+        },
+        {
+          "baseline": 2922.713135,
+          "on": 2129.273926,
+          "auto": 2578.874023,
+          "off": 2130.554932
+        },
+        {
+          "on": 2130.553955,
+          "off": 2130.234863,
+          "baseline": 2923.354004,
+          "auto": 2577.915039
+        },
+        {
+          "off": 2129.275146,
+          "auto": 2579.674072,
+          "on": 2131.35498,
+          "baseline": 2924.474121
+        },
+        {
+          "auto": 2578.713867,
+          "baseline": 2924.154053,
+          "off": 2130.875,
+          "on": 2131.195068
+        }
+      ],
+      "median_us": {
+        "baseline": 2922.473511,
+        "on": 2127.3554685,
+        "off": 2126.47583,
+        "auto": 2575.5949705000003
+      },
+      "contrasts": {
+        "on/baseline": {
+          "median": 0.7278100188748571,
+          "ci95": [
+            0.7272230598478455,
+            0.7286629415415793
+          ],
+          "spread": 0.0031158478177524263,
+          "ratios": [
+            0.7269690516355245,
+            0.7265606313638491,
+            0.7268545119543764,
+            0.7274770680601668,
+            0.7275114806348117,
+            0.7276705502776202,
+            0.7279494874720941,
+            0.728348369693098,
+            0.728526484690397,
+            0.728804637442055,
+            0.7287993983927614,
+            0.728824483721549
+          ]
+        },
+        "on/off": {
+          "median": 1.0001499984483742,
+          "ci95": [
+            0.9997372419417323,
+            1.000339021989181
+          ],
+          "spread": 0.0017314270262016596,
+          "ratios": [
+            0.9992466576236849,
+            0.9999242118108765,
+            0.9997740883600003,
+            1.0003770460763481,
+            1.0002258100843098,
+            1.000526348008507,
+            1.000300997902014,
+            0.9997003955234645,
+            0.999398745378136,
+            1.0001497919339986,
+            1.0009767802925362,
+            1.00015020496275
+          ]
+        },
+        "on/auto": {
+          "median": 0.826180361781696,
+          "ci95": [
+            0.8255664497456714,
+            0.8262478359996137
+          ],
+          "spread": 0.0016007130796560354,
+          "ratios": [
+            0.8251431748498694,
+            0.825472589212588,
+            0.8253653080362661,
+            0.8262628414844275,
+            0.8261629636721349,
+            0.8257356063673894,
+            0.826197759891257,
+            0.8262328305147999,
+            0.8256603102787545,
+            0.8264639923224405,
+            0.8262109555365568,
+            0.8264565895708972
+          ]
+        },
+        "off/baseline": {
+          "median": 0.7276237816240663,
+          "ci95": [
+            0.7272453114449766,
+            0.7286310681297248
+          ],
+          "spread": 0.0032329027292568036,
+          "ratios": [
+            0.7275171211123532,
+            0.7266157002519598,
+            0.7270187539533925,
+            0.7272028790679052,
+            0.7273472382936103,
+            0.7272877438220479,
+            0.7277304421357794,
+            0.728566651523349,
+            0.7289647781324252,
+            0.7286954847361005,
+            0.7280882161719768,
+            0.7287150271080468
+          ]
+        },
+        "off/auto": {
+          "median": 0.8259502853360081,
+          "ci95": [
+            0.8255434824132838,
+            0.8262447556755118
+          ],
+          "spread": 0.0014288565467883707,
+          "ratios": [
+            0.8257652588122214,
+            0.8255351550270452,
+            0.8255518097995226,
+            0.8259514197423595,
+            0.8259764498603542,
+            0.8253012107187092,
+            0.8259491509296567,
+            0.8264804477567169,
+            0.8261570410180521,
+            0.8263402132237609,
+            0.8254047164761363,
+            0.8263324703329716
+          ]
+        },
+        "auto/baseline": {
+          "median": 0.8811614943881463,
+          "ci95": [
+            0.8806182972827541,
+            0.8818506692028016
+          ],
+          "spread": 0.0024777236810269443,
+          "ratios": [
+            0.8810217108901044,
+            0.88017535755719,
+            0.8806458241911458,
+            0.8804426769975683,
+            0.8805907703743624,
+            0.8812391577478642,
+            0.8810838310284282,
+            0.8815292043518616,
+            0.8823561888840658,
+            0.8818347129607503,
+            0.8820984441188698,
+            0.881866625444853
+          ]
+        }
+      }
+    },
+    "vllm/128K": {
+      "status": "validated",
+      "aa": [
+        {
+          "median": 0.9997551680543713,
+          "ci95": [
+            0.9978207589886157,
+            1.0017189398700994
+          ],
+          "spread": 0.025426130907609812,
+          "ratios": [
+            1.0001132374668857,
+            0.9966860608458883,
+            1.0003399296576958,
+            0.9991694276185437,
+            1.0101912061243217,
+            0.9989554571313431,
+            0.9872687702149373,
+            0.9903593809591564,
+            1.0007095747659693,
+            0.9993970986418567,
+            1.0027283049742295,
+            1.0123711952074173
+          ],
+          "passed": true
+        }
+      ],
+      "frozen_runner": "/data/home/chh/simplify-v2/build/b2b-layouts/darm-tti/vllm-runner",
+      "rounds": [
+        {
+          "baseline": 5808.785156,
+          "on": 4282.230957,
+          "auto": 5129.10791,
+          "off": 4245.11084
+        },
+        {
+          "on": 4288.310059,
+          "off": 4292.631348,
+          "baseline": 5811.348145,
+          "auto": 5165.109375
+        },
+        {
+          "off": 4246.709961,
+          "auto": 5128.308594,
+          "on": 4280.150879,
+          "baseline": 5806.224609
+        },
+        {
+          "auto": 5160.470215,
+          "baseline": 5808.467773,
+          "off": 4242.549805,
+          "on": 4292.469238
+        },
+        {
+          "baseline": 5811.667969,
+          "on": 4279.669922,
+          "auto": 5129.589844,
+          "off": 4243.190918
+        },
+        {
+          "on": 4286.070801,
+          "off": 4243.989746,
+          "baseline": 5829.744629,
+          "auto": 5158.868652
+        },
+        {
+          "off": 4290.709961,
+          "auto": 5162.228027,
+          "on": 4237.909668,
+          "baseline": 5823.825684
+        },
+        {
+          "auto": 5159.98877,
+          "baseline": 5810.068359,
+          "off": 4242.868164,
+          "on": 4244.310059
+        },
+        {
+          "baseline": 5810.228027,
+          "on": 4244.629883,
+          "auto": 5162.709473,
+          "off": 4243.669922
+        },
+        {
+          "on": 4243.669922,
+          "off": 4282.070312,
+          "baseline": 5821.585938,
+          "auto": 5154.388184
+        },
+        {
+          "off": 4285.27002,
+          "auto": 5160.469238,
+          "on": 4243.350098,
+          "baseline": 5810.387207
+        },
+        {
+          "auto": 5132.628906,
+          "baseline": 5809.74707,
+          "off": 4243.830078,
+          "on": 4282.391113
+        }
+      ],
+      "median_us": {
+        "baseline": 5810.307617,
+        "on": 4279.9104005,
+        "off": 4244.550293,
+        "auto": 5159.4287110000005
+      },
+      "contrasts": {
+        "on/baseline": {
+          "median": 0.7358000040823783,
+          "ci95": [
+            0.730406836592866,
+            0.7371824877295581
+          ],
+          "spread": 0.015552265607602811,
+          "ratios": [
+            0.7371990600438726,
+            0.7379200061675191,
+            0.7371659154152436,
+            0.7390019891223385,
+            0.7363927094300937,
+            0.735207298734663,
+            0.7276848411934714,
+            0.730509487453003,
+            0.7305444576831235,
+            0.7289542690248266,
+            0.7303041857327289,
+            0.7371045695109751
+          ]
+        },
+        "on/off": {
+          "median": 1.0041071934409769,
+          "ci95": [
+            0.9950128040472948,
+            1.0089152901228917
+          ],
+          "spread": 0.024372014639019612,
+          "ratios": [
+            1.0087442044269448,
+            0.9989933239894889,
+            1.0078745471923225,
+            1.0117663752447097,
+            1.0085970687402381,
+            1.0099154469069256,
+            0.9876942758937513,
+            1.0003398396896312,
+            1.0002262101006072,
+            0.9910322841051005,
+            0.9902176708108582,
+            1.0090863758188386
+          ]
+        },
+        "on/auto": {
+          "median": 0.8305308881035427,
+          "ci95": [
+            0.8224111966259077,
+            0.8343284418909682
+          ],
+          "spread": 0.01698310839458239,
+          "ratios": [
+            0.8348880608752878,
+            0.830245740730321,
+            0.8346125824034215,
+            0.831798084120906,
+            0.8343103546584455,
+            0.8308160354767644,
+            0.8209458485433929,
+            0.8225424992543153,
+            0.8221709753761307,
+            0.8233120538288119,
+            0.8222798939975001,
+            0.8343465291234908
+          ]
+        },
+        "off/baseline": {
+          "median": 0.7306379942920929,
+          "ci95": [
+            0.7303202770981153,
+            0.7361507868268509
+          ],
+          "spread": 0.014663186964005037,
+          "ratios": [
+            0.7308087192061404,
+            0.7386636010945787,
+            0.7314064210360277,
+            0.7304077376000963,
+            0.7301158532513543,
+            0.7279889628249444,
+            0.7367510969272341,
+            0.7302613156741347,
+            0.730379238522096,
+            0.7355504767264676,
+            0.7375188377871561,
+            0.7304672693780454
+          ]
+        },
+        "off/auto": {
+          "median": 0.8274248906122362,
+          "ci95": [
+            0.8224610327163582,
+            0.8305826317130073
+          ],
+          "spread": 0.011179051455985523,
+          "ratios": [
+            0.8276509121056883,
+            0.8310823714163845,
+            0.828091734956931,
+            0.8221246569097772,
+            0.8271988691187842,
+            0.8226590038020608,
+            0.8311740470506728,
+            0.8222630616306555,
+            0.8219850340588786,
+            0.8307620922483473,
+            0.8304031711776673,
+            0.8268336082195614
+          ]
+        },
+        "auto/baseline": {
+          "median": 0.8858952710008781,
+          "ci95": [
+            0.883347292590574,
+            0.8882923276515783
+          ],
+          "spread": 0.006979854283165388,
+          "ratios": [
+            0.8829914986100064,
+            0.8887970994207232,
+            0.8832432327972313,
+            0.8884391575671396,
+            0.8826364257837387,
+            0.8849218928625562,
+            0.8863981010253054,
+            0.888111542096918,
+            0.8885553973112594,
+            0.8853924409764506,
+            0.8881454977360169,
+            0.883451352383917
+          ]
+        }
+      }
+    },
+    "MapAiry/65539": {
+      "status": "validated",
+      "aa": [
+        {
+          "median": 1.0,
+          "ci95": [
+            0.9951957728102068,
+            1.0048542480559066
+          ],
+          "spread": 0.029850717800920634,
+          "ratios": [
+            0.9951692018366861,
+            1.0248757168448805,
+            0.9951992335971377,
+            1.0096784044882472,
+            0.995192312023276,
+            1.0048542480559066,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0048542480559066,
+            0.9951692018366861
+          ],
+          "passed": true
+        }
+      ],
+      "frozen_runner": "/data/home/chh/v2-runtime/cases/mapairy/runner",
+      "rounds": [
+        {
+          "baseline": 86.23999786,
+          "on": 32.9600029,
+          "auto": 47.52000046,
+          "off": 33.11999893
+        },
+        {
+          "on": 33.27999878,
+          "off": 33.11999893,
+          "baseline": 86.23999786,
+          "auto": 47.36000061
+        },
+        {
+          "off": 33.11999893,
+          "auto": 47.36000061,
+          "on": 33.11999893,
+          "baseline": 86.40000153
+        },
+        {
+          "auto": 47.36000061,
+          "baseline": 86.23999786,
+          "off": 33.11899948,
+          "on": 32.9600029
+        },
+        {
+          "baseline": 86.40000153,
+          "on": 33.11999893,
+          "auto": 47.36000061,
+          "off": 33.11899948
+        },
+        {
+          "on": 33.11999893,
+          "off": 32.9600029,
+          "baseline": 86.23999786,
+          "auto": 47.20000076
+        },
+        {
+          "off": 32.9600029,
+          "auto": 47.20000076,
+          "on": 32.9600029,
+          "baseline": 86.23900604
+        },
+        {
+          "auto": 47.20000076,
+          "baseline": 86.23900604,
+          "off": 33.11999893,
+          "on": 33.11999893
+        },
+        {
+          "baseline": 86.23999786,
+          "on": 32.9600029,
+          "auto": 47.36000061,
+          "off": 33.11999893
+        },
+        {
+          "on": 33.11999893,
+          "off": 33.11999893,
+          "baseline": 84.79899597,
+          "auto": 47.20000076
+        },
+        {
+          "off": 33.11999893,
+          "auto": 47.20000076,
+          "on": 32.9600029,
+          "baseline": 84.95899963
+        },
+        {
+          "auto": 47.36000061,
+          "baseline": 86.40000153,
+          "off": 32.9600029,
+          "on": 32.9600029
+        }
+      ],
+      "median_us": {
+        "baseline": 86.23999786,
+        "on": 33.040000915,
+        "off": 33.11999893,
+        "auto": 47.36000061
+      },
+      "contrasts": {
+        "on/baseline": {
+          "median": 0.38333331416088,
+          "ci95": [
+            0.38218928244300854,
+            0.3849743753774979
+          ],
+          "spread": 0.02382590237474136,
+          "ratios": [
+            0.3821892824430086,
+            0.38589980990057504,
+            0.38333331416088,
+            0.3821892824430086,
+            0.38333331416088,
+            0.38404452402429595,
+            0.38219367793631864,
+            0.3840489408544208,
+            0.3821892824430086,
+            0.3905706494652026,
+            0.3879518714149436,
+            0.3814815082908946
+          ]
+        },
+        "on/off": {
+          "median": 1.0,
+          "ci95": [
+            0.9951842177169119,
+            1.000015088771033
+          ],
+          "spread": 0.009732059836001561,
+          "ratios": [
+            0.9951692018366861,
+            1.0048309135014817,
+            1.0,
+            0.9951992335971377,
+            1.0000301775420664,
+            1.0048542480559066,
+            1.0,
+            1.0,
+            0.9951692018366861,
+            1.0,
+            0.9951692018366861,
+            1.0
+          ]
+        },
+        "on/auto": {
+          "median": 0.6988147138333096,
+          "ci95": [
+            0.6959459982152225,
+            0.7016948812862689
+          ],
+          "spread": 0.013119786511222475,
+          "ratios": [
+            0.6936027479154616,
+            0.7027026678917098,
+            0.6993242927240748,
+            0.6959459982152225,
+            0.6993242927240748,
+            0.7016948812862689,
+            0.6983051349425444,
+            0.7016948812862689,
+            0.6959459982152225,
+            0.7016948812862689,
+            0.6983051349425444,
+            0.6959459982152225
+          ]
+        },
+        "off/baseline": {
+          "median": 0.38403872943927275,
+          "ci95": [
+            0.382757712194535,
+            0.3840467324393584
+          ],
+          "spread": 0.02382590237474136,
+          "ratios": [
+            0.38404452402429595,
+            0.38404452402429595,
+            0.38333331416088,
+            0.3840329348542495,
+            0.38332174645275147,
+            0.3821892824430086,
+            0.38219367793631864,
+            0.3840489408544208,
+            0.38404452402429595,
+            0.3905706494652026,
+            0.38983508603254496,
+            0.3814815082908946
+          ]
+        },
+        "off/auto": {
+          "median": 0.6993137410983661,
+          "ci95": [
+            0.6983051349425444,
+            0.7005095870051719
+          ],
+          "spread": 0.008260530394297305,
+          "ratios": [
+            0.6969696677061018,
+            0.6993242927240748,
+            0.6993242927240748,
+            0.6993031894726573,
+            0.6993031894726573,
+            0.6983051349425444,
+            0.6983051349425444,
+            0.7016948812862689,
+            0.6993242927240748,
+            0.7016948812862689,
+            0.7016948812862689,
+            0.6959459982152225
+          ]
+        },
+        "auto/baseline": {
+          "median": 0.5486566433978808,
+          "ci95": [
+            0.5477321477180744,
+            0.550092784232358
+          ],
+          "spread": 0.01699314801450935,
+          "ratios": [
+            0.5510204271704976,
+            0.5491651412942185,
+            0.5481481455015432,
+            0.5491651412942185,
+            0.5481481455015432,
+            0.5473098554179394,
+            0.5473161499346056,
+            0.5473161499346056,
+            0.5491651412942185,
+            0.5566103728008561,
+            0.5555621060224106,
+            0.5481481455015432
+          ]
+        }
+      }
+    },
+    "tigre/head64": {
+      "status": "validated",
+      "aa": [
+        {
+          "median": 1.0012840312687894,
+          "ci95": [
+            0.9960984128523955,
+            1.0028347839869083
+          ],
+          "spread": 0.012365491783295601,
+          "ratios": [
+            1.0025656055291565,
+            0.9954773702938821,
+            1.0017420540848498,
+            1.0031513508211252,
+            1.000826008452729,
+            0.9993665102326571,
+            1.0073920045131988,
+            0.9967194554109091,
+            0.9953186630526432,
+            1.0031039624446598,
+            1.0025154368034688,
+            0.9950872611616423
+          ],
+          "passed": true
+        }
+      ],
+      "frozen_runner": "/data/home/chh/simplify-v2/build/b2b-layouts/k16-gpu/tigre-golden-runner",
+      "rounds": [
+        {
+          "baseline": 6320.32,
+          "on": 3307.0339999999997,
+          "auto": 4447.496,
+          "off": 3309.4190000000003
+        },
+        {
+          "on": 3317.1180000000004,
+          "off": 3306.866,
+          "baseline": 6279.467000000001,
+          "auto": 4442.715
+        },
+        {
+          "off": 3310.863,
+          "auto": 4450.0650000000005,
+          "on": 3313.902,
+          "baseline": 6291.3060000000005
+        },
+        {
+          "auto": 4454.08,
+          "baseline": 6292.319,
+          "off": 3321.107,
+          "on": 3309.757
+        },
+        {
+          "baseline": 6268.478,
+          "on": 3315.339,
+          "auto": 4441.424,
+          "off": 3315.1989999999996
+        },
+        {
+          "on": 3311.98,
+          "off": 3303.9900000000002,
+          "baseline": 6268.157,
+          "auto": 4430.705
+        },
+        {
+          "off": 3314.237,
+          "auto": 4450.858,
+          "on": 3316.783,
+          "baseline": 6301.588
+        },
+        {
+          "auto": 4452.786,
+          "baseline": 6287.955999999999,
+          "off": 3322.239,
+          "on": 3298.061
+        },
+        {
+          "baseline": 6278.227,
+          "on": 3304.3179999999998,
+          "auto": 4466.379,
+          "off": 3318.54
+        },
+        {
+          "on": 3303.023,
+          "off": 3322.0570000000002,
+          "baseline": 6282.878000000001,
+          "auto": 4463.816
+        },
+        {
+          "off": 3308.471,
+          "auto": 4461.898,
+          "on": 3313.596,
+          "baseline": 6247.348
+        },
+        {
+          "auto": 4446.879,
+          "baseline": 6274.827,
+          "off": 3309.28,
+          "on": 3317.268
+        }
+      ],
+      "median_us": {
+        "baseline": 6281.172500000001,
+        "on": 3312.788,
+        "off": 3312.55,
+        "auto": 4450.4615
+      },
+      "contrasts": {
+        "on/baseline": {
+          "median": 0.5265419583533979,
+          "ci95": [
+            0.5258588530759407,
+            0.5285223247208756
+          ],
+          "spread": 0.013687908685605432,
+          "ratios": [
+            0.5232383803351729,
+            0.5282483370005766,
+            0.5267430959485995,
+            0.5259995559665681,
+            0.5288905855615988,
+            0.5283817875014937,
+            0.5263408207581962,
+            0.5245044653620351,
+            0.5263138781060321,
+            0.5257181501853131,
+            0.5304004195060048,
+            0.5286628619402575
+          ]
+        },
+        "on/off": {
+          "median": 1.000405215344435,
+          "ci95": [
+            0.9961484226215143,
+            1.0019814360200145
+          ],
+          "spread": 0.010453918113024763,
+          "ratios": [
+            0.9992793296950309,
+            1.0031002163377651,
+            1.0009178875719111,
+            0.9965824648227233,
+            1.000042229742468,
+            1.002418288190945,
+            1.0007682009464018,
+            0.9927223778903325,
+            0.9957143804203052,
+            0.9942704173950055,
+            1.0015490539285368,
+            1.0024138181114925
+          ]
+        },
+        "on/auto": {
+          "median": 0.7441291572998698,
+          "ci95": [
+            0.7416581483673765,
+            0.7462176204355646
+          ],
+          "spread": 0.010388994202063406,
+          "ratios": [
+            0.7435721133869484,
+            0.7466420871021436,
+            0.7446862012127912,
+            0.7430843181981465,
+            0.746458568242978,
+            0.7475063223572772,
+            0.7452008129668481,
+            0.7406735917692878,
+            0.7398203332050415,
+            0.7399550071060277,
+            0.7426427049654654,
+            0.7459766726281511
+          ]
+        },
+        "off/baseline": {
+          "median": 0.5275965906258259,
+          "ci95": [
+            0.5264378813748924,
+            0.5286634104392347
+          ],
+          "spread": 0.011390675212585855,
+          "ratios": [
+            0.5236157346463471,
+            0.5266157143591964,
+            0.5262600483905885,
+            0.5278033424560961,
+            0.5288682515915346,
+            0.5271070906488143,
+            0.5259367956140579,
+            0.5283495940493222,
+            0.5285791673349817,
+            0.5287476535434875,
+            0.5295800714159032,
+            0.5273898387955557
+          ]
+        },
+        "off/auto": {
+          "median": 0.7442767804559737,
+          "ci95": [
+            0.744055830016306,
+            0.7456677706247978
+          ],
+          "spread": 0.006652724886091921,
+          "ratios": [
+            0.7441083701930256,
+            0.7443344891580936,
+            0.7440032898395865,
+            0.7456325436453768,
+            0.7464270468210195,
+            0.7457029976042188,
+            0.7446287884268606,
+            0.7461034507384815,
+            0.7430045681300221,
+            0.7442190717538537,
+            0.7414940906313859,
+            0.7441803566051607
+          ]
+        },
+        "auto/baseline": {
+          "median": 0.7080025375068626,
+          "ci95": [
+            0.7070974679724472,
+            0.7095793223325435
+          ],
+          "spread": 0.01495652692259708,
+          "ratios": [
+            0.7036820920459724,
+            0.707498741533318,
+            0.7073356470023872,
+            0.7078598526234922,
+            0.70853307613108,
+            0.7068592889425073,
+            0.7063073625251286,
+            0.7081452223902331,
+            0.7114076951980233,
+            0.71047313030748,
+            0.7142067322006074,
+            0.708685514357607
+          ]
+        }
+      }
+    },
+    "HLLD/65536": {
+      "status": "unable_to_time",
+      "aa": [
+        {
+          "median": 1.0011521455660772,
+          "ci95": [
+            0.9976937163107138,
+            1.002325634489925
+          ],
+          "spread": 0.03283618040881886,
+          "ratios": [
+            0.9954165973003674,
+            1.0000145609638962,
+            0.9999708353210603,
+            1.0069897946393724,
+            1.0022897301682585,
+            1.0023256344899247,
+            1.0116135939011144,
+            1.0,
+            0.9794521271521452,
+            1.0023256344899247,
+            1.0022950954503467,
+            0.9953740593437899
+          ],
+          "passed": false
+        },
+        {
+          "median": 0.9988622602037444,
+          "ci95": [
+            0.9919464152136122,
+            1.0000289430913063
+          ],
+          "spread": 0.06097666742391672,
+          "ratios": [
+            0.9908534351733722,
+            0.9930393952538523,
+            1.0,
+            0.9977048714395742,
+            0.9557378229873604,
+            1.013989487923413,
+            0.9977245204074887,
+            1.014015530364119,
+            1.000029165529543,
+            0.9883989181821818,
+            1.0000287206530698,
+            1.0
+          ],
+          "passed": false
+        }
+      ],
+      "frozen_runner": "/data/home/chh/simplify-v2/build/b2b-layouts/anchor-heldout/hip-runner"
+    },
+    "Landau/mixed": {
+      "status": "validated",
+      "aa": [
+        {
+          "median": 1.0,
+          "ci95": [
+            0.997849844930269,
+            1.0000134561015321
+          ],
+          "spread": 0.026279639993349813,
+          "ratios": [
+            1.0,
+            1.0000269122030643,
+            0.9957266013393549,
+            1.004283416071747,
+            0.9999730885211828,
+            1.0,
+            0.9999730885211828,
+            0.9957080566286516,
+            1.0,
+            1.0000269122030643,
+            1.0,
+            0.9785670268955688
+          ],
+          "passed": true
+        }
+      ],
+      "frozen_runner": "/data/home/chh/simplify-v2/build/b2b-layouts/anchor-heldout/hip-runner",
+      "rounds": [
+        {
+          "baseline": 85.75999451,
+          "on": 37.28000259,
+          "auto": 47.19900131,
+          "off": 37.28000259
+        },
+        {
+          "on": 37.28000259,
+          "off": 37.11999893,
+          "baseline": 86.08000183,
+          "auto": 45.60000229
+        },
+        {
+          "off": 35.84000015,
+          "auto": 45.43999863,
+          "on": 35.84000015,
+          "baseline": 84.31900024
+        },
+        {
+          "auto": 45.59899902,
+          "baseline": 84.31999969,
+          "off": 35.84000015,
+          "on": 35.84000015
+        },
+        {
+          "baseline": 84.31900024,
+          "on": 35.8390007,
+          "auto": 45.43999863,
+          "off": 35.84000015
+        },
+        {
+          "on": 35.84000015,
+          "off": 35.84000015,
+          "baseline": 84.47899628,
+          "auto": 45.75899887
+        },
+        {
+          "off": 35.84000015,
+          "auto": 45.75899887,
+          "on": 35.84000015,
+          "baseline": 84.31900024
+        },
+        {
+          "auto": 45.43999863,
+          "baseline": 84.31900024,
+          "off": 35.84000015,
+          "on": 35.8390007
+        },
+        {
+          "baseline": 84.47899628,
+          "on": 35.84000015,
+          "auto": 45.60000229,
+          "off": 35.84000015
+        },
+        {
+          "on": 35.84000015,
+          "off": 35.84000015,
+          "baseline": 84.48000336,
+          "auto": 45.59899902
+        },
+        {
+          "off": 35.99900055,
+          "auto": 45.60000229,
+          "on": 35.84000015,
+          "baseline": 84.31999969
+        },
+        {
+          "auto": 45.75899887,
+          "baseline": 84.48000336,
+          "off": 35.84000015,
+          "on": 35.84000015
+        }
+      ],
+      "median_us": {
+        "baseline": 84.39949798500001,
+        "on": 35.84000015,
+        "off": 35.84000015,
+        "auto": 45.60000229
+      },
+      "contrasts": {
+        "on/baseline": {
+          "median": 0.4250440341578605,
+          "ci95": [
+            0.42424746656802964,
+            0.4250524798442511
+          ],
+          "spread": 0.02465369136960427,
+          "ratios": [
+            0.434701550565666,
+            0.4330855227399337,
+            0.4250524798442511,
+            0.4250474416717826,
+            0.4250406266439385,
+            0.42424746656802964,
+            0.4250524798442511,
+            0.4250406266439385,
+            0.42424746656802964,
+            0.42424240914471484,
+            0.4250474416717826,
+            0.42424240914471484
+          ]
+        },
+        "on/off": {
+          "median": 1.0,
+          "ci95": [
+            0.9999860567801923,
+            1.0
+          ],
+          "spread": 0.008765961452214865,
+          "ratios": [
+            1.0,
+            1.0043104435509747,
+            1.0,
+            1.0,
+            0.9999721135603845,
+            1.0,
+            1.0,
+            0.9999721135603845,
+            1.0,
+            1.0,
+            0.9955831996008012,
+            1.0
+          ]
+        },
+        "on/auto": {
+          "median": 0.7859821689129701,
+          "ci95": [
+            0.7845993990307327,
+            0.7887214239777367
+          ],
+          "spread": 0.04380549982188264,
+          "ratios": [
+            0.7898472754782956,
+            0.8175438753908888,
+            0.7887324214472584,
+            0.7859821689129701,
+            0.7887104265082149,
+            0.7832339219618946,
+            0.7832339219618946,
+            0.7887104265082149,
+            0.785964876099571,
+            0.7859821689129701,
+            0.785964876099571,
+            0.7832339219618946
+          ]
+        },
+        "off/baseline": {
+          "median": 0.4250524798442511,
+          "ci95": [
+            0.42424746656802964,
+            0.42599279994554384
+          ],
+          "spread": 0.02465369136960427,
+          "ratios": [
+            0.434701550565666,
+            0.4312267442013831,
+            0.4250524798442511,
+            0.4250474416717826,
+            0.4250524798442511,
+            0.42424746656802964,
+            0.4250524798442511,
+            0.4250524798442511,
+            0.42424746656802964,
+            0.42424240914471484,
+            0.42693312004683664,
+            0.42424240914471484
+          ]
+        },
+        "off/auto": {
+          "median": 0.7873572951801142,
+          "ci95": [
+            0.7845993990307327,
+            0.7890920741244576
+          ],
+          "spread": 0.039325545725945155,
+          "ratios": [
+            0.7898472754782956,
+            0.8140350233741184,
+            0.7887324214472584,
+            0.7859821689129701,
+            0.7887324214472584,
+            0.7832339219618946,
+            0.7832339219618946,
+            0.7887324214472584,
+            0.785964876099571,
+            0.7859821689129701,
+            0.7894517268016567,
+            0.7832339219618946
+          ]
+        },
+        "auto/baseline": {
+          "median": 0.540282131154985,
+          "ci95": [
+            0.5389058041563896,
+            0.54165802317869
+          ],
+          "spread": 0.03892804051107879,
+          "ratios": [
+            0.5503615243876488,
+            0.5297397922929389,
+            0.5389058041563896,
+            0.5407850947301159,
+            0.5389058041563896,
+            0.541661251730961,
+            0.54268905869086,
+            0.5389058041563896,
+            0.5397791675798541,
+            0.5397608570833751,
+            0.5407969930935373,
+            0.5416547946264192
+          ]
+        }
+      }
+    },
+    "Landau/coherent": {
+      "status": "unable_to_time",
+      "aa": [
+        {
+          "median": 1.0,
+          "ci95": [
+            0.9999759747587376,
+            1.0066904414428035
+          ],
+          "spread": 0.15395085305570766,
+          "ratios": [
+            1.0,
+            1.006711403061799,
+            1.0,
+            1.0,
+            1.006711403061799,
+            0.9923187358269674,
+            0.9999519495174751,
+            1.0,
+            1.13846159496302,
+            0.9865771942958649,
+            1.0,
+            1.0066694798238078
+          ],
+          "passed": false
+        },
+        {
+          "median": 1.003334739911904,
+          "ci95": [
+            0.9928994334117635,
+            1.01057358616809
+          ],
+          "spread": 0.3024475564300231,
+          "ratios": [
+            1.0135135002453892,
+            0.992424159392221,
+            1.0,
+            1.007633672090791,
+            1.1538461960059188,
+            0.8859060699292822,
+            0.9923664195122665,
+            1.0153846928698254,
+            1.0,
+            0.993374707431306,
+            1.0066694798238078,
+            1.006756749911546
+          ],
+          "passed": false
+        }
+      ],
+      "frozen_runner": "/data/home/chh/simplify-v2/build/b2b-layouts/anchor-heldout/hip-runner"
+    },
+    "SW2D/258x259": {
+      "status": "validated",
+      "aa": [
+        {
+          "median": 0.9999961684653186,
+          "ci95": [
+            0.9987653405543669,
+            1.0012330015898157
+          ],
+          "spread": 0.007453246390965784,
+          "ratios": [
+            0.9963040717621594,
+            1.0,
+            0.9999923369306372,
+            1.0,
+            0.9999923282796319,
+            1.0012284596394028,
+            0.9975309068552297,
+            1.0012375435402285,
+            0.9987653947851867,
+            1.0037297714893252,
+            1.0037128665445272,
+            0.9987652863235474
+          ],
+          "passed": true
+        }
+      ],
+      "frozen_runner": "/data/home/chh/simplify-v2/build/b2b-layouts/anchor-heldout/hip-runner",
+      "rounds": [
+        {
+          "baseline": 129.4389954,
+          "on": 129.4399872,
+          "auto": 129.6000061,
+          "off": 129.4389954
+        },
+        {
+          "on": 129.118988,
+          "off": 129.4389954,
+          "baseline": 129.598999,
+          "auto": 129.4399872
+        },
+        {
+          "off": 129.4389954,
+          "auto": 129.1200104,
+          "on": 129.598999,
+          "baseline": 129.598999
+        },
+        {
+          "auto": 129.4399872,
+          "baseline": 129.118988,
+          "off": 129.4389954,
+          "on": 129.6000061
+        },
+        {
+          "baseline": 128.8000031,
+          "on": 129.118988,
+          "auto": 129.7590027,
+          "off": 129.2799988
+        },
+        {
+          "on": 129.7590027,
+          "off": 129.4399872,
+          "baseline": 128.9599915,
+          "auto": 129.7590027
+        },
+        {
+          "off": 129.4389954,
+          "auto": 129.4399872,
+          "on": 129.4389954,
+          "baseline": 129.2799988
+        },
+        {
+          "auto": 129.7599945,
+          "baseline": 129.118988,
+          "off": 129.118988,
+          "on": 128.9599915
+        },
+        {
+          "baseline": 129.118988,
+          "on": 128.9599915,
+          "auto": 128.6399994,
+          "off": 129.4389954
+        },
+        {
+          "on": 128.9589996,
+          "off": 128.9589996,
+          "baseline": 128.7990112,
+          "auto": 129.4389954
+        },
+        {
+          "off": 128.8000031,
+          "auto": 128.8000031,
+          "on": 129.4389954,
+          "baseline": 129.598999
+        },
+        {
+          "auto": 129.598999,
+          "baseline": 129.279007,
+          "off": 129.4389954,
+          "on": 129.4389954
+        }
+      ],
+      "median_us": {
+        "baseline": 129.19899750000002,
+        "on": 129.4389954,
+        "off": 129.4389954,
+        "auto": 129.4399872
+      },
+      "contrasts": {
+        "on/baseline": {
+          "median": 1.0006187623112852,
+          "ci95": [
+            0.9987686048158928,
+            1.001859373138843
+          ],
+          "spread": 0.0099364267558546,
+          "ratios": [
+            1.000007662296798,
+            0.996296182812338,
+            1.0,
+            1.0037253862305675,
+            1.002476590778902,
+            1.0061958068599903,
+            1.0012298623257725,
+            0.9987686048158928,
+            0.9987686048158928,
+            1.0012421554987838,
+            0.9987653947851867,
+            1.0012375435402285
+          ]
+        },
+        "on/off": {
+          "median": 1.0,
+          "ci95": [
+            0.9987615811769188,
+            1.0012400215986226
+          ],
+          "spread": 0.008693908122825666,
+          "ratios": [
+            1.000007662296798,
+            0.9975277357568243,
+            1.001236131349023,
+            1.001243911848222,
+            0.9987545575379446,
+            1.002464582289452,
+            1.0,
+            0.9987686048158928,
+            0.9962993849069999,
+            1.0,
+            1.004961120222209,
+            1.0
+          ]
+        },
+        "on/auto": {
+          "median": 0.9993788662735495,
+          "ci95": [
+            0.9969059071497254,
+            1.0018618704339755
+          ],
+          "spread": 0.011195394137007986,
+          "ratios": [
+            0.9987652863235474,
+            0.997520092461814,
+            1.0037096387966213,
+            1.0012362400789856,
+            0.9950676663146086,
+            1.0,
+            0.9999923377619124,
+            0.9938347485056344,
+            1.0024875007889653,
+            0.9962917218376371,
+            1.004961120222209,
+            0.9987653947851867
+          ]
+        },
+        "off/baseline": {
+          "median": 1.0012337029330005,
+          "ci95": [
+            0.9993826973925932,
+            1.0024783914818167
+          ],
+          "spread": 0.009953176761420712,
+          "ratios": [
+            1.0,
+            0.9987653947851867,
+            0.9987653947851867,
+            1.0024783914818167,
+            1.0037266745997462,
+            1.0037220512689007,
+            1.0012298623257725,
+            1.0,
+            1.0024783914818167,
+            1.0012421554987838,
+            0.9938348605609215,
+            1.0012375435402285
+          ]
+        },
+        "off/auto": {
+          "median": 0.9993788662735495,
+          "ci95": [
+            0.9969249940913734,
+            0.9999961688809561
+          ],
+          "spread": 0.01120639903430698,
+          "ratios": [
+            0.99875763354613,
+            0.9999923377619124,
+            1.0024704536424045,
+            0.9999923377619124,
+            0.9963085112398139,
+            0.9975414769429327,
+            0.9999923377619124,
+            0.9950600606722436,
+            1.0062111007752386,
+            0.9962917218376371,
+            1.0,
+            0.9987653947851867
+          ]
+        },
+        "auto/baseline": {
+          "median": 1.0018595582519196,
+          "ci95": [
+            0.9975385596921162,
+            1.0049666615253612
+          ],
+          "spread": 0.013695221277018943,
+          "ratios": [
+            1.001243911848222,
+            0.9987730476220731,
+            0.9963040717621594,
+            1.0024860727687859,
+            1.0074456488891186,
+            1.0061958068599903,
+            1.0012375340461406,
+            1.0049644634761232,
+            0.9962903318294285,
+            1.0049688595745991,
+            0.9938348605609215,
+            1.0024752046556173
+          ]
+        }
+      }
+    },
+    "CED/110": {
+      "status": "unable_to_time",
+      "aa": [
+        {
+          "median": 1.0011659838833276,
+          "ci95": [
+            1.0000020134485705,
+            1.0059844747609943
+          ],
+          "spread": 0.11306882391832995,
+          "ratios": [
+            1.1094450725738847,
+            1.085342264257975,
+            1.005841676084609,
+            1.0061272734373798,
+            1.0014149582405663,
+            0.996744360037245,
+            1.0012501031183196,
+            1.0003354067548897,
+            0.9969173873504742,
+            1.0000893851497197,
+            0.9999146417474213,
+            1.0010818646483357
+          ],
+          "passed": false
+        },
+        {
+          "median": 1.0008094004736456,
+          "ci95": [
+            0.942114492140384,
+            1.0515474447466304
+          ],
+          "spread": 0.6815897955713512,
+          "ratios": [
+            1.0362297955844577,
+            1.264193110369094,
+            1.0086199242637583,
+            1.1523987664906183,
+            0.889006788674184,
+            1.0003304612243435,
+            0.7517844801975389,
+            1.0668650939088031,
+            0.976160537846525,
+            1.001288339722948,
+            0.9080684464342433,
+            0.9818011575874742
+          ],
+          "passed": false
+        }
+      ],
+      "frozen_runner": "/data/home/chh/simplify-v2/build/b2b-layouts/anchor-ablation/heldout/CED/runner"
+    },
+    "TPACF/16384": {
+      "status": "validated",
+      "aa": [
+        {
+          "median": 0.9999098021090871,
+          "ci95": [
+            0.9968121896059998,
+            1.0042599863815185
+          ],
+          "spread": 0.014303152122349783,
+          "ratios": [
+            0.9997641414703219,
+            0.9971568618497673,
+            1.0056034320700558,
+            0.9970700945236282,
+            1.007462912418532,
+            0.9939648568501421,
+            0.9965542846883714,
+            1.0000554627478524,
+            0.993256217641141,
+            1.0008946304624102,
+            1.0041209333073735,
+            1.0043990394556632
+          ],
+          "passed": true
+        }
+      ],
+      "frozen_runner": "/data/home/chh/simplify-v2/build/b2b-layouts/anchor-ablation/heldout/TPACF/runner",
+      "rounds": [
+        {
+          "baseline": 9698.358398,
+          "on": 10167.01855,
+          "auto": 29081.07227,
+          "off": 11587.97754
+        },
+        {
+          "on": 10158.21191,
+          "off": 11590.22461,
+          "baseline": 9648.776367,
+          "auto": 29099.59961
+        },
+        {
+          "off": 11590.05371,
+          "auto": 29062.46875,
+          "on": 10167.82031,
+          "baseline": 9687.658203
+        },
+        {
+          "auto": 29094.64258,
+          "baseline": 9664.461914,
+          "off": 11640.44531,
+          "on": 10155.50195
+        },
+        {
+          "baseline": 9692.947266,
+          "on": 10172.93262,
+          "auto": 29068.57812,
+          "off": 11613.2627
+        },
+        {
+          "on": 10170.84473,
+          "off": 11615.82031,
+          "baseline": 9689.891602,
+          "auto": 29058.02734
+        },
+        {
+          "off": 11646.69727,
+          "auto": 29056.5957,
+          "on": 10130.05273,
+          "baseline": 9697.896484
+        },
+        {
+          "auto": 29065.9707,
+          "baseline": 9703.182617,
+          "off": 11621.57812,
+          "on": 10189.09473
+        },
+        {
+          "baseline": 9704.449219,
+          "on": 10181.09961,
+          "auto": 29056.23242,
+          "off": 11591.49219
+        },
+        {
+          "on": 10183.02637,
+          "off": 11625.39941,
+          "baseline": 9709.724609,
+          "auto": 29085.66602
+        },
+        {
+          "off": 11637.73926,
+          "auto": 29080.06836,
+          "on": 10187.16797,
+          "baseline": 9611.81543
+        },
+        {
+          "auto": 29051.5625,
+          "baseline": 9677.257812,
+          "off": 11553.55469,
+          "on": 10195.32812
+        }
+      ],
+      "median_us": {
+        "baseline": 9691.419434,
+        "on": 10171.888675,
+        "off": 11614.541505,
+        "auto": 29067.274409999998
+      },
+      "contrasts": {
+        "on/baseline": {
+          "median": 1.0495994161423285,
+          "ci95": [
+            1.04893090689702,
+            1.0518033881515567
+          ],
+          "spread": 0.014644445960600105,
+          "ratios": [
+            1.0483236577539399,
+            1.0527979428295522,
+            1.0495643113060393,
+            1.0508088334735612,
+            1.0495190307785587,
+            1.0496345209786178,
+            1.0445618538734651,
+            1.050077601564324,
+            1.0491166866087343,
+            1.0487451271853059,
+            1.0598588834950193,
+            1.05353482547066
+          ]
+        },
+        "on/off": {
+          "median": 0.8762109628148884,
+          "ci95": [
+            0.8754795299428337,
+            0.8773324503711825
+          ],
+          "spread": 0.014557496131226477,
+          "ratios": [
+            0.8773764459678096,
+            0.8764465100387732,
+            0.8772884547745551,
+            0.8724324267281833,
+            0.8759754155910036,
+            0.8756027950298072,
+            0.8697790021634175,
+            0.8767393399408652,
+            0.8783251925738474,
+            0.8759291625921005,
+            0.87535626485586,
+            0.8824408066224335
+          ]
+        },
+        "on/auto": {
+          "median": 0.3499908085169435,
+          "ci95": [
+            0.34934686501173706,
+            0.35035370745322303
+          ],
+          "spread": 0.006618103407589171,
+          "ratios": [
+            0.3496094798570507,
+            0.34908425016642347,
+            0.3498608599794193,
+            0.3490505828375775,
+            0.34996320005761605,
+            0.3500184169762709,
+            0.3486317817334671,
+            0.35055064340238945,
+            0.35039297121646573,
+            0.35010463102333317,
+            0.3503144436899804,
+            0.35093906291615123
+          ]
+        },
+        "off/baseline": {
+          "median": 1.1979112865434138,
+          "ci95": [
+            1.1956060873293082,
+            1.2010813677768815
+          ],
+          "spread": 0.01414461001288947,
+          "ratios": [
+            1.1948390711555552,
+            1.2012118603598265,
+            1.1963731035030611,
+            1.2044587079532671,
+            1.1981147097267206,
+            1.198756476037615,
+            1.2009508751939364,
+            1.1977078633601068,
+            1.194451321081203,
+            1.1972944525351779,
+            1.2107743167515232,
+            1.193887247239952
+          ]
+        },
+        "off/auto": {
+          "median": 0.39960386200312425,
+          "ci95": [
+            0.39863472159582847,
+            0.3999617347603538
+          ],
+          "spread": 0.007887194455137525,
+          "ratios": [
+            0.39847146736587646,
+            0.3982949856814198,
+            0.39879797582578047,
+            0.40008896063915833,
+            0.39951258200722756,
+            0.3997456597478719,
+            0.4008280044313656,
+            0.3998345088815492,
+            0.39893307647213544,
+            0.399695141999021,
+            0.4001964203085525,
+            0.39769133553487873
+          ]
+        },
+        "auto/baseline": {
+          "median": 2.9988695483233876,
+          "ci95": [
+            2.9958471118404786,
+            3.0062610695087244
+          ],
+          "spread": 0.010465735739990212,
+          "ratios": [
+            2.998556155235211,
+            3.015884968535928,
+            2.999947783149508,
+            3.0104772349356894,
+            2.9989411189684274,
+            2.9987979776783473,
+            2.996175072392121,
+            2.9955089837303843,
+            2.994114530798082,
+            2.9955191512888355,
+            3.0254501422526796,
+            3.00204490408176
+          ]
+        }
+      }
+    },
+    "SRAD-stage2/256": {
+      "status": "unable_to_time",
+      "aa": [
+        {
+          "median": 1.0082912841835743,
+          "ci95": [
+            0.9916833920833138,
+            1.0199364888070672
+          ],
+          "spread": 0.13254735513602878,
+          "ratios": [
+            0.9921387058781155,
+            1.0078869241658255,
+            1.0158730006141345,
+            1.007874008486267,
+            0.9062011932056907,
+            1.0239999770000001,
+            0.9844960470036404,
+            1.0239999770000001,
+            0.9912280782885119,
+            1.0088271998012663,
+            1.0263157645862184,
+            1.0086956442013233
+          ],
+          "passed": false
+        },
+        {
+          "median": 1.0,
+          "ci95": [
+            0.9913043557986769,
+            1.0132871263906094
+          ],
+          "spread": 0.15382201398496198,
+          "ratios": [
+            1.0178571254783164,
+            0.991304355798677,
+            1.0,
+            1.0236220254588004,
+            1.0,
+            0.992125992005859,
+            0.9843750147857668,
+            1.1140350847712757,
+            1.0087171273029023,
+            0.9655172732609998,
+            1.0,
+            0.991304355798677
+          ],
+          "passed": false
+        }
+      ],
+      "frozen_runner": "/data/home/chh/simplify-v2/build/b2b-layouts/anchor-heldout/hip-runner"
+    },
+    "SRAD-stage2/1024": {
+      "status": "unable_to_time",
+      "aa": [
+        {
+          "median": 1.1309087570413887,
+          "ci95": [
+            0.9318732878474627,
+            1.2563499949135708
+          ],
+          "spread": 1.1053512065569655,
+          "ratios": [
+            0.8630176925365615,
+            1.1820892075171527,
+            1.0797283065656247,
+            0.8469135569739761,
+            0.8233568570152238,
+            1.7334553523439524,
+            1.0548561701817731,
+            1.2521792033574735,
+            1.1901993478476465,
+            1.0007288831583638,
+            1.502251294676685,
+            1.2605207864696684
+          ],
+          "passed": false
+        },
+        {
+          "median": 1.1430130778431673,
+          "ci95": [
+            0.7728332239648059,
+            1.2403743005246772
+          ],
+          "spread": 1.3026670133814573,
+          "ratios": [
+            1.4740033975150046,
+            1.6198116234266688,
+            0.7201075063936667,
+            0.7379162491043082,
+            0.8077501988253036,
+            1.2081838327333803,
+            0.9581418224122472,
+            1.272564768315974,
+            1.1513822103713436,
+            0.7034502227258564,
+            1.1346439453149908,
+            1.186453901065607
+          ],
+          "passed": false
+        }
+      ],
+      "frozen_runner": "/data/home/chh/simplify-v2/build/b2b-layouts/anchor-heldout/hip-runner"
+    },
+    "SasPoint5/interval-mixture": {
+      "status": "validated",
+      "aa": [
+        {
+          "median": 1.0,
+          "ci95": [
+            0.9997795048761106,
+            1.0
+          ],
+          "spread": 0.015611222645578016,
+          "ratios": [
+            1.0,
+            1.0,
+            1.0,
+            1.002647856041017,
+            0.9872358966546347,
+            1.0,
+            0.9995590097522211,
+            0.9991196772130166,
+            1.0008814867300113,
+            1.0,
+            1.0,
+            1.0
+          ],
+          "passed": true
+        }
+      ],
+      "frozen_runner": "/data/home/chh/simplify-v2/build/b2b-layouts/anchor-heldout/cuda-runner",
+      "rounds": [
+        {
+          "baseline": 151.552002,
+          "on": 72.54399872,
+          "auto": 151.552002,
+          "off": 72.70400238
+        },
+        {
+          "on": 72.70400238,
+          "off": 72.70400238,
+          "baseline": 151.552002,
+          "auto": 151.552002
+        },
+        {
+          "off": 72.70400238,
+          "auto": 151.552002,
+          "on": 71.68000031,
+          "baseline": 151.552002
+        },
+        {
+          "auto": 151.552002,
+          "baseline": 151.6799927,
+          "off": 72.70400238,
+          "on": 72.70400238
+        },
+        {
+          "baseline": 151.552002,
+          "on": 72.70400238,
+          "auto": 152.5119934,
+          "off": 72.70400238
+        },
+        {
+          "on": 72.54399872,
+          "off": 72.70400238,
+          "baseline": 151.552002,
+          "auto": 151.552002
+        },
+        {
+          "off": 72.70400238,
+          "auto": 151.647995,
+          "on": 72.70400238,
+          "baseline": 151.552002
+        },
+        {
+          "auto": 152.576004,
+          "baseline": 151.552002,
+          "off": 72.70400238,
+          "on": 72.70400238
+        },
+        {
+          "baseline": 152.576004,
+          "on": 72.70400238,
+          "auto": 151.552002,
+          "off": 72.60800171
+        },
+        {
+          "on": 72.70400238,
+          "off": 72.70400238,
+          "baseline": 151.5839996,
+          "auto": 152.447998
+        },
+        {
+          "off": 72.6720047,
+          "auto": 151.552002,
+          "on": 72.6720047,
+          "baseline": 151.552002
+        },
+        {
+          "auto": 151.552002,
+          "baseline": 151.552002,
+          "off": 72.70400238,
+          "on": 72.70400238
+        }
+      ],
+      "median_us": {
+        "baseline": 151.552002,
+        "on": 72.70400238,
+        "off": 72.70400238,
+        "auto": 151.552002
+      },
+      "contrasts": {
+        "on/baseline": {
+          "median": 0.47957353978057937,
+          "ci95": [
+            0.4786739717235805,
+            0.47972973910301764
+          ],
+          "spread": 0.014285743102280035,
+          "ratios": [
+            0.47867397172358045,
+            0.4797297391030177,
+            0.4729729687767503,
+            0.4793249332744727,
+            0.4797297391030177,
+            0.47867397172358045,
+            0.4797297391030177,
+            0.4797297391030177,
+            0.4765100702204784,
+            0.47962847379572643,
+            0.4795186057654323,
+            0.4797297391030177
+          ]
+        },
+        "on/off": {
+          "median": 1.0,
+          "ci95": [
+            0.9988996227527907,
+            1.0
+          ],
+          "spread": 0.015626808943730586,
+          "ratios": [
+            0.9977992455055814,
+            1.0,
+            0.9859154649471994,
+            1.0,
+            1.0,
+            0.9977992455055814,
+            1.0,
+            1.0,
+            1.0013221775525987,
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "on/auto": {
+          "median": 0.4790500212369035,
+          "ci95": [
+            0.47681012350410557,
+            0.47972973910301764
+          ],
+          "spread": 0.014285743102280035,
+          "ratios": [
+            0.47867397172358045,
+            0.4797297391030177,
+            0.4729729687767503,
+            0.4797297391030177,
+            0.4767100656098303,
+            0.47867397172358045,
+            0.47942607075022653,
+            0.4765100702204784,
+            0.4797297391030177,
+            0.4769101813983808,
+            0.4795186057654323,
+            0.4797297391030177
+          ]
+        },
+        "off/baseline": {
+          "median": 0.4797297391030177,
+          "ci95": [
+            0.4795735397805793,
+            0.47972973910301764
+          ],
+          "spread": 0.008087881066421332,
+          "ratios": [
+            0.4797297391030177,
+            0.4797297391030177,
+            0.4797297391030177,
+            0.4793249332744727,
+            0.4797297391030177,
+            0.4797297391030177,
+            0.4797297391030177,
+            0.4797297391030177,
+            0.47588087121484707,
+            0.47962847379572643,
+            0.4795186057654323,
+            0.4797297391030177
+          ]
+        },
+        "off/auto": {
+          "median": 0.479624172434225,
+          "ci95": [
+            0.47800323507144366,
+            0.47972973910301764
+          ],
+          "spread": 0.006756769864379786,
+          "ratios": [
+            0.4797297391030177,
+            0.4797297391030177,
+            0.4797297391030177,
+            0.4797297391030177,
+            0.4767100656098303,
+            0.4797297391030177,
+            0.47942607075022653,
+            0.4765100702204784,
+            0.4790962887445063,
+            0.4769101813983808,
+            0.4795186057654323,
+            0.4797297391030177
+          ]
+        },
+        "auto/baseline": {
+          "median": 1.0,
+          "ci95": [
+            1.0,
+            1.0031665996074952
+          ],
+          "spread": 0.013559193667759706,
+          "ratios": [
+            1.0,
+            1.0,
+            1.0,
+            0.9991561794161398,
+            1.0063344026296663,
+            1.0,
+            1.0006333997488204,
+            1.0067567698643798,
+            0.9932885776717548,
+            1.00569979946617,
+            1.0,
+            1.0
+          ]
+        }
+      }
+    },
+    "SasPoint5/coherent-blocks": {
+      "status": "unable_to_time",
+      "aa": [
+        {
+          "median": 1.0,
+          "ci95": [
+            1.0,
+            1.0
+          ],
+          "spread": 0.07559540631272754,
+          "ratios": [
+            1.0,
+            1.0,
+            1.0,
+            0.9636135700065848,
+            1.0,
+            1.0,
+            0.9660377239779877,
+            1.0,
+            1.0,
+            1.0364583293596905,
+            1.0012562653050112,
+            1.0
+          ],
+          "passed": false
+        },
+        {
+          "median": 1.0,
+          "ci95": [
+            1.0,
+            1.0
+          ],
+          "spread": 0.03645832935969029,
+          "ratios": [
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            0.9974026306175164,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            0.964824124302022,
+            1.0
+          ],
+          "passed": false
+        }
+      ],
+      "frozen_runner": "/data/home/chh/simplify-v2/build/b2b-layouts/anchor-heldout/cuda-runner"
+    },
+    "SasPoint5/uniform-01": {
+      "status": "validated",
+      "aa": [
+        {
+          "median": 0.9994318255472987,
+          "ci95": [
+            0.9834949208015887,
+            1.0
+          ],
+          "spread": 0.019697312279158385,
+          "ratios": [
+            0.9977273020116381,
+            1.0,
+            0.9988636510945975,
+            0.982935169917408,
+            0.9818182126129907,
+            1.0,
+            1.001157392548194,
+            1.0,
+            1.0,
+            0.9818182126129907,
+            0.9840546716857691,
+            1.0
+          ],
+          "passed": true
+        }
+      ],
+      "frozen_runner": "/data/home/chh/simplify-v2/build/b2b-layouts/anchor-heldout/cuda-runner",
+      "rounds": [
+        {
+          "baseline": 65.53600311,
+          "on": 56.12799835,
+          "auto": 65.53600311,
+          "off": 56.28800201
+        },
+        {
+          "on": 56.31999969,
+          "off": 56.31999969,
+          "baseline": 65.53600311,
+          "auto": 64.51200104
+        },
+        {
+          "off": 55.29600143,
+          "auto": 64.51200104,
+          "on": 56.25600052,
+          "baseline": 65.53600311
+        },
+        {
+          "auto": 65.53600311,
+          "baseline": 65.53600311,
+          "off": 56.22399902,
+          "on": 55.29600143
+        },
+        {
+          "baseline": 65.53600311,
+          "on": 56.31999969,
+          "auto": 65.53600311,
+          "off": 56.25600052
+        },
+        {
+          "on": 56.28800201,
+          "off": 55.29600143,
+          "baseline": 65.53600311,
+          "auto": 65.53600311
+        },
+        {
+          "off": 55.29600143,
+          "auto": 65.47200012,
+          "on": 56.15999985,
+          "baseline": 65.53600311
+        },
+        {
+          "auto": 65.53600311,
+          "baseline": 64.51200104,
+          "off": 55.36000061,
+          "on": 55.39200211
+        },
+        {
+          "baseline": 65.40799713,
+          "on": 55.29600143,
+          "auto": 65.53600311,
+          "off": 55.29600143
+        },
+        {
+          "on": 56.28800201,
+          "off": 55.29600143,
+          "baseline": 65.53600311,
+          "auto": 65.53600311
+        },
+        {
+          "off": 56.19200134,
+          "auto": 64.51200104,
+          "on": 55.29600143,
+          "baseline": 65.47200012
+        },
+        {
+          "auto": 65.40799713,
+          "baseline": 65.53600311,
+          "off": 56.15999985,
+          "on": 56.15999985
+        }
+      ],
+      "median_us": {
+        "baseline": 65.53600311,
+        "on": 56.15999985,
+        "off": 55.76000023,
+        "auto": 65.53600311
+      },
+      "contrasts": {
+        "on/baseline": {
+          "median": 0.8576659777474794,
+          "ci95": [
+            0.8509232399032362,
+            0.85888670866184
+          ],
+          "spread": 0.018518486572601578,
+          "ratios": [
+            0.8564452466805311,
+            0.8593749544882797,
+            0.8583984046994166,
+            0.843749981780053,
+            0.8593749544882797,
+            0.8588867086618399,
+            0.8569335507955422,
+            0.8586309712460285,
+            0.8454012331259408,
+            0.8588867086618399,
+            0.8445748003520744,
+            0.8569335507955422
+          ]
+        },
+        "on/off": {
+          "median": 1.0002890308855434,
+          "ci95": [
+            0.9985787054586555,
+            1.0164930326138415
+          ],
+          "spread": 0.03502326088927199,
+          "ratios": [
+            0.997157410917311,
+            1.0,
+            1.0173610942052524,
+            0.9834946356329102,
+            1.0011376416632614,
+            1.017939824839881,
+            1.01562497102243,
+            1.000578061771087,
+            1.0,
+            1.017939824839881,
+            0.9840546716857691,
+            1.0
+          ]
+        },
+        "on/auto": {
+          "median": 0.8581909300148554,
+          "ci95": [
+            0.8508300412585234,
+            0.8591308315750599
+          ],
+          "spread": 0.03468547909755704,
+          "ratios": [
+            0.8564452466805311,
+            0.8730158541366492,
+            0.872023803526402,
+            0.843749981780053,
+            0.8593749544882797,
+            0.8588867086618399,
+            0.8577712571338503,
+            0.8452148358365152,
+            0.843749981780053,
+            0.8588867086618399,
+            0.8571428654912484,
+            0.8586106028958603
+          ]
+        },
+        "off/baseline": {
+          "median": 0.8574218256899738,
+          "ci95": [
+            0.8437499817800529,
+            0.8583292215717329
+          ],
+          "spread": 0.018518486572601578,
+          "ratios": [
+            0.8588867086618399,
+            0.8593749544882797,
+            0.843749981780053,
+            0.8579101005844054,
+            0.8583984046994166,
+            0.843749981780053,
+            0.843749981780053,
+            0.8581349162565055,
+            0.8454012331259408,
+            0.843749981780053,
+            0.8582600384440492,
+            0.8569335507955422
+          ]
+        },
+        "off/auto": {
+          "median": 0.8575264830378269,
+          "ci95": [
+            0.8441623910660636,
+            0.8587486557788502
+          ],
+          "spread": 0.03468547909755704,
+          "ratios": [
+            0.8588867086618399,
+            0.8730158541366492,
+            0.8571428654912484,
+            0.8579101005844054,
+            0.8583984046994166,
+            0.843749981780053,
+            0.8445748003520744,
+            0.844726531721504,
+            0.843749981780053,
+            0.843749981780053,
+            0.8710317527611448,
+            0.8586106028958603
+          ]
+        },
+        "auto/baseline": {
+          "median": 1.0,
+          "ci95": [
+            0.9916920206627868,
+            1.0
+          ],
+          "spread": 0.031998049051778166,
+          "ratios": [
+            1.0,
+            0.9843749691557899,
+            0.9843749691557899,
+            1.0,
+            1.0,
+            1.0,
+            0.9990233919225656,
+            1.0158730477041795,
+            1.0019570386744237,
+            1.0,
+            0.9853372574804424,
+            0.998046783845131
+          ]
+        }
+      }
+    },
+    "HiPIMS-George/128x128": {
+      "status": "validated",
+      "aa": [
+        {
+          "median": 1.0,
+          "ci95": [
+            0.999353177746116,
+            1.0
+          ],
+          "spread": 0.0036456114534881845,
+          "ratios": [
+            1.0,
+            1.0,
+            1.0023472508204858,
+            1.0,
+            0.998706355492232,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            0.998706355492232,
+            0.998706355492232
+          ],
+          "passed": true
+        }
+      ],
+      "frozen_runner": "/data/home/chh/simplify-v2/build/b2b-layouts/anchor-heldout/cuda-runner",
+      "rounds": [
+        {
+          "baseline": 791.552002,
+          "on": 791.552002,
+          "auto": 791.552002,
+          "off": 791.4879761
+        },
+        {
+          "on": 790.5280151,
+          "off": 790.5280151,
+          "baseline": 791.552002,
+          "auto": 791.552002
+        },
+        {
+          "off": 791.552002,
+          "auto": 791.552002,
+          "on": 790.5280151,
+          "baseline": 791.552002
+        },
+        {
+          "auto": 791.552002,
+          "baseline": 791.552002,
+          "off": 791.552002,
+          "on": 790.5280151
+        },
+        {
+          "baseline": 791.552002,
+          "on": 791.552002,
+          "auto": 791.552002,
+          "off": 790.5280151
+        },
+        {
+          "on": 790.5280151,
+          "off": 790.5280151,
+          "baseline": 791.552002,
+          "auto": 791.552002
+        },
+        {
+          "off": 790.5280151,
+          "auto": 791.552002,
+          "on": 790.5280151,
+          "baseline": 791.552002
+        },
+        {
+          "auto": 792.5759888,
+          "baseline": 791.552002,
+          "off": 790.5280151,
+          "on": 790.5280151
+        },
+        {
+          "baseline": 791.552002,
+          "on": 790.5280151,
+          "auto": 791.552002,
+          "off": 790.5280151
+        },
+        {
+          "on": 790.5280151,
+          "off": 790.5280151,
+          "baseline": 791.552002,
+          "auto": 791.552002
+        },
+        {
+          "off": 790.5280151,
+          "auto": 791.552002,
+          "on": 790.5280151,
+          "baseline": 792.5120239
+        },
+        {
+          "auto": 791.552002,
+          "baseline": 791.552002,
+          "off": 790.5280151,
+          "on": 790.5280151
+        }
+      ],
+      "median_us": {
+        "baseline": 791.552002,
+        "on": 790.5280151,
+        "off": 790.5280151,
+        "auto": 791.552002
+      },
+      "contrasts": {
+        "on/baseline": {
+          "median": 0.998706355492232,
+          "ci95": [
+            0.9987063554922319,
+            0.9987063554922319
+          ],
+          "spread": 0.0025097261097686285,
+          "ratios": [
+            1.0,
+            0.998706355492232,
+            0.998706355492232,
+            0.998706355492232,
+            1.0,
+            0.998706355492232,
+            0.998706355492232,
+            0.998706355492232,
+            0.998706355492232,
+            0.998706355492232,
+            0.997496556846877,
+            0.998706355492232
+          ]
+        },
+        "on/off": {
+          "median": 1.0,
+          "ci95": [
+            1.0,
+            1.0
+          ],
+          "spread": 0.0025923182376381693,
+          "ratios": [
+            1.0000808930797858,
+            1.0,
+            0.998706355492232,
+            0.998706355492232,
+            1.0012953201916197,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "on/auto": {
+          "median": 0.998706355492232,
+          "ci95": [
+            0.9987063554922319,
+            0.9987063554922319
+          ],
+          "spread": 0.0025906402567414943,
+          "ratios": [
+            1.0,
+            0.998706355492232,
+            0.998706355492232,
+            0.998706355492232,
+            1.0,
+            0.998706355492232,
+            0.998706355492232,
+            0.9974160538182582,
+            0.998706355492232,
+            0.998706355492232,
+            0.998706355492232,
+            0.998706355492232
+          ]
+        },
+        "off/baseline": {
+          "median": 0.998706355492232,
+          "ci95": [
+            0.9987063554922319,
+            0.9993127344778037
+          ],
+          "spread": 0.0025097261097686285,
+          "ratios": [
+            0.9999191134633754,
+            0.998706355492232,
+            1.0,
+            1.0,
+            0.998706355492232,
+            0.998706355492232,
+            0.998706355492232,
+            0.998706355492232,
+            0.998706355492232,
+            0.998706355492232,
+            0.997496556846877,
+            0.998706355492232
+          ]
+        },
+        "off/auto": {
+          "median": 0.998706355492232,
+          "ci95": [
+            0.9987063554922319,
+            0.9993127344778037
+          ],
+          "spread": 0.0025906402567414943,
+          "ratios": [
+            0.9999191134633754,
+            0.998706355492232,
+            1.0,
+            1.0,
+            0.998706355492232,
+            0.998706355492232,
+            0.998706355492232,
+            0.9974160538182582,
+            0.998706355492232,
+            0.998706355492232,
+            0.998706355492232,
+            0.998706355492232
+          ]
+        },
+        "auto/baseline": {
+          "median": 1.0,
+          "ci95": [
+            1.0,
+            1.0
+          ],
+          "spread": 0.0025080482671016036,
+          "ratios": [
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0012936443814338,
+            1.0,
+            1.0,
+            0.9987886342780319,
+            1.0
+          ]
+        }
+      }
+    },
+    "SRAD16/256": {
+      "status": "unable_to_time",
+      "aa": [
+        {
+          "median": 1.0,
+          "ci95": [
+            0.9921875071487427,
+            1.0075084719376495
+          ],
+          "spread": 0.22305446789122207,
+          "ratios": [
+            0.9921875071487427,
+            1.0,
+            1.0,
+            1.0,
+            0.9921875071487427,
+            1.007874008486267,
+            1.007874008486267,
+            0.9007091514197014,
+            0.9928571494323981,
+            1.1016163519143771,
+            1.007142935389032,
+            0.9078013429216384
+          ],
+          "passed": false
+        },
+        {
+          "median": 1.0,
+          "ci95": [
+            0.9960937535743714,
+            1.003881845790315
+          ],
+          "spread": 0.1197774019866007,
+          "ratios": [
+            1.0,
+            1.0,
+            1.1023622028411557,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            0.9921875071487427,
+            1.0078248229540205,
+            0.9921875071487427,
+            0.984447624041574,
+            1.0077636915806298
+          ],
+          "passed": false
+        }
+      ],
+      "frozen_runner": "/data/home/chh/simplify-v2/build/b2b-layouts/anchor-heldout/hip-runner"
+    },
+    "SRAD32/256": {
+      "status": "validated",
+      "aa": [
+        {
+          "median": 1.0,
+          "ci95": [
+            0.9930312393750832,
+            1.0
+          ],
+          "spread": 0.16491971646043635,
+          "ratios": [
+            1.0,
+            1.0671642081163697,
+            1.007633672090791,
+            0.9166666665219907,
+            1.0,
+            1.0,
+            0.9930554794439652,
+            0.9999564012221756,
+            1.0,
+            0.916083909506577,
+            1.0,
+            0.993006999306201
+          ],
+          "passed": false
+        },
+        {
+          "median": 1.0,
+          "ci95": [
+            0.9930770603731263,
+            1.006993084172823
+          ],
+          "spread": 0.028367532012157914,
+          "ratios": [
+            1.0070422471328853,
+            1.0,
+            0.9930554794439652,
+            1.006993084172823,
+            1.0140845783326744,
+            1.0,
+            1.006993084172823,
+            0.9930986413022875,
+            1.0,
+            0.9861110417872326,
+            1.006993084172823,
+            0.9861110417872326
+          ],
+          "passed": true
+        }
+      ],
+      "frozen_runner": "/data/home/chh/simplify-v2/build/b2b-layouts/anchor-heldout/hip-runner",
+      "rounds": [
+        {
+          "baseline": 22.71999931,
+          "on": 22.87999916,
+          "auto": 20.95999908,
+          "off": 20.6400013
+        },
+        {
+          "on": 20.6400013,
+          "off": 20.79999924,
+          "baseline": 20.6400013,
+          "auto": 23.52000046
+        },
+        {
+          "off": 20.6400013,
+          "auto": 21.11899948,
+          "on": 20.79999924,
+          "baseline": 20.6400013
+        },
+        {
+          "auto": 20.95999908,
+          "baseline": 23.04000092,
+          "off": 20.79999924,
+          "on": 20.6400013
+        },
+        {
+          "baseline": 20.6400013,
+          "on": 20.6400013,
+          "auto": 21.12000084,
+          "off": 20.79999924
+        },
+        {
+          "on": 20.47999954,
+          "off": 20.6400013,
+          "baseline": 20.63899994,
+          "auto": 21.12000084
+        },
+        {
+          "off": 20.79999924,
+          "auto": 21.28000069,
+          "on": 20.6400013,
+          "baseline": 20.63899994
+        },
+        {
+          "auto": 21.12000084,
+          "baseline": 22.87999916,
+          "off": 22.87999916,
+          "on": 22.87999916
+        },
+        {
+          "baseline": 22.87999916,
+          "on": 22.71999931,
+          "auto": 23.36000061,
+          "off": 22.87999916
+        },
+        {
+          "on": 23.19999886,
+          "off": 20.79999924,
+          "baseline": 20.47999954,
+          "auto": 20.95999908
+        },
+        {
+          "off": 20.79999924,
+          "auto": 21.12000084,
+          "on": 20.79999924,
+          "baseline": 20.47999954
+        },
+        {
+          "auto": 21.12000084,
+          "baseline": 23.04000092,
+          "off": 20.6400013,
+          "on": 20.79999924
+        }
+      ],
+      "median_us": {
+        "baseline": 20.6400013,
+        "on": 20.79999924,
+        "off": 20.79999924,
+        "auto": 21.12000084
+      },
+      "contrasts": {
+        "on/baseline": {
+          "median": 1.0,
+          "ci95": [
+            0.9926515591409093,
+            1.0073970424114669
+          ],
+          "spread": 0.2645348208344309,
+          "ratios": [
+            1.0070422471328853,
+            1.0,
+            1.0077518376900487,
+            0.895833353985821,
+            1.0,
+            0.9922961189756174,
+            1.0000485178546883,
+            1.0,
+            0.993006999306201,
+            1.1328124697799675,
+            1.0156249857025141,
+            0.9027777087432511
+          ]
+        },
+        "on/off": {
+          "median": 0.9965034996531005,
+          "ci95": [
+            0.9923077910650925,
+            1.0077518376900487
+          ],
+          "spread": 0.12409863957835143,
+          "ratios": [
+            1.1085270212652554,
+            0.9923077910650925,
+            1.0077518376900487,
+            0.9923077910650925,
+            0.9923077910650925,
+            0.9922479772324433,
+            0.9923077910650925,
+            1.0,
+            0.993006999306201,
+            1.1153846013313606,
+            1.0,
+            1.0077518376900487
+          ]
+        },
+        "on/auto": {
+          "median": 0.9847906696834605,
+          "ci95": [
+            0.9712637632307194,
+            1.0341141784387293
+          ],
+          "spread": 0.261317176316207,
+          "ratios": [
+            1.0916030612726535,
+            0.8775510585172839,
+            0.9848951064039706,
+            0.9847329296733921,
+            0.9772727499569551,
+            0.9696969093491761,
+            0.9699248416706701,
+            1.0833332504734883,
+            0.9726026847907688,
+            1.106870223202319,
+            0.984848409693529,
+            0.984848409693529
+          ]
+        },
+        "off/baseline": {
+          "median": 1.0000242589273443,
+          "ci95": [
+            0.9542253945165283,
+            1.0077762846686602
+          ],
+          "spread": 0.13372088813584093,
+          "ratios": [
+            0.9084507890330566,
+            1.0077518376900487,
+            1.0,
+            0.9027777087432511,
+            1.0077518376900487,
+            1.0000485178546883,
+            1.0078007316472717,
+            1.0,
+            1.0,
+            1.0156249857025141,
+            1.0156249857025141,
+            0.895833353985821
+          ]
+        },
+        "off/auto": {
+          "median": 0.9820924614662826,
+          "ci95": [
+            0.9772959187117491,
+            0.9886074146028978
+          ],
+          "spread": 0.22499997502258284,
+          "ratios": [
+            0.9847329296733921,
+            0.8843536918876403,
+            0.9773190874665433,
+            0.9923664195122665,
+            0.984848409693529,
+            0.9772727499569551,
+            0.9774435416148475,
+            1.0833332504734883,
+            0.9794519932591731,
+            0.9923664195122665,
+            0.984848409693529,
+            0.9772727499569551
+          ]
+        },
+        "auto/baseline": {
+          "median": 1.0232315324515022,
+          "ci95": [
+            0.922806096235591,
+            1.0272476103894839
+          ],
+          "spread": 0.2526185487380328,
+          "ratios": [
+            0.922535198791782,
+            1.1395348342347245,
+            1.023207274701092,
+            0.9097221459659559,
+            1.0232557902019124,
+            1.0233054363776504,
+            1.0310577427134777,
+            0.9230769936794001,
+            1.020979085123358,
+            1.0234374780654902,
+            1.031250064178468,
+            0.9166666665219907
+          ]
+        }
+      }
+    },
+    "MS32": {
+      "status": "validated",
+      "aa": [
+        {
+          "median": 1.000036580532339,
+          "ci95": [
+            1.0000218575832904,
+            1.0001155573733842
+          ],
+          "spread": 0.0009766034949207913,
+          "ratios": [
+            1.0000200253924543,
+            0.9997538758458904,
+            1.0001816425296834,
+            1.0000396509408336,
+            1.0001188884564503,
+            1.000730238975102,
+            1.0000279276920596,
+            0.999919882000567,
+            1.0000236897741268,
+            1.0001122262903182,
+            1.0000803892689838,
+            1.0000335101238444
+          ],
+          "passed": true
+        }
+      ],
+      "frozen_runner": "/data/home/chh/simplify-v2/build/b2b-layouts/anchor-v2/artifact-replay-four",
+      "rounds": [
+        {
+          "baseline": 1036113.525390625,
+          "on": 925659.790039062,
+          "off": 950720.581054688,
+          "auto": 933740.72265625
+        },
+        {
+          "baseline": 1036043.701171875,
+          "on": 926163.024902344,
+          "off": 950709.533691406,
+          "auto": 933540.954589844
+        },
+        {
+          "baseline": 1036280.883789062,
+          "on": 926132.263183594,
+          "off": 950663.818359375,
+          "auto": 933874.145507812
+        },
+        {
+          "baseline": 1036192.626953125,
+          "on": 926503.356933594,
+          "off": 952707.336425781,
+          "auto": 934904.113769531
+        },
+        {
+          "baseline": 1036371.337890625,
+          "on": 926034.851074219,
+          "off": 952691.223144531,
+          "auto": 935118.103027344
+        },
+        {
+          "baseline": 1036276.123046875,
+          "on": 926116.333007812,
+          "off": 952322.265625,
+          "auto": 935121.765136719
+        },
+        {
+          "baseline": 1035964.84375,
+          "on": 926200.805664062,
+          "off": 952390.930175781,
+          "auto": 934903.076171875
+        },
+        {
+          "baseline": 1036344.23828125,
+          "on": 926481.872558594,
+          "off": 952358.154296875,
+          "auto": 935167.907714844
+        },
+        {
+          "baseline": 1036023.92578125,
+          "on": 926619.140625,
+          "off": 952397.155761719,
+          "auto": 935169.860839844
+        },
+        {
+          "baseline": 1036378.784179688,
+          "on": 926548.706054688,
+          "off": 952375.305175781,
+          "auto": 934921.691894531
+        },
+        {
+          "baseline": 1036357.788085938,
+          "on": 926518.005371094,
+          "off": 952699.584960938,
+          "auto": 934974.670410156
+        },
+        {
+          "baseline": 1036368.1640625,
+          "on": 926577.63671875,
+          "off": 952408.569335938,
+          "auto": 935153.015136719
+        }
+      ],
+      "median_us": {
+        "baseline": 1036278.5034179685,
+        "on": 926341.339111328,
+        "off": 952383.117675781,
+        "auto": 934948.1811523435
+      },
+      "contrasts": {
+        "on/baseline": {
+          "median": 0.8940020582796502,
+          "ci95": [
+            0.8937021225738523,
+            0.8940543977426474
+          ],
+          "spread": 0.0011229702648758444,
+          "ratios": [
+            0.8933961070434624,
+            0.8939420449685237,
+            0.893707755948638,
+            0.8941420087671661,
+            0.8935357600288532,
+            0.8936964891990665,
+            0.8940465607996768,
+            0.8939904698994035,
+            0.8943993643064281,
+            0.894025157788296,
+            0.8940136466598968,
+            0.8940622346856181
+          ]
+        },
+        "on/off": {
+          "median": 0.9728537804916247,
+          "ci95": [
+            0.9724979524329143,
+            0.9732868793260637
+          ],
+          "spread": 0.002238037158122097,
+          "ratios": [
+            0.9736402140491957,
+            0.974180853437166,
+            0.9741953415055632,
+            0.9724952475011948,
+            0.972019924795436,
+            0.9724820750673205,
+            0.9725006573646338,
+            0.9728292537617999,
+            0.972933544602932,
+            0.9728819101243641,
+            0.972518535745014,
+            0.9728783072214496
+          ]
+        },
+        "on/auto": {
+          "median": 0.9909058496077328,
+          "ci95": [
+            0.9907017923587969,
+            0.9911949101523205
+          ],
+          "spread": 0.0018280713698997086,
+          "ratios": [
+            0.9913456354412821,
+            0.9920968334048702,
+            0.9917099296929264,
+            0.9910143118291936,
+            0.9902865189715406,
+            0.9903697759322388,
+            0.9906917939093259,
+            0.9907117908082678,
+            0.9908565057826341,
+            0.991044184863359,
+            0.9909551934328314,
+            0.9908299729785769
+          ]
+        },
+        "off/baseline": {
+          "median": 0.9189858803707369,
+          "ci95": [
+            0.9182898915338145,
+            0.9192788802840315
+          ],
+          "spread": 0.002234926870962717,
+          "ratios": [
+            0.9175834093047448,
+            0.917634586857729,
+            0.9173804450424325,
+            0.9194307232499536,
+            0.9192566296590061,
+            0.9189850508424023,
+            0.9193274616620223,
+            0.9189592792799585,
+            0.919281043672356,
+            0.9189451962099,
+            0.9192767168957071,
+            0.9189867098990715
+          ]
+        },
+        "off/auto": {
+          "median": 1.0184368430827289,
+          "ci95": [
+            1.0183864022674567,
+            1.0187489666802818
+          ],
+          "spread": 0.0010455181654838164,
+          "ratios": [
+            1.0181847679837017,
+            1.0183908151186631,
+            1.0179785176967644,
+            1.0190428327290886,
+            1.01879240714119,
+            1.018393861772393,
+            1.0187055262193736,
+            1.01838198941625,
+            1.0184215677207602,
+            1.0186685296026043,
+            1.0189576414332233,
+            1.0184521184446977
+          ]
+        },
+        "auto/baseline": {
+          "median": 0.9022747881221584,
+          "ci95": [
+            0.9016498084845324,
+            0.9023792819234281
+          ],
+          "spread": 0.0017639896277963363,
+          "ratios": [
+            0.9011953804041122,
+            0.9010632983279667,
+            0.9011785898174541,
+            0.9022493399886197,
+            0.9023002362556972,
+            0.9023866750758085,
+            0.9024467208633257,
+            0.9023718887710475,
+            0.9026527646402052,
+            0.9021042365649524,
+            0.9021736326572817,
+            0.9023366864830894
+          ]
+        }
+      }
+    },
+    "PCM32": {
+      "status": "validated",
+      "aa": [
+        {
+          "median": 1.0000028897289328,
+          "ci95": [
+            0.9999901663915016,
+            1.0000332105069463
+          ],
+          "spread": 0.00010481060935818576,
+          "ratios": [
+            0.9999898212183254,
+            1.0000393354720558,
+            0.9999963770950627,
+            1.000019063581358,
+            1.0000472708624732,
+            1.0000032779381913,
+            0.999942466283259,
+            0.9999905115646781,
+            1.0000025015196743,
+            1.0000365748072555,
+            1.000029846206637,
+            0.9999519534750925
+          ],
+          "passed": true
+        }
+      ],
+      "frozen_runner": "/data/home/chh/simplify-v2/build/b2b-layouts/anchor-v2/artifact-replay-four",
+      "rounds": [
+        {
+          "baseline": 875215.698242188,
+          "on": 707554.565429688,
+          "off": 707584.045410156,
+          "auto": 659246.765136719
+        },
+        {
+          "baseline": 875250.244140625,
+          "on": 707555.908203125,
+          "off": 707580.505371094,
+          "auto": 659271.179199219
+        },
+        {
+          "baseline": 875192.932128906,
+          "on": 707554.443359375,
+          "off": 707581.298828125,
+          "auto": 659228.698730469
+        },
+        {
+          "baseline": 875109.313964844,
+          "on": 707536.254882812,
+          "off": 707542.541503906,
+          "auto": 659255.187988281
+        },
+        {
+          "baseline": 875253.723144531,
+          "on": 707565.91796875,
+          "off": 707539.001464844,
+          "auto": 659243.530273438
+        },
+        {
+          "baseline": 875166.015625,
+          "on": 707534.851074219,
+          "off": 707564.270019531,
+          "auto": 659242.248535156
+        },
+        {
+          "baseline": 875306.396484375,
+          "on": 707557.556152344,
+          "off": 707580.932617188,
+          "auto": 659246.09375
+        },
+        {
+          "baseline": 875276.428222656,
+          "on": 707583.374023438,
+          "off": 707582.397460938,
+          "auto": 659236.694335938
+        },
+        {
+          "baseline": 875363.037109375,
+          "on": 707552.124023438,
+          "off": 707561.584472656,
+          "auto": 659273.4375
+        },
+        {
+          "baseline": 875330.322265625,
+          "on": 707598.388671875,
+          "off": 707526.428222656,
+          "auto": 659242.065429688
+        },
+        {
+          "baseline": 875272.583007812,
+          "on": 707507.8125,
+          "off": 707565.4296875,
+          "auto": 659285.461425781
+        },
+        {
+          "baseline": 875180.236816406,
+          "on": 707578.796386719,
+          "off": 707568.908691406,
+          "auto": 659251.831054688
+        }
+      ],
+      "median_us": {
+        "baseline": 875251.983642578,
+        "on": 707555.2368164065,
+        "off": 707567.169189453,
+        "auto": 659246.4294433595
+      },
+      "contrasts": {
+        "on/baseline": {
+          "median": 0.8084118350652791,
+          "ci95": [
+            0.8083664242693092,
+            0.8084566290147578
+          ],
+          "spread": 0.00026749835556172386,
+          "ratios": [
+            0.8084345000332648,
+            0.8084041254942435,
+            0.8084553901026708,
+            0.8085118551386326,
+            0.8084123486235195,
+            0.8084578679268445,
+            0.8083541477523917,
+            0.8084113215070386,
+            0.8082956373848245,
+            0.8083787007862266,
+            0.8083285438562461,
+            0.8084949438079619
+          ]
+        },
+        "on/off": {
+          "median": 0.9999767961718281,
+          "ci95": [
+            0.999960234165194,
+            1.0000076771598236
+          ],
+          "spread": 0.00018315218737496863,
+          "ratios": [
+            0.9999583371323035,
+            0.9999652376404066,
+            0.9999620461015654,
+            0.999991114850733,
+            1.0000380424313717,
+            0.9999584222288228,
+            0.999966962839491,
+            1.0000013801396184,
+            0.9999866295041652,
+            1.0001017070830835,
+            0.999918569809826,
+            1.000013974180029
+          ]
+        },
+        "on/auto": {
+          "median": 1.073280080393294,
+          "ci95": [
+            1.073237667650293,
+            1.0733061336787588
+          ],
+          "spread": 0.00019385697552820602,
+          "ratios": [
+            1.0732772655819565,
+            1.0732395568429896,
+            1.0733064939708645,
+            1.0732357784575968,
+            1.073299752635068,
+            1.0732547142516573,
+            1.0732828952046316,
+            1.0733373613800437,
+            1.0732301406022262,
+            1.0733513921182636,
+            1.0731433557930015,
+            1.0733057733866531
+          ]
+        },
+        "off/baseline": {
+          "median": 0.8084212171470817,
+          "ci95": [
+            0.8083812250912839,
+            0.808484860606501
+          ],
+          "spread": 0.0002753292208277358,
+          "ratios": [
+            0.8084681831362156,
+            0.8084322285060777,
+            0.8084860753010586,
+            0.8085190389509788,
+            0.8083815958221383,
+            0.8084914832007317,
+            0.8083808543604296,
+            0.8084102057880856,
+            0.8083064448427784,
+            0.8082964913078291,
+            0.8083943715636581,
+            0.8084836459119434
+          ]
+        },
+        "off/auto": {
+          "median": 1.0732838207537525,
+          "ci95": [
+            1.073244902407815,
+            1.0733201689245653
+          ],
+          "spread": 0.00010853444682146218,
+          "ratios": [
+            1.0733219832537404,
+            1.0732768664793655,
+            1.073347231682681,
+            1.0732453144024152,
+            1.073258923256136,
+            1.0732993396460058,
+            1.0733183545953897,
+            1.0733358800266717,
+            1.073244490413215,
+            1.0732422357810203,
+            1.0732307491770074,
+            1.0732907750281393
+          ]
+        },
+        "auto/baseline": {
+          "median": 0.7532359019878461,
+          "ci95": [
+            0.753167899115016,
+            0.7532573461963928
+          ],
+          "spread": 0.000272459915005685,
+          "ratios": [
+            0.7532391917338456,
+            0.753237355388038,
+            0.753238142733735,
+            0.7533403855586954,
+            0.7532027717688174,
+            0.7532767917917357,
+            0.7531603749245173,
+            0.7531754233055148,
+            0.7531428784987925,
+            0.7531351864098185,
+            0.7532344485876541,
+            0.7532755006589401
+          ]
+        }
+      }
+    },
+    "NQU64": {
+      "status": "validated",
+      "aa": [
+        {
+          "median": 0.9995373875371898,
+          "ci95": [
+            0.9979767745477071,
+            1.001284890817416
+          ],
+          "spread": 0.01306656552243357,
+          "ratios": [
+            0.9978023297882549,
+            1.0005421644545633,
+            1.003742551068006,
+            1.0005586341364863,
+            0.9981512193071593,
+            0.9996013231894465,
+            0.9994734518849331,
+            1.0020111474983457,
+            0.9986285204545977,
+            0.9932442855149999,
+            1.0062225770514643,
+            0.9950789860312821
+          ],
+          "passed": true
+        }
+      ],
+      "frozen_runner": "/data/home/chh/simplify-v2/build/dp1-removal/nqu/runner",
+      "rounds": [
+        {
+          "baseline": 10387.304306,
+          "on": 8734.207153,
+          "off": 10029.573441,
+          "auto": 8920.930862000001
+        },
+        {
+          "baseline": 10360.937119,
+          "on": 8729.736327999999,
+          "off": 10081.734657,
+          "auto": 8912.942885999999
+        },
+        {
+          "baseline": 10374.702454,
+          "on": 8722.064018,
+          "off": 10024.296761,
+          "auto": 8898.704529
+        },
+        {
+          "baseline": 10375.341414999999,
+          "on": 8737.747192,
+          "off": 10018.061638000001,
+          "auto": 8920.623779
+        },
+        {
+          "baseline": 10358.861922999999,
+          "on": 8724.626541,
+          "off": 10020.303726,
+          "auto": 8906.545639
+        },
+        {
+          "baseline": 10359.344481999999,
+          "on": 8739.504814,
+          "off": 10027.983665000002,
+          "auto": 8915.347099
+        },
+        {
+          "baseline": 10358.223915,
+          "on": 8723.026276,
+          "off": 10031.506538,
+          "auto": 8920.625687
+        },
+        {
+          "baseline": 10368.784904,
+          "on": 8733.588219,
+          "off": 10011.343955999999,
+          "auto": 8911.026001
+        },
+        {
+          "baseline": 10354.225159,
+          "on": 8785.106659000001,
+          "off": 10035.187721,
+          "auto": 8910.068512
+        },
+        {
+          "baseline": 10362.705231,
+          "on": 8732.307434,
+          "off": 10028.305054,
+          "auto": 8912.787437
+        },
+        {
+          "baseline": 10371.665001,
+          "on": 8735.346794,
+          "off": 10036.307335,
+          "auto": 8914.388657
+        },
+        {
+          "baseline": 10356.147766,
+          "on": 8793.267249999999,
+          "off": 10074.707985,
+          "auto": 8968.309401999999
+        }
+      ],
+      "median_us": {
+        "baseline": 10361.821175000001,
+        "on": 8733.897686,
+        "off": 10028.9392475,
+        "auto": 8913.6657715
+      },
+      "contrasts": {
+        "on/baseline": {
+          "median": 0.8422670753036642,
+          "ci95": [
+            0.8421500565842844,
+            0.8431508522001614
+          ],
+          "spread": 0.00996986154633217,
+          "ratios": [
+            0.840854074907084,
+            0.8425624272915732,
+            0.8407049798943563,
+            0.8421647869213759,
+            0.842237941373514,
+            0.8436349258570781,
+            0.8421353262471929,
+            0.8422962092338143,
+            0.8484562122317666,
+            0.8426667785432447,
+            0.8422318685724778,
+            0.849086692145215
+          ]
+        },
+        "on/off": {
+          "median": 0.8708056807238342,
+          "ci95": [
+            0.8702334702201945,
+            0.8722842971761363
+          ],
+          "spread": 0.011010518772995193,
+          "ratios": [
+            0.8708453260131025,
+            0.8658962594238407,
+            0.8700923591900832,
+            0.8721993842457929,
+            0.8706948191961421,
+            0.8715116723317876,
+            0.8695629358318822,
+            0.8723692101064797,
+            0.8754302264436933,
+            0.8707660354345659,
+            0.870374581250306,
+            0.8728061660042249
+          ]
+        },
+        "on/auto": {
+          "median": 0.9798329249581037,
+          "ci95": [
+            0.9794722299860812,
+            0.9802131566281274
+          ],
+          "spread": 0.008310131544759347,
+          "ratios": [
+            0.979069033054008,
+            0.9794448858987113,
+            0.9801498622159723,
+            0.9794995740734512,
+            0.9795746740236291,
+            0.9802764510402826,
+            0.9778491534189176,
+            0.9800878392701258,
+            0.9859752085147604,
+            0.9797504423531109,
+            0.9799154075630965,
+            0.9804821461711652
+          ]
+        },
+        "off/baseline": {
+          "median": 0.9676981964333858,
+          "ci95": [
+            0.9658947584176911,
+            0.968822935710369
+          ],
+          "spread": 0.007793859377587475,
+          "ratios": [
+            0.9655607600912044,
+            0.9730523929647257,
+            0.9662249886631784,
+            0.965564528172204,
+            0.9673170470350329,
+            0.9680133412325695,
+            0.968458166218354,
+            0.965527209667344,
+            0.9691877052023841,
+            0.967730416957182,
+            0.9676659759095897,
+            0.972823892883801
+          ]
+        },
+        "off/auto": {
+          "median": 1.1249247643113043,
+          "ci95": [
+            1.1238762861834637,
+            1.1260649215520873
+          ],
+          "spread": 0.007223067943759265,
+          "ratios": [
+            1.124274315780478,
+            1.131134215258563,
+            1.126489448922796,
+            1.1230225470984971,
+            1.1250493886342505,
+            1.124800139988358,
+            1.1245294769647025,
+            1.1234782565864492,
+            1.12627503452804,
+            1.1251592304747566,
+            1.1258548085761346,
+            1.1233675750251508
+          ]
+        },
+        "auto/baseline": {
+          "median": 0.8599413547669216,
+          "ci95": [
+            0.8594516809628961,
+            0.8605670439314291
+          ],
+          "spread": 0.009627584247830834,
+          "ratios": [
+            0.8588302218937612,
+            0.8602448585133623,
+            0.8577310596092398,
+            0.8597908658796651,
+            0.8597996290716656,
+            0.8606091934186538,
+            0.8612118988933828,
+            0.859408897330136,
+            0.8605248944442043,
+            0.8600830804621775,
+            0.8594944645956561,
+            0.865988937647609
+          ]
+        }
+      }
+    }
+  },
+  "adapters": {
+    "nqu-315": "2a96e5e798af67c2aaebce657aae395a1209d433de000a9b6de038b1f4642ab9",
+    "sort-315": "395848a11807c9cf6602491c5e491eba3b06d2cac1e90673e27864a2d436e85f"
+  }
+}
