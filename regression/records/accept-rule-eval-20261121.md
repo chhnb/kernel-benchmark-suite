@@ -52,3 +52,68 @@ EPYC 上的新运行目录为 `/data/home/chh/simplify-v2/build/accept-rir-v2.QJ
 | `decisions.jsonl` | `eaf34a3f5c570b6d7fbfa34e48939c48557deb8c63d60fcb395b4c3fff010974` |
 | `samples.json` | `4361a1f645b1126c5ef02da88e17bc88c658932f6a94e1314e2530a372982670` |
 | `sample-summary.json` | `c4871ef569c0adeddcbfb4946ec6766ad3e7999f315833a09ff455cd5b0850a2` |
+
+## 3B 续测：按实例标注和批次预热
+
+上文保留 `ab14d09` 的初始设计与暂停记录。本节更新标签、免测、测量与预算。规则及预注册沿用原版本。
+
+### 已见实例
+
+旧名单对 NQU64、TPACF 按整个 case 标注，并将区域审计及 PCM32 第 10 步所在轮次的其他候选一并标注。现用 case、融合步骤及候选坐标匹配历史记录。候选去重后仍沿用试融的实例别名。已见从 1,906 调整为 **42**，前瞻从 1,570 调整为 **3,434**，共 **3,476** 个配对。归档 PCM32 第 10 步 R2R P/M 及其变体、NQU64 第二次融合 P/C 保持已见身份，属于单独的历史配对。当前候选名单中能匹配 NQU64 G1/G2（`trial-9`），历史 P/C 及 PCM32 R2R P/M 的原配对未出现在正式名单中。历史 MapAiry #30 未匹配，发布 trace 结束于 #29。
+
+| 来源 | 匹配的已见实例 |
+| --- | --- |
+| [区域融合审计 §2.3](region-fusion-audit-20261120.md)，按区域回放的候选坐标 | MapAiry #5/#6/#7/#12/#14/#16/#18/#20/#22/#24/#26/#29，TIGRE #1/#2/#3，HLLD #1/#3/#4，NQU64 #1，TPACF #1/#9，Landau #7/#8/#9/#10/#17。共 26 个 |
+| [区域融合审计 §2.1](region-fusion-audit-20261120.md) | TPACF #2/#3 的 spill 与 #5/#11 的恢复，`trial-495/930/1714/3357` |
+| [vLLM select 代价](darm-select-cost-20261119.md) 和 [B2B Anchor v3](b2b-anchor-v3-20261119.md) | vLLM #7 的 fcmp/select（`trial-43`）和 #1（`trial-12`） |
+| [HLLD 回归二分](hlld-regression-bisect-20261119.md) 和 [B2B Anchor v2](b2b-anchor-v2-20261119.md) | HLLD #2（`trial-7`） |
+| [B2B Anchor v2](b2b-anchor-v2-20261119.md) 和 [v3](b2b-anchor-v3-20261119.md) | TIGRE #4（`trial-11`） |
+| [B2B Anchor](b2b-anchor-20261119.md)、[统一 DP](b2b-unified-dp-20261119.md) 和 [v2](b2b-anchor-v2-20261119.md) | MapAiry #1/#8/#10/#25/#27（`trial-5/110/121/252/292`） |
+| [B2B Anchor v3](b2b-anchor-v3-20261119.md) | SRAD16 和 SRAD32 各自的 #3（各 `trial-10`） |
+| NQU64 第二次融合记录，提交 `14775f2` | G1/G2（`trial-9`） |
+
+### 免测与排除
+
+| 标签 | 待测 | 字节相同，记为持平 | NVPTX 排除 | 合计 |
+| --- | ---: | ---: | ---: | ---: |
+| 前瞻 | 3,202 | 135 | 97 | 3,434 |
+| 已见 | 42 | 0 | 0 | 42 |
+| 合计 | 3,244 | 135 | 97 | 3,476 |
+
+逐一重编 135 个字节相同的配对，双方 SHA-256 均匹配原记录，并逐字节比对了 HSACO。它们的耗时比记为 1.0，五条规则的结论照常计入评估。免测分布为 MapAiry 76、Landau 43、HLLD 5、NQU64/SRAD16/SRAD32/TPACF/TIGRE 各 2、vLLM 1。NVPTX 排除分布为 SasPoint5 58、HiPIMS-George 39，97 个均跳过 GPU 测量和规则评估。gfx906 有效评估名单为前瞻 3,337、已见 42。
+
+### 测量协议验证与预算
+
+旧预算按每个配对、每轮、每角色预热 200 ms。新方案按 case 和发布输入分批，每批最多 4 个配对，代码对象常驻同一进程，按批次先预热至少 200 ms。A/A 与 A/B 各自批次执行同样的预热，A/A 达标后做 12 轮交替计时和完整输出校验。耗时比逐轮配对，区间由 10,000 次配对 bootstrap 计算。
+
+| A/A | 耗时比中位数 | 跨度 | 结果 |
+| --- | ---: | ---: | --- |
+| TIGRE | 0.998980 | 0.9557% | 第一次通过 |
+| MapAiry | 1.000000 | 0.4167% | 第一次通过 |
+| PCM32 | 1.000006 | 0.0319% | 第一次通过 |
+
+| 历史配对 | 旧耗时比 | 新耗时比 | 相对差异 |
+| --- | ---: | ---: | ---: |
+| TIGRE N/A | 0.999467 | 0.998917 | −0.0550% |
+| MapAiry | 0.848101 | 0.854772 | +0.7865% |
+| PCM32 第 10 步 DARM / 父状态 | 0.942579 | 0.942653 | +0.0079% |
+
+三组复测均在旧耗时比的 1% 以内，全部完整输出校验通过。采用批次预热。按历史工作负载计时、批次实测角色开销、完整输出传输、A/A、启动及预热估算为 **9.21 小时**。另留 15% 余量后为 **10.59 小时**。计划覆盖全部 3,244 个待测配对，无缩样。
+
+### PCM32 超阈值配对
+
+第 19 轮 `trial-33`（`_Z3pcmPi:B4:H5_7:H6_7`）的 throughput TTI 为 +202，超过 128。R 与 RB 绕过预筛选后均接受。正式测量的 12 轮完整输出校验通过，耗时比为 **0.942897**，95% 区间 **[0.942828, 0.942993]**，候选快 **5.71%**。超阈值层抽到的唯一候选为实际收益，R 和 RB 各判对 1/1。该配对属于前瞻样本，单独分析时与主表共用测量。
+
+### 续测原始数据
+
+EPYC 目录为 `/data/home/chh/simplify-v2/build/accept-rir-v2.QJqs83/build/batch-protocol.yNsnRk/`。其中有完整的实例匹配、样本名单、二进制验证、预算、三组历史复测和按 case 划分的正式数据。`formal-PCM32/batch-001/result.json` 保存 `trial-33` 的 A/A 和逐轮配对比值。
+
+| 文件 | SHA-256 |
+| --- | --- |
+| `relabel-summary.json` | `92d09f0fd3f59caf47950ea8dbd325c0425e846ea277dd581ddbebccc9a76435` |
+| `samples-relabelled.json` | `1464ecd6738861069418195072a8be6351c53aed7191f7a9d94d4b2fa10618e9` |
+| `byte-verified-aliases.json` | `564704ee62b1e2d493e1935b00c7dabaf52e02a14e2ac7c9326461d33f96020b` |
+| `batch-forecast.json` | `dadb69b3abb8575b1c8996ae5a101dba527edb4fc0dd1ba5b0fdf76ac69410ae` |
+| `aa/receipt.json` | `0b9b1f1860c9d33fe6a0ba62a2309234c383067b7b48ade2015068887518c853` |
+| `ab/receipt.json` | `882e73c027e2cbd155a7ad035f755089451064dc6258785a4aabe7d5d98513c1` |
+| `pcm/receipt.json` | `b4cc1e79339aea64c35e1afa04cbca37a4e5b6bde8fc1de1650595ef28b37cb5` |
