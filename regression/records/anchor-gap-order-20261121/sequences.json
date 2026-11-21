@@ -1,0 +1,5317 @@
+{
+  "M": [
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "%145",
+        "ordinal": 0
+      },
+      "right": {
+        "ir": "%unify.bb2",
+        "ordinal": 0
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %146 = phi i32 [ %268, %145 ], [ %moved.phi, %unify.bb3 ]",
+        "ordinal": 1
+      },
+      "right": {
+        "ir": "  %270 = phi i32 [ %369, %unify.bb2 ], [ %moved.phi6, %unify.bb3 ]",
+        "ordinal": 1
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %147 = phi i32 [ %266, %145 ], [ %moved.phi4, %unify.bb3 ]",
+        "ordinal": 2
+      },
+      "right": {
+        "ir": "  %271 = phi i32 [ %368, %unify.bb2 ], [ %moved.phi7, %unify.bb3 ]",
+        "ordinal": 2
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %148 = phi i32 [ %264, %145 ], [ %moved.phi5, %unify.bb3 ]",
+        "ordinal": 3
+      },
+      "right": {
+        "ir": "  %272 = phi i32 [ %367, %unify.bb2 ], [ %moved.phi8, %unify.bb3 ]",
+        "ordinal": 3
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %149 = add nsw i32 %148, %128",
+        "ordinal": 4
+      },
+      "right": {
+        "ir": "  %273 = add nsw i32 %271, %128",
+        "ordinal": 4
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %150 = getelementptr inbounds [8192 x i32], [8192 x i32] addrspace(3)* @_ZZ3pcmPiE2sC, i32 0, i32 %149",
+        "ordinal": 5
+      },
+      "right": {
+        "ir": "  %274 = getelementptr inbounds [8192 x i32], [8192 x i32] addrspace(3)* @_ZZ3pcmPiE2sC, i32 0, i32 %273",
+        "ordinal": 5
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %151 = load i32, i32 addrspace(3)* %150, align 4, !tbaa !8",
+        "ordinal": 6
+      },
+      "right": {
+        "ir": "  %275 = load i32, i32 addrspace(3)* %274, align 4, !tbaa !8",
+        "ordinal": 6
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %152 = add nsw i32 %136, %147",
+        "ordinal": 7
+      },
+      "right": {
+        "ir": "  %276 = add nsw i32 %135, %272",
+        "ordinal": 7
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %153 = getelementptr inbounds [8192 x i32], [8192 x i32] addrspace(3)* @_ZZ3pcmPiE2sC, i32 0, i32 %152",
+        "ordinal": 8
+      },
+      "right": {
+        "ir": "  %277 = getelementptr inbounds [8192 x i32], [8192 x i32] addrspace(3)* @_ZZ3pcmPiE2sC, i32 0, i32 %276",
+        "ordinal": 8
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %154 = load i32, i32 addrspace(3)* %153, align 4, !tbaa !8",
+        "ordinal": 9
+      },
+      "right": {
+        "ir": "  %278 = load i32, i32 addrspace(3)* %277, align 4, !tbaa !8",
+        "ordinal": 9
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %155 = icmp sgt i32 %151, %154",
+        "ordinal": 10
+      },
+      "right": {
+        "ir": "  %279 = icmp sgt i32 %275, %278",
+        "ordinal": 10
+      }
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %156 = select i1 %155, i32 %154, i32 %151",
+        "ordinal": 11
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %157 = xor i1 %155, true",
+        "ordinal": 12
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %158 = zext i1 %157 to i32",
+        "ordinal": 13
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %159 = add nuw nsw i32 %148, %158",
+        "ordinal": 14
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %160 = zext i1 %155 to i32",
+        "ordinal": 15
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %161 = add nuw nsw i32 %147, %160",
+        "ordinal": 16
+      },
+      "right": null
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %280 = sub nuw nsw i32 255, %270",
+        "ordinal": 11
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %162 = getelementptr inbounds i32, i32 addrspace(3)* %129, i32 %146",
+        "ordinal": 17
+      },
+      "right": {
+        "ir": "  %281 = getelementptr inbounds i32, i32 addrspace(3)* %129, i32 %280",
+        "ordinal": 12
+      }
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  store i32 %156, i32 addrspace(3)* %162, align 16",
+        "ordinal": 18
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %163 = or i32 %146, 1",
+        "ordinal": 19
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %164 = add nsw i32 %159, %128",
+        "ordinal": 20
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %165 = getelementptr inbounds [8192 x i32], [8192 x i32] addrspace(3)* @_ZZ3pcmPiE2sC, i32 0, i32 %164",
+        "ordinal": 21
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %166 = load i32, i32 addrspace(3)* %165, align 4, !tbaa !8",
+        "ordinal": 22
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %167 = add nsw i32 %136, %161",
+        "ordinal": 23
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %168 = getelementptr inbounds [8192 x i32], [8192 x i32] addrspace(3)* @_ZZ3pcmPiE2sC, i32 0, i32 %167",
+        "ordinal": 24
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %169 = load i32, i32 addrspace(3)* %168, align 4, !tbaa !8",
+        "ordinal": 25
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %170 = icmp sgt i32 %166, %169",
+        "ordinal": 26
+      },
+      "right": null
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %171 = select i1 %170, i32 %169, i32 %166",
+        "ordinal": 27
+      },
+      "right": {
+        "ir": "  %merged.select = select i1 %279, i32 %275, i32 %278",
+        "ordinal": 13
+      }
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %172 = xor i1 %170, true",
+        "ordinal": 28
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %173 = zext i1 %172 to i32",
+        "ordinal": 29
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %174 = add nuw nsw i32 %159, %173",
+        "ordinal": 30
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %175 = zext i1 %170 to i32",
+        "ordinal": 31
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %176 = add nuw nsw i32 %161, %175",
+        "ordinal": 32
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %177 = getelementptr inbounds i32, i32 addrspace(3)* %129, i32 %163",
+        "ordinal": 33
+      },
+      "right": null
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  store i32 %171, i32 addrspace(3)* %177, align 4",
+        "ordinal": 34
+      },
+      "right": {
+        "ir": "  store i32 %merged.select, i32 addrspace(3)* %281, align 4, !tbaa !8",
+        "ordinal": 14
+      }
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %merged.select3 = select i1 %279, i32 %271, i32 %272",
+        "ordinal": 15
+      }
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %282 = add nsw i32 %merged.select3, -1",
+        "ordinal": 16
+      }
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %283 = select i1 %279, i32 %272, i32 %282",
+        "ordinal": 17
+      }
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %178 = or i32 %146, 2",
+        "ordinal": 35
+      },
+      "right": null
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %284 = select i1 %279, i32 %282, i32 %271",
+        "ordinal": 18
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %179 = add nsw i32 %174, %128",
+        "ordinal": 36
+      },
+      "right": {
+        "ir": "  %285 = add nsw i32 %284, %128",
+        "ordinal": 19
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %180 = getelementptr inbounds [8192 x i32], [8192 x i32] addrspace(3)* @_ZZ3pcmPiE2sC, i32 0, i32 %179",
+        "ordinal": 37
+      },
+      "right": {
+        "ir": "  %286 = getelementptr inbounds [8192 x i32], [8192 x i32] addrspace(3)* @_ZZ3pcmPiE2sC, i32 0, i32 %285",
+        "ordinal": 20
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %181 = load i32, i32 addrspace(3)* %180, align 4, !tbaa !8",
+        "ordinal": 38
+      },
+      "right": {
+        "ir": "  %287 = load i32, i32 addrspace(3)* %286, align 4, !tbaa !8",
+        "ordinal": 21
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %182 = add nsw i32 %136, %176",
+        "ordinal": 39
+      },
+      "right": {
+        "ir": "  %288 = add nsw i32 %135, %283",
+        "ordinal": 22
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %183 = getelementptr inbounds [8192 x i32], [8192 x i32] addrspace(3)* @_ZZ3pcmPiE2sC, i32 0, i32 %182",
+        "ordinal": 40
+      },
+      "right": {
+        "ir": "  %289 = getelementptr inbounds [8192 x i32], [8192 x i32] addrspace(3)* @_ZZ3pcmPiE2sC, i32 0, i32 %288",
+        "ordinal": 23
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %184 = load i32, i32 addrspace(3)* %183, align 4, !tbaa !8",
+        "ordinal": 41
+      },
+      "right": {
+        "ir": "  %290 = load i32, i32 addrspace(3)* %289, align 4, !tbaa !8",
+        "ordinal": 24
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %185 = icmp sgt i32 %181, %184",
+        "ordinal": 42
+      },
+      "right": {
+        "ir": "  %291 = icmp sgt i32 %287, %290",
+        "ordinal": 25
+      }
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %186 = select i1 %185, i32 %184, i32 %181",
+        "ordinal": 43
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %187 = xor i1 %185, true",
+        "ordinal": 44
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %188 = zext i1 %187 to i32",
+        "ordinal": 45
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %189 = add nuw nsw i32 %174, %188",
+        "ordinal": 46
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %190 = zext i1 %185 to i32",
+        "ordinal": 47
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %191 = add nuw nsw i32 %176, %190",
+        "ordinal": 48
+      },
+      "right": null
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %292 = sub nsw i32 254, %270",
+        "ordinal": 26
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %192 = getelementptr inbounds i32, i32 addrspace(3)* %129, i32 %178",
+        "ordinal": 49
+      },
+      "right": {
+        "ir": "  %293 = getelementptr inbounds i32, i32 addrspace(3)* %129, i32 %292",
+        "ordinal": 27
+      }
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %merged.select7 = select i1 %291, i32 %287, i32 %290",
+        "ordinal": 28
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  store i32 %186, i32 addrspace(3)* %192, align 8",
+        "ordinal": 50
+      },
+      "right": {
+        "ir": "  store i32 %merged.select7, i32 addrspace(3)* %293, align 8, !tbaa !8",
+        "ordinal": 29
+      }
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %merged.select8 = select i1 %291, i32 %284, i32 %283",
+        "ordinal": 30
+      }
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %294 = add nsw i32 %merged.select8, -1",
+        "ordinal": 31
+      }
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %295 = select i1 %291, i32 %283, i32 %294",
+        "ordinal": 32
+      }
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %193 = or i32 %146, 3",
+        "ordinal": 51
+      },
+      "right": null
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %296 = select i1 %291, i32 %294, i32 %284",
+        "ordinal": 33
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %194 = add nsw i32 %189, %128",
+        "ordinal": 52
+      },
+      "right": {
+        "ir": "  %297 = add nsw i32 %296, %128",
+        "ordinal": 34
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %195 = getelementptr inbounds [8192 x i32], [8192 x i32] addrspace(3)* @_ZZ3pcmPiE2sC, i32 0, i32 %194",
+        "ordinal": 53
+      },
+      "right": {
+        "ir": "  %298 = getelementptr inbounds [8192 x i32], [8192 x i32] addrspace(3)* @_ZZ3pcmPiE2sC, i32 0, i32 %297",
+        "ordinal": 35
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %196 = load i32, i32 addrspace(3)* %195, align 4, !tbaa !8",
+        "ordinal": 54
+      },
+      "right": {
+        "ir": "  %299 = load i32, i32 addrspace(3)* %298, align 4, !tbaa !8",
+        "ordinal": 36
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %197 = add nsw i32 %136, %191",
+        "ordinal": 55
+      },
+      "right": {
+        "ir": "  %300 = add nsw i32 %135, %295",
+        "ordinal": 37
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %198 = getelementptr inbounds [8192 x i32], [8192 x i32] addrspace(3)* @_ZZ3pcmPiE2sC, i32 0, i32 %197",
+        "ordinal": 56
+      },
+      "right": {
+        "ir": "  %301 = getelementptr inbounds [8192 x i32], [8192 x i32] addrspace(3)* @_ZZ3pcmPiE2sC, i32 0, i32 %300",
+        "ordinal": 38
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %199 = load i32, i32 addrspace(3)* %198, align 4, !tbaa !8",
+        "ordinal": 57
+      },
+      "right": {
+        "ir": "  %302 = load i32, i32 addrspace(3)* %301, align 4, !tbaa !8",
+        "ordinal": 39
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %200 = icmp sgt i32 %196, %199",
+        "ordinal": 58
+      },
+      "right": {
+        "ir": "  %303 = icmp sgt i32 %299, %302",
+        "ordinal": 40
+      }
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %201 = select i1 %200, i32 %199, i32 %196",
+        "ordinal": 59
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %202 = xor i1 %200, true",
+        "ordinal": 60
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %203 = zext i1 %202 to i32",
+        "ordinal": 61
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %204 = add nuw nsw i32 %189, %203",
+        "ordinal": 62
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %205 = zext i1 %200 to i32",
+        "ordinal": 63
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %206 = add nuw nsw i32 %191, %205",
+        "ordinal": 64
+      },
+      "right": null
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %304 = sub nsw i32 253, %270",
+        "ordinal": 41
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %207 = getelementptr inbounds i32, i32 addrspace(3)* %129, i32 %193",
+        "ordinal": 65
+      },
+      "right": {
+        "ir": "  %305 = getelementptr inbounds i32, i32 addrspace(3)* %129, i32 %304",
+        "ordinal": 42
+      }
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %merged.select12 = select i1 %303, i32 %299, i32 %302",
+        "ordinal": 43
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  store i32 %201, i32 addrspace(3)* %207, align 4",
+        "ordinal": 66
+      },
+      "right": {
+        "ir": "  store i32 %merged.select12, i32 addrspace(3)* %305, align 4, !tbaa !8",
+        "ordinal": 44
+      }
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %merged.select13 = select i1 %303, i32 %296, i32 %295",
+        "ordinal": 45
+      }
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %306 = add nsw i32 %merged.select13, -1",
+        "ordinal": 46
+      }
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %307 = select i1 %303, i32 %295, i32 %306",
+        "ordinal": 47
+      }
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %208 = or i32 %146, 4",
+        "ordinal": 67
+      },
+      "right": null
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %308 = select i1 %303, i32 %306, i32 %296",
+        "ordinal": 48
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %209 = add nsw i32 %204, %128",
+        "ordinal": 68
+      },
+      "right": {
+        "ir": "  %309 = add nsw i32 %308, %128",
+        "ordinal": 49
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %210 = getelementptr inbounds [8192 x i32], [8192 x i32] addrspace(3)* @_ZZ3pcmPiE2sC, i32 0, i32 %209",
+        "ordinal": 69
+      },
+      "right": {
+        "ir": "  %310 = getelementptr inbounds [8192 x i32], [8192 x i32] addrspace(3)* @_ZZ3pcmPiE2sC, i32 0, i32 %309",
+        "ordinal": 50
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %211 = load i32, i32 addrspace(3)* %210, align 4, !tbaa !8",
+        "ordinal": 70
+      },
+      "right": {
+        "ir": "  %311 = load i32, i32 addrspace(3)* %310, align 4, !tbaa !8",
+        "ordinal": 51
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %212 = add nsw i32 %136, %206",
+        "ordinal": 71
+      },
+      "right": {
+        "ir": "  %312 = add nsw i32 %135, %307",
+        "ordinal": 52
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %213 = getelementptr inbounds [8192 x i32], [8192 x i32] addrspace(3)* @_ZZ3pcmPiE2sC, i32 0, i32 %212",
+        "ordinal": 72
+      },
+      "right": {
+        "ir": "  %313 = getelementptr inbounds [8192 x i32], [8192 x i32] addrspace(3)* @_ZZ3pcmPiE2sC, i32 0, i32 %312",
+        "ordinal": 53
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %214 = load i32, i32 addrspace(3)* %213, align 4, !tbaa !8",
+        "ordinal": 73
+      },
+      "right": {
+        "ir": "  %314 = load i32, i32 addrspace(3)* %313, align 4, !tbaa !8",
+        "ordinal": 54
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %215 = icmp sgt i32 %211, %214",
+        "ordinal": 74
+      },
+      "right": {
+        "ir": "  %315 = icmp sgt i32 %311, %314",
+        "ordinal": 55
+      }
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %216 = select i1 %215, i32 %214, i32 %211",
+        "ordinal": 75
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %217 = xor i1 %215, true",
+        "ordinal": 76
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %218 = zext i1 %217 to i32",
+        "ordinal": 77
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %219 = add nuw nsw i32 %204, %218",
+        "ordinal": 78
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %220 = zext i1 %215 to i32",
+        "ordinal": 79
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %221 = add nuw nsw i32 %206, %220",
+        "ordinal": 80
+      },
+      "right": null
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %316 = sub nsw i32 252, %270",
+        "ordinal": 56
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %222 = getelementptr inbounds i32, i32 addrspace(3)* %129, i32 %208",
+        "ordinal": 81
+      },
+      "right": {
+        "ir": "  %317 = getelementptr inbounds i32, i32 addrspace(3)* %129, i32 %316",
+        "ordinal": 57
+      }
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %merged.select17 = select i1 %315, i32 %311, i32 %314",
+        "ordinal": 58
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  store i32 %216, i32 addrspace(3)* %222, align 16",
+        "ordinal": 82
+      },
+      "right": {
+        "ir": "  store i32 %merged.select17, i32 addrspace(3)* %317, align 16, !tbaa !8",
+        "ordinal": 59
+      }
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %merged.select18 = select i1 %315, i32 %308, i32 %307",
+        "ordinal": 60
+      }
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %318 = add nsw i32 %merged.select18, -1",
+        "ordinal": 61
+      }
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %319 = select i1 %315, i32 %307, i32 %318",
+        "ordinal": 62
+      }
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %223 = or i32 %146, 5",
+        "ordinal": 83
+      },
+      "right": null
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %320 = select i1 %315, i32 %318, i32 %308",
+        "ordinal": 63
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %224 = add nsw i32 %219, %128",
+        "ordinal": 84
+      },
+      "right": {
+        "ir": "  %321 = add nsw i32 %320, %128",
+        "ordinal": 64
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %225 = getelementptr inbounds [8192 x i32], [8192 x i32] addrspace(3)* @_ZZ3pcmPiE2sC, i32 0, i32 %224",
+        "ordinal": 85
+      },
+      "right": {
+        "ir": "  %322 = getelementptr inbounds [8192 x i32], [8192 x i32] addrspace(3)* @_ZZ3pcmPiE2sC, i32 0, i32 %321",
+        "ordinal": 65
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %226 = load i32, i32 addrspace(3)* %225, align 4, !tbaa !8",
+        "ordinal": 86
+      },
+      "right": {
+        "ir": "  %323 = load i32, i32 addrspace(3)* %322, align 4, !tbaa !8",
+        "ordinal": 66
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %227 = add nsw i32 %136, %221",
+        "ordinal": 87
+      },
+      "right": {
+        "ir": "  %324 = add nsw i32 %135, %319",
+        "ordinal": 67
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %228 = getelementptr inbounds [8192 x i32], [8192 x i32] addrspace(3)* @_ZZ3pcmPiE2sC, i32 0, i32 %227",
+        "ordinal": 88
+      },
+      "right": {
+        "ir": "  %325 = getelementptr inbounds [8192 x i32], [8192 x i32] addrspace(3)* @_ZZ3pcmPiE2sC, i32 0, i32 %324",
+        "ordinal": 68
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %229 = load i32, i32 addrspace(3)* %228, align 4, !tbaa !8",
+        "ordinal": 89
+      },
+      "right": {
+        "ir": "  %326 = load i32, i32 addrspace(3)* %325, align 4, !tbaa !8",
+        "ordinal": 69
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %230 = icmp sgt i32 %226, %229",
+        "ordinal": 90
+      },
+      "right": {
+        "ir": "  %327 = icmp sgt i32 %323, %326",
+        "ordinal": 70
+      }
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %231 = select i1 %230, i32 %229, i32 %226",
+        "ordinal": 91
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %232 = xor i1 %230, true",
+        "ordinal": 92
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %233 = zext i1 %232 to i32",
+        "ordinal": 93
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %234 = add nuw nsw i32 %219, %233",
+        "ordinal": 94
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %235 = zext i1 %230 to i32",
+        "ordinal": 95
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %236 = add nuw nsw i32 %221, %235",
+        "ordinal": 96
+      },
+      "right": null
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %328 = sub nsw i32 251, %270",
+        "ordinal": 71
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %237 = getelementptr inbounds i32, i32 addrspace(3)* %129, i32 %223",
+        "ordinal": 97
+      },
+      "right": {
+        "ir": "  %329 = getelementptr inbounds i32, i32 addrspace(3)* %129, i32 %328",
+        "ordinal": 72
+      }
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %merged.select22 = select i1 %327, i32 %323, i32 %326",
+        "ordinal": 73
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  store i32 %231, i32 addrspace(3)* %237, align 4",
+        "ordinal": 98
+      },
+      "right": {
+        "ir": "  store i32 %merged.select22, i32 addrspace(3)* %329, align 4, !tbaa !8",
+        "ordinal": 74
+      }
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %merged.select23 = select i1 %327, i32 %320, i32 %319",
+        "ordinal": 75
+      }
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %330 = add nsw i32 %merged.select23, -1",
+        "ordinal": 76
+      }
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %331 = select i1 %327, i32 %319, i32 %330",
+        "ordinal": 77
+      }
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %238 = or i32 %146, 6",
+        "ordinal": 99
+      },
+      "right": null
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %332 = select i1 %327, i32 %330, i32 %320",
+        "ordinal": 78
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %239 = add nsw i32 %234, %128",
+        "ordinal": 100
+      },
+      "right": {
+        "ir": "  %333 = add nsw i32 %332, %128",
+        "ordinal": 79
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %240 = getelementptr inbounds [8192 x i32], [8192 x i32] addrspace(3)* @_ZZ3pcmPiE2sC, i32 0, i32 %239",
+        "ordinal": 101
+      },
+      "right": {
+        "ir": "  %334 = getelementptr inbounds [8192 x i32], [8192 x i32] addrspace(3)* @_ZZ3pcmPiE2sC, i32 0, i32 %333",
+        "ordinal": 80
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %241 = load i32, i32 addrspace(3)* %240, align 4, !tbaa !8",
+        "ordinal": 102
+      },
+      "right": {
+        "ir": "  %335 = load i32, i32 addrspace(3)* %334, align 4, !tbaa !8",
+        "ordinal": 81
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %242 = add nsw i32 %136, %236",
+        "ordinal": 103
+      },
+      "right": {
+        "ir": "  %336 = add nsw i32 %135, %331",
+        "ordinal": 82
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %243 = getelementptr inbounds [8192 x i32], [8192 x i32] addrspace(3)* @_ZZ3pcmPiE2sC, i32 0, i32 %242",
+        "ordinal": 104
+      },
+      "right": {
+        "ir": "  %337 = getelementptr inbounds [8192 x i32], [8192 x i32] addrspace(3)* @_ZZ3pcmPiE2sC, i32 0, i32 %336",
+        "ordinal": 83
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %244 = load i32, i32 addrspace(3)* %243, align 4, !tbaa !8",
+        "ordinal": 105
+      },
+      "right": {
+        "ir": "  %338 = load i32, i32 addrspace(3)* %337, align 4, !tbaa !8",
+        "ordinal": 84
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %245 = icmp sgt i32 %241, %244",
+        "ordinal": 106
+      },
+      "right": {
+        "ir": "  %339 = icmp sgt i32 %335, %338",
+        "ordinal": 85
+      }
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %246 = select i1 %245, i32 %244, i32 %241",
+        "ordinal": 107
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %247 = xor i1 %245, true",
+        "ordinal": 108
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %248 = zext i1 %247 to i32",
+        "ordinal": 109
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %249 = add nuw nsw i32 %234, %248",
+        "ordinal": 110
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %250 = zext i1 %245 to i32",
+        "ordinal": 111
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %251 = add nuw nsw i32 %236, %250",
+        "ordinal": 112
+      },
+      "right": null
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %340 = sub nsw i32 250, %270",
+        "ordinal": 86
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %252 = getelementptr inbounds i32, i32 addrspace(3)* %129, i32 %238",
+        "ordinal": 113
+      },
+      "right": {
+        "ir": "  %341 = getelementptr inbounds i32, i32 addrspace(3)* %129, i32 %340",
+        "ordinal": 87
+      }
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %merged.select27 = select i1 %339, i32 %335, i32 %338",
+        "ordinal": 88
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  store i32 %246, i32 addrspace(3)* %252, align 8",
+        "ordinal": 114
+      },
+      "right": {
+        "ir": "  store i32 %merged.select27, i32 addrspace(3)* %341, align 8, !tbaa !8",
+        "ordinal": 89
+      }
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %merged.select28 = select i1 %339, i32 %332, i32 %331",
+        "ordinal": 90
+      }
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %342 = add nsw i32 %merged.select28, -1",
+        "ordinal": 91
+      }
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %343 = select i1 %339, i32 %331, i32 %342",
+        "ordinal": 92
+      }
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %253 = or i32 %146, 7",
+        "ordinal": 115
+      },
+      "right": null
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %344 = select i1 %339, i32 %342, i32 %332",
+        "ordinal": 93
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %254 = add nsw i32 %249, %128",
+        "ordinal": 116
+      },
+      "right": {
+        "ir": "  %345 = add nsw i32 %344, %128",
+        "ordinal": 94
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %255 = getelementptr inbounds [8192 x i32], [8192 x i32] addrspace(3)* @_ZZ3pcmPiE2sC, i32 0, i32 %254",
+        "ordinal": 117
+      },
+      "right": {
+        "ir": "  %346 = getelementptr inbounds [8192 x i32], [8192 x i32] addrspace(3)* @_ZZ3pcmPiE2sC, i32 0, i32 %345",
+        "ordinal": 95
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %256 = load i32, i32 addrspace(3)* %255, align 4, !tbaa !8",
+        "ordinal": 118
+      },
+      "right": {
+        "ir": "  %347 = load i32, i32 addrspace(3)* %346, align 4, !tbaa !8",
+        "ordinal": 96
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %257 = add nsw i32 %136, %251",
+        "ordinal": 119
+      },
+      "right": {
+        "ir": "  %348 = add nsw i32 %135, %343",
+        "ordinal": 97
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %258 = getelementptr inbounds [8192 x i32], [8192 x i32] addrspace(3)* @_ZZ3pcmPiE2sC, i32 0, i32 %257",
+        "ordinal": 120
+      },
+      "right": {
+        "ir": "  %349 = getelementptr inbounds [8192 x i32], [8192 x i32] addrspace(3)* @_ZZ3pcmPiE2sC, i32 0, i32 %348",
+        "ordinal": 98
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %259 = load i32, i32 addrspace(3)* %258, align 4, !tbaa !8",
+        "ordinal": 121
+      },
+      "right": {
+        "ir": "  %350 = load i32, i32 addrspace(3)* %349, align 4, !tbaa !8",
+        "ordinal": 99
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %260 = icmp sgt i32 %256, %259",
+        "ordinal": 122
+      },
+      "right": {
+        "ir": "  %351 = icmp sgt i32 %347, %350",
+        "ordinal": 100
+      }
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %261 = select i1 %260, i32 %259, i32 %256",
+        "ordinal": 123
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %262 = xor i1 %260, true",
+        "ordinal": 124
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %263 = zext i1 %262 to i32",
+        "ordinal": 125
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %264 = add nuw nsw i32 %249, %263",
+        "ordinal": 126
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %265 = zext i1 %260 to i32",
+        "ordinal": 127
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %266 = add nuw nsw i32 %251, %265",
+        "ordinal": 128
+      },
+      "right": null
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %352 = sub nsw i32 249, %270",
+        "ordinal": 101
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %267 = getelementptr inbounds i32, i32 addrspace(3)* %129, i32 %253",
+        "ordinal": 129
+      },
+      "right": {
+        "ir": "  %353 = getelementptr inbounds i32, i32 addrspace(3)* %129, i32 %352",
+        "ordinal": 102
+      }
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %merged.select32 = select i1 %351, i32 %347, i32 %350",
+        "ordinal": 103
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  store i32 %261, i32 addrspace(3)* %267, align 4",
+        "ordinal": 130
+      },
+      "right": {
+        "ir": "  store i32 %merged.select32, i32 addrspace(3)* %353, align 4, !tbaa !8",
+        "ordinal": 104
+      }
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %merged.select33 = select i1 %351, i32 %344, i32 %343",
+        "ordinal": 105
+      }
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %354 = add nsw i32 %merged.select33, -1",
+        "ordinal": 106
+      }
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %355 = select i1 %351, i32 %343, i32 %354",
+        "ordinal": 107
+      }
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %356 = select i1 %351, i32 %354, i32 %344",
+        "ordinal": 108
+      }
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %357 = add nsw i32 %356, %128",
+        "ordinal": 109
+      }
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %358 = getelementptr inbounds [8192 x i32], [8192 x i32] addrspace(3)* @_ZZ3pcmPiE2sC, i32 0, i32 %357",
+        "ordinal": 110
+      }
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %359 = load i32, i32 addrspace(3)* %358, align 4, !tbaa !8",
+        "ordinal": 111
+      }
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %360 = add nsw i32 %135, %355",
+        "ordinal": 112
+      }
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %361 = getelementptr inbounds [8192 x i32], [8192 x i32] addrspace(3)* @_ZZ3pcmPiE2sC, i32 0, i32 %360",
+        "ordinal": 113
+      }
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %362 = load i32, i32 addrspace(3)* %361, align 4, !tbaa !8",
+        "ordinal": 114
+      }
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %363 = icmp sgt i32 %359, %362",
+        "ordinal": 115
+      }
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %364 = sub nsw i32 248, %270",
+        "ordinal": 116
+      }
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %365 = getelementptr inbounds i32, i32 addrspace(3)* %129, i32 %364",
+        "ordinal": 117
+      }
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %merged.select37 = select i1 %363, i32 %359, i32 %362",
+        "ordinal": 118
+      }
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  store i32 %merged.select37, i32 addrspace(3)* %365, align 16, !tbaa !8",
+        "ordinal": 119
+      }
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %merged.select38 = select i1 %363, i32 %356, i32 %355",
+        "ordinal": 120
+      }
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %366 = add nsw i32 %merged.select38, -1",
+        "ordinal": 121
+      }
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %367 = select i1 %363, i32 %355, i32 %366",
+        "ordinal": 122
+      }
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %368 = select i1 %363, i32 %366, i32 %356",
+        "ordinal": 123
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %268 = add nuw nsw i32 %146, 8",
+        "ordinal": 131
+      },
+      "right": {
+        "ir": "  %369 = add nuw nsw i32 %270, 8",
+        "ordinal": 124
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %269 = icmp eq i32 %268, 256",
+        "ordinal": 132
+      },
+      "right": {
+        "ir": "  %370 = icmp eq i32 %369, 256",
+        "ordinal": 125
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  br i1 %269, label %new.exit, label %145, !llvm.loop !14",
+        "ordinal": 133
+      },
+      "right": {
+        "ir": "  br i1 %370, label %new.exit1, label %unify.bb2, !llvm.loop !15",
+        "ordinal": 126
+      }
+    }
+  ],
+  "E3-native": [
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "%145",
+        "ordinal": 0
+      },
+      "right": {
+        "ir": "%unify.bb2",
+        "ordinal": 0
+      }
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %146 = phi i32 [ %268, %145 ], [ %moved.phi, %unify.bb3 ]",
+        "ordinal": 1
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %147 = phi i32 [ %266, %145 ], [ %moved.phi4, %unify.bb3 ]",
+        "ordinal": 2
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %148 = phi i32 [ %264, %145 ], [ %moved.phi5, %unify.bb3 ]",
+        "ordinal": 3
+      },
+      "right": null
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %270 = phi i32 [ %369, %unify.bb2 ], [ %moved.phi6, %unify.bb3 ]",
+        "ordinal": 1
+      }
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %271 = phi i32 [ %368, %unify.bb2 ], [ %moved.phi7, %unify.bb3 ]",
+        "ordinal": 2
+      }
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %272 = phi i32 [ %367, %unify.bb2 ], [ %moved.phi8, %unify.bb3 ]",
+        "ordinal": 3
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %149 = add nsw i32 %148, %128",
+        "ordinal": 4
+      },
+      "right": {
+        "ir": "  %273 = add nsw i32 %271, %128",
+        "ordinal": 4
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %150 = getelementptr inbounds [8192 x i32], [8192 x i32] addrspace(3)* @_ZZ3pcmPiE2sC, i32 0, i32 %149",
+        "ordinal": 5
+      },
+      "right": {
+        "ir": "  %274 = getelementptr inbounds [8192 x i32], [8192 x i32] addrspace(3)* @_ZZ3pcmPiE2sC, i32 0, i32 %273",
+        "ordinal": 5
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %151 = load i32, i32 addrspace(3)* %150, align 4, !tbaa !8",
+        "ordinal": 6
+      },
+      "right": {
+        "ir": "  %275 = load i32, i32 addrspace(3)* %274, align 4, !tbaa !8",
+        "ordinal": 6
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %152 = add nsw i32 %136, %147",
+        "ordinal": 7
+      },
+      "right": {
+        "ir": "  %276 = add nsw i32 %135, %272",
+        "ordinal": 7
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %153 = getelementptr inbounds [8192 x i32], [8192 x i32] addrspace(3)* @_ZZ3pcmPiE2sC, i32 0, i32 %152",
+        "ordinal": 8
+      },
+      "right": {
+        "ir": "  %277 = getelementptr inbounds [8192 x i32], [8192 x i32] addrspace(3)* @_ZZ3pcmPiE2sC, i32 0, i32 %276",
+        "ordinal": 8
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %154 = load i32, i32 addrspace(3)* %153, align 4, !tbaa !8",
+        "ordinal": 9
+      },
+      "right": {
+        "ir": "  %278 = load i32, i32 addrspace(3)* %277, align 4, !tbaa !8",
+        "ordinal": 9
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %155 = icmp sgt i32 %151, %154",
+        "ordinal": 10
+      },
+      "right": {
+        "ir": "  %279 = icmp sgt i32 %275, %278",
+        "ordinal": 10
+      }
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %156 = select i1 %155, i32 %154, i32 %151",
+        "ordinal": 11
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %157 = xor i1 %155, true",
+        "ordinal": 12
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %158 = zext i1 %157 to i32",
+        "ordinal": 13
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %159 = add nuw nsw i32 %148, %158",
+        "ordinal": 14
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %160 = zext i1 %155 to i32",
+        "ordinal": 15
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %161 = add nuw nsw i32 %147, %160",
+        "ordinal": 16
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %162 = getelementptr inbounds i32, i32 addrspace(3)* %129, i32 %146",
+        "ordinal": 17
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  store i32 %156, i32 addrspace(3)* %162, align 16",
+        "ordinal": 18
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %163 = or i32 %146, 1",
+        "ordinal": 19
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %164 = add nsw i32 %159, %128",
+        "ordinal": 20
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %165 = getelementptr inbounds [8192 x i32], [8192 x i32] addrspace(3)* @_ZZ3pcmPiE2sC, i32 0, i32 %164",
+        "ordinal": 21
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %166 = load i32, i32 addrspace(3)* %165, align 4, !tbaa !8",
+        "ordinal": 22
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %167 = add nsw i32 %136, %161",
+        "ordinal": 23
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %168 = getelementptr inbounds [8192 x i32], [8192 x i32] addrspace(3)* @_ZZ3pcmPiE2sC, i32 0, i32 %167",
+        "ordinal": 24
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %169 = load i32, i32 addrspace(3)* %168, align 4, !tbaa !8",
+        "ordinal": 25
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %170 = icmp sgt i32 %166, %169",
+        "ordinal": 26
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %171 = select i1 %170, i32 %169, i32 %166",
+        "ordinal": 27
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %172 = xor i1 %170, true",
+        "ordinal": 28
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %173 = zext i1 %172 to i32",
+        "ordinal": 29
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %174 = add nuw nsw i32 %159, %173",
+        "ordinal": 30
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %175 = zext i1 %170 to i32",
+        "ordinal": 31
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %176 = add nuw nsw i32 %161, %175",
+        "ordinal": 32
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %177 = getelementptr inbounds i32, i32 addrspace(3)* %129, i32 %163",
+        "ordinal": 33
+      },
+      "right": null
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %280 = sub nuw nsw i32 255, %270",
+        "ordinal": 11
+      }
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %281 = getelementptr inbounds i32, i32 addrspace(3)* %129, i32 %280",
+        "ordinal": 12
+      }
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %merged.select = select i1 %279, i32 %275, i32 %278",
+        "ordinal": 13
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  store i32 %171, i32 addrspace(3)* %177, align 4",
+        "ordinal": 34
+      },
+      "right": {
+        "ir": "  store i32 %merged.select, i32 addrspace(3)* %281, align 4, !tbaa !8",
+        "ordinal": 14
+      }
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %178 = or i32 %146, 2",
+        "ordinal": 35
+      },
+      "right": null
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %merged.select3 = select i1 %279, i32 %271, i32 %272",
+        "ordinal": 15
+      }
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %282 = add nsw i32 %merged.select3, -1",
+        "ordinal": 16
+      }
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %283 = select i1 %279, i32 %272, i32 %282",
+        "ordinal": 17
+      }
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %284 = select i1 %279, i32 %282, i32 %271",
+        "ordinal": 18
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %179 = add nsw i32 %174, %128",
+        "ordinal": 36
+      },
+      "right": {
+        "ir": "  %285 = add nsw i32 %284, %128",
+        "ordinal": 19
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %180 = getelementptr inbounds [8192 x i32], [8192 x i32] addrspace(3)* @_ZZ3pcmPiE2sC, i32 0, i32 %179",
+        "ordinal": 37
+      },
+      "right": {
+        "ir": "  %286 = getelementptr inbounds [8192 x i32], [8192 x i32] addrspace(3)* @_ZZ3pcmPiE2sC, i32 0, i32 %285",
+        "ordinal": 20
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %181 = load i32, i32 addrspace(3)* %180, align 4, !tbaa !8",
+        "ordinal": 38
+      },
+      "right": {
+        "ir": "  %287 = load i32, i32 addrspace(3)* %286, align 4, !tbaa !8",
+        "ordinal": 21
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %182 = add nsw i32 %136, %176",
+        "ordinal": 39
+      },
+      "right": {
+        "ir": "  %288 = add nsw i32 %135, %283",
+        "ordinal": 22
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %183 = getelementptr inbounds [8192 x i32], [8192 x i32] addrspace(3)* @_ZZ3pcmPiE2sC, i32 0, i32 %182",
+        "ordinal": 40
+      },
+      "right": {
+        "ir": "  %289 = getelementptr inbounds [8192 x i32], [8192 x i32] addrspace(3)* @_ZZ3pcmPiE2sC, i32 0, i32 %288",
+        "ordinal": 23
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %184 = load i32, i32 addrspace(3)* %183, align 4, !tbaa !8",
+        "ordinal": 41
+      },
+      "right": {
+        "ir": "  %290 = load i32, i32 addrspace(3)* %289, align 4, !tbaa !8",
+        "ordinal": 24
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %185 = icmp sgt i32 %181, %184",
+        "ordinal": 42
+      },
+      "right": {
+        "ir": "  %291 = icmp sgt i32 %287, %290",
+        "ordinal": 25
+      }
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %186 = select i1 %185, i32 %184, i32 %181",
+        "ordinal": 43
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %187 = xor i1 %185, true",
+        "ordinal": 44
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %188 = zext i1 %187 to i32",
+        "ordinal": 45
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %189 = add nuw nsw i32 %174, %188",
+        "ordinal": 46
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %190 = zext i1 %185 to i32",
+        "ordinal": 47
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %191 = add nuw nsw i32 %176, %190",
+        "ordinal": 48
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %192 = getelementptr inbounds i32, i32 addrspace(3)* %129, i32 %178",
+        "ordinal": 49
+      },
+      "right": null
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %292 = sub nsw i32 254, %270",
+        "ordinal": 26
+      }
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %293 = getelementptr inbounds i32, i32 addrspace(3)* %129, i32 %292",
+        "ordinal": 27
+      }
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %merged.select7 = select i1 %291, i32 %287, i32 %290",
+        "ordinal": 28
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  store i32 %186, i32 addrspace(3)* %192, align 8",
+        "ordinal": 50
+      },
+      "right": {
+        "ir": "  store i32 %merged.select7, i32 addrspace(3)* %293, align 8, !tbaa !8",
+        "ordinal": 29
+      }
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %193 = or i32 %146, 3",
+        "ordinal": 51
+      },
+      "right": null
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %merged.select8 = select i1 %291, i32 %284, i32 %283",
+        "ordinal": 30
+      }
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %294 = add nsw i32 %merged.select8, -1",
+        "ordinal": 31
+      }
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %295 = select i1 %291, i32 %283, i32 %294",
+        "ordinal": 32
+      }
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %296 = select i1 %291, i32 %294, i32 %284",
+        "ordinal": 33
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %194 = add nsw i32 %189, %128",
+        "ordinal": 52
+      },
+      "right": {
+        "ir": "  %297 = add nsw i32 %296, %128",
+        "ordinal": 34
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %195 = getelementptr inbounds [8192 x i32], [8192 x i32] addrspace(3)* @_ZZ3pcmPiE2sC, i32 0, i32 %194",
+        "ordinal": 53
+      },
+      "right": {
+        "ir": "  %298 = getelementptr inbounds [8192 x i32], [8192 x i32] addrspace(3)* @_ZZ3pcmPiE2sC, i32 0, i32 %297",
+        "ordinal": 35
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %196 = load i32, i32 addrspace(3)* %195, align 4, !tbaa !8",
+        "ordinal": 54
+      },
+      "right": {
+        "ir": "  %299 = load i32, i32 addrspace(3)* %298, align 4, !tbaa !8",
+        "ordinal": 36
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %197 = add nsw i32 %136, %191",
+        "ordinal": 55
+      },
+      "right": {
+        "ir": "  %300 = add nsw i32 %135, %295",
+        "ordinal": 37
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %198 = getelementptr inbounds [8192 x i32], [8192 x i32] addrspace(3)* @_ZZ3pcmPiE2sC, i32 0, i32 %197",
+        "ordinal": 56
+      },
+      "right": {
+        "ir": "  %301 = getelementptr inbounds [8192 x i32], [8192 x i32] addrspace(3)* @_ZZ3pcmPiE2sC, i32 0, i32 %300",
+        "ordinal": 38
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %199 = load i32, i32 addrspace(3)* %198, align 4, !tbaa !8",
+        "ordinal": 57
+      },
+      "right": {
+        "ir": "  %302 = load i32, i32 addrspace(3)* %301, align 4, !tbaa !8",
+        "ordinal": 39
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %200 = icmp sgt i32 %196, %199",
+        "ordinal": 58
+      },
+      "right": {
+        "ir": "  %303 = icmp sgt i32 %299, %302",
+        "ordinal": 40
+      }
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %201 = select i1 %200, i32 %199, i32 %196",
+        "ordinal": 59
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %202 = xor i1 %200, true",
+        "ordinal": 60
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %203 = zext i1 %202 to i32",
+        "ordinal": 61
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %204 = add nuw nsw i32 %189, %203",
+        "ordinal": 62
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %205 = zext i1 %200 to i32",
+        "ordinal": 63
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %206 = add nuw nsw i32 %191, %205",
+        "ordinal": 64
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %207 = getelementptr inbounds i32, i32 addrspace(3)* %129, i32 %193",
+        "ordinal": 65
+      },
+      "right": null
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %304 = sub nsw i32 253, %270",
+        "ordinal": 41
+      }
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %305 = getelementptr inbounds i32, i32 addrspace(3)* %129, i32 %304",
+        "ordinal": 42
+      }
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %merged.select12 = select i1 %303, i32 %299, i32 %302",
+        "ordinal": 43
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  store i32 %201, i32 addrspace(3)* %207, align 4",
+        "ordinal": 66
+      },
+      "right": {
+        "ir": "  store i32 %merged.select12, i32 addrspace(3)* %305, align 4, !tbaa !8",
+        "ordinal": 44
+      }
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %208 = or i32 %146, 4",
+        "ordinal": 67
+      },
+      "right": null
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %merged.select13 = select i1 %303, i32 %296, i32 %295",
+        "ordinal": 45
+      }
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %306 = add nsw i32 %merged.select13, -1",
+        "ordinal": 46
+      }
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %307 = select i1 %303, i32 %295, i32 %306",
+        "ordinal": 47
+      }
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %308 = select i1 %303, i32 %306, i32 %296",
+        "ordinal": 48
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %209 = add nsw i32 %204, %128",
+        "ordinal": 68
+      },
+      "right": {
+        "ir": "  %309 = add nsw i32 %308, %128",
+        "ordinal": 49
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %210 = getelementptr inbounds [8192 x i32], [8192 x i32] addrspace(3)* @_ZZ3pcmPiE2sC, i32 0, i32 %209",
+        "ordinal": 69
+      },
+      "right": {
+        "ir": "  %310 = getelementptr inbounds [8192 x i32], [8192 x i32] addrspace(3)* @_ZZ3pcmPiE2sC, i32 0, i32 %309",
+        "ordinal": 50
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %211 = load i32, i32 addrspace(3)* %210, align 4, !tbaa !8",
+        "ordinal": 70
+      },
+      "right": {
+        "ir": "  %311 = load i32, i32 addrspace(3)* %310, align 4, !tbaa !8",
+        "ordinal": 51
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %212 = add nsw i32 %136, %206",
+        "ordinal": 71
+      },
+      "right": {
+        "ir": "  %312 = add nsw i32 %135, %307",
+        "ordinal": 52
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %213 = getelementptr inbounds [8192 x i32], [8192 x i32] addrspace(3)* @_ZZ3pcmPiE2sC, i32 0, i32 %212",
+        "ordinal": 72
+      },
+      "right": {
+        "ir": "  %313 = getelementptr inbounds [8192 x i32], [8192 x i32] addrspace(3)* @_ZZ3pcmPiE2sC, i32 0, i32 %312",
+        "ordinal": 53
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %214 = load i32, i32 addrspace(3)* %213, align 4, !tbaa !8",
+        "ordinal": 73
+      },
+      "right": {
+        "ir": "  %314 = load i32, i32 addrspace(3)* %313, align 4, !tbaa !8",
+        "ordinal": 54
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %215 = icmp sgt i32 %211, %214",
+        "ordinal": 74
+      },
+      "right": {
+        "ir": "  %315 = icmp sgt i32 %311, %314",
+        "ordinal": 55
+      }
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %216 = select i1 %215, i32 %214, i32 %211",
+        "ordinal": 75
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %217 = xor i1 %215, true",
+        "ordinal": 76
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %218 = zext i1 %217 to i32",
+        "ordinal": 77
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %219 = add nuw nsw i32 %204, %218",
+        "ordinal": 78
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %220 = zext i1 %215 to i32",
+        "ordinal": 79
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %221 = add nuw nsw i32 %206, %220",
+        "ordinal": 80
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %222 = getelementptr inbounds i32, i32 addrspace(3)* %129, i32 %208",
+        "ordinal": 81
+      },
+      "right": null
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %316 = sub nsw i32 252, %270",
+        "ordinal": 56
+      }
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %317 = getelementptr inbounds i32, i32 addrspace(3)* %129, i32 %316",
+        "ordinal": 57
+      }
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %merged.select17 = select i1 %315, i32 %311, i32 %314",
+        "ordinal": 58
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  store i32 %216, i32 addrspace(3)* %222, align 16",
+        "ordinal": 82
+      },
+      "right": {
+        "ir": "  store i32 %merged.select17, i32 addrspace(3)* %317, align 16, !tbaa !8",
+        "ordinal": 59
+      }
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %223 = or i32 %146, 5",
+        "ordinal": 83
+      },
+      "right": null
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %merged.select18 = select i1 %315, i32 %308, i32 %307",
+        "ordinal": 60
+      }
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %318 = add nsw i32 %merged.select18, -1",
+        "ordinal": 61
+      }
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %319 = select i1 %315, i32 %307, i32 %318",
+        "ordinal": 62
+      }
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %320 = select i1 %315, i32 %318, i32 %308",
+        "ordinal": 63
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %224 = add nsw i32 %219, %128",
+        "ordinal": 84
+      },
+      "right": {
+        "ir": "  %321 = add nsw i32 %320, %128",
+        "ordinal": 64
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %225 = getelementptr inbounds [8192 x i32], [8192 x i32] addrspace(3)* @_ZZ3pcmPiE2sC, i32 0, i32 %224",
+        "ordinal": 85
+      },
+      "right": {
+        "ir": "  %322 = getelementptr inbounds [8192 x i32], [8192 x i32] addrspace(3)* @_ZZ3pcmPiE2sC, i32 0, i32 %321",
+        "ordinal": 65
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %226 = load i32, i32 addrspace(3)* %225, align 4, !tbaa !8",
+        "ordinal": 86
+      },
+      "right": {
+        "ir": "  %323 = load i32, i32 addrspace(3)* %322, align 4, !tbaa !8",
+        "ordinal": 66
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %227 = add nsw i32 %136, %221",
+        "ordinal": 87
+      },
+      "right": {
+        "ir": "  %324 = add nsw i32 %135, %319",
+        "ordinal": 67
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %228 = getelementptr inbounds [8192 x i32], [8192 x i32] addrspace(3)* @_ZZ3pcmPiE2sC, i32 0, i32 %227",
+        "ordinal": 88
+      },
+      "right": {
+        "ir": "  %325 = getelementptr inbounds [8192 x i32], [8192 x i32] addrspace(3)* @_ZZ3pcmPiE2sC, i32 0, i32 %324",
+        "ordinal": 68
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %229 = load i32, i32 addrspace(3)* %228, align 4, !tbaa !8",
+        "ordinal": 89
+      },
+      "right": {
+        "ir": "  %326 = load i32, i32 addrspace(3)* %325, align 4, !tbaa !8",
+        "ordinal": 69
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %230 = icmp sgt i32 %226, %229",
+        "ordinal": 90
+      },
+      "right": {
+        "ir": "  %327 = icmp sgt i32 %323, %326",
+        "ordinal": 70
+      }
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %231 = select i1 %230, i32 %229, i32 %226",
+        "ordinal": 91
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %232 = xor i1 %230, true",
+        "ordinal": 92
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %233 = zext i1 %232 to i32",
+        "ordinal": 93
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %234 = add nuw nsw i32 %219, %233",
+        "ordinal": 94
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %235 = zext i1 %230 to i32",
+        "ordinal": 95
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %236 = add nuw nsw i32 %221, %235",
+        "ordinal": 96
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %237 = getelementptr inbounds i32, i32 addrspace(3)* %129, i32 %223",
+        "ordinal": 97
+      },
+      "right": null
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %328 = sub nsw i32 251, %270",
+        "ordinal": 71
+      }
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %329 = getelementptr inbounds i32, i32 addrspace(3)* %129, i32 %328",
+        "ordinal": 72
+      }
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %merged.select22 = select i1 %327, i32 %323, i32 %326",
+        "ordinal": 73
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  store i32 %231, i32 addrspace(3)* %237, align 4",
+        "ordinal": 98
+      },
+      "right": {
+        "ir": "  store i32 %merged.select22, i32 addrspace(3)* %329, align 4, !tbaa !8",
+        "ordinal": 74
+      }
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %238 = or i32 %146, 6",
+        "ordinal": 99
+      },
+      "right": null
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %merged.select23 = select i1 %327, i32 %320, i32 %319",
+        "ordinal": 75
+      }
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %330 = add nsw i32 %merged.select23, -1",
+        "ordinal": 76
+      }
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %331 = select i1 %327, i32 %319, i32 %330",
+        "ordinal": 77
+      }
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %332 = select i1 %327, i32 %330, i32 %320",
+        "ordinal": 78
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %239 = add nsw i32 %234, %128",
+        "ordinal": 100
+      },
+      "right": {
+        "ir": "  %333 = add nsw i32 %332, %128",
+        "ordinal": 79
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %240 = getelementptr inbounds [8192 x i32], [8192 x i32] addrspace(3)* @_ZZ3pcmPiE2sC, i32 0, i32 %239",
+        "ordinal": 101
+      },
+      "right": {
+        "ir": "  %334 = getelementptr inbounds [8192 x i32], [8192 x i32] addrspace(3)* @_ZZ3pcmPiE2sC, i32 0, i32 %333",
+        "ordinal": 80
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %241 = load i32, i32 addrspace(3)* %240, align 4, !tbaa !8",
+        "ordinal": 102
+      },
+      "right": {
+        "ir": "  %335 = load i32, i32 addrspace(3)* %334, align 4, !tbaa !8",
+        "ordinal": 81
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %242 = add nsw i32 %136, %236",
+        "ordinal": 103
+      },
+      "right": {
+        "ir": "  %336 = add nsw i32 %135, %331",
+        "ordinal": 82
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %243 = getelementptr inbounds [8192 x i32], [8192 x i32] addrspace(3)* @_ZZ3pcmPiE2sC, i32 0, i32 %242",
+        "ordinal": 104
+      },
+      "right": {
+        "ir": "  %337 = getelementptr inbounds [8192 x i32], [8192 x i32] addrspace(3)* @_ZZ3pcmPiE2sC, i32 0, i32 %336",
+        "ordinal": 83
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %244 = load i32, i32 addrspace(3)* %243, align 4, !tbaa !8",
+        "ordinal": 105
+      },
+      "right": {
+        "ir": "  %338 = load i32, i32 addrspace(3)* %337, align 4, !tbaa !8",
+        "ordinal": 84
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %245 = icmp sgt i32 %241, %244",
+        "ordinal": 106
+      },
+      "right": {
+        "ir": "  %339 = icmp sgt i32 %335, %338",
+        "ordinal": 85
+      }
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %246 = select i1 %245, i32 %244, i32 %241",
+        "ordinal": 107
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %247 = xor i1 %245, true",
+        "ordinal": 108
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %248 = zext i1 %247 to i32",
+        "ordinal": 109
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %249 = add nuw nsw i32 %234, %248",
+        "ordinal": 110
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %250 = zext i1 %245 to i32",
+        "ordinal": 111
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %251 = add nuw nsw i32 %236, %250",
+        "ordinal": 112
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %252 = getelementptr inbounds i32, i32 addrspace(3)* %129, i32 %238",
+        "ordinal": 113
+      },
+      "right": null
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %340 = sub nsw i32 250, %270",
+        "ordinal": 86
+      }
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %341 = getelementptr inbounds i32, i32 addrspace(3)* %129, i32 %340",
+        "ordinal": 87
+      }
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %merged.select27 = select i1 %339, i32 %335, i32 %338",
+        "ordinal": 88
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  store i32 %246, i32 addrspace(3)* %252, align 8",
+        "ordinal": 114
+      },
+      "right": {
+        "ir": "  store i32 %merged.select27, i32 addrspace(3)* %341, align 8, !tbaa !8",
+        "ordinal": 89
+      }
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %253 = or i32 %146, 7",
+        "ordinal": 115
+      },
+      "right": null
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %merged.select28 = select i1 %339, i32 %332, i32 %331",
+        "ordinal": 90
+      }
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %342 = add nsw i32 %merged.select28, -1",
+        "ordinal": 91
+      }
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %343 = select i1 %339, i32 %331, i32 %342",
+        "ordinal": 92
+      }
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %344 = select i1 %339, i32 %342, i32 %332",
+        "ordinal": 93
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %254 = add nsw i32 %249, %128",
+        "ordinal": 116
+      },
+      "right": {
+        "ir": "  %345 = add nsw i32 %344, %128",
+        "ordinal": 94
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %255 = getelementptr inbounds [8192 x i32], [8192 x i32] addrspace(3)* @_ZZ3pcmPiE2sC, i32 0, i32 %254",
+        "ordinal": 117
+      },
+      "right": {
+        "ir": "  %346 = getelementptr inbounds [8192 x i32], [8192 x i32] addrspace(3)* @_ZZ3pcmPiE2sC, i32 0, i32 %345",
+        "ordinal": 95
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %256 = load i32, i32 addrspace(3)* %255, align 4, !tbaa !8",
+        "ordinal": 118
+      },
+      "right": {
+        "ir": "  %347 = load i32, i32 addrspace(3)* %346, align 4, !tbaa !8",
+        "ordinal": 96
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %257 = add nsw i32 %136, %251",
+        "ordinal": 119
+      },
+      "right": {
+        "ir": "  %348 = add nsw i32 %135, %343",
+        "ordinal": 97
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %258 = getelementptr inbounds [8192 x i32], [8192 x i32] addrspace(3)* @_ZZ3pcmPiE2sC, i32 0, i32 %257",
+        "ordinal": 120
+      },
+      "right": {
+        "ir": "  %349 = getelementptr inbounds [8192 x i32], [8192 x i32] addrspace(3)* @_ZZ3pcmPiE2sC, i32 0, i32 %348",
+        "ordinal": 98
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %259 = load i32, i32 addrspace(3)* %258, align 4, !tbaa !8",
+        "ordinal": 121
+      },
+      "right": {
+        "ir": "  %350 = load i32, i32 addrspace(3)* %349, align 4, !tbaa !8",
+        "ordinal": 99
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %260 = icmp sgt i32 %256, %259",
+        "ordinal": 122
+      },
+      "right": {
+        "ir": "  %351 = icmp sgt i32 %347, %350",
+        "ordinal": 100
+      }
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %261 = select i1 %260, i32 %259, i32 %256",
+        "ordinal": 123
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %262 = xor i1 %260, true",
+        "ordinal": 124
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %263 = zext i1 %262 to i32",
+        "ordinal": 125
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %264 = add nuw nsw i32 %249, %263",
+        "ordinal": 126
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %265 = zext i1 %260 to i32",
+        "ordinal": 127
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %266 = add nuw nsw i32 %251, %265",
+        "ordinal": 128
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %267 = getelementptr inbounds i32, i32 addrspace(3)* %129, i32 %253",
+        "ordinal": 129
+      },
+      "right": null
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %352 = sub nsw i32 249, %270",
+        "ordinal": 101
+      }
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %353 = getelementptr inbounds i32, i32 addrspace(3)* %129, i32 %352",
+        "ordinal": 102
+      }
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %merged.select32 = select i1 %351, i32 %347, i32 %350",
+        "ordinal": 103
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  store i32 %261, i32 addrspace(3)* %267, align 4",
+        "ordinal": 130
+      },
+      "right": {
+        "ir": "  store i32 %merged.select32, i32 addrspace(3)* %353, align 4, !tbaa !8",
+        "ordinal": 104
+      }
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %merged.select33 = select i1 %351, i32 %344, i32 %343",
+        "ordinal": 105
+      }
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %354 = add nsw i32 %merged.select33, -1",
+        "ordinal": 106
+      }
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %355 = select i1 %351, i32 %343, i32 %354",
+        "ordinal": 107
+      }
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %356 = select i1 %351, i32 %354, i32 %344",
+        "ordinal": 108
+      }
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %357 = add nsw i32 %356, %128",
+        "ordinal": 109
+      }
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %358 = getelementptr inbounds [8192 x i32], [8192 x i32] addrspace(3)* @_ZZ3pcmPiE2sC, i32 0, i32 %357",
+        "ordinal": 110
+      }
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %359 = load i32, i32 addrspace(3)* %358, align 4, !tbaa !8",
+        "ordinal": 111
+      }
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %360 = add nsw i32 %135, %355",
+        "ordinal": 112
+      }
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %361 = getelementptr inbounds [8192 x i32], [8192 x i32] addrspace(3)* @_ZZ3pcmPiE2sC, i32 0, i32 %360",
+        "ordinal": 113
+      }
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %362 = load i32, i32 addrspace(3)* %361, align 4, !tbaa !8",
+        "ordinal": 114
+      }
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %363 = icmp sgt i32 %359, %362",
+        "ordinal": 115
+      }
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %364 = sub nsw i32 248, %270",
+        "ordinal": 116
+      }
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %365 = getelementptr inbounds i32, i32 addrspace(3)* %129, i32 %364",
+        "ordinal": 117
+      }
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %merged.select37 = select i1 %363, i32 %359, i32 %362",
+        "ordinal": 118
+      }
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  store i32 %merged.select37, i32 addrspace(3)* %365, align 16, !tbaa !8",
+        "ordinal": 119
+      }
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %merged.select38 = select i1 %363, i32 %356, i32 %355",
+        "ordinal": 120
+      }
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %366 = add nsw i32 %merged.select38, -1",
+        "ordinal": 121
+      }
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %367 = select i1 %363, i32 %355, i32 %366",
+        "ordinal": 122
+      }
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %368 = select i1 %363, i32 %366, i32 %356",
+        "ordinal": 123
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %268 = add nuw nsw i32 %146, 8",
+        "ordinal": 131
+      },
+      "right": {
+        "ir": "  %369 = add nuw nsw i32 %270, 8",
+        "ordinal": 124
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %269 = icmp eq i32 %268, 256",
+        "ordinal": 132
+      },
+      "right": {
+        "ir": "  %370 = icmp eq i32 %369, 256",
+        "ordinal": 125
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  br i1 %269, label %new.exit, label %145, !llvm.loop !14",
+        "ordinal": 133
+      },
+      "right": {
+        "ir": "  br i1 %370, label %new.exit1, label %unify.bb2, !llvm.loop !15",
+        "ordinal": 126
+      }
+    }
+  ],
+  "E3-sw": [
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "%145",
+        "ordinal": 0
+      },
+      "right": {
+        "ir": "%unify.bb2",
+        "ordinal": 0
+      }
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %146 = phi i32 [ %268, %145 ], [ %moved.phi, %unify.bb3 ]",
+        "ordinal": 1
+      },
+      "right": null
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %270 = phi i32 [ %369, %unify.bb2 ], [ %moved.phi6, %unify.bb3 ]",
+        "ordinal": 1
+      }
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %147 = phi i32 [ %266, %145 ], [ %moved.phi4, %unify.bb3 ]",
+        "ordinal": 2
+      },
+      "right": null
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %271 = phi i32 [ %368, %unify.bb2 ], [ %moved.phi7, %unify.bb3 ]",
+        "ordinal": 2
+      }
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %148 = phi i32 [ %264, %145 ], [ %moved.phi5, %unify.bb3 ]",
+        "ordinal": 3
+      },
+      "right": null
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %272 = phi i32 [ %367, %unify.bb2 ], [ %moved.phi8, %unify.bb3 ]",
+        "ordinal": 3
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %149 = add nsw i32 %148, %128",
+        "ordinal": 4
+      },
+      "right": {
+        "ir": "  %273 = add nsw i32 %271, %128",
+        "ordinal": 4
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %150 = getelementptr inbounds [8192 x i32], [8192 x i32] addrspace(3)* @_ZZ3pcmPiE2sC, i32 0, i32 %149",
+        "ordinal": 5
+      },
+      "right": {
+        "ir": "  %274 = getelementptr inbounds [8192 x i32], [8192 x i32] addrspace(3)* @_ZZ3pcmPiE2sC, i32 0, i32 %273",
+        "ordinal": 5
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %151 = load i32, i32 addrspace(3)* %150, align 4, !tbaa !8",
+        "ordinal": 6
+      },
+      "right": {
+        "ir": "  %275 = load i32, i32 addrspace(3)* %274, align 4, !tbaa !8",
+        "ordinal": 6
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %152 = add nsw i32 %136, %147",
+        "ordinal": 7
+      },
+      "right": {
+        "ir": "  %276 = add nsw i32 %135, %272",
+        "ordinal": 7
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %153 = getelementptr inbounds [8192 x i32], [8192 x i32] addrspace(3)* @_ZZ3pcmPiE2sC, i32 0, i32 %152",
+        "ordinal": 8
+      },
+      "right": {
+        "ir": "  %277 = getelementptr inbounds [8192 x i32], [8192 x i32] addrspace(3)* @_ZZ3pcmPiE2sC, i32 0, i32 %276",
+        "ordinal": 8
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %154 = load i32, i32 addrspace(3)* %153, align 4, !tbaa !8",
+        "ordinal": 9
+      },
+      "right": {
+        "ir": "  %278 = load i32, i32 addrspace(3)* %277, align 4, !tbaa !8",
+        "ordinal": 9
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %155 = icmp sgt i32 %151, %154",
+        "ordinal": 10
+      },
+      "right": {
+        "ir": "  %279 = icmp sgt i32 %275, %278",
+        "ordinal": 10
+      }
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %156 = select i1 %155, i32 %154, i32 %151",
+        "ordinal": 11
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %157 = xor i1 %155, true",
+        "ordinal": 12
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %158 = zext i1 %157 to i32",
+        "ordinal": 13
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %159 = add nuw nsw i32 %148, %158",
+        "ordinal": 14
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %160 = zext i1 %155 to i32",
+        "ordinal": 15
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %161 = add nuw nsw i32 %147, %160",
+        "ordinal": 16
+      },
+      "right": null
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %280 = sub nuw nsw i32 255, %270",
+        "ordinal": 11
+      }
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %162 = getelementptr inbounds i32, i32 addrspace(3)* %129, i32 %146",
+        "ordinal": 17
+      },
+      "right": null
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %281 = getelementptr inbounds i32, i32 addrspace(3)* %129, i32 %280",
+        "ordinal": 12
+      }
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  store i32 %156, i32 addrspace(3)* %162, align 16",
+        "ordinal": 18
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %163 = or i32 %146, 1",
+        "ordinal": 19
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %164 = add nsw i32 %159, %128",
+        "ordinal": 20
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %165 = getelementptr inbounds [8192 x i32], [8192 x i32] addrspace(3)* @_ZZ3pcmPiE2sC, i32 0, i32 %164",
+        "ordinal": 21
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %166 = load i32, i32 addrspace(3)* %165, align 4, !tbaa !8",
+        "ordinal": 22
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %167 = add nsw i32 %136, %161",
+        "ordinal": 23
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %168 = getelementptr inbounds [8192 x i32], [8192 x i32] addrspace(3)* @_ZZ3pcmPiE2sC, i32 0, i32 %167",
+        "ordinal": 24
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %169 = load i32, i32 addrspace(3)* %168, align 4, !tbaa !8",
+        "ordinal": 25
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %170 = icmp sgt i32 %166, %169",
+        "ordinal": 26
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %171 = select i1 %170, i32 %169, i32 %166",
+        "ordinal": 27
+      },
+      "right": null
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %merged.select = select i1 %279, i32 %275, i32 %278",
+        "ordinal": 13
+      }
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %172 = xor i1 %170, true",
+        "ordinal": 28
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %173 = zext i1 %172 to i32",
+        "ordinal": 29
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %174 = add nuw nsw i32 %159, %173",
+        "ordinal": 30
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %175 = zext i1 %170 to i32",
+        "ordinal": 31
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %176 = add nuw nsw i32 %161, %175",
+        "ordinal": 32
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %177 = getelementptr inbounds i32, i32 addrspace(3)* %129, i32 %163",
+        "ordinal": 33
+      },
+      "right": null
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  store i32 %171, i32 addrspace(3)* %177, align 4",
+        "ordinal": 34
+      },
+      "right": {
+        "ir": "  store i32 %merged.select, i32 addrspace(3)* %281, align 4, !tbaa !8",
+        "ordinal": 14
+      }
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %merged.select3 = select i1 %279, i32 %271, i32 %272",
+        "ordinal": 15
+      }
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %282 = add nsw i32 %merged.select3, -1",
+        "ordinal": 16
+      }
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %283 = select i1 %279, i32 %272, i32 %282",
+        "ordinal": 17
+      }
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %178 = or i32 %146, 2",
+        "ordinal": 35
+      },
+      "right": null
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %284 = select i1 %279, i32 %282, i32 %271",
+        "ordinal": 18
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %179 = add nsw i32 %174, %128",
+        "ordinal": 36
+      },
+      "right": {
+        "ir": "  %285 = add nsw i32 %284, %128",
+        "ordinal": 19
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %180 = getelementptr inbounds [8192 x i32], [8192 x i32] addrspace(3)* @_ZZ3pcmPiE2sC, i32 0, i32 %179",
+        "ordinal": 37
+      },
+      "right": {
+        "ir": "  %286 = getelementptr inbounds [8192 x i32], [8192 x i32] addrspace(3)* @_ZZ3pcmPiE2sC, i32 0, i32 %285",
+        "ordinal": 20
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %181 = load i32, i32 addrspace(3)* %180, align 4, !tbaa !8",
+        "ordinal": 38
+      },
+      "right": {
+        "ir": "  %287 = load i32, i32 addrspace(3)* %286, align 4, !tbaa !8",
+        "ordinal": 21
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %182 = add nsw i32 %136, %176",
+        "ordinal": 39
+      },
+      "right": {
+        "ir": "  %288 = add nsw i32 %135, %283",
+        "ordinal": 22
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %183 = getelementptr inbounds [8192 x i32], [8192 x i32] addrspace(3)* @_ZZ3pcmPiE2sC, i32 0, i32 %182",
+        "ordinal": 40
+      },
+      "right": {
+        "ir": "  %289 = getelementptr inbounds [8192 x i32], [8192 x i32] addrspace(3)* @_ZZ3pcmPiE2sC, i32 0, i32 %288",
+        "ordinal": 23
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %184 = load i32, i32 addrspace(3)* %183, align 4, !tbaa !8",
+        "ordinal": 41
+      },
+      "right": {
+        "ir": "  %290 = load i32, i32 addrspace(3)* %289, align 4, !tbaa !8",
+        "ordinal": 24
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %185 = icmp sgt i32 %181, %184",
+        "ordinal": 42
+      },
+      "right": {
+        "ir": "  %291 = icmp sgt i32 %287, %290",
+        "ordinal": 25
+      }
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %186 = select i1 %185, i32 %184, i32 %181",
+        "ordinal": 43
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %187 = xor i1 %185, true",
+        "ordinal": 44
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %188 = zext i1 %187 to i32",
+        "ordinal": 45
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %189 = add nuw nsw i32 %174, %188",
+        "ordinal": 46
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %190 = zext i1 %185 to i32",
+        "ordinal": 47
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %191 = add nuw nsw i32 %176, %190",
+        "ordinal": 48
+      },
+      "right": null
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %292 = sub nsw i32 254, %270",
+        "ordinal": 26
+      }
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %192 = getelementptr inbounds i32, i32 addrspace(3)* %129, i32 %178",
+        "ordinal": 49
+      },
+      "right": null
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %293 = getelementptr inbounds i32, i32 addrspace(3)* %129, i32 %292",
+        "ordinal": 27
+      }
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %merged.select7 = select i1 %291, i32 %287, i32 %290",
+        "ordinal": 28
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  store i32 %186, i32 addrspace(3)* %192, align 8",
+        "ordinal": 50
+      },
+      "right": {
+        "ir": "  store i32 %merged.select7, i32 addrspace(3)* %293, align 8, !tbaa !8",
+        "ordinal": 29
+      }
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %merged.select8 = select i1 %291, i32 %284, i32 %283",
+        "ordinal": 30
+      }
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %294 = add nsw i32 %merged.select8, -1",
+        "ordinal": 31
+      }
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %295 = select i1 %291, i32 %283, i32 %294",
+        "ordinal": 32
+      }
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %193 = or i32 %146, 3",
+        "ordinal": 51
+      },
+      "right": null
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %296 = select i1 %291, i32 %294, i32 %284",
+        "ordinal": 33
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %194 = add nsw i32 %189, %128",
+        "ordinal": 52
+      },
+      "right": {
+        "ir": "  %297 = add nsw i32 %296, %128",
+        "ordinal": 34
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %195 = getelementptr inbounds [8192 x i32], [8192 x i32] addrspace(3)* @_ZZ3pcmPiE2sC, i32 0, i32 %194",
+        "ordinal": 53
+      },
+      "right": {
+        "ir": "  %298 = getelementptr inbounds [8192 x i32], [8192 x i32] addrspace(3)* @_ZZ3pcmPiE2sC, i32 0, i32 %297",
+        "ordinal": 35
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %196 = load i32, i32 addrspace(3)* %195, align 4, !tbaa !8",
+        "ordinal": 54
+      },
+      "right": {
+        "ir": "  %299 = load i32, i32 addrspace(3)* %298, align 4, !tbaa !8",
+        "ordinal": 36
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %197 = add nsw i32 %136, %191",
+        "ordinal": 55
+      },
+      "right": {
+        "ir": "  %300 = add nsw i32 %135, %295",
+        "ordinal": 37
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %198 = getelementptr inbounds [8192 x i32], [8192 x i32] addrspace(3)* @_ZZ3pcmPiE2sC, i32 0, i32 %197",
+        "ordinal": 56
+      },
+      "right": {
+        "ir": "  %301 = getelementptr inbounds [8192 x i32], [8192 x i32] addrspace(3)* @_ZZ3pcmPiE2sC, i32 0, i32 %300",
+        "ordinal": 38
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %199 = load i32, i32 addrspace(3)* %198, align 4, !tbaa !8",
+        "ordinal": 57
+      },
+      "right": {
+        "ir": "  %302 = load i32, i32 addrspace(3)* %301, align 4, !tbaa !8",
+        "ordinal": 39
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %200 = icmp sgt i32 %196, %199",
+        "ordinal": 58
+      },
+      "right": {
+        "ir": "  %303 = icmp sgt i32 %299, %302",
+        "ordinal": 40
+      }
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %201 = select i1 %200, i32 %199, i32 %196",
+        "ordinal": 59
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %202 = xor i1 %200, true",
+        "ordinal": 60
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %203 = zext i1 %202 to i32",
+        "ordinal": 61
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %204 = add nuw nsw i32 %189, %203",
+        "ordinal": 62
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %205 = zext i1 %200 to i32",
+        "ordinal": 63
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %206 = add nuw nsw i32 %191, %205",
+        "ordinal": 64
+      },
+      "right": null
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %304 = sub nsw i32 253, %270",
+        "ordinal": 41
+      }
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %207 = getelementptr inbounds i32, i32 addrspace(3)* %129, i32 %193",
+        "ordinal": 65
+      },
+      "right": null
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %305 = getelementptr inbounds i32, i32 addrspace(3)* %129, i32 %304",
+        "ordinal": 42
+      }
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %merged.select12 = select i1 %303, i32 %299, i32 %302",
+        "ordinal": 43
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  store i32 %201, i32 addrspace(3)* %207, align 4",
+        "ordinal": 66
+      },
+      "right": {
+        "ir": "  store i32 %merged.select12, i32 addrspace(3)* %305, align 4, !tbaa !8",
+        "ordinal": 44
+      }
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %merged.select13 = select i1 %303, i32 %296, i32 %295",
+        "ordinal": 45
+      }
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %306 = add nsw i32 %merged.select13, -1",
+        "ordinal": 46
+      }
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %307 = select i1 %303, i32 %295, i32 %306",
+        "ordinal": 47
+      }
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %208 = or i32 %146, 4",
+        "ordinal": 67
+      },
+      "right": null
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %308 = select i1 %303, i32 %306, i32 %296",
+        "ordinal": 48
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %209 = add nsw i32 %204, %128",
+        "ordinal": 68
+      },
+      "right": {
+        "ir": "  %309 = add nsw i32 %308, %128",
+        "ordinal": 49
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %210 = getelementptr inbounds [8192 x i32], [8192 x i32] addrspace(3)* @_ZZ3pcmPiE2sC, i32 0, i32 %209",
+        "ordinal": 69
+      },
+      "right": {
+        "ir": "  %310 = getelementptr inbounds [8192 x i32], [8192 x i32] addrspace(3)* @_ZZ3pcmPiE2sC, i32 0, i32 %309",
+        "ordinal": 50
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %211 = load i32, i32 addrspace(3)* %210, align 4, !tbaa !8",
+        "ordinal": 70
+      },
+      "right": {
+        "ir": "  %311 = load i32, i32 addrspace(3)* %310, align 4, !tbaa !8",
+        "ordinal": 51
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %212 = add nsw i32 %136, %206",
+        "ordinal": 71
+      },
+      "right": {
+        "ir": "  %312 = add nsw i32 %135, %307",
+        "ordinal": 52
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %213 = getelementptr inbounds [8192 x i32], [8192 x i32] addrspace(3)* @_ZZ3pcmPiE2sC, i32 0, i32 %212",
+        "ordinal": 72
+      },
+      "right": {
+        "ir": "  %313 = getelementptr inbounds [8192 x i32], [8192 x i32] addrspace(3)* @_ZZ3pcmPiE2sC, i32 0, i32 %312",
+        "ordinal": 53
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %214 = load i32, i32 addrspace(3)* %213, align 4, !tbaa !8",
+        "ordinal": 73
+      },
+      "right": {
+        "ir": "  %314 = load i32, i32 addrspace(3)* %313, align 4, !tbaa !8",
+        "ordinal": 54
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %215 = icmp sgt i32 %211, %214",
+        "ordinal": 74
+      },
+      "right": {
+        "ir": "  %315 = icmp sgt i32 %311, %314",
+        "ordinal": 55
+      }
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %216 = select i1 %215, i32 %214, i32 %211",
+        "ordinal": 75
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %217 = xor i1 %215, true",
+        "ordinal": 76
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %218 = zext i1 %217 to i32",
+        "ordinal": 77
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %219 = add nuw nsw i32 %204, %218",
+        "ordinal": 78
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %220 = zext i1 %215 to i32",
+        "ordinal": 79
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %221 = add nuw nsw i32 %206, %220",
+        "ordinal": 80
+      },
+      "right": null
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %316 = sub nsw i32 252, %270",
+        "ordinal": 56
+      }
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %222 = getelementptr inbounds i32, i32 addrspace(3)* %129, i32 %208",
+        "ordinal": 81
+      },
+      "right": null
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %317 = getelementptr inbounds i32, i32 addrspace(3)* %129, i32 %316",
+        "ordinal": 57
+      }
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %merged.select17 = select i1 %315, i32 %311, i32 %314",
+        "ordinal": 58
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  store i32 %216, i32 addrspace(3)* %222, align 16",
+        "ordinal": 82
+      },
+      "right": {
+        "ir": "  store i32 %merged.select17, i32 addrspace(3)* %317, align 16, !tbaa !8",
+        "ordinal": 59
+      }
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %merged.select18 = select i1 %315, i32 %308, i32 %307",
+        "ordinal": 60
+      }
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %318 = add nsw i32 %merged.select18, -1",
+        "ordinal": 61
+      }
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %319 = select i1 %315, i32 %307, i32 %318",
+        "ordinal": 62
+      }
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %223 = or i32 %146, 5",
+        "ordinal": 83
+      },
+      "right": null
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %320 = select i1 %315, i32 %318, i32 %308",
+        "ordinal": 63
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %224 = add nsw i32 %219, %128",
+        "ordinal": 84
+      },
+      "right": {
+        "ir": "  %321 = add nsw i32 %320, %128",
+        "ordinal": 64
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %225 = getelementptr inbounds [8192 x i32], [8192 x i32] addrspace(3)* @_ZZ3pcmPiE2sC, i32 0, i32 %224",
+        "ordinal": 85
+      },
+      "right": {
+        "ir": "  %322 = getelementptr inbounds [8192 x i32], [8192 x i32] addrspace(3)* @_ZZ3pcmPiE2sC, i32 0, i32 %321",
+        "ordinal": 65
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %226 = load i32, i32 addrspace(3)* %225, align 4, !tbaa !8",
+        "ordinal": 86
+      },
+      "right": {
+        "ir": "  %323 = load i32, i32 addrspace(3)* %322, align 4, !tbaa !8",
+        "ordinal": 66
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %227 = add nsw i32 %136, %221",
+        "ordinal": 87
+      },
+      "right": {
+        "ir": "  %324 = add nsw i32 %135, %319",
+        "ordinal": 67
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %228 = getelementptr inbounds [8192 x i32], [8192 x i32] addrspace(3)* @_ZZ3pcmPiE2sC, i32 0, i32 %227",
+        "ordinal": 88
+      },
+      "right": {
+        "ir": "  %325 = getelementptr inbounds [8192 x i32], [8192 x i32] addrspace(3)* @_ZZ3pcmPiE2sC, i32 0, i32 %324",
+        "ordinal": 68
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %229 = load i32, i32 addrspace(3)* %228, align 4, !tbaa !8",
+        "ordinal": 89
+      },
+      "right": {
+        "ir": "  %326 = load i32, i32 addrspace(3)* %325, align 4, !tbaa !8",
+        "ordinal": 69
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %230 = icmp sgt i32 %226, %229",
+        "ordinal": 90
+      },
+      "right": {
+        "ir": "  %327 = icmp sgt i32 %323, %326",
+        "ordinal": 70
+      }
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %231 = select i1 %230, i32 %229, i32 %226",
+        "ordinal": 91
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %232 = xor i1 %230, true",
+        "ordinal": 92
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %233 = zext i1 %232 to i32",
+        "ordinal": 93
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %234 = add nuw nsw i32 %219, %233",
+        "ordinal": 94
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %235 = zext i1 %230 to i32",
+        "ordinal": 95
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %236 = add nuw nsw i32 %221, %235",
+        "ordinal": 96
+      },
+      "right": null
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %328 = sub nsw i32 251, %270",
+        "ordinal": 71
+      }
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %237 = getelementptr inbounds i32, i32 addrspace(3)* %129, i32 %223",
+        "ordinal": 97
+      },
+      "right": null
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %329 = getelementptr inbounds i32, i32 addrspace(3)* %129, i32 %328",
+        "ordinal": 72
+      }
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %merged.select22 = select i1 %327, i32 %323, i32 %326",
+        "ordinal": 73
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  store i32 %231, i32 addrspace(3)* %237, align 4",
+        "ordinal": 98
+      },
+      "right": {
+        "ir": "  store i32 %merged.select22, i32 addrspace(3)* %329, align 4, !tbaa !8",
+        "ordinal": 74
+      }
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %merged.select23 = select i1 %327, i32 %320, i32 %319",
+        "ordinal": 75
+      }
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %330 = add nsw i32 %merged.select23, -1",
+        "ordinal": 76
+      }
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %331 = select i1 %327, i32 %319, i32 %330",
+        "ordinal": 77
+      }
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %238 = or i32 %146, 6",
+        "ordinal": 99
+      },
+      "right": null
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %332 = select i1 %327, i32 %330, i32 %320",
+        "ordinal": 78
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %239 = add nsw i32 %234, %128",
+        "ordinal": 100
+      },
+      "right": {
+        "ir": "  %333 = add nsw i32 %332, %128",
+        "ordinal": 79
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %240 = getelementptr inbounds [8192 x i32], [8192 x i32] addrspace(3)* @_ZZ3pcmPiE2sC, i32 0, i32 %239",
+        "ordinal": 101
+      },
+      "right": {
+        "ir": "  %334 = getelementptr inbounds [8192 x i32], [8192 x i32] addrspace(3)* @_ZZ3pcmPiE2sC, i32 0, i32 %333",
+        "ordinal": 80
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %241 = load i32, i32 addrspace(3)* %240, align 4, !tbaa !8",
+        "ordinal": 102
+      },
+      "right": {
+        "ir": "  %335 = load i32, i32 addrspace(3)* %334, align 4, !tbaa !8",
+        "ordinal": 81
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %242 = add nsw i32 %136, %236",
+        "ordinal": 103
+      },
+      "right": {
+        "ir": "  %336 = add nsw i32 %135, %331",
+        "ordinal": 82
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %243 = getelementptr inbounds [8192 x i32], [8192 x i32] addrspace(3)* @_ZZ3pcmPiE2sC, i32 0, i32 %242",
+        "ordinal": 104
+      },
+      "right": {
+        "ir": "  %337 = getelementptr inbounds [8192 x i32], [8192 x i32] addrspace(3)* @_ZZ3pcmPiE2sC, i32 0, i32 %336",
+        "ordinal": 83
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %244 = load i32, i32 addrspace(3)* %243, align 4, !tbaa !8",
+        "ordinal": 105
+      },
+      "right": {
+        "ir": "  %338 = load i32, i32 addrspace(3)* %337, align 4, !tbaa !8",
+        "ordinal": 84
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %245 = icmp sgt i32 %241, %244",
+        "ordinal": 106
+      },
+      "right": {
+        "ir": "  %339 = icmp sgt i32 %335, %338",
+        "ordinal": 85
+      }
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %246 = select i1 %245, i32 %244, i32 %241",
+        "ordinal": 107
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %247 = xor i1 %245, true",
+        "ordinal": 108
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %248 = zext i1 %247 to i32",
+        "ordinal": 109
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %249 = add nuw nsw i32 %234, %248",
+        "ordinal": 110
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %250 = zext i1 %245 to i32",
+        "ordinal": 111
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %251 = add nuw nsw i32 %236, %250",
+        "ordinal": 112
+      },
+      "right": null
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %340 = sub nsw i32 250, %270",
+        "ordinal": 86
+      }
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %252 = getelementptr inbounds i32, i32 addrspace(3)* %129, i32 %238",
+        "ordinal": 113
+      },
+      "right": null
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %341 = getelementptr inbounds i32, i32 addrspace(3)* %129, i32 %340",
+        "ordinal": 87
+      }
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %merged.select27 = select i1 %339, i32 %335, i32 %338",
+        "ordinal": 88
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  store i32 %246, i32 addrspace(3)* %252, align 8",
+        "ordinal": 114
+      },
+      "right": {
+        "ir": "  store i32 %merged.select27, i32 addrspace(3)* %341, align 8, !tbaa !8",
+        "ordinal": 89
+      }
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %merged.select28 = select i1 %339, i32 %332, i32 %331",
+        "ordinal": 90
+      }
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %342 = add nsw i32 %merged.select28, -1",
+        "ordinal": 91
+      }
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %343 = select i1 %339, i32 %331, i32 %342",
+        "ordinal": 92
+      }
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %253 = or i32 %146, 7",
+        "ordinal": 115
+      },
+      "right": null
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %344 = select i1 %339, i32 %342, i32 %332",
+        "ordinal": 93
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %254 = add nsw i32 %249, %128",
+        "ordinal": 116
+      },
+      "right": {
+        "ir": "  %345 = add nsw i32 %344, %128",
+        "ordinal": 94
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %255 = getelementptr inbounds [8192 x i32], [8192 x i32] addrspace(3)* @_ZZ3pcmPiE2sC, i32 0, i32 %254",
+        "ordinal": 117
+      },
+      "right": {
+        "ir": "  %346 = getelementptr inbounds [8192 x i32], [8192 x i32] addrspace(3)* @_ZZ3pcmPiE2sC, i32 0, i32 %345",
+        "ordinal": 95
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %256 = load i32, i32 addrspace(3)* %255, align 4, !tbaa !8",
+        "ordinal": 118
+      },
+      "right": {
+        "ir": "  %347 = load i32, i32 addrspace(3)* %346, align 4, !tbaa !8",
+        "ordinal": 96
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %257 = add nsw i32 %136, %251",
+        "ordinal": 119
+      },
+      "right": {
+        "ir": "  %348 = add nsw i32 %135, %343",
+        "ordinal": 97
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %258 = getelementptr inbounds [8192 x i32], [8192 x i32] addrspace(3)* @_ZZ3pcmPiE2sC, i32 0, i32 %257",
+        "ordinal": 120
+      },
+      "right": {
+        "ir": "  %349 = getelementptr inbounds [8192 x i32], [8192 x i32] addrspace(3)* @_ZZ3pcmPiE2sC, i32 0, i32 %348",
+        "ordinal": 98
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %259 = load i32, i32 addrspace(3)* %258, align 4, !tbaa !8",
+        "ordinal": 121
+      },
+      "right": {
+        "ir": "  %350 = load i32, i32 addrspace(3)* %349, align 4, !tbaa !8",
+        "ordinal": 99
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %260 = icmp sgt i32 %256, %259",
+        "ordinal": 122
+      },
+      "right": {
+        "ir": "  %351 = icmp sgt i32 %347, %350",
+        "ordinal": 100
+      }
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %261 = select i1 %260, i32 %259, i32 %256",
+        "ordinal": 123
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %262 = xor i1 %260, true",
+        "ordinal": 124
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %263 = zext i1 %262 to i32",
+        "ordinal": 125
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %264 = add nuw nsw i32 %249, %263",
+        "ordinal": 126
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %265 = zext i1 %260 to i32",
+        "ordinal": 127
+      },
+      "right": null
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %266 = add nuw nsw i32 %251, %265",
+        "ordinal": 128
+      },
+      "right": null
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %352 = sub nsw i32 249, %270",
+        "ordinal": 101
+      }
+    },
+    {
+      "kind": "left",
+      "left": {
+        "ir": "  %267 = getelementptr inbounds i32, i32 addrspace(3)* %129, i32 %253",
+        "ordinal": 129
+      },
+      "right": null
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %353 = getelementptr inbounds i32, i32 addrspace(3)* %129, i32 %352",
+        "ordinal": 102
+      }
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %merged.select32 = select i1 %351, i32 %347, i32 %350",
+        "ordinal": 103
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  store i32 %261, i32 addrspace(3)* %267, align 4",
+        "ordinal": 130
+      },
+      "right": {
+        "ir": "  store i32 %merged.select32, i32 addrspace(3)* %353, align 4, !tbaa !8",
+        "ordinal": 104
+      }
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %merged.select33 = select i1 %351, i32 %344, i32 %343",
+        "ordinal": 105
+      }
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %354 = add nsw i32 %merged.select33, -1",
+        "ordinal": 106
+      }
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %355 = select i1 %351, i32 %343, i32 %354",
+        "ordinal": 107
+      }
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %356 = select i1 %351, i32 %354, i32 %344",
+        "ordinal": 108
+      }
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %357 = add nsw i32 %356, %128",
+        "ordinal": 109
+      }
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %358 = getelementptr inbounds [8192 x i32], [8192 x i32] addrspace(3)* @_ZZ3pcmPiE2sC, i32 0, i32 %357",
+        "ordinal": 110
+      }
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %359 = load i32, i32 addrspace(3)* %358, align 4, !tbaa !8",
+        "ordinal": 111
+      }
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %360 = add nsw i32 %135, %355",
+        "ordinal": 112
+      }
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %361 = getelementptr inbounds [8192 x i32], [8192 x i32] addrspace(3)* @_ZZ3pcmPiE2sC, i32 0, i32 %360",
+        "ordinal": 113
+      }
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %362 = load i32, i32 addrspace(3)* %361, align 4, !tbaa !8",
+        "ordinal": 114
+      }
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %363 = icmp sgt i32 %359, %362",
+        "ordinal": 115
+      }
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %364 = sub nsw i32 248, %270",
+        "ordinal": 116
+      }
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %365 = getelementptr inbounds i32, i32 addrspace(3)* %129, i32 %364",
+        "ordinal": 117
+      }
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %merged.select37 = select i1 %363, i32 %359, i32 %362",
+        "ordinal": 118
+      }
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  store i32 %merged.select37, i32 addrspace(3)* %365, align 16, !tbaa !8",
+        "ordinal": 119
+      }
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %merged.select38 = select i1 %363, i32 %356, i32 %355",
+        "ordinal": 120
+      }
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %366 = add nsw i32 %merged.select38, -1",
+        "ordinal": 121
+      }
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %367 = select i1 %363, i32 %355, i32 %366",
+        "ordinal": 122
+      }
+    },
+    {
+      "kind": "right",
+      "left": null,
+      "right": {
+        "ir": "  %368 = select i1 %363, i32 %366, i32 %356",
+        "ordinal": 123
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %268 = add nuw nsw i32 %146, 8",
+        "ordinal": 131
+      },
+      "right": {
+        "ir": "  %369 = add nuw nsw i32 %270, 8",
+        "ordinal": 124
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  %269 = icmp eq i32 %268, 256",
+        "ordinal": 132
+      },
+      "right": {
+        "ir": "  %370 = icmp eq i32 %369, 256",
+        "ordinal": 125
+      }
+    },
+    {
+      "kind": "pair",
+      "left": {
+        "ir": "  br i1 %269, label %new.exit, label %145, !llvm.loop !14",
+        "ordinal": 133
+      },
+      "right": {
+        "ir": "  br i1 %370, label %new.exit1, label %unify.bb2, !llvm.loop !15",
+        "ordinal": 126
+      }
+    }
+  ]
+}

@@ -1,0 +1,123 @@
+[
+  {
+    "kind": "pair",
+    "left": {
+      "ir": "  %146 = phi i32 [ %268, %145 ], [ %moved.phi, %unify.bb3 ]",
+      "ordinal": 1
+    },
+    "right": {
+      "ir": "  %270 = phi i32 [ %369, %unify.bb2 ], [ %moved.phi6, %unify.bb3 ]",
+      "ordinal": 1
+    }
+  },
+  {
+    "kind": "pair",
+    "left": {
+      "ir": "  %147 = phi i32 [ %266, %145 ], [ %moved.phi4, %unify.bb3 ]",
+      "ordinal": 2
+    },
+    "right": {
+      "ir": "  %271 = phi i32 [ %368, %unify.bb2 ], [ %moved.phi7, %unify.bb3 ]",
+      "ordinal": 2
+    }
+  },
+  {
+    "kind": "pair",
+    "left": {
+      "ir": "  %148 = phi i32 [ %264, %145 ], [ %moved.phi5, %unify.bb3 ]",
+      "ordinal": 3
+    },
+    "right": {
+      "ir": "  %272 = phi i32 [ %367, %unify.bb2 ], [ %moved.phi8, %unify.bb3 ]",
+      "ordinal": 3
+    }
+  },
+  {
+    "kind": "pair",
+    "left": {
+      "ir": "  %162 = getelementptr inbounds i32, i32 addrspace(3)* %129, i32 %146",
+      "ordinal": 17
+    },
+    "right": {
+      "ir": "  %281 = getelementptr inbounds i32, i32 addrspace(3)* %129, i32 %280",
+      "ordinal": 12
+    }
+  },
+  {
+    "kind": "pair",
+    "left": {
+      "ir": "  %171 = select i1 %170, i32 %169, i32 %166",
+      "ordinal": 27
+    },
+    "right": {
+      "ir": "  %merged.select = select i1 %279, i32 %275, i32 %278",
+      "ordinal": 13
+    }
+  },
+  {
+    "kind": "pair",
+    "left": {
+      "ir": "  %192 = getelementptr inbounds i32, i32 addrspace(3)* %129, i32 %178",
+      "ordinal": 49
+    },
+    "right": {
+      "ir": "  %293 = getelementptr inbounds i32, i32 addrspace(3)* %129, i32 %292",
+      "ordinal": 27
+    }
+  },
+  {
+    "kind": "pair",
+    "left": {
+      "ir": "  %207 = getelementptr inbounds i32, i32 addrspace(3)* %129, i32 %193",
+      "ordinal": 65
+    },
+    "right": {
+      "ir": "  %305 = getelementptr inbounds i32, i32 addrspace(3)* %129, i32 %304",
+      "ordinal": 42
+    }
+  },
+  {
+    "kind": "pair",
+    "left": {
+      "ir": "  %222 = getelementptr inbounds i32, i32 addrspace(3)* %129, i32 %208",
+      "ordinal": 81
+    },
+    "right": {
+      "ir": "  %317 = getelementptr inbounds i32, i32 addrspace(3)* %129, i32 %316",
+      "ordinal": 57
+    }
+  },
+  {
+    "kind": "pair",
+    "left": {
+      "ir": "  %237 = getelementptr inbounds i32, i32 addrspace(3)* %129, i32 %223",
+      "ordinal": 97
+    },
+    "right": {
+      "ir": "  %329 = getelementptr inbounds i32, i32 addrspace(3)* %129, i32 %328",
+      "ordinal": 72
+    }
+  },
+  {
+    "kind": "pair",
+    "left": {
+      "ir": "  %252 = getelementptr inbounds i32, i32 addrspace(3)* %129, i32 %238",
+      "ordinal": 113
+    },
+    "right": {
+      "ir": "  %341 = getelementptr inbounds i32, i32 addrspace(3)* %129, i32 %340",
+      "ordinal": 87
+    }
+  },
+  {
+    "kind": "pair",
+    "left": {
+      "ir": "  %267 = getelementptr inbounds i32, i32 addrspace(3)* %129, i32 %253",
+      "ordinal": 129
+    },
+    "right": {
+      "ir": "  %353 = getelementptr inbounds i32, i32 addrspace(3)* %129, i32 %352",
+      "ordinal": 102
+    }
+  }
+]

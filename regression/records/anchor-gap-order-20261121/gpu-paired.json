@@ -1,0 +1,151 @@
+{
+  "status": "unmeasurable",
+  "roles": [
+    "P",
+    "M",
+    "e3-native",
+    "e3-sw",
+    "e3-latency",
+    "original-sw",
+    "original-latency"
+  ],
+  "aliases": {
+    "e1-sw": "original-sw",
+    "e1-latency": "original-latency"
+  },
+  "attempts": [
+    [
+      {
+        "median": 1.0000430529822646,
+        "minimum": 0.9999576112854268,
+        "maximum": 1.6373861742372398,
+        "confidence_interval_95": [
+          1.0000144342042374,
+          1.0001638813928677
+        ],
+        "verdict": "passed",
+        "rule": "bootstrap",
+        "spread": 0.637455583874611
+      },
+      {
+        "median": 0.9999870099546941,
+        "minimum": 0.9996924185205934,
+        "maximum": 1.0001515047173057,
+        "confidence_interval_95": [
+          0.9999137800171637,
+          1.0000871035283507
+        ],
+        "verdict": "passed",
+        "rule": "all_rounds",
+        "spread": 0.00045922744656978765
+      },
+      {
+        "median": 1.0000060624966027,
+        "minimum": 0.9997922010754748,
+        "maximum": 1.0002679063162625,
+        "confidence_interval_95": [
+          0.9999370328668306,
+          1.0001261525881673
+        ],
+        "verdict": "passed",
+        "rule": "all_rounds",
+        "spread": 0.0004758041123704704
+      },
+      {
+        "median": 1.0000320812592922,
+        "minimum": 0.9997834560415758,
+        "maximum": 1.0002492363939561,
+        "confidence_interval_95": [
+          0.9998431489587905,
+          1.000099969634228
+        ],
+        "verdict": "passed",
+        "rule": "all_rounds",
+        "spread": 0.00046588123614732524
+      },
+      {
+        "median": 0.9999420573347471,
+        "minimum": 0.999808936652069,
+        "maximum": 1.0002886921511451,
+        "confidence_interval_95": [
+          0.9998865195580035,
+          1.000090731005416
+        ],
+        "verdict": "passed",
+        "rule": "all_rounds",
+        "spread": 0.00047984718028493134
+      }
+    ],
+    [
+      {
+        "median": 0.9999791750474256,
+        "minimum": 0.9998464458439142,
+        "maximum": 1.0002571684467354,
+        "confidence_interval_95": [
+          0.999941363245392,
+          1.000168820185448
+        ],
+        "verdict": "passed",
+        "rule": "all_rounds",
+        "spread": 0.00041078568066965637
+      },
+      {
+        "median": 1.0000122063377161,
+        "minimum": 0.9997569943290715,
+        "maximum": 1.0001126543306595,
+        "confidence_interval_95": [
+          0.9999638732335813,
+          1.0000738124547337
+        ],
+        "verdict": "passed",
+        "rule": "all_rounds",
+        "spread": 0.0003557464499928109
+      },
+      {
+        "median": 1.0000256064630677,
+        "minimum": 0.9998309597470636,
+        "maximum": 1.0001995158667905,
+        "confidence_interval_95": [
+          1.0000003711160232,
+          1.0000735266824583
+        ],
+        "verdict": "passed",
+        "rule": "all_rounds",
+        "spread": 0.0003686184310796037
+      },
+      {
+        "median": 0.9999959186997575,
+        "minimum": 0.9997477589591549,
+        "maximum": 2.4014905257004493,
+        "confidence_interval_95": [
+          0.999932004049825,
+          1.0001096823902595
+        ],
+        "verdict": "passed",
+        "rule": "bootstrap",
+        "spread": 1.4020964330049206
+      },
+      {
+        "median": 1.0000408219633314,
+        "minimum": 0.9998635226575063,
+        "maximum": 1.0002973991675785,
+        "confidence_interval_95": [
+          0.9999026506866224,
+          1.0000794246732063
+        ],
+        "verdict": "passed",
+        "rule": "all_rounds",
+        "spread": 0.00043393573246786055
+      }
+    ]
+  ],
+  "sha256": {
+    "P": "35a2c062b54b056a4b3c8e6e513e75abfce5a59edba2e7b1330a21d693a952c1",
+    "M": "6a0f71b49a5856d08e1d2af6f085b5b0f4865c362c11cd1aee7f2008a747c66e",
+    "e3-native": "9d4b4d227c332e8ca26397ea772a231613f4829d05c3077b2a3d230b9bd388c1",
+    "e3-sw": "7d88ee07d45552aa4f05da1da817dfd2e11595450fdeb2df86de25fa29ecc97b",
+    "e3-latency": "15d4f21a5b3a9f4461231c52b3fa813b93cce6ca53b9ed7831f67690368bee3b",
+    "original-sw": "362c043473f2bb7d109347fa3365c1d4cbc75696312669635a8be0f9b12880f4",
+    "original-latency": "1f74de0c595b0d86992d998ca3d766b055a41b00ee2ea4aa366ddace0d7543ea"
+  }
+}

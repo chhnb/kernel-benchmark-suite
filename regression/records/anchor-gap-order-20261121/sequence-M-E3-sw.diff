@@ -1,0 +1,96 @@
+--- M
++++ E3-sw
+@@ -1,7 +1,10 @@
+ pair | 0: %145 | 0: %unify.bb2
+-pair | 1: %146 = phi i32 [ %268, %145 ], [ %moved.phi, %unify.bb3 ] | 1: %270 = phi i32 [ %369, %unify.bb2 ], [ %moved.phi6, %unify.bb3 ]
+-pair | 2: %147 = phi i32 [ %266, %145 ], [ %moved.phi4, %unify.bb3 ] | 2: %271 = phi i32 [ %368, %unify.bb2 ], [ %moved.phi7, %unify.bb3 ]
+-pair | 3: %148 = phi i32 [ %264, %145 ], [ %moved.phi5, %unify.bb3 ] | 3: %272 = phi i32 [ %367, %unify.bb2 ], [ %moved.phi8, %unify.bb3 ]
++left | 1: %146 = phi i32 [ %268, %145 ], [ %moved.phi, %unify.bb3 ] | —
++right | — | 1: %270 = phi i32 [ %369, %unify.bb2 ], [ %moved.phi6, %unify.bb3 ]
++left | 2: %147 = phi i32 [ %266, %145 ], [ %moved.phi4, %unify.bb3 ] | —
++right | — | 2: %271 = phi i32 [ %368, %unify.bb2 ], [ %moved.phi7, %unify.bb3 ]
++left | 3: %148 = phi i32 [ %264, %145 ], [ %moved.phi5, %unify.bb3 ] | —
++right | — | 3: %272 = phi i32 [ %367, %unify.bb2 ], [ %moved.phi8, %unify.bb3 ]
+ pair | 4: %149 = add nsw i32 %148, %128 | 4: %273 = add nsw i32 %271, %128
+ pair | 5: %150 = getelementptr inbounds [8192 x i32], [8192 x i32] addrspace(3)* @_ZZ3pcmPiE2sC, i32 0, i32 %149 | 5: %274 = getelementptr inbounds [8192 x i32], [8192 x i32] addrspace(3)* @_ZZ3pcmPiE2sC, i32 0, i32 %273
+ pair | 6: %151 = load i32, i32 addrspace(3)* %150, align 4, !tbaa !8 | 6: %275 = load i32, i32 addrspace(3)* %274, align 4, !tbaa !8
+@@ -16,7 +19,8 @@
+ left | 15: %160 = zext i1 %155 to i32 | —
+ left | 16: %161 = add nuw nsw i32 %147, %160 | —
+ right | — | 11: %280 = sub nuw nsw i32 255, %270
+-pair | 17: %162 = getelementptr inbounds i32, i32 addrspace(3)* %129, i32 %146 | 12: %281 = getelementptr inbounds i32, i32 addrspace(3)* %129, i32 %280
++left | 17: %162 = getelementptr inbounds i32, i32 addrspace(3)* %129, i32 %146 | —
++right | — | 12: %281 = getelementptr inbounds i32, i32 addrspace(3)* %129, i32 %280
+ left | 18: store i32 %156, i32 addrspace(3)* %162, align 16 | —
+ left | 19: %163 = or i32 %146, 1 | —
+ left | 20: %164 = add nsw i32 %159, %128 | —
+@@ -26,7 +30,8 @@
+ left | 24: %168 = getelementptr inbounds [8192 x i32], [8192 x i32] addrspace(3)* @_ZZ3pcmPiE2sC, i32 0, i32 %167 | —
+ left | 25: %169 = load i32, i32 addrspace(3)* %168, align 4, !tbaa !8 | —
+ left | 26: %170 = icmp sgt i32 %166, %169 | —
+-pair | 27: %171 = select i1 %170, i32 %169, i32 %166 | 13: %merged.select = select i1 %279, i32 %275, i32 %278
++left | 27: %171 = select i1 %170, i32 %169, i32 %166 | —
++right | — | 13: %merged.select = select i1 %279, i32 %275, i32 %278
+ left | 28: %172 = xor i1 %170, true | —
+ left | 29: %173 = zext i1 %172 to i32 | —
+ left | 30: %174 = add nuw nsw i32 %159, %173 | —
+@@ -53,7 +58,8 @@
+ left | 47: %190 = zext i1 %185 to i32 | —
+ left | 48: %191 = add nuw nsw i32 %176, %190 | —
+ right | — | 26: %292 = sub nsw i32 254, %270
+-pair | 49: %192 = getelementptr inbounds i32, i32 addrspace(3)* %129, i32 %178 | 27: %293 = getelementptr inbounds i32, i32 addrspace(3)* %129, i32 %292
++left | 49: %192 = getelementptr inbounds i32, i32 addrspace(3)* %129, i32 %178 | —
++right | — | 27: %293 = getelementptr inbounds i32, i32 addrspace(3)* %129, i32 %292
+ right | — | 28: %merged.select7 = select i1 %291, i32 %287, i32 %290
+ pair | 50: store i32 %186, i32 addrspace(3)* %192, align 8 | 29: store i32 %merged.select7, i32 addrspace(3)* %293, align 8, !tbaa !8
+ right | — | 30: %merged.select8 = select i1 %291, i32 %284, i32 %283
+@@ -75,7 +81,8 @@
+ left | 63: %205 = zext i1 %200 to i32 | —
+ left | 64: %206 = add nuw nsw i32 %191, %205 | —
+ right | — | 41: %304 = sub nsw i32 253, %270
+-pair | 65: %207 = getelementptr inbounds i32, i32 addrspace(3)* %129, i32 %193 | 42: %305 = getelementptr inbounds i32, i32 addrspace(3)* %129, i32 %304
++left | 65: %207 = getelementptr inbounds i32, i32 addrspace(3)* %129, i32 %193 | —
++right | — | 42: %305 = getelementptr inbounds i32, i32 addrspace(3)* %129, i32 %304
+ right | — | 43: %merged.select12 = select i1 %303, i32 %299, i32 %302
+ pair | 66: store i32 %201, i32 addrspace(3)* %207, align 4 | 44: store i32 %merged.select12, i32 addrspace(3)* %305, align 4, !tbaa !8
+ right | — | 45: %merged.select13 = select i1 %303, i32 %296, i32 %295
+@@ -97,7 +104,8 @@
+ left | 79: %220 = zext i1 %215 to i32 | —
+ left | 80: %221 = add nuw nsw i32 %206, %220 | —
+ right | — | 56: %316 = sub nsw i32 252, %270
+-pair | 81: %222 = getelementptr inbounds i32, i32 addrspace(3)* %129, i32 %208 | 57: %317 = getelementptr inbounds i32, i32 addrspace(3)* %129, i32 %316
++left | 81: %222 = getelementptr inbounds i32, i32 addrspace(3)* %129, i32 %208 | —
++right | — | 57: %317 = getelementptr inbounds i32, i32 addrspace(3)* %129, i32 %316
+ right | — | 58: %merged.select17 = select i1 %315, i32 %311, i32 %314
+ pair | 82: store i32 %216, i32 addrspace(3)* %222, align 16 | 59: store i32 %merged.select17, i32 addrspace(3)* %317, align 16, !tbaa !8
+ right | — | 60: %merged.select18 = select i1 %315, i32 %308, i32 %307
+@@ -119,7 +127,8 @@
+ left | 95: %235 = zext i1 %230 to i32 | —
+ left | 96: %236 = add nuw nsw i32 %221, %235 | —
+ right | — | 71: %328 = sub nsw i32 251, %270
+-pair | 97: %237 = getelementptr inbounds i32, i32 addrspace(3)* %129, i32 %223 | 72: %329 = getelementptr inbounds i32, i32 addrspace(3)* %129, i32 %328
++left | 97: %237 = getelementptr inbounds i32, i32 addrspace(3)* %129, i32 %223 | —
++right | — | 72: %329 = getelementptr inbounds i32, i32 addrspace(3)* %129, i32 %328
+ right | — | 73: %merged.select22 = select i1 %327, i32 %323, i32 %326
+ pair | 98: store i32 %231, i32 addrspace(3)* %237, align 4 | 74: store i32 %merged.select22, i32 addrspace(3)* %329, align 4, !tbaa !8
+ right | — | 75: %merged.select23 = select i1 %327, i32 %320, i32 %319
+@@ -141,7 +150,8 @@
+ left | 111: %250 = zext i1 %245 to i32 | —
+ left | 112: %251 = add nuw nsw i32 %236, %250 | —
+ right | — | 86: %340 = sub nsw i32 250, %270
+-pair | 113: %252 = getelementptr inbounds i32, i32 addrspace(3)* %129, i32 %238 | 87: %341 = getelementptr inbounds i32, i32 addrspace(3)* %129, i32 %340
++left | 113: %252 = getelementptr inbounds i32, i32 addrspace(3)* %129, i32 %238 | —
++right | — | 87: %341 = getelementptr inbounds i32, i32 addrspace(3)* %129, i32 %340
+ right | — | 88: %merged.select27 = select i1 %339, i32 %335, i32 %338
+ pair | 114: store i32 %246, i32 addrspace(3)* %252, align 8 | 89: store i32 %merged.select27, i32 addrspace(3)* %341, align 8, !tbaa !8
+ right | — | 90: %merged.select28 = select i1 %339, i32 %332, i32 %331
+@@ -163,7 +173,8 @@
+ left | 127: %265 = zext i1 %260 to i32 | —
+ left | 128: %266 = add nuw nsw i32 %251, %265 | —
+ right | — | 101: %352 = sub nsw i32 249, %270
+-pair | 129: %267 = getelementptr inbounds i32, i32 addrspace(3)* %129, i32 %253 | 102: %353 = getelementptr inbounds i32, i32 addrspace(3)* %129, i32 %352
++left | 129: %267 = getelementptr inbounds i32, i32 addrspace(3)* %129, i32 %253 | —
++right | — | 102: %353 = getelementptr inbounds i32, i32 addrspace(3)* %129, i32 %352
+ right | — | 103: %merged.select32 = select i1 %351, i32 %347, i32 %350
+ pair | 130: store i32 %261, i32 addrspace(3)* %267, align 4 | 104: store i32 %merged.select32, i32 addrspace(3)* %353, align 4, !tbaa !8
+ right | — | 105: %merged.select33 = select i1 %351, i32 %344, i32 %343
