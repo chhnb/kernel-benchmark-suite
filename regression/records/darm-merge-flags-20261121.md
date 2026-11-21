@@ -72,3 +72,23 @@ TPACF 的 `ACFKernel` 新旧均报告 42 个 SGPR spill、0 个 VGPR spill。对
 ## 测试汇总
 
 EPYC 上 `tools/build-v1`、`tools/build-decision-model` 以及独立 pair-trial 链接均通过。测试矩阵为 26 项通过和 4 项已知缺件跳过，与起点一致。26 项中的 `tests/run-v1` 包含新增的属性合并测试。独立 pair-trial 的纯计算和访存路径也通过 fixed／legacy 校验。
+
+## 发布前复核自定义 metadata
+
+`AdjacentLeafEntry::apply` 在 `tools/fusion_search.cpp:584–591` 给 union branch 附加 `!fusion.logical.arm`。节点记录被 union 的臂入口名字，嵌套 union 继承已有成员。`Inventory` 在同文件 301–318 行检查附件是否存在，再验证 CFG、支配、后支配和循环条件，据此枚举从 true successor 开始的 `G` 区域。第 587–588 行读取成员以继续构造 union。标记直接参与搜索。
+
+在 EPYC 用第 2 步产物和第 3 步原始请求 `B9:B16:B12` 重放，插桩在 DARM 配对克隆时捕获两侧。左侧是 `br i1 %leaf.enter, label %leaf.union, label %new.exit, !fusion.logical.arm !12`，右侧是 `br i1 true, label %replicated.bb7, label %replicated.bb4`，没有附件。LLVM 通用规则会丢弃其不认识的指令附件。此处改成在通用规则之前显式删除。共享分支的条件和边经过重新映射，原分支标记不足以证明新的 true successor 仍代表同一逻辑臂。各自发射的原分支仍各自保有其标记。
+
+按代码中 metadata 访问调用、常量定义及 IR 附件搜索核查其余项目自定义 kind。
+
+| Kind | 写入和读取 | 共享指令的处理 |
+| --- | --- | --- |
+| `fusion.side.condition`、`fusion.side.condition.arg` | `tools/fusion_search.cpp:629–662`。试融中追踪 split 条件以计算分侧评分，清理由 916–925、2122–2127 行负责 | 指令标签只能识别原 SSA 值，共享克隆显式删除，找不到时如实报告。参数标签附在函数上，仍由原路径清理 |
+| `fusion.incremental.identity`、`fusion.incremental.next_identity` | `tools/incremental_ir_identity.h:19–77` 写入和解析唯一指令 ID 及模块计数器。`tools/b2b_unit_capsule.h:128,162,181–184` 与 `tools/isolated_b2b_greedy.h:98,148–151` 使用或剥离这些数据 | 共享克隆需要新的指令身份，显式清除旧 ID。模块计数器是 named metadata，由原身份分配器管理 |
+| `decision.ordered_trial_boundary` | `tools/ordered_arms.h:31–41,59–73` 标记并检查未参与融合的臂、根和出口。`tools/decision_greedy_main.cpp:223–225` 检查输入冲突 | 共享指令不能充当未改写边界的证据，显式删除。原边界克隆继续受完整性检查 |
+| `decision.origin`、`decision.merged_from`、`decision.order` | `tools/decision_model.cpp:18,23,53,64,79–80,164–166` 记录和读取来源、边界及顺序。`tools/decision_model_main.cpp:27–29` 为独立工具补来源 | 共享分支的来源和区间须由决策层重新建立，显式删除源标签 |
+| `decision.condition_prefix`、`decision.short_gate` | `tools/decision_model.cpp:29,47,64,203,223,254,258` 标识短路 CFG 的前缀和 gate，并参与形状检查 | 分支共享后原短路形状不再有附件证明，显式删除 |
+
+复核记录使用 `0179504` 上的行号，以上显式处理与先前通用规则对这些附件的删除结果一致。
+
+显式处理后再次完成 16 例 fixed／legacy 完整 Greedy。逐例提交数、TTI、最终 IR 和二进制哈希与上一次对照一致。HLLD 仍为唯一最终 IR 差异，14 个 HSACO 和 2 个 cubin 均为字节别名。GPU 重测集合为空。EPYC 构建与 26 项测试通过，四项已知缺件跳过。

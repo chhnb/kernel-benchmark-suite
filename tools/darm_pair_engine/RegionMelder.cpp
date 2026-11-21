@@ -4,6 +4,7 @@
 #include "RegionReplicator.h"
 #include "llvm/ADT/CachedHashString.h"
 #include "llvm/ADT/SmallVector.h"
+#include "llvm/ADT/StringSwitch.h"
 #include "llvm/ADT/iterator_range.h"
 #include "llvm/IR/Constants.h"
 #include "llvm/Analysis/ValueTracking.h"
@@ -116,6 +117,28 @@ static void collectReachableBlocks(BasicBlock *Entry, BasicBlock *Exit,
 void llvm::intersectMergedInstructionProperties(Instruction &Shared,
                                                const Instruction &Right) {
   Shared.andIRFlags(&Right);
+  if (Shared.hasMetadataOtherThanDebugLoc()) {
+    SmallVector<StringRef, 32> Names;
+    Shared.getContext().getMDKindNames(Names);
+    SmallVector<std::pair<unsigned, MDNode *>, 4> Attachments;
+    Shared.getAllMetadataOtherThanDebugLoc(Attachments);
+    for (const auto &Attachment : Attachments) {
+      // A shared instruction has a new CFG or SSA identity. Its operands and
+      // successors are remapped after cloning, so neither input can witness
+      // ordered boundaries, decision shape, logical leaves or the side value.
+      const bool SourceIdentity =
+          StringSwitch<bool>(Names[Attachment.first])
+              .Cases("fusion.logical.arm", "fusion.side.condition",
+                     "fusion.incremental.identity", true)
+              .Cases("decision.ordered_trial_boundary", "decision.origin",
+                     "decision.order", true)
+              .Cases("decision.merged_from", "decision.short_gate",
+                     "decision.condition_prefix", true)
+              .Default(false);
+      if (SourceIdentity)
+        Shared.setMetadata(Attachment.first, nullptr);
+    }
+  }
   // The two originals were on different paths. Neither dominates the other.
   combineMetadataForCSE(&Shared, &Right, /*DoesKMove=*/true);
   if (Shared.getDebugLoc() != Right.getDebugLoc())
