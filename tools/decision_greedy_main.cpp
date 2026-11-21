@@ -3,7 +3,6 @@
 #include "domain_competition.h"
 #include "ordered_arms.h"
 #include "llvm/Analysis/PostDominators.h"
-#include "decision_checkpoint.h"
 #include "llvm/IRReader/IRReader.h"
 #include "llvm/IR/Verifier.h"
 #include "llvm/IR/Instructions.h"
@@ -129,41 +128,30 @@ int main(int argc,char**argv){try{
  auto timingReport=[&](){json::Object phases;for(const auto &kv:phaseMilliseconds)phases[kv.first]=json::Object{{"milliseconds",kv.second},{"calls",phaseCalls[kv.first]}};return phases;};
 
  if(argc==2&&StringRef(argv[1])=="--help"){
-   outs()<<"usage: decision-greedy INPUT FUNCTION [TOOL_ROOT] NEW_OUTPUT [--b2b-strategy anchor|darm|darm-artifact] [--b2r-strategy darm|guarded] [--darm-legacy-flags] [--domain-schedule ordered] [--ir-snapshots full|compact] [--tti-quote-cache off|audit|on]\n";
+   outs()<<"usage: decision-greedy INPUT FUNCTION [TOOL_ROOT] NEW_OUTPUT [--b2b-strategy anchor|darm|darm-artifact] [--domain-schedule ordered] [--ir-snapshots full|compact] [--tti-quote-cache off|audit|on]\n";
    outs()<<"Default schedule: ordered for whole-function trials (Auto Greedy v2).\n";
    return 0;
  }
- std::string b2bStrategy="anchor", b2rStrategy="darm", quoteMode="on", snapshotMode;
- bool legacyMergeFlags=false;
+ std::string b2bStrategy="anchor", quoteMode="on", snapshotMode;
  while (argc >= 3) {
-   if (StringRef(argv[argc-1]) == "--darm-legacy-flags") {
-     legacyMergeFlags=true;
-     --argc;
-     continue;
-   }
    StringRef option(argv[argc-2]), value(argv[argc-1]);
    if(option == "--domain-schedule" && value == "ordered") { argc-=2;continue; }
    if (option == "--ir-snapshots" && (value == "full" || value == "compact"))
      snapshotMode = value.str();
-   else if (option == "--b2r-strategy" && (value == "darm" || value == "guarded"))
-     b2rStrategy = value.str();
    else if (option == "--tti-quote-cache" && (value == "off" || value == "audit" || value == "on"))
      quoteMode = value.str();
    else if (option == "--b2b-strategy" && (value == "darm" || value == "darm-artifact" || value == "anchor"))
      b2bStrategy = value.str();
-   else if (option == "--ir-snapshots" || option == "--domain-schedule" || option == "--b2r-strategy" || option == "--b2b-strategy" || option == "--tti-quote-cache")
+   else if (option == "--ir-snapshots" || option == "--domain-schedule" || option == "--b2b-strategy" || option == "--tti-quote-cache")
      throw std::runtime_error("invalid value for " + option.str());
    else break;
    argc -= 2;
  }
  if(argc!=4&&argc!=5)
-   throw std::runtime_error("usage: decision-greedy INPUT FUNCTION [TOOL_ROOT] NEW_OUTPUT [--b2b-strategy anchor|darm|darm-artifact] [--b2r-strategy darm|guarded] [--darm-legacy-flags] [--domain-schedule ordered] [--ir-snapshots full|compact] [--tti-quote-cache off|audit|on]");
+   throw std::runtime_error("usage: decision-greedy INPUT FUNCTION [TOOL_ROOT] NEW_OUTPUT [--b2b-strategy anchor|darm|darm-artifact] [--domain-schedule ordered] [--ir-snapshots full|compact] [--tti-quote-cache off|audit|on]");
  if(snapshotMode.empty())snapshotMode="compact";
  const bool implicitRoot=argc==4;
  std::string root;
- const char *ttiMode=std::getenv("FUSION_TTI_MODE");
- const bool strictTTI=ttiMode&&StringRef(ttiMode)=="strict";
- const bool offlineTTI=strictTTI||(ttiMode&&StringRef(ttiMode)=="offline");
  if(implicitRoot){
    const auto executable=sys::fs::getMainExecutable(argv[0],reinterpret_cast<void*>(&run));
    SmallString<256> location(executable);
@@ -171,17 +159,12 @@ int main(int argc,char**argv){try{
    root=location.str().str();
    if(!sys::fs::can_execute(root+"/build/llvm24-tti/fusion-search-llvm24")||
       !sys::fs::can_execute(root+"/tools/run-llvm24-tti")||
-      (!offlineTTI&&!sys::fs::can_execute(root+"/build/llvm24-tti/llvm24-tti")))
+      !sys::fs::can_execute(root+"/build/llvm24-tti/llvm24-tti"))
      throw std::runtime_error("cannot find built fusion-search and selected TTI provider next to decision-greedy");
  }else root=argv[3];
  std::string current=argv[1],fn=argv[2],out=argv[argc-1];
  if(sys::fs::exists(out))throw std::runtime_error("output exists");
  if(auto e=sys::fs::create_directories(out))throw std::runtime_error(e.message());
- const std::string strictTTIErrors=out+"/offline-tti-errors.log";
- if(strictTTI&&setenv("FUSION_TTI_STRICT_ERRORS",strictTTIErrors.c_str(),1))
-   throw std::runtime_error("cannot configure strict offline TTI errors");
- if(offlineTTI&&setenv("FUSION_TTI_WARNINGS",(out+"/offline-tti-warnings.log").c_str(),0))
-   throw std::runtime_error("cannot configure offline TTI warnings");
  int64_t structuralJobs=16;
  if (const char *value=std::getenv("DECISION_GREEDY_JOBS")) {
    if (StringRef(value).getAsInteger(10,structuralJobs) || structuralJobs<1 || structuralJobs>64)
@@ -200,19 +183,8 @@ int main(int argc,char**argv){try{
  targets.emplace_back();
  auto cost=[&](const std::string&input,const std::string&prefix){if(run({root+"/tools/run-llvm24-tti",input,fn},prefix+".json",prefix+".stderr"))throw std::runtime_error("TTI worker failed: "+prefix);auto v=read(prefix+".json");auto*o=v.getAsObject();if(!o||o->getInteger("unknown")!=Optional<int64_t>(0)||o->getString("source_revision")!=Optional<StringRef>("6be16f356d3e"))throw std::runtime_error("TTI unknown cost or revision mismatch");if(o->getString("cost_kind")!=Optional<StringRef>(fusion::ttiCostKindName()))throw std::runtime_error("TTI cost kind mismatch");auto n=o->getInteger("cost");if(!n)throw std::runtime_error("missing cost");return *n;};
  int64_t parentCost=cost(current,out+"/initial-tti"),initialCost=parentCost;unsigned commits=0,trials=0;json::Array rounds,stops;
- const char *checkpoint=std::getenv("DECISION_CHECKPOINT_TOOL");
- auto recordResources=[&](const std::string &ir,const std::string &prefix,json::Object &record){
-   if(!checkpoint)return;
-   try {
-     if(run({checkpoint,ir,fn},prefix+".json",prefix+".stderr"))
-       throw std::runtime_error("backend checkpoint failed");
-     record["backend_resources"]=decision::BackendResources::parse(read(prefix+".json")).report();
-   } catch(const std::exception &error) {
-     record["backend_resources_error"]=std::string(error.what());
-   }
- };
  unsigned reusedSweepSnapshots=0;
- auto report=[&](StringRef status){save(out+"/summary.json",json::Value(json::Object{{"status",status.str()},{"driver_phase_timings",timingReport()},{"elapsed_ms",std::chrono::duration<double,std::milli>(Clock::now()-started).count()},{"domain_schedule","ordered"},{"ir_snapshots",snapshotMode},{"trial_policy","whole-function"},{"scoped_trials",nullptr},{"search","per-decision greedy; best positive adjacent or structural candidate"},{"cfg_cleanup","structural"},{"structural_cleanup",structuralCleanup},{"structural_candidates_enabled",true},{"shared_arm_trials",true},{"cross_level_b2r",false},{"reused_sweep_snapshots",int64_t(reusedSweepSnapshots)},{"pipeline_version","v2"},{"candidate_jobs",structuralJobs},{"candidate_scheduler","continuous-queue"},{"persistent_trial_workers",true},{"condition_budget",conditionBudget},{"phi_fold_threshold",7},{"r2r_enumeration","darm-alignment"},{"b2b_strategy",b2bStrategy},{"b2r_strategy",b2rStrategy},{"tti_quote_cache",quoteMode},{"tti_cost_kind",fusion::ttiCostKindName()},{"uniform_loss_guard_enabled",false},{"max_uniform_loss",-1},{"initial_cost",initialCost},{"final_cost",parentCost},{"commits",int64_t(commits)},{"trials",int64_t(trials)},{"final_ir",current},{"rounds",json::Value(json::Array(rounds))},{"stops",json::Value(json::Array(stops))}}));};
+ auto report=[&](StringRef status){save(out+"/summary.json",json::Value(json::Object{{"status",status.str()},{"driver_phase_timings",timingReport()},{"elapsed_ms",std::chrono::duration<double,std::milli>(Clock::now()-started).count()},{"domain_schedule","ordered"},{"ir_snapshots",snapshotMode},{"trial_policy","whole-function"},{"scoped_trials",nullptr},{"search","per-decision greedy; best positive adjacent or structural candidate"},{"cfg_cleanup","structural"},{"structural_cleanup",structuralCleanup},{"structural_candidates_enabled",true},{"shared_arm_trials",true},{"cross_level_b2r",false},{"reused_sweep_snapshots",int64_t(reusedSweepSnapshots)},{"pipeline_version","v2"},{"candidate_jobs",structuralJobs},{"candidate_scheduler","continuous-queue"},{"persistent_trial_workers",true},{"condition_budget",conditionBudget},{"phi_fold_threshold",7},{"r2r_enumeration","darm-alignment"},{"b2b_strategy",b2bStrategy},{"b2r_strategy","darm"},{"tti_quote_cache",quoteMode},{"tti_cost_kind",fusion::ttiCostKindName()},{"uniform_loss_guard_enabled",false},{"max_uniform_loss",-1},{"initial_cost",initialCost},{"final_cost",parentCost},{"commits",int64_t(commits)},{"trials",int64_t(trials)},{"final_ir",current},{"rounds",json::Value(json::Array(rounds))},{"stops",json::Value(json::Array(stops))}}));};
  report("running");
  std::set<std::string> attemptedStructural;
  std::set<unsigned> attemptedPreparation; // Decision indices in this parent snapshot.
@@ -426,8 +398,7 @@ int main(int argc,char**argv){try{
         trialArgs.push_back(candidate.getString(key)->str());
       }
       // Keep the exact invocation and the arguments needed for trial replay.
-      trialArgs.insert(trialArgs.end(), {"--b2b-strategy", b2bStrategy, "--b2r-strategy", b2rStrategy});
-      if (legacyMergeFlags) trialArgs.push_back("--darm-legacy-flags");
+      trialArgs.insert(trialArgs.end(), {"--b2b-strategy", b2bStrategy});
       // IDs locate a prior recipe; current planner facts certify its reuse.
       json::Array replayArgs;
       for(const auto &argument:trialArgs)replayArgs.push_back(argument);
@@ -615,13 +586,8 @@ int main(int argc,char**argv){try{
       record["ordered_update"]="structural_winner_rediscover";
     }
   }
-  recordResources(best+"/fused.ll",best+"/resources",record);
   record["selected_cost"]=bestCost;record["score"]=double(parentCost-bestCost)/std::max<int64_t>(parentCost,1);rounds.push_back(std::move(record));parentCost=bestCost;current=best+"/fused.ll";attemptedStructural.clear();attemptedPreparation.clear();++commits;report("running");outs()<<"commit="<<commits<<" cost="<<parentCost<<" decision="<<target<<"\n";outs().flush();mark("record_and_commit");
   if(iteration==99999u)throw std::runtime_error("round budget exceeded");
  }}
- if(strictTTI&&sys::fs::exists(strictTTIErrors)){
-   report("offline_tti_error");
-   throw std::runtime_error("offline TTI replay incomplete; see "+strictTTIErrors);
- }
  if(auto e=sys::fs::copy_file(current,out+"/final.ll"))throw std::runtime_error(e.message());current=out+"/final.ll";report("completed");return 0;
 }catch(const std::exception&e){errs()<<e.what()<<"\n";return 1;}}

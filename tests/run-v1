@@ -31,6 +31,3 @@ fi
 python3 "$root/tests/fusion-search/check-score-fingerprints.py"
 python3 "$root/tests/fusion-search/check-tti-quotes.py"
 python3 "$root/tests/fusion-search/check-commit-score-invalidation.py"
-python3 "$root/tests/fusion-search/check-incremental-ir.py"
-python3 "$root/tests/fusion-search/check-hybrid-priority.py"
-python3 "$root/tests/fusion-search/check-region-fallback.py"

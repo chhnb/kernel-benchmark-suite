@@ -19,8 +19,6 @@ if printf '%s\n' '#include "llvm/Support/InstructionCost.h"' |     ${CXX:-g++} "
   flags+=(-DFUSION_PACKAGED_LLVM12)
   read -r -a libs <<< "$("$lc" --ldflags --link-shared --libs --system-libs | tr '\n' ' ')"
 fi
-${CXX:-g++} ${CPPFLAGS:-} "${flags[@]}" -std=c++17 -fexceptions -O2 \
-  "$root/tools/offline_tti_layout.cpp" "${libs[@]}" ${LDFLAGS:-} -o "$build/offline-tti-layout"
 objects=()
 for source in ir_pressure fusion_search b2b_anchor logical_region_state darm_pair_engine/RegionAnalyzer darm_pair_engine/RegionMelder darm_pair_engine/RegionReplicator darm_pair_engine/CFMelderUtils darm_pair_engine/InstructionMatch; do
   obj="$build/$(basename "$source").o"

@@ -58,3 +58,19 @@ vLLM/Map-Airy输入已改为运行时生成；随机输入不纳入Git。旧Qwen
 逐状态计时、提交及机器码证据见[区域融合审计](../regression/records/region-fusion-audit-20261120.md)。
 
 SRAD32 的冻结件和诊断构建见[重建核验记录](../regression/records/anchor-release-rebuild-20261120.md)。
+
+## PCM32：TTI 保守漏判
+
+第 10 步的同父 R2R 在 LLVM12 O3 后的 throughput TTI 增加 124，实测耗时下降 **5.74%**。发布 Greedy 的 `trial-33` 增加 202，实测耗时下降 **5.71%**。两者使用各自的父状态作对照。 [第 10 步计时（`617b52a`）](https://github.com/chhnb/kernel-benchmark-suite/blob/617b52a/regression/records/cleanup-extended-20261120.md) · [O3 报价和运行时计数（`90c819b`）](https://github.com/chhnb/kernel-benchmark-suite/blob/90c819b/regression/records/pcm32-r2r-runtime-20261120.md) · [trial-33（`81bbd4a`）](https://github.com/chhnb/kernel-benchmark-suite/blob/81bbd4a/regression/records/accept-rule-eval-20261121.md)
+
+第 10 步两侧均需 64 KiB LDS，每 CU 只能驻留一个 workgroup。融合减少内层循环中的 LDS 工作量，运行时采样记录了 LDS 指令和 bank-conflict 总计数下降。该例的 throughput 报价把 LDS load/store 与普通 VALU 操作同样按单位报价，按静态指令累加时也没有给热循环更高权重。 [LDS 驻留与离线布局（`c89b380`）](https://github.com/chhnb/kernel-benchmark-suite/blob/c89b380/regression/records/region-anchor-20261120.md) · [运行时计数（`90c819b`）](https://github.com/chhnb/kernel-benchmark-suite/blob/90c819b/regression/records/pcm32-r2r-runtime-20261120.md)
+
+| 已尝试的修正 | 结果 | 记录与提交 |
+| --- | --- | --- |
+| 全局 load 和 LDS load 分别按 4、2 报价 | 第 10 步重新报价仍判亏 | [实验实现 `f1dfd7f`](https://github.com/chhnb/kernel-benchmark-suite/commit/f1dfd7f)，[运行时记录 `90c819b`](https://github.com/chhnb/kernel-benchmark-suite/blob/90c819b/regression/records/pcm32-r2r-runtime-20261120.md) |
+| gfx906 微基准访存权重 | 缩小 PCM32 的预测差距，方向仍判错，历史集方向一致率未提高 | [成本模型记录 `09778be`](https://github.com/chhnb/kernel-benchmark-suite/blob/09778be/regression/records/cost-model-eval-20261120.md) |
+| latency／throughput 切换 | latency 缩小了第 10 步的亏损报价，结论仍是拒绝 | [occupancy-aware-cost `c43d1b7`](https://github.com/chhnb/kernel-benchmark-suite/blob/c43d1b7/regression/records/occupancy-aware-cost-20261120.md)，[区域融合 latency 回放 `c89b380`](https://github.com/chhnb/kernel-benchmark-suite/blob/c89b380/regression/records/region-anchor-20261120.md) |
+| Occupancy 感知选择 | 低驻留时统一改用 latency 的启发式未提高历史转移的方向一致率。RIRv2 在该 PCM32 实例上接受，完整前瞻评估停于 NQU64 的 A/A 门槛 | [occupancy-aware-cost `c43d1b7`](https://github.com/chhnb/kernel-benchmark-suite/blob/c43d1b7/regression/records/occupancy-aware-cost-20261120.md)，[逐规则评估 `81bbd4a`](https://github.com/chhnb/kernel-benchmark-suite/blob/81bbd4a/regression/records/accept-rule-eval-20261121.md) |
+| 区域 anchor | 同父对照未达到推广门槛，区域融合保留 DARM | [区域对齐结论 `2c112f0`](https://github.com/chhnb/kernel-benchmark-suite/blob/2c112f0/regression/records/region-anchor-parity-20261121.md) |
+
+发布版本继续使用纯 throughput TTI，沿用统一报价。

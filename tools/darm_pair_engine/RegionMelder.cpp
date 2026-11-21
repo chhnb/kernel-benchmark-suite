@@ -95,25 +95,6 @@ void RegionMelder::recordBlockOrigin(BasicBlock *Left,BasicBlock *Right,BasicBlo
   BlockOrigins.push_back({sourceBlockID(Left),sourceBlockID(Right),label(Left),label(Right),WeakVH(Merged)});
 }
 
-// Project the replicated CFG onto its own side. Replication makes branch
-// choices leading to the matched block constant on that side.
-static void collectReachableBlocks(BasicBlock *Entry, BasicBlock *Exit,
-                                   SmallPtrSetImpl<BasicBlock *> &Reachable) {
-  SmallVector<BasicBlock *, 16> Worklist{Entry};
-  while (!Worklist.empty()) {
-    auto *Block = Worklist.pop_back_val();
-    if (Block == Exit || !Reachable.insert(Block).second)
-      continue;
-    auto *Branch = dyn_cast<BranchInst>(Block->getTerminator());
-    if (Branch && Branch->isConditional())
-      if (auto *Condition = dyn_cast<ConstantInt>(Branch->getCondition())) {
-        Worklist.push_back(Branch->getSuccessor(Condition->isZero() ? 1 : 0));
-        continue;
-      }
-    Worklist.append(succ_begin(Block), succ_end(Block));
-  }
-}
-
 void llvm::intersectMergedInstructionProperties(Instruction &Shared,
                                                const Instruction &Right) {
   Shared.andIRFlags(&Right);
@@ -146,19 +127,8 @@ void llvm::intersectMergedInstructionProperties(Instruction &Shared,
 }
 
 void RegionMelder::cloneInstructions() {
-  SmallPtrSet<BasicBlock *, 16> ReachableLeft, ReachableRight;
-  if (GuardReplicatedMemory) {
-    collectReachableBlocks(EntryBlockL, ExitBlockL, ReachableLeft);
-    collectReachableBlocks(EntryBlockR, ExitBlockR, ReachableRight);
-  }
-  auto NeedsGap = [&](Instruction *Original, BasicBlock *Opposite,
-                      const SmallPtrSetImpl<BasicBlock *> &Reachable) {
-    if (Opposite->size() > 1)
-      return true;
-    if (GuardReplicatedMemory)
-      return Reachable.contains(Opposite) &&
-             !safeToExecuteUnconditionally(*Original);
-    return !NativeReplicationPredication;
+  auto NeedsGap = [&](BasicBlock *Opposite) {
+    return Opposite->size() > 1 || !NativeReplicationPredication;
   };
 
   INFO << "Cloning instructions\n";
@@ -215,8 +185,7 @@ void RegionMelder::cloneInstructions() {
           Instruction *RightI = dyn_cast<Instruction>(REntry);
 
           Instruction *NewI = cloneInstruction(LeftI, Builder);
-          if (!LegacyMergeFlags)
-            intersectMergedInstructionProperties(*NewI, *RightI);
+          intersectMergedInstructionProperties(*NewI, *RightI);
 
           // update the maps
           MergedValuesToLeftValues[NewI] = LeftI;
@@ -242,7 +211,7 @@ void RegionMelder::cloneInstructions() {
         assert(ClonedRightParentIt != MergedValuesToRightValues.end() &&
                "Cloned left BB not found for right value!");
         auto *corresponding = cast<BasicBlock>(ClonedRightParentIt->second);
-        if (NeedsGap(LeftI, corresponding, ReachableRight))
+        if (NeedsGap(corresponding))
           updateSplitRangeMap(true, NewI);
       }
 
@@ -260,7 +229,7 @@ void RegionMelder::cloneInstructions() {
         assert(ClonedLeftParentIt != MergedValuesToLeftValues.end() &&
                "Cloned left BB not found for right value!");
         auto *corresponding = cast<BasicBlock>(ClonedLeftParentIt->second);
-        if (NeedsGap(RightI, corresponding, ReachableLeft))
+        if (NeedsGap(corresponding))
           updateSplitRangeMap(false, NewI);
       }
     }
@@ -653,8 +622,7 @@ void RegionMelder::merge(unsigned Index) {
     // replicate the region
     RegionReplicator RR(MA, ExpandingLeft);
     Region *ReplicatedR =
-        RR.replicate(ExpandedBlock, MatchedBlock, RToReplicate,
-                     !GuardReplicatedMemory);
+        RR.replicate(ExpandedBlock, MatchedBlock, RToReplicate);
 
     // prepare for melding
     if (ExpandingLeft) {
