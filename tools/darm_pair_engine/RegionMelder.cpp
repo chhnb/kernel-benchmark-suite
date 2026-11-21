@@ -12,6 +12,7 @@
 #include "llvm/Support/CommandLine.h"
 #include "llvm/Support/Debug.h"
 #include "llvm/Transforms/Utils/BasicBlockUtils.h"
+#include "llvm/Transforms/Utils/Local.h"
 #include <chrono>
 
 using namespace llvm;
@@ -112,6 +113,15 @@ static void collectReachableBlocks(BasicBlock *Entry, BasicBlock *Exit,
   }
 }
 
+void llvm::intersectMergedInstructionProperties(Instruction &Shared,
+                                               const Instruction &Right) {
+  Shared.andIRFlags(&Right);
+  // The two originals were on different paths. Neither dominates the other.
+  combineMetadataForCSE(&Shared, &Right, /*DoesKMove=*/true);
+  if (Shared.getDebugLoc() != Right.getDebugLoc())
+    Shared.setDebugLoc(DebugLoc());
+}
+
 void RegionMelder::cloneInstructions() {
   SmallPtrSet<BasicBlock *, 16> ReachableLeft, ReachableRight;
   if (GuardReplicatedMemory) {
@@ -182,6 +192,8 @@ void RegionMelder::cloneInstructions() {
           Instruction *RightI = dyn_cast<Instruction>(REntry);
 
           Instruction *NewI = cloneInstruction(LeftI, Builder);
+          if (!LegacyMergeFlags)
+            intersectMergedInstructionProperties(*NewI, *RightI);
 
           // update the maps
           MergedValuesToLeftValues[NewI] = LeftI;

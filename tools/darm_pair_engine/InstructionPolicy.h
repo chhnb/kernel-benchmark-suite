@@ -2,6 +2,9 @@
 #include "llvm/Analysis/ValueTracking.h"
 #include "llvm/IR/Instructions.h"
 namespace llvm {
+void intersectMergedInstructionProperties(Instruction &Shared,
+                                          const Instruction &Right);
+
 inline unsigned fusionInstructionWeight(const Instruction &I) {
   switch (I.getOpcode()) {
   case Instruction::FDiv: case Instruction::FRem:

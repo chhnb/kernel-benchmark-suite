@@ -171,10 +171,11 @@ Trial tryPair(const llvm::Module &, const Candidate &, unsigned currentVersion,
 Trial tryPair(const llvm::Module &, const Candidate &, unsigned currentVersion,
               unsigned optLevel, CleanupMode, const LogicalRegionState *, bool allowB2B,
               B2RStrategy b2rStrategy=B2RStrategy::Darm, Trial *boundaryFold=nullptr,
-              bool artifactB2B=false);
+              bool artifactB2B=false, bool legacyMergeFlags=false);
 std::vector<Trial> planSingleBranchB2B(const llvm::Module &, const Candidate &, CleanupMode,
                                        llvm::function_ref<int(const llvm::Instruction &)> intrinsicCost,
                                        llvm::function_ref<int(const llvm::Instruction &)> anchorCost,
                                        llvm::function_ref<int(llvm::Type *)> anchorSelectCost,
-                                       llvm::function_ref<int(llvm::Type *)> anchorPhiCost);
+                                       llvm::function_ref<int(llvm::Type *)> anchorPhiCost,
+                                       bool legacyMergeFlags=false);
 }
