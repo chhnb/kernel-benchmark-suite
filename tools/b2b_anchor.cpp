@@ -4,9 +4,14 @@
 #include "llvm/ADT/DenseSet.h"
 #include "llvm/ADT/STLExtras.h"
 #include "llvm/IR/Instructions.h"
+#include "llvm/Support/FileSystem.h"
+#include "llvm/Support/JSON.h"
+#include "llvm/Support/raw_ostream.h"
 #include <algorithm>
 #include <array>
 #include <cstdint>
+#include <cstdlib>
+#include <stdexcept>
 #include <vector>
 
 using namespace llvm;
@@ -23,16 +28,60 @@ struct State {
 };
 using Beam = SmallVector<State, 4>;
 
-void insert(Beam &beam, State state) {
+enum class Insertion { Duplicate, Pruned, Kept };
+
+json::Object matchJSON(AnchorMatch pair) {
+  return json::Object{{"left", int64_t(pair.left)}, {"right", int64_t(pair.right)},
+                      {"swapped", pair.swapped}};
+}
+
+json::Array matchesJSON(ArrayRef<AnchorMatch> matches) {
+  json::Array result;
+  for (auto pair : matches)
+    result.push_back(matchJSON(pair));
+  return result;
+}
+
+json::Object stateJSON(const State &state) {
+  return json::Object{{"pairs", matchesJSON(state.pairs)}, {"score", state.score},
+                      {"chargedSegments", int64_t(state.chargedSegments)},
+                      {"phiCharge", state.phiCharge}};
+}
+
+Insertion insert(Beam &beam, State state, json::Array *pruned = nullptr,
+                 StringRef phase = {}, unsigned i = 0, unsigned j = 0) {
   if (llvm::any_of(beam, [&](const State &old) { return old.pairs == state.pairs; }))
-    return;
+    return Insertion::Duplicate;
   auto position = llvm::find_if(beam, [&](const State &old) {
     return state.score > old.score ||
            (state.score == old.score && state.pairs.size() > old.pairs.size());
   });
+  const bool accepted = beam.size() < 4 || position != beam.end();
   beam.insert(position, std::move(state));
-  if (beam.size() > 4)
+  if (beam.size() > 4) {
+    if (pruned && accepted) {
+      auto event = stateJSON(beam.back());
+      event["phase"] = phase;
+      event["left_boundary"] = int64_t(i);
+      event["right_boundary"] = int64_t(j);
+      pruned->push_back(std::move(event));
+    }
     beam.pop_back();
+  }
+  return accepted ? Insertion::Kept : Insertion::Pruned;
+}
+
+StringRef insertionName(Insertion result) {
+  if (result == Insertion::Kept) return "inserted";
+  if (result == Insertion::Duplicate) return "duplicate";
+  return "beam_reject";
+}
+
+std::string operandName(const Value &value) {
+  std::string text;
+  raw_string_ostream stream(text);
+  value.printAsOperand(stream, false);
+  return stream.str();
 }
 }
 
@@ -41,6 +90,9 @@ SmallVector<AnchorPlan, 3> planB2BAnchors(
     BasicBlock *join, bool pairTies, function_ref<bool(Instruction &, Instruction &)> compatible,
     function_ref<int(const Instruction &)> instructionCost,
     function_ref<int(Type *)> selectCost, function_ref<int(Type *)> phiCost) {
+  const char *tracePath = std::getenv("FUSION_OBSERVE_B2B_DP");
+  const bool observe = tracePath && *tracePath;
+  json::Array transitions, pruned, conflictingPairs, segmentsObserved;
   const std::array<Work, 2> work{left, right};
   DenseMap<const Value *, unsigned> indices[2];
   for (unsigned side = 0; side != 2; ++side)
@@ -69,6 +121,8 @@ SmallVector<AnchorPlan, 3> planB2BAnchors(
       return;
     if (partners[0][i] != -1 || partners[1][j] != -1) {
       ++conflicts;
+      if (observe)
+        conflictingPairs.push_back(matchJSON({i, j}));
       return;
     }
     auto *li = left[i], *ri = right[j];
@@ -220,10 +274,35 @@ SmallVector<AnchorPlan, 3> planB2BAnchors(
   Beam beam(1);
   State anchorsOnly;
   unsigned li = 0, ri = 0, segments = 0;
+  auto recordTransition = [&](AnchorMatch pair, const State &state,
+                              int cost, int inputs, StringRef reason) {
+    auto event = matchJSON(pair);
+    event["instructionCost"] = cost;
+    event["inputCost"] = inputs;
+    event["gain"] = cost - inputs;
+    event["prior_score"] = state.score;
+    event["prior_pairs"] = int64_t(state.pairs.size());
+    event["outcome"] = reason;
+    transitions.push_back(std::move(event));
+  };
+  auto trim = [&](Beam &states, StringRef phase) {
+    if (states.size() <= 2) return;
+    if (observe)
+      for (const auto &state : ArrayRef<State>(states).drop_front(2)) {
+        auto event = stateJSON(state);
+        event["phase"] = phase;
+        pruned.push_back(std::move(event));
+      }
+    states.resize(2);
+  };
   auto align = [&](unsigned le, unsigned re, bool rejoins) {
     if (li == le && ri == re)
       return;
     ++segments;
+    if (observe)
+      segmentsObserved.push_back(json::Object{
+          {"left_begin", int64_t(li)}, {"left_end", int64_t(le)},
+          {"right_begin", int64_t(ri)}, {"right_end", int64_t(re)}, {"rejoins", rejoins}});
     // Keep an empty alignment even if the beam prefers several matches.
     // Map-Airy commit 10 previously preferred the candidate with fewer
     // pairs after cleanup, which is not represented by pair scores alone.
@@ -244,15 +323,23 @@ SmallVector<AnchorPlan, 3> planB2BAnchors(
       for (unsigned j = ri; j <= re; ++j)
         for (const auto &state : row[j - ri]) {
           if (i < le)
-            insert(next[j - ri], state);
+            insert(next[j - ri], state, observe ? &pruned : nullptr, "skip_left", i + 1, j);
           if (j < re)
-            insert(row[j + 1 - ri], state);
-          if (i == le || j == re || cutPairs.count({i, j}) ||
-              !compatible(*left[i], *right[j]))
+            insert(row[j + 1 - ri], state, observe ? &pruned : nullptr, "skip_right", i, j + 1);
+          if (i == le || j == re)
             continue;
           AnchorMatch pair{i, j};
+          if (cutPairs.count({i, j})) {
+            if (observe)
+              recordTransition(pair, state, instructionCost(*left[i]),
+                               addedCost(pair, state.pairs), "cutPairs");
+            continue;
+          }
+          if (!compatible(*left[i], *right[j]))
+            continue;
           const int inputCost = addedCost(pair, state.pairs);
-          const int gain = instructionCost(*left[i]) - inputCost;
+          const int cost = instructionCost(*left[i]);
+          const int gain = cost - inputCost;
           // Producers can also be reached solely from a forward segment
           // when their consumers feed different exit PHI positions.
           auto *resultType = left[i]->getType();
@@ -262,13 +349,18 @@ SmallVector<AnchorPlan, 3> planB2BAnchors(
               net <= 0 && hasSharedConsumer(left[i], right[j])) {
             if (seenForwardCut.insert({i, j}).second)
               forwardCutoffs.push_back(pair);
+            if (observe)
+              recordTransition(pair, state, cost, inputCost, "forward_cutoff");
             continue;
           }
           State shared = state;
           finishGap(shared, i, j, true);
           shared.score += gain;
           shared.pairs.push_back(pair);
-          insert(next[j + 1 - ri], std::move(shared));
+          const auto outcome = insert(next[j + 1 - ri], std::move(shared),
+                                      observe ? &pruned : nullptr, "pair", i + 1, j + 1);
+          if (observe)
+            recordTransition(pair, state, cost, inputCost, insertionName(outcome));
         }
       if (i != le) {
         row.swap(next);
@@ -280,12 +372,15 @@ SmallVector<AnchorPlan, 3> planB2BAnchors(
       finishGap(state, le, re, rejoins);
       insert(beam, std::move(state));
     }
-    if (beam.size() > 2)
-      beam.resize(2);
+    trim(beam, "segment_limit");
     insert(beam, std::move(empty.front()));
   };
   auto appendAnchor = [&](State &state, AnchorMatch anchor) {
-    state.score += instructionCost(*left[anchor.left]) - addedCost(anchor, state.pairs);
+    const int cost = instructionCost(*left[anchor.left]);
+    const int inputs = addedCost(anchor, state.pairs);
+    if (observe)
+      recordTransition(anchor, state, cost, inputs, "forced_anchor");
+    state.score += cost - inputs;
     state.pairs.push_back(anchor);
   };
   for (auto anchor : anchors) {
@@ -302,9 +397,55 @@ SmallVector<AnchorPlan, 3> planB2BAnchors(
   }
   align(left.size(), right.size(), !join);
 
-  if (beam.size() > 2)
-    beam.resize(2);
+  trim(beam, "final_limit");
   insert(beam, std::move(anchorsOnly));
+  if (observe) {
+    auto instructions = [&](Work arm) {
+      json::Array list;
+      auto hasTransferCost = [](Type *type) {
+        return type->isFirstClassType() && type->isSized() &&
+               !type->isTokenTy() && !type->isMetadataTy() && !type->isLabelTy();
+      };
+      for (auto item : llvm::enumerate(arm)) {
+        auto &inst = *item.value();
+        std::string ir, type;
+        raw_string_ostream irStream(ir), typeStream(type);
+        inst.print(irStream);
+        inst.getType()->print(typeStream);
+        json::Array operands;
+        for (const auto &operand : inst.operands()) {
+          std::string operandType;
+          raw_string_ostream operandStream(operandType);
+          operand->getType()->print(operandStream);
+          auto *ty = operand->getType();
+          operands.push_back(json::Object{{"value", operandName(*operand)}, {"type", operandStream.str()},
+              {"anchorSelectCost", hasTransferCost(ty) ? json::Value(selectCost(ty)) : json::Value(nullptr)}});
+        }
+        list.push_back(json::Object{{"index", int64_t(item.index())},
+            {"opcode", inst.getOpcodeName()}, {"type", typeStream.str()}, {"ir", irStream.str()},
+            {"anchorCost", instructionCost(inst)},
+            {"anchorSelectCost", hasTransferCost(inst.getType()) ? json::Value(selectCost(inst.getType())) : json::Value(nullptr)},
+            {"anchorPhiCost", hasTransferCost(inst.getType()) ? json::Value(phiCost(inst.getType())) : json::Value(nullptr)},
+            {"operands", std::move(operands)}});
+      }
+      return list;
+    };
+    json::Array plans;
+    for (const auto &state : beam)
+      plans.push_back(stateJSON(state));
+    std::error_code error;
+    raw_fd_ostream trace(tracePath, error, sys::fs::OF_Append);
+    if (error)
+      throw std::runtime_error("writing B2B observation: " + error.message());
+    trace << json::Value(json::Object{{"mode", pairTies ? "relaxed" : "strict"},
+        {"left_block", operandName(leftBlock)}, {"right_block", operandName(rightBlock)},
+        {"left", instructions(left)}, {"right", instructions(right)},
+        {"proposed", matchesJSON(proposed)}, {"anchors", matchesJSON(anchors)},
+        {"cutoffs", matchesJSON(cutoffs)}, {"forward_cutoffs", matchesJSON(forwardCutoffs)},
+        {"conflicts", int64_t(conflicts)}, {"conflicting_pairs", std::move(conflictingPairs)},
+        {"transitions", std::move(transitions)}, {"pruned", std::move(pruned)},
+        {"segments", std::move(segmentsObserved)}, {"plans", std::move(plans)}}) << '\n';
+  }
   SmallVector<AnchorPlan, 3> result;
   for (auto &state : beam)
     result.push_back({std::move(state.pairs), anchors, cutoffs, forwardCutoffs,
