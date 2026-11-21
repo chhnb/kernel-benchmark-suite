@@ -144,7 +144,7 @@ static int runSearch(int argc, const char *const *argv, TrialWorker *batch = nul
     bool fullSnapshots=true;
     bool controlOnly=false,catalogOnly=false;std::string ttiWorker="/home/chh/kernel-benchmark-suite/tools/run-llvm24-tti";
     for(int i=1;i<argc;++i){std::string k=argv[i];
-      if(k=="--help"){outs()<<"fusion-search v1 --ir FILE --function NAME --out FILE [--b2b-strategy anchor|darm|darm-artifact] [--b2r-strategy darm|guarded] [--region-align darm|anchor] [--merge-metadata strict|intersect] [--region-memory-pairing native|e0|e1|e2|e3] [--anchor-gap-order native|sw|latency] [--structural 0|1] [--split ID --left ID --right ID] [--debug-dir DIR] [--ir-snapshots full|compact] [--tti-worker EXECUTABLE] [--catalog-only 0|1] [--control-only 0|1] [--rounds N] [--trials N]\n";return 0;}
+      if(k=="--help"){outs()<<"fusion-search v1 --ir FILE --function NAME --out FILE [--b2b-strategy anchor|darm|darm-artifact] [--b2r-strategy darm|guarded] [--region-align darm|anchor] [--merge-metadata strict|intersect] [--region-memory-pairing native|e0|e1|e2|e3] [--anchor-gap-order native|sw] [--structural 0|1] [--split ID --left ID --right ID] [--debug-dir DIR] [--ir-snapshots full|compact] [--tti-worker EXECUTABLE] [--catalog-only 0|1] [--control-only 0|1] [--rounds N] [--trials N]\n";return 0;}
       if(i+1==argc)throw std::runtime_error("missing option value");std::string v=argv[++i];
       if(k=="--control-only"){if(v!="0"&&v!="1")throw std::runtime_error("control-only must be 0 or 1");controlOnly=v=="1";}
       else if(k=="--catalog-only"){if(v!="0"&&v!="1")throw std::runtime_error("catalog-only must be 0 or 1");catalogOnly=v=="1";}
@@ -184,8 +184,7 @@ static int runSearch(int argc, const char *const *argv, TrialWorker *batch = nul
       else if(k=="--anchor-gap-order"){
         if(v=="native") gapOrder=AnchorGapOrder::Native;
         else if(v=="sw") gapOrder=AnchorGapOrder::SW;
-        else if(v=="latency") gapOrder=AnchorGapOrder::Latency;
-        else throw std::runtime_error("anchor-gap-order must be native, sw or latency");
+        else throw std::runtime_error("anchor-gap-order must be native or sw");
       }
       else if(k=="--region-align-trace"){
         if(v!="0" && v!="1")
