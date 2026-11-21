@@ -169,6 +169,8 @@ enum class B2RStrategy { Darm, Guarded };
 
 enum class RegionMemoryPairing { Native, E0, E1, E2, E3 };
 
+enum class AnchorGapOrder;
+
 struct RegionAlignmentOptions {
   bool anchor = false, pairTies = false;
   llvm::function_ref<int(const llvm::Instruction &)> instructionCost;
@@ -176,6 +178,7 @@ struct RegionAlignmentOptions {
   bool intersectMemoryMetadata = false;
   RegionMemoryPairing memoryPairing = RegionMemoryPairing::Native;
   bool traceMemoryPairs = false;
+  AnchorGapOrder gapOrder{};
 };
 
 Trial tryPair(const llvm::Module &, const Candidate &, unsigned currentVersion,

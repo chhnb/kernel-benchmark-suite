@@ -7,6 +7,111 @@
 
 namespace fusion {
 
+enum class AnchorGapOrder { Native, SW, Latency };
+
+inline llvm::RegionMelder::BlockAlignment reorderRegionGaps(
+    const llvm::RegionMelder::BlockAlignment &native, llvm::BasicBlock *left,
+    llvm::BasicBlock *right, AnchorGapOrder order) {
+  using namespace llvm;
+  if (order == AnchorGapOrder::Native) return native;
+
+  DenseMap<Value *, unsigned> swRank;
+  if (order == AnchorGapOrder::SW) {
+    SmallVector<Value *, 32> l{left}, r{right};
+    for (auto &i : *left) l.push_back(&i);
+    for (auto &i : *right) r.push_back(&i);
+    InstrMeldingProfitabilityModel model;
+    SmithWaterman<Value *, SmallVectorImpl<Value *>, nullptr> sw(model);
+    auto reference = sw.compute(l, r);
+    unsigned rank = 0;
+    for (const auto &entry : reference) {
+      if (auto *v = entry.getLeft()) swRank[v] = rank;
+      if (auto *v = entry.getRight()) swRank[v] = rank;
+      ++rank;
+    }
+  }
+
+  RegionMelder::BlockAlignment result;
+  result.reserve(native.size());
+  const AlignedPair<Value *> *previous = nullptr;
+  for (auto first = native.begin(); first != native.end();) {
+    if (first->match()) {
+      previous = &*first;
+      result.push_back(*first++);
+      continue;
+    }
+    auto last = std::find_if(first, native.end(), [](const auto &p) { return p.match(); });
+    SmallVector<Value *, 16> gap[2];
+    SmallPtrSet<Value *, 32> pending, readDependent;
+    SmallVector<Value *, 16> ordered;
+    for (auto i = first; i != last; ++i) {
+      auto *v = i->getLeft() ? i->getLeft() : i->getRight();
+      gap[i->getLeft() ? 0 : 1].push_back(v);
+      pending.insert(v);
+      auto &inst = *cast<Instruction>(v);
+      if (inst.mayReadOrWriteMemory() || inst.mayHaveSideEffects())
+        ordered.push_back(v);
+      if (inst.mayReadFromMemory()) readDependent.insert(v);
+    }
+    if (order == AnchorGapOrder::Latency) {
+      if (previous)
+        for (auto *value : {previous->getLeft(), previous->getRight()})
+          if (auto *inst = dyn_cast<Instruction>(value))
+            if (inst->mayReadFromMemory()) readDependent.insert(value);
+      // Prioritize work independent of outstanding reads so it can overlap
+      // their latency, especially when occupancy cannot hide those waits.
+      bool changed;
+      do {
+        changed = false;
+        for (const auto &side : gap)
+          for (auto *value : side) {
+            auto *inst = cast<Instruction>(value);
+            if (!isa<PHINode>(inst) && llvm::any_of(inst->operands(), [&](const Use &use) {
+                  return readDependent.contains(use.get());
+                }))
+              changed |= readDependent.insert(value).second;
+          }
+      } while (changed);
+    }
+
+    unsigned cursor[2] = {}, nextOrdered = 0;
+    const auto begin = result.size();
+    while (!pending.empty()) {
+      int best = -1;
+      unsigned bestRank = 0;
+      for (int side = 0; side != 2; ++side) {
+        if (cursor[side] == gap[side].size()) continue;
+        auto *value = gap[side][cursor[side]];
+        unsigned rank = swRank.lookup(value);
+        if (order == AnchorGapOrder::Latency) {
+          auto *inst = cast<Instruction>(value);
+          if ((inst->mayReadOrWriteMemory() || inst->mayHaveSideEffects()) &&
+              ordered[nextOrdered] != value)
+            continue;
+          if (!isa<PHINode>(inst) && llvm::any_of(inst->operands(), [&](const Use &use) {
+                return pending.contains(use.get());
+              }))
+            continue;
+          rank = readDependent.contains(value) ? 1 : 0;
+        }
+        // SW's zero-score diagonal emits its left gap before its right gap.
+        if (best < 0 || rank < bestRank) { best = side; bestRank = rank; }
+      }
+      if (best < 0) {
+        result.erase(result.begin() + begin, result.end());
+        result.insert(result.end(), first, last);
+        break;
+      }
+      auto *value = gap[best][cursor[best]++];
+      pending.erase(value);
+      if (nextOrdered < ordered.size() && ordered[nextOrdered] == value) ++nextOrdered;
+      result.emplace_back(best == 0 ? value : nullptr, best == 1 ? value : nullptr);
+    }
+    first = last;
+  }
+  return result;
+}
+
 inline std::optional<llvm::RegionMelder::BlockAlignment> alignRegionBlocks(
     llvm::BasicBlock *left, llvm::BasicBlock *right,
     const llvm::RegionMelder::BlockMap &mapping,
@@ -14,7 +119,7 @@ inline std::optional<llvm::RegionMelder::BlockAlignment> alignRegionBlocks(
     llvm::function_ref<bool(llvm::Instruction &, llvm::Instruction &)> compatible,
     llvm::function_ref<int(const llvm::Instruction &)> instructionCost,
     llvm::function_ref<int(llvm::Type *)> selectCost,
-    llvm::function_ref<int(llvm::Type *)> phiCost, std::string &fallback, int forkCost) {
+    llvm::function_ref<int(llvm::Type *)> phiCost, std::string &fallback, int forkCost, AnchorGapOrder order) {
   using namespace llvm;
   auto *lt = dyn_cast<BranchInst>(left->getTerminator());
   auto *rt = dyn_cast<BranchInst>(right->getTerminator());
@@ -127,7 +232,8 @@ inline std::optional<llvm::RegionMelder::BlockAlignment> alignRegionBlocks(
   while (l < lwork.size()) result.emplace_back(lwork[l++], nullptr);
   while (r < rwork.size()) result.emplace_back(nullptr, rwork[r++]);
   result.emplace_back(lt, rt);
-  return result;
+  if (order == AnchorGapOrder::Native) return result;
+  return reorderRegionGaps(result, left, right, order);
 }
 
 } // namespace fusion

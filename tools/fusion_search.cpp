@@ -1358,13 +1358,27 @@ static Trial tryPairImpl(const Module&parent,const Candidate&c,unsigned version,
     melder.onAlignment = [&](BasicBlock *left, BasicBlock *right,
                              const RegionMelder::BlockAlignment &alignment) {
       int64_t pairs = 0;
-      json::Array memoryPairs;
+      json::Array memoryPairs, sequence;
+      ModuleSlotTracker slots(f->getParent());
+      if (regionAlignment->traceMemoryPairs) slots.incorporateFunction(*f);
+      int64_t ordinal[2] = {};
       unsigned loadOrdinal[2] = {}, storeOrdinal[2] = {};
       for (const auto &pair : alignment) {
         auto *l = dyn_cast_or_null<Instruction>(pair.getLeft());
         auto *r = dyn_cast_or_null<Instruction>(pair.getRight());
         if (l && r && !isa<PHINode>(l)) ++pairs;
         if (!regionAlignment->traceMemoryPairs) continue;
+        auto describe = [&](Value *value, unsigned side) -> json::Value {
+          if (!value) return nullptr;
+          std::string ir;
+          raw_string_ostream out(ir);
+          if (auto *inst = dyn_cast<Instruction>(value)) inst->print(out, slots);
+          else value->printAsOperand(out, false, slots);
+          out.flush();
+          return json::Object{{"ordinal", ordinal[side]++}, {"ir", std::move(ir)}};
+        };
+        sequence.push_back(json::Object{{"kind", pair.match() ? "pair" : l ? "left" : "right"},
+            {"left", describe(pair.getLeft(), 0)}, {"right", describe(pair.getRight(), 1)}});
         for (unsigned side = 0; side != 2; ++side) {
           if (isa_and_nonnull<LoadInst>(side == 0 ? l : r)) ++loadOrdinal[side];
           if (isa_and_nonnull<StoreInst>(side == 0 ? l : r)) ++storeOrdinal[side];
@@ -1386,6 +1400,7 @@ static Trial tryPairImpl(const Module&parent,const Candidate&c,unsigned version,
       json::Object stats{{"left", name(left)}, {"right", name(right)}, {"pairs", pairs},
                          {"fallback", std::exchange(alignmentFallback, "")}};
       if (regionAlignment->traceMemoryPairs) {
+        stats["sequence"] = std::move(sequence);
         stats["memory_pairs"] = std::move(memoryPairs);
         stats["source_loads"] = json::Array{loadOrdinal[0], loadOrdinal[1]};
         stats["source_stores"] = json::Array{storeOrdinal[0], storeOrdinal[1]};
@@ -1447,7 +1462,7 @@ static Trial tryPairImpl(const Module&parent,const Candidate&c,unsigned version,
         auto phi = [&](Type *type) { return typedCost(type, true) * scale; };
         return alignRegionBlocks(left, right, mapping, leftExit, rightExit,
                                  regionAlignment->pairTies, compatible, cost, select, phi,
-                                 alignmentFallback, 2 * scale);
+                                 alignmentFallback, 2 * scale, regionAlignment->gapOrder);
       };
     }
   }
