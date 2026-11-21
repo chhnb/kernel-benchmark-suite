@@ -139,12 +139,14 @@ static int runSearch(int argc, const char *const *argv, TrialWorker *batch = nul
     B2RStrategy b2rStrategy = B2RStrategy::Darm;
     bool regionAnchor = false, regionTrace = false, intersectMemoryMetadata = false;
     RegionMemoryPairing memoryPairing = RegionMemoryPairing::Native;
+    bool pairEntryPhis = false;
     AnchorGapOrder gapOrder = AnchorGapOrder::Native;
     std::string quoteMode="on";
     bool fullSnapshots=true;
     bool controlOnly=false,catalogOnly=false;std::string ttiWorker="/home/chh/kernel-benchmark-suite/tools/run-llvm24-tti";
     for(int i=1;i<argc;++i){std::string k=argv[i];
-      if(k=="--help"){outs()<<"fusion-search v1 --ir FILE --function NAME --out FILE [--b2b-strategy anchor|darm|darm-artifact] [--b2r-strategy darm|guarded] [--region-align darm|anchor] [--merge-metadata strict|intersect] [--region-memory-pairing native|e0|e1|e2|e3] [--anchor-gap-order native|sw] [--structural 0|1] [--split ID --left ID --right ID] [--debug-dir DIR] [--ir-snapshots full|compact] [--tti-worker EXECUTABLE] [--catalog-only 0|1] [--control-only 0|1] [--rounds N] [--trials N]\n";return 0;}
+      if(k=="--help"){outs()<<"fusion-search v1 --ir FILE --function NAME --out FILE [--b2b-strategy anchor|darm|darm-artifact] [--b2r-strategy darm|guarded] [--region-align darm|anchor] [--merge-metadata strict|intersect] [--region-memory-pairing native|e0|e1|e2|e3] [--anchor-gap-order native|sw] [--region-anchor-pair-phi] [--structural 0|1] [--split ID --left ID --right ID] [--debug-dir DIR] [--ir-snapshots full|compact] [--tti-worker EXECUTABLE] [--catalog-only 0|1] [--control-only 0|1] [--rounds N] [--trials N]\n";return 0;}
+      if(k=="--region-anchor-pair-phi"){pairEntryPhis=true;continue;}
       if(i+1==argc)throw std::runtime_error("missing option value");std::string v=argv[++i];
       if(k=="--control-only"){if(v!="0"&&v!="1")throw std::runtime_error("control-only must be 0 or 1");controlOnly=v=="1";}
       else if(k=="--catalog-only"){if(v!="0"&&v!="1")throw std::runtime_error("catalog-only must be 0 or 1");catalogOnly=v=="1";}
@@ -208,6 +210,8 @@ static int runSearch(int argc, const char *const *argv, TrialWorker *batch = nul
       }else if(k=="--require-parent-gain"){if(v!="0"&&v!="1")throw std::runtime_error("require-parent-gain must be 0 or 1");options.requireParentGain=v=="1";}else if(k=="--threshold"){size_t pos=0;options.threshold=std::stod(v,&pos);if(pos!=v.size()||!std::isfinite(options.threshold)||options.threshold<0)throw std::runtime_error("threshold must be finite and nonnegative");}
       else throw std::runtime_error("unknown option: "+k);
     }
+    if (pairEntryPhis && !regionAnchor)
+      throw std::runtime_error("region-anchor-pair-phi requires region anchor");
     if (gapOrder != AnchorGapOrder::Native && !regionAnchor)
       throw std::runtime_error("anchor-gap-order requires region anchor");
     if (memoryPairing != RegionMemoryPairing::Native &&
@@ -375,7 +379,7 @@ static int runSearch(int argc, const char *const *argv, TrialWorker *batch = nul
           return found == table.end() ? -1 : found->second;
         };
         RegionAlignmentOptions region{regionAnchor, false, instructionCost, transferCost,
-                                      intersectMemoryMetadata, memoryPairing, regionTrace, gapOrder};
+                                      intersectMemoryMetadata, memoryPairing, regionTrace, gapOrder, pairEntryPhis};
         auto attempt = [&](Trial &fold) {
           return tryPair(*module, c, 0, options.optLevel, options.cleanupMode,
                          logical.get(), allowDarmB2B, b2rStrategy, &fold, useArtifactB2B,

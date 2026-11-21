@@ -133,6 +133,9 @@ public:
     if(RecordOrigins){unsigned I=0;for(auto &BB:*MA.getParentFunction())
       SourceBlocks.push_back({WeakVH(&BB),"B"+std::to_string(I++)});}
   }
+  bool isEntryPair(const BasicBlock *left, const BasicBlock *right) const {
+    return left == EntryBlockL && right == EntryBlockR;
+  }
   bool GuardReplicatedMemory=false;
   bool NativeReplicationPredication=false;
   bool hasGuardedGap(const Instruction *instruction, bool left) const;

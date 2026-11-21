@@ -179,6 +179,7 @@ struct RegionAlignmentOptions {
   RegionMemoryPairing memoryPairing = RegionMemoryPairing::Native;
   bool traceMemoryPairs = false;
   AnchorGapOrder gapOrder{};
+  bool pairEntryPhis = false;
 };
 
 Trial tryPair(const llvm::Module &, const Candidate &, unsigned currentVersion,

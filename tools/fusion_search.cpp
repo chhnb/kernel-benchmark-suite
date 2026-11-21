@@ -1346,6 +1346,7 @@ static Trial tryPairImpl(const Module&parent,const Candidate&c,unsigned version,
   // unchanged select, PHI and fork charges.
   const int scale = memoryPairing == RegionMemoryPairing::Native ? 1 : 100;
   json::Array blockAlignment;
+  std::optional<DominatorTree> phiDominators;
   int64_t selectConditions = 0, branchConditions = 0, otherSelects = 0, missingPrices = 0;
   std::string alignmentFallback;
   auto typedCost = [&](Type *type, bool phi) {
@@ -1460,9 +1461,20 @@ static Trial tryPairImpl(const Module&parent,const Candidate&c,unsigned version,
           return typedCost(type, false) * scale;
         };
         auto phi = [&](Type *type) { return typedCost(type, true) * scale; };
+        bool pairPhis = false;
+        if (regionAlignment->pairEntryPhis && isa<PHINode>(left->front()) &&
+            isa<PHINode>(right->front())) {
+          if (!phiDominators) phiDominators.emplace(*f);
+          auto loopHeader = [&](BasicBlock *block) {
+            return llvm::any_of(predecessors(block), [&](BasicBlock *pred) {
+              return phiDominators->dominates(block, pred);
+            });
+          };
+          pairPhis = melder.isEntryPair(left, right) || (loopHeader(left) && loopHeader(right));
+        }
         return alignRegionBlocks(left, right, mapping, leftExit, rightExit,
                                  regionAlignment->pairTies, compatible, cost, select, phi,
-                                 alignmentFallback, 2 * scale, regionAlignment->gapOrder);
+                                 alignmentFallback, 2 * scale, regionAlignment->gapOrder, pairPhis);
       };
     }
   }

@@ -2,6 +2,7 @@
 
 #include "b2b_anchor.h"
 #include "darm_pair_engine/RegionMelder.h"
+#include "llvm/ADT/DenseSet.h"
 #include "llvm/ADT/SmallPtrSet.h"
 #include "llvm/IR/IntrinsicInst.h"
 
@@ -52,6 +53,70 @@ inline llvm::RegionMelder::BlockAlignment orderRegionGapsBySW(
   return result;
 }
 
+// PHIs are aligned as a prefix. RegionMelder still clones and fixes each
+// PHI separately, even for a matched entry. Never tell the body planner that
+// these producers share one SSA value or offer them as back-propagation roots.
+inline void alignRegionPhiPrefix(
+    llvm::RegionMelder::BlockAlignment &result, llvm::BasicBlock *left,
+    llvm::BasicBlock *right, const llvm::RegionMelder::BlockMap &mapping,
+    bool pairTies, llvm::function_ref<int(const llvm::Instruction &)> instructionCost,
+    llvm::function_ref<int(llvm::Type *)> selectCost) {
+  using namespace llvm;
+  SmallVector<PHINode *, 8> l, r;
+  for (auto &phi : left->phis()) l.push_back(&phi);
+  for (auto &phi : right->phis()) r.push_back(&phi);
+  auto gain = [&](PHINode &a, PHINode &b) -> std::optional<int> {
+    if (a.getType() != b.getType() || a.getNumIncomingValues() != b.getNumIncomingValues())
+      return std::nullopt;
+    int saving = instructionCost(a);
+    SmallDenseSet<unsigned, 8> seen;
+    for (unsigned i = 0; i < a.getNumIncomingValues(); ++i) {
+      auto *pred = a.getIncomingBlock(i);
+      auto *mapped = mapping.lookup(pred);
+      int j = b.getBasicBlockIndex(mapped ? mapped : pred);
+      if (j < 0 || !seen.insert(unsigned(j)).second) return std::nullopt;
+      if (a.getIncomingValue(i) != b.getIncomingValue(j))
+        saving -= selectCost(a.getType());
+    }
+    if (saving < 0 || (!pairTies && saving == 0)) return std::nullopt;
+    return saving;
+  };
+  struct Cell {
+    int64_t score = 0;
+    unsigned pairs = 0;
+    int step = 0;
+  };
+  const auto width = r.size() + 1;
+  std::vector<Cell> dp((l.size() + 1) * width);
+  auto cell = [&](unsigned i, unsigned j) -> Cell & { return dp[i * width + j]; };
+  auto rank = [](Cell c) { return std::make_pair(c.score, c.pairs); };
+  for (unsigned i = 0; i <= l.size(); ++i)
+    for (unsigned j = 0; j <= r.size(); ++j) {
+      if (i) { cell(i,j) = cell(i-1,j); cell(i,j).step = 1; }
+      if (j && (!i || rank(cell(i,j-1)) >= rank(cell(i,j)))) {
+        cell(i,j) = cell(i,j-1);
+        cell(i,j).step = 2;
+      }
+      if (i && j)
+        if (auto cost = gain(*l[i-1], *r[j-1])) {
+          auto next = cell(i-1,j-1);
+          next.score += *cost;
+          ++next.pairs;
+          next.step = 3;
+          if (rank(next) > rank(cell(i,j))) cell(i,j) = next;
+        }
+    }
+  llvm::RegionMelder::BlockAlignment reverse;
+  for (unsigned i = l.size(), j = r.size(); i || j;) {
+    switch (cell(i,j).step) {
+    case 1: reverse.emplace_back(l[--i], nullptr); break;
+    case 2: reverse.emplace_back(nullptr, r[--j]); break;
+    case 3: reverse.emplace_back(l[--i], r[--j]); break;
+    }
+  }
+  result.insert(result.end(), reverse.rbegin(), reverse.rend());
+}
+
 inline std::optional<llvm::RegionMelder::BlockAlignment> alignRegionBlocks(
     llvm::BasicBlock *left, llvm::BasicBlock *right,
     const llvm::RegionMelder::BlockMap &mapping,
@@ -59,7 +124,7 @@ inline std::optional<llvm::RegionMelder::BlockAlignment> alignRegionBlocks(
     llvm::function_ref<bool(llvm::Instruction &, llvm::Instruction &)> compatible,
     llvm::function_ref<int(const llvm::Instruction &)> instructionCost,
     llvm::function_ref<int(llvm::Type *)> selectCost,
-    llvm::function_ref<int(llvm::Type *)> phiCost, std::string &fallback, int forkCost, AnchorGapOrder order) {
+    llvm::function_ref<int(llvm::Type *)> phiCost, std::string &fallback, int forkCost, AnchorGapOrder order, bool pairPhis) {
   using namespace llvm;
   auto *lt = dyn_cast<BranchInst>(left->getTerminator());
   auto *rt = dyn_cast<BranchInst>(right->getTerminator());
@@ -156,8 +221,12 @@ inline std::optional<llvm::RegionMelder::BlockAlignment> alignRegionBlocks(
                                    compatible, instructionCost, selectCost, phiCost, seeds, false, forkCost);
   RegionMelder::BlockAlignment result;
   result.emplace_back(left, right);
-  for (auto &phi : left->phis()) result.emplace_back(&phi, nullptr);
-  for (auto &phi : right->phis()) result.emplace_back(nullptr, &phi);
+  if (pairPhis) {
+    alignRegionPhiPrefix(result, left, right, mapping, pairTies, instructionCost, selectCost);
+  } else {
+    for (auto &phi : left->phis()) result.emplace_back(&phi, nullptr);
+    for (auto &phi : right->phis()) result.emplace_back(nullptr, &phi);
+  }
   unsigned l = 0, r = 0;
   for (const auto &match : plans.front().matches) {
     if (match.swapped || match.left < l || match.right < r ||

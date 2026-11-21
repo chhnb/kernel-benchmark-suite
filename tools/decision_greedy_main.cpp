@@ -129,12 +129,14 @@ int main(int argc,char**argv){try{
  auto timingReport=[&](){json::Object phases;for(const auto &kv:phaseMilliseconds)phases[kv.first]=json::Object{{"milliseconds",kv.second},{"calls",phaseCalls[kv.first]}};return phases;};
 
  if(argc==2&&StringRef(argv[1])=="--help"){
-   outs()<<"usage: decision-greedy INPUT FUNCTION [TOOL_ROOT] NEW_OUTPUT [--b2b-strategy anchor|darm|darm-artifact] [--b2r-strategy darm|guarded] [--region-align darm|anchor] [--anchor-gap-order native|sw] [--merge-metadata strict|intersect] [--domain-schedule ordered] [--ir-snapshots full|compact] [--tti-quote-cache off|audit|on]\n";
+   outs()<<"usage: decision-greedy INPUT FUNCTION [TOOL_ROOT] NEW_OUTPUT [--b2b-strategy anchor|darm|darm-artifact] [--b2r-strategy darm|guarded] [--region-align darm|anchor] [--anchor-gap-order native|sw] [--region-anchor-pair-phi] [--merge-metadata strict|intersect] [--domain-schedule ordered] [--ir-snapshots full|compact] [--tti-quote-cache off|audit|on]\n";
    outs()<<"Default schedule: ordered for whole-function trials (Auto Greedy v2).\n";
    return 0;
  }
  std::string b2bStrategy="anchor", b2rStrategy="darm", regionAlign="darm", gapOrder="native", mergeMetadata="strict", quoteMode="on", snapshotMode;
+ bool pairEntryPhis = false;
  while (argc >= 3) {
+   if (StringRef(argv[argc-1]) == "--region-anchor-pair-phi") { pairEntryPhis = true; --argc; continue; }
    StringRef option(argv[argc-2]), value(argv[argc-1]);
    if(option == "--domain-schedule" && value == "ordered") { argc-=2;continue; }
    if (option == "--ir-snapshots" && (value == "full" || value == "compact"))
@@ -157,7 +159,9 @@ int main(int argc,char**argv){try{
    argc -= 2;
  }
  if(argc!=4&&argc!=5)
-   throw std::runtime_error("usage: decision-greedy INPUT FUNCTION [TOOL_ROOT] NEW_OUTPUT [--b2b-strategy anchor|darm|darm-artifact] [--b2r-strategy darm|guarded] [--region-align darm|anchor] [--anchor-gap-order native|sw] [--merge-metadata strict|intersect] [--domain-schedule ordered] [--ir-snapshots full|compact] [--tti-quote-cache off|audit|on]");
+   throw std::runtime_error("usage: decision-greedy INPUT FUNCTION [TOOL_ROOT] NEW_OUTPUT [--b2b-strategy anchor|darm|darm-artifact] [--b2r-strategy darm|guarded] [--region-align darm|anchor] [--anchor-gap-order native|sw] [--region-anchor-pair-phi] [--merge-metadata strict|intersect] [--domain-schedule ordered] [--ir-snapshots full|compact] [--tti-quote-cache off|audit|on]");
+ if (pairEntryPhis && regionAlign != "anchor")
+   throw std::runtime_error("region-anchor-pair-phi requires region anchor");
  if (gapOrder != "native" && regionAlign != "anchor")
    throw std::runtime_error("anchor-gap-order requires region anchor");
  if(snapshotMode.empty())snapshotMode="compact";
@@ -433,6 +437,7 @@ int main(int argc,char**argv){try{
         trialArgs.insert(trialArgs.end(), {"--region-align", regionAlign});
       if (gapOrder != "native")
         trialArgs.insert(trialArgs.end(), {"--anchor-gap-order", gapOrder});
+      if (pairEntryPhis) trialArgs.push_back("--region-anchor-pair-phi");
       if (mergeMetadata == "intersect")
         trialArgs.insert(trialArgs.end(), {"--merge-metadata", mergeMetadata});
       // IDs locate a prior recipe; current planner facts certify its reuse.
