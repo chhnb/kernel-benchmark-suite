@@ -74,3 +74,8 @@ SRAD32 的冻结件和诊断构建见[重建核验记录](../regression/records/
 | 区域 anchor | 同父对照未达到推广门槛，区域融合保留 DARM | [区域对齐结论 `2c112f0`](https://github.com/chhnb/kernel-benchmark-suite/blob/2c112f0/regression/records/region-anchor-parity-20261121.md) |
 
 发布版本继续使用纯 throughput TTI，沿用统一报价。
+
+## Auto DARM 对照口径
+
+- MS32 的发布版／原版 Auto DARM 耗时比为 1.020，配对 bootstrap 95% 区间为 [1.010, 1.027]。区间跨过 1.02。 [最终复验记录](../regression/records/final-rerun-20261121.md#gpu-复验)
+- vLLM 的 Auto DARM 对照使用无区域复制版本。上游固定阈值 0.2 的原版命令在首个区域复制处超时，360 秒内未产出完整 IR。 [最终复验记录](../regression/records/final-rerun-20261121.md#gpu-复验)

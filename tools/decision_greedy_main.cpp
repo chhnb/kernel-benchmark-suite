@@ -128,12 +128,18 @@ int main(int argc,char**argv){try{
  auto timingReport=[&](){json::Object phases;for(const auto &kv:phaseMilliseconds)phases[kv.first]=json::Object{{"milliseconds",kv.second},{"calls",phaseCalls[kv.first]}};return phases;};
 
  if(argc==2&&StringRef(argv[1])=="--help"){
-   outs()<<"usage: decision-greedy INPUT FUNCTION [TOOL_ROOT] NEW_OUTPUT [--b2b-strategy anchor|darm|darm-artifact] [--domain-schedule ordered] [--ir-snapshots full|compact] [--tti-quote-cache off|audit|on]\n";
+   outs()<<"usage: decision-greedy INPUT FUNCTION [TOOL_ROOT] NEW_OUTPUT [--b2b-strategy anchor|darm|darm-artifact] [--domain-schedule ordered] [--ir-snapshots full|compact] [--tti-quote-cache off|audit|on] [--commit-normalize-only]\n";
    outs()<<"Default schedule: ordered for whole-function trials (Auto Greedy v2).\n";
    return 0;
  }
  std::string b2bStrategy="anchor", quoteMode="on", snapshotMode;
+ bool commitNormalizeOnly=false;
  while (argc >= 3) {
+   if (StringRef(argv[argc-1]) == "--commit-normalize-only") {
+     commitNormalizeOnly=true;
+     --argc;
+     continue;
+   }
    StringRef option(argv[argc-2]), value(argv[argc-1]);
    if(option == "--domain-schedule" && value == "ordered") { argc-=2;continue; }
    if (option == "--ir-snapshots" && (value == "full" || value == "compact"))
@@ -148,7 +154,7 @@ int main(int argc,char**argv){try{
    argc -= 2;
  }
  if(argc!=4&&argc!=5)
-   throw std::runtime_error("usage: decision-greedy INPUT FUNCTION [TOOL_ROOT] NEW_OUTPUT [--b2b-strategy anchor|darm|darm-artifact] [--domain-schedule ordered] [--ir-snapshots full|compact] [--tti-quote-cache off|audit|on]");
+   throw std::runtime_error("usage: decision-greedy INPUT FUNCTION [TOOL_ROOT] NEW_OUTPUT [--b2b-strategy anchor|darm|darm-artifact] [--domain-schedule ordered] [--ir-snapshots full|compact] [--tti-quote-cache off|audit|on] [--commit-normalize-only]");
  if(snapshotMode.empty())snapshotMode="compact";
  const bool implicitRoot=argc==4;
  std::string root;
@@ -181,8 +187,23 @@ int main(int argc,char**argv){try{
  if(!sys::fs::can_execute(structural))
    throw std::runtime_error("structural candidate engine unavailable: "+structural);
  targets.emplace_back();
- auto cost=[&](const std::string&input,const std::string&prefix){if(run({root+"/tools/run-llvm24-tti",input,fn},prefix+".json",prefix+".stderr"))throw std::runtime_error("TTI worker failed: "+prefix);auto v=read(prefix+".json");auto*o=v.getAsObject();if(!o||o->getInteger("unknown")!=Optional<int64_t>(0)||o->getString("source_revision")!=Optional<StringRef>("6be16f356d3e"))throw std::runtime_error("TTI unknown cost or revision mismatch");if(o->getString("cost_kind")!=Optional<StringRef>(fusion::ttiCostKindName()))throw std::runtime_error("TTI cost kind mismatch");auto n=o->getInteger("cost");if(!n)throw std::runtime_error("missing cost");return *n;};
- int64_t parentCost=cost(current,out+"/initial-tti"),initialCost=parentCost;unsigned commits=0,trials=0;json::Array rounds,stops;
+ auto quote=[&](const std::string &input,const std::string &prefix) -> Optional<int64_t> {
+   if(run({root+"/tools/run-llvm24-tti",input,fn},prefix+".json",prefix+".stderr"))
+     throw std::runtime_error("TTI worker failed: "+prefix);
+   auto report=read(prefix+".json");
+   const auto *result=report.getAsObject();
+   if(!result || result->getString("source_revision")!=Optional<StringRef>("6be16f356d3e"))
+     throw std::runtime_error("TTI revision mismatch: "+prefix);
+   if(result->getString("cost_kind")!=Optional<StringRef>(fusion::ttiCostKindName()))
+     throw std::runtime_error("TTI cost kind mismatch: "+prefix);
+   if(result->getInteger("unknown")!=Optional<int64_t>(0))return None;
+   auto total=result->getInteger("cost");
+   if(!total)throw std::runtime_error("missing TTI cost: "+prefix);
+   return total;
+ };
+ const auto initialQuote=quote(current,out+"/initial-tti");
+ if(!initialQuote)throw std::runtime_error("unknown initial TTI cost");
+ int64_t parentCost=*initialQuote,initialCost=parentCost;unsigned commits=0,trials=0;json::Array rounds,stops;
  unsigned reusedSweepSnapshots=0;
  auto report=[&](StringRef status){save(out+"/summary.json",json::Value(json::Object{{"status",status.str()},{"driver_phase_timings",timingReport()},{"elapsed_ms",std::chrono::duration<double,std::milli>(Clock::now()-started).count()},{"domain_schedule","ordered"},{"ir_snapshots",snapshotMode},{"trial_policy","whole-function"},{"scoped_trials",nullptr},{"search","per-decision greedy; best positive adjacent or structural candidate"},{"cfg_cleanup","structural"},{"structural_cleanup",structuralCleanup},{"structural_candidates_enabled",true},{"shared_arm_trials",true},{"cross_level_b2r",false},{"reused_sweep_snapshots",int64_t(reusedSweepSnapshots)},{"pipeline_version","v2"},{"candidate_jobs",structuralJobs},{"candidate_scheduler","continuous-queue"},{"persistent_trial_workers",true},{"condition_budget",conditionBudget},{"phi_fold_threshold",7},{"r2r_enumeration","darm-alignment"},{"b2b_strategy",b2bStrategy},{"b2r_strategy","darm"},{"tti_quote_cache",quoteMode},{"tti_cost_kind",fusion::ttiCostKindName()},{"uniform_loss_guard_enabled",false},{"max_uniform_loss",-1},{"initial_cost",initialCost},{"final_cost",parentCost},{"commits",int64_t(commits)},{"trials",int64_t(trials)},{"final_ir",current},{"rounds",json::Value(json::Array(rounds))},{"stops",json::Value(json::Array(stops))}}));};
  report("running");
@@ -283,6 +304,7 @@ int main(int argc,char**argv){try{
   int64_t bestCost=parentCost;
   std::string best;
   Optional<unsigned> bestPreparedOrdinal;
+  bool bestIsNormalizeOnly=false;
   json::Array attempts, preparationRejections;
   struct PreparedPair {
     unsigned owner, left;
@@ -324,6 +346,40 @@ int main(int argc,char**argv){try{
     json::Array normalizedCandidates;
     for(const auto &pair:preparedPairs){
       const auto &d=catalog[pair.owner];
+      if(commitNormalizeOnly){
+        // Export the same no-meld control used to price structural trials.
+        // Score each preparation once, even when none of its melds are legal.
+        const auto dir=out+"/normalize-"+std::to_string(rounds.size())+
+                       "-"+std::to_string(pair.owner)+"-"+std::to_string(pair.left);
+        if(auto ec=sys::fs::create_directory(dir))throw std::runtime_error(ec.message());
+        auto controlArgs=args;
+        controlArgs[2]=pair.input;
+        controlArgs.insert(controlArgs.end(),{"--control-only","1","--out",dir+"/fused.ll"});
+        if(run(std::move(controlArgs),dir+"/stdout",dir+"/stderr"))
+          throw std::runtime_error("normalize-only control export failed: "+dir);
+        auto controlCost=quote(dir+"/fused.ll",dir+"/tti");
+        const bool improves=controlCost && *controlCost<parentCost;
+        json::Object attempt{{"kind","normalize-only"},{"directory",dir},
+          {"candidate","normalize:"+d.id+":"+std::to_string(pair.left)},{"exit_code",0},
+          {"prepared_input",pair.input},{"prepared_decision",d.id},
+          {"prepared_ordinal",int64_t(pair.left)},{"left",d.arms[pair.left].id},
+          {"right",d.arms[pair.left+1].id},{"eligible",improves}};
+        if(controlCost){
+          attempt["stage"]="scored";
+          attempt["cost"]=*controlCost;
+          attempt["gain"]=parentCost-*controlCost;
+          if(!improves)attempt["reason"]="nonpositive_gain";
+        }else{
+          attempt["stage"]="score_rejected";
+          attempt["reason"]="unknown_tti_cost";
+        }
+        if(improves && *controlCost<bestCost){
+          bestCost=*controlCost;
+          best=dir;
+          bestIsNormalizeOnly=true;
+        }
+        attempts.push_back(std::move(attempt));
+      }
       std::set<std::array<std::string,3>> coordinates(pair.coordinates.begin(),pair.coordinates.end());
       if(pair.containsRegion){
         const auto scan=pair.input+".catalog";
@@ -541,6 +597,7 @@ int main(int argc,char**argv){try{
         bestCost = *cost;
         best = dir;
         bestPreparedOrdinal = trial.preparedOrdinal;
+        bestIsNormalizeOnly = false;
       }
       attempts.push_back(std::move(attempt));
     }
@@ -572,9 +629,21 @@ int main(int argc,char**argv){try{
     continue;
   }
   if(best.empty()){rounds.push_back(std::move(record));stops.push_back(json::Object{{"decision",target},{"reason","no_positive_legal_candidate"}});report("running");mark("record_and_commit");break;}
+  if(bestIsNormalizeOnly)record["selected_kind"]="normalize-only";
   if(track){
     record["ordered_arms"]=table.describe(catalog[di]);
-    if(bestPreparedOrdinal){
+    if(bestIsNormalizeOnly){
+      // No pair was merged. Retire this binding and rediscover the CFG.
+      auto cleaned=parseIRFile(best+"/fused.ll",error,ctx);
+      if(!cleaned)throw std::runtime_error("cannot read normalize-only winner");
+      for(auto &block:*cleaned->getFunction(fn))
+        for(auto &inst:block)inst.setMetadata(decision::OrderedArms::marker,nullptr);
+      if(verifyModule(*cleaned,&errs()))throw std::runtime_error("invalid normalize-only winner");
+      writeModule(*cleaned,best+"/fused.ll");
+      table.retired=true;
+      table.nextDecision.reset();
+      record["ordered_update"]="normalize_only_rediscover";
+    }else if(bestPreparedOrdinal){
       auto cleaned=parseIRFile(best+"/fused.ll",error,ctx);
       if(!cleaned)throw std::runtime_error("cannot bind ordered winner");
       record["ordered_left"]=int64_t(*bestPreparedOrdinal);
