@@ -133,14 +133,13 @@ static int runSearch(int argc, const char *const *argv, TrialWorker *batch = nul
   fusion::requestProfile.clear();
   try {
     std::string input,function,output,debug,split,left,right,replayParentHash,policy="llvm24";Options options;options.cleanupMode=CleanupMode::DarmCFGInstCombine;
-    bool useArtifactB2B=false, useAnchorB2B=true, legacyMergeFlags=false;
+    bool useArtifactB2B=false, useAnchorB2B=true;
     B2RStrategy b2rStrategy = B2RStrategy::Darm;
     std::string quoteMode="on";
     bool fullSnapshots=true;
     bool controlOnly=false,catalogOnly=false;std::string ttiWorker="/home/chh/kernel-benchmark-suite/tools/run-llvm24-tti";
     for(int i=1;i<argc;++i){std::string k=argv[i];
-      if(k=="--help"){outs()<<"fusion-search v1 --ir FILE --function NAME --out FILE [--b2b-strategy anchor|darm|darm-artifact] [--b2r-strategy darm|guarded] [--darm-legacy-flags] [--structural 0|1] [--split ID --left ID --right ID] [--debug-dir DIR] [--ir-snapshots full|compact] [--tti-worker EXECUTABLE] [--catalog-only 0|1] [--control-only 0|1] [--rounds N] [--trials N]\n";return 0;}
-      if(k=="--darm-legacy-flags"){legacyMergeFlags=true;continue;}
+      if(k=="--help"){outs()<<"fusion-search v1 --ir FILE --function NAME --out FILE [--b2b-strategy anchor|darm|darm-artifact] [--b2r-strategy darm|guarded] [--structural 0|1] [--split ID --left ID --right ID] [--debug-dir DIR] [--ir-snapshots full|compact] [--tti-worker EXECUTABLE] [--catalog-only 0|1] [--control-only 0|1] [--rounds N] [--trials N]\n";return 0;}
       if(i+1==argc)throw std::runtime_error("missing option value");std::string v=argv[++i];
       if(k=="--control-only"){if(v!="0"&&v!="1")throw std::runtime_error("control-only must be 0 or 1");controlOnly=v=="1";}
       else if(k=="--catalog-only"){if(v!="0"&&v!="1")throw std::runtime_error("catalog-only must be 0 or 1");catalogOnly=v=="1";}
@@ -290,7 +289,7 @@ static int runSearch(int argc, const char *const *argv, TrialWorker *batch = nul
       if(observer)observer->round(round);
       std::vector<Trial> plans;
       if (!logical && useAnchorB2B)
-        plans = llvm24Scorer.planAnchorB2B(*module, c, options.cleanupMode, legacyMergeFlags);
+        plans = llvm24Scorer.planAnchorB2B(*module, c, options.cleanupMode);
       const bool plannedB2B = !plans.empty();
       Trial t;
       ScoreResult score;
@@ -325,7 +324,7 @@ static int runSearch(int argc, const char *const *argv, TrialWorker *batch = nul
       if (!plannedB2B) {
         Trial boundaryFold;
         t = tryPair(*module, c, 0, options.optLevel, options.cleanupMode,
-                    logical.get(), allowDarmB2B, b2rStrategy, &boundaryFold, useArtifactB2B, legacyMergeFlags);
+                    logical.get(), allowDarmB2B, b2rStrategy, &boundaryFold, useArtifactB2B);
         if (t.valid) score = profileCall("evaluate_score",[&](){return evaluateTrial(*module, t, round, scorer);});
         if (boundaryFold.valid) {
           if (StringRef(score.reason).startswith("tti_quote_")) throw std::runtime_error(score.reason);

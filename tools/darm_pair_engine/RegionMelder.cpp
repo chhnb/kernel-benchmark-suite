@@ -215,8 +215,7 @@ void RegionMelder::cloneInstructions() {
           Instruction *RightI = dyn_cast<Instruction>(REntry);
 
           Instruction *NewI = cloneInstruction(LeftI, Builder);
-          if (!LegacyMergeFlags)
-            intersectMergedInstructionProperties(*NewI, *RightI);
+          intersectMergedInstructionProperties(*NewI, *RightI);
 
           // update the maps
           MergedValuesToLeftValues[NewI] = LeftI;
