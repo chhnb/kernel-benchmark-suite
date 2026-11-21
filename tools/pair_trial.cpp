@@ -31,7 +31,8 @@ static json::Object facts(Function&F){
 }
 int main(int argc,char**argv){
  if(argc==4&&std::string(argv[1])=="--facts"){LLVMContext C;SMDiagnostic E;auto M=parseIRFile(argv[2],E,C);if(!M)return 1;auto*F=M->getFunction(argv[3]);if(!F)return 2;outs()<<formatv("{0:2}\n",json::Value(facts(*F)));return 0;}
- if(argc!=4){errs()<<"usage: pair-trial INPUT.ll REQUEST.json OUTPUT-DIRECTORY\n";return 2;}
+ const bool legacyMergeFlags=argc==5 && StringRef(argv[4])=="--darm-legacy-flags";
+ if(argc!=4 && !legacyMergeFlags){errs()<<"usage: pair-trial INPUT.ll REQUEST.json OUTPUT-DIRECTORY [--darm-legacy-flags]\n";return 2;}
  std::string out=argv[3];auto reject=[&](StringRef why){jsonwrite(out+"/engine-result.json",json::Object{{"status","rejected_precheck"},{"reason",why},{"transformation_applied",false}});errs()<<why<<"\n";return 4;};
  auto buf=MemoryBuffer::getFile(argv[2]);if(!buf)return reject("request_missing");auto value=json::parse((*buf)->getBuffer());if(!value)return reject("invalid_request_json");auto*req=value->getAsObject();if(!req)return reject("invalid_request_object");auto get=[&](StringRef k){return req->getString(k).getValueOr("").str();};
  LLVMContext C;SMDiagnostic E;auto M=parseIRFile(argv[1],E,C);if(!M){E.print(argv[0],errs());return reject("input_parse_failed");}if(verifyModule(*M,&errs()))return reject("input_verifier_failed");auto*F=M->getFunction(get("function"));if(!F||F->isDeclaration())return reject("function_missing");
@@ -59,12 +60,14 @@ int main(int argc,char**argv){
  std::unique_ptr<Module> rewritten;
  if (effectful) {
    fusion::Candidate candidate{get("function"), get("split"), get("left"), get("right")};
-   auto trial = fusion::tryPair(*M, candidate, 0, 0, fusion::CleanupMode::None);
+   auto trial = fusion::tryPair(*M, candidate, 0, 0, fusion::CleanupMode::None, nullptr, true,
+                                fusion::B2RStrategy::Darm, nullptr, false, legacyMergeFlags);
    if (!trial.valid) return reject(trial.reason);
    rewritten = std::move(trial.raw);
    F = rewritten->getFunction(get("function"));
  } else {
    RegionMelder melder(MA);
+   melder.LegacyMergeFlags = legacyMergeFlags;
    melder.merge(0);
  }
  Module &result = rewritten ? *rewritten : *M;
