@@ -25,11 +25,17 @@ with tempfile.TemporaryDirectory(prefix="normalize-commit-") as temporary:
         subprocess.run([opt, "-verify", "-disable-output", out / "final.ll"], check=True)
         return json.loads((out / "summary.json").read_text())
 
-    default = run("default")
-    assert default["commits"] == 1
-    assert not any(r.get("selected_kind") == "normalize-only" for r in default["rounds"])
+    disabled = run("disabled", "--no-commit-normalize-only")
+    assert disabled["commits"] == 1
+    assert not any(r.get("selected_kind") == "normalize-only" for r in disabled["rounds"])
 
-    enabled = run("enabled", "--commit-normalize-only")
+    enabled = run("default")
+    explicit = run("explicit", "--commit-normalize-only")
+    assert explicit["commits"] == enabled["commits"]
+    assert explicit["final_cost"] == enabled["final_cost"]
+    assert [r["selected_cost"] for r in explicit["rounds"] if r["selected"]] == [
+        r["selected_cost"] for r in enabled["rounds"] if r["selected"]
+    ]
     selections = [r for r in enabled["rounds"] if r.get("selected_kind") == "normalize-only"]
     assert len(selections) == 1, selections
     selected, = selections
@@ -40,6 +46,6 @@ with tempfile.TemporaryDirectory(prefix="normalize-commit-") as temporary:
     assert any(a.get("control_cost") == a.get("cost") == 274
                and a.get("reason") == "nonpositive_gain"
                for a in selected["attempts"])
-    assert b"!decision.ordered_trial_boundary" not in (work / "enabled/final.ll").read_bytes()
+    assert b"!decision.ordered_trial_boundary" not in (work / "default/final.ll").read_bytes()
 
-print("PASS NQU64 accepts only the opt-in normalize-only winner")
+print("PASS NQU64 commits the normalize-only winner by default and honors the opt-out")

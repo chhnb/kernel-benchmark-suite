@@ -1,6 +1,6 @@
 # 归一化对照提交复验
 
-分支从 feature/anchor-default 的 `86cd7d8` 开始。`decision-greedy` 新增默认关闭的 `--commit-normalize-only` 开关。
+分支从 feature/anchor-default 的 `86cd7d8` 开始。以下复验使用 `7755491` 中默认关闭的 `--commit-normalize-only` 开关。分支后续默认值见末节。
 
 开启时，每轮对已经通过原有准备检查的每一组条件归一化输入，走与融合试验相同的 cleanup，导出未融合对照并验证 IR。每个准备输入只给未融合对照报价一次。对照的 throughput TTI 严格低于当前父状态时，进入本轮候选。无法报价的对照跳过。融合仍需严格优于自身同 cleanup 对照与当前父状态，也须按原顺序严格优于当前最优候选。多个同分对照沿用候选枚举顺序。
 
@@ -114,3 +114,11 @@ EPYC 目录为 `/data/home/chh/simplify-v2/build/normalize-commit.cZRDHj/`。逐
 | `offline/results.json` | `7b213d9669d67c055b51693cf2f670193e7b01eee39f14b9e47120a1a6e8f5af` |
 | `gpu-roles/roles.json` | `d103c4c61ff64eda0cd5fe4369f029a80274f624aca53d05bdd8d94c2a8da6fb` |
 | `gpu-results/results.json` | `d9cd0fa5aa3cbf08f6d5c951eb3082a5e10fc09d6be3bf03abcc0393607862cb` |
+
+## 分支默认开启
+
+`decision-greedy` 现在默认允许提交归一化对照。`--no-commit-normalize-only` 恢复关闭行为，原有的 `--commit-normalize-only` 仍可显式开启。两个选项同时出现时，以最右边的选项为准。NQU64 回归测试覆盖默认、显式关闭、显式开启，以及融合与归一化对照打平时的拒绝行为。
+
+EPYC 重新构建 driver，测试矩阵 16 项通过、4 项按 `tests/KNOWN_FAILURES` 跳过。16 个发布 case 分别以默认配置和显式关闭运行完整 Greedy。32 份最终 IR 均通过 LLVM verifier。每个 case 的默认最终 IR 和 HSACO／cubin 均与本记录原开启档逐字节一致，显式关闭的产物均与原关闭档逐字节一致。复验收据为同一实验目录下的 `default-parity/results.json`。
+
+GPU 时比沿用上面的四角色批次。NQU64 默认产物沿用已核对的 G1 对象。TPACF 新 HSACO 的两次 A/A 均超限，性能方向仍未确定。
