@@ -155,9 +155,6 @@ int main(int argc,char**argv){try{
  if(snapshotMode.empty())snapshotMode="compact";
  const bool implicitRoot=argc==4;
  std::string root;
- const char *ttiMode=std::getenv("FUSION_TTI_MODE");
- const bool strictTTI=ttiMode&&StringRef(ttiMode)=="strict";
- const bool offlineTTI=strictTTI||(ttiMode&&StringRef(ttiMode)=="offline");
  if(implicitRoot){
    const auto executable=sys::fs::getMainExecutable(argv[0],reinterpret_cast<void*>(&run));
    SmallString<256> location(executable);
@@ -165,17 +162,12 @@ int main(int argc,char**argv){try{
    root=location.str().str();
    if(!sys::fs::can_execute(root+"/build/llvm24-tti/fusion-search-llvm24")||
       !sys::fs::can_execute(root+"/tools/run-llvm24-tti")||
-      (!offlineTTI&&!sys::fs::can_execute(root+"/build/llvm24-tti/llvm24-tti")))
+      !sys::fs::can_execute(root+"/build/llvm24-tti/llvm24-tti"))
      throw std::runtime_error("cannot find built fusion-search and selected TTI provider next to decision-greedy");
  }else root=argv[3];
  std::string current=argv[1],fn=argv[2],out=argv[argc-1];
  if(sys::fs::exists(out))throw std::runtime_error("output exists");
  if(auto e=sys::fs::create_directories(out))throw std::runtime_error(e.message());
- const std::string strictTTIErrors=out+"/offline-tti-errors.log";
- if(strictTTI&&setenv("FUSION_TTI_STRICT_ERRORS",strictTTIErrors.c_str(),1))
-   throw std::runtime_error("cannot configure strict offline TTI errors");
- if(offlineTTI&&setenv("FUSION_TTI_WARNINGS",(out+"/offline-tti-warnings.log").c_str(),0))
-   throw std::runtime_error("cannot configure offline TTI warnings");
  int64_t structuralJobs=16;
  if (const char *value=std::getenv("DECISION_GREEDY_JOBS")) {
    if (StringRef(value).getAsInteger(10,structuralJobs) || structuralJobs<1 || structuralJobs>64)
@@ -612,9 +604,5 @@ int main(int argc,char**argv){try{
   record["selected_cost"]=bestCost;record["score"]=double(parentCost-bestCost)/std::max<int64_t>(parentCost,1);rounds.push_back(std::move(record));parentCost=bestCost;current=best+"/fused.ll";attemptedStructural.clear();attemptedPreparation.clear();++commits;report("running");outs()<<"commit="<<commits<<" cost="<<parentCost<<" decision="<<target<<"\n";outs().flush();mark("record_and_commit");
   if(iteration==99999u)throw std::runtime_error("round budget exceeded");
  }}
- if(strictTTI&&sys::fs::exists(strictTTIErrors)){
-   report("offline_tti_error");
-   throw std::runtime_error("offline TTI replay incomplete; see "+strictTTIErrors);
- }
  if(auto e=sys::fs::copy_file(current,out+"/final.ll"))throw std::runtime_error(e.message());current=out+"/final.ll";report("completed");return 0;
 }catch(const std::exception&e){errs()<<e.what()<<"\n";return 1;}}

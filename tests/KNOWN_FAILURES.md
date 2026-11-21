@@ -15,8 +15,7 @@ LLVM12 和 LLVM24 实时吞吐报价确认，原始记录保存在
 
 比较后续运行时，核对测试集合、状态和失败原因。删除测试或修复已知失败时，提交说明和本表同步记录。
 
-测试维护提交更新 V2 ordered 断言。旧拒绝列表中的 `guarded` 已在
-`4a91a50` 上受支持，继续由 `check-guarded-b2r.py` 验证。DP2／DP3 和其他已移除选项的拒绝检查保留。
+测试维护提交更新 V2 ordered 断言。旧分支 `4a91a50` 的 `guarded` 专用测试依赖当时的离线报价。DP2／DP3 和其他已移除选项的拒绝检查保留。
 四个缺件测试列出缺失路径和恢复方式。Pair trial 使用新临时目录，保留已跟踪的历史证据目录。
 
 ## 历史入口清理
@@ -25,3 +24,7 @@ LLVM12 和 LLVM24 实时吞吐报价确认，原始记录保存在
 - 移除 `tests/fusion-search/check-preparation-reactivation.py`。原用于验证 trees 调度下准备臂的再激活。该脚本未列入当前 27 项通过、4 项缺件跳过的测试集合。
 
 - 移除仅适用于 DP1 的 recipe 测试。共享发射、TTI 报价、连续 worker、逐提交重新评分和局部／区域回退测试改用 anchor。缺件跳过清单保持不变。
+
+- 移除 `check-offline-tti.py`，其覆盖的 SQLite 记录、重放及实验报价档已删除。四个缺件跳过保持不变。
+
+- 移除依赖 SQLite 离线报价的 `check-guarded-b2r.py` 和 `guarded-load.ll`。默认 DARM 的测试保持运行。

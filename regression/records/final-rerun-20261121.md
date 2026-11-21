@@ -34,3 +34,8 @@
 清理前在 EPYC 从 `b54c3c0` 干净导出并构建，固定 LLVM12/LLVM24 运行默认 throughput 完整 Greedy。独立检查 25 项通过，包括套件中的 DARM 标志及 metadata 交集测试。四个缺件项目按 `KNOWN_FAILURES` 跳过。16 例均过 LLVM verifier，提交数和最终 TTI 均匹配发布 manifest。16 个 HSACO/cubin 逐字节一致，15 个 IR 逐字节一致。HLLD 的 IR 少一条 `!fusion.logical.arm` 附件，余下 IR 一致。后续验证以本次 IR/二进制的完整字节为基准。
 
 EPYC 基准目录为 `/data/home/chh/simplify-v2/build/final-release.kzxLp5/base-outputs/`。每例原始 IR、HSACO/cubin 及 SHA-256 见 `results.json`，文件 SHA-256 为 `3f4bbdd98b5a598257b8f3943f23769efe083dd919367891f84f37da183b3b4c`。
+
+### 清理提交与复验
+
+- `506e386` 删除旧 DARM 标志开关，只保留交集发射。交集测试继续覆盖整数、浮点及访存 metadata。25 项通过、4 项缺件跳过；16 例 IR、HSACO/cubin 的完整字节均与清理前一致。
+- 下一提交将实时报价固定为原有 reciprocal throughput，删除 latency 及 SQLite 记录、重放、自定义报价的试验路径和专用测试。最初测试检查发现 guarded 实验测试依赖空 SQLite 报价，改为由同一提交移除该测试及其独有的 fixture。保留默认报价的身份核对、缓存以及独立 worker。

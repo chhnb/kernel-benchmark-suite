@@ -64,9 +64,8 @@ def main():
     cases = [row for row in manifest["cases"] if not args.case or row["case"] in args.case]
     if args.case and set(args.case) != {row["case"] for row in cases}:
         parser.error("--case contains an unknown name")
-    env = os.environ | {"FUSION_TTI_MODE": "llvm24", "FUSION_TTI_COST_KIND": "throughput"}
+    env = os.environ.copy()
     env.setdefault("DECISION_GREEDY_JOBS", "8")
-    env.pop("FUSION_TTI_OVERRIDES", None)
     llvm = args.llvm12_bin
     if llvm is None:
         if "LLVM_CONFIG" not in env:

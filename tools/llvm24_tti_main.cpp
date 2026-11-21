@@ -41,7 +41,7 @@ struct TargetCache {
   }
 };
 static int score(StringRef input,StringRef function,bool summaryOnly,bool compact,
-                 TargetCache &targets, TargetTransformInfo::TargetCostKind costKind) {
+                 TargetCache &targets) {
  try {
   LLVMContext ctx;SMDiagnostic diagnostic;
   auto m=parseIRFile(input,diagnostic,ctx);
@@ -77,7 +77,7 @@ static int score(StringRef input,StringRef function,bool summaryOnly,bool compac
   unsigned blockID=0;
   for(auto &b:*f){unsigned bid=blockID++;if(!reachable.count(&b))continue;unsigned iid=0;
    for(auto&i:b){if(isa<DbgInfoIntrinsic>(i))continue;++count;
-    auto cost=tti.getInstructionCost(&i,costKind);
+    auto cost=tti.getInstructionCost(&i, TargetTransformInfo::TCK_RecipThroughput);
     bool ttiValid=cost.isValid();
     auto v=ttiValid?cost.getValue():0;
     std::string reason;
@@ -117,14 +117,6 @@ static int score(StringRef input,StringRef function,bool summaryOnly,bool compac
  }catch(const std::exception&e){errs()<<e.what()<<"\n";return 2;}
 }
 int main(int argc,char **argv) {
-  TargetTransformInfo::TargetCostKind costKind;
-  try {
-    costKind=fusion::ttiCostKindName()=="TCK_Latency" ? TargetTransformInfo::TCK_Latency
-                                                     : TargetTransformInfo::TCK_RecipThroughput;
-  } catch (const std::invalid_argument &error) {
-    errs()<<error.what()<<"\n";
-    return 2;
-  }
   const bool fullServer=argc==3&&StringRef(argv[1])=="--serve-full";
   const bool server=fullServer||(argc==3&&StringRef(argv[1])=="--serve-summary");
   const bool summaryOnly=argc==4&&StringRef(argv[3])=="--summary-only";
@@ -134,10 +126,10 @@ int main(int argc,char **argv) {
   }
   InitializeAllTargetInfos();InitializeAllTargets();InitializeAllTargetMCs();
   TargetCache targets;
-  if(!server)return score(argv[1],argv[2],summaryOnly,false,targets,costKind);
+  if(!server)return score(argv[1],argv[2],summaryOnly,false,targets);
   std::string input;
   while(std::getline(std::cin,input)){
-    if(score(input,argv[2],!fullServer,true,targets,costKind))outs()<<"null\n";
+    if(score(input,argv[2],!fullServer,true,targets))outs()<<"null\n";
     outs().flush();
   }
   return 0;

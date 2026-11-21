@@ -33,7 +33,7 @@ class LLVM24Scorer final:public Scorer {
   using QuoteKeys = std::vector<std::vector<std::optional<std::string>>>;
   QuoteKeys quoteKeys(const llvm::Function &f) const {
     using namespace llvm;
-    if (quoteMode=="off" || ttiCostKindName()!="TCK_RecipThroughput" || f.getParent()->getTargetTriple()!="amdgcn-amd-amdhsa" ||
+    if (quoteMode=="off" || f.getParent()->getTargetTriple()!="amdgcn-amd-amdhsa" ||
         f.getFnAttribute("target-cpu").getValueAsString()!="gfx906" || f.hasMetadata()) return {};
     std::string context; raw_string_ostream stream(context);
     stream << f.getName() << ';' << f.getCallingConv() << ';' << f.getParent()->getDataLayoutStr() << ';';
@@ -362,7 +362,7 @@ public:
   // This entry point lets bounded callers avoid rebuilding unused DT/PDT/RI.
   ScoreResult evaluatePair(const Candidate &candidate,const llvm::Function &beforeIR,
       const llvm::Function &afterIR,const RoundContext &r,const Trial *trial=nullptr) const {
-    ScoreResult s;s.coverage.hardwareCosts=ttiCostKindName()=="TCK_Latency" ? "LLVM24_TTI_6be16f356d3e_latency_uncalibrated" : "LLVM24_TTI_6be16f356d3e_reciprocal_throughput_uncalibrated";
+    ScoreResult s;s.coverage.hardwareCosts="LLVM24_TTI_6be16f356d3e_reciprocal_throughput_uncalibrated";
     if(candidate.version!=r.parentVersion||candidate.function!=r.function){s.reason="round_identity_mismatch";return s;}
     try {
       if(cachedHash!=r.controlHash){auto*f=r.control->getFunction(r.function);if(!f)throw std::runtime_error("control_missing");cachedControl=query(*f);cachedHash=r.controlHash;}
