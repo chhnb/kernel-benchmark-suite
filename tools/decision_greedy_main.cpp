@@ -18,6 +18,7 @@
 #include <set>
 #include <chrono>
 #include <cstdlib>
+#include <limits>
 #include <stdexcept>
 using namespace llvm;
 static void save(const std::string&p,const json::Value&v){std::error_code e;raw_fd_ostream o(p,e);if(e)throw std::runtime_error(e.message());o<<formatv("{0:2}\n",v);}
@@ -129,11 +130,11 @@ int main(int argc,char**argv){try{
  auto timingReport=[&](){json::Object phases;for(const auto &kv:phaseMilliseconds)phases[kv.first]=json::Object{{"milliseconds",kv.second},{"calls",phaseCalls[kv.first]}};return phases;};
 
  if(argc==2&&StringRef(argv[1])=="--help"){
-   outs()<<"usage: decision-greedy INPUT FUNCTION [TOOL_ROOT] NEW_OUTPUT [--b2b-strategy anchor|darm|darm-artifact] [--b2r-strategy darm|guarded] [--darm-legacy-flags] [--domain-schedule ordered] [--ir-snapshots full|compact] [--tti-quote-cache off|audit|on]\n";
+   outs()<<"usage: decision-greedy INPUT FUNCTION [TOOL_ROOT] NEW_OUTPUT [--b2b-strategy anchor|darm|darm-artifact] [--b2r-strategy darm|guarded] [--darm-legacy-flags] [--accept-rule tti|RIR|R|RB] [--domain-schedule ordered] [--ir-snapshots full|compact] [--tti-quote-cache off|audit|on]\n";
    outs()<<"Default schedule: ordered for whole-function trials (Auto Greedy v2).\n";
    return 0;
  }
- std::string b2bStrategy="anchor", b2rStrategy="darm", quoteMode="on", snapshotMode;
+ std::string b2bStrategy="anchor", b2rStrategy="darm", quoteMode="on", snapshotMode, acceptRule="tti";
  bool legacyMergeFlags=false;
  while (argc >= 3) {
    if (StringRef(argv[argc-1]) == "--darm-legacy-flags") {
@@ -145,20 +146,26 @@ int main(int argc,char**argv){try{
    if(option == "--domain-schedule" && value == "ordered") { argc-=2;continue; }
    if (option == "--ir-snapshots" && (value == "full" || value == "compact"))
      snapshotMode = value.str();
+   else if (option == "--accept-rule" &&
+            (value == "tti" || value == "RIR" || value == "R" || value == "RB"))
+     acceptRule = value.str();
    else if (option == "--b2r-strategy" && (value == "darm" || value == "guarded"))
      b2rStrategy = value.str();
    else if (option == "--tti-quote-cache" && (value == "off" || value == "audit" || value == "on"))
      quoteMode = value.str();
    else if (option == "--b2b-strategy" && (value == "darm" || value == "darm-artifact" || value == "anchor"))
      b2bStrategy = value.str();
-   else if (option == "--ir-snapshots" || option == "--domain-schedule" || option == "--b2r-strategy" || option == "--b2b-strategy" || option == "--tti-quote-cache")
+   else if (option == "--ir-snapshots" || option == "--domain-schedule" || option == "--b2r-strategy" || option == "--b2b-strategy" || option == "--tti-quote-cache" || option == "--accept-rule")
      throw std::runtime_error("invalid value for " + option.str());
    else break;
    argc -= 2;
  }
  if(argc!=4&&argc!=5)
-   throw std::runtime_error("usage: decision-greedy INPUT FUNCTION [TOOL_ROOT] NEW_OUTPUT [--b2b-strategy anchor|darm|darm-artifact] [--b2r-strategy darm|guarded] [--darm-legacy-flags] [--domain-schedule ordered] [--ir-snapshots full|compact] [--tti-quote-cache off|audit|on]");
+   throw std::runtime_error("usage: decision-greedy INPUT FUNCTION [TOOL_ROOT] NEW_OUTPUT [--b2b-strategy anchor|darm|darm-artifact] [--b2r-strategy darm|guarded] [--darm-legacy-flags] [--accept-rule tti|RIR|R|RB] [--domain-schedule ordered] [--ir-snapshots full|compact] [--tti-quote-cache off|audit|on]");
  if(snapshotMode.empty())snapshotMode="compact";
+ const bool staticAcceptance=acceptRule!="tti";
+ if((acceptRule=="R" || acceptRule=="RB") && fusion::ttiCostKindName()!="TCK_RecipThroughput")
+   throw std::runtime_error("R and RB require throughput TTI quotes");
  const bool implicitRoot=argc==4;
  std::string root;
  const char *ttiMode=std::getenv("FUSION_TTI_MODE");
@@ -199,7 +206,9 @@ int main(int argc,char**argv){try{
    throw std::runtime_error("structural candidate engine unavailable: "+structural);
  targets.emplace_back();
  auto cost=[&](const std::string&input,const std::string&prefix){if(run({root+"/tools/run-llvm24-tti",input,fn},prefix+".json",prefix+".stderr"))throw std::runtime_error("TTI worker failed: "+prefix);auto v=read(prefix+".json");auto*o=v.getAsObject();if(!o||o->getInteger("unknown")!=Optional<int64_t>(0)||o->getString("source_revision")!=Optional<StringRef>("6be16f356d3e"))throw std::runtime_error("TTI unknown cost or revision mismatch");if(o->getString("cost_kind")!=Optional<StringRef>(fusion::ttiCostKindName()))throw std::runtime_error("TTI cost kind mismatch");auto n=o->getInteger("cost");if(!n)throw std::runtime_error("missing cost");return *n;};
- int64_t parentCost=cost(current,out+"/initial-tti"),initialCost=parentCost;unsigned commits=0,trials=0;json::Array rounds,stops;
+ int64_t parentCost=cost(current,out+"/initial-tti"),initialCost=parentCost;
+ bool parentCostKnown=true;
+ unsigned commits=0,trials=0;json::Array rounds,stops;
  const char *checkpoint=std::getenv("DECISION_CHECKPOINT_TOOL");
  auto recordResources=[&](const std::string &ir,const std::string &prefix,json::Object &record){
    if(!checkpoint)return;
@@ -212,7 +221,10 @@ int main(int argc,char**argv){try{
    }
  };
  unsigned reusedSweepSnapshots=0;
- auto report=[&](StringRef status){save(out+"/summary.json",json::Value(json::Object{{"status",status.str()},{"driver_phase_timings",timingReport()},{"elapsed_ms",std::chrono::duration<double,std::milli>(Clock::now()-started).count()},{"domain_schedule","ordered"},{"ir_snapshots",snapshotMode},{"trial_policy","whole-function"},{"scoped_trials",nullptr},{"search","per-decision greedy; best positive adjacent or structural candidate"},{"cfg_cleanup","structural"},{"structural_cleanup",structuralCleanup},{"structural_candidates_enabled",true},{"shared_arm_trials",true},{"cross_level_b2r",false},{"reused_sweep_snapshots",int64_t(reusedSweepSnapshots)},{"pipeline_version","v2"},{"candidate_jobs",structuralJobs},{"candidate_scheduler","continuous-queue"},{"persistent_trial_workers",true},{"condition_budget",conditionBudget},{"phi_fold_threshold",7},{"r2r_enumeration","darm-alignment"},{"b2b_strategy",b2bStrategy},{"b2r_strategy",b2rStrategy},{"tti_quote_cache",quoteMode},{"tti_cost_kind",fusion::ttiCostKindName()},{"uniform_loss_guard_enabled",false},{"max_uniform_loss",-1},{"initial_cost",initialCost},{"final_cost",parentCost},{"commits",int64_t(commits)},{"trials",int64_t(trials)},{"final_ir",current},{"rounds",json::Value(json::Array(rounds))},{"stops",json::Value(json::Array(stops))}}));};
+ auto report=[&](StringRef status){json::Object summary{{"status",status.str()},{"driver_phase_timings",timingReport()},{"elapsed_ms",std::chrono::duration<double,std::milli>(Clock::now()-started).count()},{"domain_schedule","ordered"},{"ir_snapshots",snapshotMode},{"trial_policy","whole-function"},{"scoped_trials",nullptr},{"search","per-decision greedy; best positive adjacent or structural candidate"},{"cfg_cleanup","structural"},{"structural_cleanup",structuralCleanup},{"structural_candidates_enabled",true},{"shared_arm_trials",true},{"cross_level_b2r",false},{"reused_sweep_snapshots",int64_t(reusedSweepSnapshots)},{"pipeline_version","v2"},{"candidate_jobs",structuralJobs},{"candidate_scheduler","continuous-queue"},{"persistent_trial_workers",true},{"condition_budget",conditionBudget},{"phi_fold_threshold",7},{"r2r_enumeration","darm-alignment"},{"b2b_strategy",b2bStrategy},{"b2r_strategy",b2rStrategy},{"tti_quote_cache",quoteMode},{"tti_cost_kind",fusion::ttiCostKindName()},{"uniform_loss_guard_enabled",false},{"max_uniform_loss",-1},{"initial_cost",initialCost},{"final_cost",parentCostKnown ? json::Value(parentCost) : json::Value(nullptr)},{"commits",int64_t(commits)},{"trials",int64_t(trials)},{"final_ir",current},{"rounds",json::Value(json::Array(rounds))},{"stops",json::Value(json::Array(stops))}};
+   if(staticAcceptance)summary["accept_rule"]=acceptRule;
+   save(out+"/summary.json",std::move(summary));
+ };
  report("running");
  std::set<std::string> attemptedStructural;
  std::set<unsigned> attemptedPreparation; // Decision indices in this parent snapshot.
@@ -309,6 +321,8 @@ int main(int argc,char**argv){try{
   decision::Decision emptyDecision;
   auto &d=target.empty()?emptyDecision:catalog[di];
   int64_t bestCost=parentCost;
+  bool bestCostKnown=parentCostKnown;
+  double bestRank=std::numeric_limits<double>::infinity();
   std::string best;
   Optional<unsigned> bestPreparedOrdinal;
   json::Array attempts, preparationRejections;
@@ -557,17 +571,39 @@ int main(int argc,char**argv){try{
           const auto rejection=score->getString("profitability_rejection");
           if(rejection&&!rejection->empty())
             attempt["reason"]=rejection->str();
-          else if(trialCost<*before&&trialCost<parentCost){
+          else if(trialCost<*before&&parentCostKnown&&trialCost<parentCost){
             attempt["eligible"]=true;
 
           }else attempt["reason"]="nonpositive_gain";
         }
       }
-      const bool canCommit = attempt.getBoolean("eligible") == Optional<bool>(true);
+      bool canCommit = attempt.getBoolean("eligible") == Optional<bool>(true);
       const auto cost = attempt.getInteger("cost");
-      if (canCommit && cost && *cost < bestCost) {
+      double rank = cost ? double(*cost) : std::numeric_limits<double>::infinity();
+      if (staticAcceptance && rc == 0 && sys::fs::exists(dir+"/fused.ll")) {
+        std::vector<std::string> command{
+            root+"/tools/accept_rule.py",current,dir+"/fused.ll",fn,
+            "--rule",acceptRule,"--tti-accepted",canCommit ? "1" : "0",
+            "--cache",out+"/accept-rule-cache"};
+        if (cost && parentCostKnown)
+          command.insert(command.end(),{"--tti-loss",std::to_string(*cost-parentCost)});
+        const auto output=dir+"/accept-rule.json";
+        const auto errors=dir+"/accept-rule.stderr";
+        if (run(std::move(command),output,errors))
+          throw std::runtime_error("static acceptance failed: "+errors);
+        const auto evidence=read(output);
+        const auto *assessment=evidence.getAsObject()->getObject("decisions")->getObject(acceptRule);
+        canCommit=assessment->getBoolean("accepted")==Optional<bool>(true);
+        attempt["eligible"]=canCommit;
+        attempt["acceptance"]=json::Object(*assessment);
+        attempt["reason"]=canCommit ? "" : assessment->getString("reason").getValueOr("static_rule_rejected").str();
+        if(const auto value=assessment->getNumber("rank"))rank=*value;
+      }
+      if (canCommit && (staticAcceptance ? rank < bestRank : cost && *cost < bestCost)) {
         // Results are visited in enumeration order, so the first tie wins.
-        bestCost = *cost;
+        bestRank = rank;
+        bestCostKnown = bool(cost);
+        if(cost)bestCost = *cost;
         best = dir;
         bestPreparedOrdinal = trial.preparedOrdinal;
       }
@@ -575,7 +611,7 @@ int main(int argc,char**argv){try{
     }
   }
   mark("read_scores_and_select");
-  json::Object record{{"decision",target},{"iteration",int64_t(iteration)},{"parent",current},{"parent_cost",parentCost},{"attempts",std::move(attempts)},{"preparation_rejections",std::move(preparationRejections)},{"selected",best}};
+  json::Object record{{"decision",target},{"iteration",int64_t(iteration)},{"parent",current},{"parent_cost",parentCostKnown ? json::Value(parentCost) : json::Value(nullptr)},{"attempts",std::move(attempts)},{"preparation_rejections",std::move(preparationRejections)},{"selected",best}};
   {
     if(!competition.owners.empty()) {
       record["competition_seed"]=competition.seed;
@@ -616,7 +652,11 @@ int main(int argc,char**argv){try{
     }
   }
   recordResources(best+"/fused.ll",best+"/resources",record);
-  record["selected_cost"]=bestCost;record["score"]=double(parentCost-bestCost)/std::max<int64_t>(parentCost,1);rounds.push_back(std::move(record));parentCost=bestCost;current=best+"/fused.ll";attemptedStructural.clear();attemptedPreparation.clear();++commits;report("running");outs()<<"commit="<<commits<<" cost="<<parentCost<<" decision="<<target<<"\n";outs().flush();mark("record_and_commit");
+  record["selected_cost"]=bestCostKnown ? json::Value(bestCost) : json::Value(nullptr);
+  record["score"]=parentCostKnown && bestCostKnown ?
+      json::Value(double(parentCost-bestCost)/std::max<int64_t>(parentCost,1)) : json::Value(nullptr);
+  if(staticAcceptance)record["selected_accept_rank"]=bestRank;
+  rounds.push_back(std::move(record));parentCost=bestCost;parentCostKnown=bestCostKnown;current=best+"/fused.ll";attemptedStructural.clear();attemptedPreparation.clear();++commits;report("running");outs()<<"commit="<<commits<<" cost="<<(parentCostKnown ? std::to_string(parentCost) : "unavailable")<<" decision="<<target<<"\n";outs().flush();mark("record_and_commit");
   if(iteration==99999u)throw std::runtime_error("round budget exceeded");
  }}
  if(strictTTI&&sys::fs::exists(strictTTIErrors)){

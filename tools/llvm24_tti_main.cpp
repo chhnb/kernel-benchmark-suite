@@ -1,4 +1,5 @@
 #include "tti_cost_kind.h"
+#include "accept_rule_ir.h"
 #include "llvm/Analysis/TargetTransformInfo.h"
 #include "llvm/Config/llvm-config.h"
 #include "llvm/IR/LLVMContext.h"
@@ -41,7 +42,8 @@ struct TargetCache {
   }
 };
 static int score(StringRef input,StringRef function,bool summaryOnly,bool compact,
-                 TargetCache &targets, TargetTransformInfo::TargetCostKind costKind) {
+                 TargetCache &targets, TargetTransformInfo::TargetCostKind costKind,
+                 bool acceptanceIR=false) {
  try {
   LLVMContext ctx;SMDiagnostic diagnostic;
   auto m=parseIRFile(input,diagnostic,ctx);
@@ -67,6 +69,7 @@ static int score(StringRef input,StringRef function,bool summaryOnly,bool compac
   }
   if(cpu.empty())throw std::runtime_error("target-cpu required; generic cost forbidden");
   auto &target=targets.get(triple,cpu,features);
+  if(acceptanceIR)return fusion::reportAcceptanceIR(function,target,*m);
   FunctionAnalysisManager fam;
   auto tti=target.getTargetIRAnalysis().run(*f,fam);
   int64_t total=0,count=0,unknown=0,zero=0;
@@ -125,15 +128,17 @@ int main(int argc,char **argv) {
     errs()<<error.what()<<"\n";
     return 2;
   }
+  const bool acceptanceIR=argc==4&&StringRef(argv[1])=="--accept-ir";
   const bool fullServer=argc==3&&StringRef(argv[1])=="--serve-full";
   const bool server=fullServer||(argc==3&&StringRef(argv[1])=="--serve-summary");
   const bool summaryOnly=argc==4&&StringRef(argv[3])=="--summary-only";
-  if(argc!=3&&!summaryOnly){
-    errs()<<"usage: llvm24-tti IR FUNCTION [--summary-only] or llvm24-tti (--serve-summary|--serve-full) FUNCTION\n";
+  if(argc!=3&&!summaryOnly&&!acceptanceIR){
+    errs()<<"usage: llvm24-tti IR FUNCTION [--summary-only] or llvm24-tti (--serve-summary|--serve-full) FUNCTION or llvm24-tti --accept-ir IR FUNCTION\n";
     return 2;
   }
   InitializeAllTargetInfos();InitializeAllTargets();InitializeAllTargetMCs();
   TargetCache targets;
+  if(acceptanceIR)return score(argv[2],argv[3],true,false,targets,costKind,true);
   if(!server)return score(argv[1],argv[2],summaryOnly,false,targets,costKind);
   std::string input;
   while(std::getline(std::cin,input)){
