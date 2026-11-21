@@ -2,6 +2,8 @@
 
 #include "llvm/ADT/BitVector.h"
 #include "llvm/ADT/DenseMap.h"
+#include "llvm/ADT/SmallPtrSet.h"
+#include "llvm/IR/Module.h"
 #include "llvm/Analysis/LoopInfo.h"
 #include "llvm/Analysis/ScalarEvolution.h"
 #include "llvm/Analysis/UniformityAnalysis.h"
@@ -24,6 +26,73 @@
 #include <vector>
 
 namespace fusion {
+
+inline llvm::json::Object reportIRResidency(const llvm::Function &kernel) {
+  using namespace llvm;
+  const auto &module = *kernel.getParent();
+  const auto cpu = kernel.getFnAttribute("target-cpu").getValueAsString();
+  unsigned workgroup = 0;
+  StringRef source = "missing";
+  if (auto *size = kernel.getMetadata("reqd_work_group_size")) {
+    unsigned product = 1;
+    if (size->getNumOperands() == 3) {
+      for (const auto &operand : size->operands()) {
+        auto *dimension = mdconst::dyn_extract<ConstantInt>(operand.get());
+        const auto value = dimension ? dimension->getValue().getLimitedValue(1025) : 0;
+        if (!value || product > 1024 / value) {
+          product = 0;
+          break;
+        }
+        product *= value;
+      }
+      if (product) {
+        workgroup = product;
+        source = "reqd_work_group_size";
+      }
+    }
+  }
+  if (!workgroup) {
+    const auto range = kernel.getFnAttribute("amdgpu-flat-work-group-size").getValueAsString();
+    const auto bounds = range.split(',');
+    unsigned lower = 0, upper = 0;
+    if (!bounds.first.trim().getAsInteger(10, lower) &&
+        !bounds.second.trim().getAsInteger(10, upper) &&
+        lower > 0 && lower <= upper && upper <= 1024) {
+      workgroup = upper;
+      source = "amdgpu-flat-work-group-size";
+    }
+  }
+
+  // Follow operand references and reachable function bodies. Unused LDS
+  // from a different kernel in the same module does not consume this CU.
+  SmallPtrSet<const Value *, 32> visited;
+  SmallVector<const Value *, 32> pending{&kernel};
+  uint64_t bytes = 0;
+  while (!pending.empty()) {
+    const auto *value = pending.pop_back_val();
+    if (!visited.insert(value).second)
+      continue;
+    if (auto *global = dyn_cast<GlobalVariable>(value)) {
+      if (global->getAddressSpace() == 3 && global->hasInitializer() &&
+          global->getValueType()->isSized()) {
+        const auto size = module.getDataLayout().getTypeAllocSize(global->getValueType());
+        if (!size.isScalable())
+          bytes += size.getFixedValue();
+      }
+    }
+    if (auto *function = dyn_cast<Function>(value))
+      for (const auto &block : *function)
+        for (const auto &instruction : block)
+          pending.push_back(&instruction);
+    if (auto *user = dyn_cast<User>(value))
+      for (const auto &operand : user->operands())
+        pending.push_back(operand.get());
+  }
+  return json::Object{{"gfx906", module.getTargetTriple().isAMDGCN() && cpu == "gfx906"},
+          {"static_lds_bytes", int64_t(bytes)},
+          {"workgroup_size", workgroup ? json::Value(workgroup) : json::Value(nullptr)},
+          {"workgroup_source", source}};
+}
 
 inline int reportAcceptanceIR(llvm::StringRef function,
                               llvm::TargetMachine &target,
@@ -203,7 +272,8 @@ inline int reportAcceptanceIR(llvm::StringRef function,
       {"lds", counts[0]}, {"global", counts[1]}, {"divergent", counts[2]},
       {"uniform", counts[3]}, {"divergent_branch", counts[4]},
       {"work", work}, {"vgpr_peak", int64_t(pressure)},
-      {"trip_counts", std::move(tripCounts)}
+      {"trip_counts", std::move(tripCounts)},
+      {"residency", reportIRResidency(*f)}
   }));
   return 0;
 }

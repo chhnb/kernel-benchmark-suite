@@ -50,7 +50,8 @@ with tempfile.TemporaryDirectory() as directory:
     ))
     decisions = report["decisions"]
     assert not decisions["tti"]["accepted"]
-    assert decisions["RIR"]["accepted"], report
+    assert decisions["RIR"]["accepted"] and decisions["RIRv2"]["accepted"], report
+    assert decisions["RIRv2"]["parent_occupancy"] == decisions["RIRv2"]["candidate_occupancy"] == 10
     assert decisions["R"]["reason"] == decisions["RB"]["reason"] == "throughput_prefilter"
     assert "machine" not in report
     for state in report["ir"].values():

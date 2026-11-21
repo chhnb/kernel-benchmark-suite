@@ -305,7 +305,7 @@ def machine_metrics(binary, listing, function, trips):
 
 def analyse(path, function, machine, cache):
     digest = hashlib.sha256(path.read_bytes() + b"\0" + function.encode()).hexdigest()
-    key = cache / f"v{RULE_VERSION}-{digest}-{'machine' if machine else 'ir'}.json"
+    key = cache / f"v{RULE_VERSION}-residency-{digest}-{'machine' if machine else 'ir'}.json"
     if key.exists():
         return json.loads(key.read_text()) | {"cache_hit": True, "compile_seconds": 0}
     llvm_config = os.environ.get("LLVM_CONFIG", ROOT / "build/llvm12-jammy/usr/bin/llvm-config-12")
@@ -339,12 +339,35 @@ def analyse(path, function, machine, cache):
     return result | {"cache_hit": False, "compile_seconds": compile_seconds}
 
 
+def ir_occupancy(metrics):
+    info = metrics["residency"]
+    if not info["gfx906"]:
+        raise Unsupported("RIRv2 requires gfx906")
+    # AMD Vega 7nm ISA 70655 §3.6.4–5: VGPR allocation is in four
+    # dwords; LDS allocation is in 128 dwords (512 bytes).
+    # https://docs.amd.com/api/khub/documents/QCer_iui4EP~tr~Xlf4VGA/content
+    vgprs = max(VGPR_GRANULE, rounded(metrics["vgpr_peak"], VGPR_GRANULE))
+    vgpr_waves = VGPRS_PER_SIMD // vgprs
+    lds = rounded(info["static_lds_bytes"], LDS_GRANULE)
+    workgroup = info["workgroup_size"]
+    lds_waves = (LDS_BYTES_PER_CU // lds * math.ceil(workgroup / WAVE_SIZE) /
+                 SIMDS_PER_CU) if lds and workgroup else WAVES_PER_SIMD
+    return min(WAVES_PER_SIMD, vgpr_waves, lds_waves)
+
+
 def verdict(parent, candidate, rule):
     if rule == "RIR":
         old, new = parent["ir"], candidate["ir"]
         checks = {"weighted_work": new["work"] < old["work"],
                   "vgpr_peak": new["vgpr_peak"] <= old["vgpr_peak"]}
         rank = new["work"]
+    elif rule == "RIRv2":
+        old, new = parent["ir"], candidate["ir"]
+        parent_occ, candidate_occ = ir_occupancy(old), ir_occupancy(new)
+        checks = {"weighted_work": new["work"] < old["work"],
+                  "occupancy": candidate_occ >= parent_occ}
+        return {"accepted": all(checks.values()), "checks": checks, "rank": new["work"],
+                "parent_occupancy": parent_occ, "candidate_occupancy": candidate_occ}
     else:
         old, new = parent["machine"], candidate["machine"]
         checks = {slot: new[slot] <= old[slot]
@@ -370,7 +393,7 @@ def main():
     parser.add_argument("parent", type=Path)
     parser.add_argument("candidate", type=Path)
     parser.add_argument("function")
-    parser.add_argument("--rule", choices=("tti", "RIR", "R", "RB", "all"), required=True)
+    parser.add_argument("--rule", choices=("tti", "RIR", "RIRv2", "R", "RB", "all"), required=True)
     parser.add_argument("--tti-loss", type=float)
     parser.add_argument("--tti-accepted", type=int, choices=(0, 1), required=True)
     parser.add_argument("--cache", type=Path, required=True)
@@ -381,7 +404,7 @@ def main():
     report = {"version": RULE_VERSION, "throughput_loss": args.tti_loss,
               "decisions": {"tti": {"accepted": bool(args.tti_accepted)}}}
     states = {}
-    for rule in (("RIR", "R", "RB") if args.rule == "all" else (args.rule,)):
+    for rule in (("RIR", "RIRv2", "R", "RB") if args.rule == "all" else (args.rule,)):
         if rule == "tti":
             continue
         machine = rule in ("R", "RB")

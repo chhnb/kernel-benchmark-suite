@@ -40,3 +40,15 @@
 ## 冻结和后续评估
 
 本提交冻结版本 1 的四条判定、所有阈值、循环与硬件系数。提交后才运行 PCM32 第 10 步 R2R 的静态合理性检查。它与 NQU64、TPACF、此前区域审计 26 次、HLLD R2B #3 和 Landau R2R #17 一起按已见样本标记。后续若需要调整规则，使用新版本并按原版本保留已收集的评估。前瞻抽样和 GPU 测量待确认后执行。
+
+## RIRv2 补充预注册
+
+RIRv2 在 PCM32 第 10 步合理性检查之后、3B 样本收集之前加入。RIR v1 的 VGPR 峰值门槛没有考虑静态 LDS 和实际驻留限制。PCM32 第 10 步继续标为已见。v1 的计数、门槛和排序沿用原定义。
+
+RIRv2 使用同一份 O3 IR、热循环加权工作量及 SSA 活跃 VGPR 估算。加权工作量必须严格下降，同时估算 occupancy 不得下降。gfx906 的每 SIMD 驻留 wave 数取以下三项最小值，允许 LDS 限制产生小数。SGPR 不参与估算。
+
+- 架构上限为 10 wave/SIMD。
+- VGPR 上限为每 SIMD 的 256 个 VGPR 除以向上取整到 4 个一组的峰值 VGPR，再向下取整。至少计一个分配组。
+- LDS 上限按目标 kernel 及其直接可追踪调用引用到的已定义 AS3 全局变量，累计 DataLayout 分配大小，按 512 字节向上取整。以 64 KiB 除以 LDS 分配量并向下取整得到每 CU 的工作组数，乘每组 wave 数（线程数除以 64 向上取整），再除以四个 SIMD。工作组尺寸优先取 `reqd_work_group_size` 的三维乘积，其次取 `amdgpu-flat-work-group-size` 的上界。尺寸缺失时标记 `missing` 并采用 LDS 不限的估算。静态 LDS 为零也不限制驻留。
+
+非 gfx906 的 RIRv2 返回不支持。资源规则见 [AMD Vega 7nm ISA 70655 §3.6.4–5](https://docs.amd.com/api/khub/documents/QCer_iui4EP~tr~Xlf4VGA/content)。

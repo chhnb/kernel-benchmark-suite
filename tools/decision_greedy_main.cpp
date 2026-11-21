@@ -130,7 +130,7 @@ int main(int argc,char**argv){try{
  auto timingReport=[&](){json::Object phases;for(const auto &kv:phaseMilliseconds)phases[kv.first]=json::Object{{"milliseconds",kv.second},{"calls",phaseCalls[kv.first]}};return phases;};
 
  if(argc==2&&StringRef(argv[1])=="--help"){
-   outs()<<"usage: decision-greedy INPUT FUNCTION [TOOL_ROOT] NEW_OUTPUT [--b2b-strategy anchor|darm|darm-artifact] [--b2r-strategy darm|guarded] [--darm-legacy-flags] [--accept-rule tti|RIR|R|RB] [--domain-schedule ordered] [--ir-snapshots full|compact] [--tti-quote-cache off|audit|on]\n";
+   outs()<<"usage: decision-greedy INPUT FUNCTION [TOOL_ROOT] NEW_OUTPUT [--b2b-strategy anchor|darm|darm-artifact] [--b2r-strategy darm|guarded] [--darm-legacy-flags] [--accept-rule tti|RIR|RIRv2|R|RB] [--domain-schedule ordered] [--ir-snapshots full|compact] [--tti-quote-cache off|audit|on]\n";
    outs()<<"Default schedule: ordered for whole-function trials (Auto Greedy v2).\n";
    return 0;
  }
@@ -147,7 +147,7 @@ int main(int argc,char**argv){try{
    if (option == "--ir-snapshots" && (value == "full" || value == "compact"))
      snapshotMode = value.str();
    else if (option == "--accept-rule" &&
-            (value == "tti" || value == "RIR" || value == "R" || value == "RB"))
+            (value == "tti" || value == "RIR" || value == "RIRv2" || value == "R" || value == "RB"))
      acceptRule = value.str();
    else if (option == "--b2r-strategy" && (value == "darm" || value == "guarded"))
      b2rStrategy = value.str();
@@ -161,7 +161,7 @@ int main(int argc,char**argv){try{
    argc -= 2;
  }
  if(argc!=4&&argc!=5)
-   throw std::runtime_error("usage: decision-greedy INPUT FUNCTION [TOOL_ROOT] NEW_OUTPUT [--b2b-strategy anchor|darm|darm-artifact] [--b2r-strategy darm|guarded] [--darm-legacy-flags] [--accept-rule tti|RIR|R|RB] [--domain-schedule ordered] [--ir-snapshots full|compact] [--tti-quote-cache off|audit|on]");
+   throw std::runtime_error("usage: decision-greedy INPUT FUNCTION [TOOL_ROOT] NEW_OUTPUT [--b2b-strategy anchor|darm|darm-artifact] [--b2r-strategy darm|guarded] [--darm-legacy-flags] [--accept-rule tti|RIR|RIRv2|R|RB] [--domain-schedule ordered] [--ir-snapshots full|compact] [--tti-quote-cache off|audit|on]");
  if(snapshotMode.empty())snapshotMode="compact";
  const bool staticAcceptance=acceptRule!="tti";
  if((acceptRule=="R" || acceptRule=="RB") && fusion::ttiCostKindName()!="TCK_RecipThroughput")
