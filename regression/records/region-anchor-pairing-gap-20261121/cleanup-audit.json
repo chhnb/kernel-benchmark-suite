@@ -1,0 +1,432 @@
+{
+  "audit-native": [
+    {
+      "case": "MapAiry",
+      "trial": "trial-70",
+      "hsaco_equal": true,
+      "cleanup_ir_equal": true,
+      "sequence_equal": true,
+      "sequence_equal_after_phi_order": true
+    },
+    {
+      "case": "MapAiry",
+      "trial": "trial-96",
+      "hsaco_equal": true,
+      "cleanup_ir_equal": true,
+      "sequence_equal": true,
+      "sequence_equal_after_phi_order": true
+    },
+    {
+      "case": "MapAiry",
+      "trial": "trial-108",
+      "hsaco_equal": true,
+      "cleanup_ir_equal": true,
+      "sequence_equal": true,
+      "sequence_equal_after_phi_order": true
+    },
+    {
+      "case": "MapAiry",
+      "trial": "trial-133",
+      "hsaco_equal": true,
+      "cleanup_ir_equal": true,
+      "sequence_equal": true,
+      "sequence_equal_after_phi_order": true
+    },
+    {
+      "case": "MapAiry",
+      "trial": "trial-145",
+      "hsaco_equal": true,
+      "cleanup_ir_equal": true,
+      "sequence_equal": false,
+      "sequence_equal_after_phi_order": true
+    },
+    {
+      "case": "MapAiry",
+      "trial": "trial-157",
+      "hsaco_equal": true,
+      "cleanup_ir_equal": true,
+      "sequence_equal": false,
+      "sequence_equal_after_phi_order": true
+    },
+    {
+      "case": "MapAiry",
+      "trial": "trial-169",
+      "hsaco_equal": true,
+      "cleanup_ir_equal": true,
+      "sequence_equal": true,
+      "sequence_equal_after_phi_order": true
+    },
+    {
+      "case": "MapAiry",
+      "trial": "trial-181",
+      "hsaco_equal": true,
+      "cleanup_ir_equal": true,
+      "sequence_equal": false,
+      "sequence_equal_after_phi_order": true
+    },
+    {
+      "case": "MapAiry",
+      "trial": "trial-193",
+      "hsaco_equal": true,
+      "cleanup_ir_equal": true,
+      "sequence_equal": false,
+      "sequence_equal_after_phi_order": true
+    },
+    {
+      "case": "MapAiry",
+      "trial": "trial-228",
+      "hsaco_equal": true,
+      "cleanup_ir_equal": true,
+      "sequence_equal": true,
+      "sequence_equal_after_phi_order": true
+    },
+    {
+      "case": "MapAiry",
+      "trial": "trial-281",
+      "hsaco_equal": true,
+      "cleanup_ir_equal": true,
+      "sequence_equal": true,
+      "sequence_equal_after_phi_order": true
+    },
+    {
+      "case": "MapAiry",
+      "trial": "trial-348",
+      "hsaco_equal": true,
+      "cleanup_ir_equal": true,
+      "sequence_equal": true,
+      "sequence_equal_after_phi_order": true
+    },
+    {
+      "case": "tigre",
+      "trial": "trial-0",
+      "hsaco_equal": true,
+      "cleanup_ir_equal": true,
+      "sequence_equal": true,
+      "sequence_equal_after_phi_order": true
+    },
+    {
+      "case": "tigre",
+      "trial": "trial-3",
+      "hsaco_equal": true,
+      "cleanup_ir_equal": true,
+      "sequence_equal": true,
+      "sequence_equal_after_phi_order": true
+    },
+    {
+      "case": "tigre",
+      "trial": "trial-6",
+      "hsaco_equal": true,
+      "cleanup_ir_equal": true,
+      "sequence_equal": true,
+      "sequence_equal_after_phi_order": true
+    },
+    {
+      "case": "HLLD",
+      "trial": "trial-0",
+      "hsaco_equal": true,
+      "cleanup_ir_equal": true,
+      "sequence_equal": true,
+      "sequence_equal_after_phi_order": true
+    },
+    {
+      "case": "HLLD",
+      "trial": "trial-21",
+      "hsaco_equal": true,
+      "cleanup_ir_equal": true,
+      "sequence_equal": true,
+      "sequence_equal_after_phi_order": true
+    },
+    {
+      "case": "HLLD",
+      "trial": "trial-28",
+      "hsaco_equal": true,
+      "cleanup_ir_equal": true,
+      "sequence_equal": true,
+      "sequence_equal_after_phi_order": true
+    },
+    {
+      "case": "NQU64",
+      "trial": "trial-0",
+      "hsaco_equal": true,
+      "cleanup_ir_equal": true,
+      "sequence_equal": true,
+      "sequence_equal_after_phi_order": true
+    },
+    {
+      "case": "TPACF",
+      "trial": "trial-28",
+      "hsaco_equal": true,
+      "cleanup_ir_equal": true,
+      "sequence_equal": false,
+      "sequence_equal_after_phi_order": true
+    },
+    {
+      "case": "TPACF",
+      "trial": "trial-2902",
+      "hsaco_equal": true,
+      "cleanup_ir_equal": true,
+      "sequence_equal": false,
+      "sequence_equal_after_phi_order": true
+    },
+    {
+      "case": "Landau",
+      "trial": "trial-152",
+      "hsaco_equal": true,
+      "cleanup_ir_equal": true,
+      "sequence_equal": true,
+      "sequence_equal_after_phi_order": true
+    },
+    {
+      "case": "Landau",
+      "trial": "trial-191",
+      "hsaco_equal": true,
+      "cleanup_ir_equal": true,
+      "sequence_equal": true,
+      "sequence_equal_after_phi_order": true
+    },
+    {
+      "case": "Landau",
+      "trial": "trial-223",
+      "hsaco_equal": true,
+      "cleanup_ir_equal": true,
+      "sequence_equal": true,
+      "sequence_equal_after_phi_order": true
+    },
+    {
+      "case": "Landau",
+      "trial": "trial-241",
+      "hsaco_equal": true,
+      "cleanup_ir_equal": true,
+      "sequence_equal": true,
+      "sequence_equal_after_phi_order": true
+    },
+    {
+      "case": "Landau",
+      "trial": "trial-322",
+      "hsaco_equal": true,
+      "cleanup_ir_equal": true,
+      "sequence_equal": true,
+      "sequence_equal_after_phi_order": true
+    }
+  ],
+  "audit-sw": [
+    {
+      "case": "MapAiry",
+      "trial": "trial-70",
+      "hsaco_equal": true,
+      "cleanup_ir_equal": true,
+      "sequence_equal": true,
+      "sequence_equal_after_phi_order": true
+    },
+    {
+      "case": "MapAiry",
+      "trial": "trial-96",
+      "hsaco_equal": true,
+      "cleanup_ir_equal": true,
+      "sequence_equal": true,
+      "sequence_equal_after_phi_order": true
+    },
+    {
+      "case": "MapAiry",
+      "trial": "trial-108",
+      "hsaco_equal": true,
+      "cleanup_ir_equal": true,
+      "sequence_equal": true,
+      "sequence_equal_after_phi_order": true
+    },
+    {
+      "case": "MapAiry",
+      "trial": "trial-133",
+      "hsaco_equal": true,
+      "cleanup_ir_equal": true,
+      "sequence_equal": false,
+      "sequence_equal_after_phi_order": true
+    },
+    {
+      "case": "MapAiry",
+      "trial": "trial-145",
+      "hsaco_equal": true,
+      "cleanup_ir_equal": true,
+      "sequence_equal": false,
+      "sequence_equal_after_phi_order": true
+    },
+    {
+      "case": "MapAiry",
+      "trial": "trial-157",
+      "hsaco_equal": true,
+      "cleanup_ir_equal": true,
+      "sequence_equal": true,
+      "sequence_equal_after_phi_order": true
+    },
+    {
+      "case": "MapAiry",
+      "trial": "trial-169",
+      "hsaco_equal": true,
+      "cleanup_ir_equal": true,
+      "sequence_equal": true,
+      "sequence_equal_after_phi_order": true
+    },
+    {
+      "case": "MapAiry",
+      "trial": "trial-181",
+      "hsaco_equal": true,
+      "cleanup_ir_equal": true,
+      "sequence_equal": true,
+      "sequence_equal_after_phi_order": true
+    },
+    {
+      "case": "MapAiry",
+      "trial": "trial-193",
+      "hsaco_equal": true,
+      "cleanup_ir_equal": true,
+      "sequence_equal": true,
+      "sequence_equal_after_phi_order": true
+    },
+    {
+      "case": "MapAiry",
+      "trial": "trial-228",
+      "hsaco_equal": true,
+      "cleanup_ir_equal": true,
+      "sequence_equal": true,
+      "sequence_equal_after_phi_order": true
+    },
+    {
+      "case": "MapAiry",
+      "trial": "trial-281",
+      "hsaco_equal": true,
+      "cleanup_ir_equal": true,
+      "sequence_equal": true,
+      "sequence_equal_after_phi_order": true
+    },
+    {
+      "case": "MapAiry",
+      "trial": "trial-348",
+      "hsaco_equal": true,
+      "cleanup_ir_equal": true,
+      "sequence_equal": true,
+      "sequence_equal_after_phi_order": true
+    },
+    {
+      "case": "tigre",
+      "trial": "trial-0",
+      "hsaco_equal": true,
+      "cleanup_ir_equal": true,
+      "sequence_equal": true,
+      "sequence_equal_after_phi_order": true
+    },
+    {
+      "case": "tigre",
+      "trial": "trial-3",
+      "hsaco_equal": true,
+      "cleanup_ir_equal": true,
+      "sequence_equal": true,
+      "sequence_equal_after_phi_order": true
+    },
+    {
+      "case": "tigre",
+      "trial": "trial-6",
+      "hsaco_equal": true,
+      "cleanup_ir_equal": true,
+      "sequence_equal": true,
+      "sequence_equal_after_phi_order": true
+    },
+    {
+      "case": "HLLD",
+      "trial": "trial-0",
+      "hsaco_equal": true,
+      "cleanup_ir_equal": true,
+      "sequence_equal": true,
+      "sequence_equal_after_phi_order": true
+    },
+    {
+      "case": "HLLD",
+      "trial": "trial-21",
+      "hsaco_equal": true,
+      "cleanup_ir_equal": true,
+      "sequence_equal": true,
+      "sequence_equal_after_phi_order": true
+    },
+    {
+      "case": "HLLD",
+      "trial": "trial-28",
+      "hsaco_equal": true,
+      "cleanup_ir_equal": true,
+      "sequence_equal": true,
+      "sequence_equal_after_phi_order": true
+    },
+    {
+      "case": "NQU64",
+      "trial": "trial-0",
+      "hsaco_equal": true,
+      "cleanup_ir_equal": true,
+      "sequence_equal": true,
+      "sequence_equal_after_phi_order": true
+    },
+    {
+      "case": "TPACF",
+      "trial": "trial-28",
+      "hsaco_equal": true,
+      "cleanup_ir_equal": true,
+      "sequence_equal": false,
+      "sequence_equal_after_phi_order": true
+    },
+    {
+      "case": "TPACF",
+      "trial": "trial-2902",
+      "hsaco_equal": true,
+      "cleanup_ir_equal": true,
+      "sequence_equal": true,
+      "sequence_equal_after_phi_order": true
+    },
+    {
+      "case": "Landau",
+      "trial": "trial-152",
+      "hsaco_equal": true,
+      "cleanup_ir_equal": true,
+      "sequence_equal": true,
+      "sequence_equal_after_phi_order": true
+    },
+    {
+      "case": "Landau",
+      "trial": "trial-191",
+      "hsaco_equal": true,
+      "cleanup_ir_equal": true,
+      "sequence_equal": true,
+      "sequence_equal_after_phi_order": true
+    },
+    {
+      "case": "Landau",
+      "trial": "trial-223",
+      "hsaco_equal": true,
+      "cleanup_ir_equal": true,
+      "sequence_equal": true,
+      "sequence_equal_after_phi_order": true
+    },
+    {
+      "case": "Landau",
+      "trial": "trial-241",
+      "hsaco_equal": true,
+      "cleanup_ir_equal": true,
+      "sequence_equal": true,
+      "sequence_equal_after_phi_order": true
+    },
+    {
+      "case": "Landau",
+      "trial": "trial-322",
+      "hsaco_equal": true,
+      "cleanup_ir_equal": true,
+      "sequence_equal": true,
+      "sequence_equal_after_phi_order": true
+    }
+  ],
+  "e3-sw": [
+    {
+      "case": "PCM32",
+      "trial": "exact-10",
+      "hsaco_equal": true,
+      "cleanup_ir_equal": true,
+      "sequence_equal": true,
+      "sequence_equal_after_phi_order": true
+    }
+  ]
+}
