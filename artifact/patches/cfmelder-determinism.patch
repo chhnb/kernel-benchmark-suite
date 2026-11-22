@@ -1,0 +1,113 @@
+CFMelder traversal order
+
+- RegionMelder aligns mapped block pairs in function order. DenseMap bucket order
+  otherwise changes the order in which aligned blocks are emitted and named.
+- RegionReplicator keeps discovery order for CFG work and for the mapping used
+  to attach edges. The worklist used to switch to pointer order above its inline
+  capacity, and the mapping affected predecessor use-list order and concretization.
+- RegionReplicator processes PHI work in insertion order, including above the
+  inline capacity. It visits dominance-frontier blocks in function order instead
+  of walking the pointer-ordered set, preserving PHI placement and SSA rules.
+
+--- a/tools/darm_artifact/RegionReplicator.h
++++ b/tools/darm_artifact/RegionReplicator.h
+@@ -2,6 +2,7 @@
+ #define LLVM_LIB_TRANSFORMS_REGION_REPLICATOR_H
+ 
+ #include "RegionAnalyzer.h"
++#include "llvm/ADT/MapVector.h"
+ 
+ namespace llvm {
+ 
+@@ -10,7 +11,7 @@
+   RegionAnalyzer &MA;
+   bool IsExpandingLeft;
+   // mapping from orig to replicated basic blocks
+-  DenseMap<BasicBlock *, BasicBlock *> Mapping;
++  MapVector<BasicBlock *, BasicBlock *> Mapping;
+ 
+   BasicBlock *replicateCFG(BasicBlock *ExpandedBlock, BasicBlock *MatchedBlock,
+                            Region *RegionToReplicate);
+--- a/tools/darm_artifact/RegionReplicator.cpp
++++ b/tools/darm_artifact/RegionReplicator.cpp
+@@ -1,4 +1,5 @@
+ #include "RegionReplicator.h"
++#include "llvm/ADT/SetVector.h"
+ #include "llvm/ADT/iterator_range.h"
+ #include "llvm/IR/CFG.h"
+ #include "llvm/IR/Constants.h"
+@@ -53,7 +54,7 @@
+   // DenseMap<BasicBlock *, BasicBlock *> Mapping;
+ 
+   // traverse the region to replicate and make new basic blocks
+-  SmallSet<BasicBlock *, 32> WorkList;
++  SmallSetVector<BasicBlock *, 32> WorkList;
+   SmallVector<BasicBlock *, 32> Visited;
+   WorkList.insert(RegionToReplicate->getEntry());
+ 
+@@ -63,7 +64,7 @@
+ 
+   while (!WorkList.empty()) {
+     auto Curr = *WorkList.begin();
+-    WorkList.erase(Curr);
++    WorkList.erase(WorkList.begin());
+     BasicBlock *ReplicatedBB = nullptr;
+     Visited.push_back(Curr);
+     // if the visited block is the block we want to match eventually
+@@ -200,23 +201,21 @@
+   DF.analyze(*MA.getDT());
+ 
+   // get uses outside the expanded block
+-  SmallSet<Instruction *, 32> InstrsWithOutsideUses;
++  SmallSetVector<Instruction *, 32> WorkList;
+ 
+   for (auto &I : *ExpandedBlock) {
+     for (Use &Use : I.uses()) {
+       Instruction *User = cast<Instruction>(Use.getUser());
+       if (User->getParent() != ExpandedBlock) {
+-        InstrsWithOutsideUses.insert(&I);
++        WorkList.insert(&I);
+         break;
+       }
+     }
+   }
+-
+-  SmallSet<Instruction *, 32> WorkList(InstrsWithOutsideUses);
+ 
+   while (!WorkList.empty()) {
+     Instruction *I = *WorkList.begin();
+-    WorkList.erase(I);
++    WorkList.erase(WorkList.begin());
+ 
+     // add phi nodes in DF for this instruction
+     auto It = DF.find(I->getParent());
+@@ -224,7 +223,10 @@
+     assert(It != DF.end() &&
+            "Exapanded block does not have a DF within the replicated region!");
+ 
+-    for (auto *BB : It->second) {
++    for (auto &Block : *ExpandedBlock->getParent()) {
++      BasicBlock *BB = &Block;
++      if (!It->second.count(BB))
++        continue;
+       // add a phi node only if DF is within the replicated region
+       if (ReplicatedRegion->contains(BB) || ReplicatedRegion->getExit() == BB) {
+         PHINode *NewPHI =
+--- a/tools/darm_artifact/RegionMelder.cpp
++++ b/tools/darm_artifact/RegionMelder.cpp
+@@ -58,11 +58,10 @@
+ 
+ void RegionMelder::computeRegionSeqAlignment(
+     DenseMap<BasicBlock *, BasicBlock *> BbMap) {
+-  for (auto It = BbMap.begin(); It != BbMap.end(); It++) {
+-    BasicBlock *LBB = It->first;
+-    BasicBlock *RBB = It->second;
+-
+-    RegionInstrAlignement.concat(getAlignmentOfBlocks(LBB, RBB));
++  for (auto &Block : *MA.getParentFunction()) {
++    auto It = BbMap.find(&Block);
++    if (It != BbMap.end())
++      RegionInstrAlignement.concat(getAlignmentOfBlocks(&Block, It->second));
+   }
+   if (DumpSeqAlignStats) {
+     InstrMeldingProfitabilityModel ScoringFunc;

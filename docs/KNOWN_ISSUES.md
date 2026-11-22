@@ -93,6 +93,18 @@ SRAD32 的冻结件和诊断构建见[重建核验记录](../regression/records/
 - MS32 的发布版／原版 Auto DARM 耗时比为 1.020，配对 bootstrap 95% 区间为 [1.010, 1.027]。区间跨过 1.02。 [最终复验记录](../regression/records/final-rerun-20261121.md#gpu-复验)
 - vLLM 的 Auto DARM 对照使用无区域复制版本。上游固定阈值 0.2 的原版命令在首个区域复制处超时，360 秒内未产出完整 IR。 [最终复验记录](../regression/records/final-rerun-20261121.md#gpu-复验)
 
+## 上游 DARM 的非确定性
+
+上游 CFMelder 排查出五处依赖地址的遍历。实测的首个分歧来自块对齐的 `DenseMap` 顺序和复制 CFG 的接边顺序。其余三处是建块工作列表、PHI 工作列表和支配边界，在本批中未触发。artifact 的补丁按插入顺序或函数内块次序遍历，保持上游源码原样。
+
+100 次正常 ASLR 重放中，补丁对象在 TPACF 出现 9 次、LUD8 出现 100 次，在 MapAiry、HLLD、Landau 各出现 0 次。11 个通过 A/A 的冻结输入完成同批全输出校验，10 个输入的补丁版位于已测原版耗时范围内。HLLD 补丁版中位数 95.360 μs，快于最快已测原版的 95.680 μs，对 DARM 有利。SRAD-stage2/1024 的 HIP Graph A/A 比值为 1.00134，跨度 3.45%，未可靠计时。该输入已从 artifact 计时清单移除，SRAD-stage2/256 与历史回执继续保留。
+
+artifact 用补丁版对象做确定性重建。对外 Anchor / DARM 一律使用相对最快已测原版的时比，记录同时列出相对补丁版的时比。冻结发布历史继续保留。 [14a 扩样、时比与 manifest](../regression/records/artifact-14a-20261122.md)
+
+## 上游 branch fusion 在 vLLM 上生成非法 IR
+
+原版 BF 在 vLLM 的 `cache_eval` 生成 verifier 拒绝的 IR，涉及 PHI 前驱数及操作数支配性。原版静态工具、pristine 插件及仅改变遍历顺序的插件均复现。artifact 清单登记为不可用，`kbs build --variant bf --case vllm` 输出原因并退出 3，全量验收列为带脚注的例外。
+
 ## 已修复：DARM R2B 试融的非确定性
 
 HLLD 的 `B9:B22:B12`、`B9:B21:B12` 和 `B9:B23:B12` 在同一父 IR 上曾出现两种 cleanup 后 IR，throughput TTI 相差 1。三个候选均未获选。提交 `b2008bd` 修复了普查发现的三处地址相关顺序。
