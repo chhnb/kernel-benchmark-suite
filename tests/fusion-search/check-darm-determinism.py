@@ -20,7 +20,7 @@ with tempfile.TemporaryDirectory() as directory:
             search, "--ir", fixture,
             "--function", "_ZN3mhd26Calculate_HLLD_Fluxes_CUDAEPKdS1_S1_Pdidii",
             "--split", "B9", "--left", "B22", "--right", "B12",
-            "--anchor-wave-shape", "128,1,1", "--tti-worker", worker,
+            "--tti-worker", worker,
             "--debug-dir", "structural", "--out", "fused.ll",
         ], cwd=run, check=True, stdout=subprocess.DEVNULL)
         trial = run / "structural/trial-0"

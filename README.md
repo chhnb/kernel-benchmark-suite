@@ -11,15 +11,15 @@
 处理一棵指定 decision 树时，同时评估相邻 arm 的规范化候选和当前 split 的直接结构候选。结构扫尾处理其他 split。如果不同域的候选争用同一个基本块，且满足当前同后继和共同指令数量的触发条件，就对相关域联合评分。
 
 - B2B 默认用 Anchor 同时枚举 fork、线性和守护布局。复现旧默认 D 时请构建 `c7dded07`。B2R、R2B 和 R2R 使用 DARM，B2B 仍可显式选择 DARM 或原版对照。
-- Anchor B2B 布局与 DARM R2R 受限推测按分支条件来源判定。线程号条件在没有确切形状时按普通 throughput TTI 乐观评估。可选的 `--anchor-wave-shape X,Y,Z` 或 IR 中确切的 `reqd_work_group_size` 会启用逐 wave 分析。逐 wave 为 mixed 或有形状仍无法静态求值时会使用一致代价 gate，因此提供形状可能更保守。形状上界不足以启用精确分析。数据相关条件始终使用双侧一致代价 gate，只依赖 workgroup 内一致值的条件保留 fork 和普通 R2R。无形状的旧规则可通过构建 `b66ae7e` 复现。
-  - SRAD16/32 的 `tid.y == 0` 只有首个 wave 混合。省略形状会乐观接受该线性布局，SRAD16 在冻结输入上实测慢 0.74%。提供形状后，逐 wave 分析判为 mixed，双侧一致代价 gate 拒绝该布局。
+- Anchor B2B 布局与 DARM R2R 受限推测按分支条件来源判定。线程号条件按普通 throughput TTI 乐观评估。只依赖工作组内一致值的条件保留 fork 和普通 R2R。数据相关条件要求双侧一致代价均有报价且收益非负。
+  - SRAD16/32 的 `tid.y == 0` 只有首个 wave 混合。按线程号条件接受额外的线性布局后，SRAD16/32 在冻结输入上分别慢 0.74% 和 0.31%。 [实测记录](regression/records/thread-pattern-optimism-20261122.md)
 - 默认 Anchor 发射直接使用原 split 条件。新增用途位于原分支的执行范围内，而 LLVM 对 poison 或 undef 条件执行 `br` 已规定为未定义行为。 [LLVM LangRef](https://llvm.org/docs/LangRef.html#br-instruction)
 - 合法 trial 依次执行 DARM SimplifyCFG（PHI folding threshold 7）、EarlyCSE、DCE、InstCombine。LLVM24 TTI 要求提交后的成本低于 trial 对照及当前父 IR。
 - 默认 16 路连续队列，使用常驻评分 worker。
 
 ```sh
 tools/build-v1 --search-only  # 已有 LLVM24 worker 时，构建当前驱动
-build/decision-fuse/decision-greedy INPUT.ll FUNCTION NEW_OUTPUT --anchor-wave-shape 16,1,1
+build/decision-fuse/decision-greedy INPUT.ll FUNCTION NEW_OUTPUT
 python3 regression/verify_anchor_release.py --tool-root . --out build/anchor-release-new
 ```
 
@@ -31,10 +31,10 @@ V2 默认保留评分、拒绝原因、重放请求及清理后的候选产物�
 
 ```sh
 python3 tools/compile_kernel.py INPUT.ll FUNCTION --llvm12-bin /path/to/llvm12/bin \
-  --rocm /opt/rocm --anchor-wave-shape 16,1,1 --out kernel.hsaco
+  --rocm /opt/rocm --out kernel.hsaco
 ```
 
-示例使用的形状为 16×1×1，实际运行时传入 kernel 的 launch 形状。这个入口默认执行 V2 融合、LLVM 12 后端和链接，只交付 HSACO。需要保留试跑、IR 和目标文件时，用 `--work-dir` 指定新的目录。默认后端为 gfx906，使用 code object v4。PCM 等直接把融合结果交给 `llc` 的配置可用 `--no-preopt`。可移植 GPU benchmark 使用相同的编译函数，用 `--auto-greedy` 选择融合版本。
+这个入口默认执行 V2 融合、LLVM 12 后端和链接，只交付 HSACO。需要保留试跑、IR 和目标文件时，用 `--work-dir` 指定新的目录。默认后端为 gfx906，使用 code object v4。PCM 等直接把融合结果交给 `llc` 的配置可用 `--no-preopt`。可移植 GPU benchmark 使用相同的编译函数，用 `--auto-greedy` 选择融合版本。
 
 ## 从这里开始
 

@@ -70,7 +70,7 @@ SRAD32 的冻结件和诊断构建见[重建核验记录](../regression/records/
 
 ## PCM32：完整搜索相对 Auto DARM 的差距已解决
 
-`48fb41e` 固定 v1 默认时关闭了 R2R 的 gap 推测和布局重试。恢复受限推测后，Anchor B2B 多出的条件 `freeze` 仍使下游 R2R 保留额外的守护。发布候选恢复受限推测并加入逐 wave gate，同时从默认 Anchor 发射移除多余的条件 `freeze`。PCM32 的 `trial-33` 以同父 1138 → 1136 被接受。新 HSACO 与第 7d 步实测对象逐字节相同，较上一发布默认快 6.83%，相对 Auto DARM 的时比为 0.99999 [0.99997, 1.00001]。 [发射二分](../regression/records/pcm32-r2r-emission-bisect-20261122.md) · [第 7f 步](../regression/records/pcm32-freeze-removal-20261122.md)
+`48fb41e` 固定 v1 默认时关闭了 R2R 的 gap 推测和布局重试。恢复受限推测后，Anchor B2B 多出的条件 `freeze` 仍使下游 R2R 保留额外的守护。第 7f 步恢复受限推测并加入当时的逐 wave gate，同时从默认 Anchor 发射移除多余的条件 `freeze`。PCM32 的 `trial-33` 以同父 1138 → 1136 被接受。新 HSACO 与第 7d 步实测对象逐字节相同，较上一发布默认快 6.83%，相对 Auto DARM 的时比为 0.99999 [0.99997, 1.00001]。 [发射二分](../regression/records/pcm32-r2r-emission-bisect-20261122.md) · [第 7f 步](../regression/records/pcm32-freeze-removal-20261122.md)
 
 ### 历史 TTI 漏判记录
 
@@ -106,3 +106,7 @@ HLLD 的 `B9:B22:B12`、`B9:B21:B12` 和 `B9:B23:B12` 在同一父 IR 上曾出�
 ## 数据相关分支的保守政策
 
 依赖运行时数据的条件缺少静态证据来判断 wave 内是否一致。线性布局、守护布局和 R2R 推测目前要求两侧一致代价的收益都非负，缺少报价时拒绝。这一政策放弃了 MapAiry、Landau mixed 和 SasPoint5 interval-mixture 等冻结输入上的部分收益，此类分支上可能慢于采用激进合并的 Auto DARM。计划在在线 PGO 提供运行时的一致性频率后再评估放宽。 [一致代价政策评估](../regression/records/anchor-unified-dp-step6c-20261122.md)
+
+## SRAD16/32 的线程号合并
+
+分支条件 `tid.y == 0` 只有首个 wave 混合。当前线程号规则按普通吞吐 TTI 接受额外的线性合并，两案的 TTI 都从 445 降到 436。冻结输入上的耗时分别增加 0.74%（SRAD16）和 0.31%（SRAD32）。 [第 12 步 GPU 实测](../regression/records/thread-pattern-optimism-20261122.md)
