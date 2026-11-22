@@ -14,7 +14,7 @@ for rep in range(a.repeats):
   run.mkdir()
   dest=run/"active"
   start=time.monotonic()
-  command=[str(a.driver.resolve()),str(a.input.resolve()),a.function,str(a.tool_root.resolve()),dest.name,"--domain-schedule",mode]
+  command=[str(a.driver.resolve()),str(a.input.resolve()),a.function,str(a.tool_root.resolve()),dest.name]
   with (a.out/(run.name+".stdout")).open("w") as stdout,(a.out/(run.name+".stderr")).open("w") as stderr:
    child=subprocess.Popen(command,cwd=run,env=env,stdout=stdout,stderr=stderr)
    (a.out/"active-process.json").write_text(json.dumps(dict(pid=child.pid,mode=mode,rep=rep,command=command,start=time.time())))

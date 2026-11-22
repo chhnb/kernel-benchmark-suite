@@ -130,7 +130,7 @@ int main(int argc,char**argv){try{
  auto timingReport=[&](){json::Object phases;for(const auto &kv:phaseMilliseconds)phases[kv.first]=json::Object{{"milliseconds",kv.second},{"calls",phaseCalls[kv.first]}};return phases;};
 
  if(argc==2&&StringRef(argv[1])=="--help"){
-   outs()<<"usage: decision-greedy INPUT FUNCTION [TOOL_ROOT] NEW_OUTPUT [--b2b-strategy anchor|darm|darm-artifact] [--anchor-wave-shape X,Y,Z] [--domain-schedule ordered] [--ir-snapshots full|compact] [--tti-quote-cache off|audit|on] [--commit-normalize-only|--no-commit-normalize-only]\n";
+   outs()<<"usage: decision-greedy INPUT FUNCTION [TOOL_ROOT] NEW_OUTPUT [--b2b-strategy anchor|darm|darm-artifact] [--anchor-wave-shape X,Y,Z] [--ir-snapshots full|compact] [--tti-quote-cache off|audit|on] [--commit-normalize-only|--no-commit-normalize-only]\n";
    outs()<<"Default schedule: ordered for whole-function trials (Auto Greedy v2).\n";
    outs()<<"Normalize-only commits are enabled by default.\n";
    return 0;
@@ -147,7 +147,6 @@ int main(int argc,char**argv){try{
      continue;
    }
    StringRef option(argv[argc-2]), value(argv[argc-1]);
-   if(option == "--domain-schedule" && value == "ordered") { argc-=2;continue; }
    if (option == "--ir-snapshots" && (value == "full" || value == "compact"))
      snapshotMode = value.str();
    else if (option == "--tti-quote-cache" && (value == "off" || value == "audit" || value == "on"))
@@ -156,7 +155,7 @@ int main(int argc,char**argv){try{
      anchorWaveShape = value.str();
    else if (option == "--b2b-strategy" && (value == "darm" || value == "darm-artifact" || value == "anchor"))
      b2bStrategy = value.str();
-   else if (option == "--ir-snapshots" || option == "--domain-schedule" || option == "--b2b-strategy" ||
+   else if (option == "--ir-snapshots" || option == "--b2b-strategy" ||
             option == "--tti-quote-cache" || option == "--anchor-wave-shape" ||
             option.startswith("--anchor-"))
      throw std::runtime_error("invalid value for " + option.str());
@@ -164,7 +163,7 @@ int main(int argc,char**argv){try{
    argc -= 2;
  }
  if(argc!=4&&argc!=5)
-   throw std::runtime_error("usage: decision-greedy INPUT FUNCTION [TOOL_ROOT] NEW_OUTPUT [--b2b-strategy anchor|darm|darm-artifact] [--anchor-wave-shape X,Y,Z] [--domain-schedule ordered] [--ir-snapshots full|compact] [--tti-quote-cache off|audit|on] [--commit-normalize-only|--no-commit-normalize-only]");
+   throw std::runtime_error("usage: decision-greedy INPUT FUNCTION [TOOL_ROOT] NEW_OUTPUT [--b2b-strategy anchor|darm|darm-artifact] [--anchor-wave-shape X,Y,Z] [--ir-snapshots full|compact] [--tti-quote-cache off|audit|on] [--commit-normalize-only|--no-commit-normalize-only]");
  const bool commitNormalizeOnly=normalizeOnlyOverride.getValueOr(true);
  if(snapshotMode.empty())snapshotMode="compact";
  const bool implicitRoot=argc==4;
@@ -260,11 +259,10 @@ int main(int argc,char**argv){try{
   mark("parse_and_discover");
   const std::string scan=out+"/structural-"+std::to_string(rounds.size());
   std::vector<std::string> args{structural,"--ir",current,"--function",fn,
-    "--structural","1",
-    "--cleanup",structuralCleanup,"--tti-worker",root+"/tools/run-llvm24-tti","--tti-quote-cache",quoteMode};
+    "--tti-worker",root+"/tools/run-llvm24-tti","--tti-quote-cache",quoteMode};
   if(catalogParent!=current){
     auto catalogArgs=args;
-    catalogArgs.insert(catalogArgs.end(),{"--catalog-only","1","--darm-region-candidates","1","--debug-dir",scan,"--out",scan+".ll"});
+    catalogArgs.insert(catalogArgs.end(),{"--catalog-only","1","--debug-dir",scan,"--out",scan+".ll"});
     if(int rc=run(std::move(catalogArgs),scan+".stdout",scan+".stderr"))
       throw std::runtime_error("structural candidate enumeration failed ("+std::to_string(rc)+"): "+scan+".stderr");
     catalogParent=current;
@@ -397,7 +395,7 @@ int main(int argc,char**argv){try{
         const auto scan=pair.input+".catalog";
         auto catalogArgs=args;
         catalogArgs[2]=pair.input;
-        catalogArgs.insert(catalogArgs.end(),{"--catalog-only","1","--darm-region-candidates","1","--debug-dir",scan,"--out",scan+".ll"});
+        catalogArgs.insert(catalogArgs.end(),{"--catalog-only","1","--debug-dir",scan,"--out",scan+".ll"});
         if(int rc=run(std::move(catalogArgs),scan+".stdout",scan+".stderr"))
           throw std::runtime_error("prepared candidate enumeration failed ("+std::to_string(rc)+"): "+scan+".stderr");
         auto inventory=read(scan+"/catalog.json");

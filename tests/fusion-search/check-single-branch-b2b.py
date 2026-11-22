@@ -152,7 +152,6 @@ with tempfile.TemporaryDirectory() as directory:
             source.write_text(template.replace("LEFT", left).replace("RIGHT", right))
             args = [search, "--ir", source, "--function", "choose", "--split", "B2",
                     "--left", "B4" if swapped else "B3", "--right", "B3" if swapped else "B4",
-                    "--structural", "1", "--cleanup", "darm-cfg-dce-instcombine",
                     "--b2b-strategy", "anchor", "--tti-worker", worker]
             run(*args, "--out", fused, "--debug-dir", out / "reports")
             report = out / "reports/trial-0/trial.json"

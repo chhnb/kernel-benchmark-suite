@@ -46,7 +46,7 @@ B2B 可配对普通访存及受支持的 intrinsic。单侧副作用保持分支
 
 - `--b2b-strategy anchor|darm|darm-artifact`，默认 `anchor`。
 - B2R、R2B 和 R2R 使用 DARM。
-- `--domain-schedule ordered`，可省略。
+- 调度固定为 ordered。
 - `--ir-snapshots full|compact`，默认 `compact`。
 - `--tti-quote-cache off|audit|on`，默认 `on`。
 

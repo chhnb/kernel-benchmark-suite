@@ -7,7 +7,7 @@ root=Path(__file__).resolve().parents[2];a.out=a.out.resolve();a.out.mkdir(paren
 env=dict(os.environ,LD_LIBRARY_PATH=str(root/"build/llvm12-jammy/usr/lib/x86_64-linux-gnu"),LLVM24_LIBDIR=str(root/"build/llvm24-pinned/lib"));bin=root/"build/llvm12-jammy/usr/bin";fixture=root/"tests/fusion-search/domain-vllm-quant8.ll"
 for mode in ["ordered"]:
  with (a.out/(mode+".stdout")).open("w") as stdout,(a.out/(mode+".stderr")).open("w") as stderr:
-  subprocess.run([str(a.driver.resolve()),str(fixture),"quant8",str(root),str(a.out/mode),"--domain-schedule",mode],env=env,check=True,stdout=stdout,stderr=stderr)
+  subprocess.run([str(a.driver.resolve()),str(fixture),"quant8",str(root),str(a.out/mode)],env=env,check=True,stdout=stdout,stderr=stderr)
 subprocess.run(["python3",str(root/"tests/fusion-search/compare-domain-driver.py"),str(a.out/"ordered"),"--out",str(a.out/"comparison.json")],env=env,check=True,capture_output=True)
 subprocess.run(["python3",str(root/"tests/fusion-search/check-ordered-quant8.py"),str(a.out/"ordered")],env=env,check=True,capture_output=True)
 paths=[fixture]

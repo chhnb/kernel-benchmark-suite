@@ -2,16 +2,13 @@
 #include <optional>
 #include "fusion_search.h"
 #include "b2b_anchor.h"
-#include "anchor_wave_diagnostic.h"
 #include "darm_artifact/bridge.h"
 #include "darm_pair_engine/InstructionMatch.h"
-#include "logical_region_state.h"
 #include "darm_pair_engine/RegionMelder.h"
 #include "llvm/IR/Verifier.h"
 #include "llvm/IR/IRBuilder.h"
 #include "llvm/IR/ModuleSlotTracker.h"
 #include "llvm/Analysis/ValueTracking.h"
-#include "llvm/Analysis/DivergenceAnalysis.h"
 #include "llvm/Analysis/CaptureTracking.h"
 #include "llvm/Analysis/InstructionSimplify.h"
 #include "llvm/IR/IntrinsicInst.h"
@@ -192,73 +189,6 @@ static TargetMachine *targetMachine(const std::string &triple) {
     machines[triple]=std::unique_ptr<TargetMachine>(target?target->createTargetMachine(triple,"","",TargetOptions(),None,None,CodeGenOpt::Default):nullptr);
   }
   return machines.at(triple).get();
-}
-
-enum class ConditionKind { Uniform, Divergent, Unknown };
-
-static ConditionKind analyzeAnchorCondition(BranchInst &branch, json::Array *sources = nullptr) {
-  auto &f = *branch.getFunction();
-  Triple triple(f.getParent()->getTargetTriple());
-  if (!triple.isAMDGPU() && !triple.isNVPTX()) return ConditionKind::Unknown;
-  auto *tm = targetMachine(f.getParent()->getTargetTriple());
-  if (!tm) return ConditionKind::Unknown;
-  FunctionAnalysisManager fam;
-  auto tti = tm->getTargetIRAnalysis().run(f, fam);
-  if (!tti.hasBranchDivergence()) return ConditionKind::Unknown;
-  DominatorTree dt(f);
-  if (!dt.isReachableFromEntry(branch.getParent())) return ConditionKind::Unknown;
-  PostDominatorTree pdt(f);
-  LoopInfo loops(dt);
-  GPUDivergenceAnalysis divergence(f, dt, pdt, loops, tti);
-  if (sources) {
-    SmallVector<const Value *, 16> worklist{branch.getCondition()};
-    SmallPtrSet<const Value *, 32> visited;
-    std::set<std::string> kinds;
-    while (!worklist.empty()) {
-      auto *v = worklist.pop_back_val();
-      if (!visited.insert(v).second) continue;
-      if (const auto *arg = dyn_cast<Argument>(v)) {
-        kinds.insert("argument " + std::to_string(arg->getArgNo()) + " " + name(arg));
-      } else if (const auto *load = dyn_cast<LoadInst>(v)) {
-        kinds.insert("load addrspace(" + std::to_string(load->getPointerAddressSpace()) + ")");
-        worklist.push_back(load->getPointerOperand());
-      } else if (const auto *call = dyn_cast<CallBase>(v)) {
-        const auto *callee = call->getCalledFunction();
-        kinds.insert(callee ? callee->getName().str() : "indirect call");
-        worklist.append(call->arg_begin(), call->arg_end());
-      } else if (const auto *inst = dyn_cast<Instruction>(v)) {
-        if (isa<PHINode>(inst)) kinds.insert("phi (control join)");
-        worklist.append(inst->op_begin(), inst->op_end());
-      } else if (const auto *global = dyn_cast<GlobalValue>(v)) {
-        kinds.insert("global " + global->getName().str());
-      } else if (isa<Constant>(v)) {
-        kinds.insert("constant");
-      }
-    }
-    for (const auto &kind : kinds) sources->push_back(kind);
-  }
-  return divergence.isDivergentUse(branch.getOperandUse(0))
-      ? ConditionKind::Divergent : ConditionKind::Uniform;
-}
-
-json::Object describeAnchorCondition(Function &f, StringRef split, StringRef launch) {
-  unsigned index;
-  BranchInst *branch = nullptr;
-  if (split.startswith("B") && !split.drop_front().getAsInteger(10, index) && index < f.size())
-    branch = dyn_cast<BranchInst>(std::next(f.begin(), index)->getTerminator());
-  json::Array sources;
-  ConditionKind kind = ConditionKind::Unknown;
-  std::string condition;
-  if (branch && branch->isConditional()) {
-    kind = analyzeAnchorCondition(*branch, &sources);
-    raw_string_ostream stream(condition);
-    branch->getCondition()->print(stream);
-  }
-  return json::Object{{"classification", kind == ConditionKind::Divergent ? "divergent" :
-                       kind == ConditionKind::Uniform ? "uniform" : "unknown"},
-                      {"condition", condition}, {"sources", std::move(sources)},
-                      {"triple", f.getParent()->getTargetTriple()},
-                      {"wave", wave_diagnostic::classify(f, branch, launch)}};
 }
 
 static unsigned cleanup(Module &m,const std::string &function,CleanupMode mode) {
@@ -580,24 +510,6 @@ std::vector<Candidate> enumerate(Function&f,unsigned version) {
   std::sort(result.begin(),result.end(),[](const Candidate&a,const Candidate&b){return a.key()<b.key();});
   result.erase(std::unique(result.begin(),result.end(),[](const Candidate&a,const Candidate&b){return a.key()==b.key();}),result.end());return result;
 }
-// Conservative CFG adjacency: whole arms of a common-join decision group.
-// A one-sided continuation is ordered as first-match arm, then continuation;
-// a two-sided tree uses successor order. Never infer order from B/R numbers.
-std::vector<Candidate> enumerateAdjacent(Function&f,unsigned version) {
-  auto state=LogicalRegionState::initialize(f);state->version=version;
-  return state->filter(f,enumerate(f,version));
-}
-std::vector<ResolvedCandidate> resolveCandidateCatalog(Function &f,unsigned version) {
-  auto candidates=enumerate(f,version);
-  Analysis analysis(f);Inventory inventory(f,analysis);
-  std::vector<ResolvedCandidate> result;
-  for(const auto &c:candidates){
-    const auto &l=inventory.units.at(c.left),&r=inventory.units.at(c.right);
-    result.push_back({c,inventory.blocks.at(c.split),l.entry,l.exit,r.entry,r.exit,
-                      bool(l.region),bool(r.region)});
-  }
-  return result;
-}
 // Adjacent logical leaves need not be opposite immediate branch successors.
 // Normalize just their entry chain into a diamond; never clone the remaining
 // else-if suffix. Validation is separate from mutation for rejected trials.
@@ -781,21 +693,18 @@ static bool sideBlocksBoth(Function &f,Value *cond,std::vector<unsigned> (&sides
 // Share identical trailing arithmetic by redirecting the short arm to
 // the existing anchor. All other edges, including the long arm's memory
 // paths, keep their original execution conditions.
-static Trial tryPairImpl(const Module&parent,const Candidate&c,unsigned version,CleanupMode mode,const LogicalRegionState *logical,bool nested,bool allowB2B,bool artifactB2B,bool speculateR2R);
+static Trial tryPairImpl(const Module&parent,const Candidate&c,unsigned version,CleanupMode mode,bool nested,bool allowB2B,bool artifactB2B,bool speculateR2R);
 // Public entry. The outermost call owns the side tag and removes it from every
 // IR it returns, so committed modules, debug dumps and hashes never carry it.
-Trial tryPair(const Module&parent,const Candidate&c,unsigned version,unsigned level,CleanupMode mode,const LogicalRegionState *logical) {
-  return tryPair(parent,c,version,level,mode,logical,true);
-}
-Trial tryPair(const Module&parent,const Candidate&c,unsigned version,unsigned,CleanupMode mode,const LogicalRegionState *logical,bool allowB2B,bool artifactB2B,bool speculateR2R) {
+Trial tryPair(const Module&parent,const Candidate&c,unsigned version,CleanupMode mode,bool allowB2B,bool artifactB2B,bool speculateR2R) {
   bool nested=hasSideTag(parent.getFunction(c.function));
-  Trial t=tryPairImpl(parent,c,version,mode,logical,nested,allowB2B,artifactB2B,speculateR2R);
+  Trial t=tryPairImpl(parent,c,version,mode,nested,allowB2B,artifactB2B,speculateR2R);
   if(!nested){
     stripSideTag(t.raw.get());stripSideTag(t.normalized.get());
   }
   return t;
 }
-static Trial tryPairImpl(const Module&parent,const Candidate&c,unsigned version,CleanupMode mode,const LogicalRegionState *logical,bool nested,bool allowB2B,bool artifactB2B,bool speculateR2R) {
+static Trial tryPairImpl(const Module&parent,const Candidate&c,unsigned version,CleanupMode mode,bool nested,bool allowB2B,bool artifactB2B,bool speculateR2R) {
   auto started=Clock::now();Trial t;t.candidate=c;t.cleanupMode=mode;auto reject=[&](const char*reason){t.reason=reason;t.totalMs=millis(started);return std::move(t);};
   // After-side reachability on the final cleaned IR, before the tag is stripped.
   auto finishSides=[&](Function *after){
@@ -805,7 +714,7 @@ static Trial tryPairImpl(const Module&parent,const Candidate&c,unsigned version,
   };
   if(c.version!=version)return reject("stale_candidate_version");
   ValueToValueMapTy parentMap;
-  t.raw=CloneModule(parent,parentMap);if(logical)t.logicalState=logical->clone(parentMap);parentMap.clear();auto*f=t.raw->getFunction(c.function);
+  t.raw=CloneModule(parent,parentMap);parentMap.clear();auto*f=t.raw->getFunction(c.function);
   if(!f||f->isDeclaration())return reject("function_missing");
   if(verifyModule(*t.raw,&errs()))return reject("input_verifier_failed");
   Analysis a(*f);Inventory inv(*f,a);
@@ -882,18 +791,15 @@ static Trial tryPairImpl(const Module&parent,const Candidate&c,unsigned version,
   }
   const bool leftRequired=a.pdt.dominates(l.entry,br->getSuccessor(0));
   const bool rightRequired=a.pdt.dominates(r.entry,br->getSuccessor(1));
-  const bool guardsUnsafeWork=true;
-  const bool guardedAnchors=!l.region && leftRequired && rightRequired &&
-      !logical && guardsUnsafeWork;
+  const bool guardedAnchors=!l.region && leftRequired && rightRequired;
   const bool matchedStorePair=(l.region ||
       (l.entry==br->getSuccessor(0) && r.entry==br->getSuccessor(1) &&
        l.entry->getSingleSuccessor()==join && r.entry->getSingleSuccessor()==join)) &&
       leftRequired &&
-      rightRequired && !logical &&
-      guardsUnsafeWork;
+      rightRequired;
   // Both strategies allow ordinary accesses in the expanded block and the
   // opposite region. The strategy controls how unmatched work is emitted.
-  const bool replicationWithMemory = !l.region && !logical &&
+  const bool replicationWithMemory = !l.region &&
       leftRequired != rightRequired &&
       (leftRequired ? l.entry : r.entry) ==
           br->getSuccessor(leftRequired ? 0 : 1) &&
@@ -999,8 +905,8 @@ static Trial tryPairImpl(const Module&parent,const Candidate&c,unsigned version,
           regionStores.insert(store);
           continue;
         }
-    if (!matchedBlock(block) && !logical &&
-        guardsUnsafeWork && !preservedLoop && !instruction.isTerminator()) {
+    if (!matchedBlock(block) &&
+        !preservedLoop && !instruction.isTerminator()) {
       if (auto *store = dyn_cast<StoreInst>(&instruction)) {
         if (store->isSimple()) {
           auditRetainedEffects = true;
@@ -1183,7 +1089,6 @@ static Trial tryPairImpl(const Module&parent,const Candidate&c,unsigned version,
   std::vector<darm_artifact::Origin> artifactOrigins;
   RegionMelder melder(directLeaves?*leafAnalyzer:ma,true);
   melder.SpeculateIntegerGaps = speculateR2R && !nested && t.planKind == "R2R" && !t.replication;
-  if(t.logicalState)melder.onValueMapping=[&](const ValueToValueMapTy &m){t.logicalState->transfer(m);};
   {
     if(!regionStores.empty()){
 
@@ -1323,10 +1228,8 @@ static Trial tryPairImpl(const Module&parent,const Candidate&c,unsigned version,
   for(auto&g:*t.raw)if(&g!=f)if(!others.count(g.getName().str())||others.at(g.getName().str())!=isolatedFunctionText(g))return reject("other_function_changed");
   ft=Clock::now();t.afterRaw=features(*f);t.featuresMs+=millis(ft);if(t.afterRaw.loops>t.before.loops)return reject("new_raw_loop");
   auto blockLabel=[](const Value *V){std::string S;raw_string_ostream O(S);V->printAsOperand(O,false);O.flush();return S;};
-  std::set<BasicBlock*> oldBlocks,rawCreated;
   ValueToValueMapTy CloneMap;
   auto nt=Clock::now();t.normalized=CloneModule(*t.raw,CloneMap);
-  if(t.logicalState)t.logicalState=t.logicalState->clone(CloneMap);
   std::vector<WeakVH> CleanedBlocks;
   auto recordOrigin = [&](const auto &Origin) {
     BlockProvenance P;P.leftID=Origin.leftID;P.rightID=Origin.rightID;
@@ -1345,7 +1248,6 @@ static Trial tryPairImpl(const Module&parent,const Candidate&c,unsigned version,
   if(verifyModule(*t.normalized,&errs()))return reject("normalized_verifier_failed");
   auto*after=t.normalized->getFunction(c.function);if(!after||after->isDeclaration())return reject("target_lost_after_normalization");
   ft=Clock::now();t.after=features(*after);t.featuresMs+=millis(ft);if(t.after.loops>t.before.loops)return reject("new_normalized_loop");
-  if(t.logicalState){if(!t.logicalState->stageMerge(c))return reject("logical_state_candidate_mismatch");t.logicalState->rebind(*after);}
   finishSides(after);
   t.valid=true;t.reason="verified_ir_only";t.totalMs=millis(started);
   return t;
@@ -1901,7 +1803,6 @@ std::vector<Trial> planSingleBranchB2B(const Module &parent, const Candidate &c,
     t.anchorStats = json::Object(layout.stats);
     t.swapped = trial.swapped;
     t.loopHeaderSplit = trial.loopHeaderSplit;
-    t.insideLoop = loops.getLoopFor(split) != nullptr;
     t.sideBeforeOk = trial.sideBeforeOk;
     t.sideReason = trial.sideReason;
     for (unsigned side = 0; side < 2; ++side) t.sideBefore[side] = trial.sideBefore[side];
@@ -1960,7 +1861,7 @@ std::vector<Trial> planSingleBranchB2B(const Module &parent, const Candidate &c,
   return trials;
 }
 
-RoundContext makeRound(const Module&parent,const std::string&function,unsigned version,unsigned,CleanupMode mode) {
+RoundContext makeRound(const Module&parent,const std::string&function,unsigned version,CleanupMode mode) {
   ProfileScope roundScope("round_control_analysis_cleanup");
   RoundContext r;r.cleanupMode=mode;r.parentVersion=version;r.function=function;r.parentHash=moduleHash(parent);
   r.targetTriple=parent.getTargetTriple();r.dataLayout=parent.getDataLayoutStr();r.llvmVersion=LLVM_VERSION_STRING;

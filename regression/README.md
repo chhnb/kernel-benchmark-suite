@@ -40,11 +40,7 @@ python3 tools/run_cpu.py UNIQUE_LABEL python3 /home/chh/kernel-benchmark-suite/r
 
 当前 `check.py` 使用固定测试输出目录；已有结果时请先归档该目录再重新执行，避免覆盖证据。
 
-当前融合代码重建候选（CPU 队列内运行）：
-
-```sh
-python3 tools/run_cpu.py UNIQUE_LABEL python3 /home/chh/kernel-benchmark-suite/regression/prepare_current_generated.py /absolute/new-current-build
-```
+用当前融合代码重建候选时，向 `tools/compile_kernel.py` 提供冻结 IR 和函数名。发布形状及设备对象的校验命令见上面的发布复验。
 
 ## Map-Airy 共同父 IR 回归
 

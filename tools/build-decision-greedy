@@ -11,7 +11,7 @@ lc=${LLVM_CONFIG:-/home/chh/darm-artifacts-repro/build/bin/llvm-config}
 read -r -a cf <<< "$($lc --cxxflags)"
 read -r -a lf <<< "$($lc --ldflags --libs --system-libs | tr '\n' ' ')"
 objects=()
-for object in ir_pressure fusion_search b2b_anchor logical_region_state RegionAnalyzer RegionMelder RegionReplicator CFMelderUtils InstructionMatch darm-artifact-RegionAnalyzer darm-artifact-RegionMelder darm-artifact-RegionReplicator darm-artifact-CFMelderUtils darm-artifact-InstructionMatch darm-artifact-bridge; do
+for object in ir_pressure fusion_search b2b_anchor b2b_anchor_observe RegionAnalyzer RegionMelder RegionReplicator CFMelderUtils InstructionMatch darm-artifact-RegionAnalyzer darm-artifact-RegionMelder darm-artifact-RegionReplicator darm-artifact-CFMelderUtils darm-artifact-InstructionMatch darm-artifact-bridge; do
   path="$r/build/llvm24-tti/$object.o"
   [[ -f "$path" ]] || { echo "missing $path; build with --with-structural first" >&2; exit 2; }
   objects+=("$path")

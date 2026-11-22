@@ -25,7 +25,7 @@ expected=execute(source,"baseline");rows=[]
 for mode in ["ordered"]:
  out=a.out/mode;start=time.monotonic()
  with (a.out/(mode+".stdout")).open("w") as stdout,(a.out/(mode+".stderr")).open("w") as stderr:
-  subprocess.run([str(a.driver.resolve()),str(source),"choose",str(root),str(out),"--domain-schedule",mode],env=env,check=True,stdout=stdout,stderr=stderr)
+  subprocess.run([str(a.driver.resolve()),str(source),"choose",str(root),str(out)],env=env,check=True,stdout=stdout,stderr=stderr)
  s=json.loads((out/"summary.json").read_text());assert s["status"]=="completed"
  paths=[Path(r["selected"])/"fused.ll" for r in s["rounds"] if r.get("selected")]+[out/"final.ll"]
  for n,ir in enumerate(paths):
