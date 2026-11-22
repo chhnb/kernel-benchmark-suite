@@ -14,7 +14,7 @@
 namespace fs = std::filesystem;
 constexpr size_t Bytes = 256 * 256 * sizeof(float);
 constexpr size_t Guard = 256, Extent = Bytes + 2 * Guard;
-constexpr int Frames = 110, Windows = 12;
+constexpr int Frames = 110;
 constexpr unsigned char Sentinel = 0xa5;
 constexpr const char *Symbol = "_Z11srad_cuda_1PfS_S_S_S_S_iif";
 

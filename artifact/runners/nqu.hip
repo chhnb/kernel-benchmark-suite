@@ -30,12 +30,11 @@ static uint64_t mix(uint64_t state, const uint32_t *data, size_t words) {
   return state;
 }
 int main(int argc, char **argv) try {
-  require(argc >= 6, "replay input output rounds timed|count|profile hsacos...");
+  require(argc >= 6, "replay input output rounds timed|count hsacos...");
   auto input = read<uint32_t>(argv[1]);
   auto expected = read<uint32_t>(argv[2]);
   const int rounds = std::stoi(argv[3]);
   const bool count = !std::strcmp(argv[4], "count");
-  const bool profile = !std::strcmp(argv[4], "profile");
 
   const int roles = argc - 5;
   constexpr int threads = 64;

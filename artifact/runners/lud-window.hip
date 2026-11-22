@@ -2,7 +2,6 @@
 #include "windows.h"
 
 #include <algorithm>
-#include <array>
 #include <cmath>
 #include <cstring>
 #include <fstream>
@@ -24,10 +23,14 @@ int main(int argc, char **argv) {
     std::ifstream inputFile(argv[1], std::ios::binary);
     if (!inputFile.read(reinterpret_cast<char *>(matrix.data()), Bytes))
       throw std::runtime_error("cannot read full LUD8 input");
-    const float *input = matrix.data();
-    float *device;
+    const auto *input = reinterpret_cast<const unsigned char *>(matrix.data());
+    unsigned char *device, *staging;
+    // Keep host transfers out of the HIP event interval. Reuse one pinned slab
+    // to avoid repeatedly registering a full pageable GiB with the HIP runtime.
+    constexpr size_t ChunkBytes = 64 * 1024 * 1024;
     check(hipSetDevice(0));
     check(hipMalloc(&device, Bytes));
+    check(hipHostMalloc(&staging, ChunkBytes));
     const int roles = argc - 5;
     std::vector<hipModule_t> mods(roles);
     std::vector<hipFunction_t> kernels(roles);
@@ -39,7 +42,11 @@ int main(int argc, char **argv) {
     check(hipEventCreate(&start));
     check(hipEventCreate(&stop));
     auto launch = [&](int role) {
-      check(hipMemcpy(device, input, Bytes, hipMemcpyHostToDevice));
+      for (size_t offset = 0; offset < Bytes; offset += ChunkBytes) {
+        const size_t count = std::min(ChunkBytes, Bytes - offset);
+        std::memcpy(staging, input + offset, count);
+        check(hipMemcpy(device + offset, staging, count, hipMemcpyHostToDevice));
+      }
       check(hipEventRecord(start));
       for (int offset = 0; offset < N - Block; offset += Block) {
         int dim = N;
@@ -55,11 +62,9 @@ int main(int argc, char **argv) {
       return ms;
     };
     for (float warmed = 0; warmed < 200;) warmed += launch(0);
-    float *reference = static_cast<float *>(malloc(Bytes));
-    float *actual = static_cast<float *>(malloc(Bytes));
-    if (!actual || !reference) throw std::runtime_error("validation storage failed");
+    std::vector<unsigned char> reference(Bytes);
     std::ifstream frozen(argv[2], std::ios::binary);
-    if (!frozen.read(reinterpret_cast<char *>(reference), Bytes))
+    if (!frozen.read(reinterpret_cast<char *>(reference.data()), Bytes))
       throw std::runtime_error("cannot read full LUD8 reference");
     const int repeat = std::stoi(argv[3]);
     std::ofstream csv(argv[4]);
@@ -69,16 +74,18 @@ int main(int argc, char **argv) {
         const int role = (round + (round / roles % 2 ? roles - 1 - offset : offset)) % roles;
         for (int i = 0; i < repeat; ++i) {
           const float ms = launch(role);
-          check(hipMemcpy(actual, device, Bytes, hipMemcpyDeviceToHost));
-          if (std::memcmp(actual, reference, Bytes) != 0)
-            throw std::runtime_error("full LUD8 output mismatch");
+          for (size_t offset = 0; offset < Bytes; offset += ChunkBytes) {
+            const size_t count = std::min(ChunkBytes, Bytes - offset);
+            check(hipMemcpy(staging, device + offset, count, hipMemcpyDeviceToHost));
+            if (std::memcmp(staging, reference.data() + offset, count) != 0)
+              throw std::runtime_error("full LUD8 output mismatch at chunk " + std::to_string(offset));
+          }
           csv << round << ',' << role << ',' << ms << ",1\n";
         }
         csv.flush();
       }
     }
-    free(reference);
-    free(actual);
+    check(hipHostFree(staging));
     check(hipEventDestroy(start));
     check(hipEventDestroy(stop));
     check(hipFree(device));
