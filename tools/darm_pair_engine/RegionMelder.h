@@ -133,6 +133,8 @@ public:
       SourceBlocks.push_back({WeakVH(&BB),"B"+std::to_string(I++)});}
   }
   bool NativeReplicationPredication=false;
+  bool SpeculateIntegerGaps = false;
+  bool SpeculatedIntegerGaps = false;
   bool hasGuardedGap(const Instruction *instruction, bool left) const;
   std::function<void(const ValueToValueMapTy&)> onValueMapping;
   const std::vector<BlockOrigin>& blockOrigins() const { return BlockOrigins; }

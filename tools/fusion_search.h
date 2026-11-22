@@ -107,6 +107,8 @@ struct Trial {
   bool insideLoop=false;
   llvm::json::Array layoutProfitability;
   llvm::json::Object anchorStats;
+  std::string r2rSpeculationSplit;
+  llvm::json::Object r2rSpeculation;
   double mergeMs=0, normalizeMs=0, featuresMs=0, totalMs=0, scoreMs=0;
 };
 struct ScoreInput {
@@ -166,11 +168,12 @@ Trial tryPair(const llvm::Module &, const Candidate &, unsigned currentVersion,
               unsigned optLevel, CleanupMode mode=CleanupMode::DarmCFGInstCombine, const LogicalRegionState *logical=nullptr);
 Trial tryPair(const llvm::Module &, const Candidate &, unsigned currentVersion,
               unsigned optLevel, CleanupMode, const LogicalRegionState *, bool allowB2B,
-              bool artifactB2B=false);
+              bool artifactB2B=false, bool speculateR2R=false);
 // Emit an already-validated, order-preserving B2B alignment.
 void emitB2BLinear(llvm::BranchInst &, llvm::BasicBlock &, llvm::BasicBlock &,
                    llvm::BasicBlock *join, llvm::ArrayRef<AnchorMatch>,
-                   bool linear, bool guarded, llvm::ArrayRef<AnchorGapPlacement>);
+                   bool linear, bool guarded, llvm::ArrayRef<AnchorGapPlacement>,
+                   bool preserveLegacyFreeze = false);
 llvm::json::Object describeAnchorCondition(llvm::Function &, llvm::StringRef split, llvm::StringRef launch);
 std::vector<Trial> planSingleBranchB2B(const llvm::Module &, const Candidate &, CleanupMode,
                                        llvm::function_ref<int(const llvm::Instruction &)> intrinsicCost,

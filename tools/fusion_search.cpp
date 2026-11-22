@@ -781,21 +781,21 @@ static bool sideBlocksBoth(Function &f,Value *cond,std::vector<unsigned> (&sides
 // Share identical trailing arithmetic by redirecting the short arm to
 // the existing anchor. All other edges, including the long arm's memory
 // paths, keep their original execution conditions.
-static Trial tryPairImpl(const Module&parent,const Candidate&c,unsigned version,CleanupMode mode,const LogicalRegionState *logical,bool nested,bool allowB2B,bool artifactB2B);
+static Trial tryPairImpl(const Module&parent,const Candidate&c,unsigned version,CleanupMode mode,const LogicalRegionState *logical,bool nested,bool allowB2B,bool artifactB2B,bool speculateR2R);
 // Public entry. The outermost call owns the side tag and removes it from every
 // IR it returns, so committed modules, debug dumps and hashes never carry it.
 Trial tryPair(const Module&parent,const Candidate&c,unsigned version,unsigned level,CleanupMode mode,const LogicalRegionState *logical) {
   return tryPair(parent,c,version,level,mode,logical,true);
 }
-Trial tryPair(const Module&parent,const Candidate&c,unsigned version,unsigned,CleanupMode mode,const LogicalRegionState *logical,bool allowB2B,bool artifactB2B) {
+Trial tryPair(const Module&parent,const Candidate&c,unsigned version,unsigned,CleanupMode mode,const LogicalRegionState *logical,bool allowB2B,bool artifactB2B,bool speculateR2R) {
   bool nested=hasSideTag(parent.getFunction(c.function));
-  Trial t=tryPairImpl(parent,c,version,mode,logical,nested,allowB2B,artifactB2B);
+  Trial t=tryPairImpl(parent,c,version,mode,logical,nested,allowB2B,artifactB2B,speculateR2R);
   if(!nested){
     stripSideTag(t.raw.get());stripSideTag(t.normalized.get());
   }
   return t;
 }
-static Trial tryPairImpl(const Module&parent,const Candidate&c,unsigned version,CleanupMode mode,const LogicalRegionState *logical,bool nested,bool allowB2B,bool artifactB2B) {
+static Trial tryPairImpl(const Module&parent,const Candidate&c,unsigned version,CleanupMode mode,const LogicalRegionState *logical,bool nested,bool allowB2B,bool artifactB2B,bool speculateR2R) {
   auto started=Clock::now();Trial t;t.candidate=c;t.cleanupMode=mode;auto reject=[&](const char*reason){t.reason=reason;t.totalMs=millis(started);return std::move(t);};
   // After-side reachability on the final cleaned IR, before the tag is stripped.
   auto finishSides=[&](Function *after){
@@ -1140,7 +1140,18 @@ static Trial tryPairImpl(const Module&parent,const Candidate&c,unsigned version,
   std::unique_ptr<Region> leftLogicalRegion,rightLogicalRegion;
   t.rewriteStarted=true;
   BasicBlock *artifactGate = split;
+  std::string speculationSplit = c.split;
   if(directLeaves){
+    if (speculateR2R && l.region && !nested && leafEntry.first != split) {
+      // The adjacent-leaf selector is the first leaf condition (possibly
+      // inverted), which can differ from the enclosing catalog decision.
+      speculationSplit = "B" + std::to_string(std::distance(f->begin(), leafEntry.first->getIterator()));
+      stripSideTag(t.raw.get());
+      auto *condition = leafEntry.a->getCondition();
+      t.sideReason.clear();
+      t.sideBeforeOk = tagSideCondition(*f, condition) &&
+                       sideBlocksBoth(*f, condition, t.sideBefore, t.sideReason);
+    }
     auto *gate=leafEntry.apply();
     artifactGate = gate;
     BasicBlock *leftExit=l.exit,*rightExit=r.exit;
@@ -1168,6 +1179,7 @@ static Trial tryPairImpl(const Module&parent,const Candidate&c,unsigned version,
   const bool artifact = artifactB2B && t.planKind == "B2B";
   std::vector<darm_artifact::Origin> artifactOrigins;
   RegionMelder melder(directLeaves?*leafAnalyzer:ma,true);
+  melder.SpeculateIntegerGaps = speculateR2R && !nested && t.planKind == "R2R" && !t.replication;
   if(t.logicalState)melder.onValueMapping=[&](const ValueToValueMapTy &m){t.logicalState->transfer(m);};
   {
     if(!regionStores.empty()){
@@ -1210,6 +1222,7 @@ static Trial tryPairImpl(const Module&parent,const Candidate&c,unsigned version,
     }
     catch(const std::exception &error) { return reject(error.what()); }
   }
+  if (melder.SpeculatedIntegerGaps) t.r2rSpeculationSplit = std::move(speculationSplit);
   canonicalPhiOrder(*t.raw,c.function);t.mergeMs=millis(mt);
   for(const auto &entry:continuationStores){
     Instruction *previous=nullptr;
@@ -1434,15 +1447,19 @@ static SmallVector<B2BMatch, 8> commonB2BPrefix(BasicBlock &left, BasicBlock &ri
 void emitB2BLinear(BranchInst &split, BasicBlock &left, BasicBlock &right,
                    BasicBlock *join, ArrayRef<AnchorMatch> matches,
                    bool linear, bool guarded,
-                   ArrayRef<AnchorGapPlacement> placements) {
+                   ArrayRef<AnchorGapPlacement> placements,
+                   bool preserveLegacyFreeze) {
   SmallVector<Instruction *, 16> work[2];
   for (auto &inst : left) if (!inst.isTerminator()) work[0].push_back(&inst);
   for (auto &inst : right) if (!inst.isTerminator()) work[1].push_back(&inst);
   IRBuilder<> builder(&split);
   Value *condition = split.getCondition();
-  if (linear || (!join && llvm::any_of(matches, [&](AnchorMatch match) {
-        return work[0][match.left]->mayReadOrWriteMemory();
-      }))) {
+  // Every use stays on an execution that reached the original branch,
+  // where an undef or poison condition already has undefined behavior.
+  if (preserveLegacyFreeze &&
+      (linear || (!join && llvm::any_of(matches, [&](AnchorMatch match) {
+         return work[0][match.left]->mayReadOrWriteMemory();
+       })))) {
     condition = builder.CreateFreeze(condition);
     split.setCondition(condition);
   }
@@ -1994,7 +2011,8 @@ std::vector<Trial> planSingleBranchB2B(const Module &parent, const Candidate &c,
     t.rewriteStarted = layout.linear || !layout.matches.empty();
     if (layout.linear || (layout.prefix && !layout.matches.empty())) {
       emitB2BLinear(*rawBranch, *rawLeft, *rawRight, layout.mergeExit ? rawJoin : nullptr,
-                    layout.matches, layout.linear, layout.guarded, layout.placements);
+                    layout.matches, layout.linear, layout.guarded, layout.placements,
+                    gap == AnchorGap::Fork);
     } else if (!layout.matches.empty()) {
       try {
         emitB2BSegments(*rawBranch, *rawLeft, *rawRight, *rawJoin, layout.matches,
