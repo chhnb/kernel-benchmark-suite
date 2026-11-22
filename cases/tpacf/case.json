@@ -86,6 +86,7 @@
     "status": "three paired fixed-budget screening batches"
   },
   "specified_merge_experiment": "/home/chh/kernel-benchmark-suite/experiments/tpacf-adjacent-four-v1/summary.json",
+  "anchor_workgroup_policy": "Optional exact launch shape for per-wave refinement.",
   "anchor_workgroups": {
     "TPACF": {
       "function": "ACFKernel",

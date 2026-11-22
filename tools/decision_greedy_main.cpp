@@ -1,4 +1,5 @@
 #include "anchor_wave_diagnostic.h"
+#include "anchor_uniform_gate.h"
 #include "tti_cost_kind.h"
 #include "decision_model.h"
 #include "domain_competition.h"
@@ -188,9 +189,7 @@ int main(int argc,char**argv){try{
  }
  constexpr unsigned conditionBudget=4;
  LLVMContext ctx;SMDiagnostic error;auto initial=parseIRFile(current,error,ctx);if(!initial||!initial->getFunction(fn)||verifyModule(*initial,&errs()))throw std::runtime_error("invalid input");
- if (b2bStrategy == "anchor" &&
-     !fusion::wave_diagnostic::resolveShape(*initial->getFunction(fn), anchorWaveShape))
-   errs()<<"warning: workgroup shape not provided for "<<fn<<"; Anchor wave classification is unknown\n";
+ bool reportedOptimism = false;
  auto writeModule=[&](const Module &module,const std::string &path){std::error_code ec;raw_fd_ostream stream(path,ec);if(ec)throw std::runtime_error(ec.message());module.print(stream,nullptr);};
  auto ds=decision::discover(*initial->getFunction(fn));std::vector<std::string> targets;std::set<BasicBlock*> covered,tagged;json::Array order;
  for(auto &d:ds){bool yes=false;for(unsigned i=0;i+1<d.arms.size();++i)yes|=eligible(d.arms[i],d.arms[i+1]);if(!yes||covered.count(d.root))continue;targets.push_back(d.id);for(auto*b:d.tests)covered.insert(b);for(unsigned i=0;i<d.arms.size();++i){auto&a=d.arms[i];if(!tagged.insert(a.entry).second)continue;std::string label;raw_string_ostream stream(label);a.entry->printAsOperand(stream,false);stream.flush();order.push_back(json::Object{{"entry",label},{"family",d.id},{"index",int64_t(i)}});}}
@@ -571,6 +570,15 @@ int main(int argc,char**argv){try{
       } else {
         auto result=read(details+"/trial.json");
         const auto &actual=*result.getAsObject();
+        if (!reportedOptimism)
+          for (auto section : {"anchor", "r2r_speculation"})
+            if (const auto *entry = actual.getObject(section))
+              if (const auto *wave = entry->getObject("wave"))
+                if (wave->getBoolean("optimistic_without_shape").getValueOr(false)) {
+                  errs()<<"warning: "<<fn<<": "<<fusion::threadPatternOptimismNotice<<"\n";
+                  reportedOptimism = true;
+                  break;
+                }
         if(actual.getString("candidate")!=attempt.getString("candidate"))
           throw std::runtime_error("structural trial identity mismatch: "+dir);
         const auto *score=actual.getObject("score_result");

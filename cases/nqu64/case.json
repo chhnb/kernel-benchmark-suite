@@ -1,6 +1,7 @@
 {
   "name": "nqu64",
   "status": "frozen-anchor-release",
+  "anchor_workgroup_policy": "Optional exact launch shape for per-wave refinement.",
   "anchor_workgroups": {
     "NQU64": {
       "function": "_Z24solve_nqueen_cuda_kerneliiPjS_S_S_i",

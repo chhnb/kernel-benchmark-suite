@@ -14,7 +14,7 @@ static void checkWaveGate(LLVMContext &context) {
   auto module = parseAssemblyString(R"(
     target triple = "amdgcn-amd-amdhsa"
     declare i32 @llvm.amdgcn.workitem.id.x()
-    define amdgpu_kernel void @test_wave() "target-cpu"="gfx906" {
+    define amdgpu_kernel void @test_wave(i32 %n, i32* %p) "target-cpu"="gfx906" {
     entry:
       %tid = call i32 @llvm.amdgcn.workitem.id.x()
       %condition = icmp ult i32 %tid, 16
@@ -24,22 +24,45 @@ static void checkWaveGate(LLVMContext &context) {
     right:
       ret void
     }
+    define amdgpu_kernel void @test_uniform(i32 %n) "target-cpu"="gfx906" {
+      %condition = icmp sgt i32 %n, 0
+      br i1 %condition, label %left, label %right
+    left:
+      ret void
+    right:
+      ret void
+    }
+    define amdgpu_kernel void @test_data(i32* %p) "target-cpu"="gfx906" {
+      %v = load i32, i32* %p
+      %condition = icmp sgt i32 %v, 0
+      br i1 %condition, label %left, label %right
+    left:
+      ret void
+    right:
+      ret void
+    }
   )", error, context);
   assert(module && !verifyModule(*module));
-  const auto &f = *module->getFunction("test_wave");
-  const auto *branch = cast<BranchInst>(f.getEntryBlock().getTerminator());
-  auto classify = [&](StringRef shape) {
-    return fusion::wave_diagnostic::classify(f, branch, shape)
-        .getString("classification").getValueOr("").str();
+  auto classify = [&](StringRef fn, StringRef shape) {
+    const auto &f = *module->getFunction(fn);
+    const auto *branch = cast<BranchInst>(f.getEntryBlock().getTerminator());
+    return fusion::wave_diagnostic::classify(f, branch, shape);
   };
-  // Without a launch shape, a losing speculative layout is rejected and
-  // the guarded layout remains eligible for ordinary TTI comparison.
-  assert(classify("32,1,1") == "must-diverge");
-  assert(fusion::anchorUniformRejection(classify("32,1,1"), true, -1, -2).empty());
-  assert(classify("") == "unknown");
-  assert(fusion::anchorUniformRejection(classify(""), true, -1, -2) ==
+  using fusion::anchorUniformRejection;
+  assert(anchorUniformRejection(classify("test_wave", ""), true, -1, -2).empty());
+  assert(anchorUniformRejection(classify("test_wave", "32,1,1"), true, -1, -2).empty());
+  assert(anchorUniformRejection(classify("test_wave", "128,1,1"), true, -1, -2) ==
          "negative_uniform_gain");
-  assert(fusion::anchorUniformRejection(classify(""), false, -1, -2).empty());
+  for (StringRef shape : {"", "32,1,1"}) {
+    const auto uniform = classify("test_uniform", shape);
+    assert(anchorUniformRejection(uniform, true, 0, 0) == "workgroup_uniform");
+    assert(anchorUniformRejection(uniform, false, -1, -2).empty());
+    const auto data = classify("test_data", shape);
+    assert(anchorUniformRejection(data, true, 0, 0).empty());
+    assert(anchorUniformRejection(data, true, 0, std::nullopt) == "missing_uniform_gain");
+    assert(anchorUniformRejection(data, true, 0, -1) == "negative_uniform_gain");
+    assert(anchorUniformRejection(data, false, -1, -2).empty());
+  }
 }
 
 int main() {

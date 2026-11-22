@@ -179,6 +179,7 @@
     "build_profile_binary_identical_to_tested": true,
     "sha256": "d7f022d001c3d3759ccc3e146296503c1fd3ba0f6adc4bcbd96df79c87acf687"
   },
+  "anchor_workgroup_policy": "Optional exact launch shape for per-wave refinement.",
   "anchor_workgroups": {
     "SRAD-stage2": {
       "function": "_Z11srad_cuda_2PfS_S_S_S_S_iiff",
