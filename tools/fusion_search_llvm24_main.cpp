@@ -138,9 +138,9 @@ static int runSearch(int argc, const char *const *argv, TrialWorker *batch = nul
     AnchorGap anchorGap = AnchorGap::Fork;
     AnchorScoring anchorScoring;
     bool fullSnapshots=true;
-    bool controlOnly=false,catalogOnly=false;std::string ttiWorker="/home/chh/kernel-benchmark-suite/tools/run-llvm24-tti";
+    bool controlOnly=false,catalogOnly=false,anchorConditionOnly=false;std::string ttiWorker="/home/chh/kernel-benchmark-suite/tools/run-llvm24-tti";
     for(int i=1;i<argc;++i){std::string k=argv[i];
-      if(k=="--help"){outs()<<"fusion-search v1 --ir FILE --function NAME --out FILE [--b2b-strategy anchor|darm|darm-artifact] [--anchor-gap fork|linear|both] [--anchor-select-dedup 0|1] [--anchor-cutoff static|live] [--anchor-gap-rank lazy|eager] [--anchor-guarded-gap 0|1] [--structural 1] [--split ID --left ID --right ID] [--debug-dir DIR] [--ir-snapshots full|compact] [--tti-worker EXECUTABLE] [--catalog-only 0|1] [--control-only 0|1]\n";return 0;}
+      if(k=="--help"){outs()<<"fusion-search v1 --ir FILE --function NAME --out FILE [--b2b-strategy anchor|darm|darm-artifact] [--anchor-gap fork|linear|both] [--anchor-select-dedup 0|1] [--anchor-cutoff static|live] [--anchor-gap-rank lazy|eager] [--anchor-guarded-gap 0|1] [--anchor-linear-require any|divergent|divergent-or-unknown] [--anchor-condition-only 0|1] [--structural 1] [--split ID --left ID --right ID] [--debug-dir DIR] [--ir-snapshots full|compact] [--tti-worker EXECUTABLE] [--catalog-only 0|1] [--control-only 0|1]\n";return 0;}
       if(i+1==argc)throw std::runtime_error("missing option value");std::string v=argv[++i];
       if(k=="--control-only"){if(v!="0"&&v!="1")throw std::runtime_error("control-only must be 0 or 1");controlOnly=v=="1";}
       else if(k=="--catalog-only"){if(v!="0"&&v!="1")throw std::runtime_error("catalog-only must be 0 or 1");catalogOnly=v=="1";}
@@ -176,6 +176,17 @@ static int runSearch(int argc, const char *const *argv, TrialWorker *batch = nul
         if (v != "0" && v != "1") throw std::runtime_error("anchor-guarded-gap must be 0 or 1");
         anchorScoring.guardedGap = v == "1";
       }
+      else if(k=="--anchor-linear-require"){
+        if (v == "divergent") anchorScoring.linearRequirement = AnchorLinearRequirement::Divergent;
+        else if (v == "divergent-or-unknown")
+          anchorScoring.linearRequirement = AnchorLinearRequirement::DivergentOrUnknown;
+        else if (v == "any") anchorScoring.linearRequirement = AnchorLinearRequirement::Any;
+        else throw std::runtime_error("invalid anchor-linear-require");
+      }
+      else if(k=="--anchor-condition-only"){
+        if (v != "0" && v != "1") throw std::runtime_error("anchor-condition-only must be 0 or 1");
+        anchorConditionOnly = v == "1";
+      }
       else if(k=="--b2b-strategy"){
         if(v!="darm" && v!="darm-artifact" && v!="anchor")
           throw std::runtime_error("b2b-strategy must be anchor, darm or darm-artifact");
@@ -189,7 +200,7 @@ static int runSearch(int argc, const char *const *argv, TrialWorker *batch = nul
     }
     if(input.empty()||function.empty()||output.empty())throw std::runtime_error("--ir, --function, --out required");
     if(sys::fs::exists(output))throw std::runtime_error("output already exists");
-    bool pair=!split.empty()||!left.empty()||!right.empty();if(pair&&(split.empty()||left.empty()||right.empty()))throw std::runtime_error("explicit pair requires all three IDs");
+    bool pair=!split.empty()||!left.empty()||!right.empty();if(pair&&!anchorConditionOnly&&(split.empty()||left.empty()||right.empty()))throw std::runtime_error("explicit pair requires all three IDs");
     if (options.cleanupMode == CleanupMode::DarmCFGInstCombine) {
       // LLVM 12 reads this registered option inside SimplifyCFG. Initialize it
       // once per process, including when a worker evaluates a batch of pairs.
@@ -205,7 +216,7 @@ static int runSearch(int argc, const char *const *argv, TrialWorker *batch = nul
     std::unique_ptr<MemoryBuffer> buffer;
     std::unique_ptr<Module> parsedModule;
     if (batch) {
-      if (!pair || catalogOnly || controlOnly ||
+      if (!pair || catalogOnly || controlOnly || anchorConditionOnly ||
           !replayParentHash.empty())
         throw std::runtime_error("worker requires explicit pair with LLVM24 scoring");
       if (batch->parent && (batch->input != input || batch->function != function ||
@@ -257,6 +268,12 @@ static int runSearch(int argc, const char *const *argv, TrialWorker *batch = nul
     }
     if(!batch && verifyModule(*module,&errs()))return 2;
     auto*f=module->getFunction(function);if(!f||f->isDeclaration())throw std::runtime_error("function missing");
+    if (anchorConditionOnly) {
+      if (split.empty() || catalogOnly || controlOnly)
+        throw std::runtime_error("anchor-condition-only requires --split and excludes catalog/control");
+      jsonFile(output, describeAnchorCondition(*f, split));
+      return 0;
+    }
     std::unique_ptr<DebugObserver> observer;if(!debug.empty())observer=std::make_unique<DebugObserver>(debug,fullSnapshots,input,output);
     if(catalogOnly){
       if(pair||controlOnly||!observer)throw std::runtime_error("catalog-only requires debug-dir and excludes pair/control-only");

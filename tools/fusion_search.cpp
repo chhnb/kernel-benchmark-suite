@@ -10,6 +10,7 @@
 #include "llvm/IR/IRBuilder.h"
 #include "llvm/IR/ModuleSlotTracker.h"
 #include "llvm/Analysis/ValueTracking.h"
+#include "llvm/Analysis/DivergenceAnalysis.h"
 #include "llvm/Analysis/CaptureTracking.h"
 #include "llvm/Analysis/InstructionSimplify.h"
 #include "llvm/IR/IntrinsicInst.h"
@@ -181,19 +182,89 @@ static bool usesDarmDCE(CleanupMode mode) {
   return mode == CleanupMode::DarmCFGInstCombine;
 }
 
-static unsigned cleanup(Module &m,const std::string &function,CleanupMode mode) {
-  if(mode==CleanupMode::None)return 0;
-  canonicalPhiOrder(m,function);
-  auto*f=m.getFunction(function);if(!f)throw std::runtime_error("cleanup function missing");
+static TargetMachine *targetMachine(const std::string &triple) {
   static const bool initialized=[](){InitializeAllTargetInfos();InitializeAllTargets();InitializeAllTargetMCs();return true;}();
   (void)initialized;
   static std::map<std::string,std::unique_ptr<TargetMachine>> machines;
-  auto triple=m.getTargetTriple();
   if(!machines.count(triple)){
     std::string error;const auto*target=TargetRegistry::lookupTarget(triple,error);
     machines[triple]=std::unique_ptr<TargetMachine>(target?target->createTargetMachine(triple,"","",TargetOptions(),None,None,CodeGenOpt::Default):nullptr);
   }
-  auto*tm=machines.at(triple).get();FunctionAnalysisManager fam;
+  return machines.at(triple).get();
+}
+
+enum class ConditionKind { Uniform, Divergent, Unknown };
+
+static ConditionKind analyzeAnchorCondition(BranchInst &branch, json::Array *sources = nullptr) {
+  auto &f = *branch.getFunction();
+  Triple triple(f.getParent()->getTargetTriple());
+  if (!triple.isAMDGPU() && !triple.isNVPTX()) return ConditionKind::Unknown;
+  auto *tm = targetMachine(f.getParent()->getTargetTriple());
+  if (!tm) return ConditionKind::Unknown;
+  FunctionAnalysisManager fam;
+  auto tti = tm->getTargetIRAnalysis().run(f, fam);
+  if (!tti.hasBranchDivergence()) return ConditionKind::Unknown;
+  DominatorTree dt(f);
+  if (!dt.isReachableFromEntry(branch.getParent())) return ConditionKind::Unknown;
+  PostDominatorTree pdt(f);
+  LoopInfo loops(dt);
+  GPUDivergenceAnalysis divergence(f, dt, pdt, loops, tti);
+  if (sources) {
+    SmallVector<const Value *, 16> worklist{branch.getCondition()};
+    SmallPtrSet<const Value *, 32> visited;
+    std::set<std::string> kinds;
+    while (!worklist.empty()) {
+      auto *v = worklist.pop_back_val();
+      if (!visited.insert(v).second) continue;
+      if (const auto *arg = dyn_cast<Argument>(v)) {
+        kinds.insert("argument " + std::to_string(arg->getArgNo()) + " " + name(arg));
+      } else if (const auto *load = dyn_cast<LoadInst>(v)) {
+        kinds.insert("load addrspace(" + std::to_string(load->getPointerAddressSpace()) + ")");
+        worklist.push_back(load->getPointerOperand());
+      } else if (const auto *call = dyn_cast<CallBase>(v)) {
+        const auto *callee = call->getCalledFunction();
+        kinds.insert(callee ? callee->getName().str() : "indirect call");
+        worklist.append(call->arg_begin(), call->arg_end());
+      } else if (const auto *inst = dyn_cast<Instruction>(v)) {
+        if (isa<PHINode>(inst)) kinds.insert("phi (control join)");
+        worklist.append(inst->op_begin(), inst->op_end());
+      } else if (const auto *global = dyn_cast<GlobalValue>(v)) {
+        kinds.insert("global " + global->getName().str());
+      } else if (isa<Constant>(v)) {
+        kinds.insert("constant");
+      }
+    }
+    for (const auto &kind : kinds) sources->push_back(kind);
+  }
+  return divergence.isDivergentUse(branch.getOperandUse(0))
+      ? ConditionKind::Divergent : ConditionKind::Uniform;
+}
+
+json::Object describeAnchorCondition(Function &f, StringRef split) {
+  unsigned index;
+  BranchInst *branch = nullptr;
+  if (split.startswith("B") && !split.drop_front().getAsInteger(10, index) && index < f.size())
+    branch = dyn_cast<BranchInst>(std::next(f.begin(), index)->getTerminator());
+  json::Array sources;
+  ConditionKind kind = ConditionKind::Unknown;
+  std::string condition;
+  if (branch && branch->isConditional()) {
+    kind = analyzeAnchorCondition(*branch, &sources);
+    raw_string_ostream stream(condition);
+    branch->getCondition()->print(stream);
+  }
+  return json::Object{{"classification", kind == ConditionKind::Divergent ? "divergent" :
+                       kind == ConditionKind::Uniform ? "uniform" : "unknown"},
+                      {"condition", condition}, {"sources", std::move(sources)},
+                      {"triple", f.getParent()->getTargetTriple()}};
+}
+
+static unsigned cleanup(Module &m,const std::string &function,CleanupMode mode) {
+  if(mode==CleanupMode::None)return 0;
+  canonicalPhiOrder(m,function);
+  auto*f=m.getFunction(function);if(!f)throw std::runtime_error("cleanup function missing");
+  auto *tm = targetMachine(m.getTargetTriple());
+  FunctionAnalysisManager fam;
   auto tti=tm?tm->getTargetIRAnalysis().run(*f,fam):TargetIRAnalysis().run(*f,fam);
   // Score and commit the same fixed point, including CFG simplification after
   // scalar rewrites. Keep the legacy DARM cleanup modes reproducible.
@@ -1782,13 +1853,20 @@ std::vector<Trial> planSingleBranchB2B(const Module &parent, const Candidate &c,
       return;
     list.push_back(std::move(layout));
   };
+  bool allowLinear = gap != AnchorGap::Fork && selectableExit && segmentUsesValid;
+  if (allowLinear && scoring.linearRequirement != AnchorLinearRequirement::Any) {
+    auto kind = analyzeAnchorCondition(*branch);
+    allowLinear = kind == ConditionKind::Divergent ||
+        (kind == ConditionKind::Unknown &&
+         scoring.linearRequirement == AnchorLinearRequirement::DivergentOrUnknown);
+  }
   // Keep the unguarded candidates in the list when guarded gaps are enabled.
   for (unsigned mode = 0; mode != 3; ++mode) {
     const bool linear = mode != 0;
     const bool guarded = mode == 2;
-    if (linear ? gap == AnchorGap::Fork || !selectableExit || !segmentUsesValid ||
-                     (guarded && !scoring.guardedGap)
-               : gap == AnchorGap::Linear)
+    if (linear ? !allowLinear || (guarded && !scoring.guardedGap)
+               : gap == AnchorGap::Linear && (allowLinear ||
+                   scoring.linearRequirement == AnchorLinearRequirement::Any))
       continue;
     auto modeScoring = scoring;
     modeScoring.guardedGap = guarded;

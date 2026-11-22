@@ -70,3 +70,70 @@ with tempfile.TemporaryDirectory() as directory:
             assert "float 3.500000e+00, float 1.750000e+00" in local
             assert "float 5.000000e+00, float 1.250000e+00" in local
         print(name, historical_tti, "->", score)
+
+
+    # Query both target models on a kernel argument and a work-item ID.
+    for triple, calling_conv, intrinsic in (
+        ("amdgcn-amd-amdhsa", "amdgpu_kernel", "llvm.amdgcn.workitem.id.x"),
+        ("nvptx64-nvidia-cuda", "ptx_kernel", "llvm.nvvm.read.ptx.sreg.tid.x"),
+    ):
+        for classification, value in (("uniform", "%arg"), ("divergent", "%tid")):
+            source = root / f"{triple}-{classification}.ll"
+            result = source.with_suffix(".json")
+            source.write_text(f"""target triple = "{triple}"
+declare i32 @{intrinsic}()
+define {calling_conv} void @kernel(i32 %arg) {{
+entry:
+  %tid = call i32 @{intrinsic}()
+  %cond = icmp eq i32 {value}, 0
+  br i1 %cond, label %left, label %right
+left:
+  ret void
+right:
+  ret void
+}}
+""")
+            subprocess.run([search, "--ir", source, "--function", "kernel", "--split", "B0",
+                            "--anchor-condition-only", "1", "--out", result], check=True)
+            report = json.loads(result.read_text())
+            assert report["classification"] == classification, report
+            assert (intrinsic in report["sources"]) == (classification == "divergent"), report
+
+    source = root / "unsupported-target.ll"
+    source.write_text('target triple = "x86_64-unknown-linux-gnu"\n' +
+                      'define void @kernel(i1 %p) { entry: br i1 %p, label %l, label %r '
+                      'l: ret void r: ret void }\n')
+    result = source.with_suffix(".json")
+    subprocess.run([search, "--ir", source, "--function", "kernel", "--split", "B0",
+                    "--anchor-condition-only", "1", "--out", result], check=True)
+    assert json.loads(result.read_text())["classification"] == "unknown"
+
+    # A uniform AMDGPU kernel argument keeps the fork even when linear is
+    # requested. The gate does not change the unrestricted linear entry point.
+    source = root / "uniform-diamond.ll"
+    source.write_text("""target triple = "amdgcn-amd-amdhsa"
+define amdgpu_kernel void @kernel(i1 %flag, i32 %x, i32 addrspace(1)* %out) #0 {
+entry:
+  br i1 %flag, label %l, label %r
+l:
+  %a = add i32 %x, 1
+  br label %join
+r:
+  %b = xor i32 %x, 7
+  br label %join
+join:
+  %v = phi i32 [ %a, %l ], [ %b, %r ]
+  store i32 %v, i32 addrspace(1)* %out
+  ret void
+}
+attributes #0 = { "target-cpu"="gfx906" }
+""")
+    for requirement in ("any", "divergent", "divergent-or-unknown"):
+        report = root / ("uniform-" + requirement)
+        subprocess.run([search, "--ir", source, "--function", "kernel",
+                        "--split", "B0", "--left", "B1", "--right", "B2",
+                        "--anchor-gap", "linear", "--anchor-linear-require", requirement,
+                        "--tti-worker", worker, "--debug-dir", report,
+                        "--out", report.with_suffix(".ll")], check=True)
+        trial = json.loads((report / "trial-0/trial.json").read_text())
+        assert (trial["anchor"]["emission"] == "linear") == (requirement == "any"), trial["anchor"]
