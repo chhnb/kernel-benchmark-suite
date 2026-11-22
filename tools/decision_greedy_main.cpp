@@ -128,12 +128,13 @@ int main(int argc,char**argv){try{
  auto timingReport=[&](){json::Object phases;for(const auto &kv:phaseMilliseconds)phases[kv.first]=json::Object{{"milliseconds",kv.second},{"calls",phaseCalls[kv.first]}};return phases;};
 
  if(argc==2&&StringRef(argv[1])=="--help"){
-   outs()<<"usage: decision-greedy INPUT FUNCTION [TOOL_ROOT] NEW_OUTPUT [--b2b-strategy anchor|darm|darm-artifact] [--anchor-gap fork|linear|both|auto] [--anchor-auto-assume diverge] [--anchor-select-dedup 0|1] [--anchor-cutoff static] [--anchor-gap-rank lazy] [--anchor-guarded-gap 0|1] [--anchor-linear-require any|divergent|divergent-or-unknown] [--domain-schedule ordered] [--ir-snapshots full|compact] [--tti-quote-cache off|audit|on] [--commit-normalize-only|--no-commit-normalize-only]\n";
+   outs()<<"usage: decision-greedy INPUT FUNCTION [TOOL_ROOT] NEW_OUTPUT [--b2b-strategy anchor|darm|darm-artifact] [--anchor-gap fork|linear|both|auto] [--anchor-auto-assume diverge|classify] [--anchor-uniform-gate off|on] [--anchor-uniform-missing allow|reject] [--anchor-wave-shape X,Y,Z] [--anchor-select-dedup 0|1] [--anchor-cutoff static] [--anchor-gap-rank lazy] [--anchor-guarded-gap 0|1] [--anchor-linear-require any|divergent|divergent-or-unknown] [--domain-schedule ordered] [--ir-snapshots full|compact] [--tti-quote-cache off|audit|on] [--commit-normalize-only|--no-commit-normalize-only]\n";
    outs()<<"Default schedule: ordered for whole-function trials (Auto Greedy v2).\n";
    outs()<<"Normalize-only commits are enabled by default.\n";
    return 0;
  }
  std::string b2bStrategy="anchor", quoteMode="on", snapshotMode, anchorGap="fork", anchorLinearRequire="any";
+ std::string anchorAutoAssume="diverge", anchorUniformGate="off", anchorUniformMissing="allow", anchorWaveShape;
  bool anchorSelectDedup=false, anchorGuardedGap=false;
  Optional<bool> normalizeOnlyOverride;
  while (argc >= 3) {
@@ -156,10 +157,17 @@ int main(int argc,char**argv){try{
    else if (option == "--anchor-select-dedup" && (value == "0" || value == "1"))
      anchorSelectDedup = value == "1";
    else if ((option == "--anchor-cutoff" && value == "static") ||
-            (option == "--anchor-gap-rank" && value == "lazy") ||
-            (option == "--anchor-auto-assume" && value == "diverge")) {
+            (option == "--anchor-gap-rank" && value == "lazy")) {
      // Retain the fixed spellings for existing replay commands.
    }
+   else if (option == "--anchor-auto-assume" && (value == "diverge" || value == "classify"))
+     anchorAutoAssume = value.str();
+   else if (option == "--anchor-uniform-gate" && (value == "off" || value == "on"))
+     anchorUniformGate = value.str();
+   else if (option == "--anchor-uniform-missing" && (value == "allow" || value == "reject"))
+     anchorUniformMissing = value.str();
+   else if (option == "--anchor-wave-shape" && !value.empty())
+     anchorWaveShape = value.str();
    else if (option == "--anchor-guarded-gap" && (value == "0" || value == "1"))
      anchorGuardedGap = value == "1";
    else if (option == "--anchor-linear-require" &&
@@ -168,13 +176,17 @@ int main(int argc,char**argv){try{
    else if (option == "--b2b-strategy" && (value == "darm" || value == "darm-artifact" || value == "anchor"))
      b2bStrategy = value.str();
    else if (option == "--ir-snapshots" || option == "--domain-schedule" || option == "--b2b-strategy" || option == "--tti-quote-cache" || option == "--anchor-gap" ||
-            option == "--anchor-auto-assume" || option == "--anchor-select-dedup" || option == "--anchor-cutoff" || option == "--anchor-gap-rank" || option == "--anchor-guarded-gap" || option == "--anchor-linear-require")
+            option == "--anchor-auto-assume" || option == "--anchor-uniform-gate" || option == "--anchor-uniform-missing" || option == "--anchor-wave-shape" || option == "--anchor-select-dedup" || option == "--anchor-cutoff" || option == "--anchor-gap-rank" || option == "--anchor-guarded-gap" || option == "--anchor-linear-require")
      throw std::runtime_error("invalid value for " + option.str());
    else break;
    argc -= 2;
  }
  if(argc!=4&&argc!=5)
-   throw std::runtime_error("usage: decision-greedy INPUT FUNCTION [TOOL_ROOT] NEW_OUTPUT [--b2b-strategy anchor|darm|darm-artifact] [--anchor-gap fork|linear|both|auto] [--anchor-auto-assume diverge] [--anchor-select-dedup 0|1] [--anchor-cutoff static] [--anchor-gap-rank lazy] [--anchor-guarded-gap 0|1] [--anchor-linear-require any|divergent|divergent-or-unknown] [--domain-schedule ordered] [--ir-snapshots full|compact] [--tti-quote-cache off|audit|on] [--commit-normalize-only|--no-commit-normalize-only]");
+   throw std::runtime_error("usage: decision-greedy INPUT FUNCTION [TOOL_ROOT] NEW_OUTPUT [--b2b-strategy anchor|darm|darm-artifact] [--anchor-gap fork|linear|both|auto] [--anchor-auto-assume diverge|classify] [--anchor-uniform-gate off|on] [--anchor-uniform-missing allow|reject] [--anchor-wave-shape X,Y,Z] [--anchor-select-dedup 0|1] [--anchor-cutoff static] [--anchor-gap-rank lazy] [--anchor-guarded-gap 0|1] [--anchor-linear-require any|divergent|divergent-or-unknown] [--domain-schedule ordered] [--ir-snapshots full|compact] [--tti-quote-cache off|audit|on] [--commit-normalize-only|--no-commit-normalize-only]");
+ if (anchorAutoAssume == "classify" && anchorGap != "auto")
+   throw std::runtime_error("anchor-auto-assume classify requires anchor-gap auto");
+ if ((anchorUniformGate == "on" || !anchorWaveShape.empty()) && anchorAutoAssume != "classify")
+   throw std::runtime_error("anchor-uniform-gate on and anchor-wave-shape require anchor-auto-assume classify");
  const bool commitNormalizeOnly=normalizeOnlyOverride.getValueOr(true);
  if(snapshotMode.empty())snapshotMode="compact";
  const bool implicitRoot=argc==4;
@@ -478,6 +490,14 @@ int main(int argc,char**argv){try{
       trialArgs.insert(trialArgs.end(), {"--b2b-strategy", b2bStrategy});
       if (anchorGap != "fork")
         trialArgs.insert(trialArgs.end(), {"--anchor-gap", anchorGap});
+      if (anchorAutoAssume == "classify") {
+        trialArgs.insert(trialArgs.end(), {"--anchor-auto-assume", anchorAutoAssume});
+        if (!anchorWaveShape.empty())
+          trialArgs.insert(trialArgs.end(), {"--anchor-wave-shape", anchorWaveShape});
+        if (anchorUniformGate == "on")
+          trialArgs.insert(trialArgs.end(), {"--anchor-uniform-gate", anchorUniformGate,
+                                            "--anchor-uniform-missing", anchorUniformMissing});
+      }
       if (anchorSelectDedup)
         trialArgs.insert(trialArgs.end(), {"--anchor-select-dedup", "1"});
       if (anchorGuardedGap)

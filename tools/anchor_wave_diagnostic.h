@@ -1,6 +1,7 @@
 #pragma once
 
 #include "llvm/IR/Instructions.h"
+#include "llvm/ADT/STLExtras.h"
 #include "llvm/IR/Module.h"
 #include "llvm/Support/JSON.h"
 #include "llvm/ADT/Triple.h"
@@ -98,6 +99,13 @@ inline std::optional<llvm::APInt> evaluate(const llvm::Value *v, const Shape &id
       (operation->hasNoUnsignedWrap() && unsignedOverflow))
     return std::nullopt;
   return result;
+}
+
+inline const llvm::BranchInst *findBranch(const llvm::Function &f, llvm::StringRef split) {
+  unsigned index;
+  if (!split.consume_front("B") || split.getAsInteger(10, index) || index >= f.size())
+    return nullptr;
+  return llvm::dyn_cast<llvm::BranchInst>(std::next(f.begin(), index)->getTerminator());
 }
 
 inline llvm::json::Object classify(const llvm::Function &f, const llvm::BranchInst *branch,

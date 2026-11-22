@@ -186,3 +186,67 @@ with tempfile.TemporaryDirectory() as directory:
                ("unknown", None, 1))
     check_wave(root, source, "64,1,1", "%cond = icmp ult i32 %x, 32",
                ("must-uniform", 0, 2), nvptx=True)
+
+
+with tempfile.TemporaryDirectory() as directory:
+    root = Path(directory)
+    fixture = (fixtures / "MapAiry.ll").read_text()
+    split = "br i1 %cond, label %left, label %right"
+    wave_fixture = fixture.replace(
+        split,
+        "%tid = call i32 @llvm.amdgcn.workitem.id.x()\n"
+        "  %lane.test = icmp ult i32 %tid, 8\n"
+        "  br i1 %lane.test, label %left, label %right",
+        1,
+    ) + "\ndeclare i32 @llvm.amdgcn.workitem.id.x()\n"
+
+    def gate_trial(label, ir, *opts):
+        parent, output, debug = root / f"{label}.ll", root / f"{label}.out.ll", root / label
+        parent.write_text(ir)
+        subprocess.run(
+            [search, "--ir", parent, "--function", "MapAiry", "--split", "B0",
+             "--left", "B1", "--right", "B2", "--anchor-gap", "auto",
+             "--anchor-guarded-gap", "1", "--anchor-auto-assume", "classify",
+             "--tti-worker", worker, "--out", output, "--debug-dir", debug, *opts],
+            check=True,
+        )
+        subprocess.run([opt, "-verify", "-disable-output", output], check=True)
+        return json.loads((debug / "trial-0/trial.json").read_text())
+
+    def linear_layouts(report):
+        rows = [row for row in report["layout_profitability"]
+                if row["anchor"]["emission"] in ("linear", "guarded-linear")]
+        assert rows
+        return rows
+
+    def assert_fork_selected(report, category, rejection):
+        assert report["anchor"]["wave"]["classification"] == category
+        assert report["anchor"]["emission"] == "segmented" and report["eligible"]
+        assert report["score_result"]["metrics"]["work_after"] == 324
+        for row in linear_layouts(report):
+            assert row["tti_eligible"] and not row["eligible"]
+            assert row["uniform_gate_rejection"] == rejection
+
+    gate, shape, policy = "--anchor-uniform-gate", "--anchor-wave-shape", "--anchor-uniform-missing"
+    before = gate_trial("gate-off", wave_fixture, shape, "256,1,1")
+    assert before["anchor"]["emission"] == "linear" and before["eligible"]
+    mixed = gate_trial("mixed", wave_fixture, gate, "on", shape, "256,1,1")
+    assert_fork_selected(mixed, "mixed", "negative_uniform_gain")
+    uniform = gate_trial("uniform", wave_fixture, gate, "on", shape, "8,1,1")
+    assert_fork_selected(uniform, "must-uniform", "must_uniform")
+
+    divergent = gate_trial("divergent", wave_fixture, gate, "on", shape, "16,1,1", policy, "reject")
+    assert divergent["anchor"]["wave"]["classification"] == "must-diverge"
+    assert divergent["anchor"]["emission"] == "linear" and divergent["eligible"]
+    assert divergent["score_result"]["metrics"]["work_after"] == 303
+    for row in linear_layouts(divergent):
+        assert row["eligible"] and row["score_result"]["metrics"]["uniform_gain_false"] < 0
+
+    missing_fixture = fixture.replace(split, "br i1 true, label %left, label %right", 1)
+    allow = gate_trial("missing-allow", missing_fixture, gate, "on", policy, "allow")
+    reject = gate_trial("missing-reject", missing_fixture, gate, "on", policy, "reject")
+    for allowed, denied in zip(linear_layouts(allow), linear_layouts(reject)):
+        assert allowed["score_result"] == denied["score_result"]
+        assert "uniform_gain_false" not in allowed["score_result"]["metrics"]
+        assert "uniform_gate_rejection" not in allowed
+        assert denied["uniform_gate_rejection"] == "missing_uniform_gain"
