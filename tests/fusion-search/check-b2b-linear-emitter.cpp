@@ -31,7 +31,7 @@ int main(int argc, char **argv) {
   const AnchorMatch matches[] = {{3, 3}, {5, 4}};
   const AnchorGapPlacement gaps[] = {
       AnchorGapPlacement::Guard, AnchorGapPlacement::Hoist, AnchorGapPlacement::Guard};
-  emitB2BLinear(split, left, right, left.getSingleSuccessor(), matches, true, false, gaps);
+  emitB2BLinear(split, left, right, left.getSingleSuccessor(), matches, B2BExit::Merge, false, gaps);
   if (verifyModule(*module, &errs()))
     return 1;
 
@@ -81,7 +81,7 @@ int main(int argc, char **argv) {
     branch.setCondition(condition);
     auto *l = branch.getSuccessor(0);
     auto *r = branch.getSuccessor(1);
-    emitB2BLinear(branch, *l, *r, l->getSingleSuccessor(), matches, true, false, gaps);
+    emitB2BLinear(branch, *l, *r, l->getSingleSuccessor(), matches, B2BExit::Merge, false, gaps);
     auto &entry = undefined->getFunction("auto_guard_reference")->getEntryBlock();
     assert(cast<BranchInst>(*entry.getTerminator()).getCondition() == condition);
     assert(!verifyModule(*undefined, &errs()));
