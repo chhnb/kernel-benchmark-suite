@@ -103,12 +103,9 @@ join:
         [](Type *) { return 1; }, [](Type *) { return 0; }, true, scoring);
   };
   auto repeated = costPlans("reused", {});
-  auto dedup = costPlans("reused", {true});
   assert(repeated.front().matches.size() == 3 && repeated.front().score == 5);
-  // Four uses of (a,b), plus two exit PHIs, share one select.
-  assert(dedup.front().matches == repeated.front().matches && dedup.front().score == 8);
 
-  auto fixed = costPlans("cut", {true});
+  auto fixed = costPlans("cut", {});
   assert(fixed.front().cutoffs.size() == 1 &&
          (fixed.front().cutoffs.front() == AnchorMatch{1, 1}));
   assert(fixed.front().matches.size() == 1);
@@ -117,10 +114,10 @@ join:
   // forward cutoffs. The phis fixture forces otherwise unpairable stores.
   for (bool pairTies : {false, true})
     for (StringRef function : {"phis", "reused"}) {
-      auto expected = costPlans(function, {true, false}, pairTies);
-      auto guarded = costPlans(function, {true, true}, pairTies);
+      auto expected = costPlans(function, {}, pairTies);
+      auto guarded = costPlans(function, {true, false}, pairTies);
       expected.append(guarded.begin(), guarded.end());
-      auto unified = costPlans(function, {true, true, true}, pairTies);
+      auto unified = costPlans(function, {true, true}, pairTies);
       assert(unified.size() == expected.size());
       for (auto item : llvm::enumerate(unified)) {
         const auto &plan = item.value(), &prior = expected[item.index()];

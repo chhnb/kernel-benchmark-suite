@@ -1723,8 +1723,7 @@ std::vector<Trial> planSingleBranchB2B(const Module &parent, const Candidate &c,
                                        function_ref<int(const Instruction &)> intrinsicCost,
                                        function_ref<int(const Instruction &)> anchorCost,
                                        function_ref<int(Type *)> anchorSelectCost,
-                                       function_ref<int(Type *)> anchorPhiCost, AnchorGap gap,
-                                       AnchorScoring scoring) {
+                                       function_ref<int(Type *)> anchorPhiCost, AnchorGap gap) {
   ProfileScope planningScope("b2b_plan_generate_clean_total");
   std::vector<Trial> trials;
   if (!usesDarmDCE(mode))
@@ -1882,27 +1881,16 @@ std::vector<Trial> planSingleBranchB2B(const Module &parent, const Candidate &c,
       return;
     list.push_back(std::move(layout));
   };
-  bool allowLinear = gap != AnchorGap::Fork && selectableExit && segmentUsesValid;
-  if (allowLinear && scoring.linearRequirement != AnchorLinearRequirement::Any) {
-    auto kind = analyzeAnchorCondition(*branch);
-    allowLinear = kind == ConditionKind::Divergent ||
-        (kind == ConditionKind::Unknown &&
-         scoring.linearRequirement == AnchorLinearRequirement::DivergentOrUnknown);
-  }
-  const bool unified = gap == AnchorGap::Auto;
+  const bool allowLinear = gap == AnchorGap::Auto && selectableExit && segmentUsesValid;
   SmallVector<AnchorPlan, 3> unifiedPlans[2];
   // Emit in legacy fork, linear, guarded order, retaining the original trial
   // IDs and tie-breaks. Auto computes both linear projections in mode 1.
   for (unsigned mode = 0; mode != 3; ++mode) {
     const bool linear = mode != 0;
     const bool guarded = mode == 2;
-    if (linear ? !allowLinear || (guarded && !scoring.guardedGap)
-               : gap == AnchorGap::Linear && (allowLinear ||
-                   scoring.linearRequirement == AnchorLinearRequirement::Any))
+    if (linear && !allowLinear)
       continue;
-    auto modeScoring = scoring;
-    modeScoring.unifiedGap = unified && linear;
-    modeScoring.guardedGap = modeScoring.unifiedGap ? scoring.guardedGap : guarded;
+    AnchorScoring modeScoring{linear, linear};
     for (bool pairTies : {false, true}) {
       SmallVector<AnchorPlan, 3> plans;
       if (!modeScoring.unifiedGap || !guarded)

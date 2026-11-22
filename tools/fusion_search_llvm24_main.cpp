@@ -136,14 +136,12 @@ static int runSearch(int argc, const char *const *argv, TrialWorker *batch = nul
   try {
     std::string input,function,output,debug,split,left,right,replayParentHash,anchorWaveShape;Options options;options.cleanupMode=CleanupMode::DarmCFGInstCombine;
     bool useArtifactB2B=false, useAnchorB2B=true;
-    bool classifyWaves=false, uniformGate=false, rejectMissing=false;
+    bool anchorLegacy=false;
     std::string quoteMode="on";
-    AnchorGap anchorGap = AnchorGap::Fork;
-    AnchorScoring anchorScoring;
     bool fullSnapshots=true;
     bool controlOnly=false,catalogOnly=false,anchorConditionOnly=false;std::string ttiWorker="/home/chh/kernel-benchmark-suite/tools/run-llvm24-tti";
     for(int i=1;i<argc;++i){std::string k=argv[i];
-      if(k=="--help"){outs()<<"fusion-search v1 --ir FILE --function NAME --out FILE [--b2b-strategy anchor|darm|darm-artifact] [--anchor-gap fork|linear|both|auto] [--anchor-auto-assume diverge|classify] [--anchor-uniform-gate off|on] [--anchor-uniform-missing allow|reject] [--anchor-select-dedup 0|1] [--anchor-cutoff static] [--anchor-gap-rank lazy] [--anchor-guarded-gap 0|1] [--anchor-linear-require any|divergent|divergent-or-unknown] [--anchor-condition-only 0|1] [--anchor-wave-shape X,Y,Z] [--structural 1] [--split ID --left ID --right ID] [--debug-dir DIR] [--ir-snapshots full|compact] [--tti-worker EXECUTABLE] [--catalog-only 0|1] [--control-only 0|1]\n";return 0;}
+      if(k=="--help"){outs()<<"fusion-search v1 --ir FILE --function NAME --out FILE [--b2b-strategy anchor|darm|darm-artifact] [--anchor-mode legacy] [--anchor-wave-shape X,Y,Z] [--anchor-condition-only 0|1] [--structural 1] [--split ID --left ID --right ID] [--debug-dir DIR] [--ir-snapshots full|compact] [--tti-worker EXECUTABLE] [--catalog-only 0|1] [--control-only 0|1]\n";return 0;}
       if(i+1==argc)throw std::runtime_error("missing option value");std::string v=argv[++i];
       if(k=="--control-only"){if(v!="0"&&v!="1")throw std::runtime_error("control-only must be 0 or 1");controlOnly=v=="1";}
       else if(k=="--catalog-only"){if(v!="0"&&v!="1")throw std::runtime_error("catalog-only must be 0 or 1");catalogOnly=v=="1";}
@@ -159,46 +157,14 @@ static int runSearch(int argc, const char *const *argv, TrialWorker *batch = nul
       }
       else if(k=="--replay-parent-hash")replayParentHash=v;
       else if(k=="--ir")input=v;else if(k=="--function")function=v;else if(k=="--out")output=v;
-      else if(k=="--anchor-gap"){
-        if (!parseAnchorGap(v, anchorGap))
-          throw std::runtime_error("anchor-gap must be fork, linear, both or auto");
+      else if(k=="--anchor-mode"){
+        if (v != "legacy") throw std::runtime_error("anchor-mode must be legacy");
+        anchorLegacy = true;
       }
-      else if(k=="--anchor-select-dedup"){
-        if (v != "0" && v != "1") throw std::runtime_error("anchor-select-dedup must be 0 or 1");
-        anchorScoring.selectDedup = v == "1";
+      else if(k=="--anchor-wave-shape"){
+        if (!wave_diagnostic::parseShape(v)) throw std::runtime_error("invalid anchor-wave-shape (expected X,Y,Z)");
+        anchorWaveShape=v;
       }
-      else if(k=="--anchor-cutoff"){
-        if (v != "static") throw std::runtime_error("anchor-cutoff must be static");
-      }
-      else if(k=="--anchor-gap-rank"){
-        if (v != "lazy") throw std::runtime_error("anchor-gap-rank must be lazy");
-      }
-      else if(k=="--anchor-guarded-gap"){
-        if (v != "0" && v != "1") throw std::runtime_error("anchor-guarded-gap must be 0 or 1");
-        anchorScoring.guardedGap = v == "1";
-      }
-      else if(k=="--anchor-linear-require"){
-        if (v == "divergent") anchorScoring.linearRequirement = AnchorLinearRequirement::Divergent;
-        else if (v == "divergent-or-unknown")
-          anchorScoring.linearRequirement = AnchorLinearRequirement::DivergentOrUnknown;
-        else if (v == "any") anchorScoring.linearRequirement = AnchorLinearRequirement::Any;
-        else throw std::runtime_error("invalid anchor-linear-require");
-      }
-      else if(k=="--anchor-auto-assume"){
-        if (v != "diverge" && v != "classify")
-          throw std::runtime_error("anchor-auto-assume must be diverge or classify");
-        classifyWaves = v == "classify";
-      }
-      else if(k=="--anchor-uniform-gate"){
-        if (v != "off" && v != "on") throw std::runtime_error("anchor-uniform-gate must be off or on");
-        uniformGate = v == "on";
-      }
-      else if(k=="--anchor-uniform-missing"){
-        if (v != "allow" && v != "reject")
-          throw std::runtime_error("anchor-uniform-missing must be allow or reject");
-        rejectMissing = v == "reject";
-      }
-      else if(k=="--anchor-wave-shape") anchorWaveShape=v;
       else if(k=="--anchor-condition-only"){
         if (v != "0" && v != "1") throw std::runtime_error("anchor-condition-only must be 0 or 1");
         anchorConditionOnly = v == "1";
@@ -214,12 +180,9 @@ static int runSearch(int argc, const char *const *argv, TrialWorker *batch = nul
       else if(k=="--debug-dir")debug=v;else if(k=="--split")split=v;else if(k=="--left")left=v;else if(k=="--right")right=v;
       else throw std::runtime_error("unknown option: "+k);
     }
-    if (classifyWaves && anchorGap != AnchorGap::Auto)
-      throw std::runtime_error("anchor-auto-assume classify requires anchor-gap auto");
-    if (uniformGate && !classifyWaves)
-      throw std::runtime_error("anchor-uniform-gate on requires anchor-auto-assume classify");
-    if (!anchorWaveShape.empty() && !anchorConditionOnly && !classifyWaves)
-      throw std::runtime_error("anchor-wave-shape requires anchor-condition-only or anchor-auto-assume classify");
+    const bool uniformGate = !anchorLegacy;
+    const auto gap = anchorLegacy ? AnchorGap::Fork : AnchorGap::Auto;
+
     if(input.empty()||function.empty()||output.empty())throw std::runtime_error("--ir, --function, --out required");
     if(sys::fs::exists(output))throw std::runtime_error("output already exists");
     bool pair=!split.empty()||!left.empty()||!right.empty();if(pair&&!anchorConditionOnly&&(split.empty()||left.empty()||right.empty()))throw std::runtime_error("explicit pair requires all three IDs");
@@ -336,9 +299,11 @@ static int runSearch(int argc, const char *const *argv, TrialWorker *batch = nul
         roundStorage.emplace(makeRound(*module,function,0,options.optLevel,options.cleanupMode));
       const auto &round = *roundStorage;
       if(observer)observer->round(round);
+      if (!batch && useAnchorB2B && uniformGate && !wave_diagnostic::resolveShape(*f, anchorWaveShape))
+        errs()<<"warning: workgroup shape not provided for "<<function<<"; Anchor wave classification is unknown\n";
       std::vector<Trial> plans;
       if (useAnchorB2B)
-        plans = llvm24Scorer.planAnchorB2B(*module, c, options.cleanupMode, anchorGap, anchorScoring);
+        plans = llvm24Scorer.planAnchorB2B(*module, c, options.cleanupMode, gap);
       const bool plannedB2B = !plans.empty();
       Trial t;
       ScoreResult score;
@@ -346,7 +311,7 @@ static int runSearch(int argc, const char *const *argv, TrialWorker *batch = nul
         json::Array profitability;
         json::Object wave;
         StringRef waveClass;
-        if (classifyWaves) {
+        if (uniformGate) {
           wave = profileCall("classify_anchor_wave", [&]() {
             return wave_diagnostic::classify(*f, wave_diagnostic::findBranch(*f, split), anchorWaveShape);
           });
@@ -379,7 +344,7 @@ static int runSearch(int argc, const char *const *argv, TrialWorker *batch = nul
           const bool ttiEligible = eligible(plan, result);
           const auto rejection = uniformGate && plan.valid ? anchorUniformRejection(
               waveClass, linear, sideGain(result, "uniform_gain_false"),
-              sideGain(result, "uniform_gain_true"), rejectMissing) : StringRef{};
+              sideGain(result, "uniform_gain_true")) : StringRef{};
           json::Object layout{{"layout", plan.mergePath}, {"valid", plan.valid},
               {"eligible", ttiEligible && rejection.empty()}, {"anchor", json::Object(plan.anchorStats)},
               {"score_result", scoreJson(result)}};
@@ -406,7 +371,7 @@ static int runSearch(int argc, const char *const *argv, TrialWorker *batch = nul
           t.candidate = c;
           t.reason = "anchor_uniform_gate_no_layout";
         }
-        if (classifyWaves)
+        if (uniformGate)
           t.anchorStats["wave"] = std::move(wave);
         if (useAnchorB2B) {
           t.anchorStats["generated"] = int64_t(plans.size());

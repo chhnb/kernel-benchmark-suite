@@ -25,7 +25,7 @@ with tempfile.TemporaryDirectory() as directory:
         subprocess.run(
             [search, "--ir", fixtures / f"{name}.ll", "--function", fn,
              "--split", "B0", "--left", left, "--right", right,
-             "--b2b-strategy", "anchor", "--tti-worker", worker,
+             "--b2b-strategy", "anchor", "--anchor-mode", "legacy", "--tti-worker", worker,
              "--out", result, "--debug-dir", debug],
             check=True,
         )
@@ -108,36 +108,6 @@ right:
                     "--anchor-condition-only", "1", "--out", result], check=True)
     assert json.loads(result.read_text())["classification"] == "unknown"
 
-    # A uniform AMDGPU kernel argument keeps the fork even when linear is
-    # requested. The gate does not change the unrestricted linear entry point.
-    source = root / "uniform-diamond.ll"
-    source.write_text("""target triple = "amdgcn-amd-amdhsa"
-define amdgpu_kernel void @kernel(i1 %flag, i32 %x, i32 addrspace(1)* %out) #0 {
-entry:
-  br i1 %flag, label %l, label %r
-l:
-  %a = add i32 %x, 1
-  br label %join
-r:
-  %b = xor i32 %x, 7
-  br label %join
-join:
-  %v = phi i32 [ %a, %l ], [ %b, %r ]
-  store i32 %v, i32 addrspace(1)* %out
-  ret void
-}
-attributes #0 = { "target-cpu"="gfx906" }
-""")
-    for requirement in ("any", "divergent", "divergent-or-unknown"):
-        report = root / ("uniform-" + requirement)
-        subprocess.run([search, "--ir", source, "--function", "kernel",
-                        "--split", "B0", "--left", "B1", "--right", "B2",
-                        "--anchor-gap", "linear", "--anchor-linear-require", requirement,
-                        "--tti-worker", worker, "--debug-dir", report,
-                        "--out", report.with_suffix(".ll")], check=True)
-        trial = json.loads((report / "trial-0/trial.json").read_text())
-        assert (trial["anchor"]["emission"] == "linear") == (requirement == "any"), trial["anchor"]
-
 
 def check_wave(root, worker_input, shape, expression, expected, nvptx=False):
     triple = "nvptx64-nvidia-cuda" if nvptx else "amdgcn-amd-amdhsa"
@@ -205,8 +175,7 @@ with tempfile.TemporaryDirectory() as directory:
         parent.write_text(ir)
         subprocess.run(
             [search, "--ir", parent, "--function", "MapAiry", "--split", "B0",
-             "--left", "B1", "--right", "B2", "--anchor-gap", "auto",
-             "--anchor-guarded-gap", "1", "--anchor-auto-assume", "classify",
+             "--left", "B1", "--right", "B2",
              "--tti-worker", worker, "--out", output, "--debug-dir", debug, *opts],
             check=True,
         )
@@ -227,15 +196,13 @@ with tempfile.TemporaryDirectory() as directory:
             assert row["tti_eligible"] and not row["eligible"]
             assert row["uniform_gate_rejection"] == rejection
 
-    gate, shape, policy = "--anchor-uniform-gate", "--anchor-wave-shape", "--anchor-uniform-missing"
-    before = gate_trial("gate-off", wave_fixture, shape, "256,1,1")
-    assert before["anchor"]["emission"] == "linear" and before["eligible"]
-    mixed = gate_trial("mixed", wave_fixture, gate, "on", shape, "256,1,1")
+    shape = "--anchor-wave-shape"
+    mixed = gate_trial("mixed", wave_fixture, shape, "256,1,1")
     assert_fork_selected(mixed, "mixed", "negative_uniform_gain")
-    uniform = gate_trial("uniform", wave_fixture, gate, "on", shape, "8,1,1")
+    uniform = gate_trial("uniform", wave_fixture, shape, "8,1,1")
     assert_fork_selected(uniform, "must-uniform", "must_uniform")
 
-    divergent = gate_trial("divergent", wave_fixture, gate, "on", shape, "16,1,1", policy, "reject")
+    divergent = gate_trial("divergent", wave_fixture, shape, "16,1,1")
     assert divergent["anchor"]["wave"]["classification"] == "must-diverge"
     assert divergent["anchor"]["emission"] == "linear" and divergent["eligible"]
     assert divergent["score_result"]["metrics"]["work_after"] == 303
@@ -243,10 +210,14 @@ with tempfile.TemporaryDirectory() as directory:
         assert row["eligible"] and row["score_result"]["metrics"]["uniform_gain_false"] < 0
 
     missing_fixture = fixture.replace(split, "br i1 true, label %left, label %right", 1)
-    allow = gate_trial("missing-allow", missing_fixture, gate, "on", policy, "allow")
-    reject = gate_trial("missing-reject", missing_fixture, gate, "on", policy, "reject")
-    for allowed, denied in zip(linear_layouts(allow), linear_layouts(reject)):
-        assert allowed["score_result"] == denied["score_result"]
-        assert "uniform_gain_false" not in allowed["score_result"]["metrics"]
-        assert "uniform_gate_rejection" not in allowed
-        assert denied["uniform_gate_rejection"] == "missing_uniform_gain"
+    rejected = gate_trial("missing", missing_fixture)
+    for row in linear_layouts(rejected):
+        assert "uniform_gain_false" not in row["score_result"]["metrics"]
+        assert row["uniform_gate_rejection"] == "missing_uniform_gain"
+
+    metadata = wave_fixture.replace("#2 {", "#2 !reqd_work_group_size !900 {", 1)
+    metadata = metadata.replace('"target-cpu"="gfx906"', '"target-cpu"="gfx906" "amdgpu-flat-work-group-size"="16,16"')
+    metadata += "\n!900 = !{i32 16, i32 1, i32 1}\n"
+    required = gate_trial("metadata", metadata)
+    assert required["anchor"]["wave"]["shape_source"] == "reqd_work_group_size"
+    assert required["anchor"]["wave"]["classification"] == "must-diverge"

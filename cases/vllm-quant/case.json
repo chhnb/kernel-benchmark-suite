@@ -179,5 +179,19 @@
     "fusion_performed": false,
     "native_darm_scoring": true,
     "darm_candidate_sorter_used": false
+  },
+  "anchor_workgroups": {
+    "vllm": {
+      "function": "cache_eval",
+      "shape": [
+        64,
+        1,
+        1
+      ],
+      "sources": [
+        "vllm/64K at /data/home/chh/simplify-v2/build/b2b-layouts/k16-gpu/generated-vllm/65536/input.txt:3",
+        "vllm/128K at /data/home/chh/simplify-v2/build/b2b-layouts/k16-gpu/generated-vllm/131072/input.txt:3"
+      ]
+    }
   }
 }

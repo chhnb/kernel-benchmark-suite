@@ -13,26 +13,12 @@ class Instruction;
 class Type;
 }
 namespace fusion {
-enum class AnchorGap { Fork, Linear, Both, Auto };
-
-inline bool parseAnchorGap(llvm::StringRef name, AnchorGap &gap) {
-  if (name == "fork") gap = AnchorGap::Fork;
-  else if (name == "linear") gap = AnchorGap::Linear;
-  else if (name == "both") gap = AnchorGap::Both;
-  else if (name == "auto") gap = AnchorGap::Auto;
-  else return false;
-  return true;
-}
-
+enum class AnchorGap { Fork, Auto };
 enum class AnchorGapPlacement { Hoist, HoistAndGuard, Guard };
 
-enum class AnchorLinearRequirement { Any, Divergent, DivergentOrUnknown };
-
 struct AnchorScoring {
-  bool selectDedup = false;
   bool guardedGap = false;
   bool unifiedGap = false;
-  AnchorLinearRequirement linearRequirement = AnchorLinearRequirement::Any;
 };
 
 struct AnchorMatch {

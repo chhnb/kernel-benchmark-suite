@@ -108,33 +108,42 @@ inline const llvm::BranchInst *findBranch(const llvm::Function &f, llvm::StringR
   return llvm::dyn_cast<llvm::BranchInst>(std::next(f.begin(), index)->getTerminator());
 }
 
+inline bool validShape(const Shape &shape) {
+  return llvm::all_of(shape, [](unsigned n) { return n && n <= 1024; }) &&
+         shape[0] * shape[1] * shape[2] <= 1024;
+}
+
+inline std::optional<Shape> parseShape(llvm::StringRef launch) {
+  llvm::SmallVector<llvm::StringRef, 3> dimensions;
+  launch.split(dimensions, ',');
+  Shape shape{};
+  if (dimensions.size() != 3) return std::nullopt;
+  for (unsigned i = 0; i != 3; ++i)
+    if (dimensions[i].getAsInteger(10, shape[i])) return std::nullopt;
+  return validShape(shape) ? std::optional<Shape>(shape) : std::nullopt;
+}
+
+inline std::optional<Shape> resolveShape(const llvm::Function &f, llvm::StringRef launch) {
+  if (!launch.empty()) return parseShape(launch);
+  auto *required = f.getMetadata("reqd_work_group_size");
+  if (!required || required->getNumOperands() != 3) return std::nullopt;
+  Shape shape{};
+  for (unsigned i = 0; i != 3; ++i) {
+    const auto *value = llvm::mdconst::dyn_extract<llvm::ConstantInt>(required->getOperand(i));
+    if (!value || value->getValue().getActiveBits() > 32) return std::nullopt;
+    shape[i] = value->getZExtValue();
+  }
+  return validShape(shape) ? std::optional<Shape>(shape) : std::nullopt;
+}
+
 inline llvm::json::Object classify(const llvm::Function &f, const llvm::BranchInst *branch,
                                    llvm::StringRef launch) {
   using namespace llvm;
-  Shape shape{};
-  bool exact = false;
-  StringRef source = "unavailable";
-  if (!launch.empty()) {
-    SmallVector<StringRef, 3> dimensions;
-    launch.split(dimensions, ',');
-    exact = dimensions.size() == 3;
-    if (exact)
-      for (unsigned i = 0; i != 3; ++i)
-        exact &= !dimensions[i].getAsInteger(10, shape[i]);
-    source = "external_launch";
-  } else if (auto *required = f.getMetadata("reqd_work_group_size")) {
-    exact = required->getNumOperands() == 3;
-    if (exact)
-      for (unsigned i = 0; i != 3; ++i) {
-        const auto *value = mdconst::dyn_extract<ConstantInt>(required->getOperand(i));
-        if (!value || value->getValue().getActiveBits() > 32) exact = false;
-        else shape[i] = value->getZExtValue();
-      }
-    source = "reqd_work_group_size";
-  }
-  exact &= llvm::all_of(shape, [](unsigned n) { return n && n <= 1024; });
-  unsigned threads = exact ? shape[0] * shape[1] * shape[2] : 0;
-  exact &= threads <= 1024;
+  const auto resolved = resolveShape(f, launch);
+  const bool exact = bool(resolved);
+  const Shape shape = resolved.value_or(Shape{});
+  const StringRef source = !exact ? "unavailable" : launch.empty() ? "reqd_work_group_size" : "external_launch";
+  const unsigned threads = shape[0] * shape[1] * shape[2];
 
   Triple triple(f.getParent()->getTargetTriple());
   auto cpu = f.getFnAttribute("target-cpu");

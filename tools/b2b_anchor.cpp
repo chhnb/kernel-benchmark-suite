@@ -21,11 +21,9 @@ namespace {
 using Matches = SmallVector<AnchorMatch, 8>;
 using Work = ArrayRef<Instruction *>;
 using OperandPair = std::pair<Value *, Value *>;
-using NewCharges = SmallVector<OperandPair, 4>;
 
 struct State {
   Matches pairs;
-  DenseSet<OperandPair> charged;
   unsigned guardedSides = 0;
   int64_t score = 0;
   unsigned chargedSegments = 0;
@@ -264,21 +262,14 @@ SmallVector<AnchorPlan, 3> planB2BAnchors(
         visit(OperandPair{lv, rv});
     }
   };
-  auto addedCost = [&](AnchorMatch pair, const State &state, NewCharges &newCharges) {
+  auto addedCost = [&](AnchorMatch pair, const State &state) {
     int cost = 0;
     forInputSelect(pair, state.pairs, [&](OperandPair inputs) {
-      if (scoring.selectDedup) {
-        if (state.charged.count(inputs) || llvm::is_contained(newCharges, inputs))
-          return;
-        newCharges.push_back(inputs);
-      }
       cost += selectCost(inputs.first->getType());
     });
     return cost;
   };
-  auto appendPair = [&](State &state, AnchorMatch pair, const NewCharges &charges, int gain) {
-    for (auto inputs : charges)
-      state.charged.insert(inputs);
+  auto appendPair = [&](State &state, AnchorMatch pair, int gain) {
     state.score += gain;
     state.pairs.push_back(pair);
   };
@@ -451,16 +442,15 @@ SmallVector<AnchorPlan, 3> planB2BAnchors(
             if (i == le || j == re)
               continue;
             AnchorMatch pair{i, j};
-            NewCharges newCharges;
             if (cutPairs.count({i, j})) {
               if (observe)
                 recordTransition(pair, state, instructionCost(*left[i]),
-                                 addedCost(pair, state, newCharges), "cutPairs");
+                                 addedCost(pair, state), "cutPairs");
               continue;
             }
             if (!compatible(*left[i], *right[j]))
               continue;
-            const int inputCost = addedCost(pair, state, newCharges);
+            const int inputCost = addedCost(pair, state);
             const int cost = instructionCost(*left[i]);
             const int gain = cost - inputCost;
             // Producers can also be reached solely from a forward segment
@@ -478,7 +468,7 @@ SmallVector<AnchorPlan, 3> planB2BAnchors(
             }
             State shared = state;
             finishGap(shared, i, j, true, projection);
-            appendPair(shared, pair, newCharges, gain);
+            appendPair(shared, pair, gain);
             const auto outcome = insert(next[j + 1 - ri][projection], std::move(shared),
                                         observe ? &pruned : nullptr, "pair", i + 1, j + 1);
             if (observe)
@@ -506,11 +496,10 @@ SmallVector<AnchorPlan, 3> planB2BAnchors(
   };
   auto appendAnchor = [&](State &state, AnchorMatch anchor) {
     const int cost = instructionCost(*left[anchor.left]);
-    NewCharges newCharges;
-    const int inputs = addedCost(anchor, state, newCharges);
+    const int inputs = addedCost(anchor, state);
     if (observe)
       recordTransition(anchor, state, cost, inputs, "forced_anchor");
-    appendPair(state, anchor, newCharges, cost - inputs);
+    appendPair(state, anchor, cost - inputs);
   };
   for (auto anchor : anchors) {
     align(anchor.left, anchor.right, true);
@@ -531,18 +520,16 @@ SmallVector<AnchorPlan, 3> planB2BAnchors(
 
   if (linear && join) {
     auto chargeJoin = [&](State &state) {
-      // With dedup disabled, replay the matched instructions to find the
-      // actual input selects that the emitter could reuse at the exit.
-      if (!scoring.selectDedup) {
-        ArrayRef<AnchorMatch> pairs = state.pairs;
-        for (auto item : llvm::enumerate(pairs))
-          forInputSelect(item.value(), pairs.take_front(item.index()),
-                         [&](OperandPair inputs) { state.charged.insert(inputs); });
-      }
+      // Exit selects can reuse the actual input selects emitted for matches.
+      DenseSet<OperandPair> charged;
+      ArrayRef<AnchorMatch> pairs = state.pairs;
+      for (auto item : llvm::enumerate(pairs))
+        forInputSelect(item.value(), pairs.take_front(item.index()),
+                       [&](OperandPair inputs) { charged.insert(inputs); });
       for (auto &phi : join->phis()) {
         auto *lv = phi.getIncomingValueForBlock(&leftBlock);
         auto *rv = phi.getIncomingValueForBlock(&rightBlock);
-        if (lv != rv && !pairedValues(lv, rv, state.pairs) && state.charged.insert({lv, rv}).second)
+        if (lv != rv && !pairedValues(lv, rv, state.pairs) && charged.insert({lv, rv}).second)
           state.score -= selectCost(phi.getType());
       }
     };
@@ -605,7 +592,7 @@ SmallVector<AnchorPlan, 3> planB2BAnchors(
     trace << json::Value(json::Object{{"mode", pairTies ? "relaxed" : "strict"},
         {"left_block", operandName(leftBlock)}, {"right_block", operandName(rightBlock)},
         {"gap", scoring.unifiedGap ? "auto" : linear ? "linear" : "fork"},
-        {"guarded_gap", guarded}, {"select_dedup", scoring.selectDedup}, {"cutoff", "static"},
+        {"guarded_gap", guarded}, {"select_dedup", false}, {"cutoff", "static"},
         {"gap_rank", "lazy"},
         {"left", instructions(left, 0)}, {"right", instructions(right, 1)},
         {"proposed", matchesJSON(proposed)}, {"anchors", matchesJSON(anchors)},

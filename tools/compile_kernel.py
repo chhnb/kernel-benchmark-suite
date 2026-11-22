@@ -11,7 +11,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 def compile_kernel(source, output, llvm, rocm, *, function=None, work_dir=None,
                    target="gfx906", features="+sramecc,-xnack", code_object_version=4,
-                   preopt=True, env=None):
+                   preopt=True, anchor_wave_shape=None, env=None):
     source = source.resolve(strict=True)
     output = output.absolute()
     if os.path.lexists(output):
@@ -33,6 +33,8 @@ def compile_kernel(source, output, llvm, rocm, *, function=None, work_dir=None,
         if function is not None:
             search = work / "greedy"
             command = [ROOT / "build/decision-fuse/decision-greedy", source, function, search]
+            if anchor_wave_shape is not None:
+                command += ["--anchor-wave-shape", anchor_wave_shape]
             if work_dir is not None:
                 command += ["--ir-snapshots", "full"]
             run(*command)
@@ -67,12 +69,14 @@ def main():
     parser.add_argument("--mattr", default="+sramecc,-xnack")
     parser.add_argument("--no-preopt", action="store_true",
                         help="Verify input to llc and skip the separate opt -O3 pass")
+    parser.add_argument("--anchor-wave-shape", metavar="X,Y,Z", help="Exact kernel launch shape")
     parser.add_argument("--work-dir", type=Path, help="New directory for full search and build diagnostics")
     args = parser.parse_args()
     try:
         compile_kernel(args.ir, args.out, args.llvm12_bin.resolve(), args.rocm.resolve(),
                        function=args.function, work_dir=args.work_dir, target=args.mcpu,
-                       features=args.mattr, preopt=not args.no_preopt)
+                       features=args.mattr, preopt=not args.no_preopt,
+                       anchor_wave_shape=args.anchor_wave_shape)
     except (OSError, subprocess.CalledProcessError) as error:
         parser.exit(1, f"compile_kernel: {error}\n")
 

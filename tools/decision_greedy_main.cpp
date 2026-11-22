@@ -1,3 +1,4 @@
+#include "anchor_wave_diagnostic.h"
 #include "tti_cost_kind.h"
 #include "decision_model.h"
 #include "domain_competition.h"
@@ -128,14 +129,13 @@ int main(int argc,char**argv){try{
  auto timingReport=[&](){json::Object phases;for(const auto &kv:phaseMilliseconds)phases[kv.first]=json::Object{{"milliseconds",kv.second},{"calls",phaseCalls[kv.first]}};return phases;};
 
  if(argc==2&&StringRef(argv[1])=="--help"){
-   outs()<<"usage: decision-greedy INPUT FUNCTION [TOOL_ROOT] NEW_OUTPUT [--b2b-strategy anchor|darm|darm-artifact] [--anchor-gap fork|linear|both|auto] [--anchor-auto-assume diverge|classify] [--anchor-uniform-gate off|on] [--anchor-uniform-missing allow|reject] [--anchor-wave-shape X,Y,Z] [--anchor-select-dedup 0|1] [--anchor-cutoff static] [--anchor-gap-rank lazy] [--anchor-guarded-gap 0|1] [--anchor-linear-require any|divergent|divergent-or-unknown] [--domain-schedule ordered] [--ir-snapshots full|compact] [--tti-quote-cache off|audit|on] [--commit-normalize-only|--no-commit-normalize-only]\n";
+   outs()<<"usage: decision-greedy INPUT FUNCTION [TOOL_ROOT] NEW_OUTPUT [--b2b-strategy anchor|darm|darm-artifact] [--anchor-mode legacy] [--anchor-wave-shape X,Y,Z] [--domain-schedule ordered] [--ir-snapshots full|compact] [--tti-quote-cache off|audit|on] [--commit-normalize-only|--no-commit-normalize-only]\n";
    outs()<<"Default schedule: ordered for whole-function trials (Auto Greedy v2).\n";
    outs()<<"Normalize-only commits are enabled by default.\n";
    return 0;
  }
- std::string b2bStrategy="anchor", quoteMode="on", snapshotMode, anchorGap="fork", anchorLinearRequire="any";
- std::string anchorAutoAssume="diverge", anchorUniformGate="off", anchorUniformMissing="allow", anchorWaveShape;
- bool anchorSelectDedup=false, anchorGuardedGap=false;
+ std::string b2bStrategy="anchor", quoteMode="on", snapshotMode, anchorWaveShape;
+ bool anchorLegacy=false;
  Optional<bool> normalizeOnlyOverride;
  while (argc >= 3) {
    StringRef last(argv[argc-1]);
@@ -152,41 +152,21 @@ int main(int argc,char**argv){try{
      snapshotMode = value.str();
    else if (option == "--tti-quote-cache" && (value == "off" || value == "audit" || value == "on"))
      quoteMode = value.str();
-   else if (option == "--anchor-gap" && (value == "fork" || value == "linear" || value == "both" || value == "auto"))
-     anchorGap = value.str();
-   else if (option == "--anchor-select-dedup" && (value == "0" || value == "1"))
-     anchorSelectDedup = value == "1";
-   else if ((option == "--anchor-cutoff" && value == "static") ||
-            (option == "--anchor-gap-rank" && value == "lazy")) {
-     // Retain the fixed spellings for existing replay commands.
-   }
-   else if (option == "--anchor-auto-assume" && (value == "diverge" || value == "classify"))
-     anchorAutoAssume = value.str();
-   else if (option == "--anchor-uniform-gate" && (value == "off" || value == "on"))
-     anchorUniformGate = value.str();
-   else if (option == "--anchor-uniform-missing" && (value == "allow" || value == "reject"))
-     anchorUniformMissing = value.str();
-   else if (option == "--anchor-wave-shape" && !value.empty())
+   else if (option == "--anchor-mode" && value == "legacy")
+     anchorLegacy = true;
+   else if (option == "--anchor-wave-shape" && fusion::wave_diagnostic::parseShape(value))
      anchorWaveShape = value.str();
-   else if (option == "--anchor-guarded-gap" && (value == "0" || value == "1"))
-     anchorGuardedGap = value == "1";
-   else if (option == "--anchor-linear-require" &&
-            (value == "any" || value == "divergent" || value == "divergent-or-unknown"))
-     anchorLinearRequire = value.str();
    else if (option == "--b2b-strategy" && (value == "darm" || value == "darm-artifact" || value == "anchor"))
      b2bStrategy = value.str();
-   else if (option == "--ir-snapshots" || option == "--domain-schedule" || option == "--b2b-strategy" || option == "--tti-quote-cache" || option == "--anchor-gap" ||
-            option == "--anchor-auto-assume" || option == "--anchor-uniform-gate" || option == "--anchor-uniform-missing" || option == "--anchor-wave-shape" || option == "--anchor-select-dedup" || option == "--anchor-cutoff" || option == "--anchor-gap-rank" || option == "--anchor-guarded-gap" || option == "--anchor-linear-require")
+   else if (option == "--ir-snapshots" || option == "--domain-schedule" || option == "--b2b-strategy" ||
+            option == "--tti-quote-cache" || option == "--anchor-mode" || option == "--anchor-wave-shape" ||
+            option.startswith("--anchor-"))
      throw std::runtime_error("invalid value for " + option.str());
    else break;
    argc -= 2;
  }
  if(argc!=4&&argc!=5)
-   throw std::runtime_error("usage: decision-greedy INPUT FUNCTION [TOOL_ROOT] NEW_OUTPUT [--b2b-strategy anchor|darm|darm-artifact] [--anchor-gap fork|linear|both|auto] [--anchor-auto-assume diverge|classify] [--anchor-uniform-gate off|on] [--anchor-uniform-missing allow|reject] [--anchor-wave-shape X,Y,Z] [--anchor-select-dedup 0|1] [--anchor-cutoff static] [--anchor-gap-rank lazy] [--anchor-guarded-gap 0|1] [--anchor-linear-require any|divergent|divergent-or-unknown] [--domain-schedule ordered] [--ir-snapshots full|compact] [--tti-quote-cache off|audit|on] [--commit-normalize-only|--no-commit-normalize-only]");
- if (anchorAutoAssume == "classify" && anchorGap != "auto")
-   throw std::runtime_error("anchor-auto-assume classify requires anchor-gap auto");
- if ((anchorUniformGate == "on" || !anchorWaveShape.empty()) && anchorAutoAssume != "classify")
-   throw std::runtime_error("anchor-uniform-gate on and anchor-wave-shape require anchor-auto-assume classify");
+   throw std::runtime_error("usage: decision-greedy INPUT FUNCTION [TOOL_ROOT] NEW_OUTPUT [--b2b-strategy anchor|darm|darm-artifact] [--anchor-mode legacy] [--anchor-wave-shape X,Y,Z] [--domain-schedule ordered] [--ir-snapshots full|compact] [--tti-quote-cache off|audit|on] [--commit-normalize-only|--no-commit-normalize-only]");
  const bool commitNormalizeOnly=normalizeOnlyOverride.getValueOr(true);
  if(snapshotMode.empty())snapshotMode="compact";
  const bool implicitRoot=argc==4;
@@ -211,6 +191,9 @@ int main(int argc,char**argv){try{
  }
  constexpr unsigned conditionBudget=4;
  LLVMContext ctx;SMDiagnostic error;auto initial=parseIRFile(current,error,ctx);if(!initial||!initial->getFunction(fn)||verifyModule(*initial,&errs()))throw std::runtime_error("invalid input");
+ if (b2bStrategy == "anchor" && !anchorLegacy &&
+     !fusion::wave_diagnostic::resolveShape(*initial->getFunction(fn), anchorWaveShape))
+   errs()<<"warning: workgroup shape not provided for "<<fn<<"; Anchor wave classification is unknown\n";
  auto writeModule=[&](const Module &module,const std::string &path){std::error_code ec;raw_fd_ostream stream(path,ec);if(ec)throw std::runtime_error(ec.message());module.print(stream,nullptr);};
  auto ds=decision::discover(*initial->getFunction(fn));std::vector<std::string> targets;std::set<BasicBlock*> covered,tagged;json::Array order;
  for(auto &d:ds){bool yes=false;for(unsigned i=0;i+1<d.arms.size();++i)yes|=eligible(d.arms[i],d.arms[i+1]);if(!yes||covered.count(d.root))continue;targets.push_back(d.id);for(auto*b:d.tests)covered.insert(b);for(unsigned i=0;i<d.arms.size();++i){auto&a=d.arms[i];if(!tagged.insert(a.entry).second)continue;std::string label;raw_string_ostream stream(label);a.entry->printAsOperand(stream,false);stream.flush();order.push_back(json::Object{{"entry",label},{"family",d.id},{"index",int64_t(i)}});}}
@@ -488,22 +471,10 @@ int main(int argc,char**argv){try{
       }
       // Keep the exact invocation and the arguments needed for trial replay.
       trialArgs.insert(trialArgs.end(), {"--b2b-strategy", b2bStrategy});
-      if (anchorGap != "fork")
-        trialArgs.insert(trialArgs.end(), {"--anchor-gap", anchorGap});
-      if (anchorAutoAssume == "classify") {
-        trialArgs.insert(trialArgs.end(), {"--anchor-auto-assume", anchorAutoAssume});
-        if (!anchorWaveShape.empty())
-          trialArgs.insert(trialArgs.end(), {"--anchor-wave-shape", anchorWaveShape});
-        if (anchorUniformGate == "on")
-          trialArgs.insert(trialArgs.end(), {"--anchor-uniform-gate", anchorUniformGate,
-                                            "--anchor-uniform-missing", anchorUniformMissing});
-      }
-      if (anchorSelectDedup)
-        trialArgs.insert(trialArgs.end(), {"--anchor-select-dedup", "1"});
-      if (anchorGuardedGap)
-        trialArgs.insert(trialArgs.end(), {"--anchor-guarded-gap", "1"});
-      if (anchorLinearRequire != "any")
-        trialArgs.insert(trialArgs.end(), {"--anchor-linear-require", anchorLinearRequire});
+      if (anchorLegacy)
+        trialArgs.insert(trialArgs.end(), {"--anchor-mode", "legacy"});
+      else if (!anchorWaveShape.empty())
+        trialArgs.insert(trialArgs.end(), {"--anchor-wave-shape", anchorWaveShape});
       // IDs locate a prior recipe; current planner facts certify its reuse.
       json::Array replayArgs;
       for(const auto &argument:trialArgs)replayArgs.push_back(argument);

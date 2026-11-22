@@ -85,5 +85,18 @@
     "review": "/home/chh/kernel-benchmark-suite/experiments/tpacf-adjacent-four-v1/summary.json",
     "status": "three paired fixed-budget screening batches"
   },
-  "specified_merge_experiment": "/home/chh/kernel-benchmark-suite/experiments/tpacf-adjacent-four-v1/summary.json"
+  "specified_merge_experiment": "/home/chh/kernel-benchmark-suite/experiments/tpacf-adjacent-four-v1/summary.json",
+  "anchor_workgroups": {
+    "TPACF": {
+      "function": "ACFKernel",
+      "shape": [
+        128,
+        1,
+        1
+      ],
+      "sources": [
+        "cases/tpacf/harness/bench.hip:37"
+      ]
+    }
+  }
 }

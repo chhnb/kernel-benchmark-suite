@@ -2,6 +2,18 @@
 
 当前收益回归：vLLM 随机 BF16 64K/128K、Map-Airy 混合输入、TIGRE Siddon。完整状态见 `case-status-20261110.json` 和 `../docs/project-status-and-darm-roadmap-20261110.md`。
 
+## 发布复验
+
+`golden/20261120-anchor-release/manifest.json` 固定发布 IR、设备产物、输入和参考输出，并记录各 kernel 的确切 workgroup 形状、出处、当前默认和 legacy 的静态参考。每个形状同时登记在对应 `case.json`。LUD8 使用另外登记的共同父 IR，参与两套搜索和发布性能比较。
+
+```sh
+python3 regression/verify_anchor_release.py --tool-root . --out build/anchor-release-new
+```
+
+复验逐 case 运行当前默认与 `--anchor-mode legacy`，校验最终 IR 哈希、提交数和 TTI，并按清单重建及核对 16 个冻结发布 case 的两套设备对象。默认 TTI 高于 legacy 时报告差值。可重复传 `--case` 选择子集。LUD8 额外重放写回候选，核实漏传形状时 gate 会拒绝守护布局。手动运行搜索时可传 `--anchor-wave-shape X,Y,Z`，或由 IR 提供确切的 `reqd_work_group_size`。
+
+发布性能比较固定同一输入、参考、后端及 runner，按 case 协议在 12 轮中轮换新默认、legacy 和 Auto DARM。先做 A/A，超限允许重试一次。仍超限的输入转用 [v3 计时协议](records/anchor-unified-dp-step5-20261122.md)，每个角色每个窗口取 31 次完整校验的中位数，唯一重试使用 61 次，并保留原 A/A 门槛。CED 使用[第 7 步 HIP Graph 协议](records/pcm32-cleanup-strength-20261122.md)。所有区间使用同轮配对比值和 95% bootstrap。二进制逐字节一致时标记为别名，有同样输入和角色的既有配对测量时复用该测量。输出校验失败立即停止。
+
 ## 生成输入的回归
 
 在 `/home/chh/kernel-benchmark-suite` 执行，`--candidate` 指向当前代码生成的二进制，`--out` 必须是新目录：
@@ -36,7 +48,7 @@ python3 tools/run_cpu.py UNIQUE_LABEL python3 /home/chh/kernel-benchmark-suite/r
 
 `mapairy-v2.json` 固定输入、参考输出、父 IR 和原版 DARM 工具的 SHA-256。
 三条路径从同一份父 IR 开始，随后统一执行 LLVM12 O3 和 gfx906 codegen。
-Auto Greedy 使用当前构建的三参数入口，启用默认 B2B DP。
+Auto Greedy 使用当前构建的入口，发布复验按 manifest 提供 Map-Airy 的确切 workgroup 形状。
 GPU 上轮换测三批，每批验证完整输出并记录 15 次计时。
 输出目录保留工具命令、IR、二进制哈希和计时。首次结果见 `records/mapairy-v2-first.json`。
 相对性能门槛使用同批 Greedy/DARM 中位耗时比，允许比首次记录相对退化 2%。

@@ -15,11 +15,8 @@ for name in ("search", "worker", "opt"):
     parser.add_argument(name, type=Path)
 parser.add_argument("--ir", type=Path, help="trace the DP on a specific module and block triple")
 parser.add_argument("--function")
-parser.add_argument("--anchor-gap", choices=("fork", "linear", "both", "auto"), default="fork")
-parser.add_argument("--anchor-select-dedup", choices=("0", "1"), default="0")
-parser.add_argument("--anchor-cutoff", choices=("static",), default="static")
-parser.add_argument("--anchor-gap-rank", choices=("lazy",), default="lazy")
-parser.add_argument("--anchor-guarded-gap", choices=("0", "1"), default="0")
+parser.add_argument("--anchor-mode", choices=("legacy",))
+parser.add_argument("--anchor-wave-shape")
 parser.add_argument("--split")
 parser.add_argument("--left")
 parser.add_argument("--right")
@@ -40,10 +37,9 @@ with tempfile.TemporaryDirectory() as directory:
         result = subprocess.run(
             [search, "--ir", args.ir, "--function", args.function,
              "--split", args.split, "--left", args.left, "--right", args.right,
-             "--b2b-strategy", "anchor", "--anchor-gap", args.anchor_gap,
-             "--anchor-select-dedup", args.anchor_select_dedup,
-             "--anchor-cutoff", args.anchor_cutoff, "--anchor-gap-rank", args.anchor_gap_rank,
-             "--anchor-guarded-gap", args.anchor_guarded_gap,
+             "--b2b-strategy", "anchor",
+             *(["--anchor-mode", args.anchor_mode] if args.anchor_mode else []),
+             *(["--anchor-wave-shape", args.anchor_wave_shape] if args.anchor_wave_shape else []),
              "--structural", "1", "--tti-worker", worker,
              "--out", output, "--debug-dir", debug],
             env=os.environ | {"FUSION_OBSERVE_B2B_DP": str(trace)}, check=False,
@@ -68,7 +64,7 @@ with tempfile.TemporaryDirectory() as directory:
         result = subprocess.run(
             [search, "--ir", fixtures / f"{case}.ll", "--function", "diamond",
              "--split", "B0", "--left", "B1", "--right", "B2",
-             "--b2b-strategy", "anchor", "--tti-worker", worker,
+             "--b2b-strategy", "anchor", "--anchor-mode", "legacy", "--tti-worker", worker,
              "--out", output, "--debug-dir", root],
             check=False,
         )
