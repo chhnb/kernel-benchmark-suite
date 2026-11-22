@@ -15,7 +15,7 @@ for name in ("search", "worker", "opt"):
     parser.add_argument(name, type=Path)
 parser.add_argument("--ir", type=Path, help="trace the DP on a specific module and block triple")
 parser.add_argument("--function")
-parser.add_argument("--anchor-gap", choices=("fork", "linear", "both"), default="fork")
+parser.add_argument("--anchor-gap", choices=("fork", "linear", "both", "auto"), default="fork")
 parser.add_argument("--anchor-select-dedup", choices=("0", "1"), default="0")
 parser.add_argument("--anchor-cutoff", choices=("static",), default="static")
 parser.add_argument("--anchor-gap-rank", choices=("lazy",), default="lazy")

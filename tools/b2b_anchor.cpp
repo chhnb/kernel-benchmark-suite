@@ -116,6 +116,10 @@ SmallVector<AnchorPlan, 3> planB2BAnchors(
     function_ref<int(Type *)> selectCost, function_ref<int(Type *)> phiCost, bool linear,
     AnchorScoring scoring) {
   const bool guarded = scoring.guardedGap && linear;
+  // G0 retained an independent unguarded beam. A unified traversal must
+  // preserve its pruning history even when memory-skipping states rank higher.
+  const unsigned projections = scoring.unifiedGap && guarded ? 2 : 1;
+  auto allowsGuard = [&](unsigned projection) { return guarded && (projections == 1 || projection == 1); };
   const char *tracePath = std::getenv("FUSION_OBSERVE_B2B_DP");
   const bool observe = tracePath && *tracePath;
   json::Array transitions, pruned, conflictingPairs, segmentsObserved;
@@ -123,6 +127,10 @@ SmallVector<AnchorPlan, 3> planB2BAnchors(
   DenseMap<const Value *, unsigned> indices[2];
   SmallVector<bool, 32> skippable[2];
   SmallVector<int, 32> guardOrigins[2];
+  auto canSkip = [&](unsigned side, unsigned i, unsigned projection) {
+    return !linear || skippable[side][i] ||
+        (allowsGuard(projection) && guardOrigins[side][i] == int(i));
+  };
   if (linear)
     for (unsigned side = 0; side != 2; ++side) {
       if (guarded)
@@ -130,11 +138,10 @@ SmallVector<AnchorPlan, 3> planB2BAnchors(
       for (auto item : llvm::enumerate(work[side])) {
         const auto *inst = item.value();
         const auto *call = dyn_cast<CallBase>(inst);
-        const bool simpleMemory = guarded && guardOrigins[side][item.index()] == int(item.index());
-        skippable[side].push_back(simpleMemory || (!inst->mayReadOrWriteMemory() &&
+        skippable[side].push_back(!inst->mayReadOrWriteMemory() &&
                                   !(call && call->isConvergent()) &&
                                   !isa<AllocaInst>(inst) &&
-                                  isSafeToSpeculativelyExecute(inst)));
+                                  isSafeToSpeculativelyExecute(inst));
       }
     }
 
@@ -279,8 +286,14 @@ SmallVector<AnchorPlan, 3> planB2BAnchors(
   DenseSet<std::pair<unsigned, unsigned>> cutPairs;
   for (const auto &cut : cutoffs)
     cutPairs.insert({cut.left, cut.right});
-  DenseSet<std::pair<unsigned, unsigned>> seenForwardCut;
-  Matches forwardCutoffs;
+  struct Projection {
+    Beam beam = Beam(1);
+    State anchorsOnly;
+    bool anchorsOnlyLegal = true;
+    DenseSet<std::pair<unsigned, unsigned>> seenForwardCut;
+    Matches forwardCutoffs;
+  };
+  SmallVector<Projection, 2> runs(projections);
   auto hasSharedConsumer = [&](Instruction *l, Instruction *r) {
     return llvm::any_of(l->uses(), [&](const Use &leftUse) {
       auto *leftUser = dyn_cast<Instruction>(leftUse.getUser());
@@ -313,15 +326,16 @@ SmallVector<AnchorPlan, 3> planB2BAnchors(
   // that bypasses the grid. The PHI term still needs the end boundary.
   constexpr int ForkCharge = 2;
   auto skip = [&](State state, Beam &dest, StringRef phase, unsigned i, unsigned j,
-                  unsigned side, unsigned index) {
-    if (guarded && guardOrigins[side][index] == int(index) &&
+                  unsigned side, unsigned index, unsigned projection) {
+    if (allowsGuard(projection) && guardOrigins[side][index] == int(index) &&
         !(state.guardedSides & (1u << side))) {
       state.score -= ForkCharge;
       state.guardedSides |= 1u << side;
     }
     insert(dest, std::move(state), observe ? &pruned : nullptr, phase, i, j);
   };
-  auto finishGap = [&](State &state, unsigned le, unsigned re, bool rejoins) {
+  auto finishGap = [&](State &state, unsigned le, unsigned re, bool rejoins, unsigned projection) {
+    const bool guarded = allowsGuard(projection);
     if (linear && !guarded) return;
     unsigned begin[2] = {};
     if (!state.pairs.empty()) {
@@ -365,9 +379,6 @@ SmallVector<AnchorPlan, 3> planB2BAnchors(
     state.score -= charge;
   };
 
-  Beam beam(1);
-  State anchorsOnly;
-  bool anchorsOnlyLegal = true;
   unsigned li = 0, ri = 0, segments = 0;
   auto recordTransition = [&](AnchorMatch pair, const State &state,
                               int cost, int inputs, StringRef reason) {
@@ -401,81 +412,97 @@ SmallVector<AnchorPlan, 3> planB2BAnchors(
     // Keep an empty alignment even if the beam prefers several matches.
     // Map-Airy commit 10 previously preferred the candidate with fewer
     // pairs after cleanup, which is not represented by pair scores alone.
-    Beam empty;
-    const bool emptyLegal = !linear ||
-        (llvm::all_of(ArrayRef<bool>(skippable[0]).slice(li, le - li), [](bool b) { return b; }) &&
-         llvm::all_of(ArrayRef<bool>(skippable[1]).slice(ri, re - ri), [](bool b) { return b; }));
-    if (emptyLegal) {
-      for (auto state : beam) {
-        finishGap(state, le, re, rejoins);
-        insert(empty, std::move(state));
+    using Cell = SmallVector<Beam, 1>;
+    Cell empty(projections);
+    for (unsigned projection = 0; projection != projections; ++projection) {
+      auto &run = runs[projection];
+      bool emptyLegal = true;
+      const unsigned begin[] = {li, ri}, end[] = {le, re};
+      for (unsigned side = 0; side != 2; ++side)
+        for (unsigned i = begin[side]; i != end[side]; ++i)
+          emptyLegal &= canSkip(side, i, projection);
+      if (emptyLegal) {
+        for (auto state : run.beam) {
+          finishGap(state, le, re, rejoins, projection);
+          insert(empty[projection], std::move(state));
+        }
+        finishGap(run.anchorsOnly, le, re, rejoins, projection);
       }
-      finishGap(anchorsOnly, le, re, rejoins);
+      run.anchorsOnlyLegal &= emptyLegal;
     }
-    anchorsOnlyLegal &= emptyLegal;
     if (li == le || ri == re) {
-      beam = std::move(empty);
+      for (unsigned projection = 0; projection != projections; ++projection)
+        runs[projection].beam = std::move(empty[projection]);
       return;
     }
     const unsigned width = re - ri + 1;
-    std::vector<Beam> row(width), next(width);
-    row[0].swap(beam);
+    std::vector<Cell> row(width, Cell(projections)), next(width, Cell(projections));
+    for (unsigned projection = 0; projection != projections; ++projection)
+      row[0][projection].swap(runs[projection].beam);
     for (unsigned i = li; i <= le; ++i) {
-      for (unsigned j = ri; j <= re; ++j)
-        for (const auto &state : row[j - ri]) {
-          if (i < le && (!linear || skippable[0][i]))
-            skip(state, next[j - ri], "skip_left", i + 1, j, 0, i);
-          if (j < re && (!linear || skippable[1][j]))
-            skip(state, row[j + 1 - ri], "skip_right", i, j + 1, 1, j);
-          if (i == le || j == re)
-            continue;
-          AnchorMatch pair{i, j};
-          NewCharges newCharges;
-          if (cutPairs.count({i, j})) {
+      for (unsigned j = ri; j <= re; ++j) {
+        for (unsigned projection = 0; projection != projections; ++projection) {
+          auto &run = runs[projection];
+          for (const auto &state : row[j - ri][projection]) {
+            if (i < le && canSkip(0, i, projection))
+              skip(state, next[j - ri][projection], "skip_left", i + 1, j, 0, i, projection);
+            if (j < re && canSkip(1, j, projection))
+              skip(state, row[j + 1 - ri][projection], "skip_right", i, j + 1, 1, j, projection);
+            if (i == le || j == re)
+              continue;
+            AnchorMatch pair{i, j};
+            NewCharges newCharges;
+            if (cutPairs.count({i, j})) {
+              if (observe)
+                recordTransition(pair, state, instructionCost(*left[i]),
+                                 addedCost(pair, state, newCharges), "cutPairs");
+              continue;
+            }
+            if (!compatible(*left[i], *right[j]))
+              continue;
+            const int inputCost = addedCost(pair, state, newCharges);
+            const int cost = instructionCost(*left[i]);
+            const int gain = cost - inputCost;
+            // Producers can also be reached solely from a forward segment
+            // when their consumers feed different exit PHI positions.
+            auto *resultType = left[i]->getType();
+            const int unpaired = resultType->isVoidTy() ? 0 : selectCost(resultType);
+            const int net = gain + unpaired;
+            if (!pairTies && gain <= 0 && !resultType->isVoidTy() &&
+                net <= 0 && hasSharedConsumer(left[i], right[j])) {
+              if (run.seenForwardCut.insert({i, j}).second)
+                run.forwardCutoffs.push_back(pair);
+              if (observe)
+                recordTransition(pair, state, cost, inputCost, "forward_cutoff");
+              continue;
+            }
+            State shared = state;
+            finishGap(shared, i, j, true, projection);
+            appendPair(shared, pair, newCharges, gain);
+            const auto outcome = insert(next[j + 1 - ri][projection], std::move(shared),
+                                        observe ? &pruned : nullptr, "pair", i + 1, j + 1);
             if (observe)
-              recordTransition(pair, state, instructionCost(*left[i]),
-                               addedCost(pair, state, newCharges), "cutPairs");
-            continue;
+              recordTransition(pair, state, cost, inputCost, insertionName(outcome));
           }
-          if (!compatible(*left[i], *right[j]))
-            continue;
-          const int inputCost = addedCost(pair, state, newCharges);
-          const int cost = instructionCost(*left[i]);
-          const int gain = cost - inputCost;
-          // Producers can also be reached solely from a forward segment
-          // when their consumers feed different exit PHI positions.
-          auto *resultType = left[i]->getType();
-          const int unpaired = resultType->isVoidTy() ? 0 : selectCost(resultType);
-          const int net = gain + unpaired;
-          if (!pairTies && gain <= 0 && !resultType->isVoidTy() &&
-              net <= 0 && hasSharedConsumer(left[i], right[j])) {
-            if (seenForwardCut.insert({i, j}).second)
-              forwardCutoffs.push_back(pair);
-            if (observe)
-              recordTransition(pair, state, cost, inputCost, "forward_cutoff");
-            continue;
-          }
-          State shared = state;
-          finishGap(shared, i, j, true);
-          appendPair(shared, pair, newCharges, gain);
-          const auto outcome = insert(next[j + 1 - ri], std::move(shared),
-                                      observe ? &pruned : nullptr, "pair", i + 1, j + 1);
-          if (observe)
-            recordTransition(pair, state, cost, inputCost, insertionName(outcome));
         }
+      }
       if (i != le) {
         row.swap(next);
         for (auto &cell : next)
-          cell.clear();
+          for (auto &beam : cell)
+            beam.clear();
       }
     }
-    for (auto &state : row.back()) {
-      finishGap(state, le, re, rejoins);
-      insert(beam, std::move(state));
+    for (unsigned projection = 0; projection != projections; ++projection) {
+      auto &beam = runs[projection].beam;
+      for (auto &state : row.back()[projection]) {
+        finishGap(state, le, re, rejoins, projection);
+        insert(beam, std::move(state));
+      }
+      trim(beam, "segment_limit");
+      if (!empty[projection].empty())
+        insert(beam, std::move(empty[projection].front()));
     }
-    trim(beam, "segment_limit");
-    if (!empty.empty())
-      insert(beam, std::move(empty.front()));
   };
   auto appendAnchor = [&](State &state, AnchorMatch anchor) {
     const int cost = instructionCost(*left[anchor.left]);
@@ -487,14 +514,16 @@ SmallVector<AnchorPlan, 3> planB2BAnchors(
   };
   for (auto anchor : anchors) {
     align(anchor.left, anchor.right, true);
-    for (auto &state : beam)
-      appendAnchor(state, anchor);
-    if (anchorsOnlyLegal)
-      appendAnchor(anchorsOnly, anchor);
-    llvm::stable_sort(beam, [](const State &a, const State &b) {
-      return a.score > b.score ||
-             (a.score == b.score && a.pairs.size() > b.pairs.size());
-    });
+    for (auto &run : runs) {
+      for (auto &state : run.beam)
+        appendAnchor(state, anchor);
+      if (run.anchorsOnlyLegal)
+        appendAnchor(run.anchorsOnly, anchor);
+      llvm::stable_sort(run.beam, [](const State &a, const State &b) {
+        return a.score > b.score ||
+               (a.score == b.score && a.pairs.size() > b.pairs.size());
+      });
+    }
     li = anchor.left + 1;
     ri = anchor.right + 1;
   }
@@ -517,17 +546,21 @@ SmallVector<AnchorPlan, 3> planB2BAnchors(
           state.score -= selectCost(phi.getType());
       }
     };
-    Beam ranked;
-    for (auto &state : beam) {
-      chargeJoin(state);
-      insert(ranked, std::move(state));
+    for (auto &run : runs) {
+      Beam ranked;
+      for (auto &state : run.beam) {
+        chargeJoin(state);
+        insert(ranked, std::move(state));
+      }
+      run.beam = std::move(ranked);
+      if (run.anchorsOnlyLegal) chargeJoin(run.anchorsOnly);
     }
-    beam = std::move(ranked);
-    if (anchorsOnlyLegal) chargeJoin(anchorsOnly);
   }
-  trim(beam, "final_limit");
-  if (anchorsOnlyLegal)
-    insert(beam, std::move(anchorsOnly));
+  for (auto &run : runs) {
+    trim(run.beam, "final_limit");
+    if (run.anchorsOnlyLegal)
+      insert(run.beam, std::move(run.anchorsOnly));
+  }
   if (observe) {
     auto instructions = [&](Work arm, unsigned side) {
       json::Array list;
@@ -556,35 +589,62 @@ SmallVector<AnchorPlan, 3> planB2BAnchors(
             {"anchorSelectCost", hasTransferCost(inst.getType()) ? json::Value(selectCost(inst.getType())) : json::Value(nullptr)},
             {"anchorPhiCost", hasTransferCost(inst.getType()) ? json::Value(phiCost(inst.getType())) : json::Value(nullptr)},
             {"operands", std::move(operands)}};
-        if (linear) row["linear_skippable"] = skippable[side][item.index()];
+        if (linear) row["linear_skippable"] = canSkip(side, item.index(), projections - 1);
         list.push_back(std::move(row));
       }
       return list;
     };
     json::Array plans;
-    for (const auto &state : beam)
-      plans.push_back(stateJSON(state));
+    for (const auto &run : runs)
+      for (const auto &state : run.beam)
+        plans.push_back(stateJSON(state));
     std::error_code error;
     raw_fd_ostream trace(tracePath, error, sys::fs::OF_Append);
     if (error)
       throw std::runtime_error("writing B2B observation: " + error.message());
     trace << json::Value(json::Object{{"mode", pairTies ? "relaxed" : "strict"},
         {"left_block", operandName(leftBlock)}, {"right_block", operandName(rightBlock)},
-        {"gap", linear ? "linear" : "fork"},
+        {"gap", scoring.unifiedGap ? "auto" : linear ? "linear" : "fork"},
         {"guarded_gap", guarded}, {"select_dedup", scoring.selectDedup}, {"cutoff", "static"},
         {"gap_rank", "lazy"},
         {"left", instructions(left, 0)}, {"right", instructions(right, 1)},
         {"proposed", matchesJSON(proposed)}, {"anchors", matchesJSON(anchors)},
-        {"cutoffs", matchesJSON(cutoffs)}, {"forward_cutoffs", matchesJSON(forwardCutoffs)},
+        {"cutoffs", matchesJSON(cutoffs)}, {"forward_cutoffs", matchesJSON(runs.back().forwardCutoffs)},
         {"conflicts", int64_t(conflicts)}, {"conflicting_pairs", std::move(conflictingPairs)},
         {"transitions", std::move(transitions)}, {"pruned", std::move(pruned)},
         {"segments", std::move(segmentsObserved)}, {"plans", std::move(plans)}}) << '\n';
   }
   SmallVector<AnchorPlan, 3> result;
-  for (auto &state : beam)
-    result.push_back({std::move(state.pairs), anchors, cutoffs, forwardCutoffs,
+  for (unsigned projection = 0; projection != projections; ++projection) {
+    auto &run = runs[projection];
+    for (auto &state : run.beam) {
+      AnchorPlan plan{std::move(state.pairs), anchors, cutoffs, run.forwardCutoffs,
                       state.chargedSegments, state.phiCharge, state.score,
-                      unsigned(proposed.size() - anchors.size()), conflicts, segments});
+                      unsigned(proposed.size() - anchors.size()), conflicts, segments,
+                      allowsGuard(projection), {}};
+      if (scoring.unifiedGap) {
+        unsigned begin[2] = {};
+        auto describeGap = [&](unsigned le, unsigned re) {
+          if (begin[0] == le && begin[1] == re) return;
+          const unsigned end[] = {le, re};
+          bool hasGuard = false;
+          if (plan.guardedProjection)
+            for (unsigned side = 0; side != 2; ++side)
+              for (unsigned i = begin[side]; i < end[side]; ++i)
+                hasGuard |= guardOrigins[side][i] >= int(begin[side]);
+          plan.gapPlacements.push_back(hasGuard ? AnchorGapPlacement::HoistAndGuard
+                                                : AnchorGapPlacement::Hoist);
+        };
+        for (auto match : plan.matches) {
+          describeGap(match.left, match.right);
+          begin[0] = match.left + 1;
+          begin[1] = match.right + 1;
+        }
+        describeGap(left.size(), right.size());
+      }
+      result.push_back(std::move(plan));
+    }
+  }
   return result;
 }
 }

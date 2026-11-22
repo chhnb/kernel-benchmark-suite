@@ -88,14 +88,14 @@ join:
     }));
   }
 
-  auto costPlans = [&](StringRef function, AnchorScoring scoring) {
+  auto costPlans = [&](StringRef function, AnchorScoring scoring, bool pairTies = true) {
     auto &f = *module->getFunction(function);
     auto b = std::next(f.begin());
     auto &lhs = *b++, &rhs = *b++, &exit = *b;
     SmallVector<Instruction *, 8> work[2];
     for (auto &inst : lhs) if (!inst.isTerminator()) work[0].push_back(&inst);
     for (auto &inst : rhs) if (!inst.isTerminator()) work[1].push_back(&inst);
-    return planB2BAnchors(work[0], work[1], lhs, rhs, &exit, true,
+    return planB2BAnchors(work[0], work[1], lhs, rhs, &exit, pairTies,
         [](Instruction &a, Instruction &b) { return a.isSameOperationAs(&b); },
         [=](const Instruction &inst) {
           return function == "cut" && inst.getOpcode() == Instruction::Sub ? 1 : 3;
@@ -112,4 +112,25 @@ join:
   assert(fixed.front().cutoffs.size() == 1 &&
          (fixed.front().cutoffs.front() == AnchorMatch{1, 1}));
   assert(fixed.front().matches.size() == 1);
+
+  // The unified grid preserves both legacy beams, including their independent
+  // forward cutoffs. The phis fixture forces otherwise unpairable stores.
+  for (bool pairTies : {false, true})
+    for (StringRef function : {"phis", "reused"}) {
+      auto expected = costPlans(function, {true, false}, pairTies);
+      auto guarded = costPlans(function, {true, true}, pairTies);
+      expected.append(guarded.begin(), guarded.end());
+      auto unified = costPlans(function, {true, true, true}, pairTies);
+      assert(unified.size() == expected.size());
+      for (auto item : llvm::enumerate(unified)) {
+        const auto &plan = item.value(), &prior = expected[item.index()];
+        assert(plan.matches == prior.matches && plan.score == prior.score &&
+               plan.phiCharge == prior.phiCharge && plan.chargedSegments == prior.chargedSegments &&
+               plan.forwardCutoffs == prior.forwardCutoffs &&
+               plan.guardedProjection == prior.guardedProjection);
+        assert(!llvm::is_contained(plan.gapPlacements, AnchorGapPlacement::Guard));
+        assert(llvm::is_contained(plan.gapPlacements, AnchorGapPlacement::HoistAndGuard) ==
+               (plan.chargedSegments != 0));
+      }
+    }
 }

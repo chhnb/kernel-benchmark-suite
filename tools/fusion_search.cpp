@@ -1431,9 +1431,10 @@ static SmallVector<B2BMatch, 8> commonB2BPrefix(BasicBlock &left, BasicBlock &ri
 // Emit an order-preserving alignment in the split block. A legacy prefix
 // leaves the unconsumed suffix under the old branch. A linear alignment
 // consumes both arms and uses a select on each pair of exit values.
-static void emitB2BLinear(BranchInst &split, BasicBlock &left, BasicBlock &right,
-                           BasicBlock *join, ArrayRef<AnchorMatch> matches,
-                           bool linear, bool guarded) {
+void emitB2BLinear(BranchInst &split, BasicBlock &left, BasicBlock &right,
+                   BasicBlock *join, ArrayRef<AnchorMatch> matches,
+                   bool linear, bool guarded,
+                   ArrayRef<AnchorGapPlacement> placements) {
   SmallVector<Instruction *, 16> work[2];
   for (auto &inst : left) if (!inst.isTerminator()) work[0].push_back(&inst);
   for (auto &inst : right) if (!inst.isTerminator()) work[1].push_back(&inst);
@@ -1455,11 +1456,53 @@ static void emitB2BLinear(BranchInst &split, BasicBlock &left, BasicBlock &right
   };
   unsigned cursor[2] = {};
   SmallVector<int, 32> guardOrigins[2];
-  if (guarded)
+  if (guarded || llvm::is_contained(placements, AnchorGapPlacement::HoistAndGuard))
     for (unsigned side = 0; side != 2; ++side)
       guardOrigins[side] = b2bGuardOrigins(work[side]);
 
+  unsigned gapIndex = 0;
+  auto emitGuards = [&](ArrayRef<Instruction *> leftGuard,
+                        ArrayRef<Instruction *> rightGuard) {
+    if (leftGuard.empty() && rightGuard.empty()) return;
+    ArrayRef<Instruction *> guards[] = {leftGuard, rightGuard};
+    auto *before = split.getParent();
+    auto *function = before->getParent();
+    auto &context = before->getContext();
+    BasicBlock *bodies[2] = {};
+    for (unsigned side = 0; side != 2; ++side)
+      if (!guards[side].empty())
+        bodies[side] = BasicBlock::Create(context, "anchor.guard", function, join);
+    auto *next = BasicBlock::Create(context, "anchor.cont", function, join);
+    builder.CreateCondBr(condition, bodies[0] ? bodies[0] : next,
+                        bodies[1] ? bodies[1] : next);
+    split.removeFromParent();
+    next->getInstList().push_back(&split);
+    for (unsigned side = 0; side != 2; ++side)
+      if (bodies[side]) {
+        auto *exit = BranchInst::Create(next, bodies[side]);
+        for (auto *inst : guards[side])
+          inst->moveBefore(exit);
+      }
+    builder.SetInsertPoint(&split);
+    for (unsigned side = 0; side != 2; ++side)
+      for (auto *inst : guards[side]) {
+        auto escapes = [&](const Use &use) {
+          return cast<Instruction>(use.getUser())->getParent() != bodies[side];
+        };
+        if (!llvm::any_of(inst->uses(), escapes)) continue;
+        auto *phi = builder.CreatePHI(inst->getType(), 2, "anchor.guarded");
+        inst->replaceUsesWithIf(phi, escapes);
+        phi->addIncoming(PoisonValue::get(inst->getType()),
+                         bodies[1 - side] ? bodies[1 - side] : before);
+        phi->addIncoming(inst, bodies[side]);
+      }
+  };
   auto moveGap = [&](unsigned endLeft, unsigned endRight) {
+    if (cursor[0] == endLeft && cursor[1] == endRight) return;
+    const auto placement = placements.empty() ? (guarded ? AnchorGapPlacement::HoistAndGuard
+                                                         : AnchorGapPlacement::Hoist)
+                                             : placements[gapIndex++];
+    const bool wholeGuard = placement == AnchorGapPlacement::Guard;
     unsigned end[2] = {endLeft, endRight};
     SmallVector<Instruction *, 8> guards[2];
     for (unsigned side = 0; side != 2; ++side) {
@@ -1467,36 +1510,18 @@ static void emitB2BLinear(BranchInst &split, BasicBlock &left, BasicBlock &right
       const unsigned begin = cursor[side];
       for (; cursor[side] < end[side]; ++cursor[side]) {
         auto *inst = work[side][cursor[side]];
-        if (guarded && guardOrigins[side][cursor[side]] >= int(begin))
+        if (wholeGuard || (placement == AnchorGapPlacement::HoistAndGuard &&
+                           guardOrigins[side][cursor[side]] >= int(begin)))
           guards[side].push_back(inst);
         else
           inst->moveBefore(&split);
       }
     }
-    for (unsigned side = 0; side != 2; ++side) {
-      if (guards[side].empty()) continue;
-      auto *before = split.getParent();
-      auto *function = before->getParent();
-      auto &context = before->getContext();
-      auto *body = BasicBlock::Create(context, "anchor.guard", function, join);
-      auto *next = BasicBlock::Create(context, "anchor.cont", function, join);
-      builder.CreateCondBr(condition, side == 0 ? body : next, side == 0 ? next : body);
-      split.removeFromParent();
-      next->getInstList().push_back(&split);
-      auto *exit = BranchInst::Create(next, body);
-      for (auto *inst : guards[side])
-        inst->moveBefore(exit);
-      builder.SetInsertPoint(&split);
-      for (auto *inst : guards[side]) {
-        auto escapes = [&](const Use &use) {
-          return cast<Instruction>(use.getUser())->getParent() != body;
-        };
-        if (!llvm::any_of(inst->uses(), escapes)) continue;
-        auto *phi = builder.CreatePHI(inst->getType(), 2, "anchor.guarded");
-        inst->replaceUsesWithIf(phi, escapes);
-        phi->addIncoming(PoisonValue::get(inst->getType()), before);
-        phi->addIncoming(inst, body);
-      }
+    if (wholeGuard) {
+      emitGuards(guards[0], guards[1]);
+    } else {
+      emitGuards(guards[0], {});
+      emitGuards({}, guards[1]);
     }
   };
   for (auto match : matches) {
@@ -1517,6 +1542,7 @@ static void emitB2BLinear(BranchInst &split, BasicBlock &left, BasicBlock &right
   }
   if (!join) return;
   moveGap(work[0].size(), work[1].size());
+  assert(gapIndex == placements.size() && "unused gap placements");
   for (auto &phi : join->phis()) {
     auto *incoming = select(phi.getIncomingValueForBlock(&left),
                             phi.getIncomingValueForBlock(&right));
@@ -1823,6 +1849,7 @@ std::vector<Trial> planSingleBranchB2B(const Module &parent, const Candidate &c,
     std::string label;
     SmallVector<AnchorMatch, 8> matches;
     bool prefix = false, mergeExit = false, linear = false, guarded = false;
+    SmallVector<AnchorGapPlacement, 8> placements;
     json::Object stats;
   };
   SmallVector<Layout, 12> layouts;
@@ -1862,7 +1889,10 @@ std::vector<Trial> planSingleBranchB2B(const Module &parent, const Candidate &c,
         (kind == ConditionKind::Unknown &&
          scoring.linearRequirement == AnchorLinearRequirement::DivergentOrUnknown);
   }
-  // Keep the unguarded candidates in the list when guarded gaps are enabled.
+  const bool unified = gap == AnchorGap::Auto;
+  SmallVector<AnchorPlan, 3> unifiedPlans[2];
+  // Emit in legacy fork, linear, guarded order, retaining the original trial
+  // IDs and tie-breaks. Auto computes both linear projections in mode 1.
   for (unsigned mode = 0; mode != 3; ++mode) {
     const bool linear = mode != 0;
     const bool guarded = mode == 2;
@@ -1871,11 +1901,19 @@ std::vector<Trial> planSingleBranchB2B(const Module &parent, const Candidate &c,
                    scoring.linearRequirement == AnchorLinearRequirement::Any))
       continue;
     auto modeScoring = scoring;
-    modeScoring.guardedGap = guarded;
+    modeScoring.unifiedGap = unified && linear;
+    modeScoring.guardedGap = modeScoring.unifiedGap ? scoring.guardedGap : guarded;
     for (bool pairTies : {false, true}) {
-      auto plans = planB2BAnchors(segmentWork[0], segmentWork[1], *left, *right, join,
-                                pairTies, compatibleB2BPrefix, instructionCost, selectCost, phiCost, linear, modeScoring);
-      for (const auto &plan : plans) {
+      SmallVector<AnchorPlan, 3> plans;
+      if (!modeScoring.unifiedGap || !guarded)
+        plans = planB2BAnchors(segmentWork[0], segmentWork[1], *left, *right, join,
+                              pairTies, compatibleB2BPrefix, instructionCost, selectCost, phiCost, linear, modeScoring);
+      if (modeScoring.unifiedGap && !guarded)
+        unifiedPlans[pairTies] = std::move(plans);
+      ArrayRef<AnchorPlan> active = modeScoring.unifiedGap ? unifiedPlans[pairTies] : plans;
+      for (const auto &plan : active) {
+        if (modeScoring.unifiedGap && plan.guardedProjection != guarded)
+          continue;
         const bool prefix = !linear && plan.matches.size() <= safePrefix.size() &&
             llvm::all_of(llvm::enumerate(plan.matches), [](const auto &item) {
               return item.value().left == item.index() && item.value().right == item.index();
@@ -1888,6 +1926,7 @@ std::vector<Trial> planSingleBranchB2B(const Module &parent, const Candidate &c,
         layout.linear = linear;
         layout.guarded = guarded && plan.chargedSegments != 0;
         layout.mergeExit = linear;
+        layout.placements = plan.gapPlacements;
         json::Array swaps, cutoffs, forwardCutoffs;
         auto showPair = [&](AnchorMatch pair) -> json::Object {
           auto *l = segmentWork[0][pair.left], *r = segmentWork[1][pair.right];
@@ -1967,7 +2006,7 @@ std::vector<Trial> planSingleBranchB2B(const Module &parent, const Candidate &c,
     t.rewriteStarted = layout.linear || !layout.matches.empty();
     if (layout.linear || (layout.prefix && !layout.matches.empty())) {
       emitB2BLinear(*rawBranch, *rawLeft, *rawRight, layout.mergeExit ? rawJoin : nullptr,
-                    layout.matches, layout.linear, layout.guarded);
+                    layout.matches, layout.linear, layout.guarded, layout.placements);
     } else if (!layout.matches.empty()) {
       try {
         emitB2BSegments(*rawBranch, *rawLeft, *rawRight, *rawJoin, layout.matches,

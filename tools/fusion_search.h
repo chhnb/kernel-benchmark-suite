@@ -167,6 +167,10 @@ Trial tryPair(const llvm::Module &, const Candidate &, unsigned currentVersion,
 Trial tryPair(const llvm::Module &, const Candidate &, unsigned currentVersion,
               unsigned optLevel, CleanupMode, const LogicalRegionState *, bool allowB2B,
               bool artifactB2B=false);
+// Emit an already-validated, order-preserving B2B alignment.
+void emitB2BLinear(llvm::BranchInst &, llvm::BasicBlock &, llvm::BasicBlock &,
+                   llvm::BasicBlock *join, llvm::ArrayRef<AnchorMatch>,
+                   bool linear, bool guarded, llvm::ArrayRef<AnchorGapPlacement>);
 llvm::json::Object describeAnchorCondition(llvm::Function &, llvm::StringRef split, llvm::StringRef launch);
 std::vector<Trial> planSingleBranchB2B(const llvm::Module &, const Candidate &, CleanupMode,
                                        llvm::function_ref<int(const llvm::Instruction &)> intrinsicCost,

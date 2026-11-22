@@ -13,21 +13,25 @@ class Instruction;
 class Type;
 }
 namespace fusion {
-enum class AnchorGap { Fork, Linear, Both };
+enum class AnchorGap { Fork, Linear, Both, Auto };
 
 inline bool parseAnchorGap(llvm::StringRef name, AnchorGap &gap) {
   if (name == "fork") gap = AnchorGap::Fork;
   else if (name == "linear") gap = AnchorGap::Linear;
   else if (name == "both") gap = AnchorGap::Both;
+  else if (name == "auto") gap = AnchorGap::Auto;
   else return false;
   return true;
 }
+
+enum class AnchorGapPlacement { Hoist, HoistAndGuard, Guard };
 
 enum class AnchorLinearRequirement { Any, Divergent, DivergentOrUnknown };
 
 struct AnchorScoring {
   bool selectDedup = false;
   bool guardedGap = false;
+  bool unifiedGap = false;
   AnchorLinearRequirement linearRequirement = AnchorLinearRequirement::Any;
 };
 
@@ -47,6 +51,8 @@ struct AnchorPlan {
   int64_t phiCharge = 0;
   int64_t score = 0;
   unsigned discarded = 0, conflicts = 0, segments = 0;
+  bool guardedProjection = false;
+  llvm::SmallVector<AnchorGapPlacement, 8> gapPlacements;
 };
 // The last simple memory instruction in each instruction's dependency chain
 // (including itself), or -1 if it has none. A gap guards only its own roots.
