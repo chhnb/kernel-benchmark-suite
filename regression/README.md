@@ -12,6 +12,8 @@ python3 regression/verify_anchor_release.py --tool-root . --out build/anchor-rel
 
 复验逐 case 运行当前默认，校验最终 IR 哈希、提交数和 TTI，并按清单重建及核对 16 个冻结发布 case 的默认设备对象。脚本从 manifest 的 `anchor_profiles.legacy` 读取已冻结的旧默认 D 的 TTI 和 IR 哈希。当前默认 TTI 高于旧 D 时报告差值。复现旧默认 D 时请构建 `c7dded07`。可重复传 `--case` 选择子集。LUD8 额外重放写回候选，核实漏传形状时 gate 会拒绝守护布局。手动运行搜索时可传 `--anchor-wave-shape X,Y,Z`，或由 IR 提供确切的 `reqd_work_group_size`。
 
+等价验证按原始字节比较 IR 和设备对象。同一冻结输入的各次运行使用相同的相对输出路径。等价验证记录应列出基线与待验提交、二进制 SHA-256、运行次数、候选快照及评分、完整提交链、最终 TTI、产物哈希和报警。出现字节差异时，记录首个不同的候选或产物及其哈希。
+
 发布性能比较固定同一输入、参考、后端及 runner，按 case 协议在 12 轮中轮换新默认、legacy 和 Auto DARM。先做 A/A，超限允许重试一次。仍超限的输入转用 [v3 计时协议](records/anchor-unified-dp-step5-20261122.md)，每个角色每个窗口取 31 次完整校验的中位数，唯一重试使用 61 次，并保留原 A/A 门槛。CED 使用[第 7 步 HIP Graph 协议](records/pcm32-cleanup-strength-20261122.md)。所有区间使用同轮配对比值和 95% bootstrap。二进制逐字节一致时标记为别名，有同样输入和角色的既有配对测量时复用该测量。输出校验失败立即停止。
 
 ## 生成输入的回归

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Replay the Anchor release and compare it with the frozen profiles."""
+"""Replay Anchor and verify SHA-256 of the original IR and device object bytes."""
 
 import argparse
 from concurrent.futures import ThreadPoolExecutor

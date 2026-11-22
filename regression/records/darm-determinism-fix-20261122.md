@@ -145,3 +145,13 @@ tests/run-v1
 `regression/verify_anchor_release.py` 已按冻结哈希逐字节验收，仓库中的验证脚本和现行模板没有 DARM 白名单代码。先前按候选号和哈希放行的规则只存在于旧步骤的一次性审计脚本和历史记录。本次审计对所有候选严格比较，移除了 `docs/KNOWN_ISSUES.md` 中的现行豁免说明，保留历史记录原貌。
 
 原始回执、LLVM 12 的 `llvm-diff`、临时插桩日志和复现脚本保存在 EPYC 的 `/data/home/chh/simplify-v2/build/darm-determinism.Nq2mte`。实际环境变量来自主机的 `v2-runtime/reproduce.json`。首次固定父 IR 批量调用在临时目录误用了相对符号链接，尚未完成任何重放即退出，改成绝对路径后从头重放。回归套件包装器首次调用缺少测试输出父目录，创建目录后完整重跑。
+
+## 合并前的 PHI 工作列表加固
+
+基于 `d1f301e`，将 `RegionReplicator::addPhiNodes` 的 PHI 工作列表改为 `SmallSetVector`。原容器超过 32 项后会按指针排序。新容器始终按插入顺序取出指令，初始工作项沿用扩展块中的指令顺序。原论文对照实现不变。
+
+沿用上面的全快照命令，在正常 ASLR 下将 17 个 case 各运行两次。两轮共 9,662 条候选观察，父 IR、raw IR、cleanup 后 IR、候选输出和评分一致。两轮的 358 步完整提交链、最终 IR 和 TTI 与 `f58687f` 一致。发布复验重新生成的 16 个冻结设备对象以及按 ROCm 4.2 口径重建的 LUD8 设备对象均与 `f58687f` 逐字节一致。唯一报警为 CED 281 > 280。回归测试 16 项通过、4 项按已知缺件跳过，HLLD 确定性检查通过。
+
+`decision-greedy` SHA-256 为 `09c030e5d831ec9031db684b8a11b8d2dd92be44b2efa39a5b926a0cafeb961e`，`fusion-search-llvm24` 为 `925d2554afa246ca33501a8a5f8b07e4b1fbf7610b7c9eebc5203068b0805c26`，LLVM 24 报价器沿用本记录的固定版本。证据保存在 EPYC 的 `/data/home/chh/simplify-v2/build/darm-phi-hardening.edVTg2`。
+
+等价比较保留所有 IR 字节。调度测试的两轮使用相同的相对输出目录，比较器与汇总器读取原始 IR。另以 quant8 验证两轮输出及提交链一致，并在独立副本中只改注释，确认比较器报告差异。

@@ -95,6 +95,10 @@ SRAD32 的冻结件和诊断构建见[重建核验记录](../regression/records/
 
 ## 已修复：DARM R2B 试融的非确定性
 
-HLLD 的 `B9:B22:B12`、`B9:B21:B12` 和 `B9:B23:B12` 在同一父 IR 上曾出现两种 cleanup 后 IR，throughput TTI 相差 1。三个候选均未获选。区域复制曾按以块指针为键的 `DenseMap` 桶顺序接边，使 `concretizeBranchConditions` 对同一个分支写入 `true` 和 `false` 的先后顺序随地址变化。提交 `b2008bd` 将接边改为按 CFG 发现顺序进行。三个候选各重放 20 次，raw IR、cleanup 后 IR 和评分均只有一种形态。
+HLLD 的 `B9:B22:B12`、`B9:B21:B12` 和 `B9:B23:B12` 在同一父 IR 上曾出现两种 cleanup 后 IR，throughput TTI 相差 1。三个候选均未获选。提交 `b2008bd` 修复了普查发现的三处地址相关顺序。
+
+- `RegionReplicator::replicateCFG` 按块指针 `DenseMap` 的桶顺序接边，使 `concretizeBranchConditions` 的最终分支选择随地址变化。现在按 CFG 发现顺序接边。HLLD 的三个候选各重放 20 次，raw IR、cleanup 后 IR 和评分均只有一种形态。
+- `decision::normalize` 按地址排序出口块，使 raw IR 的前驱注释顺序不稳定。现在按两臂的 CFG 发现顺序去重。
+- 区域融合预检按 `std::set<BasicBlock *>` 的指针顺序扫描，导致首条拒绝详情随地址变化。现在按父函数的块顺序检查。
 
 历史分布见 [6c 重放记录](../regression/records/anchor-unified-dp-step6c-20261122.md#附录-hlld-地址随机化)。全量普查和修复后的严格比较见 [第 11 步记录](../regression/records/darm-determinism-fix-20261122.md)。
