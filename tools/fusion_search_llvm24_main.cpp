@@ -137,12 +137,11 @@ static int runSearch(int argc, const char *const *argv, TrialWorker *batch = nul
   try {
     std::string input,function,output,debug,split,left,right,replayParentHash,anchorWaveShape;Options options;options.cleanupMode=CleanupMode::DarmCFGInstCombine;
     bool useArtifactB2B=false, useAnchorB2B=true;
-    bool anchorLegacy=false;
     std::string quoteMode="on";
     bool fullSnapshots=true;
     bool controlOnly=false,catalogOnly=false,anchorConditionOnly=false;std::string ttiWorker="/home/chh/kernel-benchmark-suite/tools/run-llvm24-tti";
     for(int i=1;i<argc;++i){std::string k=argv[i];
-      if(k=="--help"){outs()<<"fusion-search v1 --ir FILE --function NAME --out FILE [--b2b-strategy anchor|darm|darm-artifact] [--anchor-mode legacy] [--anchor-wave-shape X,Y,Z] [--anchor-condition-only 0|1] [--structural 1] [--split ID --left ID --right ID] [--debug-dir DIR] [--ir-snapshots full|compact] [--tti-worker EXECUTABLE] [--catalog-only 0|1] [--control-only 0|1]\n";return 0;}
+      if(k=="--help"){outs()<<"fusion-search v1 --ir FILE --function NAME --out FILE [--b2b-strategy anchor|darm|darm-artifact] [--anchor-wave-shape X,Y,Z] [--anchor-condition-only 0|1] [--structural 1] [--split ID --left ID --right ID] [--debug-dir DIR] [--ir-snapshots full|compact] [--tti-worker EXECUTABLE] [--catalog-only 0|1] [--control-only 0|1]\n";return 0;}
       if(i+1==argc)throw std::runtime_error("missing option value");std::string v=argv[++i];
       if(k=="--control-only"){if(v!="0"&&v!="1")throw std::runtime_error("control-only must be 0 or 1");controlOnly=v=="1";}
       else if(k=="--catalog-only"){if(v!="0"&&v!="1")throw std::runtime_error("catalog-only must be 0 or 1");catalogOnly=v=="1";}
@@ -158,10 +157,6 @@ static int runSearch(int argc, const char *const *argv, TrialWorker *batch = nul
       }
       else if(k=="--replay-parent-hash")replayParentHash=v;
       else if(k=="--ir")input=v;else if(k=="--function")function=v;else if(k=="--out")output=v;
-      else if(k=="--anchor-mode"){
-        if (v != "legacy") throw std::runtime_error("anchor-mode must be legacy");
-        anchorLegacy = true;
-      }
       else if(k=="--anchor-wave-shape"){
         if (!wave_diagnostic::parseShape(v)) throw std::runtime_error("invalid anchor-wave-shape (expected X,Y,Z)");
         anchorWaveShape=v;
@@ -181,8 +176,6 @@ static int runSearch(int argc, const char *const *argv, TrialWorker *batch = nul
       else if(k=="--debug-dir")debug=v;else if(k=="--split")split=v;else if(k=="--left")left=v;else if(k=="--right")right=v;
       else throw std::runtime_error("unknown option: "+k);
     }
-    const bool uniformGate = !anchorLegacy;
-    const auto gap = anchorLegacy ? AnchorGap::Fork : AnchorGap::Auto;
 
     if(input.empty()||function.empty()||output.empty())throw std::runtime_error("--ir, --function, --out required");
     if(sys::fs::exists(output))throw std::runtime_error("output already exists");
@@ -300,11 +293,11 @@ static int runSearch(int argc, const char *const *argv, TrialWorker *batch = nul
         roundStorage.emplace(makeRound(*module,function,0,options.optLevel,options.cleanupMode));
       const auto &round = *roundStorage;
       if(observer)observer->round(round);
-      if (!batch && useAnchorB2B && uniformGate && !wave_diagnostic::resolveShape(*f, anchorWaveShape))
+      if (!batch && useAnchorB2B && !wave_diagnostic::resolveShape(*f, anchorWaveShape))
         errs()<<"warning: workgroup shape not provided for "<<function<<"; Anchor wave classification is unknown\n";
       std::vector<Trial> plans;
       if (useAnchorB2B)
-        plans = llvm24Scorer.planAnchorB2B(*module, c, options.cleanupMode, gap);
+        plans = llvm24Scorer.planAnchorB2B(*module, c, options.cleanupMode);
       const bool plannedB2B = !plans.empty();
       Trial t;
       ScoreResult score;
@@ -316,25 +309,20 @@ static int runSearch(int argc, const char *const *argv, TrialWorker *batch = nul
       };
       if (plannedB2B) {
         json::Array profitability;
-        json::Object wave;
-        StringRef waveClass;
-        if (uniformGate) {
-          wave = profileCall("classify_anchor_wave", [&]() {
-            return wave_diagnostic::classify(*f, wave_diagnostic::findBranch(*f, split), anchorWaveShape);
-          });
-          waveClass = wave.getString("classification").getValueOr("unknown");
-        }
+        auto wave = profileCall("classify_anchor_wave", [&]() {
+          return wave_diagnostic::classify(*f, wave_diagnostic::findBranch(*f, split), anchorWaveShape);
+        });
+        const auto waveClass = wave.getString("classification").getValueOr("unknown");
         std::set<std::string> seenCleanedIR;
         const bool traceLayouts = observer && !batch && std::getenv("FUSION_OBSERVE_B2B_DP");
         for (auto &plan : plans) {
           const std::string hash = plan.valid ? moduleHash(*plan.normalized) : "";
           const auto emission = plan.anchorStats.getString("emission").getValueOr("");
           const bool linear = emission == "linear" || emission == "guarded-linear";
-          bool duplicate = plan.valid && (uniformGate ? seenCleanedIR.count(hash)
-                                                      : !seenCleanedIR.insert(hash).second);
+          const bool duplicate = plan.valid && seenCleanedIR.count(hash);
           // A gated linear layout needs its own side quotation even when its
           // normalized IR duplicates another layout.
-          if (duplicate && !traceLayouts && !(uniformGate && linear))
+          if (duplicate && !traceLayouts && !linear)
             continue;
           if (traceLayouts) {
             if (plan.raw) writeIR(*plan.raw, debug + "/" + plan.mergePath + "-raw.ll");
@@ -343,23 +331,19 @@ static int runSearch(int argc, const char *const *argv, TrialWorker *batch = nul
           auto result = profileCall("evaluate_score",[&](){return evaluateTrial(*module, plan, round, scorer);});
           if (StringRef(result.reason).startswith("tti_quote_")) throw std::runtime_error(result.reason);
           const bool ttiEligible = eligible(plan, result);
-          const auto rejection = uniformGate && plan.valid ? anchorUniformRejection(
+          const auto rejection = plan.valid ? anchorUniformRejection(
               waveClass, linear, sideGain(result, "uniform_gain_false"),
               sideGain(result, "uniform_gain_true")) : StringRef{};
           json::Object layout{{"layout", plan.mergePath}, {"valid", plan.valid},
               {"eligible", ttiEligible && rejection.empty()}, {"anchor", json::Object(plan.anchorStats)},
               {"score_result", scoreJson(result)}};
-          if (uniformGate) {
-            layout["tti_eligible"] = ttiEligible;
-            if (!rejection.empty())
-              layout["uniform_gate_rejection"] = rejection;
-          }
+          layout["tti_eligible"] = ttiEligible;
+          if (!rejection.empty())
+            layout["uniform_gate_rejection"] = rejection;
           profitability.push_back(std::move(layout));
           if (!rejection.empty())
             continue;
-          if (uniformGate && plan.valid)
-            duplicate = !seenCleanedIR.insert(hash).second;
-          if (duplicate) continue;
+          if (plan.valid && !seenCleanedIR.insert(hash).second) continue;
           if (t.mergePath.empty() ||
               ((plan.valid && !t.valid) ||
                 (result.status == ScoreStatus::Scored &&
@@ -368,12 +352,11 @@ static int runSearch(int argc, const char *const *argv, TrialWorker *batch = nul
             score = std::move(result);
           }
         }
-        if (t.mergePath.empty() && uniformGate) {
+        if (t.mergePath.empty()) {
           t.candidate = c;
           t.reason = "anchor_uniform_gate_no_layout";
         }
-        if (uniformGate)
-          t.anchorStats["wave"] = std::move(wave);
+        t.anchorStats["wave"] = std::move(wave);
         if (useAnchorB2B) {
           t.anchorStats["generated"] = int64_t(plans.size());
           t.anchorStats["unique_normalized"] = int64_t(seenCleanedIR.size());
@@ -389,7 +372,7 @@ static int runSearch(int argc, const char *const *argv, TrialWorker *batch = nul
             return evaluateTrial(*module, t, round, scorer);
           }) : ScoreResult{};
         };
-        emitRegion(uniformGate);
+        emitRegion(true);
         if (t.valid && !t.r2rSpeculationSplit.empty()) {
           if (StringRef(score.reason).startswith("tti_quote_")) throw std::runtime_error(score.reason);
           auto wave = wave_diagnostic::classify(

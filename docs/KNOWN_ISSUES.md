@@ -66,7 +66,7 @@ SRAD32 的冻结件和诊断构建见[重建核验记录](../regression/records/
 
 ## SasPoint5：B2B 路径依赖
 
-默认 Anchor 去掉多余的条件 `freeze` 后，冻结 IR 上的 B2B 轨迹从第二次提交开始重排，末次线性提交消失。提交数由 8 变为 7，最终 TTI 由 487 升至 491，与 legacy 持平。interval-mixture 和 coherent-blocks 的第 7f 步同批计时持平，uniform-01 的 CUDA Graph 补测时比为 1.00033 [1.00017, 1.00035]。 [第 7f 步](../regression/records/pcm32-freeze-removal-20261122.md) · [第 9 步](../regression/records/anchor-r2r-speculation-release-20261122.md)
+默认 Anchor 去掉多余的条件 `freeze` 后，冻结 IR 上的 B2B 轨迹从第二次提交开始重排，末次线性提交消失。提交数由 8 变为 7，最终 TTI 由 487 升至 491，与冻结的旧默认 D 持平。复现旧 D 时请构建 `c7dded07`。interval-mixture 和 coherent-blocks 的第 7f 步同批计时持平，uniform-01 的 CUDA Graph 补测时比为 1.00033 [1.00017, 1.00035]。 [第 7f 步](../regression/records/pcm32-freeze-removal-20261122.md) · [第 9 步](../regression/records/anchor-r2r-speculation-release-20261122.md)
 
 ## PCM32：完整搜索相对 Auto DARM 的差距已解决
 

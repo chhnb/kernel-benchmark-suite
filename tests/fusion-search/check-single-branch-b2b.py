@@ -153,7 +153,7 @@ with tempfile.TemporaryDirectory() as directory:
             args = [search, "--ir", source, "--function", "choose", "--split", "B2",
                     "--left", "B4" if swapped else "B3", "--right", "B3" if swapped else "B4",
                     "--structural", "1", "--cleanup", "darm-cfg-dce-instcombine",
-                    "--b2b-strategy", "anchor", "--anchor-mode", "legacy", "--tti-worker", worker]
+                    "--b2b-strategy", "anchor", "--tti-worker", worker]
             run(*args, "--out", fused, "--debug-dir", out / "reports")
             report = out / "reports/trial-0/trial.json"
             trial = json.loads(report.read_text())
@@ -184,7 +184,7 @@ with tempfile.TemporaryDirectory() as directory:
 
     for shape in cases:
         out = root / f"{shape}-0"
-        run(greedy, out / "source.ll", "choose", out / "auto", "--anchor-mode", "legacy")
+        run(greedy, out / "source.ll", "choose", out / "auto")
         summary = json.loads((out / "auto/summary.json").read_text())
         assert summary["shared_arm_trials"] and summary["b2b_strategy"] == "anchor"
         assert summary["pipeline_version"] == "v2"

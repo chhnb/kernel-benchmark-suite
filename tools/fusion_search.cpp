@@ -1447,8 +1447,7 @@ static SmallVector<B2BMatch, 8> commonB2BPrefix(BasicBlock &left, BasicBlock &ri
 void emitB2BLinear(BranchInst &split, BasicBlock &left, BasicBlock &right,
                    BasicBlock *join, ArrayRef<AnchorMatch> matches,
                    bool linear, bool guarded,
-                   ArrayRef<AnchorGapPlacement> placements,
-                   bool preserveLegacyFreeze) {
+                   ArrayRef<AnchorGapPlacement> placements) {
   SmallVector<Instruction *, 16> work[2];
   for (auto &inst : left) if (!inst.isTerminator()) work[0].push_back(&inst);
   for (auto &inst : right) if (!inst.isTerminator()) work[1].push_back(&inst);
@@ -1456,14 +1455,6 @@ void emitB2BLinear(BranchInst &split, BasicBlock &left, BasicBlock &right,
   Value *condition = split.getCondition();
   // Every use stays on an execution that reached the original branch,
   // where an undef or poison condition already has undefined behavior.
-  if (preserveLegacyFreeze &&
-      (linear || (!join && llvm::any_of(matches, [&](AnchorMatch match) {
-         return work[0][match.left]->mayReadOrWriteMemory();
-       })))) {
-    condition = builder.CreateFreeze(condition);
-    split.setCondition(condition);
-  }
-
   std::map<std::pair<Value *, Value *>, Value *> selects;
   auto select = [&](Value *lv, Value *rv) -> Value * {
     if (lv == rv) return lv;
@@ -1740,7 +1731,7 @@ std::vector<Trial> planSingleBranchB2B(const Module &parent, const Candidate &c,
                                        function_ref<int(const Instruction &)> intrinsicCost,
                                        function_ref<int(const Instruction &)> anchorCost,
                                        function_ref<int(Type *)> anchorSelectCost,
-                                       function_ref<int(Type *)> anchorPhiCost, AnchorGap gap) {
+                                       function_ref<int(Type *)> anchorPhiCost) {
   ProfileScope planningScope("b2b_plan_generate_clean_total");
   std::vector<Trial> trials;
   if (!usesDarmDCE(mode))
@@ -1898,7 +1889,7 @@ std::vector<Trial> planSingleBranchB2B(const Module &parent, const Candidate &c,
       return;
     list.push_back(std::move(layout));
   };
-  const bool allowLinear = gap == AnchorGap::Auto && selectableExit && segmentUsesValid;
+  const bool allowLinear = selectableExit && segmentUsesValid;
   SmallVector<AnchorPlan, 3> unifiedPlans[2];
   // Emit in legacy fork, linear, guarded order, retaining the original trial
   // IDs and tie-breaks. Auto computes both linear projections in mode 1.
@@ -2011,8 +2002,7 @@ std::vector<Trial> planSingleBranchB2B(const Module &parent, const Candidate &c,
     t.rewriteStarted = layout.linear || !layout.matches.empty();
     if (layout.linear || (layout.prefix && !layout.matches.empty())) {
       emitB2BLinear(*rawBranch, *rawLeft, *rawRight, layout.mergeExit ? rawJoin : nullptr,
-                    layout.matches, layout.linear, layout.guarded, layout.placements,
-                    gap == AnchorGap::Fork);
+                    layout.matches, layout.linear, layout.guarded, layout.placements);
     } else if (!layout.matches.empty()) {
       try {
         emitB2BSegments(*rawBranch, *rawLeft, *rawRight, *rawJoin, layout.matches,

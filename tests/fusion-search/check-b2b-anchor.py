@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import json
+import os
 from pathlib import Path
 import re
 import subprocess
@@ -25,8 +26,9 @@ with tempfile.TemporaryDirectory() as directory:
         subprocess.run(
             [search, "--ir", fixtures / f"{name}.ll", "--function", fn,
              "--split", "B0", "--left", left, "--right", right,
-             "--b2b-strategy", "anchor", "--anchor-mode", "legacy", "--tti-worker", worker,
+             "--b2b-strategy", "anchor", "--tti-worker", worker,
              "--out", result, "--debug-dir", debug],
+            env=os.environ | {"FUSION_OBSERVE_B2B_DP": str(root / f"{name}-planner.jsonl")},
             check=True,
         )
         subprocess.run([opt, "-verify", "-disable-output", result], check=True)
@@ -35,7 +37,11 @@ with tempfile.TemporaryDirectory() as directory:
         assert report["valid"] and report["score_result"]["status"] == "scored"
         score = report["score_result"]["metrics"]["work_after"]
         stats = report["anchor"]
-        assert 1 <= stats["unique_normalized"] <= stats["generated"] <= 9
+        assert 1 <= stats["unique_normalized"] <= stats["generated"]
+        assert len(report["layout_profitability"]) == stats["generated"]
+        fork_layouts = [row for row in report["layout_profitability"]
+                        if row["anchor"]["emission"] not in ("linear", "guarded-linear")]
+        assert 1 <= len(fork_layouts) <= 9
         assert stats["conflicts"] == 0
         if name == "no-phi":
             assert stats["anchors"] == 0 and stats["segments"] == 1

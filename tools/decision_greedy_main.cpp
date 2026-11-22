@@ -129,13 +129,12 @@ int main(int argc,char**argv){try{
  auto timingReport=[&](){json::Object phases;for(const auto &kv:phaseMilliseconds)phases[kv.first]=json::Object{{"milliseconds",kv.second},{"calls",phaseCalls[kv.first]}};return phases;};
 
  if(argc==2&&StringRef(argv[1])=="--help"){
-   outs()<<"usage: decision-greedy INPUT FUNCTION [TOOL_ROOT] NEW_OUTPUT [--b2b-strategy anchor|darm|darm-artifact] [--anchor-mode legacy] [--anchor-wave-shape X,Y,Z] [--domain-schedule ordered] [--ir-snapshots full|compact] [--tti-quote-cache off|audit|on] [--commit-normalize-only|--no-commit-normalize-only]\n";
+   outs()<<"usage: decision-greedy INPUT FUNCTION [TOOL_ROOT] NEW_OUTPUT [--b2b-strategy anchor|darm|darm-artifact] [--anchor-wave-shape X,Y,Z] [--domain-schedule ordered] [--ir-snapshots full|compact] [--tti-quote-cache off|audit|on] [--commit-normalize-only|--no-commit-normalize-only]\n";
    outs()<<"Default schedule: ordered for whole-function trials (Auto Greedy v2).\n";
    outs()<<"Normalize-only commits are enabled by default.\n";
    return 0;
  }
  std::string b2bStrategy="anchor", quoteMode="on", snapshotMode, anchorWaveShape;
- bool anchorLegacy=false;
  Optional<bool> normalizeOnlyOverride;
  while (argc >= 3) {
    StringRef last(argv[argc-1]);
@@ -152,21 +151,19 @@ int main(int argc,char**argv){try{
      snapshotMode = value.str();
    else if (option == "--tti-quote-cache" && (value == "off" || value == "audit" || value == "on"))
      quoteMode = value.str();
-   else if (option == "--anchor-mode" && value == "legacy")
-     anchorLegacy = true;
    else if (option == "--anchor-wave-shape" && fusion::wave_diagnostic::parseShape(value))
      anchorWaveShape = value.str();
    else if (option == "--b2b-strategy" && (value == "darm" || value == "darm-artifact" || value == "anchor"))
      b2bStrategy = value.str();
    else if (option == "--ir-snapshots" || option == "--domain-schedule" || option == "--b2b-strategy" ||
-            option == "--tti-quote-cache" || option == "--anchor-mode" || option == "--anchor-wave-shape" ||
+            option == "--tti-quote-cache" || option == "--anchor-wave-shape" ||
             option.startswith("--anchor-"))
      throw std::runtime_error("invalid value for " + option.str());
    else break;
    argc -= 2;
  }
  if(argc!=4&&argc!=5)
-   throw std::runtime_error("usage: decision-greedy INPUT FUNCTION [TOOL_ROOT] NEW_OUTPUT [--b2b-strategy anchor|darm|darm-artifact] [--anchor-mode legacy] [--anchor-wave-shape X,Y,Z] [--domain-schedule ordered] [--ir-snapshots full|compact] [--tti-quote-cache off|audit|on] [--commit-normalize-only|--no-commit-normalize-only]");
+   throw std::runtime_error("usage: decision-greedy INPUT FUNCTION [TOOL_ROOT] NEW_OUTPUT [--b2b-strategy anchor|darm|darm-artifact] [--anchor-wave-shape X,Y,Z] [--domain-schedule ordered] [--ir-snapshots full|compact] [--tti-quote-cache off|audit|on] [--commit-normalize-only|--no-commit-normalize-only]");
  const bool commitNormalizeOnly=normalizeOnlyOverride.getValueOr(true);
  if(snapshotMode.empty())snapshotMode="compact";
  const bool implicitRoot=argc==4;
@@ -191,7 +188,7 @@ int main(int argc,char**argv){try{
  }
  constexpr unsigned conditionBudget=4;
  LLVMContext ctx;SMDiagnostic error;auto initial=parseIRFile(current,error,ctx);if(!initial||!initial->getFunction(fn)||verifyModule(*initial,&errs()))throw std::runtime_error("invalid input");
- if (b2bStrategy == "anchor" && !anchorLegacy &&
+ if (b2bStrategy == "anchor" &&
      !fusion::wave_diagnostic::resolveShape(*initial->getFunction(fn), anchorWaveShape))
    errs()<<"warning: workgroup shape not provided for "<<fn<<"; Anchor wave classification is unknown\n";
  auto writeModule=[&](const Module &module,const std::string &path){std::error_code ec;raw_fd_ostream stream(path,ec);if(ec)throw std::runtime_error(ec.message());module.print(stream,nullptr);};
@@ -471,9 +468,7 @@ int main(int argc,char**argv){try{
       }
       // Keep the exact invocation and the arguments needed for trial replay.
       trialArgs.insert(trialArgs.end(), {"--b2b-strategy", b2bStrategy});
-      if (anchorLegacy)
-        trialArgs.insert(trialArgs.end(), {"--anchor-mode", "legacy"});
-      else if (!anchorWaveShape.empty())
+      if (!anchorWaveShape.empty())
         trialArgs.insert(trialArgs.end(), {"--anchor-wave-shape", anchorWaveShape});
       // IDs locate a prior recipe; current planner facts certify its reuse.
       json::Array replayArgs;

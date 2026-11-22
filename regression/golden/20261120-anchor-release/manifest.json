@@ -3756,10 +3756,7 @@
     "LD_LIBRARY_PATH": "/data/home/chh/v2-runtime/toolchains/llvm12-jammy/usr/lib/x86_64-linux-gnu:/data/home/chh/v2-runtime/toolchains/llvm24-pinned/lib:/opt/rocm-6.3.3/lib"
   },
   "anchor_profile_reference_revision": "84e30a76a95bdbae55c66e31e57155c82fbef11e",
-  "anchor_modes": {
-    "default": "classification gate with missing quotes rejected",
-    "legacy": "--anchor-mode legacy"
-  },
+  "anchor_legacy_reference_revision": "c7dded07a2a0d528c4a2b7ece1c7493e22d2758e",
   "anchor_additional_cases": [
     {
       "case": "LUD8",

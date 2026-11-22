@@ -87,14 +87,5 @@ int main(int argc, char **argv) {
     assert(!verifyModule(*undefined, &errs()));
   }
 
-  auto legacy = parseAssemblyFile(argv[1], error, context);
-  assert(legacy);
-  auto &legacyEntry = legacy->getFunction("auto_guard_reference")->getEntryBlock();
-  auto &legacyBranch = cast<BranchInst>(*legacyEntry.getTerminator());
-  const AnchorMatch prefix[] = {{0, 0}};
-  emitB2BLinear(legacyBranch, *legacyBranch.getSuccessor(0), *legacyBranch.getSuccessor(1),
-                nullptr, prefix, false, false, {}, true);
-  assert(isa<FreezeInst>(legacyBranch.getCondition()));
-  assert(!verifyModule(*legacy, &errs()));
   module->print(outs(), nullptr);
 }

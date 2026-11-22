@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Replay the Anchor release from frozen IR and check both current modes."""
+"""Replay the Anchor release and compare it with the frozen profiles."""
 
 import argparse
 from concurrent.futures import ThreadPoolExecutor
@@ -120,49 +120,44 @@ def verify_profiles(row, source, case_out, tool_root, llvm, rocm, ptxas, ptxas_s
     if metadata != {"function": row["function"], **row["workgroup"]}:
         raise ValueError(f"{row['case']}: manifest and case workgroup disagree")
     shape = ",".join(map(str, metadata["shape"]))
-    profiles = {}
-    options_by_mode = {
-        "default": ["--anchor-wave-shape", shape],
-        "legacy": ["--anchor-mode", "legacy"],
-    }
-    for mode, options in options_by_mode.items():
-        folder = case_out / mode
-        folder.mkdir()
-        command = [tool_root / "build/decision-fuse/decision-greedy", source, row["function"], tool_root,
-                   "active", *options]
-        with (folder / "run.log").open("w") as log:
-            subprocess.run(command, cwd=folder, env=env, stdout=log, stderr=log, check=True)
-            final = folder / "active/final.ll"
-            subprocess.run([llvm / "opt", "-verify", "-disable-output", final],
-                           env=env, stdout=log, stderr=log, check=True)
-        summary = json.loads((folder / "active/summary.json").read_text())
-        actual = {"commits": summary["commits"], "tti": summary["final_cost"],
-                  "ir_sha256": digest(final.read_bytes())}
-        if summary["status"] != "completed":
-            raise ValueError(f"{row['case']}: {mode} search incomplete")
-        profiles[mode] = actual
-    delta = profiles["default"]["tti"] - profiles["legacy"]["tti"]
+    folder = case_out / "default"
+    folder.mkdir()
+    command = [tool_root / "build/decision-fuse/decision-greedy", source, row["function"], tool_root,
+               "active", "--anchor-wave-shape", shape]
+    with (folder / "run.log").open("w") as log:
+        subprocess.run(command, cwd=folder, env=env, stdout=log, stderr=log, check=True)
+        final = folder / "active/final.ll"
+        subprocess.run([llvm / "opt", "-verify", "-disable-output", final],
+                       env=env, stdout=log, stderr=log, check=True)
+    summary = json.loads((folder / "active/summary.json").read_text())
+    if summary["status"] != "completed":
+        raise ValueError(f"{row['case']}: default search incomplete")
+    actual = {"commits": summary["commits"], "tti": summary["final_cost"],
+              "ir_sha256": digest(final.read_bytes())}
+
+    # Compare with the frozen old D, which is reproduced by c7dded07.
+    legacy = expected["legacy"]
+    delta = actual["tti"] - legacy["tti"]
     if delta > 0:
-        print(f"WARNING: {row['case']}: default TTI {profiles['default']['tti']} > "
-              f"legacy {profiles['legacy']['tti']} (+{delta})", file=sys.stderr, flush=True)
-    for mode, actual in profiles.items():
-        frozen = expected[mode]
-        if any(frozen[key] != value for key, value in actual.items()):
-            raise ValueError(f"{row['case']}: {mode} profile differs: {actual} != {frozen}")
-        if "binary" in frozen:
-            folder = case_out / mode
-            final = folder / "active/final.ll"
-            fmt = frozen["binary"]["format"]
-            binary = folder / ("kernel." + fmt)
-            with (folder / "build.log").open("w") as log:
-                rebuild_binary(final, binary, llvm, rocm, ptxas, ptxas_sha, env, log,
-                               row.get("anchor_codegen", {}))
-            actual["binary"] = {"format": fmt, "sha256": digest(binary.read_bytes())}
-            if actual["binary"] != frozen["binary"]:
-                raise ValueError(f"{row['case']}: {mode} machine code differs from the frozen profile")
+        print(f"WARNING: {row['case']}: default TTI {actual['tti']} > "
+              f"legacy {legacy['tti']} (+{delta})", file=sys.stderr, flush=True)
+    frozen = expected["default"]
+    if any(frozen[key] != value for key, value in actual.items()):
+        raise ValueError(f"{row['case']}: default profile differs: {actual} != {frozen}")
+    if "binary" in frozen:
+        fmt = frozen["binary"]["format"]
+        binary = folder / ("kernel." + fmt)
+        with (folder / "build.log").open("w") as log:
+            rebuild_binary(final, binary, llvm, rocm, ptxas, ptxas_sha, env, log,
+                           row.get("anchor_codegen", {}))
+        actual["binary"] = {"format": fmt, "sha256": digest(binary.read_bytes())}
+        if actual["binary"] != frozen["binary"]:
+            raise ValueError(f"{row['case']}: default machine code differs from the frozen profile")
     missing_shape_verified = verify_lud8_shape(case_out, env) if row["case"] == "LUD8" else None
-    print(f"{row['case']}: both profiles verified", flush=True)
-    return {"case": row["case"], "verified": True, "profiles": profiles, "tti_delta": delta,
+    print(f"{row['case']}: default verified", flush=True)
+    return {"case": row["case"], "verified": True, "profiles": {"default": actual},
+            "legacy_reference": legacy, "default_matches_legacy_ir": actual["ir_sha256"] == legacy["ir_sha256"],
+            "tti_delta": delta,
             **({"lud8_missing_shape_verified": missing_shape_verified} if missing_shape_verified is not None else {})}
 
 

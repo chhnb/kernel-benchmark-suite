@@ -172,12 +172,11 @@ Trial tryPair(const llvm::Module &, const Candidate &, unsigned currentVersion,
 // Emit an already-validated, order-preserving B2B alignment.
 void emitB2BLinear(llvm::BranchInst &, llvm::BasicBlock &, llvm::BasicBlock &,
                    llvm::BasicBlock *join, llvm::ArrayRef<AnchorMatch>,
-                   bool linear, bool guarded, llvm::ArrayRef<AnchorGapPlacement>,
-                   bool preserveLegacyFreeze = false);
+                   bool linear, bool guarded, llvm::ArrayRef<AnchorGapPlacement>);
 llvm::json::Object describeAnchorCondition(llvm::Function &, llvm::StringRef split, llvm::StringRef launch);
 std::vector<Trial> planSingleBranchB2B(const llvm::Module &, const Candidate &, CleanupMode,
                                        llvm::function_ref<int(const llvm::Instruction &)> intrinsicCost,
                                        llvm::function_ref<int(const llvm::Instruction &)> anchorCost,
                                        llvm::function_ref<int(llvm::Type *)> anchorSelectCost,
-                                       llvm::function_ref<int(llvm::Type *)> anchorPhiCost, AnchorGap gap = AnchorGap::Auto);
+                                       llvm::function_ref<int(llvm::Type *)> anchorPhiCost);
 }
