@@ -102,3 +102,7 @@ HLLD 的 `B9:B22:B12`、`B9:B21:B12` 和 `B9:B23:B12` 在同一父 IR 上曾出�
 - 区域融合预检按 `std::set<BasicBlock *>` 的指针顺序扫描，导致首条拒绝详情随地址变化。现在按父函数的块顺序检查。
 
 历史分布见 [6c 重放记录](../regression/records/anchor-unified-dp-step6c-20261122.md#附录-hlld-地址随机化)。全量普查和修复后的严格比较见 [第 11 步记录](../regression/records/darm-determinism-fix-20261122.md)。
+
+## 数据相关分支的保守政策
+
+依赖运行时数据的条件缺少静态证据来判断 wave 内是否一致。线性布局、守护布局和 R2R 推测目前要求两侧一致代价的收益都非负，缺少报价时拒绝。这一政策放弃了 MapAiry、Landau mixed 和 SasPoint5 interval-mixture 等冻结输入上的部分收益，此类分支上可能慢于采用激进合并的 Auto DARM。计划在在线 PGO 提供运行时的一致性频率后再评估放宽。 [一致代价政策评估](../regression/records/anchor-unified-dp-step6c-20261122.md)

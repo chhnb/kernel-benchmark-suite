@@ -75,6 +75,7 @@
       "status": "validated_and_timed_nonexclusive"
     }
   ],
+  "anchor_workgroup_policy": "Optional exact launch shape for per-wave refinement.",
   "anchor_workgroups": {
     "SasPoint5": {
       "function": "evaluate",

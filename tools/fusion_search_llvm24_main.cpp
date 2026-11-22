@@ -293,8 +293,13 @@ static int runSearch(int argc, const char *const *argv, TrialWorker *batch = nul
         roundStorage.emplace(makeRound(*module,function,0,options.optLevel,options.cleanupMode));
       const auto &round = *roundStorage;
       if(observer)observer->round(round);
-      if (!batch && useAnchorB2B && !wave_diagnostic::resolveShape(*f, anchorWaveShape))
-        errs()<<"warning: workgroup shape not provided for "<<function<<"; Anchor wave classification is unknown\n";
+      auto noteOptimism = [&](json::Object &wave) {
+        if (threadPatternOptimistic(wave) &&
+            !wave.getBoolean("optimistic_without_shape").getValueOr(false)) {
+          wave["optimistic_without_shape"] = true;
+          errs()<<"warning: "<<function<<": "<<threadPatternOptimismNotice<<"\n";
+        }
+      };
       std::vector<Trial> plans;
       if (useAnchorB2B)
         plans = llvm24Scorer.planAnchorB2B(*module, c, options.cleanupMode);
@@ -312,7 +317,6 @@ static int runSearch(int argc, const char *const *argv, TrialWorker *batch = nul
         auto wave = profileCall("classify_anchor_wave", [&]() {
           return wave_diagnostic::classify(*f, wave_diagnostic::findBranch(*f, split), anchorWaveShape);
         });
-        const auto waveClass = wave.getString("classification").getValueOr("unknown");
         std::set<std::string> seenCleanedIR;
         const bool traceLayouts = observer && !batch && std::getenv("FUSION_OBSERVE_B2B_DP");
         for (auto &plan : plans) {
@@ -331,8 +335,9 @@ static int runSearch(int argc, const char *const *argv, TrialWorker *batch = nul
           auto result = profileCall("evaluate_score",[&](){return evaluateTrial(*module, plan, round, scorer);});
           if (StringRef(result.reason).startswith("tti_quote_")) throw std::runtime_error(result.reason);
           const bool ttiEligible = eligible(plan, result);
+          if (plan.valid && linear) noteOptimism(wave);
           const auto rejection = plan.valid ? anchorUniformRejection(
-              waveClass, linear, sideGain(result, "uniform_gain_false"),
+              wave, linear, sideGain(result, "uniform_gain_false"),
               sideGain(result, "uniform_gain_true")) : StringRef{};
           json::Object layout{{"layout", plan.mergePath}, {"valid", plan.valid},
               {"eligible", ttiEligible && rejection.empty()}, {"anchor", json::Object(plan.anchorStats)},
@@ -377,11 +382,13 @@ static int runSearch(int argc, const char *const *argv, TrialWorker *batch = nul
           if (StringRef(score.reason).startswith("tti_quote_")) throw std::runtime_error(score.reason);
           auto wave = wave_diagnostic::classify(
               *f, wave_diagnostic::findBranch(*f, t.r2rSpeculationSplit), anchorWaveShape);
+          noteOptimism(wave);
           const auto rejection = anchorUniformRejection(
-              wave.getString("classification").getValueOr("unknown"), true,
+              wave, true,
               sideGain(score, "uniform_gain_false"), sideGain(score, "uniform_gain_true"));
           json::Object speculation{{"split", t.r2rSpeculationSplit}, {"wave", std::move(wave)},
-                                   {"score_result", scoreJson(score)}, {"gate_rejection", rejection}};
+                                   {"score_result", scoreJson(score)}, {"tti_eligible", eligible(t, score)},
+                                   {"gate_rejection", rejection}};
           if (!rejection.empty())
             emitRegion(false);
           t.r2rSpeculation = std::move(speculation);

@@ -47,8 +47,8 @@ def ensure_frozen_source(path, content):
 
 
 def verify_lud8_shape(case_out, env):
-    # Replay the selected writeback on the exact same parent IR without the
-    # explicit launch shape. This detects a missing shape in the release flow.
+    # Replay the selected writeback on the same parent without a launch shape.
+    # The thread-pattern policy should select the same guarded layout.
     folder = case_out / "default"
     active = folder / "active"
     summary = json.loads((active / "summary.json").read_text())
@@ -78,11 +78,16 @@ def verify_lud8_shape(case_out, env):
     report = json.loads(path.read_text())
     guarded = [layout for layout in report["layout_profitability"]
                if layout["anchor"]["emission"] == "guarded-linear" and layout["tti_eligible"]]
-    if (result.returncode not in (0, 4)
-            or "workgroup shape not provided" not in result.stderr
+    if (result.returncode != 0
+            or "using optimistic TTI" not in result.stderr
             or report["anchor"]["wave"]["classification"] != "unknown"
-            or not guarded or any(not g.get("uniform_gate_rejection") for g in guarded)):
-        raise ValueError("LUD8 unshaped writeback escaped the gate")
+            or report["anchor"]["wave"]["condition_source"] != "thread-pattern"
+            or not report["anchor"]["wave"].get("optimistic_without_shape")
+            or not guarded or not any(g["eligible"] for g in guarded)
+            or report["anchor"]["emission"] != "guarded-linear"
+            or not report["eligible"]
+            or (case_out / "missing-shape.ll").read_bytes() != (selected / "fused.ll").read_bytes()):
+        raise ValueError("LUD8 unshaped writeback differs from the shaped writeback")
     return True
 
 

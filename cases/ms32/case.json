@@ -1,6 +1,7 @@
 {
   "name": "ms32",
   "status": "frozen-anchor-release",
+  "anchor_workgroup_policy": "Optional exact launch shape for per-wave refinement.",
   "anchor_workgroups": {
     "MS32": {
       "function": "_Z13gpu_mergesortPlS_lllP4dim3S1_",

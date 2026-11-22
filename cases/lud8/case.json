@@ -1,6 +1,7 @@
 {
   "name": "lud8",
   "status": "frozen-anchor-release",
+  "anchor_workgroup_policy": "Optional exact launch shape for per-wave refinement.",
   "anchor_workgroups": {
     "LUD8": {
       "function": "_Z13lud_perimeterPfii",

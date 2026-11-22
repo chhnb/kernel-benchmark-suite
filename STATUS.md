@@ -1,6 +1,6 @@
 # 当前状态导航
 
-更新于 2026-11-22。发布候选对 Anchor B2B 和 DARM R2R 受限推测使用逐 wave 分类和双侧 uniform gain gate。发布清单提供确切 launch 形状，手工运行请用 `--anchor-wave-shape X,Y,Z` 或提供确切的 `reqd_work_group_size`。复现旧默认 D 时请构建 `c7dded07`。
+更新于 2026-11-22。发布候选对 Anchor B2B 和 DARM R2R 受限推测使用逐 wave 分类和双侧 uniform gain gate。发布清单保留确切 launch 形状供逐 wave 精确分析。手工运行可省略形状，线程号条件按乐观 throughput TTI 处理。复现旧默认 D 时请构建 `c7dded07`。
 
 默认 Anchor 发射可直接使用原 split 条件，因为新用途位于原条件分支的执行范围内。LLVM 规定以 poison 或 undef 为条件执行 `br` 是未定义行为。 [LLVM LangRef](https://llvm.org/docs/LangRef.html#br-instruction)
 

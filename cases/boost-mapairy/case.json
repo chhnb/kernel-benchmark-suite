@@ -306,6 +306,7 @@
       "input_sha256": "28d054d3e1929117ebf82f9d44574486aa3d83178a92675d2081012fb2c9f141"
     }
   },
+  "anchor_workgroup_policy": "Optional exact launch shape for per-wave refinement.",
   "anchor_workgroups": {
     "MapAiry": {
       "function": "evaluate",

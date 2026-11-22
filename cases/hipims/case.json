@@ -175,6 +175,7 @@
     "native_darm_scoring": true,
     "darm_candidate_sorter_used": false
   },
+  "anchor_workgroup_policy": "Optional exact launch shape for per-wave refinement.",
   "anchor_workgroups": {
     "HiPIMS-George": {
       "function": "_ZN2GC2fv36cuAdvectionSWEsGeorgeCartesianKernelEPdS1_S1_S1_S1_PNS_7Vector2ES3_jPNS_15ShortDualHandleEjS1_S1_S3_",

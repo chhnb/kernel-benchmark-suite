@@ -10,7 +10,7 @@
 python3 regression/verify_anchor_release.py --tool-root . --out build/anchor-release-new
 ```
 
-复验逐 case 运行当前默认，校验最终 IR 哈希、提交数和 TTI，并按清单重建及核对 16 个冻结发布 case 的默认设备对象。脚本从 manifest 的 `anchor_profiles.legacy` 读取已冻结的旧默认 D 的 TTI 和 IR 哈希。当前默认 TTI 高于旧 D 时报告差值。复现旧默认 D 时请构建 `c7dded07`。可重复传 `--case` 选择子集。LUD8 额外重放写回候选，核实漏传形状时 gate 会拒绝守护布局。手动运行搜索时可传 `--anchor-wave-shape X,Y,Z`，或由 IR 提供确切的 `reqd_work_group_size`。
+复验逐 case 运行当前默认，校验最终 IR 哈希、提交数和 TTI，并按清单重建及核对 16 个冻结发布 case 的默认设备对象。脚本从 manifest 的 `anchor_profiles.legacy` 读取已冻结的旧默认 D 的 TTI 和 IR 哈希。当前默认 TTI 高于旧 D 时报告差值。复现旧默认 D 时请构建 `c7dded07`。可重复传 `--case` 选择子集。LUD8 额外在同一父 IR 上省略形状重放写回候选，核对守护布局与提供形状的产物逐字节一致。发布复验传入冻结形状作为精确信息，手动运行时可省略。
 
 等价验证按原始字节比较 IR 和设备对象。同一冻结输入的各次运行使用相同的相对输出路径。等价验证记录应列出基线与待验提交、二进制 SHA-256、运行次数、候选快照及评分、完整提交链、最终 TTI、产物哈希和报警。出现字节差异时，记录首个不同的候选或产物及其哈希。
 

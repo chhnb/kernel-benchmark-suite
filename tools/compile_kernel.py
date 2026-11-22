@@ -71,10 +71,9 @@ def main():
                         help="Verify input to llc and skip the separate opt -O3 pass")
     parser.add_argument(
         "--anchor-wave-shape", metavar="X,Y,Z",
-        help=("Exact workgroup launch shape for Anchor to prove wave divergence. "
-              "If omitted, use exact reqd_work_group_size metadata when present. "
-              "With neither source, Anchor uses conservative gating "
-              "(LUD8 final TTI 666, compared with 637 using 16,1,1)."),
+        help=("Optional exact workgroup launch shape for per-wave classification. "
+              "Without this option, use exact reqd_work_group_size metadata when present. "
+              "Without an exact shape, thread-pattern conditions use optimistic throughput TTI."),
     )
     parser.add_argument("--work-dir", type=Path, help="New directory for full search and build diagnostics")
     args = parser.parse_args()

@@ -71,6 +71,7 @@
     "timing": true,
     "complete_planned_measurement": true
   },
+  "anchor_workgroup_policy": "Optional exact launch shape for per-wave refinement.",
   "anchor_workgroups": {
     "CED": {
       "function": "_Z19non_max_supp_kernelPKhPhS0_ii",

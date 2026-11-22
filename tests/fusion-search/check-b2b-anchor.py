@@ -115,14 +115,17 @@ right:
     assert json.loads(result.read_text())["classification"] == "unknown"
 
 
-def check_wave(root, worker_input, shape, expression, expected, nvptx=False):
+def check_wave(root, worker_input, shape, expression, expected, nvptx=False,
+               condition_source="thread-pattern", split="B0"):
     triple = "nvptx64-nvidia-cuda" if nvptx else "amdgcn-amd-amdhsa"
     tid = "llvm.nvvm.read.ptx.sreg.tid.x" if nvptx else "llvm.amdgcn.workitem.id.x"
     cpu = "sm_70" if nvptx else "gfx906"
+    convention = "ptx_kernel" if nvptx else "amdgpu_kernel"
     worker_input.write_text(f'''
 target triple = "{triple}"
 declare i32 @{tid}()
-define void @wave(i32* %input) #0 {{
+declare i32 @llvm.ctpop.i32(i32)
+define {convention} void @wave(i32* %input, i32 %n) #0 {{
 entry:
   %x = call i32 @{tid}(), !range !0
   {expression}
@@ -137,13 +140,14 @@ attributes #0 = {{ "target-cpu"="{cpu}" "amdgpu-flat-work-group-size"="1,256" }}
 ''')
     report = root / "wave.json"
     report.unlink(missing_ok=True)
-    command = [search, "--ir", worker_input, "--function", "wave", "--split", "B0",
+    command = [search, "--ir", worker_input, "--function", "wave", "--split", split,
                "--anchor-condition-only", "1", "--out", report]
     if shape:
         command += ["--anchor-wave-shape", shape]
     subprocess.run(command, check=True)
     wave = json.loads(report.read_text())["wave"]
     assert (wave["classification"], wave["mixed_waves"], wave["total_waves"]) == expected, wave
+    assert wave["condition_source"] == condition_source, wave
 
 
 with tempfile.TemporaryDirectory() as directory:
@@ -157,9 +161,25 @@ with tempfile.TemporaryDirectory() as directory:
     check_wave(root, source, "128,1,1", threshold64, ("must-uniform", 0, 2))
     check_wave(root, source, "96,2,1", threshold64, ("mixed", 2, 3))
     check_wave(root, source, None, threshold8, ("unknown", None, None))
+    check_wave(root, source, None, "%cond = icmp ult i32 %x, %n", ("unknown", None, None))
+    check_wave(root, source, "16,1,1", "%cond = icmp ult i32 %x, %n", ("unknown", None, 1))
+    check_wave(root, source, None,
+               "%bits = call i32 @llvm.ctpop.i32(i32 %x)\n  %cond = icmp ult i32 %bits, %n",
+               ("unknown", None, None))
+    check_wave(root, source, None, "%cond = icmp sgt i32 %n, 0",
+               ("unknown", None, None), condition_source="workgroup-uniform")
     check_wave(root, source, "16,1,1",
                "%v = load i32, i32* %input\n  %cond = icmp ult i32 %v, 8",
-               ("unknown", None, 1))
+               ("unknown", None, 1), condition_source="data")
+    check_wave(root, source, None,
+               "%v = load i32, i32* %input\n  %sum = add i32 %x, %v\n"
+               "  %cond = icmp sgt i32 %sum, 0",
+               ("unknown", None, None), condition_source="data")
+    check_wave(root, source, None,
+               "%choose = icmp uge i32 %x, 8\n  br i1 %choose, label %a, label %b\n"
+               "a: br label %merge\nb: br label %merge\nmerge:\n"
+               "  %cond = phi i1 [ true, %a ], [ false, %b ]",
+               ("unknown", None, None), condition_source="data", split="B3")
     check_wave(root, source, "64,1,1", "%cond = icmp ult i32 %x, 32",
                ("must-uniform", 0, 2), nvptx=True)
 
@@ -214,12 +234,23 @@ with tempfile.TemporaryDirectory() as directory:
     assert divergent["score_result"]["metrics"]["work_after"] == 303
     for row in linear_layouts(divergent):
         assert row["eligible"] and row["score_result"]["metrics"]["uniform_gain_false"] < 0
+    optimistic = gate_trial("optimistic", wave_fixture)
+    assert optimistic["anchor"]["wave"]["optimistic_without_shape"]
+    assert optimistic["anchor"]["emission"] == divergent["anchor"]["emission"]
+    assert optimistic["score_result"] == divergent["score_result"]
 
     missing_fixture = fixture.replace(split, "br i1 true, label %left, label %right", 1)
     rejected = gate_trial("missing", missing_fixture)
     for row in linear_layouts(rejected):
         assert "uniform_gain_false" not in row["score_result"]["metrics"]
-        assert row["uniform_gate_rejection"] == "missing_uniform_gain"
+        assert row["uniform_gate_rejection"] == "workgroup_uniform"
+
+    uniform_fixture = wave_fixture.replace("workitem.id.x", "workgroup.id.x")
+    uniform = gate_trial("workgroup-uniform", uniform_fixture)
+    assert uniform["anchor"]["wave"]["condition_source"] == "workgroup-uniform"
+    assert uniform["anchor"]["emission"] == "segmented" and uniform["eligible"]
+    for row in linear_layouts(uniform):
+        assert row["tti_eligible"] and row["uniform_gate_rejection"] == "workgroup_uniform"
 
     metadata = wave_fixture.replace("#2 {", "#2 !reqd_work_group_size !900 {", 1)
     metadata = metadata.replace('"target-cpu"="gfx906"', '"target-cpu"="gfx906" "amdgpu-flat-work-group-size"="16,16"')
@@ -227,3 +258,22 @@ with tempfile.TemporaryDirectory() as directory:
     required = gate_trial("metadata", metadata)
     assert required["anchor"]["wave"]["shape_source"] == "reqd_work_group_size"
     assert required["anchor"]["wave"]["classification"] == "must-diverge"
+
+    for index, opts in enumerate(([], [shape, "64,1,1"])):
+        debug = root / f"nqu64-{index}"
+        result = subprocess.run([
+            search, "--ir", fixtures / "nqu64-guard-parent.ll",
+            "--function", "_Z24solve_nqueen_cuda_kerneliiPjS_S_S_i",
+            "--structural", "1", "--cleanup", "darm-cfg-dce-instcombine",
+            "--split", "B2", "--left", "B19", "--right", "B21",
+            "--tti-worker", worker, "--debug-dir", debug,
+            "--out", debug.with_suffix(".ll"), *opts,
+        ], check=True, capture_output=True, text=True)
+        assert "using optimistic TTI" not in result.stderr
+        trial = json.loads((debug / "trial-0/trial.json").read_text())
+        assert trial["anchor"]["wave"]["condition_source"] == "data"
+        guarded = [row for row in linear_layouts(trial)
+                   if row["anchor"]["emission"] == "guarded-linear"]
+        assert guarded and all(row["tti_eligible"] and
+                               row["uniform_gate_rejection"] == "negative_uniform_gain"
+                               for row in guarded)

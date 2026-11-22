@@ -1,5 +1,6 @@
 {
   "schema": "anchor-release-reference-v1",
+  "anchor_workgroup_policy": "Optional exact shape for per-wave refinement; release verification retains the frozen launch shape.",
   "anchor_source_tag": "pre-dp1-removal",
   "anchor_source_commit": "97227b3",
   "dp1_reference": "4a91a50",
