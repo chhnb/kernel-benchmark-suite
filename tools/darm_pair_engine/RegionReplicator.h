@@ -2,6 +2,7 @@
 #define LLVM_LIB_TRANSFORMS_REGION_REPLICATOR_H
 
 #include "RegionAnalyzer.h"
+#include "llvm/ADT/MapVector.h"
 
 namespace llvm {
 
@@ -9,8 +10,9 @@ class RegionReplicator {
 private:
   RegionAnalyzer &MA;
   bool IsExpandingLeft;
-  // mapping from orig to replicated basic blocks
-  DenseMap<BasicBlock *, BasicBlock *> Mapping;
+  // Install replicated edges in discovery order so predecessor traversal
+  // concretizes the same route to the matched block on every run.
+  MapVector<BasicBlock *, BasicBlock *> Mapping;
 
   BasicBlock *replicateCFG(BasicBlock *ExpandedBlock, BasicBlock *MatchedBlock,
                            Region *RegionToReplicate);

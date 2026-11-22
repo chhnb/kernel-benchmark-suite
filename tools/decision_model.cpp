@@ -192,8 +192,10 @@ bool normalize(Function &f,const Decision &d,unsigned left,std::string &reason,B
  // Reject side effects in the second test: preserving execution is supported,
  // but this prototype's audited condition-only scope excludes such work.
  for(auto &i:*y){if(!i.isTerminator()&&i.mayHaveSideEffects())return fail("test_side_effects");if(auto *c=dyn_cast<CallBase>(&i))if(c->isConvergent())return fail("convergent_test");}
- std::vector<BasicBlock*> exits=a.exitSources;exits.insert(exits.end(),b.exitSources.begin(),b.exitSources.end());
- std::sort(exits.begin(),exits.end());exits.erase(std::unique(exits.begin(),exits.end()),exits.end());
+ SmallVector<BasicBlock*,16> exits;
+ for (const auto *arm : {&a, &b})
+  for (auto *exit : arm->exitSources)
+   if (!is_contained(exits, exit)) exits.push_back(exit);
  auto *j=SplitBlockPredecessors(d.join,exits,".pair.join");
  if(!j)return fail("cannot_split_exit");
  foldExitPhis();

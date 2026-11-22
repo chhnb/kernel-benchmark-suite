@@ -10,13 +10,16 @@ provenance=dict(driver=str(a.driver.resolve()),driver_sha256=sha(a.driver),engin
 (a.out/"provenance.json").write_text(json.dumps(provenance,indent=2));rows=[]
 for rep in range(a.repeats):
  for mode in ["ordered"]:
-  dest=a.out/(mode+str(rep));start=time.monotonic()
-  command=[str(a.driver.resolve()),str(a.input.resolve()),a.function,str(a.tool_root.resolve()),str(dest),"--domain-schedule",mode]
-  with (a.out/(dest.name+".stdout")).open("w") as stdout,(a.out/(dest.name+".stderr")).open("w") as stderr:
-   child=subprocess.Popen(command,env=env,stdout=stdout,stderr=stderr)
+  run=a.out/(mode+str(rep))
+  run.mkdir()
+  dest=run/"active"
+  start=time.monotonic()
+  command=[str(a.driver.resolve()),str(a.input.resolve()),a.function,str(a.tool_root.resolve()),dest.name,"--domain-schedule",mode]
+  with (a.out/(run.name+".stdout")).open("w") as stdout,(a.out/(run.name+".stderr")).open("w") as stderr:
+   child=subprocess.Popen(command,cwd=run,env=env,stdout=stdout,stderr=stderr)
    (a.out/"active-process.json").write_text(json.dumps(dict(pid=child.pid,mode=mode,rep=rep,command=command,start=time.time())))
    code=child.wait()
-  row=dict(mode=mode,rep=rep,seconds=time.monotonic()-start,exit=code)
+  row=dict(mode=mode,rep=rep,seconds=time.monotonic()-start,exit=code,output_directory=str(dest.relative_to(a.out)))
   if (dest/"summary.json").exists():
    s=json.loads((dest/"summary.json").read_text());row.update({k:s.get(k) for k in ["status","commits","trials","final_cost","driver_phase_timings"]})
   rows.append(row);(a.out/"results.json").write_text(json.dumps(rows,indent=2));print(row,flush=True)

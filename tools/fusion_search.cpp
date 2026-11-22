@@ -936,7 +936,10 @@ static Trial tryPairImpl(const Module&parent,const Candidate&c,unsigned version,
   // RegionMelder isolates the selected exits before melding. Ordinary
   // stores in the continuation stay in their original blocks.
   std::map<BasicBlock *, SmallVector<WeakVH, 4>> continuationStores;
-  for(auto *block:scope) for(auto &instruction:*block) {
+  SmallVector<BasicBlock *, 16> orderedScope;
+  for (auto &block : *f)
+    if (scope.count(&block)) orderedScope.push_back(&block);
+  for(auto *block:orderedScope) for(auto &instruction:*block) {
     if(preservedLoop&&block!=l.entry&&block!=r.entry)continue;
     if(auto *call=dyn_cast<CallBase>(&instruction))
       if(call->isConvergent()) return reject("convergent_call_in_trial_scope");
@@ -1013,7 +1016,7 @@ static Trial tryPairImpl(const Module&parent,const Candidate&c,unsigned version,
   if (auditRetainedEffects) {
     // The path audit tracks retained accesses by instruction identity. It
     // cannot prove their order relative to a load that the melder replaces.
-    for (auto *block : scope)
+    for (auto *block : orderedScope)
       if (matchedBlock(block))
         for (auto &instruction : *block)
           if (instruction.mayReadOrWriteMemory())

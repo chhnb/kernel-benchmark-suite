@@ -200,24 +200,22 @@ void RegionReplicator::addPhiNodes(BasicBlock *ExpandedBlock,
   DominanceFrontier DF;
   DF.analyze(*MA.getDT());
 
-  // get uses outside the expanded block
-  SmallSet<Instruction *, 32> InstrsWithOutsideUses;
+  // Keep processing definitions in discovery order even beyond inline capacity.
+  SmallSetVector<Instruction *, 32> WorkList;
 
   for (auto &I : *ExpandedBlock) {
     for (Use &Use : I.uses()) {
       Instruction *User = cast<Instruction>(Use.getUser());
       if (User->getParent() != ExpandedBlock) {
-        InstrsWithOutsideUses.insert(&I);
+        WorkList.insert(&I);
         break;
       }
     }
   }
 
-  SmallSet<Instruction *, 32> WorkList(InstrsWithOutsideUses);
-
   while (!WorkList.empty()) {
     Instruction *I = *WorkList.begin();
-    WorkList.erase(I);
+    WorkList.remove(I);
 
     // add phi nodes in DF for this instruction
     auto It = DF.find(I->getParent());
