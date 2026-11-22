@@ -15,7 +15,6 @@ for name in ("search", "worker", "opt"):
     parser.add_argument(name, type=Path)
 parser.add_argument("--ir", type=Path, help="trace the DP on a specific module and block triple")
 parser.add_argument("--function")
-parser.add_argument("--anchor-wave-shape")
 parser.add_argument("--split")
 parser.add_argument("--left")
 parser.add_argument("--right")
@@ -37,7 +36,6 @@ with tempfile.TemporaryDirectory() as directory:
             [search, "--ir", args.ir, "--function", args.function,
              "--split", args.split, "--left", args.left, "--right", args.right,
              "--b2b-strategy", "anchor",
-             *(["--anchor-wave-shape", args.anchor_wave_shape] if args.anchor_wave_shape else []),
               "--tti-worker", worker,
              "--out", output, "--debug-dir", debug],
             env=os.environ | {"FUSION_OBSERVE_B2B_DP": str(trace)}, check=False,

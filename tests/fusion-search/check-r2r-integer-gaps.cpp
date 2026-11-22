@@ -1,6 +1,6 @@
 #include "GuardedRanges.h"
 #include "anchor_uniform_gate.h"
-#include "anchor_wave_diagnostic.h"
+#include "anchor_condition.h"
 #include "llvm/AsmParser/Parser.h"
 #include "llvm/IR/Module.h"
 #include "llvm/IR/Verifier.h"
@@ -9,7 +9,7 @@
 
 using namespace llvm;
 
-static void checkWaveGate(LLVMContext &context) {
+static void checkConditionGate(LLVMContext &context) {
   SMDiagnostic error;
   auto module = parseAssemblyString(R"(
     target triple = "amdgcn-amd-amdhsa"
@@ -43,31 +43,26 @@ static void checkWaveGate(LLVMContext &context) {
     }
   )", error, context);
   assert(module && !verifyModule(*module));
-  auto classify = [&](StringRef fn, StringRef shape) {
+  auto classify = [&](StringRef fn) {
     const auto &f = *module->getFunction(fn);
     const auto *branch = cast<BranchInst>(f.getEntryBlock().getTerminator());
-    return fusion::wave_diagnostic::classify(f, branch, shape);
+    return fusion::anchor_condition::classifySource(branch);
   };
   using fusion::anchorUniformRejection;
-  assert(anchorUniformRejection(classify("test_wave", ""), true, -1, -2).empty());
-  assert(anchorUniformRejection(classify("test_wave", "32,1,1"), true, -1, -2).empty());
-  assert(anchorUniformRejection(classify("test_wave", "128,1,1"), true, -1, -2) ==
-         "negative_uniform_gain");
-  for (StringRef shape : {"", "32,1,1"}) {
-    const auto uniform = classify("test_uniform", shape);
-    assert(anchorUniformRejection(uniform, true, 0, 0) == "workgroup_uniform");
-    assert(anchorUniformRejection(uniform, false, -1, -2).empty());
-    const auto data = classify("test_data", shape);
-    assert(anchorUniformRejection(data, true, 0, 0).empty());
-    assert(anchorUniformRejection(data, true, 0, std::nullopt) == "missing_uniform_gain");
-    assert(anchorUniformRejection(data, true, 0, -1) == "negative_uniform_gain");
-    assert(anchorUniformRejection(data, false, -1, -2).empty());
-  }
+  assert(anchorUniformRejection(classify("test_wave"), true, -1, -2).empty());
+  const auto uniform = classify("test_uniform");
+  assert(anchorUniformRejection(uniform, true, 0, 0) == "workgroup_uniform");
+  assert(anchorUniformRejection(uniform, false, -1, -2).empty());
+  const auto data = classify("test_data");
+  assert(anchorUniformRejection(data, true, 0, 0).empty());
+  assert(anchorUniformRejection(data, true, 0, std::nullopt) == "missing_uniform_gain");
+  assert(anchorUniformRejection(data, true, 0, -1) == "negative_uniform_gain");
+  assert(anchorUniformRejection(data, false, -1, -2).empty());
 }
 
 int main() {
   LLVMContext context;
-  checkWaveGate(context);
+  checkConditionGate(context);
   SMDiagnostic parseError;
   auto module = parseAssemblyString(R"(
     define i32 @test(i1 %cond, i32 %input, i32* %ptr) {

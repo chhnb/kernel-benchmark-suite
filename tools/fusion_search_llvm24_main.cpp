@@ -1,5 +1,5 @@
 #include "anchor_uniform_gate.h"
-#include "anchor_wave_diagnostic.h"
+#include "anchor_condition.h"
 #include "fusion_profile.h"
 #include <fcntl.h>
 #include <unistd.h>
@@ -125,7 +125,7 @@ struct TrialWorker {
 static int runSearch(int argc, const char *const *argv, TrialWorker *batch = nullptr) {
   fusion::requestProfile.clear();
   try {
-    std::string input,function,output,debug,split,left,right,anchorWaveShape;
+    std::string input,function,output,debug,split,left,right;
     constexpr auto cleanupMode = CleanupMode::DarmCFGInstCombine;
     constexpr unsigned optLevel = 3;
     bool useArtifactB2B=false, useAnchorB2B=true;
@@ -133,7 +133,7 @@ static int runSearch(int argc, const char *const *argv, TrialWorker *batch = nul
     bool fullSnapshots=true;
     bool controlOnly=false,catalogOnly=false;std::string ttiWorker="/home/chh/kernel-benchmark-suite/tools/run-llvm24-tti";
     for(int i=1;i<argc;++i){std::string k=argv[i];
-      if(k=="--help"){outs()<<"fusion-search v1 --ir FILE --function NAME --out FILE [--b2b-strategy anchor|darm|darm-artifact] [--anchor-wave-shape X,Y,Z] [--split ID --left ID --right ID] [--debug-dir DIR] [--ir-snapshots full|compact] [--tti-worker EXECUTABLE] [--catalog-only 0|1] [--control-only 0|1]\n";return 0;}
+      if(k=="--help"){outs()<<"fusion-search v1 --ir FILE --function NAME --out FILE [--b2b-strategy anchor|darm|darm-artifact] [--split ID --left ID --right ID] [--debug-dir DIR] [--ir-snapshots full|compact] [--tti-worker EXECUTABLE] [--catalog-only 0|1] [--control-only 0|1]\n";return 0;}
       if(i+1==argc)throw std::runtime_error("missing option value");std::string v=argv[++i];
       if(k=="--control-only"){if(v!="0"&&v!="1")throw std::runtime_error("control-only must be 0 or 1");controlOnly=v=="1";}
       else if(k=="--catalog-only"){if(v!="0"&&v!="1")throw std::runtime_error("catalog-only must be 0 or 1");catalogOnly=v=="1";}
@@ -147,10 +147,6 @@ static int runSearch(int argc, const char *const *argv, TrialWorker *batch = nul
         quoteMode=v;
       }
       else if(k=="--ir")input=v;else if(k=="--function")function=v;else if(k=="--out")output=v;
-      else if(k=="--anchor-wave-shape"){
-        if (!wave_diagnostic::parseShape(v)) throw std::runtime_error("invalid anchor-wave-shape (expected X,Y,Z)");
-        anchorWaveShape=v;
-      }
       else if(k=="--b2b-strategy"){
         if(v!="darm" && v!="darm-artifact" && v!="anchor")
           throw std::runtime_error("b2b-strategy must be anchor, darm or darm-artifact");
@@ -251,13 +247,6 @@ static int runSearch(int argc, const char *const *argv, TrialWorker *batch = nul
         roundStorage.emplace(makeRound(*module,function,0,cleanupMode));
       const auto &round = *roundStorage;
       if(observer)observer->round(round);
-      auto noteOptimism = [&](json::Object &wave) {
-        if (threadPatternOptimistic(wave) &&
-            !wave.getBoolean("optimistic_without_shape").getValueOr(false)) {
-          wave["optimistic_without_shape"] = true;
-          errs()<<"warning: "<<function<<": "<<threadPatternOptimismNotice<<"\n";
-        }
-      };
       std::vector<Trial> plans;
       if (useAnchorB2B)
         plans = llvm24Scorer.planAnchorB2B(*module, c, cleanupMode);
@@ -272,8 +261,8 @@ static int runSearch(int argc, const char *const *argv, TrialWorker *batch = nul
       };
       if (plannedB2B) {
         json::Array profitability;
-        auto wave = profileCall("classify_anchor_wave", [&]() {
-          return wave_diagnostic::classify(*f, wave_diagnostic::findBranch(*f, split), anchorWaveShape);
+        const auto source = profileCall("classify_anchor_condition", [&]() {
+          return anchor_condition::classifySource(anchor_condition::findBranch(*f, split));
         });
         std::set<std::string> seenCleanedIR;
         const bool traceLayouts = observer && !batch && std::getenv("FUSION_OBSERVE_B2B_DP");
@@ -293,9 +282,8 @@ static int runSearch(int argc, const char *const *argv, TrialWorker *batch = nul
           auto result = profileCall("evaluate_score",[&](){return evaluateTrial(*module, plan, round, scorer);});
           if (StringRef(result.reason).startswith("tti_quote_")) throw std::runtime_error(result.reason);
           const bool ttiEligible = eligible(plan, result);
-          if (plan.valid && linear) noteOptimism(wave);
           const auto rejection = plan.valid ? anchorUniformRejection(
-              wave, linear, sideGain(result, "uniform_gain_false"),
+              source, linear, sideGain(result, "uniform_gain_false"),
               sideGain(result, "uniform_gain_true")) : StringRef{};
           json::Object layout{{"layout", plan.mergePath}, {"valid", plan.valid},
               {"eligible", ttiEligible && rejection.empty()}, {"anchor", json::Object(plan.anchorStats)},
@@ -319,7 +307,7 @@ static int runSearch(int argc, const char *const *argv, TrialWorker *batch = nul
           t.candidate = c;
           t.reason = "anchor_uniform_gate_no_layout";
         }
-        t.anchorStats["wave"] = std::move(wave);
+        t.anchorStats["condition_source"] = source;
         if (useAnchorB2B) {
           t.anchorStats["generated"] = int64_t(plans.size());
           t.anchorStats["unique_normalized"] = int64_t(seenCleanedIR.size());
@@ -338,13 +326,12 @@ static int runSearch(int argc, const char *const *argv, TrialWorker *batch = nul
         emitRegion(true);
         if (t.valid && !t.r2rSpeculationSplit.empty()) {
           if (StringRef(score.reason).startswith("tti_quote_")) throw std::runtime_error(score.reason);
-          auto wave = wave_diagnostic::classify(
-              *f, wave_diagnostic::findBranch(*f, t.r2rSpeculationSplit), anchorWaveShape);
-          noteOptimism(wave);
+          const auto source = anchor_condition::classifySource(
+              anchor_condition::findBranch(*f, t.r2rSpeculationSplit));
           const auto rejection = anchorUniformRejection(
-              wave, true,
+              source, true,
               sideGain(score, "uniform_gain_false"), sideGain(score, "uniform_gain_true"));
-          json::Object speculation{{"split", t.r2rSpeculationSplit}, {"wave", std::move(wave)},
+          json::Object speculation{{"split", t.r2rSpeculationSplit}, {"condition_source", source},
                                    {"score_result", scoreJson(score)}, {"tti_eligible", eligible(t, score)},
                                    {"gate_rejection", rejection}};
           if (!rejection.empty())

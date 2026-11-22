@@ -26,8 +26,8 @@ if printf '%s\n' '#include "llvm/Support/InstructionCost.h"' | \
   read -r -a anchor_libs <<< "$("$LLVM_CONFIG" --ldflags --link-shared --libs --system-libs | tr '\n' ' ')"
 fi
 "${CXX:-c++}" "${anchor_cxxflags[@]}" -std=c++17 -I"$root/tools" \
-  "$root/tests/fusion-search/check-anchor-wave.cpp" "${anchor_libs[@]}" -o "$queue_test/anchor-wave"
-"$queue_test/anchor-wave"
+  "$root/tests/fusion-search/check-anchor-condition.cpp" "${anchor_libs[@]}" -o "$queue_test/anchor-condition"
+"$queue_test/anchor-condition"
 read -r -a condition_libs <<< "$("$LLVM_CONFIG" --ldflags --libs core irreader support --system-libs | tr '\n' ' ')"
 "${CXX:-c++}" "${anchor_cxxflags[@]}" -std=c++17 -I"$root/tools" \
   "$root/tests/decision-model/condition_check.cpp" "${condition_libs[@]}" -o "$queue_test/condition-check"

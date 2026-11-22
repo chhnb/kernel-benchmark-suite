@@ -1,18 +1,4 @@
 {
   "name": "pcm32",
-  "status": "frozen-anchor-release",
-  "anchor_workgroup_policy": "Optional exact launch shape for per-wave refinement.",
-  "anchor_workgroups": {
-    "PCM32": {
-      "function": "_Z3pcmPi",
-      "shape": [
-        32,
-        1,
-        1
-      ],
-      "sources": [
-        "auto-darm-release-compare/20261120-v1/sort.hip:17,85\u201386"
-      ]
-    }
-  }
+  "status": "frozen-anchor-release"
 }

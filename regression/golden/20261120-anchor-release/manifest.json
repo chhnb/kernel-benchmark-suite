@@ -1,6 +1,5 @@
 {
   "schema": "anchor-release-reference-v1",
-  "anchor_workgroup_policy": "Optional exact shape for per-wave refinement; release verification retains the frozen launch shape.",
   "anchor_source_tag": "pre-dp1-removal",
   "anchor_source_commit": "97227b3",
   "dp1_reference": "4a91a50",
@@ -90,18 +89,6 @@
         "commits": 224,
         "tti": 2747
       },
-      "workgroup": {
-        "shape": [
-          64,
-          1,
-          1
-        ],
-        "sources": [
-          "vllm/64K at /data/home/chh/simplify-v2/build/b2b-layouts/k16-gpu/generated-vllm/65536/input.txt:3",
-          "vllm/128K at /data/home/chh/simplify-v2/build/b2b-layouts/k16-gpu/generated-vllm/131072/input.txt:3"
-        ]
-      },
-      "case_metadata": "cases/vllm-quant/case.json",
       "anchor_profiles": {
         "default": {
           "commits": 225,
@@ -171,17 +158,6 @@
         "commits": 26,
         "tti": 4041
       },
-      "workgroup": {
-        "shape": [
-          256,
-          1,
-          1
-        ],
-        "sources": [
-          "MapAiry/65539 at /data/home/chh/v2-runtime/cases/mapairy/inputs/65539/input.txt:3"
-        ]
-      },
-      "case_metadata": "cases/boost-mapairy/case.json",
       "anchor_profiles": {
         "default": {
           "commits": 30,
@@ -254,17 +230,6 @@
         "commits": 5,
         "tti": 948
       },
-      "workgroup": {
-        "shape": [
-          9,
-          9,
-          9
-        ],
-        "sources": [
-          "srad-stability/20261120-v2/tigre.hip:66"
-        ]
-      },
-      "case_metadata": "cases/tigre-siddon/case.json",
       "anchor_profiles": {
         "default": {
           "commits": 5,
@@ -334,17 +299,6 @@
         "commits": 2,
         "tti": 1751
       },
-      "workgroup": {
-        "shape": [
-          128,
-          1,
-          1
-        ],
-        "sources": [
-          "HLLD/65536 at /data/home/chh/simplify-v2/build/b2b-layouts/frozen-v2-continuity-20261119/hlld/65536/input.txt:3"
-        ]
-      },
-      "case_metadata": "cases/cholla-hlld/case.json",
       "anchor_profiles": {
         "default": {
           "commits": 5,
@@ -414,17 +368,6 @@
         "commits": 1,
         "tti": 282
       },
-      "workgroup": {
-        "shape": [
-          64,
-          1,
-          1
-        ],
-        "sources": [
-          "retest-release-315.BRiNaz/nqu-original.hip:41,85"
-        ]
-      },
-      "case_metadata": "cases/nqu64/case.json",
       "anchor_profiles": {
         "default": {
           "commits": 2,
@@ -494,17 +437,6 @@
         "commits": 1,
         "tti": 215
       },
-      "workgroup": {
-        "shape": [
-          32,
-          1,
-          1
-        ],
-        "sources": [
-          "auto-darm-release-compare/20261120-v1/sort.hip:17,92\u201393"
-        ]
-      },
-      "case_metadata": "cases/ms32/case.json",
       "anchor_profiles": {
         "default": {
           "commits": 2,
@@ -574,17 +506,6 @@
         "commits": 17,
         "tti": 1138
       },
-      "workgroup": {
-        "shape": [
-          32,
-          1,
-          1
-        ],
-        "sources": [
-          "auto-darm-release-compare/20261120-v1/sort.hip:17,85\u201386"
-        ]
-      },
-      "case_metadata": "cases/pcm32/case.json",
       "anchor_profiles": {
         "default": {
           "commits": 18,
@@ -654,25 +575,14 @@
         "commits": 3,
         "tti": 455
       },
-      "workgroup": {
-        "shape": [
-          16,
-          16,
-          1
-        ],
-        "sources": [
-          "SRAD16/256 at /data/home/chh/simplify-v2/build/dp1-removal/srad1/16/input.txt:3"
-        ]
-      },
-      "case_metadata": "cases/srad/case.json",
       "anchor_profiles": {
         "default": {
-          "commits": 3,
-          "tti": 445,
-          "ir_sha256": "29c33f08d3663cfa068b563f88939300fe16ae24ca5f748bef8f6eec11b59b71",
+          "commits": 4,
+          "tti": 436,
+          "ir_sha256": "682d788ebaa36b26909d11560478599bfb22e3f9f59ae7181be2cbf84bd4d0f5",
           "binary": {
             "format": "hsaco",
-            "sha256": "ac992d49e04656c3b8789a6825ca51c0895b2c656bf7387e61785b5d8e3703d9"
+            "sha256": "89191ed8c58d26ef8af05dee8c5ca06a1a17c026204fec6ffdecc9e0d948d2db"
           }
         },
         "legacy": {
@@ -734,25 +644,14 @@
         "commits": 3,
         "tti": 455
       },
-      "workgroup": {
-        "shape": [
-          32,
-          32,
-          1
-        ],
-        "sources": [
-          "SRAD32/256 at /data/home/chh/simplify-v2/build/dp1-removal/srad1/32/input.txt:3"
-        ]
-      },
-      "case_metadata": "cases/srad/case.json",
       "anchor_profiles": {
         "default": {
-          "commits": 3,
-          "tti": 445,
-          "ir_sha256": "675b5641e45673d18e51066e4cfa8a5ec70c5c0d4afbc2409dd5766f45eae5a2",
+          "commits": 4,
+          "tti": 436,
+          "ir_sha256": "1b8b91a062304dfbf3bccc8974feb7655387f9774275c1522c8270eb9460c008",
           "binary": {
             "format": "hsaco",
-            "sha256": "fe59dbc7dc4d2955b0f3953a688ee8fcf58e6d28a8404cde068cfc610404948a"
+            "sha256": "be6cdbe3591098a69885adfabfa421f6a79c94cae37cece59f0f89648a74271a"
           }
         },
         "legacy": {
@@ -817,18 +716,6 @@
         "commits": 21,
         "tti": 1369
       },
-      "workgroup": {
-        "shape": [
-          256,
-          1,
-          1
-        ],
-        "sources": [
-          "Landau/mixed at /data/home/chh/kernel-benchmark-suite/build/fluid-sims/landau-next.6rQgJC/mixed/input.txt:3",
-          "Landau/coherent at /data/home/chh/kernel-benchmark-suite/build/fluid-sims/landau-next.6rQgJC/coherent/input.txt:3"
-        ]
-      },
-      "case_metadata": "cases/boost-landau/case.json",
       "anchor_profiles": {
         "default": {
           "commits": 22,
@@ -898,17 +785,6 @@
         "commits": 0,
         "tti": 1926
       },
-      "workgroup": {
-        "shape": [
-          1024,
-          1,
-          1
-        ],
-        "sources": [
-          "SW2D/258x259 at /data/home/chh/simplify-v2/build/b2b-layouts/anchor-ablation/heldout/SW2D/anchor-holdout-synthetic-v1/input.txt:3"
-        ]
-      },
-      "case_metadata": "cases/sw2d/case.json",
       "anchor_profiles": {
         "default": {
           "commits": 1,
@@ -978,22 +854,11 @@
         "commits": 3,
         "tti": 282
       },
-      "workgroup": {
-        "shape": [
-          16,
-          16,
-          1
-        ],
-        "sources": [
-          "cases/ced/harness/bench.hip:14"
-        ]
-      },
-      "case_metadata": "cases/ced/case.json",
       "anchor_profiles": {
         "default": {
           "commits": 3,
           "tti": 281,
-          "ir_sha256": "f068294bdff0eea4be42fe2036db147d3efd5cbc31ab44d1b006c2fc9fd4fb11",
+          "ir_sha256": "1798b84d27abb2b8d6f74d97249337ea562c97cf66e644ace637af319d7af3d4",
           "binary": {
             "format": "hsaco",
             "sha256": "c9f5da8a8caab4cc492af650f8663fae867cb65356aaa16a8c49ce48223dae38"
@@ -1058,17 +923,6 @@
         "commits": 23,
         "tti": 429
       },
-      "workgroup": {
-        "shape": [
-          128,
-          1,
-          1
-        ],
-        "sources": [
-          "cases/tpacf/harness/bench.hip:37"
-        ]
-      },
-      "case_metadata": "cases/tpacf/case.json",
       "anchor_profiles": {
         "default": {
           "commits": 23,
@@ -1138,18 +992,6 @@
         "commits": 2,
         "tti": 210
       },
-      "workgroup": {
-        "shape": [
-          16,
-          16,
-          1
-        ],
-        "sources": [
-          "SRAD-stage2/256 at /data/home/chh/simplify-v2/build/b2b-layouts/anchor-ablation/heldout/SRAD-stage2/anchor-holdout-synthetic-v1/256/input.txt:3",
-          "SRAD-stage2/1024 at /data/home/chh/simplify-v2/build/b2b-layouts/anchor-ablation/heldout/SRAD-stage2/anchor-holdout-synthetic-v1/1024/input.txt:3"
-        ]
-      },
-      "case_metadata": "cases/srad-stage2/case.json",
       "anchor_profiles": {
         "default": {
           "commits": 2,
@@ -1219,19 +1061,6 @@
         "commits": 8,
         "tti": 493
       },
-      "workgroup": {
-        "shape": [
-          256,
-          1,
-          1
-        ],
-        "sources": [
-          "SasPoint5/interval-mixture at /data/home/chh/simplify-v2/build/b2b-layouts/anchor-ablation/heldout/SasPoint5/anchor-holdout-synthetic-v1/interval-mixture/input.txt:3",
-          "SasPoint5/coherent-blocks at /data/home/chh/simplify-v2/build/b2b-layouts/anchor-ablation/heldout/SasPoint5/anchor-holdout-synthetic-v1/coherent-blocks/input.txt:3",
-          "SasPoint5/uniform-01 at /data/home/chh/simplify-v2/build/b2b-layouts/anchor-ablation/heldout/SasPoint5/anchor-holdout-synthetic-v1/uniform-01/input.txt:3"
-        ]
-      },
-      "case_metadata": "cases/boost-saspoint5/case.json",
       "anchor_profiles": {
         "default": {
           "commits": 7,
@@ -1301,17 +1130,6 @@
         "commits": 2,
         "tti": 5577
       },
-      "workgroup": {
-        "shape": [
-          128,
-          1,
-          1
-        ],
-        "sources": [
-          "HiPIMS-George/128x128 at /data/home/chh/simplify-v2/build/b2b-layouts/anchor-ablation/heldout/HiPIMS-George/anchor-holdout-synthetic-v1/input.txt:3"
-        ]
-      },
-      "case_metadata": "cases/hipims/case.json",
       "anchor_profiles": {
         "default": {
           "commits": 5,
@@ -3766,18 +3584,6 @@
       "input": {
         "sha256": "a52a8746779c561db1be7bc66026508f909e9eeba2223c966d7fe201435782b9"
       },
-      "workgroup": {
-        "shape": [
-          16,
-          1,
-          1
-        ],
-        "sources": [
-          "darm-paper-repro.AtXc3N/validated-source/LUD/block_size.h:5",
-          "darm-paper-repro.AtXc3N/validated-source/LUD/lud_kernel.hip.cpp:215"
-        ]
-      },
-      "case_metadata": "cases/lud8/case.json",
       "anchor_profiles": {
         "default": {
           "commits": 2,

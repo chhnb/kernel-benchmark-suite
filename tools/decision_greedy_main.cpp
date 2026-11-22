@@ -1,5 +1,3 @@
-#include "anchor_wave_diagnostic.h"
-#include "anchor_uniform_gate.h"
 #include "tti_cost_kind.h"
 #include "decision_model.h"
 #include "domain_competition.h"
@@ -130,12 +128,12 @@ int main(int argc,char**argv){try{
  auto timingReport=[&](){json::Object phases;for(const auto &kv:phaseMilliseconds)phases[kv.first]=json::Object{{"milliseconds",kv.second},{"calls",phaseCalls[kv.first]}};return phases;};
 
  if(argc==2&&StringRef(argv[1])=="--help"){
-   outs()<<"usage: decision-greedy INPUT FUNCTION [TOOL_ROOT] NEW_OUTPUT [--b2b-strategy anchor|darm|darm-artifact] [--anchor-wave-shape X,Y,Z] [--ir-snapshots full|compact] [--tti-quote-cache off|audit|on] [--commit-normalize-only|--no-commit-normalize-only]\n";
+   outs()<<"usage: decision-greedy INPUT FUNCTION [TOOL_ROOT] NEW_OUTPUT [--b2b-strategy anchor|darm|darm-artifact] [--ir-snapshots full|compact] [--tti-quote-cache off|audit|on] [--commit-normalize-only|--no-commit-normalize-only]\n";
    outs()<<"Default schedule: ordered for whole-function trials (Auto Greedy v2).\n";
    outs()<<"Normalize-only commits are enabled by default.\n";
    return 0;
  }
- std::string b2bStrategy="anchor", quoteMode="on", snapshotMode, anchorWaveShape;
+ std::string b2bStrategy="anchor", quoteMode="on", snapshotMode;
  Optional<bool> normalizeOnlyOverride;
  while (argc >= 3) {
    StringRef last(argv[argc-1]);
@@ -151,19 +149,17 @@ int main(int argc,char**argv){try{
      snapshotMode = value.str();
    else if (option == "--tti-quote-cache" && (value == "off" || value == "audit" || value == "on"))
      quoteMode = value.str();
-   else if (option == "--anchor-wave-shape" && fusion::wave_diagnostic::parseShape(value))
-     anchorWaveShape = value.str();
    else if (option == "--b2b-strategy" && (value == "darm" || value == "darm-artifact" || value == "anchor"))
      b2bStrategy = value.str();
    else if (option == "--ir-snapshots" || option == "--b2b-strategy" ||
-            option == "--tti-quote-cache" || option == "--anchor-wave-shape" ||
+            option == "--tti-quote-cache" ||
             option.startswith("--anchor-"))
      throw std::runtime_error("invalid value for " + option.str());
    else break;
    argc -= 2;
  }
  if(argc!=4&&argc!=5)
-   throw std::runtime_error("usage: decision-greedy INPUT FUNCTION [TOOL_ROOT] NEW_OUTPUT [--b2b-strategy anchor|darm|darm-artifact] [--anchor-wave-shape X,Y,Z] [--ir-snapshots full|compact] [--tti-quote-cache off|audit|on] [--commit-normalize-only|--no-commit-normalize-only]");
+   throw std::runtime_error("usage: decision-greedy INPUT FUNCTION [TOOL_ROOT] NEW_OUTPUT [--b2b-strategy anchor|darm|darm-artifact] [--ir-snapshots full|compact] [--tti-quote-cache off|audit|on] [--commit-normalize-only|--no-commit-normalize-only]");
  const bool commitNormalizeOnly=normalizeOnlyOverride.getValueOr(true);
  if(snapshotMode.empty())snapshotMode="compact";
  const bool implicitRoot=argc==4;
@@ -188,7 +184,6 @@ int main(int argc,char**argv){try{
  }
  constexpr unsigned conditionBudget=4;
  LLVMContext ctx;SMDiagnostic error;auto initial=parseIRFile(current,error,ctx);if(!initial||!initial->getFunction(fn)||verifyModule(*initial,&errs()))throw std::runtime_error("invalid input");
- bool reportedOptimism = false;
  auto writeModule=[&](const Module &module,const std::string &path){std::error_code ec;raw_fd_ostream stream(path,ec);if(ec)throw std::runtime_error(ec.message());module.print(stream,nullptr);};
  auto ds=decision::discover(*initial->getFunction(fn));std::vector<std::string> targets;std::set<BasicBlock*> covered,tagged;json::Array order;
  for(auto &d:ds){bool yes=false;for(unsigned i=0;i+1<d.arms.size();++i)yes|=eligible(d.arms[i],d.arms[i+1]);if(!yes||covered.count(d.root))continue;targets.push_back(d.id);for(auto*b:d.tests)covered.insert(b);for(unsigned i=0;i<d.arms.size();++i){auto&a=d.arms[i];if(!tagged.insert(a.entry).second)continue;std::string label;raw_string_ostream stream(label);a.entry->printAsOperand(stream,false);stream.flush();order.push_back(json::Object{{"entry",label},{"family",d.id},{"index",int64_t(i)}});}}
@@ -465,8 +460,6 @@ int main(int argc,char**argv){try{
       }
       // Keep the exact invocation and the arguments needed for trial replay.
       trialArgs.insert(trialArgs.end(), {"--b2b-strategy", b2bStrategy});
-      if (!anchorWaveShape.empty())
-        trialArgs.insert(trialArgs.end(), {"--anchor-wave-shape", anchorWaveShape});
       // IDs locate a prior recipe; current planner facts certify its reuse.
       json::Array replayArgs;
       for(const auto &argument:trialArgs)replayArgs.push_back(argument);
@@ -568,15 +561,6 @@ int main(int argc,char**argv){try{
       } else {
         auto result=read(details+"/trial.json");
         const auto &actual=*result.getAsObject();
-        if (!reportedOptimism)
-          for (auto section : {"anchor", "r2r_speculation"})
-            if (const auto *entry = actual.getObject(section))
-              if (const auto *wave = entry->getObject("wave"))
-                if (wave->getBoolean("optimistic_without_shape").getValueOr(false)) {
-                  errs()<<"warning: "<<fn<<": "<<fusion::threadPatternOptimismNotice<<"\n";
-                  reportedOptimism = true;
-                  break;
-                }
         if(actual.getString("candidate")!=attempt.getString("candidate"))
           throw std::runtime_error("structural trial identity mismatch: "+dir);
         const auto *score=actual.getObject("score_result");

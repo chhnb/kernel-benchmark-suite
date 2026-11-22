@@ -4,13 +4,13 @@
 
 ## 发布复验
 
-`golden/20261120-anchor-release/manifest.json` 固定发布 IR、设备产物、输入和参考输出，并记录各 kernel 的确切 workgroup 形状、出处、当前默认和 legacy 的静态参考。每个形状同时登记在对应 `case.json`。LUD8 使用另外登记的共同父 IR，参与两套搜索和发布性能比较。
+`golden/20261120-anchor-release/manifest.json` 固定发布 IR、设备产物、输入和参考输出，并记录当前默认和 legacy 的静态参考。LUD8 使用另外登记的共同父 IR，参与两套搜索和发布性能比较。
 
 ```sh
 python3 regression/verify_anchor_release.py --tool-root . --out build/anchor-release-new
 ```
 
-复验逐 case 运行当前默认，校验最终 IR 哈希、提交数和 TTI，并按清单重建及核对 16 个冻结发布 case 的默认设备对象。脚本从 manifest 的 `anchor_profiles.legacy` 读取已冻结的旧默认 D 的 TTI 和 IR 哈希。当前默认 TTI 高于旧 D 时报告差值。复现旧默认 D 时请构建 `c7dded07`。可重复传 `--case` 选择子集。LUD8 额外在同一父 IR 上省略形状重放写回候选，核对守护布局与提供形状的产物逐字节一致。发布复验传入冻结形状作为精确信息，手动运行时可省略。
+复验逐 case 运行当前默认，校验最终 IR 哈希、提交数和 TTI，并按清单重建及核对 16 个冻结发布 case 的默认设备对象。脚本从 manifest 的 `anchor_profiles.legacy` 读取已冻结的旧默认 D 的 TTI 和 IR 哈希。当前默认 TTI 高于旧 D 时报告差值。复现旧默认 D 时请构建 `c7dded07`。可重复传 `--case` 选择子集。
 
 等价验证按原始字节比较 IR 和设备对象。同一冻结输入的各次运行使用相同的相对输出路径。等价验证记录应列出基线与待验提交、二进制 SHA-256、运行次数、候选快照及评分、完整提交链、最终 TTI、产物哈希和报警。出现字节差异时，记录首个不同的候选或产物及其哈希。
 
@@ -40,13 +40,13 @@ python3 tools/run_cpu.py UNIQUE_LABEL python3 /home/chh/kernel-benchmark-suite/r
 
 当前 `check.py` 使用固定测试输出目录；已有结果时请先归档该目录再重新执行，避免覆盖证据。
 
-用当前融合代码重建候选时，向 `tools/compile_kernel.py` 提供冻结 IR 和函数名。发布形状及设备对象的校验命令见上面的发布复验。
+用当前融合代码重建候选时，向 `tools/compile_kernel.py` 提供冻结 IR 和函数名。设备对象的校验命令见上面的发布复验。
 
 ## Map-Airy 共同父 IR 回归
 
 `mapairy-v2.json` 固定输入、参考输出、父 IR 和原版 DARM 工具的 SHA-256。
 三条路径从同一份父 IR 开始，随后统一执行 LLVM12 O3 和 gfx906 codegen。
-Auto Greedy 使用当前构建的入口，发布复验按 manifest 提供 Map-Airy 的确切 workgroup 形状。
+Auto Greedy 使用当前构建的入口。
 GPU 上轮换测三批，每批验证完整输出并记录 15 次计时。
 输出目录保留工具命令、IR、二进制哈希和计时。首次结果见 `records/mapairy-v2-first.json`。
 相对性能门槛使用同批 Greedy/DARM 中位耗时比，允许比首次记录相对退化 2%。

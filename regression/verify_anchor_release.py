@@ -46,51 +46,6 @@ def ensure_frozen_source(path, content):
             raise ValueError(f"existing input differs from frozen input: {path}")
 
 
-def verify_lud8_shape(case_out, env):
-    # Replay the selected writeback on the same parent without a launch shape.
-    # The thread-pattern policy should select the same guarded layout.
-    folder = case_out / "default"
-    active = folder / "active"
-    summary = json.loads((active / "summary.json").read_text())
-    for round_row in summary["rounds"]:
-        if not round_row["selected"]:
-            continue
-        selected = folder / round_row["selected"]
-        trial_path = selected / "structural/trial-0/trial.json"
-        if not trial_path.exists():
-            continue
-        trial = json.loads(trial_path.read_text())
-        if trial.get("anchor", {}).get("emission") == "guarded-linear":
-            break
-    else:
-        raise ValueError("LUD8 shaped search did not commit guarded writeback")
-    if trial["anchor"]["wave"]["classification"] != "must-diverge":
-        raise ValueError("LUD8 shaped writeback lacks its must-diverge exemption")
-
-    command = json.loads((selected / "request.json").read_text())["argv"]
-    pos = command.index("--anchor-wave-shape")
-    del command[pos:pos + 2]
-    command[command.index("--debug-dir") + 1] = str(case_out / "missing-shape")
-    command[command.index("--out") + 1] = str(case_out / "missing-shape.ll")
-    result = subprocess.run(command, cwd=folder, env=env, capture_output=True, text=True)
-    (case_out / "missing-shape.log").write_text(result.stdout + result.stderr)
-    path = case_out / "missing-shape/trial-0/trial.json"
-    report = json.loads(path.read_text())
-    guarded = [layout for layout in report["layout_profitability"]
-               if layout["anchor"]["emission"] == "guarded-linear" and layout["tti_eligible"]]
-    if (result.returncode != 0
-            or "using optimistic TTI" not in result.stderr
-            or report["anchor"]["wave"]["classification"] != "unknown"
-            or report["anchor"]["wave"]["condition_source"] != "thread-pattern"
-            or not report["anchor"]["wave"].get("optimistic_without_shape")
-            or not guarded or not any(g["eligible"] for g in guarded)
-            or report["anchor"]["emission"] != "guarded-linear"
-            or not report["eligible"]
-            or (case_out / "missing-shape.ll").read_bytes() != (selected / "fused.ll").read_bytes()):
-        raise ValueError("LUD8 unshaped writeback differs from the shaped writeback")
-    return True
-
-
 def rebuild_binary(final, binary, llvm, rocm, ptxas, ptxas_sha, env, log, codegen):
     if binary.suffix == ".hsaco":
         if codegen.get("correct_srad32_launch_bound"):
@@ -121,14 +76,10 @@ def rebuild_binary(final, binary, llvm, rocm, ptxas, ptxas_sha, env, log, codege
 
 def verify_profiles(row, source, case_out, tool_root, llvm, rocm, ptxas, ptxas_sha, env):
     expected = row["anchor_profiles"]
-    metadata = json.loads((ROOT / row["case_metadata"]).read_text())["anchor_workgroups"][row["case"]]
-    if metadata != {"function": row["function"], **row["workgroup"]}:
-        raise ValueError(f"{row['case']}: manifest and case workgroup disagree")
-    shape = ",".join(map(str, metadata["shape"]))
     folder = case_out / "default"
     folder.mkdir()
     command = [tool_root / "build/decision-fuse/decision-greedy", source, row["function"], tool_root,
-               "active", "--anchor-wave-shape", shape]
+               "active"]
     with (folder / "run.log").open("w") as log:
         subprocess.run(command, cwd=folder, env=env, stdout=log, stderr=log, check=True)
         final = folder / "active/final.ll"
@@ -158,12 +109,10 @@ def verify_profiles(row, source, case_out, tool_root, llvm, rocm, ptxas, ptxas_s
         actual["binary"] = {"format": fmt, "sha256": digest(binary.read_bytes())}
         if actual["binary"] != frozen["binary"]:
             raise ValueError(f"{row['case']}: default machine code differs from the frozen profile")
-    missing_shape_verified = verify_lud8_shape(case_out, env) if row["case"] == "LUD8" else None
     print(f"{row['case']}: default verified", flush=True)
     return {"case": row["case"], "verified": True, "profiles": {"default": actual},
             "legacy_reference": legacy, "default_matches_legacy_ir": actual["ir_sha256"] == legacy["ir_sha256"],
-            "tti_delta": delta,
-            **({"lud8_missing_shape_verified": missing_shape_verified} if missing_shape_verified is not None else {})}
+            "tti_delta": delta}
 
 
 def main():

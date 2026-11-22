@@ -11,7 +11,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 def compile_kernel(source, output, llvm, rocm, *, function=None, work_dir=None,
                    features="+sramecc,-xnack", code_object_version=4,
-                   anchor_wave_shape=None, env=None):
+                   env=None):
     source = source.resolve(strict=True)
     output = output.absolute()
     if os.path.lexists(output):
@@ -33,8 +33,6 @@ def compile_kernel(source, output, llvm, rocm, *, function=None, work_dir=None,
         if function is not None:
             search = work / "greedy"
             command = [ROOT / "build/decision-fuse/decision-greedy", source, function, search]
-            if anchor_wave_shape is not None:
-                command += ["--anchor-wave-shape", anchor_wave_shape]
             if work_dir is not None:
                 command += ["--ir-snapshots", "full"]
             run(*command)
@@ -61,18 +59,11 @@ def main():
     parser.add_argument("--out", type=Path, required=True, help="New HSACO output file")
     parser.add_argument("--llvm12-bin", type=Path, required=True)
     parser.add_argument("--rocm", type=Path, default=Path("/opt/rocm"))
-    parser.add_argument(
-        "--anchor-wave-shape", metavar="X,Y,Z",
-        help=("Optional exact workgroup launch shape for per-wave classification. "
-              "Without this option, use exact reqd_work_group_size metadata when present. "
-              "Without an exact shape, thread-pattern conditions use optimistic throughput TTI."),
-    )
     parser.add_argument("--work-dir", type=Path, help="New directory for full search and build diagnostics")
     args = parser.parse_args()
     try:
         compile_kernel(args.ir, args.out, args.llvm12_bin.resolve(), args.rocm.resolve(),
-                       function=args.function, work_dir=args.work_dir,
-                       anchor_wave_shape=args.anchor_wave_shape)
+                       function=args.function, work_dir=args.work_dir)
     except (OSError, subprocess.CalledProcessError) as error:
         parser.exit(1, f"compile_kernel: {error}\n")
 
