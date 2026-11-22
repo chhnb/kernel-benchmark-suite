@@ -211,6 +211,71 @@ with tempfile.TemporaryDirectory() as directory:
         run(clang, out / "before.o", out / "auto.o", root / "check.c", "-o", out / "check-auto")
         run(out / "check-auto")
 
+    linear_cases = {
+        "unpaired-load": ("  %l = load i32, i32* %mem, align 4", "  %r = add i32 %x, %y"),
+        "unpaired-division": ("  %l = udiv i32 %x, %y", "  %r = add i32 %x, %y"),
+        "unpaired-convergent": ("  %l = call i32 @convergent()", "  %r = add i32 %x, %y"),
+        "ordered-memory-and-poison": (
+            "  %speculated = shl i32 1, %shift\n"
+            "  %la = load i32, i32* %mem, align 4\n"
+            "  %lv = xor i32 %la, %speculated\n"
+            "  store i32 %lv, i32* %mem, align 4\n"
+            "  %lb = load i32, i32* %mem, align 4\n"
+            "  %l = add i32 %lb, %x",
+            "  %ra = load i32, i32* %mem, align 4\n"
+            "  %rv = or i32 %ra, %y\n"
+            "  store i32 %rv, i32* %mem, align 4\n"
+            "  %rb = load i32, i32* %mem, align 4\n"
+            "  %r = sub i32 %rb, %y",
+        ),
+    }
+    for shape, (left, right) in linear_cases.items():
+        out = root / shape
+        out.mkdir()
+        source, fused = out / "input.ll", out / "fused.ll"
+        ir = template.replace("LEFT", left).replace("RIGHT", right)
+        if shape == "unpaired-convergent":
+            ir += "declare i32 @convergent() convergent nounwind readnone speculatable willreturn\n"
+        if shape == "ordered-memory-and-poison":
+            # This shift amount is invalid only on the arm that did not
+            # originally execute the shift. The speculative result must stay
+            # behind the left value of the store's select.
+            ir = ir.replace("split:\n", "split:\n  %shift = select i1 %p, i32 1, i32 32\n")
+        source.write_text(ir)
+        args = [search, "--ir", source, "--function", "choose", "--split", "B2",
+                "--left", "B3", "--right", "B4", "--anchor-gap", "linear",
+                "--tti-worker", worker, "--out", fused, "--debug-dir", out / "reports"]
+        report = out / "reports/trial-0/trial.json"
+        if shape != "ordered-memory-and-poison":
+            rejected = subprocess.run(args, capture_output=True, text=True)
+            assert rejected.returncode == 4, (shape, rejected.stdout, rejected.stderr)
+            assert not fused.exists()
+            trial = json.loads(report.read_text())
+            assert not trial["valid"], (shape, trial["reason"])
+            print(shape, trial["reason"])
+            continue
+        run(*args)
+        trial = json.loads(report.read_text())
+        assert trial["anchor"]["emission"] == "linear", trial["anchor"]
+        raw_ir = report.with_name("after-raw.ll")
+        raw = raw_ir.read_text()
+        assert not re.search(r"^(?:left|right):", raw, re.M)
+        assert re.findall(r"\b(load|store) i32\b", raw) == ["load", "store", "load"]
+        assert "freeze i1 %p" in raw
+        assert re.search(r"select i1 %[^,]+, i32 %lv, i32 %rv", raw)
+        assert re.search(r"phi i32 \[ 77, %external \], \[ %[^,]+, %split \]", raw)
+        for variant, path in (("before", source), ("after", raw_ir)):
+            run(opt, "-O3", "-verify-each", "-disable-output", path)
+            cpu = out / f"{variant}.ll"
+            text = path.read_text().replace("amdgcn-amd-amdhsa", "x86_64-unknown-linux-gnu")
+            text = re.sub(r"^attributes #0 = .*\n", "", text, flags=re.M)
+            cpu.write_text(text.replace(" #0 {", " {").replace("@choose(", f"@{variant}("))
+            run(clang, "-O2", "-c", cpu, "-o", cpu.with_suffix(".o"))
+        (root / "check.c").write_text(driver.replace("if (outside || p)", "if (outside)"))
+        run(clang, out / "before.o", out / "after.o", root / "check.c", "-o", out / "check")
+        run(out / "check")
+    print("Linear B2B verifier, effect order, join PHI and untaken poison checks passed")
+
     # Experimental strategies and transformations must be rejected.
     source = root / "prefix-0/source.ll"
     for option, value in (("--b2b-strategy", "dp1"), ("--b2b-recipe-in", "unused"),

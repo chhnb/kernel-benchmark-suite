@@ -15,6 +15,7 @@ for name in ("search", "worker", "opt"):
     parser.add_argument(name, type=Path)
 parser.add_argument("--ir", type=Path, help="trace the DP on a specific module and block triple")
 parser.add_argument("--function")
+parser.add_argument("--anchor-gap", choices=("fork", "linear", "both"), default="fork")
 parser.add_argument("--split")
 parser.add_argument("--left")
 parser.add_argument("--right")
@@ -32,14 +33,18 @@ with tempfile.TemporaryDirectory() as directory:
     if args.ir is not None:
         root = Path(directory)
         debug, trace, output = root / "debug", root / "planner.jsonl", root / "candidate.ll"
-        subprocess.run(
+        result = subprocess.run(
             [search, "--ir", args.ir, "--function", args.function,
              "--split", args.split, "--left", args.left, "--right", args.right,
-             "--b2b-strategy", "anchor", "--structural", "1", "--tti-worker", worker,
+             "--b2b-strategy", "anchor", "--anchor-gap", args.anchor_gap,
+             "--structural", "1", "--tti-worker", worker,
              "--out", output, "--debug-dir", debug],
-            env=os.environ | {"FUSION_OBSERVE_B2B_DP": str(trace)}, check=True,
+            env=os.environ | {"FUSION_OBSERVE_B2B_DP": str(trace)}, check=False,
         )
-        subprocess.run([opt, "-verify", "-disable-output", output], check=True)
+        if result.returncode not in (0, 4) or not trace.is_file():
+            raise subprocess.CalledProcessError(result.returncode or 1, result.args)
+        if result.returncode == 0:
+            subprocess.run([opt, "-verify", "-disable-output", output], check=True)
         trial = json.loads((debug / "trial-0/trial.json").read_text())
         plans = [json.loads(line) for line in trace.read_text().splitlines()]
         args.output.write_text(json.dumps({

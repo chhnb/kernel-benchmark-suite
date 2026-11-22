@@ -2,6 +2,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <cerrno>
+#include <cstdlib>
 #include <csignal>
 #include <optional>
 #include <limits>
@@ -134,10 +135,11 @@ static int runSearch(int argc, const char *const *argv, TrialWorker *batch = nul
     std::string input,function,output,debug,split,left,right,replayParentHash;Options options;options.cleanupMode=CleanupMode::DarmCFGInstCombine;
     bool useArtifactB2B=false, useAnchorB2B=true;
     std::string quoteMode="on";
+    AnchorGap anchorGap = AnchorGap::Fork;
     bool fullSnapshots=true;
     bool controlOnly=false,catalogOnly=false;std::string ttiWorker="/home/chh/kernel-benchmark-suite/tools/run-llvm24-tti";
     for(int i=1;i<argc;++i){std::string k=argv[i];
-      if(k=="--help"){outs()<<"fusion-search v1 --ir FILE --function NAME --out FILE [--b2b-strategy anchor|darm|darm-artifact] [--structural 1] [--split ID --left ID --right ID] [--debug-dir DIR] [--ir-snapshots full|compact] [--tti-worker EXECUTABLE] [--catalog-only 0|1] [--control-only 0|1]\n";return 0;}
+      if(k=="--help"){outs()<<"fusion-search v1 --ir FILE --function NAME --out FILE [--b2b-strategy anchor|darm|darm-artifact] [--anchor-gap fork|linear|both] [--structural 1] [--split ID --left ID --right ID] [--debug-dir DIR] [--ir-snapshots full|compact] [--tti-worker EXECUTABLE] [--catalog-only 0|1] [--control-only 0|1]\n";return 0;}
       if(i+1==argc)throw std::runtime_error("missing option value");std::string v=argv[++i];
       if(k=="--control-only"){if(v!="0"&&v!="1")throw std::runtime_error("control-only must be 0 or 1");controlOnly=v=="1";}
       else if(k=="--catalog-only"){if(v!="0"&&v!="1")throw std::runtime_error("catalog-only must be 0 or 1");catalogOnly=v=="1";}
@@ -153,6 +155,10 @@ static int runSearch(int argc, const char *const *argv, TrialWorker *batch = nul
       }
       else if(k=="--replay-parent-hash")replayParentHash=v;
       else if(k=="--ir")input=v;else if(k=="--function")function=v;else if(k=="--out")output=v;
+      else if(k=="--anchor-gap"){
+        if (!parseAnchorGap(v, anchorGap))
+          throw std::runtime_error("anchor-gap must be fork, linear or both");
+      }
       else if(k=="--b2b-strategy"){
         if(v!="darm" && v!="darm-artifact" && v!="anchor")
           throw std::runtime_error("b2b-strategy must be anchor, darm or darm-artifact");
@@ -276,16 +282,22 @@ static int runSearch(int argc, const char *const *argv, TrialWorker *batch = nul
       if(observer)observer->round(round);
       std::vector<Trial> plans;
       if (useAnchorB2B)
-        plans = llvm24Scorer.planAnchorB2B(*module, c, options.cleanupMode);
+        plans = llvm24Scorer.planAnchorB2B(*module, c, options.cleanupMode, anchorGap);
       const bool plannedB2B = !plans.empty();
       Trial t;
       ScoreResult score;
       if (plannedB2B) {
         json::Array profitability;
         std::set<std::string> seenCleanedIR;
+        const bool traceLayouts = observer && !batch && std::getenv("FUSION_OBSERVE_B2B_DP");
         for (auto &plan : plans) {
-          if (plan.valid && !seenCleanedIR.insert(moduleHash(*plan.normalized)).second)
+          const bool duplicate = plan.valid && !seenCleanedIR.insert(moduleHash(*plan.normalized)).second;
+          if (duplicate && !traceLayouts)
             continue;
+          if (traceLayouts) {
+            if (plan.raw) writeIR(*plan.raw, debug + "/" + plan.mergePath + "-raw.ll");
+            if (plan.normalized) writeIR(*plan.normalized, debug + "/" + plan.mergePath + "-cleaned.ll");
+          }
           auto result = profileCall("evaluate_score",[&](){return evaluateTrial(*module, plan, round, scorer);});
           if (StringRef(result.reason).startswith("tti_quote_")) throw std::runtime_error(result.reason);
           const bool allowed = eligible(plan, result);
@@ -293,6 +305,7 @@ static int runSearch(int argc, const char *const *argv, TrialWorker *batch = nul
             profitability.push_back(json::Object{{"layout",plan.mergePath},{"valid",plan.valid},
                 {"eligible",allowed},{"anchor",json::Object(plan.anchorStats)},
                 {"score_result",scoreJson(result)}});
+          if (duplicate) continue;
           if (t.mergePath.empty() ||
               ((plan.valid && !t.valid) ||
                 (result.status == ScoreStatus::Scored &&

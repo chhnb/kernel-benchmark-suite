@@ -4,6 +4,7 @@
 
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/STLExtras.h"
+#include "llvm/ADT/StringRef.h"
 #include "llvm/ADT/SmallVector.h"
 
 namespace llvm {
@@ -12,6 +13,16 @@ class Instruction;
 class Type;
 }
 namespace fusion {
+enum class AnchorGap { Fork, Linear, Both };
+
+inline bool parseAnchorGap(llvm::StringRef name, AnchorGap &gap) {
+  if (name == "fork") gap = AnchorGap::Fork;
+  else if (name == "linear") gap = AnchorGap::Linear;
+  else if (name == "both") gap = AnchorGap::Both;
+  else return false;
+  return true;
+}
+
 struct AnchorMatch {
   unsigned left, right;
   bool swapped = false;
@@ -26,6 +37,7 @@ struct AnchorPlan {
   llvm::SmallVector<AnchorMatch, 8> forwardCutoffs;
   unsigned chargedSegments = 0;
   int64_t phiCharge = 0;
+  int64_t score = 0;
   unsigned discarded = 0, conflicts = 0, segments = 0;
 };
 llvm::SmallVector<AnchorPlan, 3> planB2BAnchors(
@@ -35,5 +47,5 @@ llvm::SmallVector<AnchorPlan, 3> planB2BAnchors(
     llvm::function_ref<bool(llvm::Instruction &, llvm::Instruction &)> compatible,
     llvm::function_ref<int(const llvm::Instruction &)> instructionCost,
     llvm::function_ref<int(llvm::Type *)> selectCost,
-    llvm::function_ref<int(llvm::Type *)> phiCost);
+    llvm::function_ref<int(llvm::Type *)> phiCost, bool linear = false);
 }

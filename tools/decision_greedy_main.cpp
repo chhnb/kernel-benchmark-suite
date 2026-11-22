@@ -128,12 +128,12 @@ int main(int argc,char**argv){try{
  auto timingReport=[&](){json::Object phases;for(const auto &kv:phaseMilliseconds)phases[kv.first]=json::Object{{"milliseconds",kv.second},{"calls",phaseCalls[kv.first]}};return phases;};
 
  if(argc==2&&StringRef(argv[1])=="--help"){
-   outs()<<"usage: decision-greedy INPUT FUNCTION [TOOL_ROOT] NEW_OUTPUT [--b2b-strategy anchor|darm|darm-artifact] [--domain-schedule ordered] [--ir-snapshots full|compact] [--tti-quote-cache off|audit|on] [--commit-normalize-only|--no-commit-normalize-only]\n";
+   outs()<<"usage: decision-greedy INPUT FUNCTION [TOOL_ROOT] NEW_OUTPUT [--b2b-strategy anchor|darm|darm-artifact] [--anchor-gap fork|linear|both] [--domain-schedule ordered] [--ir-snapshots full|compact] [--tti-quote-cache off|audit|on] [--commit-normalize-only|--no-commit-normalize-only]\n";
    outs()<<"Default schedule: ordered for whole-function trials (Auto Greedy v2).\n";
    outs()<<"Normalize-only commits are enabled by default.\n";
    return 0;
  }
- std::string b2bStrategy="anchor", quoteMode="on", snapshotMode;
+ std::string b2bStrategy="anchor", quoteMode="on", snapshotMode, anchorGap="fork";
  Optional<bool> normalizeOnlyOverride;
  while (argc >= 3) {
    StringRef last(argv[argc-1]);
@@ -150,15 +150,17 @@ int main(int argc,char**argv){try{
      snapshotMode = value.str();
    else if (option == "--tti-quote-cache" && (value == "off" || value == "audit" || value == "on"))
      quoteMode = value.str();
+   else if (option == "--anchor-gap" && (value == "fork" || value == "linear" || value == "both"))
+     anchorGap = value.str();
    else if (option == "--b2b-strategy" && (value == "darm" || value == "darm-artifact" || value == "anchor"))
      b2bStrategy = value.str();
-   else if (option == "--ir-snapshots" || option == "--domain-schedule" || option == "--b2b-strategy" || option == "--tti-quote-cache")
+   else if (option == "--ir-snapshots" || option == "--domain-schedule" || option == "--b2b-strategy" || option == "--tti-quote-cache" || option == "--anchor-gap")
      throw std::runtime_error("invalid value for " + option.str());
    else break;
    argc -= 2;
  }
  if(argc!=4&&argc!=5)
-   throw std::runtime_error("usage: decision-greedy INPUT FUNCTION [TOOL_ROOT] NEW_OUTPUT [--b2b-strategy anchor|darm|darm-artifact] [--domain-schedule ordered] [--ir-snapshots full|compact] [--tti-quote-cache off|audit|on] [--commit-normalize-only|--no-commit-normalize-only]");
+   throw std::runtime_error("usage: decision-greedy INPUT FUNCTION [TOOL_ROOT] NEW_OUTPUT [--b2b-strategy anchor|darm|darm-artifact] [--anchor-gap fork|linear|both] [--domain-schedule ordered] [--ir-snapshots full|compact] [--tti-quote-cache off|audit|on] [--commit-normalize-only|--no-commit-normalize-only]");
  const bool commitNormalizeOnly=normalizeOnlyOverride.getValueOr(true);
  if(snapshotMode.empty())snapshotMode="compact";
  const bool implicitRoot=argc==4;
@@ -460,6 +462,8 @@ int main(int argc,char**argv){try{
       }
       // Keep the exact invocation and the arguments needed for trial replay.
       trialArgs.insert(trialArgs.end(), {"--b2b-strategy", b2bStrategy});
+      if (anchorGap != "fork")
+        trialArgs.insert(trialArgs.end(), {"--anchor-gap", anchorGap});
       // IDs locate a prior recipe; current planner facts certify its reuse.
       json::Array replayArgs;
       for(const auto &argument:trialArgs)replayArgs.push_back(argument);

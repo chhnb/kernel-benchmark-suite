@@ -4,6 +4,7 @@
 #include "llvm/ADT/DenseSet.h"
 #include "llvm/ADT/STLExtras.h"
 #include "llvm/IR/Instructions.h"
+#include "llvm/Analysis/ValueTracking.h"
 #include "llvm/Support/FileSystem.h"
 #include "llvm/Support/JSON.h"
 #include "llvm/Support/raw_ostream.h"
@@ -89,12 +90,23 @@ SmallVector<AnchorPlan, 3> planB2BAnchors(
     Work left, Work right, BasicBlock &leftBlock, BasicBlock &rightBlock,
     BasicBlock *join, bool pairTies, function_ref<bool(Instruction &, Instruction &)> compatible,
     function_ref<int(const Instruction &)> instructionCost,
-    function_ref<int(Type *)> selectCost, function_ref<int(Type *)> phiCost) {
+    function_ref<int(Type *)> selectCost, function_ref<int(Type *)> phiCost, bool linear) {
   const char *tracePath = std::getenv("FUSION_OBSERVE_B2B_DP");
   const bool observe = tracePath && *tracePath;
   json::Array transitions, pruned, conflictingPairs, segmentsObserved;
   const std::array<Work, 2> work{left, right};
   DenseMap<const Value *, unsigned> indices[2];
+  SmallVector<bool, 32> skippable[2];
+  if (linear)
+    for (unsigned side = 0; side != 2; ++side)
+      for (const auto *inst : work[side]) {
+        const auto *call = dyn_cast<CallBase>(inst);
+        skippable[side].push_back(!inst->mayReadOrWriteMemory() &&
+                                  !(call && call->isConvergent()) &&
+                                  !isa<AllocaInst>(inst) &&
+                                  isSafeToSpeculativelyExecute(inst));
+      }
+
   for (unsigned side = 0; side != 2; ++side)
     for (unsigned k = 0; k != work[side].size(); ++k)
       indices[side].insert({work[side][k], k});
@@ -201,6 +213,11 @@ SmallVector<AnchorPlan, 3> planB2BAnchors(
     anchors.push_back(proposed[k]);
   std::reverse(anchors.begin(), anchors.end());
 
+  auto pairedValues = [&](Value *lv, Value *rv, ArrayRef<AnchorMatch> pairs) {
+    return llvm::any_of(pairs, [&](AnchorMatch producer) {
+      return left[producer.left] == lv && right[producer.right] == rv;
+    });
+  };
   auto addedCost = [&](AnchorMatch pair, ArrayRef<AnchorMatch> pairs) {
     auto *l = left[pair.left], *r = right[pair.right];
     int cost = 0;
@@ -208,9 +225,7 @@ SmallVector<AnchorPlan, 3> planB2BAnchors(
       auto *lv = l->getOperand(n), *rv = r->getOperand(n ^ unsigned(pair.swapped));
       if (lv == rv)
         continue;
-      if (!llvm::any_of(pairs, [&](AnchorMatch producer) {
-            return left[producer.left] == lv && right[producer.right] == rv;
-          }))
+      if (!pairedValues(lv, rv, pairs))
         cost += selectCost(lv->getType());
     }
     return cost;
@@ -238,7 +253,7 @@ SmallVector<AnchorPlan, 3> planB2BAnchors(
   // Any use outside this arm also crosses the boundary.
   std::vector<unsigned> lastUse[2];
   std::vector<int> phiPrice[2];
-  for (unsigned side = 0; side != 2; ++side) {
+  for (unsigned side = 0; !linear && side != 2; ++side) {
     for (auto *inst : work[side]) {
       unsigned last = indices[side].lookup(inst);
       for (const auto *user : inst->users()) {
@@ -250,6 +265,7 @@ SmallVector<AnchorPlan, 3> planB2BAnchors(
     }
   }
   auto finishGap = [&](State &state, unsigned le, unsigned re, bool rejoins) {
+    if (linear) return;
     unsigned begin[2] = {};
     if (!state.pairs.empty()) {
       begin[0] = state.pairs.back().left + 1;
@@ -273,6 +289,7 @@ SmallVector<AnchorPlan, 3> planB2BAnchors(
 
   Beam beam(1);
   State anchorsOnly;
+  bool anchorsOnlyLegal = true;
   unsigned li = 0, ri = 0, segments = 0;
   auto recordTransition = [&](AnchorMatch pair, const State &state,
                               int cost, int inputs, StringRef reason) {
@@ -307,11 +324,17 @@ SmallVector<AnchorPlan, 3> planB2BAnchors(
     // Map-Airy commit 10 previously preferred the candidate with fewer
     // pairs after cleanup, which is not represented by pair scores alone.
     Beam empty;
-    for (auto state : beam) {
-      finishGap(state, le, re, rejoins);
-      insert(empty, std::move(state));
+    const bool emptyLegal = !linear ||
+        (llvm::all_of(ArrayRef<bool>(skippable[0]).slice(li, le - li), [](bool b) { return b; }) &&
+         llvm::all_of(ArrayRef<bool>(skippable[1]).slice(ri, re - ri), [](bool b) { return b; }));
+    if (emptyLegal) {
+      for (auto state : beam) {
+        finishGap(state, le, re, rejoins);
+        insert(empty, std::move(state));
+      }
+      finishGap(anchorsOnly, le, re, rejoins);
     }
-    finishGap(anchorsOnly, le, re, rejoins);
+    anchorsOnlyLegal &= emptyLegal;
     if (li == le || ri == re) {
       beam = std::move(empty);
       return;
@@ -322,9 +345,9 @@ SmallVector<AnchorPlan, 3> planB2BAnchors(
     for (unsigned i = li; i <= le; ++i) {
       for (unsigned j = ri; j <= re; ++j)
         for (const auto &state : row[j - ri]) {
-          if (i < le)
+          if (i < le && (!linear || skippable[0][i]))
             insert(next[j - ri], state, observe ? &pruned : nullptr, "skip_left", i + 1, j);
-          if (j < re)
+          if (j < re && (!linear || skippable[1][j]))
             insert(row[j + 1 - ri], state, observe ? &pruned : nullptr, "skip_right", i, j + 1);
           if (i == le || j == re)
             continue;
@@ -373,7 +396,8 @@ SmallVector<AnchorPlan, 3> planB2BAnchors(
       insert(beam, std::move(state));
     }
     trim(beam, "segment_limit");
-    insert(beam, std::move(empty.front()));
+    if (!empty.empty())
+      insert(beam, std::move(empty.front()));
   };
   auto appendAnchor = [&](State &state, AnchorMatch anchor) {
     const int cost = instructionCost(*left[anchor.left]);
@@ -387,7 +411,8 @@ SmallVector<AnchorPlan, 3> planB2BAnchors(
     align(anchor.left, anchor.right, true);
     for (auto &state : beam)
       appendAnchor(state, anchor);
-    appendAnchor(anchorsOnly, anchor);
+    if (anchorsOnlyLegal)
+      appendAnchor(anchorsOnly, anchor);
     llvm::stable_sort(beam, [](const State &a, const State &b) {
       return a.score > b.score ||
              (a.score == b.score && a.pairs.size() > b.pairs.size());
@@ -397,10 +422,34 @@ SmallVector<AnchorPlan, 3> planB2BAnchors(
   }
   align(left.size(), right.size(), !join);
 
+  if (linear && join) {
+    auto chargeJoin = [&](State &state) {
+      DenseSet<std::pair<Value *, Value *>> selected;
+      for (auto pair : state.pairs) {
+        auto *l = left[pair.left], *r = right[pair.right];
+        for (unsigned n = 0; n < l->getNumOperands(); ++n)
+          selected.insert({l->getOperand(n), r->getOperand(n ^ unsigned(pair.swapped))});
+      }
+      for (auto &phi : join->phis()) {
+        auto *lv = phi.getIncomingValueForBlock(&leftBlock);
+        auto *rv = phi.getIncomingValueForBlock(&rightBlock);
+        if (lv != rv && !pairedValues(lv, rv, state.pairs) && selected.insert({lv, rv}).second)
+          state.score -= selectCost(phi.getType());
+      }
+    };
+    Beam ranked;
+    for (auto &state : beam) {
+      chargeJoin(state);
+      insert(ranked, std::move(state));
+    }
+    beam = std::move(ranked);
+    if (anchorsOnlyLegal) chargeJoin(anchorsOnly);
+  }
   trim(beam, "final_limit");
-  insert(beam, std::move(anchorsOnly));
+  if (anchorsOnlyLegal)
+    insert(beam, std::move(anchorsOnly));
   if (observe) {
-    auto instructions = [&](Work arm) {
+    auto instructions = [&](Work arm, unsigned side) {
       json::Array list;
       auto hasTransferCost = [](Type *type) {
         return type->isFirstClassType() && type->isSized() &&
@@ -421,12 +470,14 @@ SmallVector<AnchorPlan, 3> planB2BAnchors(
           operands.push_back(json::Object{{"value", operandName(*operand)}, {"type", operandStream.str()},
               {"anchorSelectCost", hasTransferCost(ty) ? json::Value(selectCost(ty)) : json::Value(nullptr)}});
         }
-        list.push_back(json::Object{{"index", int64_t(item.index())},
+        json::Object row{{"index", int64_t(item.index())},
             {"opcode", inst.getOpcodeName()}, {"type", typeStream.str()}, {"ir", irStream.str()},
             {"anchorCost", instructionCost(inst)},
             {"anchorSelectCost", hasTransferCost(inst.getType()) ? json::Value(selectCost(inst.getType())) : json::Value(nullptr)},
             {"anchorPhiCost", hasTransferCost(inst.getType()) ? json::Value(phiCost(inst.getType())) : json::Value(nullptr)},
-            {"operands", std::move(operands)}});
+            {"operands", std::move(operands)}};
+        if (linear) row["linear_skippable"] = skippable[side][item.index()];
+        list.push_back(std::move(row));
       }
       return list;
     };
@@ -439,7 +490,8 @@ SmallVector<AnchorPlan, 3> planB2BAnchors(
       throw std::runtime_error("writing B2B observation: " + error.message());
     trace << json::Value(json::Object{{"mode", pairTies ? "relaxed" : "strict"},
         {"left_block", operandName(leftBlock)}, {"right_block", operandName(rightBlock)},
-        {"left", instructions(left)}, {"right", instructions(right)},
+        {"gap", linear ? "linear" : "fork"},
+        {"left", instructions(left, 0)}, {"right", instructions(right, 1)},
         {"proposed", matchesJSON(proposed)}, {"anchors", matchesJSON(anchors)},
         {"cutoffs", matchesJSON(cutoffs)}, {"forward_cutoffs", matchesJSON(forwardCutoffs)},
         {"conflicts", int64_t(conflicts)}, {"conflicting_pairs", std::move(conflictingPairs)},
@@ -449,7 +501,7 @@ SmallVector<AnchorPlan, 3> planB2BAnchors(
   SmallVector<AnchorPlan, 3> result;
   for (auto &state : beam)
     result.push_back({std::move(state.pairs), anchors, cutoffs, forwardCutoffs,
-                      state.chargedSegments, state.phiCharge,
+                      state.chargedSegments, state.phiCharge, state.score,
                       unsigned(proposed.size() - anchors.size()), conflicts, segments});
   return result;
 }

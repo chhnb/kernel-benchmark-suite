@@ -1,4 +1,6 @@
 #pragma once
+
+#include "b2b_anchor.h"
 #include "llvm/Support/JSON.h"
 #include "llvm/IR/Module.h"
 #include "llvm/Analysis/RegionInfo.h"
@@ -169,5 +171,5 @@ std::vector<Trial> planSingleBranchB2B(const llvm::Module &, const Candidate &, 
                                        llvm::function_ref<int(const llvm::Instruction &)> intrinsicCost,
                                        llvm::function_ref<int(const llvm::Instruction &)> anchorCost,
                                        llvm::function_ref<int(llvm::Type *)> anchorSelectCost,
-                                       llvm::function_ref<int(llvm::Type *)> anchorPhiCost);
+                                       llvm::function_ref<int(llvm::Type *)> anchorPhiCost, AnchorGap gap = AnchorGap::Fork);
 }
