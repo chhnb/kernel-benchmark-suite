@@ -20,9 +20,13 @@ namespace fusion {
 namespace {
 using Matches = SmallVector<AnchorMatch, 8>;
 using Work = ArrayRef<Instruction *>;
+using OperandPair = std::pair<Value *, Value *>;
+using NewCharges = SmallVector<OperandPair, 4>;
 
 struct State {
   Matches pairs;
+  DenseSet<OperandPair> charged;
+  bool gapPrepaid = false;
   int64_t score = 0;
   unsigned chargedSegments = 0;
   int64_t phiCharge = 0;
@@ -90,7 +94,9 @@ SmallVector<AnchorPlan, 3> planB2BAnchors(
     Work left, Work right, BasicBlock &leftBlock, BasicBlock &rightBlock,
     BasicBlock *join, bool pairTies, function_ref<bool(Instruction &, Instruction &)> compatible,
     function_ref<int(const Instruction &)> instructionCost,
-    function_ref<int(Type *)> selectCost, function_ref<int(Type *)> phiCost, bool linear) {
+    function_ref<int(Type *)> selectCost, function_ref<int(Type *)> phiCost, bool linear,
+    AnchorScoring scoring) {
+  const bool eager = scoring.eagerGapRank && !linear;
   const char *tracePath = std::getenv("FUSION_OBSERVE_B2B_DP");
   const bool observe = tracePath && *tracePath;
   json::Array transitions, pruned, conflictingPairs, segmentsObserved;
@@ -218,22 +224,37 @@ SmallVector<AnchorPlan, 3> planB2BAnchors(
       return left[producer.left] == lv && right[producer.right] == rv;
     });
   };
-  auto addedCost = [&](AnchorMatch pair, ArrayRef<AnchorMatch> pairs) {
+  auto forInputSelect = [&](AnchorMatch pair, ArrayRef<AnchorMatch> earlier, auto visit) {
     auto *l = left[pair.left], *r = right[pair.right];
-    int cost = 0;
     for (unsigned n = 0; n < l->getNumOperands(); ++n) {
       auto *lv = l->getOperand(n), *rv = r->getOperand(n ^ unsigned(pair.swapped));
-      if (lv == rv)
-        continue;
-      if (!pairedValues(lv, rv, pairs))
-        cost += selectCost(lv->getType());
+      if (lv != rv && !pairedValues(lv, rv, earlier))
+        visit(OperandPair{lv, rv});
     }
+  };
+  auto addedCost = [&](AnchorMatch pair, const State &state, NewCharges &newCharges) {
+    int cost = 0;
+    forInputSelect(pair, state.pairs, [&](OperandPair inputs) {
+      if (scoring.selectDedup) {
+        if (state.charged.count(inputs) || llvm::is_contained(newCharges, inputs))
+          return;
+        newCharges.push_back(inputs);
+      }
+      cost += selectCost(inputs.first->getType());
+    });
     return cost;
+  };
+  auto appendPair = [&](State &state, AnchorMatch pair, const NewCharges &charges, int gain) {
+    for (auto inputs : charges)
+      state.charged.insert(inputs);
+    state.score += gain;
+    state.pairs.push_back(pair);
   };
 
   DenseSet<std::pair<unsigned, unsigned>> cutPairs;
-  for (const auto &cut : cutoffs)
-    cutPairs.insert({cut.left, cut.right});
+  if (!scoring.liveCutoff)
+    for (const auto &cut : cutoffs)
+      cutPairs.insert({cut.left, cut.right});
   DenseSet<std::pair<unsigned, unsigned>> seenForwardCut;
   Matches forwardCutoffs;
   auto hasSharedConsumer = [&](Instruction *l, Instruction *r) {
@@ -264,6 +285,16 @@ SmallVector<AnchorPlan, 3> planB2BAnchors(
       phiPrice[side].push_back(inst->getType()->isVoidTy() ? 0 : phiCost(inst->getType()));
     }
   }
+  // Charge once when leaving a match, or at settlement for a fallback
+  // that bypasses the grid. The PHI term still needs the end boundary.
+  constexpr int ForkCharge = 2;
+  auto skip = [&](State state, Beam &dest, StringRef phase, unsigned i, unsigned j) {
+    if (eager && !state.gapPrepaid) {
+      state.score -= ForkCharge;
+      state.gapPrepaid = true;
+    }
+    insert(dest, std::move(state), observe ? &pruned : nullptr, phase, i, j);
+  };
   auto finishGap = [&](State &state, unsigned le, unsigned re, bool rejoins) {
     if (linear) return;
     unsigned begin[2] = {};
@@ -274,7 +305,9 @@ SmallVector<AnchorPlan, 3> planB2BAnchors(
     if (begin[0] == le && begin[1] == re)
       return;
     ++state.chargedSegments;
-    state.score -= 2; // Match DP1's penalty for starting a fork.
+    if (!state.gapPrepaid)
+      state.score -= ForkCharge;
+    state.gapPrepaid = false;
     if (!rejoins)
       return; // The original exit PHIs already receive values from both arms.
     int64_t charge = 0;
@@ -346,21 +379,22 @@ SmallVector<AnchorPlan, 3> planB2BAnchors(
       for (unsigned j = ri; j <= re; ++j)
         for (const auto &state : row[j - ri]) {
           if (i < le && (!linear || skippable[0][i]))
-            insert(next[j - ri], state, observe ? &pruned : nullptr, "skip_left", i + 1, j);
+            skip(state, next[j - ri], "skip_left", i + 1, j);
           if (j < re && (!linear || skippable[1][j]))
-            insert(row[j + 1 - ri], state, observe ? &pruned : nullptr, "skip_right", i, j + 1);
+            skip(state, row[j + 1 - ri], "skip_right", i, j + 1);
           if (i == le || j == re)
             continue;
           AnchorMatch pair{i, j};
-          if (cutPairs.count({i, j})) {
+          NewCharges newCharges;
+          if (!scoring.liveCutoff && cutPairs.count({i, j})) {
             if (observe)
               recordTransition(pair, state, instructionCost(*left[i]),
-                               addedCost(pair, state.pairs), "cutPairs");
+                               addedCost(pair, state, newCharges), "cutPairs");
             continue;
           }
           if (!compatible(*left[i], *right[j]))
             continue;
-          const int inputCost = addedCost(pair, state.pairs);
+          const int inputCost = addedCost(pair, state, newCharges);
           const int cost = instructionCost(*left[i]);
           const int gain = cost - inputCost;
           // Producers can also be reached solely from a forward segment
@@ -378,8 +412,7 @@ SmallVector<AnchorPlan, 3> planB2BAnchors(
           }
           State shared = state;
           finishGap(shared, i, j, true);
-          shared.score += gain;
-          shared.pairs.push_back(pair);
+          appendPair(shared, pair, newCharges, gain);
           const auto outcome = insert(next[j + 1 - ri], std::move(shared),
                                       observe ? &pruned : nullptr, "pair", i + 1, j + 1);
           if (observe)
@@ -401,11 +434,11 @@ SmallVector<AnchorPlan, 3> planB2BAnchors(
   };
   auto appendAnchor = [&](State &state, AnchorMatch anchor) {
     const int cost = instructionCost(*left[anchor.left]);
-    const int inputs = addedCost(anchor, state.pairs);
+    NewCharges newCharges;
+    const int inputs = addedCost(anchor, state, newCharges);
     if (observe)
       recordTransition(anchor, state, cost, inputs, "forced_anchor");
-    state.score += cost - inputs;
-    state.pairs.push_back(anchor);
+    appendPair(state, anchor, newCharges, cost - inputs);
   };
   for (auto anchor : anchors) {
     align(anchor.left, anchor.right, true);
@@ -424,16 +457,18 @@ SmallVector<AnchorPlan, 3> planB2BAnchors(
 
   if (linear && join) {
     auto chargeJoin = [&](State &state) {
-      DenseSet<std::pair<Value *, Value *>> selected;
-      for (auto pair : state.pairs) {
-        auto *l = left[pair.left], *r = right[pair.right];
-        for (unsigned n = 0; n < l->getNumOperands(); ++n)
-          selected.insert({l->getOperand(n), r->getOperand(n ^ unsigned(pair.swapped))});
+      // With dedup disabled, replay the matched instructions to find the
+      // actual input selects that the emitter could reuse at the exit.
+      if (!scoring.selectDedup) {
+        ArrayRef<AnchorMatch> pairs = state.pairs;
+        for (auto item : llvm::enumerate(pairs))
+          forInputSelect(item.value(), pairs.take_front(item.index()),
+                         [&](OperandPair inputs) { state.charged.insert(inputs); });
       }
       for (auto &phi : join->phis()) {
         auto *lv = phi.getIncomingValueForBlock(&leftBlock);
         auto *rv = phi.getIncomingValueForBlock(&rightBlock);
-        if (lv != rv && !pairedValues(lv, rv, state.pairs) && selected.insert({lv, rv}).second)
+        if (lv != rv && !pairedValues(lv, rv, state.pairs) && state.charged.insert({lv, rv}).second)
           state.score -= selectCost(phi.getType());
       }
     };
@@ -491,6 +526,8 @@ SmallVector<AnchorPlan, 3> planB2BAnchors(
     trace << json::Value(json::Object{{"mode", pairTies ? "relaxed" : "strict"},
         {"left_block", operandName(leftBlock)}, {"right_block", operandName(rightBlock)},
         {"gap", linear ? "linear" : "fork"},
+        {"select_dedup", scoring.selectDedup}, {"cutoff", scoring.liveCutoff ? "live" : "static"},
+        {"gap_rank", eager ? "eager" : "lazy"},
         {"left", instructions(left, 0)}, {"right", instructions(right, 1)},
         {"proposed", matchesJSON(proposed)}, {"anchors", matchesJSON(anchors)},
         {"cutoffs", matchesJSON(cutoffs)}, {"forward_cutoffs", matchesJSON(forwardCutoffs)},

@@ -171,5 +171,6 @@ std::vector<Trial> planSingleBranchB2B(const llvm::Module &, const Candidate &, 
                                        llvm::function_ref<int(const llvm::Instruction &)> intrinsicCost,
                                        llvm::function_ref<int(const llvm::Instruction &)> anchorCost,
                                        llvm::function_ref<int(llvm::Type *)> anchorSelectCost,
-                                       llvm::function_ref<int(llvm::Type *)> anchorPhiCost, AnchorGap gap = AnchorGap::Fork);
+                                       llvm::function_ref<int(llvm::Type *)> anchorPhiCost, AnchorGap gap = AnchorGap::Fork,
+                                       AnchorScoring scoring = {});
 }

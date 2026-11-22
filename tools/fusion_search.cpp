@@ -1588,7 +1588,8 @@ std::vector<Trial> planSingleBranchB2B(const Module &parent, const Candidate &c,
                                        function_ref<int(const Instruction &)> intrinsicCost,
                                        function_ref<int(const Instruction &)> anchorCost,
                                        function_ref<int(Type *)> anchorSelectCost,
-                                       function_ref<int(Type *)> anchorPhiCost, AnchorGap gap) {
+                                       function_ref<int(Type *)> anchorPhiCost, AnchorGap gap,
+                                       AnchorScoring scoring) {
   ProfileScope planningScope("b2b_plan_generate_clean_total");
   std::vector<Trial> trials;
   if (!usesDarmDCE(mode))
@@ -1751,7 +1752,7 @@ std::vector<Trial> planSingleBranchB2B(const Module &parent, const Candidate &c,
       continue;
     for (bool pairTies : {false, true}) {
       auto plans = planB2BAnchors(segmentWork[0], segmentWork[1], *left, *right, join,
-                                pairTies, compatibleB2BPrefix, instructionCost, selectCost, phiCost, linear);
+                                pairTies, compatibleB2BPrefix, instructionCost, selectCost, phiCost, linear, scoring);
       for (const auto &plan : plans) {
         const bool prefix = !linear && plan.matches.size() <= safePrefix.size() &&
             llvm::all_of(llvm::enumerate(plan.matches), [](const auto &item) {

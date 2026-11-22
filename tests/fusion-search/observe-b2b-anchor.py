@@ -16,6 +16,9 @@ for name in ("search", "worker", "opt"):
 parser.add_argument("--ir", type=Path, help="trace the DP on a specific module and block triple")
 parser.add_argument("--function")
 parser.add_argument("--anchor-gap", choices=("fork", "linear", "both"), default="fork")
+parser.add_argument("--anchor-select-dedup", choices=("0", "1"), default="0")
+parser.add_argument("--anchor-cutoff", choices=("static", "live"), default="static")
+parser.add_argument("--anchor-gap-rank", choices=("lazy", "eager"), default="lazy")
 parser.add_argument("--split")
 parser.add_argument("--left")
 parser.add_argument("--right")
@@ -37,6 +40,8 @@ with tempfile.TemporaryDirectory() as directory:
             [search, "--ir", args.ir, "--function", args.function,
              "--split", args.split, "--left", args.left, "--right", args.right,
              "--b2b-strategy", "anchor", "--anchor-gap", args.anchor_gap,
+             "--anchor-select-dedup", args.anchor_select_dedup,
+             "--anchor-cutoff", args.anchor_cutoff, "--anchor-gap-rank", args.anchor_gap_rank,
              "--structural", "1", "--tti-worker", worker,
              "--out", output, "--debug-dir", debug],
             env=os.environ | {"FUSION_OBSERVE_B2B_DP": str(trace)}, check=False,

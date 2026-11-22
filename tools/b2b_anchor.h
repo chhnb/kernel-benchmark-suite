@@ -23,6 +23,12 @@ inline bool parseAnchorGap(llvm::StringRef name, AnchorGap &gap) {
   return true;
 }
 
+struct AnchorScoring {
+  bool selectDedup = false;
+  bool liveCutoff = false;
+  bool eagerGapRank = false;
+};
+
 struct AnchorMatch {
   unsigned left, right;
   bool swapped = false;
@@ -47,5 +53,5 @@ llvm::SmallVector<AnchorPlan, 3> planB2BAnchors(
     llvm::function_ref<bool(llvm::Instruction &, llvm::Instruction &)> compatible,
     llvm::function_ref<int(const llvm::Instruction &)> instructionCost,
     llvm::function_ref<int(llvm::Type *)> selectCost,
-    llvm::function_ref<int(llvm::Type *)> phiCost, bool linear = false);
+    llvm::function_ref<int(llvm::Type *)> phiCost, bool linear = false, AnchorScoring scoring = {});
 }
