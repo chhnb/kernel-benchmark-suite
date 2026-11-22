@@ -64,7 +64,15 @@ SRAD32 的冻结件和诊断构建见[重建核验记录](../regression/records/
 - TIGRE 的 6c R 配置比旧默认 D 慢约 0.6%。分支依赖运行时数据，线性布局的两侧 uniform gain 为 +1 和 +9，满足当前 gate。 [6c 记录](../regression/records/anchor-unified-dp-step6c-20261122.md)
 - 对无法证明必然发散的分支，发布候选要求两侧 uniform gain 均有报价且非负。按 6c 冻结输入，这放弃了 Map-Airy mixed 约 6.7%、Landau mixed 约 19.6% 和 SasPoint5 interval-mixture 约 6.5% 的线性布局收益，同时避免了 Landau coherent 约 30% 和 SasPoint5 coherent/uniform 约 17%–21% 的退化。这个取舍针对跨输入稳定性。 [6c 的逐输入比较](../regression/records/anchor-unified-dp-step6c-20261122.md)
 
-## PCM32：TTI 保守漏判
+## SasPoint5：B2B 路径依赖
+
+默认 Anchor 去掉多余的条件 `freeze` 后，冻结 IR 上的 B2B 轨迹从第二次提交开始重排，末次线性提交消失。提交数由 8 变为 7，最终 TTI 由 487 升至 491，与 legacy 持平。interval-mixture 和 coherent-blocks 的第 7f 步同批计时持平，uniform-01 的 CUDA Graph 补测时比为 1.00033 [1.00017, 1.00035]。 [第 7f 步](../regression/records/pcm32-freeze-removal-20261122.md) · [第 9 步](../regression/records/anchor-r2r-speculation-release-20261122.md)
+
+## PCM32：完整搜索相对 Auto DARM 的差距已解决
+
+`48fb41e` 固定 v1 默认时关闭了 R2R 的 gap 推测和布局重试。恢复受限推测后，Anchor B2B 多出的条件 `freeze` 仍使下游 R2R 保留额外的守护。发布候选恢复受限推测并加入逐 wave gate，同时从默认 Anchor 发射移除多余的条件 `freeze`。PCM32 的 `trial-33` 以同父 1138 → 1136 被接受。新 HSACO 与第 7d 步实测对象逐字节相同，较上一发布默认快 6.83%，相对 Auto DARM 的时比为 0.99999 [0.99997, 1.00001]。 [发射二分](../regression/records/pcm32-r2r-emission-bisect-20261122.md) · [第 7f 步](../regression/records/pcm32-freeze-removal-20261122.md)
+
+### 历史 TTI 漏判记录
 
 第 10 步的同父 R2R 在 LLVM12 O3 后的 throughput TTI 增加 124，实测耗时下降 **5.74%**。发布 Greedy 的 `trial-33` 增加 202，实测耗时下降 **5.71%**。两者使用各自的父状态作对照。 [第 10 步计时（`617b52a`）](https://github.com/chhnb/kernel-benchmark-suite/blob/617b52a/regression/records/cleanup-extended-20261120.md) · [O3 报价和运行时计数（`90c819b`）](https://github.com/chhnb/kernel-benchmark-suite/blob/90c819b/regression/records/pcm32-r2r-runtime-20261120.md) · [trial-33（`81bbd4a`）](https://github.com/chhnb/kernel-benchmark-suite/blob/81bbd4a/regression/records/accept-rule-eval-20261121.md)
 
@@ -78,7 +86,7 @@ SRAD32 的冻结件和诊断构建见[重建核验记录](../regression/records/
 | Occupancy 感知选择 | 低驻留时统一改用 latency 的启发式未提高历史转移的方向一致率。RIRv2 在该 PCM32 实例上接受，完整前瞻评估停于 NQU64 的 A/A 门槛 | [occupancy-aware-cost `c43d1b7`](https://github.com/chhnb/kernel-benchmark-suite/blob/c43d1b7/regression/records/occupancy-aware-cost-20261120.md)，[逐规则评估 `81bbd4a`](https://github.com/chhnb/kernel-benchmark-suite/blob/81bbd4a/regression/records/accept-rule-eval-20261121.md) |
 | 区域 anchor | 同父对照未达到推广门槛，区域融合保留 DARM | [区域对齐结论 `2c112f0`](https://github.com/chhnb/kernel-benchmark-suite/blob/2c112f0/regression/records/region-anchor-parity-20261121.md) |
 
-当前 D 和 R 的 PCM32 产物相同。完整搜索现在只拒绝一个 R2R（`trial-33`），在五档同父 cleanup 下都判亏。6.83% 的收益来自历史父路径重建，当前搜索不生成该路径上的两个 R2R 候选。全局加强 cleanup 使 NQU64 慢 9.4%，因此保留发布 cleanup 和 throughput TTI。搜索路径诊断留待第 7b 步。 [第 7 步记录](../regression/records/pcm32-cleanup-strength-20261122.md)
+第 7 步的旧 D 与旧 R 在五档同父 cleanup 下都拒绝了 `trial-33`。全局加强 cleanup 使 NQU64 慢 9.4%。发布候选沿用原 cleanup 和 throughput TTI。 [第 7 步记录](../regression/records/pcm32-cleanup-strength-20261122.md)
 
 ## Auto DARM 对照口径
 
