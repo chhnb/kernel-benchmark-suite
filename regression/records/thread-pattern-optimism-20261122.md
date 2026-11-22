@@ -149,3 +149,26 @@ SRAD32 另用同一 runner 和冻结输入做 A、B、Auto DARM 各一次完整�
 回归测试 16 项通过，4 项按 `tests/KNOWN_FAILURES.md` 跳过。新增或更新的用例覆盖线程号、线程号和参数、纯通用 intrinsic、工作组一致参数与 ID、load、PHI、线程号与 load 混合、形状上界、B2B fork 回退和 R2R 的共享 gate。固定 NQU64 父 IR 的有形状和无形状两次重放均拒绝守护候选，LUD8 的无形状守护布局重放与有形状产物逐字节一致。
 
 用新二进制运行 `regression/verify_anchor_release.py` 的 17 个 case 全部通过，LUD8 重放检查通过。唯一既有报警为 CED 281 > 280。C 与 A 的 358 步提交链及全部设备对象一致。
+
+## 合并前 SRAD32 HIP Graph 补测
+
+沿用第 7 步 CED 的 HIP Graph 窗口协议。SRAD32 每个样本用 110 个独立的常驻缓冲区副本，按冻结输入的 8×8 grid、32×32 block 捕获 110 次 kernel 启动。重置、回传及完整输出检查在 event 区间外。每个样本检查五个输出、只读输入和每个缓冲区两侧的 guard。A/A 和正式比较均按批次预热至少 200 ms、12 个交替窗口，取每角色每窗口的中位数。角色起点按窗口轮换，每组窗口交换顺序，平衡先后位置。A/A 门槛为中位比值偏离不超过 1%、比值极差不超过 3%。首次 31 次失败后只重试 61 次。
+
+运行记录和 CSV 保存在 EPYC 的 `/data/home/chh/simplify-v2/build/thread-pattern.vLL3Qo/srad32-graph`。使用 ROCm 6.3.3 构建，runner SHA-256 为 `e9c82e90cc8322b8980feb4f883ad71114d67e945001fc2b28936779300646ec`，源码 SHA-256 为 `61def1cf34f1f133caaca4ade95ed2a3ca0ddf6a89b50723059013f891938170`。
+
+```sh
+/opt/rocm-6.3.3/bin/hipcc -O3 -std=c++17 --offload-arch=gfx906 step12-srad-graph.hip -o srad-graph
+python3 step12-srad-graph.py /data/home/chh/simplify-v2/build/thread-pattern.vLL3Qo
+```
+
+| A/A 每窗口次数 | 中位时比 | 95% 区间 | 比值极差 |
+| ---: | ---: | --- | ---: |
+| 31 | 0.99957 | [0.99141, 1.00671] | 1.90% |
+
+正式比较使用每角色每窗口 31 次，三个角色均通过完整输出校验。
+
+| 比较 | 中位时比 | bootstrap 95% 区间 |
+| --- | ---: | --- |
+| B / A | 1.00312 | [1.00072, 1.00539] |
+| B / Auto DARM | 0.95482 | [0.95169, 0.95721] |
+| A / Auto DARM | 0.95090 | [0.94887, 0.95268] |
