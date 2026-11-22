@@ -1813,26 +1813,14 @@ std::vector<Trial> planSingleBranchB2B(const Module &parent, const Candidate &c,
     list.push_back(std::move(layout));
   };
   const bool allowLinear = selectableExit && segmentUsesValid;
-  SmallVector<AnchorPlan, 3> unifiedPlans[2];
-  // Emit in legacy fork, linear, guarded order, retaining the original trial
-  // IDs and tie-breaks. Auto computes both linear projections in mode 1.
-  for (unsigned mode = 0; mode != 3; ++mode) {
-    const bool linear = mode != 0;
-    const bool guarded = mode == 2;
+  for (bool linear : {false, true}) {
     if (linear && !allowLinear)
       continue;
-    AnchorScoring modeScoring{linear, linear};
     for (bool pairTies : {false, true}) {
-      SmallVector<AnchorPlan, 3> plans;
-      if (!modeScoring.unifiedGap || !guarded)
-        plans = planB2BAnchors(segmentWork[0], segmentWork[1], *left, *right, join,
-                              pairTies, compatibleB2BPrefix, instructionCost, selectCost, phiCost, linear, modeScoring);
-      if (modeScoring.unifiedGap && !guarded)
-        unifiedPlans[pairTies] = std::move(plans);
-      ArrayRef<AnchorPlan> active = modeScoring.unifiedGap ? unifiedPlans[pairTies] : plans;
-      for (const auto &plan : active) {
-        if (modeScoring.unifiedGap && plan.guardedProjection != guarded)
-          continue;
+      auto plans = planB2BAnchors(segmentWork[0], segmentWork[1], *left, *right, join,
+                                 pairTies, compatibleB2BPrefix, instructionCost,
+                                 selectCost, phiCost, linear);
+      for (const auto &plan : plans) {
         const bool prefix = !linear && plan.matches.size() <= safePrefix.size() &&
             llvm::all_of(llvm::enumerate(plan.matches), [](const auto &item) {
               return item.value().left == item.index() && item.value().right == item.index();
@@ -1843,7 +1831,7 @@ std::vector<Trial> planSingleBranchB2B(const Module &parent, const Candidate &c,
         layout.matches = plan.matches;
         layout.prefix = prefix;
         layout.linear = linear;
-        layout.guarded = guarded && plan.chargedSegments != 0;
+        layout.guarded = linear && plan.chargedSegments != 0;
         layout.mergeExit = linear;
         layout.placements = plan.gapPlacements;
         json::Array swaps, cutoffs, forwardCutoffs;

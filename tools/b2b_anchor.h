@@ -15,11 +15,6 @@ class Type;
 namespace fusion {
 enum class AnchorGapPlacement { Hoist, HoistAndGuard, Guard };
 
-struct AnchorScoring {
-  bool guardedGap = false;
-  bool unifiedGap = false;
-};
-
 struct AnchorMatch {
   unsigned left, right;
   bool swapped = false;
@@ -36,7 +31,6 @@ struct AnchorPlan {
   int64_t phiCharge = 0;
   int64_t score = 0;
   unsigned discarded = 0, conflicts = 0, segments = 0;
-  bool guardedProjection = false;
   llvm::SmallVector<AnchorGapPlacement, 8> gapPlacements;
 };
 // The last simple memory instruction in each instruction's dependency chain
@@ -50,5 +44,5 @@ llvm::SmallVector<AnchorPlan, 3> planB2BAnchors(
     llvm::function_ref<bool(llvm::Instruction &, llvm::Instruction &)> compatible,
     llvm::function_ref<int(const llvm::Instruction &)> instructionCost,
     llvm::function_ref<int(llvm::Type *)> selectCost,
-    llvm::function_ref<int(llvm::Type *)> phiCost, bool linear = false, AnchorScoring scoring = {});
+    llvm::function_ref<int(llvm::Type *)> phiCost, bool linear = false);
 }

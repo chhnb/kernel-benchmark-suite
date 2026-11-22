@@ -88,7 +88,7 @@ join:
     }));
   }
 
-  auto costPlans = [&](StringRef function, AnchorScoring scoring, bool pairTies = true) {
+  auto costPlans = [&](StringRef function, bool pairTies = true) {
     auto &f = *module->getFunction(function);
     auto b = std::next(f.begin());
     auto &lhs = *b++, &rhs = *b++, &exit = *b;
@@ -100,34 +100,26 @@ join:
         [=](const Instruction &inst) {
           return function == "cut" && inst.getOpcode() == Instruction::Sub ? 1 : 3;
         },
-        [](Type *) { return 1; }, [](Type *) { return 0; }, true, scoring);
+        [](Type *) { return 1; }, [](Type *) { return 0; }, true);
   };
-  auto repeated = costPlans("reused", {});
+  auto repeated = costPlans("reused");
   assert(repeated.front().matches.size() == 3 && repeated.front().score == 5);
 
-  auto fixed = costPlans("cut", {});
+  auto fixed = costPlans("cut");
   assert(fixed.front().cutoffs.size() == 1 &&
          (fixed.front().cutoffs.front() == AnchorMatch{1, 1}));
   assert(fixed.front().matches.size() == 1);
 
-  // The unified grid preserves both legacy beams, including their independent
-  // forward cutoffs. The phis fixture forces otherwise unpairable stores.
   for (bool pairTies : {false, true})
     for (StringRef function : {"phis", "reused"}) {
-      auto expected = costPlans(function, {}, pairTies);
-      auto guarded = costPlans(function, {true, false}, pairTies);
-      expected.append(guarded.begin(), guarded.end());
-      auto unified = costPlans(function, {true, true}, pairTies);
-      assert(unified.size() == expected.size());
-      for (auto item : llvm::enumerate(unified)) {
-        const auto &plan = item.value(), &prior = expected[item.index()];
-        assert(plan.matches == prior.matches && plan.score == prior.score &&
-               plan.phiCharge == prior.phiCharge && plan.chargedSegments == prior.chargedSegments &&
-               plan.forwardCutoffs == prior.forwardCutoffs &&
-               plan.guardedProjection == prior.guardedProjection);
+      auto plans = costPlans(function, pairTies);
+      assert(!plans.empty() && plans.size() <= 3);
+      for (const auto &plan : plans) {
         assert(!llvm::is_contained(plan.gapPlacements, AnchorGapPlacement::Guard));
         assert(llvm::is_contained(plan.gapPlacements, AnchorGapPlacement::HoistAndGuard) ==
                (plan.chargedSegments != 0));
       }
+      if (function == "phis")
+        assert(llvm::any_of(plans, [](const auto &plan) { return plan.chargedSegments != 0; }));
     }
 }
