@@ -74,5 +74,20 @@
       "automatic_melds": 9,
       "status": "validated_and_timed_nonexclusive"
     }
-  ]
+  ],
+  "anchor_workgroups": {
+    "SasPoint5": {
+      "function": "evaluate",
+      "shape": [
+        256,
+        1,
+        1
+      ],
+      "sources": [
+        "SasPoint5/interval-mixture at /data/home/chh/simplify-v2/build/b2b-layouts/anchor-ablation/heldout/SasPoint5/anchor-holdout-synthetic-v1/interval-mixture/input.txt:3",
+        "SasPoint5/coherent-blocks at /data/home/chh/simplify-v2/build/b2b-layouts/anchor-ablation/heldout/SasPoint5/anchor-holdout-synthetic-v1/coherent-blocks/input.txt:3",
+        "SasPoint5/uniform-01 at /data/home/chh/simplify-v2/build/b2b-layouts/anchor-ablation/heldout/SasPoint5/anchor-holdout-synthetic-v1/uniform-01/input.txt:3"
+      ]
+    }
+  }
 }

@@ -1,0 +1,17 @@
+{
+  "name": "nqu64",
+  "status": "frozen-anchor-release",
+  "anchor_workgroups": {
+    "NQU64": {
+      "function": "_Z24solve_nqueen_cuda_kerneliiPjS_S_S_i",
+      "shape": [
+        64,
+        1,
+        1
+      ],
+      "sources": [
+        "retest-release-315.BRiNaz/nqu-original.hip:41,85"
+      ]
+    }
+  }
+}

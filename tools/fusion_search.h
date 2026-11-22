@@ -1,4 +1,6 @@
 #pragma once
+
+#include "b2b_anchor.h"
 #include "llvm/Support/JSON.h"
 #include "llvm/IR/Module.h"
 #include "llvm/Analysis/RegionInfo.h"
@@ -165,9 +167,14 @@ Trial tryPair(const llvm::Module &, const Candidate &, unsigned currentVersion,
 Trial tryPair(const llvm::Module &, const Candidate &, unsigned currentVersion,
               unsigned optLevel, CleanupMode, const LogicalRegionState *, bool allowB2B,
               bool artifactB2B=false);
+// Emit an already-validated, order-preserving B2B alignment.
+void emitB2BLinear(llvm::BranchInst &, llvm::BasicBlock &, llvm::BasicBlock &,
+                   llvm::BasicBlock *join, llvm::ArrayRef<AnchorMatch>,
+                   bool linear, bool guarded, llvm::ArrayRef<AnchorGapPlacement>);
+llvm::json::Object describeAnchorCondition(llvm::Function &, llvm::StringRef split, llvm::StringRef launch);
 std::vector<Trial> planSingleBranchB2B(const llvm::Module &, const Candidate &, CleanupMode,
                                        llvm::function_ref<int(const llvm::Instruction &)> intrinsicCost,
                                        llvm::function_ref<int(const llvm::Instruction &)> anchorCost,
                                        llvm::function_ref<int(llvm::Type *)> anchorSelectCost,
-                                       llvm::function_ref<int(llvm::Type *)> anchorPhiCost);
+                                       llvm::function_ref<int(llvm::Type *)> anchorPhiCost, AnchorGap gap = AnchorGap::Auto);
 }

@@ -139,6 +139,7 @@ def run(*args):
     subprocess.run(list(map(str, args)), check=True)
 
 
+
 with tempfile.TemporaryDirectory() as directory:
     root = Path(directory)
     for shape, (left, right) in cases.items():
@@ -152,7 +153,7 @@ with tempfile.TemporaryDirectory() as directory:
             args = [search, "--ir", source, "--function", "choose", "--split", "B2",
                     "--left", "B4" if swapped else "B3", "--right", "B3" if swapped else "B4",
                     "--structural", "1", "--cleanup", "darm-cfg-dce-instcombine",
-                    "--b2b-strategy", "anchor", "--tti-worker", worker]
+                    "--b2b-strategy", "anchor", "--anchor-mode", "legacy", "--tti-worker", worker]
             run(*args, "--out", fused, "--debug-dir", out / "reports")
             report = out / "reports/trial-0/trial.json"
             trial = json.loads(report.read_text())
@@ -183,7 +184,7 @@ with tempfile.TemporaryDirectory() as directory:
 
     for shape in cases:
         out = root / f"{shape}-0"
-        run(greedy, out / "source.ll", "choose", out / "auto")
+        run(greedy, out / "source.ll", "choose", out / "auto", "--anchor-mode", "legacy")
         summary = json.loads((out / "auto/summary.json").read_text())
         assert summary["shared_arm_trials"] and summary["b2b_strategy"] == "anchor"
         assert summary["pipeline_version"] == "v2"
@@ -218,7 +219,9 @@ with tempfile.TemporaryDirectory() as directory:
                           ("--b2b-planner", "unified"), ("--b2b-unified-extended", "on"),
                           ("--speculation", "cost"), ("--gap-trials", "4"),
                           ("--gap-replay", "unused"),
-                          ("--cleanup", "o3"), ("--profile-bundle", "unused")):
+                          ("--cleanup", "o3"), ("--anchor-gap", "both"), ("--anchor-gap", "linear"),
+                          ("--anchor-linear-require", "any"), ("--anchor-select-dedup", "1"),
+                          ("--anchor-uniform-missing", "allow"), ("--anchor-auto-assume", "diverge"), ("--profile-bundle", "unused")):
         rejected = subprocess.run([str(search), "--ir", str(source), "--function", "choose",
                                    "--out", str(root / "rejected.ll"), option, value],
                                   capture_output=True, text=True)

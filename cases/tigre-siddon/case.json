@@ -255,5 +255,18 @@
     "fusion_performed": false,
     "native_darm_scoring": true,
     "darm_candidate_sorter_used": false
+  },
+  "anchor_workgroups": {
+    "tigre": {
+      "function": "_Z19kernelPixelDetector8GeometryPfiiP13__hip_texture",
+      "shape": [
+        9,
+        9,
+        9
+      ],
+      "sources": [
+        "srad-stability/20261120-v2/tigre.hip:66"
+      ]
+    }
   }
 }

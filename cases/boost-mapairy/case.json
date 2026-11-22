@@ -305,5 +305,18 @@
       "scope": "same LLVM IR used by default code object",
       "input_sha256": "28d054d3e1929117ebf82f9d44574486aa3d83178a92675d2081012fb2c9f141"
     }
+  },
+  "anchor_workgroups": {
+    "MapAiry": {
+      "function": "evaluate",
+      "shape": [
+        256,
+        1,
+        1
+      ],
+      "sources": [
+        "MapAiry/65539 at /data/home/chh/v2-runtime/cases/mapairy/inputs/65539/input.txt:3"
+      ]
+    }
   }
 }

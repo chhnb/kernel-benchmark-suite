@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
-"""Rebuild the anchor release references from their frozen IR inputs."""
+"""Replay the Anchor release from frozen IR and check both current modes."""
 
 import argparse
 from concurrent.futures import ThreadPoolExecutor
 import hashlib
 import json
 import os
+import re
 from pathlib import Path
 import shutil
 import subprocess
@@ -45,6 +46,126 @@ def ensure_frozen_source(path, content):
             raise ValueError(f"existing input differs from frozen input: {path}")
 
 
+def verify_lud8_shape(case_out, env):
+    # Replay the selected writeback on the exact same parent IR without the
+    # explicit launch shape. This detects a missing shape in the release flow.
+    folder = case_out / "default"
+    active = folder / "active"
+    summary = json.loads((active / "summary.json").read_text())
+    for round_row in summary["rounds"]:
+        if not round_row["selected"]:
+            continue
+        selected = folder / round_row["selected"]
+        trial_path = selected / "structural/trial-0/trial.json"
+        if not trial_path.exists():
+            continue
+        trial = json.loads(trial_path.read_text())
+        if trial.get("anchor", {}).get("emission") == "guarded-linear":
+            break
+    else:
+        raise ValueError("LUD8 shaped search did not commit guarded writeback")
+    if trial["anchor"]["wave"]["classification"] != "must-diverge":
+        raise ValueError("LUD8 shaped writeback lacks its must-diverge exemption")
+
+    command = json.loads((selected / "request.json").read_text())["argv"]
+    pos = command.index("--anchor-wave-shape")
+    del command[pos:pos + 2]
+    command[command.index("--debug-dir") + 1] = str(case_out / "missing-shape")
+    command[command.index("--out") + 1] = str(case_out / "missing-shape.ll")
+    result = subprocess.run(command, cwd=folder, env=env, capture_output=True, text=True)
+    (case_out / "missing-shape.log").write_text(result.stdout + result.stderr)
+    path = case_out / "missing-shape/trial-0/trial.json"
+    report = json.loads(path.read_text())
+    guarded = [layout for layout in report["layout_profitability"]
+               if layout["anchor"]["emission"] == "guarded-linear" and layout["tti_eligible"]]
+    if (result.returncode not in (0, 4)
+            or "workgroup shape not provided" not in result.stderr
+            or report["anchor"]["wave"]["classification"] != "unknown"
+            or not guarded or any(not g.get("uniform_gate_rejection") for g in guarded)):
+        raise ValueError("LUD8 unshaped writeback escaped the gate")
+    return True
+
+
+def rebuild_binary(final, binary, llvm, rocm, ptxas, ptxas_sha, env, log, codegen):
+    if binary.suffix == ".hsaco":
+        if codegen.get("correct_srad32_launch_bound"):
+            # The frozen SRAD32 input uses the 256-thread LLVM bound. The
+            # release comparison uses its documented 1024-thread diagnostic build.
+            corrected = binary.with_suffix(".launch.ll")
+            text, replacements = re.subn(r'"amdgpu-flat-work-group-size"="1,256"',
+                                         '"amdgpu-flat-work-group-size"="1,1024"',
+                                         final.read_text())
+            if not replacements and '"amdgpu-flat-work-group-size"="1,1024"' not in text:
+                raise ValueError("SRAD32 diagnostic build lacks the expected launch bound")
+            corrected.write_text(text)
+            final = corrected
+        compile_kernel(final, binary, llvm, rocm,
+                       features=codegen.get("amdgpu_features", "+sramecc,-xnack"), env=env)
+        return
+
+    if digest(ptxas.read_bytes()) != ptxas_sha:
+        raise ValueError("ptxas checksum mismatch")
+    post, ptx = binary.with_suffix(".post.ll"), binary.with_suffix(".ptx")
+    commands = ([llvm / "opt", final, "-O3", "-verify-each", "-S", "-o", post],
+                [llvm / "llc", post, "-O3", "-march=nvptx64", "-mcpu=sm_70",
+                 "-mattr=+ptx70", "-o", ptx],
+                [ptxas, "-O3", "-arch=sm_86", ptx, "-o", binary])
+    for command in commands:
+        subprocess.run(command, env=env, stdout=log, stderr=log, check=True)
+
+
+def verify_profiles(row, source, case_out, tool_root, llvm, rocm, ptxas, ptxas_sha, env):
+    expected = row["anchor_profiles"]
+    metadata = json.loads((ROOT / row["case_metadata"]).read_text())["anchor_workgroups"][row["case"]]
+    if metadata != {"function": row["function"], **row["workgroup"]}:
+        raise ValueError(f"{row['case']}: manifest and case workgroup disagree")
+    shape = ",".join(map(str, metadata["shape"]))
+    profiles = {}
+    options_by_mode = {
+        "default": ["--anchor-wave-shape", shape],
+        "legacy": ["--anchor-mode", "legacy"],
+    }
+    for mode, options in options_by_mode.items():
+        folder = case_out / mode
+        folder.mkdir()
+        command = [tool_root / "build/decision-fuse/decision-greedy", source, row["function"], tool_root,
+                   "active", *options]
+        with (folder / "run.log").open("w") as log:
+            subprocess.run(command, cwd=folder, env=env, stdout=log, stderr=log, check=True)
+            final = folder / "active/final.ll"
+            subprocess.run([llvm / "opt", "-verify", "-disable-output", final],
+                           env=env, stdout=log, stderr=log, check=True)
+        summary = json.loads((folder / "active/summary.json").read_text())
+        actual = {"commits": summary["commits"], "tti": summary["final_cost"],
+                  "ir_sha256": digest(final.read_bytes())}
+        if summary["status"] != "completed":
+            raise ValueError(f"{row['case']}: {mode} search incomplete")
+        profiles[mode] = actual
+    delta = profiles["default"]["tti"] - profiles["legacy"]["tti"]
+    if delta > 0:
+        print(f"WARNING: {row['case']}: default TTI {profiles['default']['tti']} > "
+              f"legacy {profiles['legacy']['tti']} (+{delta})", file=sys.stderr, flush=True)
+    for mode, actual in profiles.items():
+        frozen = expected[mode]
+        if any(frozen[key] != value for key, value in actual.items()):
+            raise ValueError(f"{row['case']}: {mode} profile differs: {actual} != {frozen}")
+        if "binary" in frozen:
+            folder = case_out / mode
+            final = folder / "active/final.ll"
+            fmt = frozen["binary"]["format"]
+            binary = folder / ("kernel." + fmt)
+            with (folder / "build.log").open("w") as log:
+                rebuild_binary(final, binary, llvm, rocm, ptxas, ptxas_sha, env, log,
+                               row.get("anchor_codegen", {}))
+            actual["binary"] = {"format": fmt, "sha256": digest(binary.read_bytes())}
+            if actual["binary"] != frozen["binary"]:
+                raise ValueError(f"{row['case']}: {mode} machine code differs from the frozen profile")
+    missing_shape_verified = verify_lud8_shape(case_out, env) if row["case"] == "LUD8" else None
+    print(f"{row['case']}: both profiles verified", flush=True)
+    return {"case": row["case"], "verified": True, "profiles": profiles, "tti_delta": delta,
+            **({"lud8_missing_shape_verified": missing_shape_verified} if missing_shape_verified is not None else {})}
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--manifest", type=Path, default=DEFAULT_MANIFEST)
@@ -61,7 +182,8 @@ def main():
 
     manifest = json.loads(args.manifest.read_text())
     packed = load_references(args.manifest, manifest)
-    cases = [row for row in manifest["cases"] if not args.case or row["case"] in args.case]
+    release_cases = manifest["cases"] + manifest.get("anchor_additional_cases", [])
+    cases = [row for row in release_cases if not args.case or row["case"] in args.case]
     if args.case and set(args.case) != {row["case"] for row in cases}:
         parser.error("--case contains an unknown name")
     env = os.environ.copy()
@@ -75,13 +197,24 @@ def main():
     out.mkdir(parents=True, exist_ok=False)
     tool_root = args.tool_root.resolve()
     ptxas = args.ptxas or Path(manifest["tools"]["ptxas"]["path"])
+    ptxas_sha = manifest["tools"]["ptxas"]["sha256"]
 
     def reproduce(row):
         name = row["case"]
         source = Path(row["source_path"])
-        active = Path(row["serialization_output_path"])
         case_out = out / name
         case_out.mkdir()
+        if "anchor_profiles" in row:
+            if "archive_entry" in row["input"]:
+                content = packed[row["input"]["archive_entry"]]
+                if digest(content) != row["input"]["sha256"]:
+                    raise ValueError(f"{name}: frozen input checksum mismatch")
+                ensure_frozen_source(source, content)
+            if digest(source.read_bytes()) != row["input"]["sha256"]:
+                raise ValueError(f"{name}: frozen input checksum mismatch")
+            return verify_profiles(row, source, case_out, tool_root, llvm, args.rocm, ptxas, ptxas_sha, env)
+
+        active = Path(row["serialization_output_path"])
         if active.exists():
             raise FileExistsError(f"canonical Greedy output already exists: {active}")
         active.parent.mkdir(parents=True, exist_ok=True)
@@ -104,16 +237,7 @@ def main():
                      tool_root, active])
                 final = active / "final.ll"
                 run([llvm / "opt", "-verify", "-disable-output", final])
-                if binary.suffix == ".hsaco":
-                    compile_kernel(final, binary, llvm, args.rocm, env=env)
-                else:
-                    if digest(ptxas.read_bytes()) != manifest["tools"]["ptxas"]["sha256"]:
-                        raise ValueError("ptxas checksum mismatch")
-                    post, ptx = case_out / "post.ll", case_out / "kernel.ptx"
-                    run([llvm / "opt", final, "-O3", "-verify-each", "-S", "-o", post])
-                    run([llvm / "llc", post, "-O3", "-march=nvptx64", "-mcpu=sm_70", "-mattr=+ptx70",
-                         "-o", ptx])
-                    run([ptxas, "-O3", "-arch=sm_86", ptx, "-o", binary])
+                rebuild_binary(final, binary, llvm, args.rocm, ptxas, ptxas_sha, env, log, {})
                 result = json.loads((active / "summary.json").read_text())
                 if result["status"] != "completed" or result["b2b_strategy"] != "anchor":
                     raise ValueError(f"{name}: incomplete anchor search")
@@ -130,6 +254,10 @@ def main():
 
     with ThreadPoolExecutor(max_workers=args.jobs) as pool:
         results = list(pool.map(reproduce, cases))
+    warnings = [r for r in results if r.get("tti_delta", 0) > 0]
+    if warnings:
+        print("Default TTI above legacy: " + ", ".join(
+            f"{r['case']} +{r['tti_delta']}" for r in warnings), file=sys.stderr)
     (out / "results.json").write_text(json.dumps(results, indent=2) + "\n")
 
 

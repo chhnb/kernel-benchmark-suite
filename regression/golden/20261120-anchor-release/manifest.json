@@ -88,6 +88,38 @@
         },
         "commits": 224,
         "tti": 2747
+      },
+      "workgroup": {
+        "shape": [
+          64,
+          1,
+          1
+        ],
+        "sources": [
+          "vllm/64K at /data/home/chh/simplify-v2/build/b2b-layouts/k16-gpu/generated-vllm/65536/input.txt:3",
+          "vllm/128K at /data/home/chh/simplify-v2/build/b2b-layouts/k16-gpu/generated-vllm/131072/input.txt:3"
+        ]
+      },
+      "case_metadata": "cases/vllm-quant/case.json",
+      "anchor_profiles": {
+        "default": {
+          "commits": 225,
+          "tti": 2619,
+          "ir_sha256": "186bc0f6e7fb590b52b30907d35809155695c40a6ee6b1ca7178a8b8fc4eb379",
+          "binary": {
+            "format": "hsaco",
+            "sha256": "9aa97bca3906c0d31452e4594b5fc17c535bce25ba5e7e4df92e5ff6841c5fa6"
+          }
+        },
+        "legacy": {
+          "commits": 225,
+          "tti": 2619,
+          "ir_sha256": "186bc0f6e7fb590b52b30907d35809155695c40a6ee6b1ca7178a8b8fc4eb379",
+          "binary": {
+            "format": "hsaco",
+            "sha256": "9aa97bca3906c0d31452e4594b5fc17c535bce25ba5e7e4df92e5ff6841c5fa6"
+          }
+        }
       }
     },
     {
@@ -137,6 +169,40 @@
         },
         "commits": 26,
         "tti": 4041
+      },
+      "workgroup": {
+        "shape": [
+          256,
+          1,
+          1
+        ],
+        "sources": [
+          "MapAiry/65539 at /data/home/chh/v2-runtime/cases/mapairy/inputs/65539/input.txt:3"
+        ]
+      },
+      "case_metadata": "cases/boost-mapairy/case.json",
+      "anchor_profiles": {
+        "default": {
+          "commits": 30,
+          "tti": 3997,
+          "ir_sha256": "25a2d3b390209e09433d77547d88fc59cc4e121cad8470316142033ed81305b1",
+          "binary": {
+            "format": "hsaco",
+            "sha256": "030b9488c8bb5b7cf98479f218adaa85aeaec30e404f7efd4fc2ba4ad0167afc"
+          }
+        },
+        "legacy": {
+          "commits": 31,
+          "tti": 4065,
+          "ir_sha256": "388930dd748222e1e2b4e4eccbd6d43156c7f3d6d0a7baa33e9dbc1b7d3dd252",
+          "binary": {
+            "format": "hsaco",
+            "sha256": "5cc3f528f4f1f08e51c56f04a73e0593d2ebb703076e2950f275eb5058ccbc21"
+          }
+        }
+      },
+      "anchor_codegen": {
+        "amdgpu_features": "+sramecc"
       }
     },
     {
@@ -186,6 +252,37 @@
         },
         "commits": 5,
         "tti": 948
+      },
+      "workgroup": {
+        "shape": [
+          9,
+          9,
+          9
+        ],
+        "sources": [
+          "srad-stability/20261120-v2/tigre.hip:66"
+        ]
+      },
+      "case_metadata": "cases/tigre-siddon/case.json",
+      "anchor_profiles": {
+        "default": {
+          "commits": 5,
+          "tti": 944,
+          "ir_sha256": "5aea08d6b2a5febf5eb480f283bde146e3a1c6b972dcf3fd51cdec94d28fdf61",
+          "binary": {
+            "format": "hsaco",
+            "sha256": "687d2a0b1088c123af6496b3435d5555b5b9676ff75fd573a9154e616cf9ae97"
+          }
+        },
+        "legacy": {
+          "commits": 6,
+          "tti": 946,
+          "ir_sha256": "ac3d39d3f979a4237b9dd5875e114da10a2e047647af3c2e4d02a7ef15b9f20a",
+          "binary": {
+            "format": "hsaco",
+            "sha256": "02452bc591290cb318b1ed9d876a907a56fd849fa9094e4efd74a76892e83a9a"
+          }
+        }
       }
     },
     {
@@ -235,6 +332,37 @@
         },
         "commits": 2,
         "tti": 1751
+      },
+      "workgroup": {
+        "shape": [
+          128,
+          1,
+          1
+        ],
+        "sources": [
+          "HLLD/65536 at /data/home/chh/simplify-v2/build/b2b-layouts/frozen-v2-continuity-20261119/hlld/65536/input.txt:3"
+        ]
+      },
+      "case_metadata": "cases/cholla-hlld/case.json",
+      "anchor_profiles": {
+        "default": {
+          "commits": 5,
+          "tti": 1696,
+          "ir_sha256": "0ef79f2ea967b3a7b7ebab420c2667a64cb9099572d1fd97bd110a1cb0ed05de",
+          "binary": {
+            "format": "hsaco",
+            "sha256": "3aa2cad420017f246aa3f3f148eb23baa0d834dd92611c3bf68196393ceaf9a3"
+          }
+        },
+        "legacy": {
+          "commits": 5,
+          "tti": 1696,
+          "ir_sha256": "0ef79f2ea967b3a7b7ebab420c2667a64cb9099572d1fd97bd110a1cb0ed05de",
+          "binary": {
+            "format": "hsaco",
+            "sha256": "3aa2cad420017f246aa3f3f148eb23baa0d834dd92611c3bf68196393ceaf9a3"
+          }
+        }
       }
     },
     {
@@ -284,6 +412,37 @@
         },
         "commits": 1,
         "tti": 282
+      },
+      "workgroup": {
+        "shape": [
+          64,
+          1,
+          1
+        ],
+        "sources": [
+          "retest-release-315.BRiNaz/nqu-original.hip:41,85"
+        ]
+      },
+      "case_metadata": "cases/nqu64/case.json",
+      "anchor_profiles": {
+        "default": {
+          "commits": 2,
+          "tti": 274,
+          "ir_sha256": "383e6dfc7e111895537ba15f78c40824d8cac68a1b0843b08a5f6279c34331c4",
+          "binary": {
+            "format": "hsaco",
+            "sha256": "83bec1d3bb5b164770921cd52763d70670efa5ea12ab5f04082391abbf74e97b"
+          }
+        },
+        "legacy": {
+          "commits": 2,
+          "tti": 274,
+          "ir_sha256": "383e6dfc7e111895537ba15f78c40824d8cac68a1b0843b08a5f6279c34331c4",
+          "binary": {
+            "format": "hsaco",
+            "sha256": "83bec1d3bb5b164770921cd52763d70670efa5ea12ab5f04082391abbf74e97b"
+          }
+        }
       }
     },
     {
@@ -333,6 +492,37 @@
         },
         "commits": 1,
         "tti": 215
+      },
+      "workgroup": {
+        "shape": [
+          32,
+          1,
+          1
+        ],
+        "sources": [
+          "auto-darm-release-compare/20261120-v1/sort.hip:17,92\u201393"
+        ]
+      },
+      "case_metadata": "cases/ms32/case.json",
+      "anchor_profiles": {
+        "default": {
+          "commits": 2,
+          "tti": 198,
+          "ir_sha256": "f95ad2fe62d67c4a44eec0fc5a2c6ef387c9bed934f1410918cbcc27af599714",
+          "binary": {
+            "format": "hsaco",
+            "sha256": "1be889a67dbd43dd8d63e0b6d5cee7fe26584fa22bb23da67878cd30b6722054"
+          }
+        },
+        "legacy": {
+          "commits": 2,
+          "tti": 198,
+          "ir_sha256": "f95ad2fe62d67c4a44eec0fc5a2c6ef387c9bed934f1410918cbcc27af599714",
+          "binary": {
+            "format": "hsaco",
+            "sha256": "1be889a67dbd43dd8d63e0b6d5cee7fe26584fa22bb23da67878cd30b6722054"
+          }
+        }
       }
     },
     {
@@ -382,6 +572,37 @@
         },
         "commits": 17,
         "tti": 1138
+      },
+      "workgroup": {
+        "shape": [
+          32,
+          1,
+          1
+        ],
+        "sources": [
+          "auto-darm-release-compare/20261120-v1/sort.hip:17,85\u201386"
+        ]
+      },
+      "case_metadata": "cases/pcm32/case.json",
+      "anchor_profiles": {
+        "default": {
+          "commits": 17,
+          "tti": 1138,
+          "ir_sha256": "09305dd6ce16fd9dd197ddd3fa7a12ee97de69086bc3f7087e738fc1eea1c7f2",
+          "binary": {
+            "format": "hsaco",
+            "sha256": "a0a8df33ee604bc77519a3887af2c8663afa6c7f0cd609dd392d136a815ec116"
+          }
+        },
+        "legacy": {
+          "commits": 17,
+          "tti": 1138,
+          "ir_sha256": "09305dd6ce16fd9dd197ddd3fa7a12ee97de69086bc3f7087e738fc1eea1c7f2",
+          "binary": {
+            "format": "hsaco",
+            "sha256": "a0a8df33ee604bc77519a3887af2c8663afa6c7f0cd609dd392d136a815ec116"
+          }
+        }
       }
     },
     {
@@ -431,6 +652,37 @@
         },
         "commits": 3,
         "tti": 455
+      },
+      "workgroup": {
+        "shape": [
+          16,
+          16,
+          1
+        ],
+        "sources": [
+          "SRAD16/256 at /data/home/chh/simplify-v2/build/dp1-removal/srad1/16/input.txt:3"
+        ]
+      },
+      "case_metadata": "cases/srad/case.json",
+      "anchor_profiles": {
+        "default": {
+          "commits": 3,
+          "tti": 446,
+          "ir_sha256": "84495226b219c7d3c405401e962a85122cd209101bc70ff2e7103a658ae8f55a",
+          "binary": {
+            "format": "hsaco",
+            "sha256": "4f105a815f9370e3a983092c84d558f7b05dd76ff6e170dc6deffc3f79aad925"
+          }
+        },
+        "legacy": {
+          "commits": 4,
+          "tti": 452,
+          "ir_sha256": "a874ce3e6de7dc81c55d058eafed0599c131723fcd46141854100d0f934a60ec",
+          "binary": {
+            "format": "hsaco",
+            "sha256": "2a6a3d958d37e110a4ca5107ca9346c31aa7e8393524dd4b95de2df56385e16e"
+          }
+        }
       }
     },
     {
@@ -480,6 +732,40 @@
         },
         "commits": 3,
         "tti": 455
+      },
+      "workgroup": {
+        "shape": [
+          32,
+          32,
+          1
+        ],
+        "sources": [
+          "SRAD32/256 at /data/home/chh/simplify-v2/build/dp1-removal/srad1/32/input.txt:3"
+        ]
+      },
+      "case_metadata": "cases/srad/case.json",
+      "anchor_profiles": {
+        "default": {
+          "commits": 3,
+          "tti": 446,
+          "ir_sha256": "5f76db84cd3958b85edbe91394ef7aba54672e0d44e548e721a94b4c8eaef638",
+          "binary": {
+            "format": "hsaco",
+            "sha256": "9dde8dbb06009f0f0b609d2fde1a7cd20f31e98a70b20af3ce397a6991594dbf"
+          }
+        },
+        "legacy": {
+          "commits": 4,
+          "tti": 452,
+          "ir_sha256": "775c85f9b192b53cc82078d603a99536da3918500fcdffdf6f51604a439a9fff",
+          "binary": {
+            "format": "hsaco",
+            "sha256": "d7a53d5860abb8177c7beefc47b54b8be0df858069db738ec8780e744e316e23"
+          }
+        }
+      },
+      "anchor_codegen": {
+        "correct_srad32_launch_bound": true
       }
     },
     {
@@ -529,6 +815,38 @@
         },
         "commits": 21,
         "tti": 1369
+      },
+      "workgroup": {
+        "shape": [
+          256,
+          1,
+          1
+        ],
+        "sources": [
+          "Landau/mixed at /data/home/chh/kernel-benchmark-suite/build/fluid-sims/landau-next.6rQgJC/mixed/input.txt:3",
+          "Landau/coherent at /data/home/chh/kernel-benchmark-suite/build/fluid-sims/landau-next.6rQgJC/coherent/input.txt:3"
+        ]
+      },
+      "case_metadata": "cases/boost-landau/case.json",
+      "anchor_profiles": {
+        "default": {
+          "commits": 22,
+          "tti": 1635,
+          "ir_sha256": "0a776f8358682bca451208efdec2de8b7c23c985990debefa5b4eaa1f69ea944",
+          "binary": {
+            "format": "hsaco",
+            "sha256": "a74f636a78aa5c595ba9ea2675494d942064fe7f5cd499d7a7323c501cb1019f"
+          }
+        },
+        "legacy": {
+          "commits": 20,
+          "tti": 1708,
+          "ir_sha256": "fb7a3852ffc14afc4fea138e9f06db4d8b6f77432897398ab73f0cc72c8b4bf5",
+          "binary": {
+            "format": "hsaco",
+            "sha256": "2c49a3bcb7798476672355fa5c579a6c917d3ad84668f8d302b8e065ae21d669"
+          }
+        }
       }
     },
     {
@@ -578,6 +896,37 @@
         },
         "commits": 0,
         "tti": 1926
+      },
+      "workgroup": {
+        "shape": [
+          1024,
+          1,
+          1
+        ],
+        "sources": [
+          "SW2D/258x259 at /data/home/chh/simplify-v2/build/b2b-layouts/anchor-ablation/heldout/SW2D/anchor-holdout-synthetic-v1/input.txt:3"
+        ]
+      },
+      "case_metadata": "cases/sw2d/case.json",
+      "anchor_profiles": {
+        "default": {
+          "commits": 1,
+          "tti": 1925,
+          "ir_sha256": "2c231580ab79542a9998f2fd1ef0cdf765e05f46794ca5fd4af6cddfb159d6b1",
+          "binary": {
+            "format": "hsaco",
+            "sha256": "cd0e00d276836e765fe1dba400bfab62312a79121226fcc8ef4e4d7fa95b3518"
+          }
+        },
+        "legacy": {
+          "commits": 1,
+          "tti": 1925,
+          "ir_sha256": "2c231580ab79542a9998f2fd1ef0cdf765e05f46794ca5fd4af6cddfb159d6b1",
+          "binary": {
+            "format": "hsaco",
+            "sha256": "cd0e00d276836e765fe1dba400bfab62312a79121226fcc8ef4e4d7fa95b3518"
+          }
+        }
       }
     },
     {
@@ -627,6 +976,37 @@
         },
         "commits": 3,
         "tti": 282
+      },
+      "workgroup": {
+        "shape": [
+          16,
+          16,
+          1
+        ],
+        "sources": [
+          "cases/ced/harness/bench.hip:14"
+        ]
+      },
+      "case_metadata": "cases/ced/case.json",
+      "anchor_profiles": {
+        "default": {
+          "commits": 3,
+          "tti": 281,
+          "ir_sha256": "417664a60f8b61f295edc5ea6f6eebd9c17760d6f19cfedb6ff7540778dae78e",
+          "binary": {
+            "format": "hsaco",
+            "sha256": "c9f5da8a8caab4cc492af650f8663fae867cb65356aaa16a8c49ce48223dae38"
+          }
+        },
+        "legacy": {
+          "commits": 5,
+          "tti": 280,
+          "ir_sha256": "0db3898d2be02dd29bcae14c6522ea6ed86992e931fdf9861eea9b6caad8fe7a",
+          "binary": {
+            "format": "hsaco",
+            "sha256": "a213f9bb1677d2079917ec3398dcb902cc5eabda8dd04353c8aa8799bfd5a93b"
+          }
+        }
       }
     },
     {
@@ -676,6 +1056,37 @@
         },
         "commits": 23,
         "tti": 429
+      },
+      "workgroup": {
+        "shape": [
+          128,
+          1,
+          1
+        ],
+        "sources": [
+          "cases/tpacf/harness/bench.hip:37"
+        ]
+      },
+      "case_metadata": "cases/tpacf/case.json",
+      "anchor_profiles": {
+        "default": {
+          "commits": 23,
+          "tti": 325,
+          "ir_sha256": "bc5b0ff9d9a58929c405bb97dd7af9e8c19b5239f2a2052282990be50633c781",
+          "binary": {
+            "format": "hsaco",
+            "sha256": "3853cc72321f0c31102fbfe7b9b80a3258275103448e1437e0db0837dce6d65f"
+          }
+        },
+        "legacy": {
+          "commits": 23,
+          "tti": 325,
+          "ir_sha256": "bc5b0ff9d9a58929c405bb97dd7af9e8c19b5239f2a2052282990be50633c781",
+          "binary": {
+            "format": "hsaco",
+            "sha256": "3853cc72321f0c31102fbfe7b9b80a3258275103448e1437e0db0837dce6d65f"
+          }
+        }
       }
     },
     {
@@ -725,6 +1136,38 @@
         },
         "commits": 2,
         "tti": 210
+      },
+      "workgroup": {
+        "shape": [
+          16,
+          16,
+          1
+        ],
+        "sources": [
+          "SRAD-stage2/256 at /data/home/chh/simplify-v2/build/b2b-layouts/anchor-ablation/heldout/SRAD-stage2/anchor-holdout-synthetic-v1/256/input.txt:3",
+          "SRAD-stage2/1024 at /data/home/chh/simplify-v2/build/b2b-layouts/anchor-ablation/heldout/SRAD-stage2/anchor-holdout-synthetic-v1/1024/input.txt:3"
+        ]
+      },
+      "case_metadata": "cases/srad-stage2/case.json",
+      "anchor_profiles": {
+        "default": {
+          "commits": 2,
+          "tti": 210,
+          "ir_sha256": "b80a9581d7c8cb5e652c0b80b6658ffa98000051115380f910fc4e6c69272de8",
+          "binary": {
+            "format": "hsaco",
+            "sha256": "67e86ccd15676d38fb247efa7f161ac6f0cb42dc6a040973de329a86763f296a"
+          }
+        },
+        "legacy": {
+          "commits": 2,
+          "tti": 210,
+          "ir_sha256": "b80a9581d7c8cb5e652c0b80b6658ffa98000051115380f910fc4e6c69272de8",
+          "binary": {
+            "format": "hsaco",
+            "sha256": "67e86ccd15676d38fb247efa7f161ac6f0cb42dc6a040973de329a86763f296a"
+          }
+        }
       }
     },
     {
@@ -774,6 +1217,39 @@
         },
         "commits": 8,
         "tti": 493
+      },
+      "workgroup": {
+        "shape": [
+          256,
+          1,
+          1
+        ],
+        "sources": [
+          "SasPoint5/interval-mixture at /data/home/chh/simplify-v2/build/b2b-layouts/anchor-ablation/heldout/SasPoint5/anchor-holdout-synthetic-v1/interval-mixture/input.txt:3",
+          "SasPoint5/coherent-blocks at /data/home/chh/simplify-v2/build/b2b-layouts/anchor-ablation/heldout/SasPoint5/anchor-holdout-synthetic-v1/coherent-blocks/input.txt:3",
+          "SasPoint5/uniform-01 at /data/home/chh/simplify-v2/build/b2b-layouts/anchor-ablation/heldout/SasPoint5/anchor-holdout-synthetic-v1/uniform-01/input.txt:3"
+        ]
+      },
+      "case_metadata": "cases/boost-saspoint5/case.json",
+      "anchor_profiles": {
+        "default": {
+          "commits": 8,
+          "tti": 487,
+          "ir_sha256": "cddeee0b711c71df961d6790a5d6501a1cab8070c4972dc17e1ee9d5292aab44",
+          "binary": {
+            "format": "cubin",
+            "sha256": "c1e34623ec1e2517a89fc5864712e3edaaac4de9c81ab71685d71ae068fcd183"
+          }
+        },
+        "legacy": {
+          "commits": 8,
+          "tti": 491,
+          "ir_sha256": "107673959aa91db3f36aea8a1fee279d01c65b9b5fff34f5eda6da15fa356f2e",
+          "binary": {
+            "format": "cubin",
+            "sha256": "d79a4f5f5b6cff913644f66bba6a958b3541a810ffe83a8de5f9ababbe43456d"
+          }
+        }
       }
     },
     {
@@ -823,6 +1299,37 @@
         },
         "commits": 2,
         "tti": 5577
+      },
+      "workgroup": {
+        "shape": [
+          128,
+          1,
+          1
+        ],
+        "sources": [
+          "HiPIMS-George/128x128 at /data/home/chh/simplify-v2/build/b2b-layouts/anchor-ablation/heldout/HiPIMS-George/anchor-holdout-synthetic-v1/input.txt:3"
+        ]
+      },
+      "case_metadata": "cases/hipims/case.json",
+      "anchor_profiles": {
+        "default": {
+          "commits": 5,
+          "tti": 5572,
+          "ir_sha256": "f22721c031b2847ee682e82637ff02cced9fc7e1b5ff99396fa5c68f56c74432",
+          "binary": {
+            "format": "cubin",
+            "sha256": "5775bc0c9c040ba7b55d84bd29d0719342a2f38043dff855fea723a9c5510b3b"
+          }
+        },
+        "legacy": {
+          "commits": 5,
+          "tti": 5572,
+          "ir_sha256": "f22721c031b2847ee682e82637ff02cced9fc7e1b5ff99396fa5c68f56c74432",
+          "binary": {
+            "format": "cubin",
+            "sha256": "5775bc0c9c040ba7b55d84bd29d0719342a2f38043dff855fea723a9c5510b3b"
+          }
+        }
       }
     }
   ],
@@ -3247,5 +3754,44 @@
     "LLVM24_CONFIG": "/data/home/chh/v2-runtime/toolchains/llvm24-config",
     "LLVM24_LIBDIR": "/data/home/chh/v2-runtime/toolchains/llvm24-pinned/lib",
     "LD_LIBRARY_PATH": "/data/home/chh/v2-runtime/toolchains/llvm12-jammy/usr/lib/x86_64-linux-gnu:/data/home/chh/v2-runtime/toolchains/llvm24-pinned/lib:/opt/rocm-6.3.3/lib"
-  }
+  },
+  "anchor_profile_reference_revision": "84e30a76a95bdbae55c66e31e57155c82fbef11e",
+  "anchor_modes": {
+    "default": "classification gate with missing quotes rejected",
+    "legacy": "--anchor-mode legacy"
+  },
+  "anchor_additional_cases": [
+    {
+      "case": "LUD8",
+      "function": "_Z13lud_perimeterPfii",
+      "source_path": "/data/home/chh/simplify-v2/build/lud8-identical-input.6VjBaq/shared.ll",
+      "input": {
+        "sha256": "a52a8746779c561db1be7bc66026508f909e9eeba2223c966d7fe201435782b9"
+      },
+      "workgroup": {
+        "shape": [
+          16,
+          1,
+          1
+        ],
+        "sources": [
+          "darm-paper-repro.AtXc3N/validated-source/LUD/block_size.h:5",
+          "darm-paper-repro.AtXc3N/validated-source/LUD/lud_kernel.hip.cpp:215"
+        ]
+      },
+      "case_metadata": "cases/lud8/case.json",
+      "anchor_profiles": {
+        "default": {
+          "commits": 2,
+          "tti": 637,
+          "ir_sha256": "ef1fa6fd26c94734564b205d4c8b79bb69ec5cc8ace91c88d6163dbad45b4078"
+        },
+        "legacy": {
+          "commits": 1,
+          "tti": 735,
+          "ir_sha256": "526ce2273ff4f2c93cb8ce2d20ac992cdfef6cf31ca24966601954911cb76442"
+        }
+      }
+    }
+  ]
 }

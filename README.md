@@ -10,17 +10,18 @@
 
 处理一棵指定 decision 树时，同时评估相邻 arm 的规范化候选和当前 split 的直接结构候选。结构扫尾处理其他 split。如果不同域的候选争用同一个基本块，且满足当前同后继和共同指令数量的触发条件，就对相关域联合评分。
 
-- B2B 默认 anchor，可显式选择 DARM 或上游 DARM 对照。DP1 的历史入口保存在 pre-dp1-removal。B2R、R2B 和 R2R 使用 DARM。
+- B2B 默认用 Anchor 同时枚举 fork、线性和守护布局。对分支条件逐 wave 分类，必然发散的线性和守护布局按原 TTI 评估，必然一致时仅保留 fork。其余条件要求两侧的 uniform gain 均有报价且非负。可用 `--anchor-mode legacy` 复现旧版 fork 默认。B2R、R2B 和 R2R 使用 DARM，B2B 仍可显式选择 DARM 或原版对照。
+- `decision-greedy` 和 `fusion-search-llvm24` 都接受 `--anchor-wave-shape X,Y,Z`，参数是确切的 launch 形状。发布复验从 manifest 传入逐 case 核实的形状。无参数时使用 IR 的 `reqd_work_group_size`，两者均缺失时日志会提示，分类按 unknown 处理。
 - 合法 trial 依次执行 DARM SimplifyCFG（PHI folding threshold 7）、EarlyCSE、DCE、InstCombine。LLVM24 TTI 要求提交后的成本低于 trial 对照及当前父 IR。
 - 默认 16 路连续队列，使用常驻评分 worker。
 
 ```sh
 tools/build-v1 --search-only  # 已有 LLVM24 worker 时，构建当前驱动
-build/decision-fuse/decision-greedy INPUT.ll FUNCTION NEW_OUTPUT
-python3 tools/run_v1_regression.py --out build/v1-regression-new
+build/decision-fuse/decision-greedy INPUT.ll FUNCTION NEW_OUTPUT --anchor-wave-shape 16,1,1
+python3 regression/verify_anchor_release.py --tool-root . --out build/anchor-release-new
 ```
 
-构建脚本接受 `LLVM_CONFIG` 和 `LLVM24_CONFIG`，报价版本为 LLVM24 `6be16f356d3e`。V2 的 `summary.json` 记录 `pipeline_version: v2` 和 `domain_schedule: ordered`。`tools/run_v1_regression.py` 使用[有序调度冻结清单](regression/greedy-v1/manifest-ordered-20261119.json)，核对 38 个常规配置的提交次数、TTI 和最终 IR。带 `--include-slow` 时同时运行 PCM128/256。[原 v1 清单](regression/greedy-v1/manifest.json)保留历史对照。
+构建脚本接受 `LLVM_CONFIG` 和 `LLVM24_CONFIG`，报价版本为 LLVM24 `6be16f356d3e`。V2 的 `summary.json` 记录 `pipeline_version: v2` 和 `domain_schedule: ordered`。历史 DP1 重放需要单独构建 `pre-dp1-removal` 并向脚本传入 `--tool-root`。`tools/run_v1_regression.py` 使用[有序调度冻结清单](regression/greedy-v1/manifest-ordered-20261119.json)，核对 38 个常规配置的提交次数、TTI 和最终 IR。带 `--include-slow` 时同时运行 PCM128/256。[原 v1 清单](regression/greedy-v1/manifest.json)保留历史对照。
 
 V2 默认保留评分、拒绝原因、重放请求及清理后的候选产物。排查某项改写时可传 `--ir-snapshots full`，同时导出每次试跑的父 IR、对照 IR 和清理前产物。单独执行 `fusion-search-llvm24` 默认导出完整诊断。
 
@@ -28,10 +29,10 @@ V2 默认保留评分、拒绝原因、重放请求及清理后的候选产物�
 
 ```sh
 python3 tools/compile_kernel.py INPUT.ll FUNCTION --llvm12-bin /path/to/llvm12/bin \
-  --rocm /opt/rocm --out kernel.hsaco
+  --rocm /opt/rocm --anchor-wave-shape 16,1,1 --out kernel.hsaco
 ```
 
-这个入口默认执行 V2 融合、LLVM 12 后端和链接，只交付 HSACO。需要保留试跑、IR 和目标文件时，用 `--work-dir` 指定新的目录。默认后端为 gfx906，使用 code object v4。PCM 等直接把融合结果交给 `llc` 的配置可用 `--no-preopt`。可移植 GPU benchmark 使用相同的编译函数，用 `--auto-greedy` 选择融合版本。
+示例使用的形状为 16×1×1，实际运行时传入 kernel 的 launch 形状。这个入口默认执行 V2 融合、LLVM 12 后端和链接，只交付 HSACO。需要保留试跑、IR 和目标文件时，用 `--work-dir` 指定新的目录。默认后端为 gfx906，使用 code object v4。PCM 等直接把融合结果交给 `llc` 的配置可用 `--no-preopt`。可移植 GPU benchmark 使用相同的编译函数，用 `--auto-greedy` 选择融合版本。
 
 ## 从这里开始
 

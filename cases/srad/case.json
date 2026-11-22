@@ -223,5 +223,29 @@
     "fusion_performed": false,
     "native_darm_scoring": true,
     "darm_candidate_sorter_used": false
+  },
+  "anchor_workgroups": {
+    "SRAD16": {
+      "function": "_Z11srad_cuda_1PfS_S_S_S_S_iif",
+      "shape": [
+        16,
+        16,
+        1
+      ],
+      "sources": [
+        "SRAD16/256 at /data/home/chh/simplify-v2/build/dp1-removal/srad1/16/input.txt:3"
+      ]
+    },
+    "SRAD32": {
+      "function": "_Z11srad_cuda_1PfS_S_S_S_S_iif",
+      "shape": [
+        32,
+        32,
+        1
+      ],
+      "sources": [
+        "SRAD32/256 at /data/home/chh/simplify-v2/build/dp1-removal/srad1/32/input.txt:3"
+      ]
+    }
   }
 }

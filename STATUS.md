@@ -1,6 +1,8 @@
 # 当前状态导航
 
-更新于 2026-11-20。Auto Greedy V2 使用 ordered 调度，默认 B2B 为 anchor。
+更新于 2026-11-22。Auto Greedy V2 在 Anchor 发布候选分支使用逐 wave 分类和双侧 uniform gain gate；旧默认可用 `--anchor-mode legacy` 重放。发布清单提供确切 launch 形状。当前候选等待合入发布线。
+
+下表保留 2026-11-20 冻结版本的背景。当前候选的逐输入计时和等价审计见 [第 8 步发布复验](regression/records/anchor-unified-dp-step8-20261122.md)。
 
 | 范围 | 当前状态 |
 |---|---|

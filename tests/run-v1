@@ -28,6 +28,17 @@ fi
   "$root/tests/fusion-search/check-b2b-anchor-segments.cpp" \
   "$root/build/llvm24-tti/b2b_anchor.o" "${anchor_libs[@]}" -o "$queue_test/anchor-segments"
 "$queue_test/anchor-segments"
+read -r -a emitter_libs <<< "$("$LLVM_CONFIG" --ldflags --link-shared --libs --system-libs | tr '\n' ' ')"
+"${CXX:-c++}" "${anchor_cxxflags[@]}" -std=c++17 -I"$root/tools" \
+  "$root/tests/fusion-search/check-b2b-linear-emitter.cpp" \
+  "$root"/build/llvm24-tti/*.o "${emitter_libs[@]}" -o "$queue_test/linear-emitter"
+emitter_fixture="$root/tests/fusion-search/b2b-anchor/auto-guard"
+"$queue_test/linear-emitter" "$emitter_fixture.ll" > "$queue_test/auto-fused.ll"
+"$bindir/opt" -O2 -verify-each -S "$queue_test/auto-fused.ll" -o "$queue_test/auto-opt.ll"
+"$bindir/clang" -O2 "$emitter_fixture-driver.c" "$emitter_fixture.ll" "$queue_test/auto-opt.ll" \
+  -o "$queue_test/auto-check"
+"$queue_test/auto-check"
 python3 "$root/tests/fusion-search/check-score-fingerprints.py"
 python3 "$root/tests/fusion-search/check-tti-quotes.py"
 python3 "$root/tests/fusion-search/check-commit-score-invalidation.py"
+python3 "$root/tests/fusion-search/check-normalize-commit.py" "$root/build/decision-fuse/decision-greedy" "$bindir/opt"

@@ -341,5 +341,18 @@
     "historical_python_runtime": "archive/python-runtime/sw2d-runtime.json"
   },
   "enabled": false,
-  "inactive_reason": "User opted to drop SW2D from current active suite; baseline valid, optimization route lacks accepted timing and prepared DARM has known invalid self-loops. Sources, inputs and prior results retained."
+  "inactive_reason": "User opted to drop SW2D from current active suite; baseline valid, optimization route lacks accepted timing and prepared DARM has known invalid self-loops. Sources, inputs and prior results retained.",
+  "anchor_workgroups": {
+    "SW2D": {
+      "function": "_Z4fluxPdddPiS_S0_S0_S_S_S_S_S_S_S_S_S_S_S_S_iiiddd",
+      "shape": [
+        1024,
+        1,
+        1
+      ],
+      "sources": [
+        "SW2D/258x259 at /data/home/chh/simplify-v2/build/b2b-layouts/anchor-ablation/heldout/SW2D/anchor-holdout-synthetic-v1/input.txt:3"
+      ]
+    }
+  }
 }

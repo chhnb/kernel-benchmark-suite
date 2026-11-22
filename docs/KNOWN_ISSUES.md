@@ -59,6 +59,11 @@ vLLM/Map-Airy输入已改为运行时生成；随机输入不纳入Git。旧Qwen
 
 SRAD32 的冻结件和诊断构建见[重建核验记录](../regression/records/anchor-release-rebuild-20261120.md)。
 
+## Anchor B2B 一致代价 gate 的性能取舍
+
+- TIGRE 的 6c R 配置比旧默认 D 慢约 0.6%。分支依赖运行时数据，线性布局的两侧 uniform gain 为 +1 和 +9，满足当前 gate。 [6c 记录](../regression/records/anchor-unified-dp-step6c-20261122.md)
+- 对无法证明必然发散的分支，发布候选要求两侧 uniform gain 均有报价且非负。按 6c 冻结输入，这放弃了 Map-Airy mixed 约 6.7%、Landau mixed 约 19.6% 和 SasPoint5 interval-mixture 约 6.5% 的线性布局收益，同时避免了 Landau coherent 约 30% 和 SasPoint5 coherent/uniform 约 17%–21% 的退化。这个取舍针对跨输入稳定性。 [6c 的逐输入比较](../regression/records/anchor-unified-dp-step6c-20261122.md)
+
 ## PCM32：TTI 保守漏判
 
 第 10 步的同父 R2R 在 LLVM12 O3 后的 throughput TTI 增加 124，实测耗时下降 **5.74%**。发布 Greedy 的 `trial-33` 增加 202，实测耗时下降 **5.71%**。两者使用各自的父状态作对照。 [第 10 步计时（`617b52a`）](https://github.com/chhnb/kernel-benchmark-suite/blob/617b52a/regression/records/cleanup-extended-20261120.md) · [O3 报价和运行时计数（`90c819b`）](https://github.com/chhnb/kernel-benchmark-suite/blob/90c819b/regression/records/pcm32-r2r-runtime-20261120.md) · [trial-33（`81bbd4a`）](https://github.com/chhnb/kernel-benchmark-suite/blob/81bbd4a/regression/records/accept-rule-eval-20261121.md)
@@ -73,4 +78,34 @@ SRAD32 的冻结件和诊断构建见[重建核验记录](../regression/records/
 | Occupancy 感知选择 | 低驻留时统一改用 latency 的启发式未提高历史转移的方向一致率。RIRv2 在该 PCM32 实例上接受，完整前瞻评估停于 NQU64 的 A/A 门槛 | [occupancy-aware-cost `c43d1b7`](https://github.com/chhnb/kernel-benchmark-suite/blob/c43d1b7/regression/records/occupancy-aware-cost-20261120.md)，[逐规则评估 `81bbd4a`](https://github.com/chhnb/kernel-benchmark-suite/blob/81bbd4a/regression/records/accept-rule-eval-20261121.md) |
 | 区域 anchor | 同父对照未达到推广门槛，区域融合保留 DARM | [区域对齐结论 `2c112f0`](https://github.com/chhnb/kernel-benchmark-suite/blob/2c112f0/regression/records/region-anchor-parity-20261121.md) |
 
-发布版本继续使用纯 throughput TTI，沿用统一报价。
+当前 D 和 R 的 PCM32 产物相同。完整搜索现在只拒绝一个 R2R（`trial-33`），在五档同父 cleanup 下都判亏。6.83% 的收益来自历史父路径重建，当前搜索不生成该路径上的两个 R2R 候选。全局加强 cleanup 使 NQU64 慢 9.4%，因此保留发布 cleanup 和 throughput TTI。搜索路径诊断留待第 7b 步。 [第 7 步记录](../regression/records/pcm32-cleanup-strength-20261122.md)
+
+## Auto DARM 对照口径
+
+- MS32 的发布版／原版 Auto DARM 耗时比为 1.020，配对 bootstrap 95% 区间为 [1.010, 1.027]。区间跨过 1.02。 [最终复验记录](../regression/records/final-rerun-20261121.md#gpu-复验)
+- vLLM 的 Auto DARM 对照使用无区域复制版本。上游固定阈值 0.2 的原版命令在首个区域复制处超时，360 秒内未产出完整 IR。 [最终复验记录](../regression/records/final-rerun-20261121.md#gpu-复验)
+
+## DARM R2B 试融的非确定性
+
+HLLD 在固定候选和同一父 IR 上，用 `c7dded07` 的发布二进制重复试融可得到两种不同的 IR。差异包括浮点比较谓词、条件跳转方向和一条 `and i1`，相应候选的 throughput TTI 相差 1。下表列出默认 D 下的 SHA-256 与各 20 次重放的计数。这些候选均未获选，完整提交链和最终 IR 一致。
+
+| 候选 | IR SHA-256 | 次数 | TTI |
+| --- | --- | ---: | ---: |
+| `B9:B22:B12` | `5a7d21cef13e427ed492cf02ac4c0fc9d7662ce1b76da627460a7171eb201d3a` | 17 | 1839 |
+| `B9:B22:B12` | `3d088bc542be3afa7cea5ea719ab027ec04353596c45db55c45c75d64e2de864` | 3 | 1838 |
+| `B9:B21:B12` | `4187ad0d4f4310521ae6fc5d893ff3bca1ba344cd9ebb38e74897313b509cf52` | 17 | 1805 |
+| `B9:B21:B12` | `0e732f1488ffebc94e1cab72ce0daf9d19c9da29756f28e2837e1dccff9fee3e` | 3 | 1804 |
+| `B9:B23:B12` | `dd1b16cbc43fd52e21b74a270680d5885dc1465df59648db24254e19123ff2b4` | 11 | 1844 |
+| `B9:B23:B12` | `0e5a464ec534233a07094584cbd49a3b325d4a404ba7339958d57f886fe462ef` | 9 | 1843 |
+
+根因尚未定位。候选原因包括以指针为键的容器遍历或按地址排序，本分支只登记证据。等价审计仅允许在相同父 IR 上由发布二进制复现的候选号、IR 哈希与对应评分组合。Auto 对照中的其他父状态和序列化路径见 [6b 核验记录](../regression/records/anchor-unified-dp-step6b-20261122.md)。
+
+6c 在相同父 IR 上补做了正常环境和 `setarch x86_64 -R` 的独立进程对照，每个候选每组 20 次：
+
+| 候选 | 正常 ASLR（按上表同候选的哈希顺序） | 关闭 ASLR（同顺序） |
+| --- | ---: | ---: |
+| `B9:B22:B12` | 12 / 8 | 0 / 20 |
+| `B9:B21:B12` | 6 / 14 | 20 / 0 |
+| `B9:B23:B12` | 9 / 11 | 0 / 20 |
+
+关闭 ASLR 后三个候选都只产生一种已有形态，支持地址参与排序或容器遍历的解释。具体容器和代码位置仍未定位。 [6c 重放记录](../regression/records/anchor-unified-dp-step6c-20261122.md#附录-hlld-地址随机化)
