@@ -140,7 +140,7 @@ static int runSearch(int argc, const char *const *argv, TrialWorker *batch = nul
     bool fullSnapshots=true;
     bool controlOnly=false,catalogOnly=false;std::string ttiWorker="/home/chh/kernel-benchmark-suite/tools/run-llvm24-tti";
     for(int i=1;i<argc;++i){std::string k=argv[i];
-      if(k=="--help"){outs()<<"fusion-search v1 --ir FILE --function NAME --out FILE [--b2b-strategy anchor|darm|darm-artifact] [--anchor-gap fork|linear|both] [--anchor-select-dedup 0|1] [--anchor-cutoff static|live] [--anchor-gap-rank lazy|eager] [--structural 1] [--split ID --left ID --right ID] [--debug-dir DIR] [--ir-snapshots full|compact] [--tti-worker EXECUTABLE] [--catalog-only 0|1] [--control-only 0|1]\n";return 0;}
+      if(k=="--help"){outs()<<"fusion-search v1 --ir FILE --function NAME --out FILE [--b2b-strategy anchor|darm|darm-artifact] [--anchor-gap fork|linear|both] [--anchor-select-dedup 0|1] [--anchor-cutoff static|live] [--anchor-gap-rank lazy|eager] [--anchor-guarded-gap 0|1] [--structural 1] [--split ID --left ID --right ID] [--debug-dir DIR] [--ir-snapshots full|compact] [--tti-worker EXECUTABLE] [--catalog-only 0|1] [--control-only 0|1]\n";return 0;}
       if(i+1==argc)throw std::runtime_error("missing option value");std::string v=argv[++i];
       if(k=="--control-only"){if(v!="0"&&v!="1")throw std::runtime_error("control-only must be 0 or 1");controlOnly=v=="1";}
       else if(k=="--catalog-only"){if(v!="0"&&v!="1")throw std::runtime_error("catalog-only must be 0 or 1");catalogOnly=v=="1";}
@@ -171,6 +171,10 @@ static int runSearch(int argc, const char *const *argv, TrialWorker *batch = nul
       else if(k=="--anchor-gap-rank"){
         if (v != "lazy" && v != "eager") throw std::runtime_error("anchor-gap-rank must be lazy or eager");
         anchorScoring.eagerGapRank = v == "eager";
+      }
+      else if(k=="--anchor-guarded-gap"){
+        if (v != "0" && v != "1") throw std::runtime_error("anchor-guarded-gap must be 0 or 1");
+        anchorScoring.guardedGap = v == "1";
       }
       else if(k=="--b2b-strategy"){
         if(v!="darm" && v!="darm-artifact" && v!="anchor")

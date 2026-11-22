@@ -27,6 +27,7 @@ struct State {
   Matches pairs;
   DenseSet<OperandPair> charged;
   bool gapPrepaid = false;
+  unsigned guardedSides = 0;
   int64_t score = 0;
   unsigned chargedSegments = 0;
   int64_t phiCharge = 0;
@@ -90,6 +91,25 @@ std::string operandName(const Value &value) {
 }
 }
 
+SmallVector<int, 32> b2bGuardOrigins(Work work) {
+  SmallVector<int, 32> origins;
+  DenseMap<const Value *, int> latestRoot;
+  for (auto item : llvm::enumerate(work)) {
+    auto *inst = item.value();
+    const auto *load = dyn_cast<LoadInst>(inst);
+    const auto *store = dyn_cast<StoreInst>(inst);
+    int root = (load && load->isSimple()) || (store && store->isSimple()) ? int(item.index()) : -1;
+    for (const auto &operand : inst->operands()) {
+      auto known = latestRoot.find(operand.get());
+      if (known != latestRoot.end())
+        root = std::max(root, known->second);
+    }
+    latestRoot[inst] = root;
+    origins.push_back(root);
+  }
+  return origins;
+}
+
 SmallVector<AnchorPlan, 3> planB2BAnchors(
     Work left, Work right, BasicBlock &leftBlock, BasicBlock &rightBlock,
     BasicBlock *join, bool pairTies, function_ref<bool(Instruction &, Instruction &)> compatible,
@@ -97,21 +117,28 @@ SmallVector<AnchorPlan, 3> planB2BAnchors(
     function_ref<int(Type *)> selectCost, function_ref<int(Type *)> phiCost, bool linear,
     AnchorScoring scoring) {
   const bool eager = scoring.eagerGapRank && !linear;
+  const bool guarded = scoring.guardedGap && linear;
   const char *tracePath = std::getenv("FUSION_OBSERVE_B2B_DP");
   const bool observe = tracePath && *tracePath;
   json::Array transitions, pruned, conflictingPairs, segmentsObserved;
   const std::array<Work, 2> work{left, right};
   DenseMap<const Value *, unsigned> indices[2];
   SmallVector<bool, 32> skippable[2];
+  SmallVector<int, 32> guardOrigins[2];
   if (linear)
-    for (unsigned side = 0; side != 2; ++side)
-      for (const auto *inst : work[side]) {
+    for (unsigned side = 0; side != 2; ++side) {
+      if (guarded)
+        guardOrigins[side] = b2bGuardOrigins(work[side]);
+      for (auto item : llvm::enumerate(work[side])) {
+        const auto *inst = item.value();
         const auto *call = dyn_cast<CallBase>(inst);
-        skippable[side].push_back(!inst->mayReadOrWriteMemory() &&
+        const bool simpleMemory = guarded && guardOrigins[side][item.index()] == int(item.index());
+        skippable[side].push_back(simpleMemory || (!inst->mayReadOrWriteMemory() &&
                                   !(call && call->isConvergent()) &&
                                   !isa<AllocaInst>(inst) &&
-                                  isSafeToSpeculativelyExecute(inst));
+                                  isSafeToSpeculativelyExecute(inst)));
       }
+    }
 
   for (unsigned side = 0; side != 2; ++side)
     for (unsigned k = 0; k != work[side].size(); ++k)
@@ -274,7 +301,7 @@ SmallVector<AnchorPlan, 3> planB2BAnchors(
   // Any use outside this arm also crosses the boundary.
   std::vector<unsigned> lastUse[2];
   std::vector<int> phiPrice[2];
-  for (unsigned side = 0; !linear && side != 2; ++side) {
+  for (unsigned side = 0; (!linear || guarded) && side != 2; ++side) {
     for (auto *inst : work[side]) {
       unsigned last = indices[side].lookup(inst);
       for (const auto *user : inst->users()) {
@@ -288,7 +315,13 @@ SmallVector<AnchorPlan, 3> planB2BAnchors(
   // Charge once when leaving a match, or at settlement for a fallback
   // that bypasses the grid. The PHI term still needs the end boundary.
   constexpr int ForkCharge = 2;
-  auto skip = [&](State state, Beam &dest, StringRef phase, unsigned i, unsigned j) {
+  auto skip = [&](State state, Beam &dest, StringRef phase, unsigned i, unsigned j,
+                  unsigned side, unsigned index) {
+    if (guarded && guardOrigins[side][index] == int(index) &&
+        !(state.guardedSides & (1u << side))) {
+      state.score -= ForkCharge;
+      state.guardedSides |= 1u << side;
+    }
     if (eager && !state.gapPrepaid) {
       state.score -= ForkCharge;
       state.gapPrepaid = true;
@@ -296,7 +329,7 @@ SmallVector<AnchorPlan, 3> planB2BAnchors(
     insert(dest, std::move(state), observe ? &pruned : nullptr, phase, i, j);
   };
   auto finishGap = [&](State &state, unsigned le, unsigned re, bool rejoins) {
-    if (linear) return;
+    if (linear && !guarded) return;
     unsigned begin[2] = {};
     if (!state.pairs.empty()) {
       begin[0] = state.pairs.back().left + 1;
@@ -304,6 +337,28 @@ SmallVector<AnchorPlan, 3> planB2BAnchors(
     }
     if (begin[0] == le && begin[1] == re)
       return;
+    const unsigned end[2] = {le, re};
+    if (guarded) {
+      for (unsigned side = 0; side != 2; ++side) {
+        bool hasGuard = false;
+        for (unsigned k = begin[side]; k < end[side]; ++k)
+          if (guardOrigins[side][k] >= int(begin[side])) {
+            hasGuard = true;
+            if (lastUse[side][k] >= end[side]) {
+              state.phiCharge += phiPrice[side][k];
+              state.score -= phiPrice[side][k];
+            }
+          }
+        if (hasGuard) {
+          ++state.chargedSegments;
+          // Empty/anchors-only paths settle without going through skip().
+          if (!(state.guardedSides & (1u << side)))
+            state.score -= ForkCharge;
+        }
+      }
+      state.guardedSides = 0;
+      return;
+    }
     ++state.chargedSegments;
     if (!state.gapPrepaid)
       state.score -= ForkCharge;
@@ -311,7 +366,6 @@ SmallVector<AnchorPlan, 3> planB2BAnchors(
     if (!rejoins)
       return; // The original exit PHIs already receive values from both arms.
     int64_t charge = 0;
-    const unsigned end[2] = {le, re};
     for (unsigned side = 0; side != 2; ++side)
       for (unsigned k = begin[side]; k < end[side]; ++k)
         if (lastUse[side][k] >= end[side])
@@ -379,9 +433,9 @@ SmallVector<AnchorPlan, 3> planB2BAnchors(
       for (unsigned j = ri; j <= re; ++j)
         for (const auto &state : row[j - ri]) {
           if (i < le && (!linear || skippable[0][i]))
-            skip(state, next[j - ri], "skip_left", i + 1, j);
+            skip(state, next[j - ri], "skip_left", i + 1, j, 0, i);
           if (j < re && (!linear || skippable[1][j]))
-            skip(state, row[j + 1 - ri], "skip_right", i, j + 1);
+            skip(state, row[j + 1 - ri], "skip_right", i, j + 1, 1, j);
           if (i == le || j == re)
             continue;
           AnchorMatch pair{i, j};
@@ -526,7 +580,7 @@ SmallVector<AnchorPlan, 3> planB2BAnchors(
     trace << json::Value(json::Object{{"mode", pairTies ? "relaxed" : "strict"},
         {"left_block", operandName(leftBlock)}, {"right_block", operandName(rightBlock)},
         {"gap", linear ? "linear" : "fork"},
-        {"select_dedup", scoring.selectDedup}, {"cutoff", scoring.liveCutoff ? "live" : "static"},
+        {"guarded_gap", guarded}, {"select_dedup", scoring.selectDedup}, {"cutoff", scoring.liveCutoff ? "live" : "static"},
         {"gap_rank", eager ? "eager" : "lazy"},
         {"left", instructions(left, 0)}, {"right", instructions(right, 1)},
         {"proposed", matchesJSON(proposed)}, {"anchors", matchesJSON(anchors)},

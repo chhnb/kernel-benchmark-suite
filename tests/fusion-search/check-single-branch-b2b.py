@@ -139,6 +139,19 @@ def run(*args):
     subprocess.run(list(map(str, args)), check=True)
 
 
+def verify_raw_cpu(root, out, source, raw_ir):
+    for variant, path in (("before", source), ("after", raw_ir)):
+        run(opt, "-O3", "-verify-each", "-disable-output", path)
+        cpu = out / f"{variant}.ll"
+        text = path.read_text().replace("amdgcn-amd-amdhsa", "x86_64-unknown-linux-gnu")
+        text = re.sub(r"^attributes #0 = .*\n", "", text, flags=re.M)
+        cpu.write_text(text.replace(" #0 {", " {").replace("@choose(", f"@{variant}("))
+        run(clang, "-O2", "-c", cpu, "-o", cpu.with_suffix(".o"))
+    (root / "check.c").write_text(driver.replace("if (outside || p)", "if (outside)"))
+    run(clang, out / "before.o", out / "after.o", root / "check.c", "-o", out / "check")
+    run(out / "check")
+
+
 with tempfile.TemporaryDirectory() as directory:
     root = Path(directory)
     for shape, (left, right) in cases.items():
@@ -264,17 +277,71 @@ with tempfile.TemporaryDirectory() as directory:
         assert "freeze i1 %p" in raw
         assert re.search(r"select i1 %[^,]+, i32 %lv, i32 %rv", raw)
         assert re.search(r"phi i32 \[ 77, %external \], \[ %[^,]+, %split \]", raw)
-        for variant, path in (("before", source), ("after", raw_ir)):
-            run(opt, "-O3", "-verify-each", "-disable-output", path)
-            cpu = out / f"{variant}.ll"
-            text = path.read_text().replace("amdgcn-amd-amdhsa", "x86_64-unknown-linux-gnu")
-            text = re.sub(r"^attributes #0 = .*\n", "", text, flags=re.M)
-            cpu.write_text(text.replace(" #0 {", " {").replace("@choose(", f"@{variant}("))
-            run(clang, "-O2", "-c", cpu, "-o", cpu.with_suffix(".o"))
-        (root / "check.c").write_text(driver.replace("if (outside || p)", "if (outside)"))
-        run(clang, out / "before.o", out / "after.o", root / "check.c", "-o", out / "check")
-        run(out / "check")
+        verify_raw_cpu(root, out, source, raw_ir)
     print("Linear B2B verifier, effect order, join PHI and untaken poison checks passed")
+
+    guarded_cases = {
+        "guard-load-result": (
+            "  %side = load i32, i32* %mem, align 4\n"
+            "  %used = xor i32 %side, %x\n"
+            "  %l = add i32 %used, %x\n  store i32 %l, i32* %mem, align 4",
+            "  %r = add i32 %x, %y\n  store i32 %r, i32* %mem, align 4",
+        ),
+        "guard-store-order": (
+            "  %first = load i32, i32* %mem, align 4\n"
+            "  %added = add i32 %first, %x\n  store i32 %added, i32* %mem, align 4\n"
+            "  %l = load i32, i32* %mem, align 4",
+            "  %before = load i32, i32* %mem, align 4\n"
+            "  %after = load i32, i32* %mem, align 4\n  %r = xor i32 %before, %after",
+        ),
+        "guard-both-sides": (
+            "  %loaded = load i32, i32* %mem, align 4\n  %l = add i32 %loaded, %x",
+            "  store i32 %y, i32* %mem, align 4\n  %r = sub i32 %x, %y",
+        ),
+        "guard-join-only": (
+            "  %value = load i32, i32* %mem, align 4\n  %l = xor i32 %value, %x",
+            "  %r = sub i32 %x, %y",
+        ),
+        "guard-convergent": linear_cases["unpaired-convergent"],
+    }
+    for shape, (left, right) in guarded_cases.items():
+        out = root / shape
+        out.mkdir()
+        source, fused = out / "input.ll", out / "fused.ll"
+        ir = template.replace("LEFT", left).replace("RIGHT", right)
+        if shape == "guard-convergent":
+            ir += "declare i32 @convergent() convergent nounwind readnone speculatable willreturn\n"
+        source.write_text(ir)
+        args = [search, "--ir", source, "--function", "choose", "--split", "B2",
+                "--left", "B3", "--right", "B4", "--anchor-gap", "linear",
+                "--anchor-guarded-gap", "1", "--tti-worker", worker,
+                "--out", fused, "--debug-dir", out / "reports"]
+        if shape == "guard-convergent":
+            rejected = subprocess.run(args, capture_output=True, text=True)
+            assert rejected.returncode == 4 and not fused.exists(), rejected
+            continue
+        run(*args)
+        report = out / "reports/trial-0/trial.json"
+        trial = json.loads(report.read_text())
+        assert trial["anchor"]["emission"] == "guarded-linear", trial["anchor"]
+        raw_ir = report.with_name("after-raw.ll")
+        raw = raw_ir.read_text()
+        assert "freeze i1 %p" in raw and "[ 77, %external ]" in raw
+        if shape == "guard-store-order":
+            assert re.search(r"load i32[^\n]*\n(?:  .*\n)*?  br i1 .*%anchor.guard", raw)
+            assert re.search(r"anchor.guard:[^\n]*\n(?:  .*\n)*?  store i32", raw)
+            assert re.search(r"anchor.cont:[^\n]*\n  %.* = load i32", raw)
+        else:
+            assert "phi i32 [ poison, %split ], [ %l, %anchor.guard ]" in raw
+            if shape == "guard-load-result":
+                assert re.search(r"anchor.guard:[^\n]*\n  %side = load.*\n  %used = xor.*\n  %l = add", raw)
+                assert re.search(r"select i1 %[^,]+, i32 %anchor.guarded, i32 %r\n  store", raw)
+        if shape == "guard-both-sides":
+            assert (trial["anchor"]["charged_segments"], trial["anchor"]["phi_charge"]) == (2, 1)
+            assert re.search(r"br i1 %[^,]+, label %anchor.guard, label %anchor.cont", raw)
+            assert re.search(r"br i1 %[^,]+, label %anchor.cont\d+, label %anchor.guard\d+", raw)
+        verify_raw_cpu(root, out, source, raw_ir)
+    print("Guarded B2B verifier, effect order, live-out PHI and CPU checks passed")
 
     # Experimental strategies and transformations must be rejected.
     source = root / "prefix-0/source.ll"

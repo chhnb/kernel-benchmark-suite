@@ -1360,7 +1360,7 @@ static SmallVector<B2BMatch, 8> commonB2BPrefix(BasicBlock &left, BasicBlock &ri
 // consumes both arms and uses a select on each pair of exit values.
 static void emitB2BLinear(BranchInst &split, BasicBlock &left, BasicBlock &right,
                            BasicBlock *join, ArrayRef<AnchorMatch> matches,
-                           bool linear) {
+                           bool linear, bool guarded) {
   SmallVector<Instruction *, 16> work[2];
   for (auto &inst : left) if (!inst.isTerminator()) work[0].push_back(&inst);
   for (auto &inst : right) if (!inst.isTerminator()) work[1].push_back(&inst);
@@ -1381,16 +1381,53 @@ static void emitB2BLinear(BranchInst &split, BasicBlock &left, BasicBlock &right
     return choice;
   };
   unsigned cursor[2] = {};
-  auto moveGap = [&](unsigned side, unsigned end) {
-    assert((linear || cursor[side] == end) && "legacy prefix cannot skip instructions");
-    // Only speculatable, memory-free instructions can reach a linear gap.
-    // Their arm-specific results stay on that side of input or exit selects.
-    for (; cursor[side] < end; ++cursor[side])
-      work[side][cursor[side]]->moveBefore(&split);
+  SmallVector<int, 32> guardOrigins[2];
+  if (guarded)
+    for (unsigned side = 0; side != 2; ++side)
+      guardOrigins[side] = b2bGuardOrigins(work[side]);
+
+  auto moveGap = [&](unsigned endLeft, unsigned endRight) {
+    unsigned end[2] = {endLeft, endRight};
+    SmallVector<Instruction *, 8> guards[2];
+    for (unsigned side = 0; side != 2; ++side) {
+      assert((linear || cursor[side] == end[side]) && "legacy prefix cannot skip instructions");
+      const unsigned begin = cursor[side];
+      for (; cursor[side] < end[side]; ++cursor[side]) {
+        auto *inst = work[side][cursor[side]];
+        if (guarded && guardOrigins[side][cursor[side]] >= int(begin))
+          guards[side].push_back(inst);
+        else
+          inst->moveBefore(&split);
+      }
+    }
+    for (unsigned side = 0; side != 2; ++side) {
+      if (guards[side].empty()) continue;
+      auto *before = split.getParent();
+      auto *function = before->getParent();
+      auto &context = before->getContext();
+      auto *body = BasicBlock::Create(context, "anchor.guard", function, join);
+      auto *next = BasicBlock::Create(context, "anchor.cont", function, join);
+      builder.CreateCondBr(condition, side == 0 ? body : next, side == 0 ? next : body);
+      split.removeFromParent();
+      next->getInstList().push_back(&split);
+      auto *exit = BranchInst::Create(next, body);
+      for (auto *inst : guards[side])
+        inst->moveBefore(exit);
+      builder.SetInsertPoint(&split);
+      for (auto *inst : guards[side]) {
+        auto escapes = [&](const Use &use) {
+          return cast<Instruction>(use.getUser())->getParent() != body;
+        };
+        if (!llvm::any_of(inst->uses(), escapes)) continue;
+        auto *phi = builder.CreatePHI(inst->getType(), 2, "anchor.guarded");
+        inst->replaceUsesWithIf(phi, escapes);
+        phi->addIncoming(PoisonValue::get(inst->getType()), before);
+        phi->addIncoming(inst, body);
+      }
+    }
   };
   for (auto match : matches) {
-    moveGap(0, match.left);
-    moveGap(1, match.right);
+    moveGap(match.left, match.right);
     auto *l = work[0][cursor[0]++], *r = work[1][cursor[1]++];
     auto *shared = l->clone();
     intersectMergedInstructionProperties(*shared, *r);
@@ -1406,8 +1443,7 @@ static void emitB2BLinear(BranchInst &split, BasicBlock &left, BasicBlock &right
     r->eraseFromParent();
   }
   if (!join) return;
-  moveGap(0, work[0].size());
-  moveGap(1, work[1].size());
+  moveGap(work[0].size(), work[1].size());
   for (auto &phi : join->phis()) {
     auto *incoming = select(phi.getIncomingValueForBlock(&left),
                             phi.getIncomingValueForBlock(&right));
@@ -1713,7 +1749,7 @@ std::vector<Trial> planSingleBranchB2B(const Module &parent, const Candidate &c,
   struct Layout {
     std::string label;
     SmallVector<AnchorMatch, 8> matches;
-    bool prefix = false, mergeExit = false, linear = false;
+    bool prefix = false, mergeExit = false, linear = false, guarded = false;
     json::Object stats;
   };
   SmallVector<Layout, 12> layouts;
@@ -1746,13 +1782,19 @@ std::vector<Trial> planSingleBranchB2B(const Module &parent, const Candidate &c,
       return;
     list.push_back(std::move(layout));
   };
-  for (bool linear : {false, true}) {
-    if (linear ? gap == AnchorGap::Fork || !selectableExit || !segmentUsesValid
+  // Keep the unguarded candidates in the list when guarded gaps are enabled.
+  for (unsigned mode = 0; mode != 3; ++mode) {
+    const bool linear = mode != 0;
+    const bool guarded = mode == 2;
+    if (linear ? gap == AnchorGap::Fork || !selectableExit || !segmentUsesValid ||
+                     (guarded && !scoring.guardedGap)
                : gap == AnchorGap::Linear)
       continue;
+    auto modeScoring = scoring;
+    modeScoring.guardedGap = guarded;
     for (bool pairTies : {false, true}) {
       auto plans = planB2BAnchors(segmentWork[0], segmentWork[1], *left, *right, join,
-                                pairTies, compatibleB2BPrefix, instructionCost, selectCost, phiCost, linear, scoring);
+                                pairTies, compatibleB2BPrefix, instructionCost, selectCost, phiCost, linear, modeScoring);
       for (const auto &plan : plans) {
         const bool prefix = !linear && plan.matches.size() <= safePrefix.size() &&
             llvm::all_of(llvm::enumerate(plan.matches), [](const auto &item) {
@@ -1764,6 +1806,7 @@ std::vector<Trial> planSingleBranchB2B(const Module &parent, const Candidate &c,
         layout.matches = plan.matches;
         layout.prefix = prefix;
         layout.linear = linear;
+        layout.guarded = guarded && plan.chargedSegments != 0;
         layout.mergeExit = linear;
         json::Array swaps, cutoffs, forwardCutoffs;
         auto showPair = [&](AnchorMatch pair) -> json::Object {
@@ -1788,7 +1831,8 @@ std::vector<Trial> planSingleBranchB2B(const Module &parent, const Candidate &c,
             {"cutoff_count", int64_t(plan.cutoffs.size())}, {"cutoffs", std::move(cutoffs)},
             {"swaps", std::move(swaps)}, {"phi_charge", plan.phiCharge},
             {"charged_segments", int64_t(plan.chargedSegments)},
-            {"emission", linear ? "linear" : prefix ? "before-split" : "segmented"}};
+            {"emission", layout.guarded ? "guarded-linear" : linear ? "linear" :
+                         prefix ? "before-split" : "segmented"}};
         if (linear || std::getenv("FUSION_OBSERVE_B2B_DP"))
           layout.stats["dp_score"] = plan.score;
         if (linear) {
@@ -1843,7 +1887,7 @@ std::vector<Trial> planSingleBranchB2B(const Module &parent, const Candidate &c,
     t.rewriteStarted = layout.linear || !layout.matches.empty();
     if (layout.linear || (layout.prefix && !layout.matches.empty())) {
       emitB2BLinear(*rawBranch, *rawLeft, *rawRight, layout.mergeExit ? rawJoin : nullptr,
-                    layout.matches, layout.linear);
+                    layout.matches, layout.linear, layout.guarded);
     } else if (!layout.matches.empty()) {
       try {
         emitB2BSegments(*rawBranch, *rawLeft, *rawRight, *rawJoin, layout.matches,

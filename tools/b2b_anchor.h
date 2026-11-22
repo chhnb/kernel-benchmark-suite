@@ -27,6 +27,7 @@ struct AnchorScoring {
   bool selectDedup = false;
   bool liveCutoff = false;
   bool eagerGapRank = false;
+  bool guardedGap = false;
 };
 
 struct AnchorMatch {
@@ -46,6 +47,10 @@ struct AnchorPlan {
   int64_t score = 0;
   unsigned discarded = 0, conflicts = 0, segments = 0;
 };
+// The last simple memory instruction in each instruction's dependency chain
+// (including itself), or -1 if it has none. A gap guards only its own roots.
+llvm::SmallVector<int, 32> b2bGuardOrigins(llvm::ArrayRef<llvm::Instruction *> work);
+
 llvm::SmallVector<AnchorPlan, 3> planB2BAnchors(
     llvm::ArrayRef<llvm::Instruction *> left,
     llvm::ArrayRef<llvm::Instruction *> right,
