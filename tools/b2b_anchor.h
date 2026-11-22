@@ -13,7 +13,6 @@ class Instruction;
 class Type;
 }
 namespace fusion {
-enum class AnchorGap { Fork, Auto };
 enum class AnchorGapPlacement { Hoist, HoistAndGuard, Guard };
 
 struct AnchorScoring {

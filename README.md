@@ -10,7 +10,7 @@
 
 处理一棵指定 decision 树时，同时评估相邻 arm 的规范化候选和当前 split 的直接结构候选。结构扫尾处理其他 split。如果不同域的候选争用同一个基本块，且满足当前同后继和共同指令数量的触发条件，就对相关域联合评分。
 
-- B2B 默认用 Anchor 同时枚举 fork、线性和守护布局。对分支条件逐 wave 分类，必然发散的线性和守护布局按原 TTI 评估，必然一致时仅保留 fork。其余条件要求两侧的 uniform gain 均有报价且非负。可用 `--anchor-mode legacy` 复现旧版 fork 默认。B2R、R2B 和 R2R 使用 DARM，B2B 仍可显式选择 DARM 或原版对照。
+- B2B 默认用 Anchor 同时枚举 fork、线性和守护布局。对分支条件逐 wave 分类，必然发散的线性和守护布局按原 TTI 评估，必然一致时仅保留 fork。其余条件要求两侧的 uniform gain 均有报价且非负。复现旧默认 D 时请构建 `c7dded07`。B2R、R2B 和 R2R 使用 DARM，B2B 仍可显式选择 DARM 或原版对照。
 - Anchor B2B 布局与 DARM R2R 受限推测都使用逐 wave 分类。R2R 推测未通过一致代价 gate 时，普通守护布局继续参与 TTI 比较。判定一个分支在每个 wave 内必然发散需要确切的 workgroup 形状。请给 `decision-greedy`、`fusion-search-llvm24` 或 `tools/compile_kernel.py` 传入实际 launch 的 `--anchor-wave-shape X,Y,Z`。发布复验从 manifest 传入核实过的形状，手动运行也可使用 IR 中确切的 `reqd_work_group_size`。两者均缺失时，搜索会提示缺失并采用保守的 unknown gate。LUD8 缺形状时回退到普通布局，最终 TTI 为 655。传入 `16,1,1` 后为 628。
 - 默认 Anchor 发射直接使用原 split 条件。新增用途位于原分支的执行范围内，而 LLVM 对 poison 或 undef 条件执行 `br` 已规定为未定义行为。 [LLVM LangRef](https://llvm.org/docs/LangRef.html#br-instruction)
 - 合法 trial 依次执行 DARM SimplifyCFG（PHI folding threshold 7）、EarlyCSE、DCE、InstCombine。LLVM24 TTI 要求提交后的成本低于 trial 对照及当前父 IR。

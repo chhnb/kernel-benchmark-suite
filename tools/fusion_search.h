@@ -169,15 +169,15 @@ Trial tryPair(const llvm::Module &, const Candidate &, unsigned currentVersion,
 Trial tryPair(const llvm::Module &, const Candidate &, unsigned currentVersion,
               unsigned optLevel, CleanupMode, const LogicalRegionState *, bool allowB2B,
               bool artifactB2B=false, bool speculateR2R=false);
+enum class B2BExit { PreserveSuffix, Merge, ForkJoin, Independent };
 // Emit an already-validated, order-preserving B2B alignment.
 void emitB2BLinear(llvm::BranchInst &, llvm::BasicBlock &, llvm::BasicBlock &,
                    llvm::BasicBlock *join, llvm::ArrayRef<AnchorMatch>,
-                   bool linear, bool guarded, llvm::ArrayRef<AnchorGapPlacement>,
-                   bool preserveLegacyFreeze = false);
+                   B2BExit exit, bool guarded, llvm::ArrayRef<AnchorGapPlacement>);
 llvm::json::Object describeAnchorCondition(llvm::Function &, llvm::StringRef split, llvm::StringRef launch);
 std::vector<Trial> planSingleBranchB2B(const llvm::Module &, const Candidate &, CleanupMode,
                                        llvm::function_ref<int(const llvm::Instruction &)> intrinsicCost,
                                        llvm::function_ref<int(const llvm::Instruction &)> anchorCost,
                                        llvm::function_ref<int(llvm::Type *)> anchorSelectCost,
-                                       llvm::function_ref<int(llvm::Type *)> anchorPhiCost, AnchorGap gap = AnchorGap::Auto);
+                                       llvm::function_ref<int(llvm::Type *)> anchorPhiCost);
 }

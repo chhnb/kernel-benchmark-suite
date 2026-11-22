@@ -1441,33 +1441,49 @@ static SmallVector<B2BMatch, 8> commonB2BPrefix(BasicBlock &left, BasicBlock &ri
   return result;
 }
 
-// Emit an order-preserving alignment in the split block. A legacy prefix
-// leaves the unconsumed suffix under the old branch. A linear alignment
-// consumes both arms and uses a select on each pair of exit values.
+// Emit a shared sequence, preserving the placement and exit selected by the planner.
 void emitB2BLinear(BranchInst &split, BasicBlock &left, BasicBlock &right,
                    BasicBlock *join, ArrayRef<AnchorMatch> matches,
-                   bool linear, bool guarded,
-                   ArrayRef<AnchorGapPlacement> placements,
-                   bool preserveLegacyFreeze) {
+                   B2BExit exit, bool guarded,
+                   ArrayRef<AnchorGapPlacement> placements) {
+  const bool independent = exit == B2BExit::Independent;
+  const bool segmented = independent || exit == B2BExit::ForkJoin;
+  auto *function = split.getFunction();
+  auto &context = function->getContext();
   SmallVector<Instruction *, 16> work[2];
   for (auto &inst : left) if (!inst.isTerminator()) work[0].push_back(&inst);
   for (auto &inst : right) if (!inst.isTerminator()) work[1].push_back(&inst);
   IRBuilder<> builder(&split);
+  // Every use is confined to execution of the original split branch.
   Value *condition = split.getCondition();
-  // Every use stays on an execution that reached the original branch,
-  // where an undef or poison condition already has undefined behavior.
-  if (preserveLegacyFreeze &&
-      (linear || (!join && llvm::any_of(matches, [&](AnchorMatch match) {
-         return work[0][match.left]->mayReadOrWriteMemory();
-       })))) {
-    condition = builder.CreateFreeze(condition);
-    split.setCondition(condition);
-  }
-
+  DenseMap<Value *, Value *> values[2];
+  auto value = [&](unsigned side, Value *original) -> Value * {
+    if (auto *mapped = values[side].lookup(original)) return mapped;
+    return original;
+  };
+  BasicBlock *joinedPaths[2] = {};
   std::map<std::pair<Value *, Value *>, Value *> selects;
   auto select = [&](Value *lv, Value *rv) -> Value * {
     if (lv == rv) return lv;
     auto &choice = selects[{lv, rv}];
+    if (!choice && joinedPaths[0] && joinedPaths[1]) {
+      auto *l = dyn_cast<PHINode>(lv);
+      auto *r = dyn_cast<PHINode>(rv);
+      auto *common = builder.GetInsertBlock();
+      if (l && r && l->getParent() == common && r->getParent() == common &&
+          l->getNumIncomingValues() == 2 && r->getNumIncomingValues() == 2 &&
+          l->getBasicBlockIndex(joinedPaths[0]) >= 0 &&
+          l->getBasicBlockIndex(joinedPaths[1]) >= 0 &&
+          r->getBasicBlockIndex(joinedPaths[0]) >= 0 &&
+          r->getBasicBlockIndex(joinedPaths[1]) >= 0 &&
+          isa<PoisonValue>(l->getIncomingValueForBlock(joinedPaths[1])) &&
+          isa<PoisonValue>(r->getIncomingValueForBlock(joinedPaths[0]))) {
+        auto *phi = PHINode::Create(lv->getType(), 2, "fusion.paired", common->getFirstNonPHI());
+        phi->addIncoming(l->getIncomingValueForBlock(joinedPaths[0]), joinedPaths[0]);
+        phi->addIncoming(r->getIncomingValueForBlock(joinedPaths[1]), joinedPaths[1]);
+        choice = phi;
+      }
+    }
     if (!choice) choice = emitB2BSelect(builder, condition, lv, rv);
     return choice;
   };
@@ -1477,45 +1493,81 @@ void emitB2BLinear(BranchInst &split, BasicBlock &left, BasicBlock &right,
     for (unsigned side = 0; side != 2; ++side)
       guardOrigins[side] = b2bGuardOrigins(work[side]);
 
-  unsigned gapIndex = 0;
   auto emitGuards = [&](ArrayRef<Instruction *> leftGuard,
-                        ArrayRef<Instruction *> rightGuard) {
+                        ArrayRef<Instruction *> rightGuard, bool directExit) {
     if (leftGuard.empty() && rightGuard.empty()) return;
     ArrayRef<Instruction *> guards[] = {leftGuard, rightGuard};
     auto *before = split.getParent();
-    auto *function = before->getParent();
-    auto &context = before->getContext();
+    auto *next = directExit ? join : segmented
+        ? BasicBlock::Create(context, "fusion.common", function, join) : nullptr;
     BasicBlock *bodies[2] = {};
     for (unsigned side = 0; side != 2; ++side)
       if (!guards[side].empty())
-        bodies[side] = BasicBlock::Create(context, "anchor.guard", function, join);
-    auto *next = BasicBlock::Create(context, "anchor.cont", function, join);
+        bodies[side] = BasicBlock::Create(context, segmented ? "fusion.side" : "anchor.guard",
+                                          function, next ? next : join);
+    if (!next)
+      next = BasicBlock::Create(context, "anchor.cont", function, join);
+    BasicBlock *paths[] = {bodies[0] ? bodies[0] : before, bodies[1] ? bodies[1] : before};
     builder.CreateCondBr(condition, bodies[0] ? bodies[0] : next,
                         bodies[1] ? bodies[1] : next);
-    split.removeFromParent();
-    next->getInstList().push_back(&split);
+    if (!directExit) {
+      split.removeFromParent();
+      next->getInstList().push_back(&split);
+    }
     for (unsigned side = 0; side != 2; ++side)
       if (bodies[side]) {
-        auto *exit = BranchInst::Create(next, bodies[side]);
-        for (auto *inst : guards[side])
-          inst->moveBefore(exit);
+        auto *branch = BranchInst::Create(next, bodies[side]);
+        for (auto *inst : guards[side]) {
+          if (!segmented) {
+            inst->moveBefore(branch);
+            continue;
+          }
+          auto *copy = inst->clone();
+          for (unsigned n = 0; n < inst->getNumOperands(); ++n)
+            copy->setOperand(n, value(side, inst->getOperand(n)));
+          copy->insertBefore(branch);
+          values[side][inst] = copy;
+        }
       }
+    if (directExit) {
+      for (auto &phi : join->phis()) {
+        auto *lv = value(0, phi.getIncomingValueForBlock(&left));
+        auto *rv = value(1, phi.getIncomingValueForBlock(&right));
+        phi.removeIncomingValue(&left, false);
+        phi.removeIncomingValue(&right, false);
+        phi.addIncoming(lv, paths[0]);
+        phi.addIncoming(rv, paths[1]);
+      }
+      return;
+    }
     builder.SetInsertPoint(&split);
+    if (segmented)
+      std::copy(std::begin(paths), std::end(paths), joinedPaths);
     for (unsigned side = 0; side != 2; ++side)
       for (auto *inst : guards[side]) {
         auto escapes = [&](const Use &use) {
-          return cast<Instruction>(use.getUser())->getParent() != bodies[side];
+          return segmented ? !llvm::is_contained(guards[side], use.getUser())
+                           : cast<Instruction>(use.getUser())->getParent() != bodies[side];
         };
-        if (!llvm::any_of(inst->uses(), escapes)) continue;
-        auto *phi = builder.CreatePHI(inst->getType(), 2, "anchor.guarded");
-        inst->replaceUsesWithIf(phi, escapes);
-        phi->addIncoming(PoisonValue::get(inst->getType()),
-                         bodies[1 - side] ? bodies[1 - side] : before);
-        phi->addIncoming(inst, bodies[side]);
+        if (inst->getType()->isVoidTy() || !llvm::any_of(inst->uses(), escapes)) continue;
+        auto *phi = builder.CreatePHI(inst->getType(), 2, segmented ? "" : "anchor.guarded");
+        auto *poison = PoisonValue::get(inst->getType());
+        if (segmented) {
+          phi->addIncoming(value(side, inst), paths[side]);
+          phi->addIncoming(poison, paths[1 - side]);
+          values[side][inst] = phi;
+        } else {
+          inst->replaceUsesWithIf(phi, escapes);
+          phi->addIncoming(poison, paths[1 - side]);
+          phi->addIncoming(inst, paths[side]);
+        }
       }
   };
-  auto moveGap = [&](unsigned endLeft, unsigned endRight) {
+
+  unsigned gapIndex = 0;
+  auto moveGap = [&](unsigned endLeft, unsigned endRight, bool directExit = false) {
     if (cursor[0] == endLeft && cursor[1] == endRight) return;
+    assert(exit != B2BExit::PreserveSuffix && "prefix cannot skip instructions");
     const auto placement = placements.empty() ? (guarded ? AnchorGapPlacement::HoistAndGuard
                                                          : AnchorGapPlacement::Hoist)
                                              : placements[gapIndex++];
@@ -1523,7 +1575,6 @@ void emitB2BLinear(BranchInst &split, BasicBlock &left, BasicBlock &right,
     unsigned end[2] = {endLeft, endRight};
     SmallVector<Instruction *, 8> guards[2];
     for (unsigned side = 0; side != 2; ++side) {
-      assert((linear || cursor[side] == end[side]) && "legacy prefix cannot skip instructions");
       const unsigned begin = cursor[side];
       for (; cursor[side] < end[side]; ++cursor[side]) {
         auto *inst = work[side][cursor[side]];
@@ -1535,10 +1586,10 @@ void emitB2BLinear(BranchInst &split, BasicBlock &left, BasicBlock &right,
       }
     }
     if (wholeGuard) {
-      emitGuards(guards[0], guards[1]);
+      emitGuards(guards[0], guards[1], directExit);
     } else {
-      emitGuards(guards[0], {});
-      emitGuards({}, guards[1]);
+      emitGuards(guards[0], {}, false);
+      emitGuards({}, guards[1], false);
     }
   };
   for (auto match : matches) {
@@ -1547,164 +1598,29 @@ void emitB2BLinear(BranchInst &split, BasicBlock &left, BasicBlock &right,
     auto *shared = l->clone();
     intersectMergedInstructionProperties(*shared, *r);
     for (unsigned n = 0; n < shared->getNumOperands(); ++n) {
-      auto *lv = l->getOperand(n), *rv = r->getOperand(n ^ unsigned(match.swapped));
-      if (lv != rv)
-        shared->setOperand(n, select(lv, rv));
-    }
-    builder.Insert(shared);
-    l->replaceAllUsesWith(shared);
-    r->replaceAllUsesWith(shared);
-    l->eraseFromParent();
-    r->eraseFromParent();
-  }
-  if (!join) return;
-  moveGap(work[0].size(), work[1].size());
-  assert(gapIndex == placements.size() && "unused gap placements");
-  for (auto &phi : join->phis()) {
-    auto *incoming = select(phi.getIncomingValueForBlock(&left),
-                            phi.getIncomingValueForBlock(&right));
-    phi.removeIncomingValue(&left, false);
-    phi.removeIncomingValue(&right, false);
-    phi.addIncoming(incoming, split.getParent());
-  }
-  builder.CreateBr(join);
-  split.eraseFromParent();
-  left.eraseFromParent();
-  right.eraseFromParent();
-}
-
-static void emitB2BSegments(BranchInst &split, BasicBlock &left,
-                            BasicBlock &right, BasicBlock &join,
-                            ArrayRef<AnchorMatch> matches,
-                            bool independentExits) {
-  auto *function = split.getFunction();
-  auto &context = function->getContext();
-  SmallVector<Instruction *, 16> work[2];
-  for (auto &inst : left) if (!inst.isTerminator()) work[0].push_back(&inst);
-  for (auto &inst : right) if (!inst.isTerminator()) work[1].push_back(&inst);
-  IRBuilder<> builder(&split);
-  Value *condition = split.getCondition();
-  // The segmented rewrite stays within the execution domain of the
-  // original conditional branch, where its condition must be defined.
-  split.eraseFromParent();
-  auto *common = builder.GetInsertBlock();
-  builder.SetInsertPoint(common);
-  DenseMap<Value *, Value *> values[2];
-  std::map<std::pair<Value *, Value *>, Value *> selects;
-  auto value = [&](unsigned side, Value *original) -> Value * {
-    if (auto *mapped = values[side].lookup(original)) return mapped;
-    return original;
-  };
-  BasicBlock *joinedPaths[2] = {};
-  auto select = [&](Value *lv, Value *rv) -> Value * {
-    if (lv == rv) return lv;
-    auto &choice = selects[{lv, rv}];
-    if (!choice && joinedPaths[0] && joinedPaths[1]) {
-      auto *leftPhi = dyn_cast<PHINode>(lv);
-      auto *rightPhi = dyn_cast<PHINode>(rv);
-      if (leftPhi && rightPhi && leftPhi->getParent() == common &&
-          rightPhi->getParent() == common &&
-          leftPhi->getNumIncomingValues() == 2 && rightPhi->getNumIncomingValues() == 2 &&
-          leftPhi->getBasicBlockIndex(joinedPaths[0]) >= 0 &&
-          leftPhi->getBasicBlockIndex(joinedPaths[1]) >= 0 &&
-          rightPhi->getBasicBlockIndex(joinedPaths[0]) >= 0 &&
-          rightPhi->getBasicBlockIndex(joinedPaths[1]) >= 0 &&
-          isa<PoisonValue>(leftPhi->getIncomingValueForBlock(joinedPaths[1])) &&
-          isa<PoisonValue>(rightPhi->getIncomingValueForBlock(joinedPaths[0]))) {
-        auto *insertBefore = common->getFirstNonPHI();
-        auto *phi = insertBefore
-            ? PHINode::Create(lv->getType(), 2, "fusion.paired", insertBefore)
-            : PHINode::Create(lv->getType(), 2, "fusion.paired", common);
-        phi->addIncoming(leftPhi->getIncomingValueForBlock(joinedPaths[0]), joinedPaths[0]);
-        phi->addIncoming(rightPhi->getIncomingValueForBlock(joinedPaths[1]), joinedPaths[1]);
-        choice = phi;
-      }
-    }
-    if (!choice) choice = emitB2BSelect(builder, condition, lv, rv);
-    return choice;
-  };
-  unsigned cursor[2] = {};
-  auto preserve = [&](unsigned l, unsigned r, bool directExit) {
-    auto *next = directExit ? &join :
-        BasicBlock::Create(context, "fusion.common", function, &join);
-    unsigned end[] = {l, r};
-    BasicBlock *paths[] = {common, common};
-    for (unsigned side = 0; side < 2; ++side)
-      if (cursor[side] != end[side])
-        paths[side] = BasicBlock::Create(context, "fusion.side", function, next);
-    builder.CreateCondBr(condition, paths[0] == common ? next : paths[0],
-                        paths[1] == common ? next : paths[1]);
-    unsigned begin[] = {cursor[0], cursor[1]};
-    for (unsigned side = 0; side < 2; ++side) {
-      if (paths[side] == common) continue;
-      builder.SetInsertPoint(paths[side]);
-      for (; cursor[side] < end[side]; ++cursor[side]) {
-        auto *inst = work[side][cursor[side]];
-        auto *copy = inst->clone();
-        for (unsigned n = 0; n < inst->getNumOperands(); ++n)
-          copy->setOperand(n, value(side, inst->getOperand(n)));
-        builder.Insert(copy);
-        values[side][inst] = copy;
-      }
-      builder.CreateBr(next);
-    }
-    if (directExit) {
-      for (auto &phi : join.phis()) {
-        auto *lv = value(0, phi.getIncomingValueForBlock(&left));
-        auto *rv = value(1, phi.getIncomingValueForBlock(&right));
-        phi.removeIncomingValue(&left, false);
-        phi.removeIncomingValue(&right, false);
-        phi.addIncoming(lv, paths[0]);
-        phi.addIncoming(rv, paths[1]);
-      }
-      return;
-    }
-    for (unsigned side = 0; side < 2; ++side) {
-      joinedPaths[side] = paths[side];
-    }
-    builder.SetInsertPoint(next);
-    for (unsigned side = 0; side < 2; ++side)
-      for (unsigned n = begin[side]; n < end[side]; ++n) {
-        auto *inst = work[side][n];
-        if (inst->getType()->isVoidTy() || llvm::all_of(inst->users(), [&](User *user) {
-              return llvm::is_contained(
-                  ArrayRef<Instruction *>(work[side]).slice(begin[side], end[side] - begin[side]),
-                  user);
-            }))
-          continue;
-        auto *phi = builder.CreatePHI(inst->getType(), 2);
-        phi->addIncoming(values[side].lookup(inst), paths[side]);
-        phi->addIncoming(PoisonValue::get(inst->getType()), paths[1 - side]);
-        values[side][inst] = phi;
-      }
-    common = next;
-  };
-  for (auto match : matches) {
-    if (cursor[0] != match.left || cursor[1] != match.right)
-      preserve(match.left, match.right, false);
-    auto consume = [&](unsigned side, unsigned index) {
-      auto *inst = work[side][index];
-      ++cursor[side];
-      return inst;
-    };
-    auto *l = consume(0, match.left);
-    auto *r = consume(1, match.right);
-    auto *shared = l->clone();
-    intersectMergedInstructionProperties(*shared, *r);
-    for (unsigned n = 0; n < shared->getNumOperands(); ++n) {
-      auto *lv = value(0, l->getOperand(n));
-      auto *rv = value(1, r->getOperand(n ^ unsigned(match.swapped)));
+      auto *lv = value(0, l->getOperand(n)), *rv = value(1, r->getOperand(n ^ unsigned(match.swapped)));
       shared->setOperand(n, select(lv, rv));
     }
     builder.Insert(shared);
-    values[0][l] = values[1][r] = shared;
+    if (segmented) {
+      values[0][l] = values[1][r] = shared;
+    } else {
+      l->replaceAllUsesWith(shared);
+      r->replaceAllUsesWith(shared);
+      l->eraseFromParent();
+      r->eraseFromParent();
+    }
   }
-  const bool pending = cursor[0] != work[0].size() || cursor[1] != work[1].size();
-  if (independentExits) {
-    if (pending) preserve(work[0].size(), work[1].size(), false);
+  if (exit == B2BExit::PreserveSuffix) return;
+
+  const bool directExit = exit == B2BExit::ForkJoin &&
+      (cursor[0] != work[0].size() || cursor[1] != work[1].size());
+  moveGap(work[0].size(), work[1].size(), directExit);
+  assert(gapIndex == placements.size() && "unused gap placements");
+  if (independent) {
     builder.CreateCondBr(condition, &left, &right);
-    // The original terminators and outgoing edges remain in place, including
-    // the incoming labels of successor PHIs.
+    split.eraseFromParent();
+    // Keep the original terminators and successor PHI labels.
     for (unsigned side = 0; side < 2; ++side) {
       for (auto *inst : work[side])
         if (!inst->use_empty())
@@ -1714,23 +1630,21 @@ static void emitB2BSegments(BranchInst &split, BasicBlock &left,
     }
     return;
   }
-  if (pending) {
-    preserve(work[0].size(), work[1].size(), true);
-  } else {
-    for (auto &phi : join.phis()) {
-      auto *lo = phi.getIncomingValueForBlock(&left);
-      auto *ro = phi.getIncomingValueForBlock(&right);
-      auto *lv = value(0, lo);
-      auto *rv = value(1, ro);
-      auto *incoming = select(lv, rv);
+  if (!directExit) {
+    for (auto &phi : join->phis()) {
+      auto *incoming = select(value(0, phi.getIncomingValueForBlock(&left)),
+                              value(1, phi.getIncomingValueForBlock(&right)));
       phi.removeIncomingValue(&left, false);
       phi.removeIncomingValue(&right, false);
-      phi.addIncoming(incoming, common);
+      phi.addIncoming(incoming, split.getParent());
     }
-    builder.CreateBr(&join);
+    builder.CreateBr(join);
   }
-  left.dropAllReferences();
-  right.dropAllReferences();
+  split.eraseFromParent();
+  if (segmented) {
+    left.dropAllReferences();
+    right.dropAllReferences();
+  }
   left.eraseFromParent();
   right.eraseFromParent();
 }
@@ -1740,7 +1654,7 @@ std::vector<Trial> planSingleBranchB2B(const Module &parent, const Candidate &c,
                                        function_ref<int(const Instruction &)> intrinsicCost,
                                        function_ref<int(const Instruction &)> anchorCost,
                                        function_ref<int(Type *)> anchorSelectCost,
-                                       function_ref<int(Type *)> anchorPhiCost, AnchorGap gap) {
+                                       function_ref<int(Type *)> anchorPhiCost) {
   ProfileScope planningScope("b2b_plan_generate_clean_total");
   std::vector<Trial> trials;
   if (!usesDarmDCE(mode))
@@ -1898,7 +1812,7 @@ std::vector<Trial> planSingleBranchB2B(const Module &parent, const Candidate &c,
       return;
     list.push_back(std::move(layout));
   };
-  const bool allowLinear = gap == AnchorGap::Auto && selectableExit && segmentUsesValid;
+  const bool allowLinear = selectableExit && segmentUsesValid;
   SmallVector<AnchorPlan, 3> unifiedPlans[2];
   // Emit in legacy fork, linear, guarded order, retaining the original trial
   // IDs and tie-breaks. Auto computes both linear projections in mode 1.
@@ -2009,19 +1923,25 @@ std::vector<Trial> planSingleBranchB2B(const Module &parent, const Candidate &c,
     auto *rawRight = cast<BasicBlock>(clone[right]);
     auto *rawJoin = join ? cast<BasicBlock>(clone[join]) : rawRight;
     t.rewriteStarted = layout.linear || !layout.matches.empty();
-    if (layout.linear || (layout.prefix && !layout.matches.empty())) {
-      emitB2BLinear(*rawBranch, *rawLeft, *rawRight, layout.mergeExit ? rawJoin : nullptr,
-                    layout.matches, layout.linear, layout.guarded, layout.placements,
-                    gap == AnchorGap::Fork);
-    } else if (!layout.matches.empty()) {
-      try {
-        emitB2BSegments(*rawBranch, *rawLeft, *rawRight, *rawJoin, layout.matches,
-                        independentExits);
-      } catch (const std::runtime_error &error) {
-        t.reason = error.what();
-        trials.push_back(std::move(t));
-        continue;
+    if (t.rewriteStarted) {
+      auto exit = layout.mergeExit ? B2BExit::Merge : B2BExit::PreserveSuffix;
+      auto placements = layout.placements;
+      if (!layout.prefix && !layout.linear) {
+        exit = independentExits ? B2BExit::Independent : B2BExit::ForkJoin;
+        unsigned leftNext = 0, rightNext = 0;
+        auto recordGap = [&](unsigned l, unsigned r) {
+          if (l != leftNext || r != rightNext)
+            placements.push_back(AnchorGapPlacement::Guard);
+        };
+        for (auto match : layout.matches) {
+          recordGap(match.left, match.right);
+          leftNext = match.left + 1;
+          rightNext = match.right + 1;
+        }
+        recordGap(segmentWork[0].size(), segmentWork[1].size());
       }
+      emitB2BLinear(*rawBranch, *rawLeft, *rawRight, rawJoin, layout.matches,
+                    exit, layout.guarded, placements);
     }
 
     } // layout emission
