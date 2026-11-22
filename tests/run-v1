@@ -28,6 +28,9 @@ fi
   "$root/tests/fusion-search/check-b2b-anchor-segments.cpp" \
   "$root/build/llvm24-tti/b2b_anchor.o" "${anchor_libs[@]}" -o "$queue_test/anchor-segments"
 "$queue_test/anchor-segments"
+"${CXX:-c++}" "${anchor_cxxflags[@]}" -std=c++17 -I"$root/tools/darm_pair_engine" -I"$root/tools" \
+  "$root/tests/fusion-search/check-r2r-integer-gaps.cpp" "${anchor_libs[@]}" -o "$queue_test/r2r-integer-gaps"
+"$queue_test/r2r-integer-gaps"
 read -r -a emitter_libs <<< "$("$LLVM_CONFIG" --ldflags --link-shared --libs --system-libs | tr '\n' ' ')"
 "${CXX:-c++}" "${anchor_cxxflags[@]}" -std=c++17 -I"$root/tools" \
   "$root/tests/fusion-search/check-b2b-linear-emitter.cpp" \

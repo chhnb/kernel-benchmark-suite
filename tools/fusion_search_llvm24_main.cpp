@@ -112,6 +112,7 @@ struct DebugObserver final:Observer {
       {"cleaned_hash",t.normalized?moduleHash(*t.normalized):""},{"blocks",std::move(Origins)}});
     json::Object report{{"schema","incremental-score-trial-v1"},{"logical_decision",t.candidate.logicalDecision},{"logical_left",t.candidate.logicalLeft},{"logical_right",t.candidate.logicalRight},{"candidate",t.candidate.key()},{"version",int64_t(t.candidate.version)},{"parent_hash",r.parentHash},{"control_hash",r.controlHash},{"round_context","../round-"+std::to_string(r.parentVersion)+".json"},{"valid",t.valid},{"rewrite_started",t.rewriteStarted},{"decision",!t.valid?"reject":score.status!=ScoreStatus::Scored?"unsupported":eligible?"accept":"reject"},{"reason",t.reason},{"merge_path",t.mergePath},{"layout_profitability",json::Array(t.layoutProfitability)},{"cross_decision_leaves",false},{"complete_leaf_plan",false},{"moved_leaf_instructions",int64_t(t.movedLeafInstructions)},{"leaf_anchors",int64_t(t.leafAnchors)},{"leaf_anchor_pairs",[&](){json::Array a;for(auto &p:t.leafAnchorPairs)a.push_back(p);return a;}()},{"fusion_plan",json::Object{{"kind",t.planKind},{"matched_left",t.matchedLeft},{"matched_right",t.matchedRight},{"left_context",bound(t.leftContext)},{"right_context",bound(t.rightContext)},{"split_is_loop_header",t.loopHeaderSplit},{"replication_required",t.replication}}},{"local_reject_reason",t.localRejectReason},{"score_result",scoreJson(score)},{"eligible",eligible},{"cleanup_iterations",int64_t(t.cleanupIterations)},{"alignment_order","function_order_v1"},{"original_darm_similarity",t.originalSimilarity},{"original_darm_profitable",t.originalProfitable},{"replication_required",t.replication},{"orientation_swapped",t.swapped},{"left",bound(t.left)},{"right",bound(t.right)},{"after_raw",stats(t.afterRaw)},{"after",stats(t.after)},{"cleaned_hash",t.normalized?moduleHash(*t.normalized):""},{"parent_ir",fullSnapshots?"../state-"+std::to_string(t.candidate.version)+".ll":inputPath},{"snapshot_mode",fullSnapshots?"full":"compact"},{"cleaned_ir",t.valid?(fullSnapshots?"after.ll":outputPath):""},{"timings_ms",json::Object{{"merge",t.mergeMs},{"normalization",t.normalizeMs},{"features",t.featuresMs},{"trial_total",t.totalMs},{"score_with_analysis",t.scoreMs}}},{"semantic_validation","not_run"}};
     if (!t.anchorStats.empty()) report["anchor"] = json::Object(t.anchorStats);
+    if (!t.r2rSpeculation.empty()) report["r2r_speculation"] = json::Object(t.r2rSpeculation);
     jsonFile(path+"/trial.json", std::move(report));
   }
   void commit(unsigned version,const Candidate&c,const ScoreResult&score,const Module&m)override {
@@ -307,6 +308,12 @@ static int runSearch(int argc, const char *const *argv, TrialWorker *batch = nul
       const bool plannedB2B = !plans.empty();
       Trial t;
       ScoreResult score;
+      auto sideGain = [](const ScoreResult &result, const char *key) -> std::optional<double> {
+        auto metric = result.metrics.find(key);
+        if (metric == result.metrics.end() || !std::isfinite(metric->second))
+          return std::nullopt;
+        return metric->second;
+      };
       if (plannedB2B) {
         json::Array profitability;
         json::Object wave;
@@ -317,12 +324,6 @@ static int runSearch(int argc, const char *const *argv, TrialWorker *batch = nul
           });
           waveClass = wave.getString("classification").getValueOr("unknown");
         }
-        auto sideGain = [](const ScoreResult &result, const char *key) -> std::optional<double> {
-          auto metric = result.metrics.find(key);
-          if (metric == result.metrics.end() || !std::isfinite(metric->second))
-            return std::nullopt;
-          return metric->second;
-        };
         std::set<std::string> seenCleanedIR;
         const bool traceLayouts = observer && !batch && std::getenv("FUSION_OBSERVE_B2B_DP");
         for (auto &plan : plans) {
@@ -381,10 +382,27 @@ static int runSearch(int argc, const char *const *argv, TrialWorker *batch = nul
       }
       const bool allowDarmB2B = !useAnchorB2B;
       if (!plannedB2B) {
-        t = tryPair(*module, c, 0, options.optLevel, options.cleanupMode,
-                    nullptr, allowDarmB2B, useArtifactB2B);
-        if (t.valid) score = profileCall("evaluate_score",[&](){return evaluateTrial(*module, t, round, scorer);});
-
+        auto emitRegion = [&](bool speculate) {
+          t = tryPair(*module, c, 0, options.optLevel, options.cleanupMode,
+                      nullptr, allowDarmB2B, useArtifactB2B, speculate);
+          score = t.valid ? profileCall("evaluate_score", [&]() {
+            return evaluateTrial(*module, t, round, scorer);
+          }) : ScoreResult{};
+        };
+        emitRegion(uniformGate);
+        if (t.valid && !t.r2rSpeculationSplit.empty()) {
+          if (StringRef(score.reason).startswith("tti_quote_")) throw std::runtime_error(score.reason);
+          auto wave = wave_diagnostic::classify(
+              *f, wave_diagnostic::findBranch(*f, t.r2rSpeculationSplit), anchorWaveShape);
+          const auto rejection = anchorUniformRejection(
+              wave.getString("classification").getValueOr("unknown"), true,
+              sideGain(score, "uniform_gain_false"), sideGain(score, "uniform_gain_true"));
+          json::Object speculation{{"split", t.r2rSpeculationSplit}, {"wave", std::move(wave)},
+                                   {"score_result", scoreJson(score)}, {"gate_rejection", rejection}};
+          if (!rejection.empty())
+            emitRegion(false);
+          t.r2rSpeculation = std::move(speculation);
+        }
       }
       if (StringRef(score.reason).startswith("tti_quote_")) throw std::runtime_error(score.reason);
       if(observer)jsonFile(debug+"/tti-quote-cache.json",llvm24Scorer.quoteCacheStats());

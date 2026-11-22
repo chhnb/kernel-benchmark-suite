@@ -185,7 +185,7 @@
         "default": {
           "commits": 30,
           "tti": 3997,
-          "ir_sha256": "25a2d3b390209e09433d77547d88fc59cc4e121cad8470316142033ed81305b1",
+          "ir_sha256": "109dae2f8e462357add07adbc0dcd17dae365372fdca464a9abe9469f40c90d1",
           "binary": {
             "format": "hsaco",
             "sha256": "030b9488c8bb5b7cf98479f218adaa85aeaec30e404f7efd4fc2ba4ad0167afc"
@@ -267,11 +267,11 @@
       "anchor_profiles": {
         "default": {
           "commits": 5,
-          "tti": 944,
-          "ir_sha256": "5aea08d6b2a5febf5eb480f283bde146e3a1c6b972dcf3fd51cdec94d28fdf61",
+          "tti": 942,
+          "ir_sha256": "5605316b9f7b3403cfdd81fcb96017f63592c94dad1c3ad888b3972c9adbc809",
           "binary": {
             "format": "hsaco",
-            "sha256": "687d2a0b1088c123af6496b3435d5555b5b9676ff75fd573a9154e616cf9ae97"
+            "sha256": "ffa327ddc018b3b910d11d56c9d9cca022509c39d5e099363465a44a574bc721"
           }
         },
         "legacy": {
@@ -586,12 +586,12 @@
       "case_metadata": "cases/pcm32/case.json",
       "anchor_profiles": {
         "default": {
-          "commits": 17,
-          "tti": 1138,
-          "ir_sha256": "09305dd6ce16fd9dd197ddd3fa7a12ee97de69086bc3f7087e738fc1eea1c7f2",
+          "commits": 18,
+          "tti": 1136,
+          "ir_sha256": "debd9769998968174b631e18fd675916172800fd3eeeb179f026e725cf3b5fb0",
           "binary": {
             "format": "hsaco",
-            "sha256": "a0a8df33ee604bc77519a3887af2c8663afa6c7f0cd609dd392d136a815ec116"
+            "sha256": "5ba36c22102cb607d1db54684102c836b639e0acbd7ee03b76a109d5447c5816"
           }
         },
         "legacy": {
@@ -667,11 +667,11 @@
       "anchor_profiles": {
         "default": {
           "commits": 3,
-          "tti": 446,
-          "ir_sha256": "84495226b219c7d3c405401e962a85122cd209101bc70ff2e7103a658ae8f55a",
+          "tti": 445,
+          "ir_sha256": "29c33f08d3663cfa068b563f88939300fe16ae24ca5f748bef8f6eec11b59b71",
           "binary": {
             "format": "hsaco",
-            "sha256": "4f105a815f9370e3a983092c84d558f7b05dd76ff6e170dc6deffc3f79aad925"
+            "sha256": "ac992d49e04656c3b8789a6825ca51c0895b2c656bf7387e61785b5d8e3703d9"
           }
         },
         "legacy": {
@@ -747,11 +747,11 @@
       "anchor_profiles": {
         "default": {
           "commits": 3,
-          "tti": 446,
-          "ir_sha256": "5f76db84cd3958b85edbe91394ef7aba54672e0d44e548e721a94b4c8eaef638",
+          "tti": 445,
+          "ir_sha256": "675b5641e45673d18e51066e4cfa8a5ec70c5c0d4afbc2409dd5766f45eae5a2",
           "binary": {
             "format": "hsaco",
-            "sha256": "9dde8dbb06009f0f0b609d2fde1a7cd20f31e98a70b20af3ce397a6991594dbf"
+            "sha256": "fe59dbc7dc4d2955b0f3953a688ee8fcf58e6d28a8404cde068cfc610404948a"
           }
         },
         "legacy": {
@@ -832,7 +832,7 @@
         "default": {
           "commits": 22,
           "tti": 1635,
-          "ir_sha256": "0a776f8358682bca451208efdec2de8b7c23c985990debefa5b4eaa1f69ea944",
+          "ir_sha256": "31aea7ae5a00106b1e4684c7f87cf6fa895cff29010f450c740f92396eb1943f",
           "binary": {
             "format": "hsaco",
             "sha256": "a74f636a78aa5c595ba9ea2675494d942064fe7f5cd499d7a7323c501cb1019f"
@@ -992,7 +992,7 @@
         "default": {
           "commits": 3,
           "tti": 281,
-          "ir_sha256": "417664a60f8b61f295edc5ea6f6eebd9c17760d6f19cfedb6ff7540778dae78e",
+          "ir_sha256": "f068294bdff0eea4be42fe2036db147d3efd5cbc31ab44d1b006c2fc9fd4fb11",
           "binary": {
             "format": "hsaco",
             "sha256": "c9f5da8a8caab4cc492af650f8663fae867cb65356aaa16a8c49ce48223dae38"
@@ -1152,11 +1152,11 @@
       "anchor_profiles": {
         "default": {
           "commits": 2,
-          "tti": 210,
-          "ir_sha256": "b80a9581d7c8cb5e652c0b80b6658ffa98000051115380f910fc4e6c69272de8",
+          "tti": 209,
+          "ir_sha256": "b1343cc5c72cc19d5a352cfa8080208fb503de8160190f1a0f638bc4cff42ad8",
           "binary": {
             "format": "hsaco",
-            "sha256": "67e86ccd15676d38fb247efa7f161ac6f0cb42dc6a040973de329a86763f296a"
+            "sha256": "37ed260bde0e42fc816853f9ea712685dbda735b563bbddd3a5026044c7befc5"
           }
         },
         "legacy": {
@@ -1233,12 +1233,12 @@
       "case_metadata": "cases/boost-saspoint5/case.json",
       "anchor_profiles": {
         "default": {
-          "commits": 8,
-          "tti": 487,
-          "ir_sha256": "cddeee0b711c71df961d6790a5d6501a1cab8070c4972dc17e1ee9d5292aab44",
+          "commits": 7,
+          "tti": 491,
+          "ir_sha256": "eefddfe2b88b52b4e348b8ac7ad6a324f0c7c881521d3a4f3c7696de9d616385",
           "binary": {
             "format": "cubin",
-            "sha256": "c1e34623ec1e2517a89fc5864712e3edaaac4de9c81ab71685d71ae068fcd183"
+            "sha256": "9b8f297905aca8ac726d64707a8432c07a90565b1828401251dbef473f230b2d"
           }
         },
         "legacy": {
@@ -3783,8 +3783,8 @@
       "anchor_profiles": {
         "default": {
           "commits": 2,
-          "tti": 637,
-          "ir_sha256": "ef1fa6fd26c94734564b205d4c8b79bb69ec5cc8ace91c88d6163dbad45b4078"
+          "tti": 628,
+          "ir_sha256": "387a564d46e1226112d51f2d9e7640dc1016dd72b2e41533a2a488aa330af915"
         },
         "legacy": {
           "commits": 1,

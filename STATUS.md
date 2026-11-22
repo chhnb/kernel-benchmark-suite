@@ -1,8 +1,12 @@
 # 当前状态导航
 
-更新于 2026-11-22。Auto Greedy V2 在 Anchor 发布线默认使用逐 wave 分类和双侧 uniform gain gate。旧默认可用 `--anchor-mode legacy` 重放。发布清单提供确切 launch 形状。
+更新于 2026-11-22。发布候选对 Anchor B2B 和 DARM R2R 受限推测使用逐 wave 分类和双侧 uniform gain gate。发布清单提供确切 launch 形状，手工运行请用 `--anchor-wave-shape X,Y,Z` 或提供确切的 `reqd_work_group_size`。旧默认可用 `--anchor-mode legacy` 重放。
 
-下表保留 2026-11-20 冻结版本的背景。当前默认的逐输入计时和等价审计见 [第 8 步发布复验](regression/records/anchor-unified-dp-step8-20261122.md)。
+默认 Anchor 发射可直接使用原 split 条件，因为新用途位于原条件分支的执行范围内。LLVM 规定以 poison 或 undef 为条件执行 `br` 是未定义行为。 [LLVM LangRef](https://llvm.org/docs/LangRef.html#br-instruction)
+
+PCM32 复现第 7d 步已测的设备对象，较上一发布默认快 6.83%，与 Auto DARM 持平。静态等价和补测见 [第 9 步发布候选复验](regression/records/anchor-r2r-speculation-release-20261122.md)。
+
+下表保留 2026-11-20 冻结版本的背景。上一发布默认的逐输入计时和等价审计见 [第 8 步发布复验](regression/records/anchor-unified-dp-step8-20261122.md)。
 
 | 范围 | 当前状态 |
 |---|---|
