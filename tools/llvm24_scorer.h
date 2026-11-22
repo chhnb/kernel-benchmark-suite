@@ -1,6 +1,7 @@
 #pragma once
 #include "fusion_search.h"
 #include "tti_quote_key.h"
+#include <cstdlib>
 #include "tti_cost_kind.h"
 #include "tti_memory_io.h"
 #include "llvm/IR/IntrinsicInst.h"
@@ -119,7 +120,9 @@ class LLVM24Scorer final:public Scorer {
         result=session->score(ir);
         if(StringRef(result).trim()=="null")
           throw std::runtime_error("persistent worker rejected IR");
-      }catch(const std::runtime_error &){
+      }catch(const std::runtime_error &error){
+        if (std::getenv("KBS_TTI_TABLE"))
+          throw std::runtime_error(std::string("tti_quote_replay: ") + error.what());
         session.reset();
         persistentUnavailable=true;
         result.clear();
@@ -146,13 +149,15 @@ class LLVM24Scorer final:public Scorer {
 #endif
     auto j=json::parse(result);if(!j)throw std::runtime_error(toString(j.takeError()));
     auto*o=j->getAsObject();if(!o)throw std::runtime_error("invalid worker JSON");
-    if(o->getString("schema")!=Optional<StringRef>("llvm24-tti-v1")||
-       o->getString("source_revision")!=Optional<StringRef>("6be16f356d3e"))throw std::runtime_error("worker identity mismatch");
-    if (o->getString("cost_kind")!=Optional<StringRef>(ttiCostKindName()))
-      throw std::runtime_error("worker cost kind mismatch");
-    if(o->getString("triple")!=Optional<StringRef>(f.getParent()->getTargetTriple())||
-       o->getString("cpu")!=Optional<StringRef>(f.getFnAttribute("target-cpu").getValueAsString())||
-       o->getString("features")!=Optional<StringRef>(f.getFnAttribute("target-features").getValueAsString()))throw std::runtime_error("worker target mismatch");
+    if (!std::getenv("KBS_TTI_TABLE")) {
+      if(o->getString("schema")!=Optional<StringRef>("llvm24-tti-v1")||
+         o->getString("source_revision")!=Optional<StringRef>("6be16f356d3e"))throw std::runtime_error("worker identity mismatch");
+      if (o->getString("cost_kind")!=Optional<StringRef>(ttiCostKindName()))
+        throw std::runtime_error("worker cost kind mismatch");
+      if(o->getString("triple")!=Optional<StringRef>(f.getParent()->getTargetTriple())||
+         o->getString("cpu")!=Optional<StringRef>(f.getFnAttribute("target-cpu").getValueAsString())||
+         o->getString("features")!=Optional<StringRef>(f.getFnAttribute("target-features").getValueAsString()))throw std::runtime_error("worker target mismatch");
+    }
     auto n=o->getInteger("instructions"),u=o->getInteger("unknown"),z=o->getInteger("zero"),v=o->getInteger("modeled_cost");
     if(!n||!u||!z||!v)throw std::runtime_error("worker cost fields missing");
     int64_t count=0;std::set<const BasicBlock*> seen;std::vector<const BasicBlock*> pending{&f.getEntryBlock()};

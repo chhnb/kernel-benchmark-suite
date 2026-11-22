@@ -133,7 +133,7 @@ public:
       char Buffer[4096];
       auto N=::read(Socket,Buffer,sizeof Buffer);
       if(N<0&&errno==EINTR)continue;
-      if(N<=0)throw std::runtime_error("persistent TTI worker exited");
+      if(N<=0)throw std::runtime_error("persistent TTI worker exited: " + Error.read());
       Response.append(Buffer,N);
       if(Response.size()>maxResponseSize)break;
       if(Response.back()=='\n')return Response;

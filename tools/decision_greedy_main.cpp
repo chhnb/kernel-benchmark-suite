@@ -26,7 +26,7 @@ static json::Value read(const std::string&p){auto b=MemoryBuffer::getFile(p);if(
 static void checkQuoteFailure(const std::string &path) {
   auto file=MemoryBuffer::getFile(path);
   if(file && (*file)->getBuffer().contains("tti_quote_"))
-    throw std::runtime_error("TTI quote audit failed: "+path);
+    throw std::runtime_error("TTI quote audit failed: "+path+"\n"+(*file)->getBuffer().take_back(8192).str());
 }
 static int run(std::vector<std::string> a,const std::string&out,const std::string&err){for(const auto&p:{out,err})if(auto e=sys::fs::remove(p))throw std::runtime_error("cannot reset child output: "+p+": "+e.message());std::vector<StringRef> refs;for(auto&s:a)refs.push_back(s);std::array<Optional<StringRef>,3> red{{StringRef(""),StringRef(out),StringRef(err)}};return sys::ExecuteAndWait(a[0],refs,None,red,120);}
 static sys::ProcessInfo startTrial(const std::vector<std::string> &args,
@@ -194,14 +194,20 @@ int main(int argc,char**argv){try{
    throw std::runtime_error("structural candidate engine unavailable: "+structural);
  targets.emplace_back();
  auto quote=[&](const std::string &input,const std::string &prefix) -> Optional<int64_t> {
-   if(run({root+"/tools/run-llvm24-tti",input,fn},prefix+".json",prefix+".stderr"))
+   if(run({root+"/tools/run-llvm24-tti",input,fn},prefix+".json",prefix+".stderr")){
+     checkQuoteFailure(prefix+".stderr");
      throw std::runtime_error("TTI worker failed: "+prefix);
+   }
    auto report=read(prefix+".json");
    const auto *result=report.getAsObject();
-   if(!result || result->getString("source_revision")!=Optional<StringRef>("6be16f356d3e"))
-     throw std::runtime_error("TTI revision mismatch: "+prefix);
-   if(result->getString("cost_kind")!=Optional<StringRef>(fusion::ttiCostKindName()))
-     throw std::runtime_error("TTI cost kind mismatch: "+prefix);
+   if(!result)
+     throw std::runtime_error("invalid TTI response: "+prefix);
+   if (!std::getenv("KBS_TTI_TABLE")) {
+     if(result->getString("source_revision")!=Optional<StringRef>("6be16f356d3e"))
+       throw std::runtime_error("TTI revision mismatch: "+prefix);
+     if(result->getString("cost_kind")!=Optional<StringRef>(fusion::ttiCostKindName()))
+       throw std::runtime_error("TTI cost kind mismatch: "+prefix);
+   }
    if(result->getInteger("unknown")!=Optional<int64_t>(0))return None;
    auto total=result->getInteger("cost");
    if(!total)throw std::runtime_error("missing TTI cost: "+prefix);
