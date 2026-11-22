@@ -13,11 +13,12 @@ int main() {
   auto module = parseAssemblyString(R"(
     define i32 @test(i1 %cond, i32 %input, i32* %ptr) {
       %safe = add nsw i32 %input, 4
+      %frozen = freeze i32 %safe
       %keep = load i32, i32* %ptr
       %local = sub nuw i32 %keep, 1
       %opposite = add i32 %input, 9
       %wide = xor i32 %opposite, %local
-      %masked = select i1 %cond, i32 %safe, i32 %input
+      %masked = select i1 %cond, i32 %frozen, i32 %input
       %out = add i32 %wide, %masked
       ret i32 %out
     }
@@ -31,7 +32,7 @@ int main() {
     llvm_unreachable("missing fixture instruction");
   };
   SmallVector<GapRange, 8> gaps{
-      {inst("safe"), inst("safe"), true},
+      {inst("safe"), inst("frozen"), true},
       {inst("keep"), inst("keep"), true},
       {inst("local"), inst("local"), true},
       {inst("opposite"), inst("opposite"), false},
@@ -43,7 +44,11 @@ int main() {
     protectedValues.insert(g.First.Instructions.begin(), g.First.Instructions.end());
     protectedValues.insert(g.Second.begin(), g.Second.end());
   }
+  assert(plan.SpeculatedIntegerGaps);
   assert(!protectedValues.count(inst("safe")));
+  assert(!protectedValues.count(inst("frozen")));
+  assert(isa<FreezeInst>(inst("frozen")) &&
+         inst("masked")->getOperand(1) == inst("frozen"));
   assert(!cast<BinaryOperator>(inst("safe"))->hasNoSignedWrap());
   assert(protectedValues.count(inst("keep")));
   assert(protectedValues.count(inst("local")));

@@ -38,7 +38,7 @@ int main(int argc, char **argv) {
   // The first gap guards both arms with one branch, retaining memory order
   // and keeping their pure calculations inside the chosen arm.
   auto &first = cast<BranchInst>(*entry.getTerminator());
-  assert(isa<FreezeInst>(first.getCondition()));
+  assert(first.getCondition() == function.getArg(0));
   auto *join = first.getSuccessor(0)->getSingleSuccessor();
   assert(join && first.getSuccessor(1)->getSingleSuccessor() == join);
   for (unsigned side = 0; side != 2; ++side) {
@@ -65,5 +65,36 @@ int main(int argc, char **argv) {
   auto &exitValue = cast<PHINode>(continuation->front());
   assert(isa<PoisonValue>(exitValue.getIncomingValueForBlock(join)));
   assert(exitValue.getIncomingValueForBlock(oneSide) == &oneSide->front());
+  for (const auto &block : function)
+    for (const auto &inst : block)
+      assert(!isa<FreezeInst>(inst));
+
+  // These inputs already reach a branch with an undefined condition. Keep
+  // the original condition in the rewritten guard and selects.
+  Value *undefinedConditions[] = {PoisonValue::get(Type::getInt1Ty(context)),
+                                  UndefValue::get(Type::getInt1Ty(context))};
+  for (Value *condition : undefinedConditions) {
+    auto undefined = parseAssemblyFile(argv[1], error, context);
+    assert(undefined);
+    auto &branch = cast<BranchInst>(*undefined->getFunction("auto_guard_reference")
+                                       ->getEntryBlock().getTerminator());
+    branch.setCondition(condition);
+    auto *l = branch.getSuccessor(0);
+    auto *r = branch.getSuccessor(1);
+    emitB2BLinear(branch, *l, *r, l->getSingleSuccessor(), matches, true, false, gaps);
+    auto &entry = undefined->getFunction("auto_guard_reference")->getEntryBlock();
+    assert(cast<BranchInst>(*entry.getTerminator()).getCondition() == condition);
+    assert(!verifyModule(*undefined, &errs()));
+  }
+
+  auto legacy = parseAssemblyFile(argv[1], error, context);
+  assert(legacy);
+  auto &legacyEntry = legacy->getFunction("auto_guard_reference")->getEntryBlock();
+  auto &legacyBranch = cast<BranchInst>(*legacyEntry.getTerminator());
+  const AnchorMatch prefix[] = {{0, 0}};
+  emitB2BLinear(legacyBranch, *legacyBranch.getSuccessor(0), *legacyBranch.getSuccessor(1),
+                nullptr, prefix, false, false, {}, true);
+  assert(isa<FreezeInst>(legacyBranch.getCondition()));
+  assert(!verifyModule(*legacy, &errs()));
   module->print(outs(), nullptr);
 }

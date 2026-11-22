@@ -785,6 +785,7 @@ bool RegionMelder::hasGuardedGap(const Instruction *instruction, bool left) cons
 void RegionMelder::runUnpredicationPass() {
   auto Plan = planGaps(SplitRanges, SpeculateIntegerGaps ?
                                     MA.getDivergentCondition() : nullptr);
+  SpeculatedIntegerGaps |= Plan.SpeculatedIntegerGaps;
   for (auto &Guard : Plan.Guards) {
     auto Range = Guard.First.range();
     auto *End = Guard.Second.empty() ? Range.getEnd() : Guard.Second.back();

@@ -67,6 +67,7 @@ inline bool isCheapIntegerGapInstruction(const Instruction &I) {
   if (!I.getType()->isIntegerTy() || !safeToExecuteUnconditionally(I))
     return false;
   switch (I.getOpcode()) {
+  case Instruction::Freeze:
   case Instruction::Add: case Instruction::Sub:
   case Instruction::And: case Instruction::Or: case Instruction::Xor:
   case Instruction::ICmp: case Instruction::Select:
@@ -140,7 +141,10 @@ inline void keepIndependentIntegerGapsInPlace(std::vector<GapSegment> &segments,
   });
 }
 
-struct GapPlan { std::vector<GapGuard> Guards; };
+struct GapPlan {
+  std::vector<GapGuard> Guards;
+  bool SpeculatedIntegerGaps = false;
+};
 inline GapPlan planGaps(ArrayRef<GapRange> ranges,
                         const Value *integerGapCondition = nullptr) {
   GapPlan plan;
@@ -154,8 +158,11 @@ inline GapPlan planGaps(ArrayRef<GapRange> ranges,
     }
     segments.push_back(std::move(segment));
   }
-  if (integerGapCondition)
+  if (integerGapCondition) {
+    const auto guardedCount = segments.size();
     keepIndependentIntegerGapsInPlace(segments, integerGapCondition);
+    plan.SpeculatedIntegerGaps = segments.size() != guardedCount;
+  }
   for (unsigned i = 0; i < segments.size(); ++i) {
     const auto &a = segments[i];
     GapGuard guard{a, {}};
