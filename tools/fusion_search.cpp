@@ -1168,6 +1168,7 @@ static Trial tryPairImpl(const Module&parent,const Candidate&c,unsigned version,
   const bool artifact = artifactB2B && t.planKind == "B2B";
   std::vector<darm_artifact::Origin> artifactOrigins;
   RegionMelder melder(directLeaves?*leafAnalyzer:ma,true);
+  melder.SpeculateIntegerGaps = t.planKind == "R2R" && !t.replication;
   if(t.logicalState)melder.onValueMapping=[&](const ValueToValueMapTy &m){t.logicalState->transfer(m);};
   {
     if(!regionStores.empty()){
