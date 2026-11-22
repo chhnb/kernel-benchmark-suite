@@ -1,11 +1,22 @@
 #include "llvm/Support/FileSystem.h"
 #include "llvm/Support/JSON.h"
+#include "llvm/Support/FormatVariadic.h"
 #include "llvm/Support/MemoryBuffer.h"
 #include "llvm/Support/Program.h"
 #include "llvm/Support/raw_ostream.h"
 #include <zlib.h>
 
+#include <algorithm>
 #include <chrono>
+#include <cmath>
+#include <fcntl.h>
+#include <iomanip>
+#include <numeric>
+#include <random>
+#include <set>
+#include <sstream>
+#include <sys/file.h>
+#include <unistd.h>
 #include <cstdlib>
 #include <filesystem>
 #include <fstream>
@@ -275,11 +286,16 @@ struct Artifact {
   }
 };
 
+#include "measure.hpp"
+
 void help() {
   std::cout << "kbs list\n"
             << "kbs build --variant base|bf|darm|anchor --case NAME [--out DIR]"
                " [--darm-original] [--darm-pristine]\n"
-            << "kbs verify [--out DIR]\n";
+            << "kbs verify [--out DIR]\n"
+            << "kbs run --variant V --case NAME[/INPUT] [--out DIR] [--objects DIR]\n"
+            << "kbs compare [--case NAME[/INPUT]]... [--quick] [--force] [--out DIR] [--objects DIR]\n"
+            << "kbs report [--quick] [--out DIR]\n";
 }
 }
 
@@ -291,9 +307,12 @@ int main(int argc, char **argv) try {
   Artifact artifact(llvm::sys::fs::getMainExecutable(argv[0],
       reinterpret_cast<void *>(&help)));
   const StringRef command(argv[1]);
+  if (command == "run" || command == "compare" || command == "report")
+    return measurementCommand(artifact, command, argc, argv);
   if (command == "list" && argc == 2) {
     for (const auto &[name, row] : artifact.cases) {
       std::cout << name << " base bf darm anchor";
+      if (fs::exists(artifact.data / "run-manifest.json")) std::cout << " darm-best (run only)";
       if (auto exception = row->getString("bf_unavailable"))
         std::cout << " · bf 不可用〔1〕 " << exception->str();
       std::cout << '\n';

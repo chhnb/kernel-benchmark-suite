@@ -131,3 +131,44 @@ target_link_libraries(kbs PRIVATE ZLIB::ZLIB)
 target_compile_definitions(kbs PRIVATE KBS_LLVM_BIN="${llvm_bindir}"
   KBS_DATA_DIR="${CMAKE_CURRENT_SOURCE_DIR}")
 add_dependencies(kbs decision-greedy fusion-search-llvm24 kbs-tti kbs-darm kbs-darm-pristine)
+
+option(KBS_GPU_RUNNERS "Build the gfx906 timing runners" OFF)
+if(KBS_GPU_RUNNERS)
+  find_program(KBS_HIPCC NAMES hipcc HINTS /opt/rocm-6.3.3/bin /opt/rocm/bin REQUIRED)
+  set(runners "${CMAKE_CURRENT_SOURCE_DIR}/runners")
+  set(repo "${CMAKE_CURRENT_SOURCE_DIR}/..")
+  file(GLOB runner_headers CONFIGURE_DEPENDS "${runners}/*.h" "${runners}/*.hpp"
+    "${repo}/runner/*.hpp" "${repo}/regression/srad_measurement/*.hpp"
+    "${repo}/cases/tigre-siddon/harness/*.hpp" "${repo}/cases/tigre-siddon/harness/*.inc")
+  foreach(runner generic ced-graph srad-graph lud-window nqu sort tigre tpacf environment)
+    set(source "${runners}/${runner}.hip")
+    if(runner STREQUAL "generic")
+      set(source "${runners}/generic.cpp")
+    endif()
+    set(output "${CMAKE_CURRENT_BINARY_DIR}/kbs-${runner}")
+    add_custom_command(OUTPUT "${output}"
+      COMMAND "${KBS_HIPCC}" -O2 -std=c++17 -DBENCH_HIP --offload-arch=gfx906
+        -I "${repo}/runner" -I "${repo}/regression/srad_measurement"
+        -I "${repo}/cases/tigre-siddon/harness" -x hip "${source}" -o "${output}"
+      DEPENDS "${source}" ${runner_headers} VERBATIM)
+    list(APPEND timing_runners "${output}")
+  endforeach()
+  add_custom_target(kbs-gpu-runners ALL DEPENDS ${timing_runners})
+
+  add_executable(kbs-lud-fixture runners/lud-fixture.cpp)
+  add_executable(kbs-sort-fixtures runners/sort-fixtures.cpp)
+  add_executable(kbs-nqu-fixtures runners/nqu-fixtures.cpp)
+  add_executable(kbs-srad-stage2-fixtures "${repo}/cases/srad-stage2/make_fixtures.cpp")
+  set(fixture_source "${repo}/regression/generators/generated_fixtures.cpp")
+  add_executable(kbs-vllm-fixtures "${fixture_source}")
+  add_executable(kbs-mapairy-fixtures "${fixture_source}")
+  target_compile_definitions(kbs-mapairy-fixtures PRIVATE MAPAIRY BOOST_MATH_STANDALONE)
+  target_include_directories(kbs-mapairy-fixtures PRIVATE
+    "${repo}/cases/boost-mapairy/source/boost-math/include")
+  foreach(generator lud-fixture sort-fixtures nqu-fixtures srad-stage2-fixtures vllm-fixtures mapairy-fixtures)
+    target_compile_features(kbs-${generator} PRIVATE cxx_std_17)
+    target_compile_options(kbs-${generator} PRIVATE -O2 -ffp-contract=off -fno-fast-math)
+  endforeach()
+  add_dependencies(kbs kbs-gpu-runners kbs-lud-fixture kbs-sort-fixtures
+    kbs-nqu-fixtures kbs-srad-stage2-fixtures kbs-vllm-fixtures kbs-mapairy-fixtures)
+endif()
