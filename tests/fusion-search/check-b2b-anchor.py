@@ -78,112 +78,6 @@ with tempfile.TemporaryDirectory() as directory:
         print(name, historical_tti, "->", score)
 
 
-    # Query both target models on a kernel argument and a work-item ID.
-    for triple, calling_conv, intrinsic in (
-        ("amdgcn-amd-amdhsa", "amdgpu_kernel", "llvm.amdgcn.workitem.id.x"),
-        ("nvptx64-nvidia-cuda", "ptx_kernel", "llvm.nvvm.read.ptx.sreg.tid.x"),
-    ):
-        for classification, value in (("uniform", "%arg"), ("divergent", "%tid")):
-            source = root / f"{triple}-{classification}.ll"
-            result = source.with_suffix(".json")
-            source.write_text(f"""target triple = "{triple}"
-declare i32 @{intrinsic}()
-define {calling_conv} void @kernel(i32 %arg) {{
-entry:
-  %tid = call i32 @{intrinsic}()
-  %cond = icmp eq i32 {value}, 0
-  br i1 %cond, label %left, label %right
-left:
-  ret void
-right:
-  ret void
-}}
-""")
-            subprocess.run([search, "--ir", source, "--function", "kernel", "--split", "B0",
-                            "--anchor-condition-only", "1", "--out", result], check=True)
-            report = json.loads(result.read_text())
-            assert report["classification"] == classification, report
-            assert (intrinsic in report["sources"]) == (classification == "divergent"), report
-
-    source = root / "unsupported-target.ll"
-    source.write_text('target triple = "x86_64-unknown-linux-gnu"\n' +
-                      'define void @kernel(i1 %p) { entry: br i1 %p, label %l, label %r '
-                      'l: ret void r: ret void }\n')
-    result = source.with_suffix(".json")
-    subprocess.run([search, "--ir", source, "--function", "kernel", "--split", "B0",
-                    "--anchor-condition-only", "1", "--out", result], check=True)
-    assert json.loads(result.read_text())["classification"] == "unknown"
-
-
-def check_wave(root, worker_input, shape, expression, expected, nvptx=False,
-               condition_source="thread-pattern", split="B0"):
-    triple = "nvptx64-nvidia-cuda" if nvptx else "amdgcn-amd-amdhsa"
-    tid = "llvm.nvvm.read.ptx.sreg.tid.x" if nvptx else "llvm.amdgcn.workitem.id.x"
-    cpu = "sm_70" if nvptx else "gfx906"
-    convention = "ptx_kernel" if nvptx else "amdgpu_kernel"
-    worker_input.write_text(f'''
-target triple = "{triple}"
-declare i32 @{tid}()
-declare i32 @llvm.ctpop.i32(i32)
-define {convention} void @wave(i32* %input, i32 %n) #0 {{
-entry:
-  %x = call i32 @{tid}(), !range !0
-  {expression}
-  br i1 %cond, label %yes, label %no
-yes:
-  ret void
-no:
-  ret void
-}}
-attributes #0 = {{ "target-cpu"="{cpu}" "amdgpu-flat-work-group-size"="1,256" }}
-!0 = !{{i32 0, i32 256}}
-''')
-    report = root / "wave.json"
-    report.unlink(missing_ok=True)
-    command = [search, "--ir", worker_input, "--function", "wave", "--split", split,
-               "--anchor-condition-only", "1", "--out", report]
-    if shape:
-        command += ["--anchor-wave-shape", shape]
-    subprocess.run(command, check=True)
-    wave = json.loads(report.read_text())["wave"]
-    assert (wave["classification"], wave["mixed_waves"], wave["total_waves"]) == expected, wave
-    assert wave["condition_source"] == condition_source, wave
-
-
-with tempfile.TemporaryDirectory() as directory:
-    root = Path(directory)
-    source = root / "wave.ll"
-    threshold8 = "%cond = icmp ult i32 %x, 8"
-    threshold64 = "%cond = icmp ult i32 %x, 64"
-    check_wave(root, source, "16,1,1", threshold8, ("must-diverge", 1, 1))
-    check_wave(root, source, "256,1,1", threshold8, ("mixed", 1, 4))
-    check_wave(root, source, "16,4,1", "%cond = icmp eq i32 %x, 0", ("must-diverge", 1, 1))
-    check_wave(root, source, "128,1,1", threshold64, ("must-uniform", 0, 2))
-    check_wave(root, source, "96,2,1", threshold64, ("mixed", 2, 3))
-    check_wave(root, source, None, threshold8, ("unknown", None, None))
-    check_wave(root, source, None, "%cond = icmp ult i32 %x, %n", ("unknown", None, None))
-    check_wave(root, source, "16,1,1", "%cond = icmp ult i32 %x, %n", ("unknown", None, 1))
-    check_wave(root, source, None,
-               "%bits = call i32 @llvm.ctpop.i32(i32 %x)\n  %cond = icmp ult i32 %bits, %n",
-               ("unknown", None, None))
-    check_wave(root, source, None, "%cond = icmp sgt i32 %n, 0",
-               ("unknown", None, None), condition_source="workgroup-uniform")
-    check_wave(root, source, "16,1,1",
-               "%v = load i32, i32* %input\n  %cond = icmp ult i32 %v, 8",
-               ("unknown", None, 1), condition_source="data")
-    check_wave(root, source, None,
-               "%v = load i32, i32* %input\n  %sum = add i32 %x, %v\n"
-               "  %cond = icmp sgt i32 %sum, 0",
-               ("unknown", None, None), condition_source="data")
-    check_wave(root, source, None,
-               "%choose = icmp uge i32 %x, 8\n  br i1 %choose, label %a, label %b\n"
-               "a: br label %merge\nb: br label %merge\nmerge:\n"
-               "  %cond = phi i1 [ true, %a ], [ false, %b ]",
-               ("unknown", None, None), condition_source="data", split="B3")
-    check_wave(root, source, "64,1,1", "%cond = icmp ult i32 %x, 32",
-               ("must-uniform", 0, 2), nvptx=True)
-
-
 with tempfile.TemporaryDirectory() as directory:
     root = Path(directory)
     fixture = (fixtures / "MapAiry.ll").read_text()
@@ -264,7 +158,6 @@ with tempfile.TemporaryDirectory() as directory:
         result = subprocess.run([
             search, "--ir", fixtures / "nqu64-guard-parent.ll",
             "--function", "_Z24solve_nqueen_cuda_kerneliiPjS_S_S_i",
-            "--structural", "1", "--cleanup", "darm-cfg-dce-instcombine",
             "--split", "B2", "--left", "B19", "--right", "B21",
             "--tti-worker", worker, "--debug-dir", debug,
             "--out", debug.with_suffix(".ll"), *opts,

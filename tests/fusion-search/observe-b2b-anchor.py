@@ -38,7 +38,7 @@ with tempfile.TemporaryDirectory() as directory:
              "--split", args.split, "--left", args.left, "--right", args.right,
              "--b2b-strategy", "anchor",
              *(["--anchor-wave-shape", args.anchor_wave_shape] if args.anchor_wave_shape else []),
-             "--structural", "1", "--tti-worker", worker,
+              "--tti-worker", worker,
              "--out", output, "--debug-dir", debug],
             env=os.environ | {"FUSION_OBSERVE_B2B_DP": str(trace)}, check=False,
         )

@@ -28,8 +28,8 @@ int main(void) {
 
 with tempfile.TemporaryDirectory() as temporary:
     out = Path(temporary)
-    command = [args.search.resolve(), "--function", "choose", "--structural", "1",
-               "--cleanup", "darm-cfg-dce-instcombine", "--b2b-strategy", "darm",
+    command = [args.search.resolve(), "--function", "choose",
+                "--b2b-strategy", "darm",
                "--tti-worker", str(fixture.parents[2] / "tools/run-llvm24-tti")]
     def trial(source, label):
         binary_ir = out / (label + ".ll")

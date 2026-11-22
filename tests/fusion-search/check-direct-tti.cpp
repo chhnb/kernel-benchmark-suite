@@ -16,7 +16,7 @@ int main(int argc,char **argv){
  auto before=parseIRFile(argv[1],err,ctx),after=parseIRFile(argv[2],err,ctx);
  if(!before||!after)return 2;
  auto *b=before->getFunction(argv[3]),*a=after->getFunction(argv[3]);if(!a||!b)return 2;
- auto round=makeRound(*before,argv[3],0,0,CleanupMode::None);
+ auto round=makeRound(*before,argv[3],0,CleanupMode::None);
  Trial trial;trial.valid=true;trial.cleanupMode=CleanupMode::None;trial.candidate={argv[3],"","","",0};
  trial.before=features(*b);trial.after=features(*a);trial.afterRaw=trial.after;
  trial.normalized=CloneModule(*after);trial.raw=CloneModule(*after);

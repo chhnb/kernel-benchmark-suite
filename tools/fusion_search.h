@@ -13,7 +13,6 @@
 #include <string>
 #include <vector>
 namespace fusion {
-class LogicalRegionState;
 enum class CleanupMode { None, DarmCFGInstCombine };
 struct Candidate {
   std::string function, split, left, right;
@@ -81,7 +80,6 @@ struct BlockProvenance {
   std::string leftID,rightID,leftLabel,rightLabel,rawBlock,cleanedBlock;
 };
 struct Trial {
-  std::shared_ptr<LogicalRegionState> logicalState;
   CleanupMode cleanupMode=CleanupMode::DarmCFGInstCombine;
   Candidate candidate;
   std::unique_ptr<llvm::Module> raw, normalized;
@@ -92,8 +90,6 @@ struct Trial {
   double originalSimilarity=0;
   bool originalProfitable=false;
   unsigned cleanupIterations=0;
-  unsigned movedLeafInstructions=0, leafAnchors=0;
-  std::vector<std::string> leafAnchorPairs;
   // Blocks reachable when the split condition is fixed to false ([0]) / true
   // ([1]); indices into the parent (before) and cleaned (after) functions.
   std::vector<unsigned> sideBefore[2], sideAfter[2];
@@ -104,7 +100,6 @@ struct Trial {
   std::string planKind, matchedLeft, matchedRight;
   Boundary leftContext, rightContext;
   bool loopHeaderSplit=false;
-  bool insideLoop=false;
   llvm::json::Array layoutProfitability;
   llvm::json::Object anchorStats;
   std::string r2rSpeculationSplit;
@@ -131,50 +126,23 @@ public:
     return false;
   }
 };
-struct Options {
-  CleanupMode cleanupMode=CleanupMode::DarmCFGInstCombine;
-  static constexpr unsigned optLevel=3;
-};
-struct Observer {
-  virtual ~Observer() = default;
-  virtual void initial(const llvm::Module &) {}
-  virtual void logical(unsigned version, const std::string &json) {}
-  virtual void round(const RoundContext &) {}
-  virtual void trial(const Trial &, const RoundContext &, const ScoreResult &, bool eligible) {}
-  virtual void commit(unsigned version, const Candidate &, const ScoreResult &,
-                      const llvm::Module &) {}
-};
 std::string moduleHash(const llvm::Module &);
 Features features(llvm::Function &);
 RoundContext makeRound(const llvm::Module &, const std::string &function,
-                       unsigned version, unsigned optLevel, CleanupMode mode=CleanupMode::DarmCFGInstCombine);
+                       unsigned version, CleanupMode mode=CleanupMode::DarmCFGInstCombine);
 ScoreResult evaluateTrial(const llvm::Module &, Trial &, const RoundContext &, const Scorer &);
 bool eligible(const Trial &, const ScoreResult &);
 // Complete E-leaves require same-SSA constant predicates unless explicitly enabled.
 std::set<std::string> crossLevelCatalogRejections(llvm::Function &,
     const std::vector<Candidate> &);
 std::vector<Candidate> enumerate(llvm::Function &, unsigned version);
-std::vector<Candidate> enumerateAdjacent(llvm::Function &, unsigned version);
-// Resolved endpoints belong to this exact Function snapshot. Coordinates are
-// transport only; clients must bind persistent identity to the actual blocks.
-struct ResolvedCandidate {
-  Candidate candidate;
-  llvm::BasicBlock *split, *leftEntry, *leftExit, *rightEntry, *rightExit;
-  bool leftRegion, rightRegion;
-};
-std::vector<ResolvedCandidate> resolveCandidateCatalog(llvm::Function &, unsigned version);
-
 Trial tryPair(const llvm::Module &, const Candidate &, unsigned currentVersion,
-              unsigned optLevel, CleanupMode mode=CleanupMode::DarmCFGInstCombine, const LogicalRegionState *logical=nullptr);
-Trial tryPair(const llvm::Module &, const Candidate &, unsigned currentVersion,
-              unsigned optLevel, CleanupMode, const LogicalRegionState *, bool allowB2B,
-              bool artifactB2B=false, bool speculateR2R=false);
+              CleanupMode, bool allowB2B, bool artifactB2B, bool speculateR2R);
 enum class B2BExit { PreserveSuffix, Merge, ForkJoin, Independent };
 // Emit an already-validated, order-preserving B2B alignment.
 void emitB2BLinear(llvm::BranchInst &, llvm::BasicBlock &, llvm::BasicBlock &,
                    llvm::BasicBlock *join, llvm::ArrayRef<AnchorMatch>,
                    B2BExit exit, bool guarded, llvm::ArrayRef<AnchorGapPlacement>);
-llvm::json::Object describeAnchorCondition(llvm::Function &, llvm::StringRef split, llvm::StringRef launch);
 std::vector<Trial> planSingleBranchB2B(const llvm::Module &, const Candidate &, CleanupMode,
                                        llvm::function_ref<int(const llvm::Instruction &)> intrinsicCost,
                                        llvm::function_ref<int(const llvm::Instruction &)> anchorCost,
