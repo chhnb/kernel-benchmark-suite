@@ -27,8 +27,6 @@ enum class AnchorLinearRequirement { Any, Divergent, DivergentOrUnknown };
 
 struct AnchorScoring {
   bool selectDedup = false;
-  bool liveCutoff = false;
-  bool eagerGapRank = false;
   bool guardedGap = false;
   AnchorLinearRequirement linearRequirement = AnchorLinearRequirement::Any;
 };

@@ -137,3 +137,52 @@ attributes #0 = { "target-cpu"="gfx906" }
                         "--out", report.with_suffix(".ll")], check=True)
         trial = json.loads((report / "trial-0/trial.json").read_text())
         assert (trial["anchor"]["emission"] == "linear") == (requirement == "any"), trial["anchor"]
+
+
+def check_wave(root, worker_input, shape, expression, expected, nvptx=False):
+    triple = "nvptx64-nvidia-cuda" if nvptx else "amdgcn-amd-amdhsa"
+    tid = "llvm.nvvm.read.ptx.sreg.tid.x" if nvptx else "llvm.amdgcn.workitem.id.x"
+    cpu = "sm_70" if nvptx else "gfx906"
+    worker_input.write_text(f'''
+target triple = "{triple}"
+declare i32 @{tid}()
+define void @wave(i32* %input) #0 {{
+entry:
+  %x = call i32 @{tid}(), !range !0
+  {expression}
+  br i1 %cond, label %yes, label %no
+yes:
+  ret void
+no:
+  ret void
+}}
+attributes #0 = {{ "target-cpu"="{cpu}" "amdgpu-flat-work-group-size"="1,256" }}
+!0 = !{{i32 0, i32 256}}
+''')
+    report = root / "wave.json"
+    report.unlink(missing_ok=True)
+    command = [search, "--ir", worker_input, "--function", "wave", "--split", "B0",
+               "--anchor-condition-only", "1", "--out", report]
+    if shape:
+        command += ["--anchor-wave-shape", shape]
+    subprocess.run(command, check=True)
+    wave = json.loads(report.read_text())["wave"]
+    assert (wave["classification"], wave["mixed_waves"], wave["total_waves"]) == expected, wave
+
+
+with tempfile.TemporaryDirectory() as directory:
+    root = Path(directory)
+    source = root / "wave.ll"
+    threshold8 = "%cond = icmp ult i32 %x, 8"
+    threshold64 = "%cond = icmp ult i32 %x, 64"
+    check_wave(root, source, "16,1,1", threshold8, ("must-diverge", 1, 1))
+    check_wave(root, source, "256,1,1", threshold8, ("mixed", 1, 4))
+    check_wave(root, source, "16,4,1", "%cond = icmp eq i32 %x, 0", ("must-diverge", 1, 1))
+    check_wave(root, source, "128,1,1", threshold64, ("must-uniform", 0, 2))
+    check_wave(root, source, "96,2,1", threshold64, ("mixed", 2, 3))
+    check_wave(root, source, None, threshold8, ("unknown", None, None))
+    check_wave(root, source, "16,1,1",
+               "%v = load i32, i32* %input\n  %cond = icmp ult i32 %v, 8",
+               ("unknown", None, 1))
+    check_wave(root, source, "64,1,1", "%cond = icmp ult i32 %x, 32",
+               ("must-uniform", 0, 2), nvptx=True)

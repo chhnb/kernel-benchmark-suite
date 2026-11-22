@@ -26,7 +26,6 @@ using NewCharges = SmallVector<OperandPair, 4>;
 struct State {
   Matches pairs;
   DenseSet<OperandPair> charged;
-  bool gapPrepaid = false;
   unsigned guardedSides = 0;
   int64_t score = 0;
   unsigned chargedSegments = 0;
@@ -116,7 +115,6 @@ SmallVector<AnchorPlan, 3> planB2BAnchors(
     function_ref<int(const Instruction &)> instructionCost,
     function_ref<int(Type *)> selectCost, function_ref<int(Type *)> phiCost, bool linear,
     AnchorScoring scoring) {
-  const bool eager = scoring.eagerGapRank && !linear;
   const bool guarded = scoring.guardedGap && linear;
   const char *tracePath = std::getenv("FUSION_OBSERVE_B2B_DP");
   const bool observe = tracePath && *tracePath;
@@ -279,9 +277,8 @@ SmallVector<AnchorPlan, 3> planB2BAnchors(
   };
 
   DenseSet<std::pair<unsigned, unsigned>> cutPairs;
-  if (!scoring.liveCutoff)
-    for (const auto &cut : cutoffs)
-      cutPairs.insert({cut.left, cut.right});
+  for (const auto &cut : cutoffs)
+    cutPairs.insert({cut.left, cut.right});
   DenseSet<std::pair<unsigned, unsigned>> seenForwardCut;
   Matches forwardCutoffs;
   auto hasSharedConsumer = [&](Instruction *l, Instruction *r) {
@@ -322,10 +319,6 @@ SmallVector<AnchorPlan, 3> planB2BAnchors(
       state.score -= ForkCharge;
       state.guardedSides |= 1u << side;
     }
-    if (eager && !state.gapPrepaid) {
-      state.score -= ForkCharge;
-      state.gapPrepaid = true;
-    }
     insert(dest, std::move(state), observe ? &pruned : nullptr, phase, i, j);
   };
   auto finishGap = [&](State &state, unsigned le, unsigned re, bool rejoins) {
@@ -360,9 +353,7 @@ SmallVector<AnchorPlan, 3> planB2BAnchors(
       return;
     }
     ++state.chargedSegments;
-    if (!state.gapPrepaid)
-      state.score -= ForkCharge;
-    state.gapPrepaid = false;
+    state.score -= ForkCharge;
     if (!rejoins)
       return; // The original exit PHIs already receive values from both arms.
     int64_t charge = 0;
@@ -440,7 +431,7 @@ SmallVector<AnchorPlan, 3> planB2BAnchors(
             continue;
           AnchorMatch pair{i, j};
           NewCharges newCharges;
-          if (!scoring.liveCutoff && cutPairs.count({i, j})) {
+          if (cutPairs.count({i, j})) {
             if (observe)
               recordTransition(pair, state, instructionCost(*left[i]),
                                addedCost(pair, state, newCharges), "cutPairs");
@@ -580,8 +571,8 @@ SmallVector<AnchorPlan, 3> planB2BAnchors(
     trace << json::Value(json::Object{{"mode", pairTies ? "relaxed" : "strict"},
         {"left_block", operandName(leftBlock)}, {"right_block", operandName(rightBlock)},
         {"gap", linear ? "linear" : "fork"},
-        {"guarded_gap", guarded}, {"select_dedup", scoring.selectDedup}, {"cutoff", scoring.liveCutoff ? "live" : "static"},
-        {"gap_rank", eager ? "eager" : "lazy"},
+        {"guarded_gap", guarded}, {"select_dedup", scoring.selectDedup}, {"cutoff", "static"},
+        {"gap_rank", "lazy"},
         {"left", instructions(left, 0)}, {"right", instructions(right, 1)},
         {"proposed", matchesJSON(proposed)}, {"anchors", matchesJSON(anchors)},
         {"cutoffs", matchesJSON(cutoffs)}, {"forward_cutoffs", matchesJSON(forwardCutoffs)},

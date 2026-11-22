@@ -167,7 +167,7 @@ Trial tryPair(const llvm::Module &, const Candidate &, unsigned currentVersion,
 Trial tryPair(const llvm::Module &, const Candidate &, unsigned currentVersion,
               unsigned optLevel, CleanupMode, const LogicalRegionState *, bool allowB2B,
               bool artifactB2B=false);
-llvm::json::Object describeAnchorCondition(llvm::Function &, llvm::StringRef split);
+llvm::json::Object describeAnchorCondition(llvm::Function &, llvm::StringRef split, llvm::StringRef launch);
 std::vector<Trial> planSingleBranchB2B(const llvm::Module &, const Candidate &, CleanupMode,
                                        llvm::function_ref<int(const llvm::Instruction &)> intrinsicCost,
                                        llvm::function_ref<int(const llvm::Instruction &)> anchorCost,

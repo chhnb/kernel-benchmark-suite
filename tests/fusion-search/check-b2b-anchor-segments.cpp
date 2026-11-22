@@ -103,41 +103,13 @@ join:
         [](Type *) { return 1; }, [](Type *) { return 0; }, true, scoring);
   };
   auto repeated = costPlans("reused", {});
-  auto dedup = costPlans("reused", {true, false, false});
-  auto dedupEager = costPlans("reused", {true, false, true});
+  auto dedup = costPlans("reused", {true});
   assert(repeated.front().matches.size() == 3 && repeated.front().score == 5);
-  // Four uses of (a,b), plus two exit PHIs, share one select. Paired
-  // producers at exit and identical constant operands add no select.
+  // Four uses of (a,b), plus two exit PHIs, share one select.
   assert(dedup.front().matches == repeated.front().matches && dedup.front().score == 8);
-  assert(dedupEager.front().matches == dedup.front().matches &&
-         dedupEager.front().score == dedup.front().score);
 
-  auto fixed = costPlans("cut", {true, false, false});
-  auto live = costPlans("cut", {true, true, false});
+  auto fixed = costPlans("cut", {true});
   assert(fixed.front().cutoffs.size() == 1 &&
          (fixed.front().cutoffs.front() == AnchorMatch{1, 1}));
-  assert(live.front().cutoffs == fixed.front().cutoffs);
   assert(fixed.front().matches.size() == 1);
-  assert(live.front().matches.size() == 2 && live.front().score == 2);
-
-  auto gaps = [&](bool eager) {
-    return planB2BAnchors(left, right, l, r, &join, true,
-        [](Instruction &a, Instruction &b) { return a.isSameOperationAs(&b); },
-        [](const Instruction &inst) { return inst.getOpcode() == Instruction::FMul ? 3 : 1; },
-        [](Type *) { return 1; }, [](Type *) { return 0; }, false, {false, false, eager});
-  };
-  auto lazy = gaps(false);
-  auto eager = gaps(true);
-  // Eager ranking can retain a different beam, but a shared alignment must
-  // have exactly the same settled fork and PHI costs.
-  unsigned shared = 0;
-  for (const auto &a : lazy)
-    for (const auto &b : eager)
-      if (a.matches == b.matches) {
-        ++shared;
-        assert(a.score == b.score && a.phiCharge == b.phiCharge &&
-               a.chargedSegments == b.chargedSegments);
-      }
-  assert(shared != 0);
-
 }

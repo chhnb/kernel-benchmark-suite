@@ -2,6 +2,7 @@
 #include <optional>
 #include "fusion_search.h"
 #include "b2b_anchor.h"
+#include "anchor_wave_diagnostic.h"
 #include "darm_artifact/bridge.h"
 #include "darm_pair_engine/InstructionMatch.h"
 #include "logical_region_state.h"
@@ -240,7 +241,7 @@ static ConditionKind analyzeAnchorCondition(BranchInst &branch, json::Array *sou
       ? ConditionKind::Divergent : ConditionKind::Uniform;
 }
 
-json::Object describeAnchorCondition(Function &f, StringRef split) {
+json::Object describeAnchorCondition(Function &f, StringRef split, StringRef launch) {
   unsigned index;
   BranchInst *branch = nullptr;
   if (split.startswith("B") && !split.drop_front().getAsInteger(10, index) && index < f.size())
@@ -256,7 +257,8 @@ json::Object describeAnchorCondition(Function &f, StringRef split) {
   return json::Object{{"classification", kind == ConditionKind::Divergent ? "divergent" :
                        kind == ConditionKind::Uniform ? "uniform" : "unknown"},
                       {"condition", condition}, {"sources", std::move(sources)},
-                      {"triple", f.getParent()->getTargetTriple()}};
+                      {"triple", f.getParent()->getTargetTriple()},
+                      {"wave", wave_diagnostic::classify(f, branch, launch)}};
 }
 
 static unsigned cleanup(Module &m,const std::string &function,CleanupMode mode) {

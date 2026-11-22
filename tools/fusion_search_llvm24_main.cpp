@@ -132,7 +132,7 @@ struct TrialWorker {
 static int runSearch(int argc, const char *const *argv, TrialWorker *batch = nullptr) {
   fusion::requestProfile.clear();
   try {
-    std::string input,function,output,debug,split,left,right,replayParentHash;Options options;options.cleanupMode=CleanupMode::DarmCFGInstCombine;
+    std::string input,function,output,debug,split,left,right,replayParentHash,anchorWaveShape;Options options;options.cleanupMode=CleanupMode::DarmCFGInstCombine;
     bool useArtifactB2B=false, useAnchorB2B=true;
     std::string quoteMode="on";
     AnchorGap anchorGap = AnchorGap::Fork;
@@ -140,7 +140,7 @@ static int runSearch(int argc, const char *const *argv, TrialWorker *batch = nul
     bool fullSnapshots=true;
     bool controlOnly=false,catalogOnly=false,anchorConditionOnly=false;std::string ttiWorker="/home/chh/kernel-benchmark-suite/tools/run-llvm24-tti";
     for(int i=1;i<argc;++i){std::string k=argv[i];
-      if(k=="--help"){outs()<<"fusion-search v1 --ir FILE --function NAME --out FILE [--b2b-strategy anchor|darm|darm-artifact] [--anchor-gap fork|linear|both] [--anchor-select-dedup 0|1] [--anchor-cutoff static|live] [--anchor-gap-rank lazy|eager] [--anchor-guarded-gap 0|1] [--anchor-linear-require any|divergent|divergent-or-unknown] [--anchor-condition-only 0|1] [--structural 1] [--split ID --left ID --right ID] [--debug-dir DIR] [--ir-snapshots full|compact] [--tti-worker EXECUTABLE] [--catalog-only 0|1] [--control-only 0|1]\n";return 0;}
+      if(k=="--help"){outs()<<"fusion-search v1 --ir FILE --function NAME --out FILE [--b2b-strategy anchor|darm|darm-artifact] [--anchor-gap fork|linear|both] [--anchor-select-dedup 0|1] [--anchor-cutoff static] [--anchor-gap-rank lazy] [--anchor-guarded-gap 0|1] [--anchor-linear-require any|divergent|divergent-or-unknown] [--anchor-condition-only 0|1] [--anchor-wave-shape X,Y,Z] [--structural 1] [--split ID --left ID --right ID] [--debug-dir DIR] [--ir-snapshots full|compact] [--tti-worker EXECUTABLE] [--catalog-only 0|1] [--control-only 0|1]\n";return 0;}
       if(i+1==argc)throw std::runtime_error("missing option value");std::string v=argv[++i];
       if(k=="--control-only"){if(v!="0"&&v!="1")throw std::runtime_error("control-only must be 0 or 1");controlOnly=v=="1";}
       else if(k=="--catalog-only"){if(v!="0"&&v!="1")throw std::runtime_error("catalog-only must be 0 or 1");catalogOnly=v=="1";}
@@ -165,12 +165,10 @@ static int runSearch(int argc, const char *const *argv, TrialWorker *batch = nul
         anchorScoring.selectDedup = v == "1";
       }
       else if(k=="--anchor-cutoff"){
-        if (v != "static" && v != "live") throw std::runtime_error("anchor-cutoff must be static or live");
-        anchorScoring.liveCutoff = v == "live";
+        if (v != "static") throw std::runtime_error("anchor-cutoff must be static");
       }
       else if(k=="--anchor-gap-rank"){
-        if (v != "lazy" && v != "eager") throw std::runtime_error("anchor-gap-rank must be lazy or eager");
-        anchorScoring.eagerGapRank = v == "eager";
+        if (v != "lazy") throw std::runtime_error("anchor-gap-rank must be lazy");
       }
       else if(k=="--anchor-guarded-gap"){
         if (v != "0" && v != "1") throw std::runtime_error("anchor-guarded-gap must be 0 or 1");
@@ -183,6 +181,7 @@ static int runSearch(int argc, const char *const *argv, TrialWorker *batch = nul
         else if (v == "any") anchorScoring.linearRequirement = AnchorLinearRequirement::Any;
         else throw std::runtime_error("invalid anchor-linear-require");
       }
+      else if(k=="--anchor-wave-shape") anchorWaveShape=v;
       else if(k=="--anchor-condition-only"){
         if (v != "0" && v != "1") throw std::runtime_error("anchor-condition-only must be 0 or 1");
         anchorConditionOnly = v == "1";
@@ -198,6 +197,8 @@ static int runSearch(int argc, const char *const *argv, TrialWorker *batch = nul
       else if(k=="--debug-dir")debug=v;else if(k=="--split")split=v;else if(k=="--left")left=v;else if(k=="--right")right=v;
       else throw std::runtime_error("unknown option: "+k);
     }
+    if (!anchorWaveShape.empty() && !anchorConditionOnly)
+      throw std::runtime_error("anchor-wave-shape requires anchor-condition-only");
     if(input.empty()||function.empty()||output.empty())throw std::runtime_error("--ir, --function, --out required");
     if(sys::fs::exists(output))throw std::runtime_error("output already exists");
     bool pair=!split.empty()||!left.empty()||!right.empty();if(pair&&!anchorConditionOnly&&(split.empty()||left.empty()||right.empty()))throw std::runtime_error("explicit pair requires all three IDs");
@@ -271,7 +272,7 @@ static int runSearch(int argc, const char *const *argv, TrialWorker *batch = nul
     if (anchorConditionOnly) {
       if (split.empty() || catalogOnly || controlOnly)
         throw std::runtime_error("anchor-condition-only requires --split and excludes catalog/control");
-      jsonFile(output, describeAnchorCondition(*f, split));
+      jsonFile(output, describeAnchorCondition(*f, split, anchorWaveShape));
       return 0;
     }
     std::unique_ptr<DebugObserver> observer;if(!debug.empty())observer=std::make_unique<DebugObserver>(debug,fullSnapshots,input,output);
