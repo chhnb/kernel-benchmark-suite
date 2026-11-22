@@ -93,27 +93,8 @@ SRAD32 的冻结件和诊断构建见[重建核验记录](../regression/records/
 - MS32 的发布版／原版 Auto DARM 耗时比为 1.020，配对 bootstrap 95% 区间为 [1.010, 1.027]。区间跨过 1.02。 [最终复验记录](../regression/records/final-rerun-20261121.md#gpu-复验)
 - vLLM 的 Auto DARM 对照使用无区域复制版本。上游固定阈值 0.2 的原版命令在首个区域复制处超时，360 秒内未产出完整 IR。 [最终复验记录](../regression/records/final-rerun-20261121.md#gpu-复验)
 
-## DARM R2B 试融的非确定性
+## 已修复：DARM R2B 试融的非确定性
 
-HLLD 在固定候选和同一父 IR 上，用 `c7dded07` 的发布二进制重复试融可得到两种不同的 IR。差异包括浮点比较谓词、条件跳转方向和一条 `and i1`，相应候选的 throughput TTI 相差 1。下表列出默认 D 下的 SHA-256 与各 20 次重放的计数。这些候选均未获选，完整提交链和最终 IR 一致。
+HLLD 的 `B9:B22:B12`、`B9:B21:B12` 和 `B9:B23:B12` 在同一父 IR 上曾出现两种 cleanup 后 IR，throughput TTI 相差 1。三个候选均未获选。区域复制曾按以块指针为键的 `DenseMap` 桶顺序接边，使 `concretizeBranchConditions` 对同一个分支写入 `true` 和 `false` 的先后顺序随地址变化。提交 `b2008bd` 将接边改为按 CFG 发现顺序进行。三个候选各重放 20 次，raw IR、cleanup 后 IR 和评分均只有一种形态。
 
-| 候选 | IR SHA-256 | 次数 | TTI |
-| --- | --- | ---: | ---: |
-| `B9:B22:B12` | `5a7d21cef13e427ed492cf02ac4c0fc9d7662ce1b76da627460a7171eb201d3a` | 17 | 1839 |
-| `B9:B22:B12` | `3d088bc542be3afa7cea5ea719ab027ec04353596c45db55c45c75d64e2de864` | 3 | 1838 |
-| `B9:B21:B12` | `4187ad0d4f4310521ae6fc5d893ff3bca1ba344cd9ebb38e74897313b509cf52` | 17 | 1805 |
-| `B9:B21:B12` | `0e732f1488ffebc94e1cab72ce0daf9d19c9da29756f28e2837e1dccff9fee3e` | 3 | 1804 |
-| `B9:B23:B12` | `dd1b16cbc43fd52e21b74a270680d5885dc1465df59648db24254e19123ff2b4` | 11 | 1844 |
-| `B9:B23:B12` | `0e5a464ec534233a07094584cbd49a3b325d4a404ba7339958d57f886fe462ef` | 9 | 1843 |
-
-根因尚未定位。候选原因包括以指针为键的容器遍历或按地址排序，本分支只登记证据。等价审计仅允许在相同父 IR 上由发布二进制复现的候选号、IR 哈希与对应评分组合。Auto 对照中的其他父状态和序列化路径见 [6b 核验记录](../regression/records/anchor-unified-dp-step6b-20261122.md)。
-
-6c 在相同父 IR 上补做了正常环境和 `setarch x86_64 -R` 的独立进程对照，每个候选每组 20 次：
-
-| 候选 | 正常 ASLR（按上表同候选的哈希顺序） | 关闭 ASLR（同顺序） |
-| --- | ---: | ---: |
-| `B9:B22:B12` | 12 / 8 | 0 / 20 |
-| `B9:B21:B12` | 6 / 14 | 20 / 0 |
-| `B9:B23:B12` | 9 / 11 | 0 / 20 |
-
-关闭 ASLR 后三个候选都只产生一种已有形态，支持地址参与排序或容器遍历的解释。具体容器和代码位置仍未定位。 [6c 重放记录](../regression/records/anchor-unified-dp-step6c-20261122.md#附录-hlld-地址随机化)
+历史分布见 [6c 重放记录](../regression/records/anchor-unified-dp-step6c-20261122.md#附录-hlld-地址随机化)。全量普查和修复后的严格比较见 [第 11 步记录](../regression/records/darm-determinism-fix-20261122.md)。
