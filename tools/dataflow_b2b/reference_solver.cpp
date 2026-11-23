@@ -1,4 +1,5 @@
 #include "evaluate_cost.h"
+#include "schedule_dp.h"
 #include "fold_oracle.h"
 
 #include "llvm/IR/IRBuilder.h"
@@ -117,10 +118,11 @@ bool compatible(const Instruction &a, const Instruction &b, Recipe recipe) {
     if (recipe != Recipe::R1 || !callee || !callee->isIntrinsic() ||
         r.getCalledFunction() != callee || l->isConvergent() || r.isConvergent() ||
         l->hasOperandBundles() || r.hasOperandBundles() ||
-        l->isTailCall() || r.isTailCall() || !l->isSameOperationAs(&r))
+        l->isMustTailCall() || r.isMustTailCall() || l->getAttributes() != r.getAttributes() ||
+        l->getCallingConv() != r.getCallingConv())
       return false;
     for (unsigned i = 0; i < l->arg_size(); ++i)
-      if ((isa<Constant>(l->getArgOperand(i)) || isa<Constant>(r.getArgOperand(i))) &&
+      if ((l->paramHasAttr(i, Attribute::ImmArg) || r.paramHasAttr(i, Attribute::ImmArg)) &&
           l->getArgOperand(i) != r.getArgOperand(i))
         return false;
     return true;
@@ -153,7 +155,7 @@ struct Candidate {
 };
 
 Candidate emit(const Module &source, const Function &func, const Diamond &shape,
-               ArrayRef<Node> nodes) {
+               ArrayRef<Node> nodes, const dataflow::Schedule &schedule) {
   Candidate result;
   ValueToValueMapTy map;
   auto module = CloneModule(source, map);
@@ -162,33 +164,50 @@ Candidate emit(const Module &source, const Function &func, const Diamond &shape,
   auto *condition = branch->getCondition();
   auto *target = cast<Function>(map.lookup(&func));
   IRBuilder<> builder(branch);
-  SmallPtrSet<const Value *, 32> pending;
+  BasicBlock *tail = join;
+  Instruction *terminator = branch;
+  struct Segment {
+    BasicBlock *arms[2];
+    BasicBlock *before;
+    BasicBlock *after;
+    unsigned operations[2];
+  };
+  struct GuardedValue {
+    unsigned segment;
+    unsigned side;
+  };
+  SmallVector<Segment, 8> segments;
+  DenseMap<Value *, GuardedValue> guarded;
+  DenseMap<Value *, unsigned> available;
+  DenseSet<Value *> tainted;
   DenseMap<const Value *, unsigned> order;
   SmallVector<Value *, 16> generatedSelects;
-  DenseMap<Value *, unsigned> guardedValues;
-  BasicBlock *predecessors[2] = {nullptr, nullptr};
-  bool guarding = false;
+  DenseMap<std::pair<Value *, Value *>, Value *> choices;
   bool speculativeSides[2] = {false, false};
-  for (const auto &node : nodes) {
-    if (node.left) pending.insert(node.left);
-    if (node.right) pending.insert(node.right);
-  }
   for (unsigned i = 0; i < shape.ops[1].size(); ++i)
     order[shape.ops[1][i]] = i;
-  DenseMap<std::pair<Value *, Value *>, Value *> choices;
-  auto notCondition = [&] {
-    auto *inst = cast<Instruction>(builder.CreateNot(condition));
-    inst->setMetadata("dataflow.folded.condition", MDNode::get(module->getContext(), {}));
-    return inst;
-  };
-  auto guardPhi = [&](Value *left, Value *right) -> Value * {
+
+  auto guardPhi = [&](unsigned segment, Value *left, Value *right) -> Value * {
     auto key = std::make_pair(left, right);
     if (auto found = choices.find(key); found != choices.end())
       return found->second;
-    auto *phi = PHINode::Create(left->getType(), 2, "", &*join->getFirstInsertionPt());
-    phi->addIncoming(left, predecessors[0]);
-    phi->addIncoming(right, predecessors[1]);
+    auto &guard = segments[segment - 1];
+    auto *phi = PHINode::Create(left->getType(), 2, "", &*guard.after->getFirstInsertionPt());
+    phi->addIncoming(left, guard.arms[0] ? guard.arms[0] : guard.before);
+    phi->addIncoming(right, guard.arms[1] ? guard.arms[1] : guard.before);
     choices[key] = phi;
+    available[phi] = segment;
+    return phi;
+  };
+  auto escape = [&](Value *value) -> Value * {
+    auto found = guarded.find(value);
+    if (found == guarded.end())
+      return value;
+    auto placement = found->second;
+    auto *padding = PoisonValue::get(value->getType());
+    auto *phi = placement.side == 0 ? guardPhi(placement.segment, value, padding)
+                                    : guardPhi(placement.segment, padding, value);
+    tainted.insert(phi);
     return phi;
   };
   auto merge = [&](Value *left, Value *right) -> Value * {
@@ -202,21 +221,34 @@ Candidate emit(const Module &source, const Function &func, const Diamond &shape,
         right = sel->getFalseValue();
     if (left == right)
       return left;
-    bool lGuarded = guardedValues.count(left);
-    bool rGuarded = guardedValues.count(right);
-    auto afterGuard = [&](Value *value) {
-      const auto *inst = dyn_cast<Instruction>(value);
-      return inst && inst->getParent() == join;
-    };
-    if (lGuarded && afterGuard(right))
-      left = guardPhi(left, PoisonValue::get(left->getType()));
-    else if (rGuarded && afterGuard(left))
-      right = guardPhi(PoisonValue::get(right->getType()), right);
-    else if (lGuarded || rGuarded)
-      return guardPhi(left, right);
+    auto lGuard = guarded.find(left), rGuard = guarded.find(right);
+    if (lGuard != guarded.end() && rGuard != guarded.end() &&
+        lGuard->second.segment == rGuard->second.segment)
+      return guardPhi(lGuard->second.segment, left, right);
+    if (lGuard != guarded.end() && rGuard != guarded.end()) {
+      if (lGuard->second.segment < rGuard->second.segment)
+        left = escape(left);
+      else
+        right = escape(right);
+    }
+    if (auto found = guarded.find(left); found != guarded.end())
+      if (available.lookup(right) < found->second.segment)
+        return guardPhi(found->second.segment, left, right);
+    if (auto found = guarded.find(right); found != guarded.end())
+      if (available.lookup(left) < found->second.segment)
+        return guardPhi(found->second.segment, left, right);
+    left = escape(left);
+    right = escape(right);
     auto key = std::make_pair(left, right);
     if (auto found = choices.find(key); found != choices.end())
       return found->second;
+
+    auto notCondition = [&] {
+      auto *inst = cast<Instruction>(builder.CreateNot(condition));
+      inst->setMetadata("dataflow.folded.condition", MDNode::get(module->getContext(), {}));
+      available[inst] = segments.size();
+      return inst;
+    };
     Value *value = nullptr;
     auto *l = dyn_cast<ConstantInt>(left), *r = dyn_cast<ConstantInt>(right);
     if (l && r && left->getType()->isIntegerTy(1)) {
@@ -227,26 +259,17 @@ Candidate emit(const Module &source, const Function &func, const Diamond &shape,
       value = builder.CreateZExt(notCondition(), left->getType());
     } else {
       value = builder.CreateSelect(condition, left, right);
-      generatedSelects.push_back(value);
+      if (isa<SelectInst>(value))
+        generatedSelects.push_back(value);
     }
+    if (auto *inst = dyn_cast<Instruction>(value))
+      if (inst->getParent() == terminator->getParent())
+        available[value] = segments.size();
     choices[key] = value;
     return value;
   };
-  auto ready = [&](const Instruction *inst) {
-    return !inst || (!pending.count(shape.effectBefore.lookup(inst)) &&
-                     llvm::none_of(inst->operands(), [&](const Use &use) {
-                       return pending.count(use.get());
-                     }));
-  };
   auto mapped = [&](const Value *value) -> Value * {
     return MapValue(value, map, RF_IgnoreMissingLocals);
-  };
-  auto escape = [&](Value *value) -> Value * {
-    auto side = guardedValues.lookup(value);
-    if (!side)
-      return value;
-    auto *padding = PoisonValue::get(value->getType());
-    return side == 1 ? merge(value, padding) : merge(padding, value);
   };
   auto clone = [&](const Instruction &inst) {
     auto *copy = inst.clone();
@@ -255,98 +278,105 @@ Candidate emit(const Module &source, const Function &func, const Diamond &shape,
     RemapInstruction(copy, map, RF_IgnoreMissingLocals);
     return copy;
   };
-  SmallPtrSet<const Node *, 16> emitted;
-  bool invalid = false;
-  auto scheduleGlobals = [&] {
-    while (true) {
-      size_t before = emitted.size();
-      for (const auto &node : nodes) {
-        if (node.recipe == Recipe::R6 || emitted.count(&node) ||
-            !ready(node.left) || !ready(node.right))
-          continue;
-        const auto &base = *(node.left ? node.left : node.right);
-        auto *copy = clone(base);
-        if (node.left && node.right) {
-          copy->andIRFlags(node.right);
-          SmallVector<std::pair<unsigned, MDNode *>, 8> metadata;
-          copy->getAllMetadataOtherThanDebugLoc(metadata);
-          for (const auto &item : metadata)
-            if (node.left->getMetadata(item.first) != node.right->getMetadata(item.first))
-              copy->setMetadata(item.first, nullptr);
-          if (auto *load = dyn_cast<LoadInst>(copy))
-            load->setAlignment(std::min(load->getAlign(), cast<LoadInst>(node.right)->getAlign()));
-          if (auto *store = dyn_cast<StoreInst>(copy))
-            store->setAlignment(std::min(store->getAlign(), cast<StoreInst>(node.right)->getAlign()));
-          for (unsigned i = 0; i < copy->getNumOperands(); ++i) {
-            unsigned r = node.recipe == Recipe::R1 ? i : 1 - i;
-            copy->setOperand(i, merge(mapped(node.left->getOperand(i)),
-                                      mapped(node.right->getOperand(r))));
-          }
-        } else if (guarding) {
-          bool sensitive = isa<CallBase, LoadInst>(base) ||
-                           base.getOpcode() == Instruction::SDiv ||
-                           base.getOpcode() == Instruction::UDiv ||
-                           base.getOpcode() == Instruction::SRem ||
-                           base.getOpcode() == Instruction::URem;
-          for (unsigned i = 0; i < base.getNumOperands(); ++i) {
-            if (sensitive && guardedValues.count(copy->getOperand(i))) {
-              copy->deleteValue();
-              invalid = true;
-              return;
-            }
-            copy->setOperand(i, escape(copy->getOperand(i)));
-          }
-        }
-        builder.Insert(copy);
-        if (node.left) {
-          map[node.left] = copy;
-          pending.erase(node.left);
-        }
-        if (node.right) {
-          map[node.right] = copy;
-          pending.erase(node.right);
-        }
-        emitted.insert(&node);
-      }
-      if (before == emitted.size())
-        return;
-    }
-  };
-  scheduleGlobals();
 
-  BasicBlock *guards[2] = {nullptr, nullptr};
-  if (llvm::any_of(nodes, [](const Node &node) { return node.recipe == Recipe::R6; })) {
-    auto *entry = branch->getParent();
-    guarding = true;
-    for (unsigned side : {0u, 1u}) {
-      Insts protectedOps;
-      for (auto *inst : shape.ops[side])
-        if (llvm::any_of(nodes, [&](const Node &node) {
-              return node.recipe == Recipe::R6 && (side ? node.right : node.left) == inst;
-            }))
-          protectedOps.push_back(inst);
-      result.guardCluster |= protectedOps.size() > 1;
-      predecessors[side] = entry;
-      if (protectedOps.empty())
-        continue;
-      guards[side] = BasicBlock::Create(module->getContext(), "", target, join);
-      predecessors[side] = guards[side];
-      for (auto *inst : protectedOps) {
-        if (!ready(inst))
-          return result;
-        auto *copy = clone(*inst);
-        guards[side]->getInstList().push_back(copy);
-        map[inst] = copy;
-        guardedValues[copy] = side + 1;
-        pending.erase(inst);
-      }
-      BranchInst::Create(join, guards[side]);
+  auto finishGuard = [&] {
+    auto &guard = segments.back();
+    auto *end = guard.before->getTerminator();
+    BranchInst::Create(guard.arms[0] ? guard.arms[0] : guard.after,
+                       guard.arms[1] ? guard.arms[1] : guard.after, condition, end);
+    end->eraseFromParent();
+    result.guardCluster |= guard.operations[0] > 1 || guard.operations[1] > 1;
+    terminator = guard.after->getTerminator();
+    builder.SetInsertPoint(terminator);
+  };
+
+  bool activeGuard = false;
+  for (const auto &step : schedule.steps) {
+    const auto &node = nodes[step.node];
+    const auto &base = *(node.left ? node.left : node.right);
+    if (activeGuard && (step.opensGuard || node.recipe != Recipe::R6)) {
+      finishGuard();
+      activeGuard = false;
     }
-    builder.SetInsertPoint(&*join->getFirstInsertionPt());
-    scheduleGlobals();
+    if (step.opensGuard) {
+      auto *continuation = BasicBlock::Create(module->getContext(), "", target, tail);
+      new UnreachableInst(module->getContext(), continuation);
+      segments.push_back({{nullptr, nullptr}, terminator->getParent(), continuation, {0, 0}});
+      activeGuard = true;
+    }
+    auto *copy = clone(base);
+    if (node.recipe == Recipe::R6) {
+      auto &guard = segments.back();
+      unsigned side = node.right != nullptr;
+      if (!guard.arms[side]) {
+        guard.arms[side] = BasicBlock::Create(module->getContext(), "", target, guard.after);
+        BranchInst::Create(guard.after, guard.arms[side]);
+      }
+      for (unsigned i = 0; i < copy->getNumOperands(); ++i) {
+        auto *op = copy->getOperand(i);
+        auto found = guarded.find(op);
+        if (found != guarded.end() && found->second.segment != segments.size())
+          copy->setOperand(i, escape(op));
+      }
+      copy->insertBefore(guard.arms[side]->getTerminator());
+      ++guard.operations[side];
+      guarded[copy] = {static_cast<unsigned>(segments.size()), side};
+    } else if (node.left && node.right) {
+      copy->andIRFlags(node.right);
+      SmallVector<std::pair<unsigned, MDNode *>, 8> metadata;
+      copy->getAllMetadataOtherThanDebugLoc(metadata);
+      for (const auto &item : metadata)
+        if (node.left->getMetadata(item.first) != node.right->getMetadata(item.first))
+          copy->setMetadata(item.first, nullptr);
+      if (auto *load = dyn_cast<LoadInst>(copy))
+        load->setAlignment(std::min(load->getAlign(), cast<LoadInst>(node.right)->getAlign()));
+      if (auto *store = dyn_cast<StoreInst>(copy))
+        store->setAlignment(std::min(store->getAlign(), cast<StoreInst>(node.right)->getAlign()));
+      for (unsigned i = 0; i < copy->getNumOperands(); ++i) {
+        unsigned r = node.recipe == Recipe::R1 ? i : 1 - i;
+        copy->setOperand(i, merge(mapped(node.left->getOperand(i)),
+                                  mapped(node.right->getOperand(r))));
+      }
+      builder.Insert(copy);
+      available[copy] = segments.size();
+    } else {
+      bool hasTaint = false;
+      for (unsigned i = 0; i < copy->getNumOperands(); ++i) {
+        auto *operand = escape(copy->getOperand(i));
+        copy->setOperand(i, operand);
+        hasTaint |= tainted.count(operand);
+      }
+      // An escaped operand may be poison on the opposite path. Operations
+      // which can observe poison immediately cannot use that speculation.
+      bool observesPoison = isa<LoadInst>(base) && hasTaint;
+      if (const auto *call = dyn_cast<CallBase>(copy))
+        for (unsigned i = 0; i < call->arg_size(); ++i)
+          if (tainted.count(call->getArgOperand(i)) &&
+              (call->paramHasAttr(i, Attribute::NoUndef) ||
+               call->paramHasAttr(i, Attribute::Dereferenceable) ||
+               call->paramHasAttr(i, Attribute::DereferenceableOrNull) ||
+               call->getArgOperand(i)->getType()->isPointerTy()))
+            observesPoison = true;
+      if ((base.getOpcode() == Instruction::SDiv || base.getOpcode() == Instruction::UDiv ||
+           base.getOpcode() == Instruction::SRem || base.getOpcode() == Instruction::URem) &&
+          tainted.count(copy->getOperand(1)))
+        observesPoison = true;
+      if (observesPoison) {
+        copy->deleteValue();
+        return result;
+      }
+      builder.Insert(copy);
+      available[copy] = segments.size();
+      if (hasTaint)
+        tainted.insert(copy);
+    }
+    if (node.left)
+      map[node.left] = copy;
+    if (node.right)
+      map[node.right] = copy;
   }
-  if (invalid || !pending.empty())
-    return result;
+  if (activeGuard)
+    finishGuard();
   unsigned last = 0;
   bool hasPair = false;
   for (const auto &node : nodes) {
@@ -386,12 +416,8 @@ Candidate emit(const Module &source, const Function &func, const Diamond &shape,
   }
   for (auto *phi : phis)
     phi->eraseFromParent();
-  if (guarding)
-    BranchInst::Create(guards[0] ? guards[0] : join, guards[1] ? guards[1] : join,
-                       condition, branch);
-  else
-    BranchInst::Create(join, branch);
-  branch->eraseFromParent();
+  BranchInst::Create(tail, terminator);
+  terminator->eraseFromParent();
   SmallVector<BasicBlock *, 2> dead;
   for (auto *block : {shape.left, shape.right})
     if (block != shape.branch->getParent())
@@ -427,28 +453,33 @@ struct Pairing {
   Optional<int64_t> bestD;
 };
 
-bool acyclic(const Diamond &shape, ArrayRef<Node> nodes) {
-  SmallPtrSet<const Value *, 32> pending;
-  for (const auto &node : nodes) {
-    if (node.left) pending.insert(node.left);
-    if (node.right) pending.insert(node.right);
+SmallVector<unsigned, 16> dependencies(const Diamond &shape, ArrayRef<Node> nodes) {
+  DenseMap<const Value *, unsigned> uses;
+  for (unsigned i = 0; i < nodes.size(); ++i) {
+    if (nodes[i].left) uses[nodes[i].left] = 1u << i;
+    if (nodes[i].right) uses[nodes[i].right] = 1u << i;
   }
-  auto ready = [&](const Instruction *inst) {
-    return !inst || (!pending.count(shape.effectBefore.lookup(inst)) &&
-                     llvm::none_of(inst->operands(), [&](const Use &use) {
-                       return pending.count(use.get());
-                     }));
-  };
-  while (!pending.empty()) {
-    auto before = pending.size();
-    for (const auto &node : nodes) {
-      bool remaining = pending.count(node.left) || pending.count(node.right);
-      if (remaining && ready(node.left) && ready(node.right)) {
-        if (node.left) pending.erase(node.left);
-        if (node.right) pending.erase(node.right);
-      }
+  SmallVector<unsigned, 16> graph(nodes.size(), 0);
+  for (unsigned i = 0; i < nodes.size(); ++i)
+    for (auto *inst : {nodes[i].left, nodes[i].right}) {
+      if (!inst)
+        continue;
+      graph[i] |= uses.lookup(shape.effectBefore.lookup(inst));
+      for (const auto &operand : inst->operands())
+        graph[i] |= uses.lookup(operand.get());
     }
-    if (before == pending.size())
+  return graph;
+}
+
+bool acyclic(ArrayRef<unsigned> graph) {
+  unsigned done = 0;
+  const unsigned full = (1u << graph.size()) - 1;
+  while (done != full) {
+    auto before = done;
+    for (unsigned i = 0; i < graph.size(); ++i)
+      if ((graph[i] & ~done) == 0)
+        done |= 1u << i;
+    if (before == done)
       return false;
   }
   return true;
@@ -475,27 +506,39 @@ struct Search {
   SmallVector<Node, 16> nodes;
   SmallPtrSet<const Instruction *, 16> usedRight;
   std::string stop;
-  bool hasWrites = false;
   const dataflow::SizeLatency *quotes = nullptr;
   const dataflow::SizeLatency *oracleQuotes = nullptr;
   std::vector<Pairing> pairings;
   Pairing *current = nullptr;
   unsigned cyclic = 0, oracleCandidates = 0, oracleGuards = 0;
+  unsigned rejectedFold = 0, unsupportedGeneration = 0, dpMismatches = 0;
+  unsigned selectedGuards = 0;
+  bool completed = false;
   StringRef outputDirectory;
 
   Search(const Module &m, const Function &f, const json::Object &table)
       : module(m), func(f), costs(table) {}
 
   bool speculate(const Instruction &inst) const {
-    return !(hasWrites && isa<LoadInst>(inst)) &&
-           dataflow::speculationFailure(inst, costs).empty();
+    return dataflow::speculationFailure(inst, costs).empty();
   }
 
   void add(Module &input, bool original, Candidate *candidate = nullptr) {
     auto *function = input.getFunction(func.getName());
     auto result = dataflow::evaluate(*function, costs, original, quotes);
     if (!result) {
-      stop = toString(result.takeError());
+      auto reason = toString(result.takeError());
+      if (!original && StringRef(reason).contains("must be speculated by SimplifyCFG"))
+        ++rejectedFold;
+      else
+        stop = std::move(reason);
+      return;
+    }
+    const int64_t selectedControl =
+        selectedGuards * *costs.getInteger("guard_segment_control");
+    if (candidate && (result->branches != selectedGuards ||
+                      result->divergenceCosts["control"] != selectedControl)) {
+      ++dpMismatches;
       return;
     }
     ++verified;
@@ -517,6 +560,8 @@ struct Search {
     report.erase("operations");
     report["original"] = original;
     if (candidate) {
+      report["dp_guard_branches"] = selectedGuards;
+      report["dp_control_cost"] = selectedControl;
       report["pairs"] = std::move(candidate->pairs);
       report["features"] = json::Object{{"crossed", candidate->crossed},
         {"commute", candidate->commute}, {"cmp_swap", candidate->cmpSwap},
@@ -554,14 +599,21 @@ struct Search {
       return;
     }
     ++candidates;
-    auto result = emit(module, func, shape, nodes);
-    if (!result.module)
+    SmallVector<dataflow::Lane, 16> lanes;
+    for (const auto &node : nodes)
+      lanes.push_back(node.recipe != Recipe::R6 ? dataflow::Lane::Common :
+                      node.left ? dataflow::Lane::Left : dataflow::Lane::Right);
+    auto schedule = dataflow::minimumGuards(dependencies(shape, nodes), lanes);
+    selectedGuards = schedule.branches;
+    auto result = emit(module, func, shape, nodes, schedule);
+    if (!result.module) {
+      ++unsupportedGeneration;
       return;
+    }
     if (verifyModule(*result.module, &errs())) {
       stop = "generated candidate failed LLVM12 verifier";
       return;
     }
-    const auto *f = result.module->getFunction(func.getName());
     bool guarded = result.recipes.count("R6");
     if (guarded) {
       if (oracleQuotes) {
@@ -584,14 +636,7 @@ struct Search {
           return;
         }
       }
-      // The residual single guard is priced with the same Fold rule. A
-      // foldable residual guard should be reached via the R5 choices instead.
-      auto check = dataflow::evaluate(*f, costs, true, quotes);
-      if (!check || check->folded) {
-        if (!check)
-          consumeError(check.takeError());
-        return;
-      }
+
     }
     add(*result.module, false, &result);
   }
@@ -601,7 +646,7 @@ struct Search {
     for (auto *right : shape.ops[1])
       if (!usedRight.count(right))
         full.push_back({nullptr, right, Recipe::R6});
-    if (!acyclic(shape, full)) {
+    if (!acyclic(dependencies(shape, full))) {
       ++cyclic;
       return;
     }
@@ -669,9 +714,6 @@ struct Search {
       for (auto recipe : {Recipe::R1, Recipe::R2, Recipe::R3}) {
         if (!compatible(*left, *right, recipe))
           continue;
-        if (!isa<LoadInst, StoreInst>(left) &&
-            (!speculate(*left) || !speculate(*right)))
-          continue;
         usedRight.insert(right);
         nodes.back() = {left, right, recipe};
         enumeratePairings(index+1);
@@ -694,6 +736,7 @@ struct Search {
       generate(0);
     }
     current = nullptr;
+    completed = stop.empty() && dpMismatches == 0 && unsupportedGeneration == 0;
   }
 
 };
@@ -742,13 +785,14 @@ int main(int argc, char **argv) {
   if (argc == 5 && StringRef(argv[4]) == "--c-sl=real")
     search.quotes = &oracleQuotes;
   auto baseline = dataflow::evaluate(*function, costs, true, search.quotes);
-  std::string limitation = "multi-segment R6/G1–G4 scheduling and S_loc coverage are incomplete";
+  std::string limitation = "a generation alternative could not be verified";
   if (baseline) {
     search.add(*module, true);
     if (readDiamond(*function, search.shape)) {
-      for (const auto &arm : search.shape.ops)
-        search.hasWrites |= llvm::any_of(arm, [](const auto *inst) { return inst->mayWriteToMemory(); });
-      search.search();
+      if (search.shape.ops[0].size() + search.shape.ops[1].size() <= 16)
+        search.search();
+      else
+        limitation = "input exceeds the subset DP operation limit";
     } else {
       limitation = "unsupported source CFG for candidate generation";
     }
@@ -793,9 +837,10 @@ int main(int argc, char **argv) {
       topK.push_back(json::Object{{"k", k}, {"best_observed_D", best}});
     }
   }
-  outs() << json::Value(json::Object{{"complete", false}, {"top_k", std::move(topK)},
+  outs() << json::Value(json::Object{{"complete", search.completed}, {"top_k", std::move(topK)},
       {"oracle_candidates", search.oracleCandidates}, {"oracle_guards", search.oracleGuards},
-      {"pairings", static_cast<int64_t>(search.pairings.size())}, {"cyclic_pairings", search.cyclic}, {"reason", limitation},
+      {"pairings", static_cast<int64_t>(search.pairings.size())}, {"cyclic_pairings", search.cyclic}, {"reason", search.completed ? "" : limitation}, {"dp_mismatches", search.dpMismatches},
+      {"unsupported_generation", search.unsupportedGeneration}, {"rejected_fold", search.rejectedFold},
       {"original_T", base}, {"candidates", static_cast<int64_t>(search.candidates)},
       {"verified_candidates", static_cast<int64_t>(search.verified)}, {"seconds", seconds},
       {"pareto_front", std::move(front)}, {"conservative_index", std::move(conservative)}}) << '\n';

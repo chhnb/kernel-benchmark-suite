@@ -8,14 +8,16 @@ using namespace llvm;
 
 int main(int argc, char **argv) {
   if (argc < 3) {
-    errs() << "usage: evaluate_cost INPUT.ll COST_TABLE.json [--original] [--c-sl=real|abstract]\n";
+    errs() << "usage: evaluate_cost INPUT.ll COST_TABLE.json [--original] [--output-buffer] [--c-sl=real|abstract]\n";
     return 2;
   }
-  bool original = false, real = false;
+  bool original = false, real = false, outputBuffer = false;
   for (int index = 3; index < argc; ++index) {
     StringRef option(argv[index]);
     if (option == "--original")
       original = true;
+    else if (option == "--output-buffer")
+      outputBuffer = true;
     else if (option == "--c-sl=real")
       real = true;
     else if (option == "--c-sl=abstract")
@@ -56,7 +58,7 @@ int main(int argc, char **argv) {
   std::unique_ptr<dataflow::SizeLatency> quotes;
   if (real)
     quotes = std::make_unique<dataflow::SizeLatency>(*module);
-  auto result = dataflow::evaluate(*function, *table->getAsObject(), original, quotes.get());
+  auto result = dataflow::evaluate(*function, *table->getAsObject(), original, quotes.get(), true, outputBuffer);
   if (!result) {
     outs() << json::Value(json::Object{{"status", "unsupported"},
                   {"reason", toString(result.takeError())}}) << '\n';
