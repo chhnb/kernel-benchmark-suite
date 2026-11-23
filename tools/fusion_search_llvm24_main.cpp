@@ -255,8 +255,21 @@ static int runSearch(int argc, const char *const *argv, TrialWorker *batch = nul
         roundStorage.emplace(makeRound(*module,function,0,cleanupMode));
       const auto &round = *roundStorage;
       if(observer)observer->round(round);
+      Optional<Trial> exactPlan;
+      json::Object fallback;
+      bool planWithAnchor = useAnchorB2B;
+      if (useDataflowExact) {
+        exactPlan = tryDataflowExact(*module, c, cleanupMode, dataflowSolver,
+                                     dataflowCosts, ttiWorker);
+        if (exactPlan && exactPlan->dataflowExact.getString("handler") ==
+                             Optional<StringRef>("anchor_fallback")) {
+          fallback = std::move(exactPlan->dataflowExact);
+          exactPlan.reset();
+        }
+        planWithAnchor = !exactPlan;
+      }
       std::vector<Trial> plans;
-      if (useAnchorB2B)
+      if (planWithAnchor)
         plans = llvm24Scorer.planAnchorB2B(*module, c, cleanupMode);
       const bool plannedB2B = !plans.empty();
       Trial t;
@@ -316,33 +329,17 @@ static int runSearch(int argc, const char *const *argv, TrialWorker *batch = nul
           t.reason = "anchor_uniform_gate_no_layout";
         }
         t.anchorStats["condition_source"] = source;
-        if (useAnchorB2B) {
+        if (planWithAnchor) {
           t.anchorStats["generated"] = int64_t(plans.size());
           t.anchorStats["unique_normalized"] = int64_t(seenCleanedIR.size());
         }
         t.layoutProfitability = std::move(profitability);
       }
-      bool dataflowHandled = false;
-      if (useDataflowExact) {
-        if (auto plan = tryDataflowExact(*module, c, cleanupMode, dataflowSolver,
-                                         dataflowCosts, ttiWorker)) {
-          dataflowHandled = true;
-          t = std::move(*plan);
-          if (t.valid) {
-            try {
-              if (auto rawCost = llvm24Scorer.functionCost(*t.raw->getFunction(function)))
-                t.dataflowExact["raw_kernel_cost"] = *rawCost;
-              else
-                t.dataflowExact["raw_kernel_cost_error"] = "unknown LLVM24 instruction cost";
-            } catch (const std::exception &error) {
-              t.dataflowExact["raw_kernel_cost_error"] = error.what();
-            }
-            score = evaluateTrial(*module, t, round, scorer);
-            auto after = score.metrics.find("work_after");
-            if (after != score.metrics.end())
-              t.dataflowExact["cleaned_kernel_cost"] = after->second;
-          }
-        }
+      const bool dataflowHandled = bool(exactPlan);
+      if (exactPlan) {
+        t = std::move(*exactPlan);
+        if (t.valid)
+          score = evaluateTrial(*module, t, round, scorer);
       }
       const bool allowDarmB2B = !useAnchorB2B && !useDataflowExact;
       if (!plannedB2B && !dataflowHandled) {
@@ -367,6 +364,25 @@ static int runSearch(int argc, const char *const *argv, TrialWorker *batch = nul
           if (!rejection.empty())
             emitRegion(false);
           t.r2rSpeculation = std::move(speculation);
+        }
+      }
+      if (useDataflowExact) {
+        if (!fallback.empty())
+          t.dataflowExact = std::move(fallback);
+        if (t.dataflowExact.empty())
+          t.dataflowExact["handler"] = plannedB2B ? "existing_anchor" : "existing_pipeline";
+        if (t.valid) {
+          try {
+            if (auto rawCost = llvm24Scorer.functionCost(*t.raw->getFunction(function)))
+              t.dataflowExact["raw_kernel_cost"] = *rawCost;
+            else
+              t.dataflowExact["raw_kernel_cost_error"] = "unknown LLVM24 instruction cost";
+          } catch (const std::exception &error) {
+            t.dataflowExact["raw_kernel_cost_error"] = error.what();
+          }
+          auto after = score.metrics.find("work_after");
+          if (after != score.metrics.end())
+            t.dataflowExact["cleaned_kernel_cost"] = after->second;
         }
       }
       if (StringRef(score.reason).startswith("tti_quote_")) throw std::runtime_error(score.reason);

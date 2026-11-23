@@ -32,10 +32,23 @@ inline BranchInst *findSplit(Function &fn, const fusion::Candidate &candidate) {
   return classifyB2B(*branch).isB2B() ? branch : nullptr;
 }
 
+inline constexpr unsigned exactOperationLimit = 10;
+
+inline unsigned operationCount(const Region &region) {
+  unsigned size = 0;
+  for (const auto &side : {region.left, region.right})
+    for (const auto *arm : side)
+      size += llvm::count_if(*arm, semantic);
+  return size;
+}
+
 inline void addCandidates(Function &fn, std::vector<fusion::Candidate> &candidates) {
   for (auto &block : fn) {
     auto *branch = dyn_cast<BranchInst>(block.getTerminator());
-    if (!branch || !branch->isConditional() || !classifyB2B(*branch).isB2B())
+    if (!branch || !branch->isConditional())
+      continue;
+    auto region = classifyB2B(*branch);
+    if (!region.isB2B() || operationCount(region) > exactOperationLimit)
       continue;
     fusion::Candidate candidate{fn.getName().str(), blockID(block),
                                 blockID(*branch->getSuccessor(0)),
@@ -170,26 +183,29 @@ inline bool replace(Region &region, ArrayRef<Output> outputs, ArrayRef<Value *> 
 inline std::unique_ptr<Module> solve(Region &region, ArrayRef<Output> outputs,
                                     Values &arguments, StringRef solver, StringRef costs,
                                     StringRef worker, json::Object &stats, std::string &failure) {
-  auto extracted = isolate(region, outputs, failure, &arguments);
-  if (!extracted)
-    return nullptr;
-  std::string ir;
-  raw_string_ostream stream(ir);
-  extracted->print(stream, nullptr);
-  stream.flush();
-  stats["region_id"] = digest(region.kind.str() + "\n" + ir);
-  unsigned size = 0;
-  for (const auto &side : {region.left, region.right})
-    for (auto *arm : side)
-      size += llvm::count_if(*arm, semantic);
+  const unsigned size = operationCount(region);
+  const bool fallback = size > exactOperationLimit;
+  StringRef source = fusion::anchor_condition::classifySource(&region.split);
   stats["operations"] = size;
   stats["kind"] = region.kind;
-  if (size > 10) {
+  stats["condition_source"] = source;
+  stats["handler"] = fallback ? "anchor_fallback" : "reference_solver";
+  auto extracted = isolate(region, outputs, failure, &arguments);
+  std::string ir;
+  if (extracted) {
+    raw_string_ostream stream(ir);
+    extracted->print(stream, nullptr);
+    stream.flush();
+    stats["region_id"] = digest(region.kind.str() + "\n" + ir);
+  }
+  if (fallback) {
+    if (!extracted)
+      stats["extraction_error"] = failure;
     failure = "dataflow_exact_size_limit";
     return nullptr;
   }
-  StringRef source = fusion::anchor_condition::classifySource(&region.split);
-  stats["condition_source"] = source;
+  if (!extracted)
+    return nullptr;
   SmallString<256> temp;
   if (auto err = sys::fs::createUniqueDirectory("dataflow-exact", temp)) {
     failure = err.message();
@@ -261,9 +277,11 @@ inline std::unique_ptr<Module> solve(Region &region, ArrayRef<Output> outputs,
     }
   }
   if (!chosen) {
+    stats["choice"] = "original";
     failure = "dataflow_exact_keep_original";
     return nullptr;
   }
+  stats["choice"] = "fuse";
   stats["chosen"] = json::Object(*chosen);
   SMDiagnostic diagnostic;
   std::string path = (temp + "/" + chosen->getString("ir").getValueOr("")).str();
