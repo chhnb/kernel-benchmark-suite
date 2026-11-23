@@ -1,0 +1,37 @@
+{
+  "original_folds": {
+    "value": false,
+    "reason": "参数除数的 sdiv 和无解引用保证的 load 都不可推测，合计代价为 12。"
+  },
+  "schemes": {
+    "original": {
+      "recipes": [
+        "R6",
+        "G1",
+        "G2",
+        "G4"
+      ],
+      "pairs": [],
+      "guard_segments": [
+        "L: %div",
+        "R: %loaded"
+      ],
+      "selects": [],
+      "T": [
+        16,
+        12,
+        8
+      ],
+      "delta": [
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  "pareto_front": [
+    "original"
+  ],
+  "conservative_choice": "original",
+  "enumeration": "partial"
+}

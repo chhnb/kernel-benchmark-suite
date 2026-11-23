@@ -1,0 +1,35 @@
+{
+  "original_folds": {
+    "value": false,
+    "reason": "除数可能为零，%p 无解引用保证，两条操作都不能推测。"
+  },
+  "schemes": {
+    "original": {
+      "recipes": [
+        "R6",
+        "G1",
+        "G4"
+      ],
+      "pairs": [],
+      "guard_segments": [
+        "L: %div, %loaded"
+      ],
+      "selects": [],
+      "T": [
+        17,
+        17,
+        5
+      ],
+      "delta": [
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  "pareto_front": [
+    "original"
+  ],
+  "conservative_choice": "original",
+  "enumeration": "partial"
+}

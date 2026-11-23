@@ -1,0 +1,96 @@
+{
+  "original_folds": {
+    "value": false,
+    "reason": "每侧 icmp 1 + zext 1 + mul 2 + xor 1，合计 10。"
+  },
+  "schemes": {
+    "original": {
+      "recipes": [
+        "R6",
+        "G1",
+        "G2",
+        "G4"
+      ],
+      "pairs": [],
+      "guard_segments": [
+        "L: %lc, %lz, %lm, %lout",
+        "R: %rc, %rz, %rm, %rout"
+      ],
+      "selects": [],
+      "T": [
+        14,
+        9,
+        9
+      ],
+      "delta": [
+        0,
+        0,
+        0
+      ]
+    },
+    "swap-predicate": {
+      "recipes": [
+        "R3",
+        "R1",
+        "V1",
+        "V2",
+        "V3"
+      ],
+      "pairs": [
+        "%lc / %rc（交换右侧）",
+        "%lz / %rz",
+        "%lm / %rm",
+        "%lout / %rout"
+      ],
+      "guard_segments": [],
+      "selects": [
+        "%a / %ap",
+        "%b / %bp"
+      ],
+      "T": [
+        7,
+        7,
+        7
+      ],
+      "delta": [
+        7,
+        2,
+        2
+      ]
+    },
+    "speculate-comparisons": {
+      "recipes": [
+        "R5",
+        "R1",
+        "V1",
+        "V2",
+        "V3"
+      ],
+      "pairs": [
+        "%lz / %rz",
+        "%lm / %rm",
+        "%lout / %rout"
+      ],
+      "guard_segments": [],
+      "selects": [
+        "%lc / %rc"
+      ],
+      "T": [
+        7,
+        7,
+        7
+      ],
+      "delta": [
+        7,
+        2,
+        2
+      ]
+    }
+  },
+  "pareto_front": [
+    "swap-predicate",
+    "speculate-comparisons"
+  ],
+  "conservative_choice": "swap-predicate",
+  "enumeration": "partial"
+}

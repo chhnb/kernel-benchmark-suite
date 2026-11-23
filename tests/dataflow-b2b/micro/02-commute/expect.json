@@ -1,0 +1,93 @@
+{
+  "original_folds": {
+    "value": false,
+    "reason": "每侧 add 1 + mul 2 + sub 1，合计 8。"
+  },
+  "schemes": {
+    "original": {
+      "recipes": [
+        "R6",
+        "G1",
+        "G2",
+        "G4"
+      ],
+      "pairs": [],
+      "guard_segments": [
+        "L: %a, %lm, %lout",
+        "R: %b, %rm, %rout"
+      ],
+      "selects": [],
+      "T": [
+        12,
+        8,
+        8
+      ],
+      "delta": [
+        0,
+        0,
+        0
+      ]
+    },
+    "positional": {
+      "recipes": [
+        "R1",
+        "V1",
+        "V2",
+        "V3"
+      ],
+      "pairs": [
+        "%a / %b",
+        "%lm / %rm",
+        "%lout / %rout"
+      ],
+      "guard_segments": [],
+      "selects": [
+        "%x / %y",
+        "%y / %z"
+      ],
+      "T": [
+        6,
+        6,
+        6
+      ],
+      "delta": [
+        6,
+        2,
+        2
+      ]
+    },
+    "commuted": {
+      "recipes": [
+        "R1",
+        "R2",
+        "V1",
+        "V2",
+        "V3"
+      ],
+      "pairs": [
+        "%a / %b（交换右侧）",
+        "%lm / %rm",
+        "%lout / %rout"
+      ],
+      "guard_segments": [],
+      "selects": [
+        "%x / %z"
+      ],
+      "T": [
+        5,
+        5,
+        5
+      ],
+      "delta": [
+        7,
+        3,
+        3
+      ]
+    }
+  },
+  "pareto_front": [
+    "commuted"
+  ],
+  "conservative_choice": "commuted",
+  "enumeration": "partial"
+}

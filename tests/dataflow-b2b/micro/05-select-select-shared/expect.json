@@ -1,0 +1,91 @@
+{
+  "original_folds": {
+    "value": false,
+    "reason": "每侧 select 1 + mul 2 + mul 2，合计 10。"
+  },
+  "schemes": {
+    "original": {
+      "recipes": [
+        "R6",
+        "G1",
+        "G2",
+        "G4"
+      ],
+      "pairs": [],
+      "guard_segments": [
+        "L: %ls, %lm, %lout",
+        "R: %rs, %rm, %rout"
+      ],
+      "selects": [],
+      "T": [
+        14,
+        9,
+        9
+      ],
+      "delta": [
+        0,
+        0,
+        0
+      ]
+    },
+    "merge-selects": {
+      "recipes": [
+        "R1",
+        "V1",
+        "V2",
+        "V3"
+      ],
+      "pairs": [
+        "%ls / %rs",
+        "%lm / %rm",
+        "%lout / %rout"
+      ],
+      "guard_segments": [],
+      "selects": [
+        "%x / %y"
+      ],
+      "T": [
+        6,
+        6,
+        6
+      ],
+      "delta": [
+        8,
+        3,
+        3
+      ]
+    },
+    "speculate-selects": {
+      "recipes": [
+        "R5",
+        "R1",
+        "V1",
+        "V2",
+        "V3"
+      ],
+      "pairs": [
+        "%lm / %rm",
+        "%lout / %rout"
+      ],
+      "guard_segments": [],
+      "selects": [
+        "%ls / %rs"
+      ],
+      "T": [
+        7,
+        7,
+        7
+      ],
+      "delta": [
+        7,
+        2,
+        2
+      ]
+    }
+  },
+  "pareto_front": [
+    "merge-selects"
+  ],
+  "conservative_choice": "merge-selects",
+  "enumeration": "partial"
+}

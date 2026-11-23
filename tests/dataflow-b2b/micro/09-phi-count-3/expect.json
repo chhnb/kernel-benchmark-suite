@@ -1,0 +1,63 @@
+{
+  "original_folds": {
+    "value": true,
+    "reason": "两侧操作均可推测，c_SL 合计 6，join 含 3 个 i32 PHI。"
+  },
+  "schemes": {
+    "original": {
+      "recipes": [
+        "R5",
+        "V3"
+      ],
+      "pairs": [],
+      "guard_segments": [],
+      "selects": [
+        "%la / %ra",
+        "%ls / %rs",
+        "%lx / %rx"
+      ],
+      "T": [
+        9,
+        9,
+        9
+      ],
+      "delta": [
+        0,
+        0,
+        0
+      ]
+    },
+    "pair-operations": {
+      "recipes": [
+        "R1",
+        "V1",
+        "V2",
+        "V3"
+      ],
+      "pairs": [
+        "%la / %ra",
+        "%ls / %rs",
+        "%lx / %rx"
+      ],
+      "guard_segments": [],
+      "selects": [
+        "%x / %y（三条共享操作共用）"
+      ],
+      "T": [
+        4,
+        4,
+        4
+      ],
+      "delta": [
+        5,
+        5,
+        5
+      ]
+    }
+  },
+  "pareto_front": [
+    "pair-operations"
+  ],
+  "conservative_choice": "pair-operations",
+  "enumeration": "partial"
+}

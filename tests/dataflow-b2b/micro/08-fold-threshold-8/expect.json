@@ -1,0 +1,57 @@
+{
+  "original_folds": {
+    "value": false,
+    "reason": "全部操作可推测，只有一个 i32 PHI，两侧合计 8 个单位。"
+  },
+  "schemes": {
+    "original": {
+      "recipes": [
+        "R6",
+        "G1",
+        "G4"
+      ],
+      "pairs": [],
+      "guard_segments": [
+        "L: %a1, %a2, %a3, %a4, %a5, %a6, %a7, %a8"
+      ],
+      "selects": [],
+      "T": [
+        12,
+        12,
+        4
+      ],
+      "delta": [
+        0,
+        0,
+        0
+      ]
+    },
+    "speculate-chain": {
+      "recipes": [
+        "R5",
+        "V3"
+      ],
+      "pairs": [],
+      "guard_segments": [],
+      "selects": [
+        "%a8 / %fallback"
+      ],
+      "T": [
+        9,
+        9,
+        9
+      ],
+      "delta": [
+        3,
+        3,
+        -5
+      ]
+    }
+  },
+  "pareto_front": [
+    "original",
+    "speculate-chain"
+  ],
+  "conservative_choice": "original",
+  "enumeration": "partial"
+}

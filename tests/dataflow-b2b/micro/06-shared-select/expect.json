@@ -1,0 +1,64 @@
+{
+  "original_folds": {
+    "value": false,
+    "reason": "每侧 mul 2 + sub 1 + add 1，合计 8。"
+  },
+  "schemes": {
+    "original": {
+      "recipes": [
+        "R6",
+        "G1",
+        "G2",
+        "G4"
+      ],
+      "pairs": [],
+      "guard_segments": [
+        "L: %lm, %ls, %lout",
+        "R: %rm, %rs, %rout"
+      ],
+      "selects": [],
+      "T": [
+        12,
+        8,
+        8
+      ],
+      "delta": [
+        0,
+        0,
+        0
+      ]
+    },
+    "reuse-input-select": {
+      "recipes": [
+        "R1",
+        "V1",
+        "V2",
+        "V3"
+      ],
+      "pairs": [
+        "%lm / %rm",
+        "%ls / %rs",
+        "%lout / %rout"
+      ],
+      "guard_segments": [],
+      "selects": [
+        "%p / %q（mul 和 sub 共用）"
+      ],
+      "T": [
+        5,
+        5,
+        5
+      ],
+      "delta": [
+        7,
+        3,
+        3
+      ]
+    }
+  },
+  "pareto_front": [
+    "reuse-input-select"
+  ],
+  "conservative_choice": "reuse-input-select",
+  "enumeration": "partial"
+}

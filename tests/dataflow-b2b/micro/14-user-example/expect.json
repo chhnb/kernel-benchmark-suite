@@ -1,0 +1,105 @@
+{
+  "original_folds": {
+    "value": true,
+    "reason": "两条 add 都可推测，合计 2，且只有一个 i32 PHI。"
+  },
+  "schemes": {
+    "original": {
+      "recipes": [
+        "R5",
+        "V3"
+      ],
+      "pairs": [],
+      "guard_segments": [],
+      "selects": [
+        "%a / %b"
+      ],
+      "T": [
+        3,
+        3,
+        3
+      ],
+      "delta": [
+        0,
+        0,
+        0
+      ]
+    },
+    "positional": {
+      "recipes": [
+        "R1",
+        "V2",
+        "V3"
+      ],
+      "pairs": [
+        "%a / %b"
+      ],
+      "guard_segments": [],
+      "selects": [
+        "%x / %y",
+        "%y / %z"
+      ],
+      "T": [
+        3,
+        3,
+        3
+      ],
+      "delta": [
+        0,
+        0,
+        0
+      ]
+    },
+    "commuted": {
+      "recipes": [
+        "R2",
+        "V1",
+        "V2",
+        "V3"
+      ],
+      "pairs": [
+        "%a / %b（交换右侧）"
+      ],
+      "guard_segments": [],
+      "selects": [
+        "%x / %z"
+      ],
+      "T": [
+        2,
+        2,
+        2
+      ],
+      "delta": [
+        1,
+        1,
+        1
+      ]
+    },
+    "speculate-both": {
+      "recipes": [
+        "R5",
+        "V3"
+      ],
+      "pairs": [],
+      "guard_segments": [],
+      "selects": [
+        "%a / %b"
+      ],
+      "T": [
+        3,
+        3,
+        3
+      ],
+      "delta": [
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  "pareto_front": [
+    "commuted"
+  ],
+  "conservative_choice": "commuted",
+  "enumeration": "partial"
+}

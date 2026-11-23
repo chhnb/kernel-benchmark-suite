@@ -1,0 +1,35 @@
+{
+  "original_folds": {
+    "value": false,
+    "reason": "store 有副作用，load 可访问无效指针，也依赖可能别名的 store。"
+  },
+  "schemes": {
+    "original": {
+      "recipes": [
+        "R6",
+        "G1",
+        "G4"
+      ],
+      "pairs": [],
+      "guard_segments": [
+        "L: store %p → %loaded"
+      ],
+      "selects": [],
+      "T": [
+        12,
+        12,
+        4
+      ],
+      "delta": [
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  "pareto_front": [
+    "original"
+  ],
+  "conservative_choice": "original",
+  "enumeration": "partial"
+}

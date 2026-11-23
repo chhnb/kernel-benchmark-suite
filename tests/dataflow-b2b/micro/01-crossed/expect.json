@@ -1,0 +1,67 @@
+{
+  "original_folds": {
+    "value": false,
+    "reason": "两侧各为 7，合计 14。"
+  },
+  "schemes": {
+    "original": {
+      "recipes": [
+        "R6",
+        "G1",
+        "G2",
+        "G4"
+      ],
+      "pairs": [],
+      "guard_segments": [
+        "L: %lf, %lf2, %lg, %lg1, %lg2",
+        "R: %rg, %rg1, %rg2, %rf, %rf2"
+      ],
+      "selects": [],
+      "T": [
+        19,
+        12,
+        12
+      ],
+      "delta": [
+        0,
+        0,
+        0
+      ]
+    },
+    "pair-both-chains": {
+      "recipes": [
+        "R1",
+        "V1",
+        "V2",
+        "V3"
+      ],
+      "pairs": [
+        "%lf / %rf",
+        "%lf2 / %rf2",
+        "%lg / %rg",
+        "%lg1 / %rg1",
+        "%lg2 / %rg2"
+      ],
+      "guard_segments": [],
+      "selects": [
+        "%x / %xr",
+        "%u / %ur"
+      ],
+      "T": [
+        9,
+        9,
+        9
+      ],
+      "delta": [
+        10,
+        3,
+        3
+      ]
+    }
+  },
+  "pareto_front": [
+    "pair-both-chains"
+  ],
+  "conservative_choice": "pair-both-chains",
+  "enumeration": "partial"
+}

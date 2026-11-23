@@ -1,0 +1,35 @@
+{
+  "original_folds": {
+    "value": false,
+    "reason": "convergent 调用不可推测。"
+  },
+  "schemes": {
+    "original": {
+      "recipes": [
+        "R6",
+        "G1",
+        "G4"
+      ],
+      "pairs": [],
+      "guard_segments": [
+        "L: %shuffle"
+      ],
+      "selects": [],
+      "T": [
+        5,
+        5,
+        4
+      ],
+      "delta": [
+        0,
+        0,
+        0
+      ]
+    }
+  },
+  "pareto_front": [
+    "original"
+  ],
+  "conservative_choice": "original",
+  "enumeration": "partial"
+}

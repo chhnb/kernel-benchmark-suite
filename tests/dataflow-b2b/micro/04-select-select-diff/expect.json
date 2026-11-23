@@ -1,0 +1,86 @@
+{
+  "original_folds": {
+    "value": false,
+    "reason": "左侧 5、右侧 3，合计 8。"
+  },
+  "schemes": {
+    "original": {
+      "recipes": [
+        "R6",
+        "G1",
+        "G2",
+        "G4"
+      ],
+      "pairs": [],
+      "guard_segments": [
+        "L: %lm, %ln, %ls",
+        "R: %rt, %ru, %rs"
+      ],
+      "selects": [],
+      "T": [
+        12,
+        9,
+        7
+      ],
+      "delta": [
+        0,
+        0,
+        0
+      ]
+    },
+    "speculate-selects": {
+      "recipes": [
+        "R5",
+        "V3"
+      ],
+      "pairs": [],
+      "guard_segments": [],
+      "selects": [
+        "%ls / %rs"
+      ],
+      "T": [
+        9,
+        9,
+        9
+      ],
+      "delta": [
+        3,
+        0,
+        -2
+      ]
+    },
+    "merge-selects": {
+      "recipes": [
+        "R5",
+        "R1",
+        "V3",
+        "V2"
+      ],
+      "pairs": [
+        "%ls / %rs"
+      ],
+      "guard_segments": [],
+      "selects": [
+        "%lc / %rc",
+        "%ln / %ru",
+        "%b / %e"
+      ],
+      "T": [
+        10,
+        10,
+        10
+      ],
+      "delta": [
+        2,
+        -1,
+        -3
+      ]
+    }
+  },
+  "pareto_front": [
+    "original",
+    "speculate-selects"
+  ],
+  "conservative_choice": "original",
+  "enumeration": "partial"
+}

@@ -1,0 +1,94 @@
+{
+  "original_folds": {
+    "value": false,
+    "reason": "参数除数的两条 sdiv 不可推测，且合计代价为 20。"
+  },
+  "schemes": {
+    "original": {
+      "recipes": [
+        "R6",
+        "G1",
+        "G2",
+        "G4"
+      ],
+      "pairs": [],
+      "guard_segments": [
+        "L: %ld0, %lm, %ld1",
+        "R: %rm"
+      ],
+      "selects": [],
+      "T": [
+        26,
+        24,
+        8
+      ],
+      "delta": [
+        0,
+        0,
+        0
+      ]
+    },
+    "cluster-divides": {
+      "recipes": [
+        "R1",
+        "R6",
+        "V1",
+        "V2",
+        "G1",
+        "G3",
+        "G4"
+      ],
+      "pairs": [
+        "%lm / %rm"
+      ],
+      "guard_segments": [
+        "L: %ld0, %ld1；各自与右侧参数合流"
+      ],
+      "selects": [],
+      "T": [
+        23,
+        23,
+        7
+      ],
+      "delta": [
+        3,
+        1,
+        1
+      ]
+    },
+    "split-divides": {
+      "recipes": [
+        "R1",
+        "R6",
+        "V1",
+        "V2",
+        "G1",
+        "G3",
+        "G4"
+      ],
+      "pairs": [
+        "%lm / %rm"
+      ],
+      "guard_segments": [
+        "L: %ld0；先于共享 mul",
+        "L: %ld1；后于共享 mul"
+      ],
+      "selects": [],
+      "T": [
+        26,
+        26,
+        10
+      ],
+      "delta": [
+        0,
+        -2,
+        -2
+      ]
+    }
+  },
+  "pareto_front": [
+    "cluster-divides"
+  ],
+  "conservative_choice": "cluster-divides",
+  "enumeration": "partial"
+}
