@@ -256,19 +256,23 @@ def main():
     print(f"opt: {args.opt} ({version.splitlines()[0].strip()})", flush=True)
     print(f"clang: {args.clang} (host {host})", flush=True)
     native = 0
+    failures = 0
     with tempfile.TemporaryDirectory(prefix="dataflow-micro-") as directory:
         for path in paths:
             try:
                 native += check_case(path, args.opt, args.clang, host, Path(directory))
             except (OSError, ValueError, subprocess.CalledProcessError) as error:
-                raise ValueError(f"{path.name}: {error}") from error
-    print(f"OK: {len(paths)} verifiers and expectations; {native} native runs "
-          f"({SAMPLES} samples per condition); {len(paths) - native} host skip")
+                failures += 1
+                print(f"FAIL {path.name}: {error}", file=sys.stderr)
+    passed = len(paths) - failures
+    print(f"{'OK' if not failures else 'FAIL'}: {passed} verifiers and expectations; "
+          f"{native} native runs ({SAMPLES} samples per condition); {passed - native} host skip")
+    return int(bool(failures))
 
 
 if __name__ == "__main__":
     try:
-        main()
+        sys.exit(main())
     except (OSError, ValueError, subprocess.CalledProcessError) as error:
         print(f"check-micro: {error}", file=sys.stderr)
         sys.exit(1)

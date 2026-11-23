@@ -129,13 +129,13 @@ static int runSearch(int argc, const char *const *argv, TrialWorker *batch = nul
     std::string input,function,output,debug,split,left,right;
     constexpr auto cleanupMode = CleanupMode::DarmCFGInstCombine;
     constexpr unsigned optLevel = 3;
-    bool useArtifactB2B=false, useAnchorB2B=true, useDataflowExact=false, useDataflowILP=false;
-    std::string dataflowSolver, dataflowCosts, ilpSolver;
+    bool useArtifactB2B=false, useAnchorB2B=true, useDataflowExact=false;
+    std::string dataflowSolver, dataflowCosts;
     std::string quoteMode="on";
     bool fullSnapshots=true;
     bool controlOnly=false,catalogOnly=false;std::string ttiWorker="/home/chh/kernel-benchmark-suite/tools/run-llvm24-tti";
     for(int i=1;i<argc;++i){std::string k=argv[i];
-      if(k=="--help"){outs()<<"fusion-search v1 --ir FILE --function NAME --out FILE [--b2b-strategy anchor|darm|darm-artifact|dataflow-exact|dataflow-ilp] [--split ID --left ID --right ID] [--debug-dir DIR] [--ir-snapshots full|compact] [--tti-worker EXECUTABLE] [--catalog-only 0|1] [--control-only 0|1]\n";return 0;}
+      if(k=="--help"){outs()<<"fusion-search v1 --ir FILE --function NAME --out FILE [--b2b-strategy anchor|darm|darm-artifact|dataflow-exact] [--split ID --left ID --right ID] [--debug-dir DIR] [--ir-snapshots full|compact] [--tti-worker EXECUTABLE] [--catalog-only 0|1] [--control-only 0|1]\n";return 0;}
       if(i+1==argc)throw std::runtime_error("missing option value");std::string v=argv[++i];
       if(k=="--control-only"){if(v!="0"&&v!="1")throw std::runtime_error("control-only must be 0 or 1");controlOnly=v=="1";}
       else if(k=="--catalog-only"){if(v!="0"&&v!="1")throw std::runtime_error("catalog-only must be 0 or 1");catalogOnly=v=="1";}
@@ -150,14 +150,12 @@ static int runSearch(int argc, const char *const *argv, TrialWorker *batch = nul
       }
       else if(k=="--ir")input=v;else if(k=="--function")function=v;else if(k=="--out")output=v;
       else if(k=="--b2b-strategy"){
-        if(v!="darm" && v!="darm-artifact" && v!="anchor" && v!="dataflow-exact" && v!="dataflow-ilp")
-          throw std::runtime_error("b2b-strategy must be anchor, darm, darm-artifact, dataflow-exact or dataflow-ilp");
+        if(v!="darm" && v!="darm-artifact" && v!="anchor" && v!="dataflow-exact")
+          throw std::runtime_error("b2b-strategy must be anchor, darm, darm-artifact or dataflow-exact");
         useArtifactB2B=v=="darm-artifact";
         useAnchorB2B=v=="anchor";
-        useDataflowILP=v=="dataflow-ilp";
-        useDataflowExact=v=="dataflow-exact" || useDataflowILP;
+        useDataflowExact=v=="dataflow-exact";
       }
-      else if(k=="--dataflow-ilp")ilpSolver=v;
       else if(k=="--dataflow-solver")dataflowSolver=v;
       else if(k=="--dataflow-costs")dataflowCosts=v;
       else if(k=="--debug-dir")debug=v;else if(k=="--split")split=v;else if(k=="--left")left=v;else if(k=="--right")right=v;
@@ -169,8 +167,6 @@ static int runSearch(int argc, const char *const *argv, TrialWorker *batch = nul
     bool pair=!split.empty()||!left.empty()||!right.empty();if(pair&&(split.empty()||left.empty()||right.empty()))throw std::runtime_error("explicit pair requires all three IDs");
     if (pair && useDataflowExact && (dataflowSolver.empty() || dataflowCosts.empty()))
       throw std::runtime_error("dataflow-exact requires --dataflow-solver and --dataflow-costs");
-    if (pair && useDataflowILP && ilpSolver.empty())
-      throw std::runtime_error("dataflow-ilp requires --dataflow-ilp PATH");
     // LLVM 12 reads this registered option inside SimplifyCFG. Initialize it
     // once per process, including when a worker evaluates a batch of pairs.
     static const bool configured = [] {
@@ -225,7 +221,7 @@ static int runSearch(int argc, const char *const *argv, TrialWorker *batch = nul
       observer->initial(*module);
       const char*cleanupName="darm-cfg-dce-instcombine";
       auto candidates=enumerate(*module->getFunction(function),0);json::Array entries;
-      if (useDataflowExact) addDataflowCandidates(*f, candidates, useDataflowILP);
+      if (useDataflowExact) addDataflowCandidates(*f, candidates);
       const auto rejected=crossLevelCatalogRejections(*f,candidates);
       for(const auto&c:candidates)entries.push_back(json::Object{{"logical_decision",c.logicalDecision},{"logical_left",c.logicalLeft},{"logical_right",c.logicalRight},{"candidate",c.key()},{"function",c.function},{"split",c.split},{"left",c.left},{"right",c.right},{"preflight_rejection",rejected.count(c.key())?"b2r_replicates_same_decision_chain_requires_opt_in":""}});
       jsonFile(debug+"/catalog.json",json::Object{{"schema","postopt-candidate-catalog-v1"},{"adjacent_only",false},{"cross_decision_leaves",false},{"source_ir",input},{"function",function},
@@ -247,7 +243,7 @@ static int runSearch(int argc, const char *const *argv, TrialWorker *batch = nul
     auto &llvm24Scorer = batch ? *batch->scorer : standaloneScorer;
     if(observer)jsonFile(debug+"/run.json",json::Object{
       {"schema","fusion-v1"},{"function",function},{"policy","llvm24"},
-      {"b2b_strategy",useDataflowILP?"dataflow-ilp":useDataflowExact?"dataflow-exact":useAnchorB2B?"anchor":useArtifactB2B?"darm-artifact":"darm"},{"b2r_strategy","darm"},{"r2r_strategy","darm"},
+      {"b2b_strategy",useDataflowExact?"dataflow-exact":useAnchorB2B?"anchor":useArtifactB2B?"darm-artifact":"darm"},{"b2r_strategy","darm"},{"r2r_strategy","darm"},
       {"cleanup","darm-cfg-dce-instcombine"},{"phi_fold_threshold",7},
       {"initial_parent_hash",moduleHash(*module)},{"replay_parent_hash",""},
       {"semantic_validation","not_run"}});
@@ -262,36 +258,20 @@ static int runSearch(int argc, const char *const *argv, TrialWorker *batch = nul
       Optional<Trial> exactPlan;
       json::Object fallback;
       bool planWithAnchor = useAnchorB2B;
-      std::vector<Trial> plans;
       if (useDataflowExact) {
-        const json::Object *hint = nullptr;
-        if (useDataflowILP) {
-          plans = llvm24Scorer.planAnchorB2B(*module, c, cleanupMode);
-          double best = -std::numeric_limits<double>::infinity();
-          for (auto &plan : plans) {
-            auto *candidate = plan.anchorStats.getObject("dataflow_hint");
-            if (!plan.valid || !candidate)
-              continue;
-            auto scored = evaluateTrial(*module, plan, round, scorer);
-            if (scored.status == ScoreStatus::Scored && scored.total > best) {
-              best = scored.total;
-              hint = candidate;
-            }
-          }
-        }
         exactPlan = tryDataflowExact(*module, c, cleanupMode, dataflowSolver,
-                                     dataflowCosts, ttiWorker, ilpSolver, hint);
+                                     dataflowCosts, ttiWorker);
         if (exactPlan && exactPlan->dataflowExact.getString("handler") ==
                              Optional<StringRef>("anchor_fallback")) {
           fallback = std::move(exactPlan->dataflowExact);
-          fallback["fallback_reason"] = exactPlan->reason;
           exactPlan.reset();
         }
         planWithAnchor = !exactPlan;
       }
-      if (planWithAnchor && !useDataflowILP)
+      std::vector<Trial> plans;
+      if (planWithAnchor)
         plans = llvm24Scorer.planAnchorB2B(*module, c, cleanupMode);
-      const bool plannedB2B = planWithAnchor && !plans.empty();
+      const bool plannedB2B = !plans.empty();
       Trial t;
       ScoreResult score;
       auto sideGain = [](const ScoreResult &result, const char *key) -> std::optional<double> {

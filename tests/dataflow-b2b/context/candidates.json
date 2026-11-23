@@ -1,0 +1,6514 @@
+{
+  "source": {
+    "archive": "dataflow-b2b-ilp-archive",
+    "evidence": "results/step7-evidence.json.gz"
+  },
+  "single_replacement_by_case": {
+    "DCT8": {
+      "region_id": "d23a7c228c5b39f95910f0b1d4eb8b9318e5c775",
+      "source_row": 0,
+      "baseline_kernel_TTI": 62,
+      "final_kernel_TTI": 44
+    },
+    "NQU64": {
+      "region_id": "80f0bef62b48d136fe1335de6839815b6ece7f28",
+      "source_row": 2,
+      "baseline_kernel_TTI": 274,
+      "final_kernel_TTI": 273
+    },
+    "PCM32": {
+      "region_id": "00bc16cfd8ae8b9fd56b51b66aeeb3eeb49c6052",
+      "source_row": 8,
+      "baseline_kernel_TTI": 1136,
+      "final_kernel_TTI": 1136
+    },
+    "SRAD16": {
+      "region_id": "3ea49ee220ead1c6df3cea0ee7173406d968d83b",
+      "source_row": 49,
+      "baseline_kernel_TTI": 436,
+      "final_kernel_TTI": 436
+    },
+    "MapAiry": {
+      "region_id": "5ea02d4d5683cd2517a1d8f924c0186fe7d03f3a",
+      "source_row": 259,
+      "baseline_kernel_TTI": 3997,
+      "final_kernel_TTI": 4301
+    }
+  },
+  "candidates": [
+    {
+      "case": "DCT8",
+      "region_id": "d23a7c228c5b39f95910f0b1d4eb8b9318e5c775",
+      "function": "_Z27CUDAkernelQuantizationShortPsi",
+      "candidate": "_Z27CUDAkernelQuantizationShortPsi:B0:B1:B2",
+      "location": {
+        "block": "%2",
+        "condition_source": "data",
+        "function": "_Z27CUDAkernelQuantizationShortPsi",
+        "join": "%35",
+        "join_has_other_preds": false
+      },
+      "parent": {
+        "ir": "parents/21a5ddb82636744c691db57d4e78ffcfcaf0143b495f3129d14700d09ca9ae0d.ll.gz",
+        "sha256": "21a5ddb82636744c691db57d4e78ffcfcaf0143b495f3129d14700d09ca9ae0d",
+        "archive_path": "/data/home/chh/kernel-benchmark-suite-dataflow-b2b/build/dataflow-corpus/step7/DCT8/input.ll"
+      },
+      "source_round": 1,
+      "source_row": 0,
+      "anchor_T": [
+        25,
+        18,
+        15
+      ],
+      "best_known_T": [
+        9,
+        9,
+        9
+      ],
+      "objectives": {
+        "min_D": {
+          "T": [
+            9,
+            9,
+            9
+          ],
+          "optimal": true,
+          "regret_D": 16,
+          "method": "context-cleaned"
+        },
+        "strategy": {
+          "T": [
+            9,
+            9,
+            9
+          ],
+          "optimal": true,
+          "regret_D": 16,
+          "method": "context-cleaned"
+        }
+      },
+      "single_replacement": {
+        "status": "measured",
+        "final_kernel_TTI": 44
+      }
+    },
+    {
+      "case": "NQU64",
+      "region_id": "80f0bef62b48d136fe1335de6839815b6ece7f28",
+      "function": "_Z24solve_nqueen_cuda_kerneliiPjS_S_S_i",
+      "candidate": "_Z24solve_nqueen_cuda_kerneliiPjS_S_S_i:B21:B19:B23",
+      "location": {
+        "block": "%merged.bb14",
+        "condition_source": "data",
+        "function": "_Z24solve_nqueen_cuda_kerneliiPjS_S_S_i",
+        "join": "%merged.bb15",
+        "join_has_other_preds": true
+      },
+      "parent": {
+        "ir": "parents/e7ef6968a2adf3ac6a3baf88ff25a1bb824c5b3dad7d60f4e135bb16fa188f78.ll.gz",
+        "sha256": "e7ef6968a2adf3ac6a3baf88ff25a1bb824c5b3dad7d60f4e135bb16fa188f78",
+        "archive_path": "/data/home/chh/kernel-benchmark-suite-dataflow-b2b/build/dataflow-corpus/step7/NQU64/anchor/trial-0/fused.ll"
+      },
+      "source_round": 2,
+      "source_row": 2,
+      "anchor_T": [
+        42,
+        17,
+        35
+      ],
+      "best_known_T": [
+        38,
+        13,
+        38
+      ],
+      "objectives": {
+        "min_D": {
+          "T": [
+            38,
+            13,
+            38
+          ],
+          "optimal": true,
+          "regret_D": 4,
+          "method": "context-cleaned"
+        },
+        "strategy": {
+          "T": [
+            42,
+            17,
+            35
+          ],
+          "optimal": true,
+          "regret_D": 0,
+          "method": "context-cleaned"
+        }
+      },
+      "single_replacement": {
+        "status": "measured",
+        "final_kernel_TTI": 273
+      }
+    },
+    {
+      "case": "NQU64",
+      "region_id": "80f0bef62b48d136fe1335de6839815b6ece7f28",
+      "function": "_Z24solve_nqueen_cuda_kerneliiPjS_S_S_i",
+      "candidate": "_Z24solve_nqueen_cuda_kerneliiPjS_S_S_i:B21:B19:B24",
+      "location": {
+        "block": "%merged.bb14",
+        "condition_source": "data",
+        "function": "_Z24solve_nqueen_cuda_kerneliiPjS_S_S_i",
+        "join": "%merged.bb15.pair.join",
+        "join_has_other_preds": false
+      },
+      "parent": {
+        "ir": "parents/d86d5e528fc0ebf04e6d233ece1c58bdfc242960e6719e974a070ae4b75b037c.ll.gz",
+        "sha256": "d86d5e528fc0ebf04e6d233ece1c58bdfc242960e6719e974a070ae4b75b037c",
+        "archive_path": "/data/home/chh/kernel-benchmark-suite-dataflow-b2b/build/dataflow-corpus/step7/NQU64/anchor/prepared-1-1-1.ll"
+      },
+      "source_round": 2,
+      "source_row": 5,
+      "anchor_T": [
+        42,
+        17,
+        35
+      ],
+      "best_known_T": [
+        38,
+        13,
+        38
+      ],
+      "objectives": {
+        "min_D": {
+          "T": [
+            38,
+            13,
+            38
+          ],
+          "optimal": true,
+          "regret_D": 4,
+          "method": "same-plan-outlined-cleaned"
+        },
+        "strategy": {
+          "T": [
+            42,
+            17,
+            35
+          ],
+          "optimal": true,
+          "regret_D": 0,
+          "method": "same-plan-outlined-cleaned"
+        }
+      },
+      "single_replacement": {
+        "status": "not_measured",
+        "final_kernel_TTI": null
+      }
+    },
+    {
+      "case": "NQU64",
+      "region_id": "52930d576989c58ab6b03af754c36e47d2da8765",
+      "function": "_Z24solve_nqueen_cuda_kerneliiPjS_S_S_i",
+      "candidate": "_Z24solve_nqueen_cuda_kerneliiPjS_S_S_i:B2:B19:B21",
+      "location": {
+        "block": "%unify.bb",
+        "condition_source": "data",
+        "function": "_Z24solve_nqueen_cuda_kerneliiPjS_S_S_i",
+        "join": "%merged.bb15",
+        "join_has_other_preds": false
+      },
+      "parent": {
+        "ir": "parents/9b0a463f5f20de03abe3535ed1bb159aad626204e4ff975858b7a808830b7d3f.ll.gz",
+        "sha256": "9b0a463f5f20de03abe3535ed1bb159aad626204e4ff975858b7a808830b7d3f",
+        "archive_path": "/data/home/chh/kernel-benchmark-suite-dataflow-b2b/build/dataflow-corpus/step7/NQU64/anchor/normalize-1-1-0/fused.ll"
+      },
+      "source_round": 3,
+      "source_row": 6,
+      "anchor_T": [
+        44,
+        19,
+        35
+      ],
+      "best_known_T": [
+        40,
+        15,
+        40
+      ],
+      "objectives": {
+        "min_D": {
+          "T": [
+            40,
+            15,
+            40
+          ],
+          "optimal": true,
+          "regret_D": 4,
+          "method": "context-cleaned"
+        },
+        "strategy": {
+          "T": [
+            44,
+            19,
+            35
+          ],
+          "optimal": true,
+          "regret_D": 0,
+          "method": "context-cleaned"
+        }
+      },
+      "single_replacement": {
+        "status": "not_measured",
+        "final_kernel_TTI": null
+      }
+    },
+    {
+      "case": "NQU64",
+      "region_id": "52930d576989c58ab6b03af754c36e47d2da8765",
+      "function": "_Z24solve_nqueen_cuda_kerneliiPjS_S_S_i",
+      "candidate": "_Z24solve_nqueen_cuda_kerneliiPjS_S_S_i:B2:B19:B22",
+      "location": {
+        "block": "%unify.bb",
+        "condition_source": "data",
+        "function": "_Z24solve_nqueen_cuda_kerneliiPjS_S_S_i",
+        "join": "%merged.bb15.pair.join",
+        "join_has_other_preds": false
+      },
+      "parent": {
+        "ir": "parents/90a3e4ff6c40d3ec1ce6918614bd0eb74d1a8a044d24e7dc3754b1d30e51fd4f.ll.gz",
+        "sha256": "90a3e4ff6c40d3ec1ce6918614bd0eb74d1a8a044d24e7dc3754b1d30e51fd4f",
+        "archive_path": "/data/home/chh/kernel-benchmark-suite-dataflow-b2b/build/dataflow-corpus/step7/NQU64/anchor/prepared-2-1-0.ll"
+      },
+      "source_round": 3,
+      "source_row": 7,
+      "anchor_T": [
+        44,
+        19,
+        35
+      ],
+      "best_known_T": [
+        40,
+        15,
+        40
+      ],
+      "objectives": {
+        "min_D": {
+          "T": [
+            40,
+            15,
+            40
+          ],
+          "optimal": true,
+          "regret_D": 4,
+          "method": "same-plan-outlined-cleaned"
+        },
+        "strategy": {
+          "T": [
+            44,
+            19,
+            35
+          ],
+          "optimal": true,
+          "regret_D": 0,
+          "method": "same-plan-outlined-cleaned"
+        }
+      },
+      "single_replacement": {
+        "status": "not_measured",
+        "final_kernel_TTI": null
+      }
+    },
+    {
+      "case": "SRAD16",
+      "region_id": "701ab76d676a4ef232f0791b9588571e90543da0",
+      "function": "_Z11srad_cuda_1PfS_S_S_S_S_iif",
+      "candidate": "_Z11srad_cuda_1PfS_S_S_S_S_iif:B28:B29:B30",
+      "location": {
+        "block": "%175",
+        "condition_source": "thread-pattern",
+        "function": "_Z11srad_cuda_1PfS_S_S_S_S_iif",
+        "join": "%191",
+        "join_has_other_preds": true
+      },
+      "parent": {
+        "ir": "parents/ecf89ddfdc19aca349c70571b29ea5be2b95049fbce5d9815cabc7b73de016d1.ll.gz",
+        "sha256": "ecf89ddfdc19aca349c70571b29ea5be2b95049fbce5d9815cabc7b73de016d1",
+        "archive_path": "/data/home/chh/kernel-benchmark-suite-dataflow-b2b/build/dataflow-corpus/step7/SRAD16/input.ll"
+      },
+      "source_round": 3,
+      "source_row": 41,
+      "anchor_T": [
+        17,
+        17,
+        17
+      ],
+      "best_known_T": [
+        11,
+        11,
+        11
+      ],
+      "objectives": {
+        "min_D": {
+          "T": [
+            11,
+            11,
+            11
+          ],
+          "optimal": true,
+          "regret_D": 6,
+          "method": "context-cleaned"
+        },
+        "strategy": {
+          "T": [
+            11,
+            11,
+            11
+          ],
+          "optimal": true,
+          "regret_D": 6,
+          "method": "context-cleaned"
+        }
+      },
+      "single_replacement": {
+        "status": "not_measured",
+        "final_kernel_TTI": null
+      }
+    },
+    {
+      "case": "SRAD16",
+      "region_id": "69b92fc9723f87ca38f415a5ada139ac687ed76d",
+      "function": "_Z11srad_cuda_1PfS_S_S_S_S_iif",
+      "candidate": "_Z11srad_cuda_1PfS_S_S_S_S_iif:B26:B27:B28",
+      "location": {
+        "block": "%167",
+        "condition_source": "thread-pattern",
+        "function": "_Z11srad_cuda_1PfS_S_S_S_S_iif",
+        "join": "%185",
+        "join_has_other_preds": true
+      },
+      "parent": {
+        "ir": "parents/57b0823e6c666d64beaf20a3004fd4c459816b894571188ab70fe4bd31595e7d.ll.gz",
+        "sha256": "57b0823e6c666d64beaf20a3004fd4c459816b894571188ab70fe4bd31595e7d",
+        "archive_path": "/data/home/chh/kernel-benchmark-suite-dataflow-b2b/build/dataflow-corpus/step7/SRAD16/anchor/trial-1/fused.ll"
+      },
+      "source_round": 4,
+      "source_row": 45,
+      "anchor_T": [
+        22,
+        22,
+        22
+      ],
+      "best_known_T": [
+        20,
+        20,
+        20
+      ],
+      "objectives": {
+        "min_D": {
+          "T": [
+            20,
+            20,
+            20
+          ],
+          "optimal": false,
+          "regret_D": 2,
+          "method": "context-cleaned"
+        },
+        "strategy": {
+          "T": [
+            20,
+            20,
+            20
+          ],
+          "optimal": false,
+          "regret_D": 2,
+          "method": "context-cleaned"
+        }
+      },
+      "single_replacement": {
+        "status": "not_measured",
+        "final_kernel_TTI": null
+      }
+    },
+    {
+      "case": "SRAD16",
+      "region_id": "88091c4b8b24743e53afa81daaaa0429385a742b",
+      "function": "_Z11srad_cuda_1PfS_S_S_S_S_iif",
+      "candidate": "_Z11srad_cuda_1PfS_S_S_S_S_iif:B24:B25:B26",
+      "location": {
+        "block": "%159",
+        "condition_source": "thread-pattern",
+        "function": "_Z11srad_cuda_1PfS_S_S_S_S_iif",
+        "join": "%180",
+        "join_has_other_preds": true
+      },
+      "parent": {
+        "ir": "parents/645e108ba4993945024002bd6a1a7c99f4c65d86dbedc8a4e36a9529063536a7.ll.gz",
+        "sha256": "645e108ba4993945024002bd6a1a7c99f4c65d86dbedc8a4e36a9529063536a7",
+        "archive_path": "/data/home/chh/kernel-benchmark-suite-dataflow-b2b/build/dataflow-corpus/step7/SRAD16/anchor/trial-6/fused.ll"
+      },
+      "source_round": 5,
+      "source_row": 48,
+      "anchor_T": [
+        27,
+        27,
+        27
+      ],
+      "best_known_T": [
+        20,
+        20,
+        20
+      ],
+      "objectives": {
+        "min_D": {
+          "T": [
+            20,
+            20,
+            20
+          ],
+          "optimal": false,
+          "regret_D": 7,
+          "method": "context-cleaned"
+        },
+        "strategy": {
+          "T": [
+            20,
+            20,
+            20
+          ],
+          "optimal": false,
+          "regret_D": 7,
+          "method": "context-cleaned"
+        }
+      },
+      "single_replacement": {
+        "status": "not_measured",
+        "final_kernel_TTI": null
+      }
+    },
+    {
+      "case": "SRAD16",
+      "region_id": "3ea49ee220ead1c6df3cea0ee7173406d968d83b",
+      "function": "_Z11srad_cuda_1PfS_S_S_S_S_iif",
+      "candidate": "_Z11srad_cuda_1PfS_S_S_S_S_iif:B22:B23:B24",
+      "location": {
+        "block": "%151",
+        "condition_source": "thread-pattern",
+        "function": "_Z11srad_cuda_1PfS_S_S_S_S_iif",
+        "join": "%178",
+        "join_has_other_preds": true
+      },
+      "parent": {
+        "ir": "parents/b27bca01a1002be3f0a0b942ca7c72686125bd9605ed7f6034914d8f02ceabf9.ll.gz",
+        "sha256": "b27bca01a1002be3f0a0b942ca7c72686125bd9605ed7f6034914d8f02ceabf9",
+        "archive_path": "/data/home/chh/kernel-benchmark-suite-dataflow-b2b/build/dataflow-corpus/step7/SRAD16/anchor/trial-10/fused.ll"
+      },
+      "source_round": 6,
+      "source_row": 49,
+      "anchor_T": [
+        35,
+        35,
+        35
+      ],
+      "best_known_T": [
+        27,
+        27,
+        27
+      ],
+      "objectives": {
+        "min_D": {
+          "T": [
+            27,
+            27,
+            27
+          ],
+          "optimal": false,
+          "regret_D": 8,
+          "method": "context-cleaned"
+        },
+        "strategy": {
+          "T": [
+            27,
+            27,
+            27
+          ],
+          "optimal": false,
+          "regret_D": 8,
+          "method": "context-cleaned"
+        }
+      },
+      "single_replacement": {
+        "status": "measured",
+        "final_kernel_TTI": 436
+      }
+    },
+    {
+      "case": "MapAiry",
+      "region_id": "3937cfbcda287bf19a5827b797d738cdf6bf7802",
+      "function": "evaluate",
+      "candidate": "evaluate:B96:B93:B97",
+      "location": {
+        "block": "%decision.dispatch",
+        "condition_source": "data",
+        "function": "evaluate",
+        "join": "%_ZN5boost4math6detail25mapairy_quantile_imp_precIdEET_RKS3_bRKSt17integral_constantIiLi53EE.exit.i.i.pair.join",
+        "join_has_other_preds": false
+      },
+      "parent": {
+        "ir": "parents/70229dc7109a6e06f22885a21c43299876dc7433d7cff29ffd2f4fd507751a2d.ll.gz",
+        "sha256": "70229dc7109a6e06f22885a21c43299876dc7433d7cff29ffd2f4fd507751a2d",
+        "archive_path": "/data/home/chh/kernel-benchmark-suite-dataflow-b2b/build/dataflow-corpus/step7/MapAiry/anchor/prepared-0-3-13.ll"
+      },
+      "source_round": 1,
+      "source_row": 54,
+      "anchor_T": [
+        342,
+        97,
+        278
+      ],
+      "best_known_T": [
+        327,
+        327,
+        327
+      ],
+      "objectives": {
+        "min_D": {
+          "T": [
+            327,
+            327,
+            327
+          ],
+          "optimal": false,
+          "regret_D": 15,
+          "method": "same-plan-outlined-cleaned"
+        },
+        "strategy": {
+          "T": [
+            365,
+            96,
+            277
+          ],
+          "optimal": false,
+          "regret_D": -23,
+          "method": "same-plan-outlined-cleaned"
+        }
+      },
+      "single_replacement": {
+        "status": "not_measured",
+        "final_kernel_TTI": null
+      }
+    },
+    {
+      "case": "MapAiry",
+      "region_id": "3937cfbcda287bf19a5827b797d738cdf6bf7802",
+      "function": "evaluate",
+      "candidate": "evaluate:B96:B93:B97",
+      "location": {
+        "block": "%decision.dispatch1",
+        "condition_source": "data",
+        "function": "evaluate",
+        "join": "%_ZN5boost4math6detail25mapairy_quantile_imp_precIdEET_RKS3_bRKSt17integral_constantIiLi53EE.exit.i.i.pair.join",
+        "join_has_other_preds": false
+      },
+      "parent": {
+        "ir": "parents/a75ca3a4185b1c843b348cfb5e3c02d304898908cde6ea4fe3c9ea8583961015.ll.gz",
+        "sha256": "a75ca3a4185b1c843b348cfb5e3c02d304898908cde6ea4fe3c9ea8583961015",
+        "archive_path": "/data/home/chh/kernel-benchmark-suite-dataflow-b2b/build/dataflow-corpus/step7/MapAiry/anchor/prepared-1-3-13.ll"
+      },
+      "source_round": 2,
+      "source_row": 66,
+      "anchor_T": [
+        342,
+        97,
+        278
+      ],
+      "best_known_T": [
+        327,
+        327,
+        327
+      ],
+      "objectives": {
+        "min_D": {
+          "T": [
+            327,
+            327,
+            327
+          ],
+          "optimal": false,
+          "regret_D": 15,
+          "method": "same-plan-outlined-cleaned"
+        },
+        "strategy": {
+          "T": [
+            365,
+            96,
+            277
+          ],
+          "optimal": false,
+          "regret_D": -23,
+          "method": "same-plan-outlined-cleaned"
+        }
+      },
+      "single_replacement": {
+        "status": "not_measured",
+        "final_kernel_TTI": null
+      }
+    },
+    {
+      "case": "MapAiry",
+      "region_id": "3937cfbcda287bf19a5827b797d738cdf6bf7802",
+      "function": "evaluate",
+      "candidate": "evaluate:B96:B93:B97",
+      "location": {
+        "block": "%decision.dispatch2",
+        "condition_source": "data",
+        "function": "evaluate",
+        "join": "%_ZN5boost4math6detail25mapairy_quantile_imp_precIdEET_RKS3_bRKSt17integral_constantIiLi53EE.exit.i.i.pair.join",
+        "join_has_other_preds": false
+      },
+      "parent": {
+        "ir": "parents/d1744a689ab8148d71e09bb26bad2e79fcab81a1aee81e1ed3305bfe7498ffcd.ll.gz",
+        "sha256": "d1744a689ab8148d71e09bb26bad2e79fcab81a1aee81e1ed3305bfe7498ffcd",
+        "archive_path": "/data/home/chh/kernel-benchmark-suite-dataflow-b2b/build/dataflow-corpus/step7/MapAiry/anchor/prepared-2-3-13.ll"
+      },
+      "source_round": 3,
+      "source_row": 79,
+      "anchor_T": [
+        342,
+        97,
+        278
+      ],
+      "best_known_T": [
+        327,
+        327,
+        327
+      ],
+      "objectives": {
+        "min_D": {
+          "T": [
+            327,
+            327,
+            327
+          ],
+          "optimal": false,
+          "regret_D": 15,
+          "method": "same-plan-outlined-cleaned"
+        },
+        "strategy": {
+          "T": [
+            365,
+            96,
+            277
+          ],
+          "optimal": false,
+          "regret_D": -23,
+          "method": "same-plan-outlined-cleaned"
+        }
+      },
+      "single_replacement": {
+        "status": "not_measured",
+        "final_kernel_TTI": null
+      }
+    },
+    {
+      "case": "MapAiry",
+      "region_id": "3937cfbcda287bf19a5827b797d738cdf6bf7802",
+      "function": "evaluate",
+      "candidate": "evaluate:B96:B93:B97",
+      "location": {
+        "block": "%decision.dispatch3",
+        "condition_source": "data",
+        "function": "evaluate",
+        "join": "%_ZN5boost4math6detail25mapairy_quantile_imp_precIdEET_RKS3_bRKSt17integral_constantIiLi53EE.exit.i.i.pair.join",
+        "join_has_other_preds": false
+      },
+      "parent": {
+        "ir": "parents/223ad4f30a4195cccc453aae378635a6c4e85b2ef00b2bc039ce74a92656fd94.ll.gz",
+        "sha256": "223ad4f30a4195cccc453aae378635a6c4e85b2ef00b2bc039ce74a92656fd94",
+        "archive_path": "/data/home/chh/kernel-benchmark-suite-dataflow-b2b/build/dataflow-corpus/step7/MapAiry/anchor/prepared-3-3-13.ll"
+      },
+      "source_round": 4,
+      "source_row": 94,
+      "anchor_T": [
+        342,
+        97,
+        278
+      ],
+      "best_known_T": [
+        327,
+        327,
+        327
+      ],
+      "objectives": {
+        "min_D": {
+          "T": [
+            327,
+            327,
+            327
+          ],
+          "optimal": false,
+          "regret_D": 15,
+          "method": "same-plan-outlined-cleaned"
+        },
+        "strategy": {
+          "T": [
+            365,
+            96,
+            277
+          ],
+          "optimal": false,
+          "regret_D": -23,
+          "method": "same-plan-outlined-cleaned"
+        }
+      },
+      "single_replacement": {
+        "status": "not_measured",
+        "final_kernel_TTI": null
+      }
+    },
+    {
+      "case": "MapAiry",
+      "region_id": "3937cfbcda287bf19a5827b797d738cdf6bf7802",
+      "function": "evaluate",
+      "candidate": "evaluate:B96:B93:B97",
+      "location": {
+        "block": "%decision.dispatch4",
+        "condition_source": "data",
+        "function": "evaluate",
+        "join": "%_ZN5boost4math6detail25mapairy_quantile_imp_precIdEET_RKS3_bRKSt17integral_constantIiLi53EE.exit.i.i.pair.join",
+        "join_has_other_preds": false
+      },
+      "parent": {
+        "ir": "parents/e2b1fcebecd4d0636ea01d16466f2e9cf09fdae280d3b894e5bcb8c69ca00b00.ll.gz",
+        "sha256": "e2b1fcebecd4d0636ea01d16466f2e9cf09fdae280d3b894e5bcb8c69ca00b00",
+        "archive_path": "/data/home/chh/kernel-benchmark-suite-dataflow-b2b/build/dataflow-corpus/step7/MapAiry/anchor/prepared-4-3-13.ll"
+      },
+      "source_round": 5,
+      "source_row": 111,
+      "anchor_T": [
+        342,
+        97,
+        278
+      ],
+      "best_known_T": [
+        327,
+        327,
+        327
+      ],
+      "objectives": {
+        "min_D": {
+          "T": [
+            327,
+            327,
+            327
+          ],
+          "optimal": false,
+          "regret_D": 15,
+          "method": "same-plan-outlined-cleaned"
+        },
+        "strategy": {
+          "T": [
+            365,
+            96,
+            277
+          ],
+          "optimal": false,
+          "regret_D": -23,
+          "method": "same-plan-outlined-cleaned"
+        }
+      },
+      "single_replacement": {
+        "status": "not_measured",
+        "final_kernel_TTI": null
+      }
+    },
+    {
+      "case": "MapAiry",
+      "region_id": "3937cfbcda287bf19a5827b797d738cdf6bf7802",
+      "function": "evaluate",
+      "candidate": "evaluate:B96:B93:B97",
+      "location": {
+        "block": "%decision.dispatch",
+        "condition_source": "data",
+        "function": "evaluate",
+        "join": "%_ZN5boost4math6detail25mapairy_quantile_imp_precIdEET_RKS3_bRKSt17integral_constantIiLi53EE.exit.i.i.pair.join",
+        "join_has_other_preds": false
+      },
+      "parent": {
+        "ir": "parents/4b437fe451694ad33d9b4934d2aa9a9715a617ad5b3ad5f53af73cef1391027d.ll.gz",
+        "sha256": "4b437fe451694ad33d9b4934d2aa9a9715a617ad5b3ad5f53af73cef1391027d",
+        "archive_path": "/data/home/chh/kernel-benchmark-suite-dataflow-b2b/build/dataflow-corpus/step7/MapAiry/anchor/prepared-5-3-13.ll"
+      },
+      "source_round": 6,
+      "source_row": 129,
+      "anchor_T": [
+        342,
+        97,
+        278
+      ],
+      "best_known_T": [
+        327,
+        327,
+        327
+      ],
+      "objectives": {
+        "min_D": {
+          "T": [
+            327,
+            327,
+            327
+          ],
+          "optimal": false,
+          "regret_D": 15,
+          "method": "same-plan-outlined-cleaned"
+        },
+        "strategy": {
+          "T": [
+            365,
+            96,
+            277
+          ],
+          "optimal": false,
+          "regret_D": -23,
+          "method": "same-plan-outlined-cleaned"
+        }
+      },
+      "single_replacement": {
+        "status": "not_measured",
+        "final_kernel_TTI": null
+      }
+    },
+    {
+      "case": "MapAiry",
+      "region_id": "3937cfbcda287bf19a5827b797d738cdf6bf7802",
+      "function": "evaluate",
+      "candidate": "evaluate:B96:B93:B97",
+      "location": {
+        "block": "%decision.dispatch1",
+        "condition_source": "data",
+        "function": "evaluate",
+        "join": "%_ZN5boost4math6detail25mapairy_quantile_imp_precIdEET_RKS3_bRKSt17integral_constantIiLi53EE.exit.i.i.pair.join",
+        "join_has_other_preds": false
+      },
+      "parent": {
+        "ir": "parents/cc7b91484166b856d0c1435c932c88a14041c74d431f44402543cccfac181178.ll.gz",
+        "sha256": "cc7b91484166b856d0c1435c932c88a14041c74d431f44402543cccfac181178",
+        "archive_path": "/data/home/chh/kernel-benchmark-suite-dataflow-b2b/build/dataflow-corpus/step7/MapAiry/anchor/prepared-6-3-13.ll"
+      },
+      "source_round": 7,
+      "source_row": 143,
+      "anchor_T": [
+        342,
+        97,
+        278
+      ],
+      "best_known_T": [
+        327,
+        327,
+        327
+      ],
+      "objectives": {
+        "min_D": {
+          "T": [
+            327,
+            327,
+            327
+          ],
+          "optimal": false,
+          "regret_D": 15,
+          "method": "same-plan-outlined-cleaned"
+        },
+        "strategy": {
+          "T": [
+            365,
+            96,
+            277
+          ],
+          "optimal": false,
+          "regret_D": -23,
+          "method": "same-plan-outlined-cleaned"
+        }
+      },
+      "single_replacement": {
+        "status": "not_measured",
+        "final_kernel_TTI": null
+      }
+    },
+    {
+      "case": "MapAiry",
+      "region_id": "3937cfbcda287bf19a5827b797d738cdf6bf7802",
+      "function": "evaluate",
+      "candidate": "evaluate:B96:B93:B97",
+      "location": {
+        "block": "%decision.dispatch2",
+        "condition_source": "data",
+        "function": "evaluate",
+        "join": "%_ZN5boost4math6detail25mapairy_quantile_imp_precIdEET_RKS3_bRKSt17integral_constantIiLi53EE.exit.i.i.pair.join",
+        "join_has_other_preds": false
+      },
+      "parent": {
+        "ir": "parents/c082de5c692a8871deb1a8a12a6f0678e5ed5760d74b448f78bdb420b8b76aef.ll.gz",
+        "sha256": "c082de5c692a8871deb1a8a12a6f0678e5ed5760d74b448f78bdb420b8b76aef",
+        "archive_path": "/data/home/chh/kernel-benchmark-suite-dataflow-b2b/build/dataflow-corpus/step7/MapAiry/anchor/prepared-7-3-13.ll"
+      },
+      "source_round": 8,
+      "source_row": 153,
+      "anchor_T": [
+        342,
+        97,
+        278
+      ],
+      "best_known_T": [
+        327,
+        327,
+        327
+      ],
+      "objectives": {
+        "min_D": {
+          "T": [
+            327,
+            327,
+            327
+          ],
+          "optimal": false,
+          "regret_D": 15,
+          "method": "same-plan-outlined-cleaned"
+        },
+        "strategy": {
+          "T": [
+            365,
+            96,
+            277
+          ],
+          "optimal": false,
+          "regret_D": -23,
+          "method": "same-plan-outlined-cleaned"
+        }
+      },
+      "single_replacement": {
+        "status": "not_measured",
+        "final_kernel_TTI": null
+      }
+    },
+    {
+      "case": "MapAiry",
+      "region_id": "3937cfbcda287bf19a5827b797d738cdf6bf7802",
+      "function": "evaluate",
+      "candidate": "evaluate:B94:B91:B95",
+      "location": {
+        "block": "%decision.dispatch3",
+        "condition_source": "data",
+        "function": "evaluate",
+        "join": "%_ZN5boost4math6detail25mapairy_quantile_imp_precIdEET_RKS3_bRKSt17integral_constantIiLi53EE.exit.i.i.pair.join",
+        "join_has_other_preds": false
+      },
+      "parent": {
+        "ir": "parents/aa46e335ba448b29f973932e32228093d7c37ca8d0bfd62774928f65131ef6e5.ll.gz",
+        "sha256": "aa46e335ba448b29f973932e32228093d7c37ca8d0bfd62774928f65131ef6e5",
+        "archive_path": "/data/home/chh/kernel-benchmark-suite-dataflow-b2b/build/dataflow-corpus/step7/MapAiry/anchor/prepared-8-3-12.ll"
+      },
+      "source_round": 9,
+      "source_row": 159,
+      "anchor_T": [
+        342,
+        97,
+        278
+      ],
+      "best_known_T": [
+        327,
+        327,
+        327
+      ],
+      "objectives": {
+        "min_D": {
+          "T": [
+            327,
+            327,
+            327
+          ],
+          "optimal": false,
+          "regret_D": 15,
+          "method": "same-plan-outlined-cleaned"
+        },
+        "strategy": {
+          "T": [
+            365,
+            96,
+            277
+          ],
+          "optimal": false,
+          "regret_D": -23,
+          "method": "same-plan-outlined-cleaned"
+        }
+      },
+      "single_replacement": {
+        "status": "not_measured",
+        "final_kernel_TTI": null
+      }
+    },
+    {
+      "case": "MapAiry",
+      "region_id": "3937cfbcda287bf19a5827b797d738cdf6bf7802",
+      "function": "evaluate",
+      "candidate": "evaluate:B92:B89:B93",
+      "location": {
+        "block": "%decision.dispatch5",
+        "condition_source": "data",
+        "function": "evaluate",
+        "join": "%_ZN5boost4math6detail25mapairy_quantile_imp_precIdEET_RKS3_bRKSt17integral_constantIiLi53EE.exit.i.i.pair.join",
+        "join_has_other_preds": false
+      },
+      "parent": {
+        "ir": "parents/deb0d18d810226111034e6505b73da365a0a7ec807b5f331457e6c97b05dfdda.ll.gz",
+        "sha256": "deb0d18d810226111034e6505b73da365a0a7ec807b5f331457e6c97b05dfdda",
+        "archive_path": "/data/home/chh/kernel-benchmark-suite-dataflow-b2b/build/dataflow-corpus/step7/MapAiry/anchor/prepared-9-3-11.ll"
+      },
+      "source_round": 10,
+      "source_row": 163,
+      "anchor_T": [
+        342,
+        97,
+        278
+      ],
+      "best_known_T": [
+        327,
+        327,
+        327
+      ],
+      "objectives": {
+        "min_D": {
+          "T": [
+            327,
+            327,
+            327
+          ],
+          "optimal": false,
+          "regret_D": 15,
+          "method": "same-plan-outlined-cleaned"
+        },
+        "strategy": {
+          "T": [
+            365,
+            96,
+            277
+          ],
+          "optimal": false,
+          "regret_D": -23,
+          "method": "same-plan-outlined-cleaned"
+        }
+      },
+      "single_replacement": {
+        "status": "not_measured",
+        "final_kernel_TTI": null
+      }
+    },
+    {
+      "case": "MapAiry",
+      "region_id": "4691ec0c105801022e72f775009d892015e9257c",
+      "function": "evaluate",
+      "candidate": "evaluate:B10:B11:B12",
+      "location": {
+        "block": "%if.then12.i.i.i622.i.i.i.i",
+        "condition_source": "data",
+        "function": "evaluate",
+        "join": "%if.end23.i.i.i640.i.i.i.i.pair.join",
+        "join_has_other_preds": false
+      },
+      "parent": {
+        "ir": "parents/d2964ad3aa7a4031bee3e0f9db4c4fd099096e5df2696e607af8863fd4664d9f.ll.gz",
+        "sha256": "d2964ad3aa7a4031bee3e0f9db4c4fd099096e5df2696e607af8863fd4664d9f",
+        "archive_path": "/data/home/chh/kernel-benchmark-suite-dataflow-b2b/build/dataflow-corpus/step7/MapAiry/anchor/prepared-12-9-1.ll"
+      },
+      "source_round": 13,
+      "source_row": 175,
+      "anchor_T": [
+        53,
+        25,
+        47
+      ],
+      "best_known_T": [
+        38,
+        38,
+        38
+      ],
+      "objectives": {
+        "min_D": {
+          "T": [
+            38,
+            38,
+            38
+          ],
+          "optimal": true,
+          "regret_D": 15,
+          "method": "same-plan-outlined-cleaned"
+        },
+        "strategy": {
+          "T": [
+            62,
+            24,
+            46
+          ],
+          "optimal": true,
+          "regret_D": -9,
+          "method": "same-plan-outlined-cleaned"
+        }
+      },
+      "single_replacement": {
+        "status": "not_measured",
+        "final_kernel_TTI": null
+      }
+    },
+    {
+      "case": "MapAiry",
+      "region_id": "b9d27685035d79937b18e4cbdae32f585c60eec7",
+      "function": "evaluate",
+      "candidate": "evaluate:B9:B10:B11",
+      "location": {
+        "block": "%if.end7.i.i.i620.i.i.i.i",
+        "condition_source": "data",
+        "function": "evaluate",
+        "join": "%if.end23.i.i.i640.i.i.i.i",
+        "join_has_other_preds": false
+      },
+      "parent": {
+        "ir": "parents/90ea252073aeff0adc38b484daf2534d0b0c64d0381210b7272074d407d88909.ll.gz",
+        "sha256": "90ea252073aeff0adc38b484daf2534d0b0c64d0381210b7272074d407d88909",
+        "archive_path": "/data/home/chh/kernel-benchmark-suite-dataflow-b2b/build/dataflow-corpus/step7/MapAiry/anchor/normalize-12-9-0/fused.ll"
+      },
+      "source_round": 14,
+      "source_row": 176,
+      "anchor_T": [
+        56,
+        28,
+        48
+      ],
+      "best_known_T": [
+        41,
+        41,
+        41
+      ],
+      "objectives": {
+        "min_D": {
+          "T": [
+            41,
+            41,
+            41
+          ],
+          "optimal": true,
+          "regret_D": 15,
+          "method": "context-cleaned"
+        },
+        "strategy": {
+          "T": [
+            65,
+            26,
+            47
+          ],
+          "optimal": true,
+          "regret_D": -9,
+          "method": "context-cleaned"
+        }
+      },
+      "single_replacement": {
+        "status": "not_measured",
+        "final_kernel_TTI": null
+      }
+    },
+    {
+      "case": "MapAiry",
+      "region_id": "b9d27685035d79937b18e4cbdae32f585c60eec7",
+      "function": "evaluate",
+      "candidate": "evaluate:B9:B10:B11",
+      "location": {
+        "block": "%if.end7.i.i.i620.i.i.i.i",
+        "condition_source": "data",
+        "function": "evaluate",
+        "join": "%if.end23.i.i.i640.i.i.i.i.pair.join",
+        "join_has_other_preds": false
+      },
+      "parent": {
+        "ir": "parents/eab1dceff839bfb928734c73667383f323d39d0ed0e52791d35842a2cb5a4476.ll.gz",
+        "sha256": "eab1dceff839bfb928734c73667383f323d39d0ed0e52791d35842a2cb5a4476",
+        "archive_path": "/data/home/chh/kernel-benchmark-suite-dataflow-b2b/build/dataflow-corpus/step7/MapAiry/anchor/prepared-13-9-0.ll"
+      },
+      "source_round": 14,
+      "source_row": 177,
+      "anchor_T": [
+        56,
+        28,
+        48
+      ],
+      "best_known_T": [
+        41,
+        41,
+        41
+      ],
+      "objectives": {
+        "min_D": {
+          "T": [
+            41,
+            41,
+            41
+          ],
+          "optimal": true,
+          "regret_D": 15,
+          "method": "same-plan-outlined-cleaned"
+        },
+        "strategy": {
+          "T": [
+            65,
+            26,
+            47
+          ],
+          "optimal": true,
+          "regret_D": -9,
+          "method": "same-plan-outlined-cleaned"
+        }
+      },
+      "single_replacement": {
+        "status": "not_measured",
+        "final_kernel_TTI": null
+      }
+    },
+    {
+      "case": "MapAiry",
+      "region_id": "03d67ab131476a444bd5452400697c1c70beaed1",
+      "function": "evaluate",
+      "candidate": "evaluate:B9:B10:B11",
+      "location": {
+        "block": "%if.end7.i.i.i620.i.i.i.i",
+        "condition_source": "data",
+        "function": "evaluate",
+        "join": "%if.end23.i.i.i640.i.i.i.i",
+        "join_has_other_preds": false
+      },
+      "parent": {
+        "ir": "parents/e89cf8c57bf9f5a710df72e2d7a067b649e22609acbe8e91bc3ee8633aca33a8.ll.gz",
+        "sha256": "e89cf8c57bf9f5a710df72e2d7a067b649e22609acbe8e91bc3ee8633aca33a8",
+        "archive_path": "/data/home/chh/kernel-benchmark-suite-dataflow-b2b/build/dataflow-corpus/step7/MapAiry/anchor/trial-135/fused.ll"
+      },
+      "source_round": 15,
+      "source_row": 178,
+      "anchor_T": [
+        44,
+        16,
+        36
+      ],
+      "best_known_T": [
+        29,
+        29,
+        29
+      ],
+      "objectives": {
+        "min_D": {
+          "T": [
+            29,
+            29,
+            29
+          ],
+          "optimal": true,
+          "regret_D": 15,
+          "method": "context-cleaned"
+        },
+        "strategy": {
+          "T": [
+            44,
+            16,
+            36
+          ],
+          "optimal": true,
+          "regret_D": 0,
+          "method": "context-cleaned"
+        }
+      },
+      "single_replacement": {
+        "status": "not_measured",
+        "final_kernel_TTI": null
+      }
+    },
+    {
+      "case": "MapAiry",
+      "region_id": "03d67ab131476a444bd5452400697c1c70beaed1",
+      "function": "evaluate",
+      "candidate": "evaluate:B9:B10:B11",
+      "location": {
+        "block": "%if.end7.i.i.i620.i.i.i.i",
+        "condition_source": "data",
+        "function": "evaluate",
+        "join": "%if.end23.i.i.i640.i.i.i.i.pair.join",
+        "join_has_other_preds": false
+      },
+      "parent": {
+        "ir": "parents/d03034a5cd18ff1251eac47365a84a3b5d72014630dd57d3e7c6053566fbe35d.ll.gz",
+        "sha256": "d03034a5cd18ff1251eac47365a84a3b5d72014630dd57d3e7c6053566fbe35d",
+        "archive_path": "/data/home/chh/kernel-benchmark-suite-dataflow-b2b/build/dataflow-corpus/step7/MapAiry/anchor/prepared-14-9-0.ll"
+      },
+      "source_round": 15,
+      "source_row": 179,
+      "anchor_T": [
+        44,
+        16,
+        36
+      ],
+      "best_known_T": [
+        29,
+        29,
+        29
+      ],
+      "objectives": {
+        "min_D": {
+          "T": [
+            29,
+            29,
+            29
+          ],
+          "optimal": true,
+          "regret_D": 15,
+          "method": "same-plan-outlined-cleaned"
+        },
+        "strategy": {
+          "T": [
+            44,
+            16,
+            36
+          ],
+          "optimal": true,
+          "regret_D": 0,
+          "method": "same-plan-outlined-cleaned"
+        }
+      },
+      "single_replacement": {
+        "status": "not_measured",
+        "final_kernel_TTI": null
+      }
+    },
+    {
+      "case": "MapAiry",
+      "region_id": "4691ec0c105801022e72f775009d892015e9257c",
+      "function": "evaluate",
+      "candidate": "evaluate:B20:B21:B22",
+      "location": {
+        "block": "%if.then12.i.i.i501.i.i.i.i",
+        "condition_source": "data",
+        "function": "evaluate",
+        "join": "%if.end23.i.i.i519.i.i.i.i.pair.join",
+        "join_has_other_preds": false
+      },
+      "parent": {
+        "ir": "parents/03cbb5e305399e3342cbcc80c32e23d18e581b136f7c1634d9e37a42f57e8785.ll.gz",
+        "sha256": "03cbb5e305399e3342cbcc80c32e23d18e581b136f7c1634d9e37a42f57e8785",
+        "archive_path": "/data/home/chh/kernel-benchmark-suite-dataflow-b2b/build/dataflow-corpus/step7/MapAiry/anchor/prepared-15-16-1.ll"
+      },
+      "source_round": 16,
+      "source_row": 185,
+      "anchor_T": [
+        53,
+        25,
+        47
+      ],
+      "best_known_T": [
+        38,
+        38,
+        38
+      ],
+      "objectives": {
+        "min_D": {
+          "T": [
+            38,
+            38,
+            38
+          ],
+          "optimal": true,
+          "regret_D": 15,
+          "method": "same-plan-outlined-cleaned"
+        },
+        "strategy": {
+          "T": [
+            62,
+            24,
+            46
+          ],
+          "optimal": true,
+          "regret_D": -9,
+          "method": "same-plan-outlined-cleaned"
+        }
+      },
+      "single_replacement": {
+        "status": "not_measured",
+        "final_kernel_TTI": null
+      }
+    },
+    {
+      "case": "MapAiry",
+      "region_id": "b9d27685035d79937b18e4cbdae32f585c60eec7",
+      "function": "evaluate",
+      "candidate": "evaluate:B19:B20:B21",
+      "location": {
+        "block": "%if.end7.i.i.i499.i.i.i.i",
+        "condition_source": "data",
+        "function": "evaluate",
+        "join": "%if.end23.i.i.i519.i.i.i.i",
+        "join_has_other_preds": false
+      },
+      "parent": {
+        "ir": "parents/4c8f969755247dda63f925a5ff761540313416c4acf853aaa4f26f25d6c121f7.ll.gz",
+        "sha256": "4c8f969755247dda63f925a5ff761540313416c4acf853aaa4f26f25d6c121f7",
+        "archive_path": "/data/home/chh/kernel-benchmark-suite-dataflow-b2b/build/dataflow-corpus/step7/MapAiry/anchor/normalize-15-16-0/fused.ll"
+      },
+      "source_round": 17,
+      "source_row": 186,
+      "anchor_T": [
+        56,
+        28,
+        48
+      ],
+      "best_known_T": [
+        41,
+        41,
+        41
+      ],
+      "objectives": {
+        "min_D": {
+          "T": [
+            41,
+            41,
+            41
+          ],
+          "optimal": true,
+          "regret_D": 15,
+          "method": "context-cleaned"
+        },
+        "strategy": {
+          "T": [
+            65,
+            26,
+            47
+          ],
+          "optimal": true,
+          "regret_D": -9,
+          "method": "context-cleaned"
+        }
+      },
+      "single_replacement": {
+        "status": "not_measured",
+        "final_kernel_TTI": null
+      }
+    },
+    {
+      "case": "MapAiry",
+      "region_id": "b9d27685035d79937b18e4cbdae32f585c60eec7",
+      "function": "evaluate",
+      "candidate": "evaluate:B19:B20:B21",
+      "location": {
+        "block": "%if.end7.i.i.i499.i.i.i.i",
+        "condition_source": "data",
+        "function": "evaluate",
+        "join": "%if.end23.i.i.i519.i.i.i.i.pair.join",
+        "join_has_other_preds": false
+      },
+      "parent": {
+        "ir": "parents/80632236ab4a13ccf7c7a3c291c879ea343ebe83faf8ce9f584b3407b837986b.ll.gz",
+        "sha256": "80632236ab4a13ccf7c7a3c291c879ea343ebe83faf8ce9f584b3407b837986b",
+        "archive_path": "/data/home/chh/kernel-benchmark-suite-dataflow-b2b/build/dataflow-corpus/step7/MapAiry/anchor/prepared-16-16-0.ll"
+      },
+      "source_round": 17,
+      "source_row": 187,
+      "anchor_T": [
+        56,
+        28,
+        48
+      ],
+      "best_known_T": [
+        41,
+        41,
+        41
+      ],
+      "objectives": {
+        "min_D": {
+          "T": [
+            41,
+            41,
+            41
+          ],
+          "optimal": true,
+          "regret_D": 15,
+          "method": "same-plan-outlined-cleaned"
+        },
+        "strategy": {
+          "T": [
+            65,
+            26,
+            47
+          ],
+          "optimal": true,
+          "regret_D": -9,
+          "method": "same-plan-outlined-cleaned"
+        }
+      },
+      "single_replacement": {
+        "status": "not_measured",
+        "final_kernel_TTI": null
+      }
+    },
+    {
+      "case": "MapAiry",
+      "region_id": "03d67ab131476a444bd5452400697c1c70beaed1",
+      "function": "evaluate",
+      "candidate": "evaluate:B19:B20:B21",
+      "location": {
+        "block": "%if.end7.i.i.i499.i.i.i.i",
+        "condition_source": "data",
+        "function": "evaluate",
+        "join": "%if.end23.i.i.i519.i.i.i.i",
+        "join_has_other_preds": false
+      },
+      "parent": {
+        "ir": "parents/7bda4f3e86e8ca8d88f3ddd0c321f786146f16a91ecff9146762aec3414efaef.ll.gz",
+        "sha256": "7bda4f3e86e8ca8d88f3ddd0c321f786146f16a91ecff9146762aec3414efaef",
+        "archive_path": "/data/home/chh/kernel-benchmark-suite-dataflow-b2b/build/dataflow-corpus/step7/MapAiry/anchor/trial-145/fused.ll"
+      },
+      "source_round": 18,
+      "source_row": 188,
+      "anchor_T": [
+        44,
+        16,
+        36
+      ],
+      "best_known_T": [
+        29,
+        29,
+        29
+      ],
+      "objectives": {
+        "min_D": {
+          "T": [
+            29,
+            29,
+            29
+          ],
+          "optimal": true,
+          "regret_D": 15,
+          "method": "context-cleaned"
+        },
+        "strategy": {
+          "T": [
+            44,
+            16,
+            36
+          ],
+          "optimal": true,
+          "regret_D": 0,
+          "method": "context-cleaned"
+        }
+      },
+      "single_replacement": {
+        "status": "not_measured",
+        "final_kernel_TTI": null
+      }
+    },
+    {
+      "case": "MapAiry",
+      "region_id": "03d67ab131476a444bd5452400697c1c70beaed1",
+      "function": "evaluate",
+      "candidate": "evaluate:B19:B20:B21",
+      "location": {
+        "block": "%if.end7.i.i.i499.i.i.i.i",
+        "condition_source": "data",
+        "function": "evaluate",
+        "join": "%if.end23.i.i.i519.i.i.i.i.pair.join",
+        "join_has_other_preds": false
+      },
+      "parent": {
+        "ir": "parents/7b110b7c2ee0ce1a97f4262851bbe9cc3fcb3f84a925971f931756fbd6f1d843.ll.gz",
+        "sha256": "7b110b7c2ee0ce1a97f4262851bbe9cc3fcb3f84a925971f931756fbd6f1d843",
+        "archive_path": "/data/home/chh/kernel-benchmark-suite-dataflow-b2b/build/dataflow-corpus/step7/MapAiry/anchor/prepared-17-16-0.ll"
+      },
+      "source_round": 18,
+      "source_row": 189,
+      "anchor_T": [
+        44,
+        16,
+        36
+      ],
+      "best_known_T": [
+        29,
+        29,
+        29
+      ],
+      "objectives": {
+        "min_D": {
+          "T": [
+            29,
+            29,
+            29
+          ],
+          "optimal": true,
+          "regret_D": 15,
+          "method": "same-plan-outlined-cleaned"
+        },
+        "strategy": {
+          "T": [
+            44,
+            16,
+            36
+          ],
+          "optimal": true,
+          "regret_D": 0,
+          "method": "same-plan-outlined-cleaned"
+        }
+      },
+      "single_replacement": {
+        "status": "not_measured",
+        "final_kernel_TTI": null
+      }
+    },
+    {
+      "case": "MapAiry",
+      "region_id": "4691ec0c105801022e72f775009d892015e9257c",
+      "function": "evaluate",
+      "candidate": "evaluate:B30:B31:B32",
+      "location": {
+        "block": "%if.then12.i.i.i388.i.i.i.i",
+        "condition_source": "data",
+        "function": "evaluate",
+        "join": "%if.end23.i.i.i406.i.i.i.i.pair.join",
+        "join_has_other_preds": false
+      },
+      "parent": {
+        "ir": "parents/6619770b6d088d437d1fbca086320798c8804fcd1d9a8f24842500a78383fd58.ll.gz",
+        "sha256": "6619770b6d088d437d1fbca086320798c8804fcd1d9a8f24842500a78383fd58",
+        "archive_path": "/data/home/chh/kernel-benchmark-suite-dataflow-b2b/build/dataflow-corpus/step7/MapAiry/anchor/prepared-18-23-1.ll"
+      },
+      "source_round": 19,
+      "source_row": 195,
+      "anchor_T": [
+        53,
+        25,
+        47
+      ],
+      "best_known_T": [
+        38,
+        38,
+        38
+      ],
+      "objectives": {
+        "min_D": {
+          "T": [
+            38,
+            38,
+            38
+          ],
+          "optimal": true,
+          "regret_D": 15,
+          "method": "same-plan-outlined-cleaned"
+        },
+        "strategy": {
+          "T": [
+            62,
+            24,
+            46
+          ],
+          "optimal": true,
+          "regret_D": -9,
+          "method": "same-plan-outlined-cleaned"
+        }
+      },
+      "single_replacement": {
+        "status": "not_measured",
+        "final_kernel_TTI": null
+      }
+    },
+    {
+      "case": "MapAiry",
+      "region_id": "b9d27685035d79937b18e4cbdae32f585c60eec7",
+      "function": "evaluate",
+      "candidate": "evaluate:B29:B30:B31",
+      "location": {
+        "block": "%if.end7.i.i.i386.i.i.i.i",
+        "condition_source": "data",
+        "function": "evaluate",
+        "join": "%if.end23.i.i.i406.i.i.i.i",
+        "join_has_other_preds": false
+      },
+      "parent": {
+        "ir": "parents/ad5be8993d52753248d3985948a83205be43c7e9f5584451863784d5a6a7aa3a.ll.gz",
+        "sha256": "ad5be8993d52753248d3985948a83205be43c7e9f5584451863784d5a6a7aa3a",
+        "archive_path": "/data/home/chh/kernel-benchmark-suite-dataflow-b2b/build/dataflow-corpus/step7/MapAiry/anchor/normalize-18-23-0/fused.ll"
+      },
+      "source_round": 20,
+      "source_row": 196,
+      "anchor_T": [
+        56,
+        28,
+        48
+      ],
+      "best_known_T": [
+        41,
+        41,
+        41
+      ],
+      "objectives": {
+        "min_D": {
+          "T": [
+            41,
+            41,
+            41
+          ],
+          "optimal": true,
+          "regret_D": 15,
+          "method": "context-cleaned"
+        },
+        "strategy": {
+          "T": [
+            65,
+            26,
+            47
+          ],
+          "optimal": true,
+          "regret_D": -9,
+          "method": "context-cleaned"
+        }
+      },
+      "single_replacement": {
+        "status": "not_measured",
+        "final_kernel_TTI": null
+      }
+    },
+    {
+      "case": "MapAiry",
+      "region_id": "b9d27685035d79937b18e4cbdae32f585c60eec7",
+      "function": "evaluate",
+      "candidate": "evaluate:B29:B30:B31",
+      "location": {
+        "block": "%if.end7.i.i.i386.i.i.i.i",
+        "condition_source": "data",
+        "function": "evaluate",
+        "join": "%if.end23.i.i.i406.i.i.i.i.pair.join",
+        "join_has_other_preds": false
+      },
+      "parent": {
+        "ir": "parents/7925e55586f2afb0affce86fff8966ffa401cde223371f4646d441448bff8506.ll.gz",
+        "sha256": "7925e55586f2afb0affce86fff8966ffa401cde223371f4646d441448bff8506",
+        "archive_path": "/data/home/chh/kernel-benchmark-suite-dataflow-b2b/build/dataflow-corpus/step7/MapAiry/anchor/prepared-19-23-0.ll"
+      },
+      "source_round": 20,
+      "source_row": 197,
+      "anchor_T": [
+        56,
+        28,
+        48
+      ],
+      "best_known_T": [
+        41,
+        41,
+        41
+      ],
+      "objectives": {
+        "min_D": {
+          "T": [
+            41,
+            41,
+            41
+          ],
+          "optimal": true,
+          "regret_D": 15,
+          "method": "same-plan-outlined-cleaned"
+        },
+        "strategy": {
+          "T": [
+            65,
+            26,
+            47
+          ],
+          "optimal": true,
+          "regret_D": -9,
+          "method": "same-plan-outlined-cleaned"
+        }
+      },
+      "single_replacement": {
+        "status": "not_measured",
+        "final_kernel_TTI": null
+      }
+    },
+    {
+      "case": "MapAiry",
+      "region_id": "03d67ab131476a444bd5452400697c1c70beaed1",
+      "function": "evaluate",
+      "candidate": "evaluate:B29:B30:B31",
+      "location": {
+        "block": "%if.end7.i.i.i386.i.i.i.i",
+        "condition_source": "data",
+        "function": "evaluate",
+        "join": "%if.end23.i.i.i406.i.i.i.i",
+        "join_has_other_preds": false
+      },
+      "parent": {
+        "ir": "parents/e09422e89835a7af0d2780352c185a1e1a3f13a5a3dad15176488e22f4a0008f.ll.gz",
+        "sha256": "e09422e89835a7af0d2780352c185a1e1a3f13a5a3dad15176488e22f4a0008f",
+        "archive_path": "/data/home/chh/kernel-benchmark-suite-dataflow-b2b/build/dataflow-corpus/step7/MapAiry/anchor/trial-155/fused.ll"
+      },
+      "source_round": 21,
+      "source_row": 198,
+      "anchor_T": [
+        44,
+        16,
+        36
+      ],
+      "best_known_T": [
+        29,
+        29,
+        29
+      ],
+      "objectives": {
+        "min_D": {
+          "T": [
+            29,
+            29,
+            29
+          ],
+          "optimal": true,
+          "regret_D": 15,
+          "method": "context-cleaned"
+        },
+        "strategy": {
+          "T": [
+            44,
+            16,
+            36
+          ],
+          "optimal": true,
+          "regret_D": 0,
+          "method": "context-cleaned"
+        }
+      },
+      "single_replacement": {
+        "status": "not_measured",
+        "final_kernel_TTI": null
+      }
+    },
+    {
+      "case": "MapAiry",
+      "region_id": "03d67ab131476a444bd5452400697c1c70beaed1",
+      "function": "evaluate",
+      "candidate": "evaluate:B29:B30:B31",
+      "location": {
+        "block": "%if.end7.i.i.i386.i.i.i.i",
+        "condition_source": "data",
+        "function": "evaluate",
+        "join": "%if.end23.i.i.i406.i.i.i.i.pair.join",
+        "join_has_other_preds": false
+      },
+      "parent": {
+        "ir": "parents/30bfc1a684710d64053a189730b0273b53b2879b06b2d9b751f4dd5be5be788f.ll.gz",
+        "sha256": "30bfc1a684710d64053a189730b0273b53b2879b06b2d9b751f4dd5be5be788f",
+        "archive_path": "/data/home/chh/kernel-benchmark-suite-dataflow-b2b/build/dataflow-corpus/step7/MapAiry/anchor/prepared-20-23-0.ll"
+      },
+      "source_round": 21,
+      "source_row": 199,
+      "anchor_T": [
+        44,
+        16,
+        36
+      ],
+      "best_known_T": [
+        29,
+        29,
+        29
+      ],
+      "objectives": {
+        "min_D": {
+          "T": [
+            29,
+            29,
+            29
+          ],
+          "optimal": true,
+          "regret_D": 15,
+          "method": "same-plan-outlined-cleaned"
+        },
+        "strategy": {
+          "T": [
+            44,
+            16,
+            36
+          ],
+          "optimal": true,
+          "regret_D": 0,
+          "method": "same-plan-outlined-cleaned"
+        }
+      },
+      "single_replacement": {
+        "status": "not_measured",
+        "final_kernel_TTI": null
+      }
+    },
+    {
+      "case": "MapAiry",
+      "region_id": "4691ec0c105801022e72f775009d892015e9257c",
+      "function": "evaluate",
+      "candidate": "evaluate:B40:B41:B42",
+      "location": {
+        "block": "%if.then12.i.i.i275.i.i.i.i",
+        "condition_source": "data",
+        "function": "evaluate",
+        "join": "%if.end23.i.i.i293.i.i.i.i.pair.join",
+        "join_has_other_preds": false
+      },
+      "parent": {
+        "ir": "parents/d685bcad71f8d9c76cc9100e558e4f90fc42a6b4454b1b78af1edba3a4c1f597.ll.gz",
+        "sha256": "d685bcad71f8d9c76cc9100e558e4f90fc42a6b4454b1b78af1edba3a4c1f597",
+        "archive_path": "/data/home/chh/kernel-benchmark-suite-dataflow-b2b/build/dataflow-corpus/step7/MapAiry/anchor/prepared-21-30-1.ll"
+      },
+      "source_round": 22,
+      "source_row": 205,
+      "anchor_T": [
+        53,
+        25,
+        47
+      ],
+      "best_known_T": [
+        38,
+        38,
+        38
+      ],
+      "objectives": {
+        "min_D": {
+          "T": [
+            38,
+            38,
+            38
+          ],
+          "optimal": true,
+          "regret_D": 15,
+          "method": "same-plan-outlined-cleaned"
+        },
+        "strategy": {
+          "T": [
+            62,
+            24,
+            46
+          ],
+          "optimal": true,
+          "regret_D": -9,
+          "method": "same-plan-outlined-cleaned"
+        }
+      },
+      "single_replacement": {
+        "status": "not_measured",
+        "final_kernel_TTI": null
+      }
+    },
+    {
+      "case": "MapAiry",
+      "region_id": "b9d27685035d79937b18e4cbdae32f585c60eec7",
+      "function": "evaluate",
+      "candidate": "evaluate:B39:B40:B41",
+      "location": {
+        "block": "%if.end7.i.i.i273.i.i.i.i",
+        "condition_source": "data",
+        "function": "evaluate",
+        "join": "%if.end23.i.i.i293.i.i.i.i",
+        "join_has_other_preds": false
+      },
+      "parent": {
+        "ir": "parents/24999bb28eee40d31f3da063db08c4ce1beb450ddfe652c11e0ef5401b9998ed.ll.gz",
+        "sha256": "24999bb28eee40d31f3da063db08c4ce1beb450ddfe652c11e0ef5401b9998ed",
+        "archive_path": "/data/home/chh/kernel-benchmark-suite-dataflow-b2b/build/dataflow-corpus/step7/MapAiry/anchor/normalize-21-30-0/fused.ll"
+      },
+      "source_round": 23,
+      "source_row": 206,
+      "anchor_T": [
+        56,
+        28,
+        48
+      ],
+      "best_known_T": [
+        41,
+        41,
+        41
+      ],
+      "objectives": {
+        "min_D": {
+          "T": [
+            41,
+            41,
+            41
+          ],
+          "optimal": true,
+          "regret_D": 15,
+          "method": "context-cleaned"
+        },
+        "strategy": {
+          "T": [
+            65,
+            26,
+            47
+          ],
+          "optimal": true,
+          "regret_D": -9,
+          "method": "context-cleaned"
+        }
+      },
+      "single_replacement": {
+        "status": "not_measured",
+        "final_kernel_TTI": null
+      }
+    },
+    {
+      "case": "MapAiry",
+      "region_id": "b9d27685035d79937b18e4cbdae32f585c60eec7",
+      "function": "evaluate",
+      "candidate": "evaluate:B39:B40:B41",
+      "location": {
+        "block": "%if.end7.i.i.i273.i.i.i.i",
+        "condition_source": "data",
+        "function": "evaluate",
+        "join": "%if.end23.i.i.i293.i.i.i.i.pair.join",
+        "join_has_other_preds": false
+      },
+      "parent": {
+        "ir": "parents/5725f135df8d6d5b728f9b53dc6ec94cbbbe13fd441108d39e2032c7b1652c43.ll.gz",
+        "sha256": "5725f135df8d6d5b728f9b53dc6ec94cbbbe13fd441108d39e2032c7b1652c43",
+        "archive_path": "/data/home/chh/kernel-benchmark-suite-dataflow-b2b/build/dataflow-corpus/step7/MapAiry/anchor/prepared-22-30-0.ll"
+      },
+      "source_round": 23,
+      "source_row": 207,
+      "anchor_T": [
+        56,
+        28,
+        48
+      ],
+      "best_known_T": [
+        41,
+        41,
+        41
+      ],
+      "objectives": {
+        "min_D": {
+          "T": [
+            41,
+            41,
+            41
+          ],
+          "optimal": true,
+          "regret_D": 15,
+          "method": "same-plan-outlined-cleaned"
+        },
+        "strategy": {
+          "T": [
+            65,
+            26,
+            47
+          ],
+          "optimal": true,
+          "regret_D": -9,
+          "method": "same-plan-outlined-cleaned"
+        }
+      },
+      "single_replacement": {
+        "status": "not_measured",
+        "final_kernel_TTI": null
+      }
+    },
+    {
+      "case": "MapAiry",
+      "region_id": "03d67ab131476a444bd5452400697c1c70beaed1",
+      "function": "evaluate",
+      "candidate": "evaluate:B39:B40:B41",
+      "location": {
+        "block": "%if.end7.i.i.i273.i.i.i.i",
+        "condition_source": "data",
+        "function": "evaluate",
+        "join": "%if.end23.i.i.i293.i.i.i.i",
+        "join_has_other_preds": false
+      },
+      "parent": {
+        "ir": "parents/977c4c4faa90b862f9bdfb2633abc82c339768c4f92913bb9da085d20ede5d1c.ll.gz",
+        "sha256": "977c4c4faa90b862f9bdfb2633abc82c339768c4f92913bb9da085d20ede5d1c",
+        "archive_path": "/data/home/chh/kernel-benchmark-suite-dataflow-b2b/build/dataflow-corpus/step7/MapAiry/anchor/trial-165/fused.ll"
+      },
+      "source_round": 24,
+      "source_row": 208,
+      "anchor_T": [
+        44,
+        16,
+        36
+      ],
+      "best_known_T": [
+        29,
+        29,
+        29
+      ],
+      "objectives": {
+        "min_D": {
+          "T": [
+            29,
+            29,
+            29
+          ],
+          "optimal": true,
+          "regret_D": 15,
+          "method": "context-cleaned"
+        },
+        "strategy": {
+          "T": [
+            44,
+            16,
+            36
+          ],
+          "optimal": true,
+          "regret_D": 0,
+          "method": "context-cleaned"
+        }
+      },
+      "single_replacement": {
+        "status": "not_measured",
+        "final_kernel_TTI": null
+      }
+    },
+    {
+      "case": "MapAiry",
+      "region_id": "03d67ab131476a444bd5452400697c1c70beaed1",
+      "function": "evaluate",
+      "candidate": "evaluate:B39:B40:B41",
+      "location": {
+        "block": "%if.end7.i.i.i273.i.i.i.i",
+        "condition_source": "data",
+        "function": "evaluate",
+        "join": "%if.end23.i.i.i293.i.i.i.i.pair.join",
+        "join_has_other_preds": false
+      },
+      "parent": {
+        "ir": "parents/3b7d005bef074afec6902c66790d26c3f5373e5433ec2263624d3b09d8ea2487.ll.gz",
+        "sha256": "3b7d005bef074afec6902c66790d26c3f5373e5433ec2263624d3b09d8ea2487",
+        "archive_path": "/data/home/chh/kernel-benchmark-suite-dataflow-b2b/build/dataflow-corpus/step7/MapAiry/anchor/prepared-23-30-0.ll"
+      },
+      "source_round": 24,
+      "source_row": 209,
+      "anchor_T": [
+        44,
+        16,
+        36
+      ],
+      "best_known_T": [
+        29,
+        29,
+        29
+      ],
+      "objectives": {
+        "min_D": {
+          "T": [
+            29,
+            29,
+            29
+          ],
+          "optimal": true,
+          "regret_D": 15,
+          "method": "same-plan-outlined-cleaned"
+        },
+        "strategy": {
+          "T": [
+            44,
+            16,
+            36
+          ],
+          "optimal": true,
+          "regret_D": 0,
+          "method": "same-plan-outlined-cleaned"
+        }
+      },
+      "single_replacement": {
+        "status": "not_measured",
+        "final_kernel_TTI": null
+      }
+    },
+    {
+      "case": "MapAiry",
+      "region_id": "4691ec0c105801022e72f775009d892015e9257c",
+      "function": "evaluate",
+      "candidate": "evaluate:B50:B51:B52",
+      "location": {
+        "block": "%if.then12.i.i.i194.i.i.i.i",
+        "condition_source": "data",
+        "function": "evaluate",
+        "join": "%if.end23.i.i.i212.i.i.i.i.pair.join",
+        "join_has_other_preds": false
+      },
+      "parent": {
+        "ir": "parents/9d5a3bfac244759d58d277aa92d77c126e3492e9a1d7becdc8a7128ea6b813bd.ll.gz",
+        "sha256": "9d5a3bfac244759d58d277aa92d77c126e3492e9a1d7becdc8a7128ea6b813bd",
+        "archive_path": "/data/home/chh/kernel-benchmark-suite-dataflow-b2b/build/dataflow-corpus/step7/MapAiry/anchor/prepared-24-37-1.ll"
+      },
+      "source_round": 25,
+      "source_row": 215,
+      "anchor_T": [
+        53,
+        25,
+        47
+      ],
+      "best_known_T": [
+        38,
+        38,
+        38
+      ],
+      "objectives": {
+        "min_D": {
+          "T": [
+            38,
+            38,
+            38
+          ],
+          "optimal": true,
+          "regret_D": 15,
+          "method": "same-plan-outlined-cleaned"
+        },
+        "strategy": {
+          "T": [
+            62,
+            24,
+            46
+          ],
+          "optimal": true,
+          "regret_D": -9,
+          "method": "same-plan-outlined-cleaned"
+        }
+      },
+      "single_replacement": {
+        "status": "not_measured",
+        "final_kernel_TTI": null
+      }
+    },
+    {
+      "case": "MapAiry",
+      "region_id": "b9d27685035d79937b18e4cbdae32f585c60eec7",
+      "function": "evaluate",
+      "candidate": "evaluate:B49:B50:B51",
+      "location": {
+        "block": "%if.end7.i.i.i192.i.i.i.i",
+        "condition_source": "data",
+        "function": "evaluate",
+        "join": "%if.end23.i.i.i212.i.i.i.i",
+        "join_has_other_preds": false
+      },
+      "parent": {
+        "ir": "parents/c7cf47e41d426d60136edd85e84e476254614b837d21534dbbac3e0c241cb38f.ll.gz",
+        "sha256": "c7cf47e41d426d60136edd85e84e476254614b837d21534dbbac3e0c241cb38f",
+        "archive_path": "/data/home/chh/kernel-benchmark-suite-dataflow-b2b/build/dataflow-corpus/step7/MapAiry/anchor/normalize-24-37-0/fused.ll"
+      },
+      "source_round": 26,
+      "source_row": 216,
+      "anchor_T": [
+        56,
+        28,
+        48
+      ],
+      "best_known_T": [
+        41,
+        41,
+        41
+      ],
+      "objectives": {
+        "min_D": {
+          "T": [
+            41,
+            41,
+            41
+          ],
+          "optimal": true,
+          "regret_D": 15,
+          "method": "context-cleaned"
+        },
+        "strategy": {
+          "T": [
+            65,
+            26,
+            47
+          ],
+          "optimal": true,
+          "regret_D": -9,
+          "method": "context-cleaned"
+        }
+      },
+      "single_replacement": {
+        "status": "not_measured",
+        "final_kernel_TTI": null
+      }
+    },
+    {
+      "case": "MapAiry",
+      "region_id": "b9d27685035d79937b18e4cbdae32f585c60eec7",
+      "function": "evaluate",
+      "candidate": "evaluate:B49:B50:B51",
+      "location": {
+        "block": "%if.end7.i.i.i192.i.i.i.i",
+        "condition_source": "data",
+        "function": "evaluate",
+        "join": "%if.end23.i.i.i212.i.i.i.i.pair.join",
+        "join_has_other_preds": false
+      },
+      "parent": {
+        "ir": "parents/bdc9e8c8e9679a84cfc434fa857a7d6a4fb88fadb878f03dc1725fb62535492b.ll.gz",
+        "sha256": "bdc9e8c8e9679a84cfc434fa857a7d6a4fb88fadb878f03dc1725fb62535492b",
+        "archive_path": "/data/home/chh/kernel-benchmark-suite-dataflow-b2b/build/dataflow-corpus/step7/MapAiry/anchor/prepared-25-37-0.ll"
+      },
+      "source_round": 26,
+      "source_row": 217,
+      "anchor_T": [
+        56,
+        28,
+        48
+      ],
+      "best_known_T": [
+        41,
+        41,
+        41
+      ],
+      "objectives": {
+        "min_D": {
+          "T": [
+            41,
+            41,
+            41
+          ],
+          "optimal": true,
+          "regret_D": 15,
+          "method": "same-plan-outlined-cleaned"
+        },
+        "strategy": {
+          "T": [
+            65,
+            26,
+            47
+          ],
+          "optimal": true,
+          "regret_D": -9,
+          "method": "same-plan-outlined-cleaned"
+        }
+      },
+      "single_replacement": {
+        "status": "not_measured",
+        "final_kernel_TTI": null
+      }
+    },
+    {
+      "case": "MapAiry",
+      "region_id": "03d67ab131476a444bd5452400697c1c70beaed1",
+      "function": "evaluate",
+      "candidate": "evaluate:B49:B50:B51",
+      "location": {
+        "block": "%if.end7.i.i.i192.i.i.i.i",
+        "condition_source": "data",
+        "function": "evaluate",
+        "join": "%if.end23.i.i.i212.i.i.i.i",
+        "join_has_other_preds": false
+      },
+      "parent": {
+        "ir": "parents/069beef998b3b6dd4f2caa0f030ec56aafe116a3c3010dc2584b7234974efcf7.ll.gz",
+        "sha256": "069beef998b3b6dd4f2caa0f030ec56aafe116a3c3010dc2584b7234974efcf7",
+        "archive_path": "/data/home/chh/kernel-benchmark-suite-dataflow-b2b/build/dataflow-corpus/step7/MapAiry/anchor/trial-175/fused.ll"
+      },
+      "source_round": 27,
+      "source_row": 218,
+      "anchor_T": [
+        44,
+        16,
+        36
+      ],
+      "best_known_T": [
+        29,
+        29,
+        29
+      ],
+      "objectives": {
+        "min_D": {
+          "T": [
+            29,
+            29,
+            29
+          ],
+          "optimal": true,
+          "regret_D": 15,
+          "method": "context-cleaned"
+        },
+        "strategy": {
+          "T": [
+            44,
+            16,
+            36
+          ],
+          "optimal": true,
+          "regret_D": 0,
+          "method": "context-cleaned"
+        }
+      },
+      "single_replacement": {
+        "status": "not_measured",
+        "final_kernel_TTI": null
+      }
+    },
+    {
+      "case": "MapAiry",
+      "region_id": "03d67ab131476a444bd5452400697c1c70beaed1",
+      "function": "evaluate",
+      "candidate": "evaluate:B49:B50:B51",
+      "location": {
+        "block": "%if.end7.i.i.i192.i.i.i.i",
+        "condition_source": "data",
+        "function": "evaluate",
+        "join": "%if.end23.i.i.i212.i.i.i.i.pair.join",
+        "join_has_other_preds": false
+      },
+      "parent": {
+        "ir": "parents/156d8c606d77f225fdc4fdca2da3bdb05454bed3c3ed93ccd2bdc043528d0670.ll.gz",
+        "sha256": "156d8c606d77f225fdc4fdca2da3bdb05454bed3c3ed93ccd2bdc043528d0670",
+        "archive_path": "/data/home/chh/kernel-benchmark-suite-dataflow-b2b/build/dataflow-corpus/step7/MapAiry/anchor/prepared-26-37-0.ll"
+      },
+      "source_round": 27,
+      "source_row": 219,
+      "anchor_T": [
+        44,
+        16,
+        36
+      ],
+      "best_known_T": [
+        29,
+        29,
+        29
+      ],
+      "objectives": {
+        "min_D": {
+          "T": [
+            29,
+            29,
+            29
+          ],
+          "optimal": true,
+          "regret_D": 15,
+          "method": "same-plan-outlined-cleaned"
+        },
+        "strategy": {
+          "T": [
+            44,
+            16,
+            36
+          ],
+          "optimal": true,
+          "regret_D": 0,
+          "method": "same-plan-outlined-cleaned"
+        }
+      },
+      "single_replacement": {
+        "status": "not_measured",
+        "final_kernel_TTI": null
+      }
+    },
+    {
+      "case": "MapAiry",
+      "region_id": "4691ec0c105801022e72f775009d892015e9257c",
+      "function": "evaluate",
+      "candidate": "evaluate:B59:B60:B61",
+      "location": {
+        "block": "%if.then12.i.i.i113.i.i.i.i",
+        "condition_source": "data",
+        "function": "evaluate",
+        "join": "%if.end23.i.i.i131.i.i.i.i.pair.join",
+        "join_has_other_preds": false
+      },
+      "parent": {
+        "ir": "parents/f3be3b72bb065afac0da790f4348d53cfb924f1a5b5f74e32c113f63282e0d11.ll.gz",
+        "sha256": "f3be3b72bb065afac0da790f4348d53cfb924f1a5b5f74e32c113f63282e0d11",
+        "archive_path": "/data/home/chh/kernel-benchmark-suite-dataflow-b2b/build/dataflow-corpus/step7/MapAiry/anchor/prepared-27-43-1.ll"
+      },
+      "source_round": 28,
+      "source_row": 225,
+      "anchor_T": [
+        53,
+        25,
+        47
+      ],
+      "best_known_T": [
+        38,
+        38,
+        38
+      ],
+      "objectives": {
+        "min_D": {
+          "T": [
+            38,
+            38,
+            38
+          ],
+          "optimal": true,
+          "regret_D": 15,
+          "method": "same-plan-outlined-cleaned"
+        },
+        "strategy": {
+          "T": [
+            62,
+            24,
+            46
+          ],
+          "optimal": true,
+          "regret_D": -9,
+          "method": "same-plan-outlined-cleaned"
+        }
+      },
+      "single_replacement": {
+        "status": "not_measured",
+        "final_kernel_TTI": null
+      }
+    },
+    {
+      "case": "MapAiry",
+      "region_id": "9696f4c5696faba7e38032fa3a1f0779a79575d6",
+      "function": "evaluate",
+      "candidate": "evaluate:B58:B59:B60",
+      "location": {
+        "block": "%if.end4.i.i.i92.i.i.i.i",
+        "condition_source": "data",
+        "function": "evaluate",
+        "join": "%if.end23.i.i.i131.i.i.i.i",
+        "join_has_other_preds": false
+      },
+      "parent": {
+        "ir": "parents/a89916322181098b0a6ac3c12b972c2adacd99a800f53ed2ef653bd32daeea3e.ll.gz",
+        "sha256": "a89916322181098b0a6ac3c12b972c2adacd99a800f53ed2ef653bd32daeea3e",
+        "archive_path": "/data/home/chh/kernel-benchmark-suite-dataflow-b2b/build/dataflow-corpus/step7/MapAiry/anchor/normalize-27-43-0/fused.ll"
+      },
+      "source_round": 29,
+      "source_row": 226,
+      "anchor_T": [
+        49,
+        49,
+        49
+      ],
+      "best_known_T": [
+        40,
+        40,
+        40
+      ],
+      "objectives": {
+        "min_D": {
+          "T": [
+            40,
+            40,
+            40
+          ],
+          "optimal": true,
+          "regret_D": 9,
+          "method": "same-plan-outlined-cleaned"
+        },
+        "strategy": {
+          "T": [
+            64,
+            26,
+            46
+          ],
+          "optimal": true,
+          "regret_D": -15,
+          "method": "same-plan-outlined-cleaned"
+        }
+      },
+      "single_replacement": {
+        "status": "not_measured",
+        "final_kernel_TTI": null
+      }
+    },
+    {
+      "case": "MapAiry",
+      "region_id": "9696f4c5696faba7e38032fa3a1f0779a79575d6",
+      "function": "evaluate",
+      "candidate": "evaluate:B58:B59:B60",
+      "location": {
+        "block": "%if.end4.i.i.i92.i.i.i.i",
+        "condition_source": "data",
+        "function": "evaluate",
+        "join": "%if.end23.i.i.i131.i.i.i.i.pair.join",
+        "join_has_other_preds": false
+      },
+      "parent": {
+        "ir": "parents/d711eaf03d976f013ed31273820342e9a8dece8ba89f9e6a02a339ef6fbf454f.ll.gz",
+        "sha256": "d711eaf03d976f013ed31273820342e9a8dece8ba89f9e6a02a339ef6fbf454f",
+        "archive_path": "/data/home/chh/kernel-benchmark-suite-dataflow-b2b/build/dataflow-corpus/step7/MapAiry/anchor/prepared-28-43-0.ll"
+      },
+      "source_round": 29,
+      "source_row": 227,
+      "anchor_T": [
+        49,
+        49,
+        49
+      ],
+      "best_known_T": [
+        40,
+        40,
+        40
+      ],
+      "objectives": {
+        "min_D": {
+          "T": [
+            40,
+            40,
+            40
+          ],
+          "optimal": true,
+          "regret_D": 9,
+          "method": "same-plan-outlined-cleaned"
+        },
+        "strategy": {
+          "T": [
+            64,
+            26,
+            46
+          ],
+          "optimal": true,
+          "regret_D": -15,
+          "method": "same-plan-outlined-cleaned"
+        }
+      },
+      "single_replacement": {
+        "status": "not_measured",
+        "final_kernel_TTI": null
+      }
+    },
+    {
+      "case": "MapAiry",
+      "region_id": "03d67ab131476a444bd5452400697c1c70beaed1",
+      "function": "evaluate",
+      "candidate": "evaluate:B19:B20:B21",
+      "location": {
+        "block": "%if.end7.i.i.i499.i.i.i.i",
+        "condition_source": "data",
+        "function": "evaluate",
+        "join": "%if.end23.i.i.i519.i.i.i.i",
+        "join_has_other_preds": false
+      },
+      "parent": {
+        "ir": "parents/0c74d0d5d87916da7507b80ffe7a29f105036c2f34ef26c228eae3f2656b4a3d.ll.gz",
+        "sha256": "0c74d0d5d87916da7507b80ffe7a29f105036c2f34ef26c228eae3f2656b4a3d",
+        "archive_path": "/data/home/chh/kernel-benchmark-suite-dataflow-b2b/build/dataflow-corpus/step7/MapAiry/anchor/trial-187/fused.ll"
+      },
+      "source_round": 32,
+      "source_row": 228,
+      "anchor_T": [
+        44,
+        16,
+        36
+      ],
+      "best_known_T": [
+        29,
+        29,
+        29
+      ],
+      "objectives": {
+        "min_D": {
+          "T": [
+            29,
+            29,
+            29
+          ],
+          "optimal": true,
+          "regret_D": 15,
+          "method": "context-cleaned"
+        },
+        "strategy": {
+          "T": [
+            44,
+            16,
+            36
+          ],
+          "optimal": true,
+          "regret_D": 0,
+          "method": "context-cleaned"
+        }
+      },
+      "single_replacement": {
+        "status": "not_measured",
+        "final_kernel_TTI": null
+      }
+    },
+    {
+      "case": "MapAiry",
+      "region_id": "03d67ab131476a444bd5452400697c1c70beaed1",
+      "function": "evaluate",
+      "candidate": "evaluate:B19:B20:B21",
+      "location": {
+        "block": "%if.end7.i.i.i499.i.i.i.i",
+        "condition_source": "data",
+        "function": "evaluate",
+        "join": "%if.end23.i.i.i519.i.i.i.i.pair.join",
+        "join_has_other_preds": false
+      },
+      "parent": {
+        "ir": "parents/d49713967cb99e6f5d61648325e00d30dba879ed9b94bde34942125a10b5c15e.ll.gz",
+        "sha256": "d49713967cb99e6f5d61648325e00d30dba879ed9b94bde34942125a10b5c15e",
+        "archive_path": "/data/home/chh/kernel-benchmark-suite-dataflow-b2b/build/dataflow-corpus/step7/MapAiry/anchor/prepared-31-16-0.ll"
+      },
+      "source_round": 32,
+      "source_row": 229,
+      "anchor_T": [
+        44,
+        16,
+        36
+      ],
+      "best_known_T": [
+        29,
+        29,
+        29
+      ],
+      "objectives": {
+        "min_D": {
+          "T": [
+            29,
+            29,
+            29
+          ],
+          "optimal": true,
+          "regret_D": 15,
+          "method": "same-plan-outlined-cleaned"
+        },
+        "strategy": {
+          "T": [
+            44,
+            16,
+            36
+          ],
+          "optimal": true,
+          "regret_D": 0,
+          "method": "same-plan-outlined-cleaned"
+        }
+      },
+      "single_replacement": {
+        "status": "not_measured",
+        "final_kernel_TTI": null
+      }
+    },
+    {
+      "case": "MapAiry",
+      "region_id": "03d67ab131476a444bd5452400697c1c70beaed1",
+      "function": "evaluate",
+      "candidate": "evaluate:B29:B30:B31",
+      "location": {
+        "block": "%if.end7.i.i.i386.i.i.i.i",
+        "condition_source": "data",
+        "function": "evaluate",
+        "join": "%if.end23.i.i.i406.i.i.i.i",
+        "join_has_other_preds": false
+      },
+      "parent": {
+        "ir": "parents/0c74d0d5d87916da7507b80ffe7a29f105036c2f34ef26c228eae3f2656b4a3d.ll.gz",
+        "sha256": "0c74d0d5d87916da7507b80ffe7a29f105036c2f34ef26c228eae3f2656b4a3d",
+        "archive_path": "/data/home/chh/kernel-benchmark-suite-dataflow-b2b/build/dataflow-corpus/step7/MapAiry/anchor/trial-187/fused.ll"
+      },
+      "source_round": 34,
+      "source_row": 230,
+      "anchor_T": [
+        44,
+        16,
+        36
+      ],
+      "best_known_T": [
+        29,
+        29,
+        29
+      ],
+      "objectives": {
+        "min_D": {
+          "T": [
+            29,
+            29,
+            29
+          ],
+          "optimal": true,
+          "regret_D": 15,
+          "method": "context-cleaned"
+        },
+        "strategy": {
+          "T": [
+            44,
+            16,
+            36
+          ],
+          "optimal": true,
+          "regret_D": 0,
+          "method": "context-cleaned"
+        }
+      },
+      "single_replacement": {
+        "status": "not_measured",
+        "final_kernel_TTI": null
+      }
+    },
+    {
+      "case": "MapAiry",
+      "region_id": "03d67ab131476a444bd5452400697c1c70beaed1",
+      "function": "evaluate",
+      "candidate": "evaluate:B29:B30:B31",
+      "location": {
+        "block": "%if.end7.i.i.i386.i.i.i.i",
+        "condition_source": "data",
+        "function": "evaluate",
+        "join": "%if.end23.i.i.i406.i.i.i.i.pair.join",
+        "join_has_other_preds": false
+      },
+      "parent": {
+        "ir": "parents/1b0c6de93bd1db8a8f560985f5922e25fb7995338453303f43e456e94b4f1b3d.ll.gz",
+        "sha256": "1b0c6de93bd1db8a8f560985f5922e25fb7995338453303f43e456e94b4f1b3d",
+        "archive_path": "/data/home/chh/kernel-benchmark-suite-dataflow-b2b/build/dataflow-corpus/step7/MapAiry/anchor/prepared-33-23-0.ll"
+      },
+      "source_round": 34,
+      "source_row": 231,
+      "anchor_T": [
+        44,
+        16,
+        36
+      ],
+      "best_known_T": [
+        29,
+        29,
+        29
+      ],
+      "objectives": {
+        "min_D": {
+          "T": [
+            29,
+            29,
+            29
+          ],
+          "optimal": true,
+          "regret_D": 15,
+          "method": "same-plan-outlined-cleaned"
+        },
+        "strategy": {
+          "T": [
+            44,
+            16,
+            36
+          ],
+          "optimal": true,
+          "regret_D": 0,
+          "method": "same-plan-outlined-cleaned"
+        }
+      },
+      "single_replacement": {
+        "status": "not_measured",
+        "final_kernel_TTI": null
+      }
+    },
+    {
+      "case": "MapAiry",
+      "region_id": "03d67ab131476a444bd5452400697c1c70beaed1",
+      "function": "evaluate",
+      "candidate": "evaluate:B39:B40:B41",
+      "location": {
+        "block": "%if.end7.i.i.i273.i.i.i.i",
+        "condition_source": "data",
+        "function": "evaluate",
+        "join": "%if.end23.i.i.i293.i.i.i.i",
+        "join_has_other_preds": false
+      },
+      "parent": {
+        "ir": "parents/0c74d0d5d87916da7507b80ffe7a29f105036c2f34ef26c228eae3f2656b4a3d.ll.gz",
+        "sha256": "0c74d0d5d87916da7507b80ffe7a29f105036c2f34ef26c228eae3f2656b4a3d",
+        "archive_path": "/data/home/chh/kernel-benchmark-suite-dataflow-b2b/build/dataflow-corpus/step7/MapAiry/anchor/trial-187/fused.ll"
+      },
+      "source_round": 37,
+      "source_row": 234,
+      "anchor_T": [
+        44,
+        16,
+        36
+      ],
+      "best_known_T": [
+        29,
+        29,
+        29
+      ],
+      "objectives": {
+        "min_D": {
+          "T": [
+            29,
+            29,
+            29
+          ],
+          "optimal": true,
+          "regret_D": 15,
+          "method": "context-cleaned"
+        },
+        "strategy": {
+          "T": [
+            44,
+            16,
+            36
+          ],
+          "optimal": true,
+          "regret_D": 0,
+          "method": "context-cleaned"
+        }
+      },
+      "single_replacement": {
+        "status": "not_measured",
+        "final_kernel_TTI": null
+      }
+    },
+    {
+      "case": "MapAiry",
+      "region_id": "03d67ab131476a444bd5452400697c1c70beaed1",
+      "function": "evaluate",
+      "candidate": "evaluate:B39:B40:B41",
+      "location": {
+        "block": "%if.end7.i.i.i273.i.i.i.i",
+        "condition_source": "data",
+        "function": "evaluate",
+        "join": "%if.end23.i.i.i293.i.i.i.i.pair.join",
+        "join_has_other_preds": false
+      },
+      "parent": {
+        "ir": "parents/13501fe1e693ed234480891433c09bd2f75d9a6c543e4e213f3c4c5c9a0e534e.ll.gz",
+        "sha256": "13501fe1e693ed234480891433c09bd2f75d9a6c543e4e213f3c4c5c9a0e534e",
+        "archive_path": "/data/home/chh/kernel-benchmark-suite-dataflow-b2b/build/dataflow-corpus/step7/MapAiry/anchor/prepared-36-30-0.ll"
+      },
+      "source_round": 37,
+      "source_row": 235,
+      "anchor_T": [
+        44,
+        16,
+        36
+      ],
+      "best_known_T": [
+        29,
+        29,
+        29
+      ],
+      "objectives": {
+        "min_D": {
+          "T": [
+            29,
+            29,
+            29
+          ],
+          "optimal": true,
+          "regret_D": 15,
+          "method": "same-plan-outlined-cleaned"
+        },
+        "strategy": {
+          "T": [
+            44,
+            16,
+            36
+          ],
+          "optimal": true,
+          "regret_D": 0,
+          "method": "same-plan-outlined-cleaned"
+        }
+      },
+      "single_replacement": {
+        "status": "not_measured",
+        "final_kernel_TTI": null
+      }
+    },
+    {
+      "case": "MapAiry",
+      "region_id": "03d67ab131476a444bd5452400697c1c70beaed1",
+      "function": "evaluate",
+      "candidate": "evaluate:B49:B50:B51",
+      "location": {
+        "block": "%if.end7.i.i.i192.i.i.i.i",
+        "condition_source": "data",
+        "function": "evaluate",
+        "join": "%if.end23.i.i.i212.i.i.i.i",
+        "join_has_other_preds": false
+      },
+      "parent": {
+        "ir": "parents/0c74d0d5d87916da7507b80ffe7a29f105036c2f34ef26c228eae3f2656b4a3d.ll.gz",
+        "sha256": "0c74d0d5d87916da7507b80ffe7a29f105036c2f34ef26c228eae3f2656b4a3d",
+        "archive_path": "/data/home/chh/kernel-benchmark-suite-dataflow-b2b/build/dataflow-corpus/step7/MapAiry/anchor/trial-187/fused.ll"
+      },
+      "source_round": 39,
+      "source_row": 236,
+      "anchor_T": [
+        44,
+        16,
+        36
+      ],
+      "best_known_T": [
+        29,
+        29,
+        29
+      ],
+      "objectives": {
+        "min_D": {
+          "T": [
+            29,
+            29,
+            29
+          ],
+          "optimal": true,
+          "regret_D": 15,
+          "method": "context-cleaned"
+        },
+        "strategy": {
+          "T": [
+            44,
+            16,
+            36
+          ],
+          "optimal": true,
+          "regret_D": 0,
+          "method": "context-cleaned"
+        }
+      },
+      "single_replacement": {
+        "status": "not_measured",
+        "final_kernel_TTI": null
+      }
+    },
+    {
+      "case": "MapAiry",
+      "region_id": "03d67ab131476a444bd5452400697c1c70beaed1",
+      "function": "evaluate",
+      "candidate": "evaluate:B49:B50:B51",
+      "location": {
+        "block": "%if.end7.i.i.i192.i.i.i.i",
+        "condition_source": "data",
+        "function": "evaluate",
+        "join": "%if.end23.i.i.i212.i.i.i.i.pair.join",
+        "join_has_other_preds": false
+      },
+      "parent": {
+        "ir": "parents/b4bc06b9cc13878ffade0992c7dddf37339f663ebe221b512be30aa727f46941.ll.gz",
+        "sha256": "b4bc06b9cc13878ffade0992c7dddf37339f663ebe221b512be30aa727f46941",
+        "archive_path": "/data/home/chh/kernel-benchmark-suite-dataflow-b2b/build/dataflow-corpus/step7/MapAiry/anchor/prepared-38-37-0.ll"
+      },
+      "source_round": 39,
+      "source_row": 237,
+      "anchor_T": [
+        44,
+        16,
+        36
+      ],
+      "best_known_T": [
+        29,
+        29,
+        29
+      ],
+      "objectives": {
+        "min_D": {
+          "T": [
+            29,
+            29,
+            29
+          ],
+          "optimal": true,
+          "regret_D": 15,
+          "method": "same-plan-outlined-cleaned"
+        },
+        "strategy": {
+          "T": [
+            44,
+            16,
+            36
+          ],
+          "optimal": true,
+          "regret_D": 0,
+          "method": "same-plan-outlined-cleaned"
+        }
+      },
+      "single_replacement": {
+        "status": "not_measured",
+        "final_kernel_TTI": null
+      }
+    },
+    {
+      "case": "MapAiry",
+      "region_id": "03d67ab131476a444bd5452400697c1c70beaed1",
+      "function": "evaluate",
+      "candidate": "evaluate:B19:B20:B21",
+      "location": {
+        "block": "%if.end7.i.i.i499.i.i.i.i",
+        "condition_source": "data",
+        "function": "evaluate",
+        "join": "%if.end23.i.i.i519.i.i.i.i",
+        "join_has_other_preds": false
+      },
+      "parent": {
+        "ir": "parents/60b0e0097aab16155d1c898b39d738604d5bcca51be3775282722d4cefc50d06.ll.gz",
+        "sha256": "60b0e0097aab16155d1c898b39d738604d5bcca51be3775282722d4cefc50d06",
+        "archive_path": "/data/home/chh/kernel-benchmark-suite-dataflow-b2b/build/dataflow-corpus/step7/MapAiry/anchor/trial-205/fused.ll"
+      },
+      "source_round": 43,
+      "source_row": 238,
+      "anchor_T": [
+        44,
+        16,
+        36
+      ],
+      "best_known_T": [
+        29,
+        29,
+        29
+      ],
+      "objectives": {
+        "min_D": {
+          "T": [
+            29,
+            29,
+            29
+          ],
+          "optimal": true,
+          "regret_D": 15,
+          "method": "context-cleaned"
+        },
+        "strategy": {
+          "T": [
+            44,
+            16,
+            36
+          ],
+          "optimal": true,
+          "regret_D": 0,
+          "method": "context-cleaned"
+        }
+      },
+      "single_replacement": {
+        "status": "not_measured",
+        "final_kernel_TTI": null
+      }
+    },
+    {
+      "case": "MapAiry",
+      "region_id": "03d67ab131476a444bd5452400697c1c70beaed1",
+      "function": "evaluate",
+      "candidate": "evaluate:B19:B20:B21",
+      "location": {
+        "block": "%if.end7.i.i.i499.i.i.i.i",
+        "condition_source": "data",
+        "function": "evaluate",
+        "join": "%if.end23.i.i.i519.i.i.i.i.pair.join",
+        "join_has_other_preds": false
+      },
+      "parent": {
+        "ir": "parents/aff6048293b71bf147aea6e4544c1a040d5b93ae032363576deef5d34b43918a.ll.gz",
+        "sha256": "aff6048293b71bf147aea6e4544c1a040d5b93ae032363576deef5d34b43918a",
+        "archive_path": "/data/home/chh/kernel-benchmark-suite-dataflow-b2b/build/dataflow-corpus/step7/MapAiry/anchor/prepared-42-16-0.ll"
+      },
+      "source_round": 43,
+      "source_row": 239,
+      "anchor_T": [
+        44,
+        16,
+        36
+      ],
+      "best_known_T": [
+        29,
+        29,
+        29
+      ],
+      "objectives": {
+        "min_D": {
+          "T": [
+            29,
+            29,
+            29
+          ],
+          "optimal": true,
+          "regret_D": 15,
+          "method": "same-plan-outlined-cleaned"
+        },
+        "strategy": {
+          "T": [
+            44,
+            16,
+            36
+          ],
+          "optimal": true,
+          "regret_D": 0,
+          "method": "same-plan-outlined-cleaned"
+        }
+      },
+      "single_replacement": {
+        "status": "not_measured",
+        "final_kernel_TTI": null
+      }
+    },
+    {
+      "case": "MapAiry",
+      "region_id": "03d67ab131476a444bd5452400697c1c70beaed1",
+      "function": "evaluate",
+      "candidate": "evaluate:B29:B30:B31",
+      "location": {
+        "block": "%if.end7.i.i.i386.i.i.i.i",
+        "condition_source": "data",
+        "function": "evaluate",
+        "join": "%if.end23.i.i.i406.i.i.i.i",
+        "join_has_other_preds": false
+      },
+      "parent": {
+        "ir": "parents/60b0e0097aab16155d1c898b39d738604d5bcca51be3775282722d4cefc50d06.ll.gz",
+        "sha256": "60b0e0097aab16155d1c898b39d738604d5bcca51be3775282722d4cefc50d06",
+        "archive_path": "/data/home/chh/kernel-benchmark-suite-dataflow-b2b/build/dataflow-corpus/step7/MapAiry/anchor/trial-205/fused.ll"
+      },
+      "source_round": 45,
+      "source_row": 240,
+      "anchor_T": [
+        44,
+        16,
+        36
+      ],
+      "best_known_T": [
+        29,
+        29,
+        29
+      ],
+      "objectives": {
+        "min_D": {
+          "T": [
+            29,
+            29,
+            29
+          ],
+          "optimal": true,
+          "regret_D": 15,
+          "method": "context-cleaned"
+        },
+        "strategy": {
+          "T": [
+            44,
+            16,
+            36
+          ],
+          "optimal": true,
+          "regret_D": 0,
+          "method": "context-cleaned"
+        }
+      },
+      "single_replacement": {
+        "status": "not_measured",
+        "final_kernel_TTI": null
+      }
+    },
+    {
+      "case": "MapAiry",
+      "region_id": "03d67ab131476a444bd5452400697c1c70beaed1",
+      "function": "evaluate",
+      "candidate": "evaluate:B29:B30:B31",
+      "location": {
+        "block": "%if.end7.i.i.i386.i.i.i.i",
+        "condition_source": "data",
+        "function": "evaluate",
+        "join": "%if.end23.i.i.i406.i.i.i.i.pair.join",
+        "join_has_other_preds": false
+      },
+      "parent": {
+        "ir": "parents/6a5b6780ab8be6e5e0cb40f3fd9dfc1fa05ad35c9805de31db2bfb7649e9fb4d.ll.gz",
+        "sha256": "6a5b6780ab8be6e5e0cb40f3fd9dfc1fa05ad35c9805de31db2bfb7649e9fb4d",
+        "archive_path": "/data/home/chh/kernel-benchmark-suite-dataflow-b2b/build/dataflow-corpus/step7/MapAiry/anchor/prepared-44-23-0.ll"
+      },
+      "source_round": 45,
+      "source_row": 241,
+      "anchor_T": [
+        44,
+        16,
+        36
+      ],
+      "best_known_T": [
+        29,
+        29,
+        29
+      ],
+      "objectives": {
+        "min_D": {
+          "T": [
+            29,
+            29,
+            29
+          ],
+          "optimal": true,
+          "regret_D": 15,
+          "method": "same-plan-outlined-cleaned"
+        },
+        "strategy": {
+          "T": [
+            44,
+            16,
+            36
+          ],
+          "optimal": true,
+          "regret_D": 0,
+          "method": "same-plan-outlined-cleaned"
+        }
+      },
+      "single_replacement": {
+        "status": "not_measured",
+        "final_kernel_TTI": null
+      }
+    },
+    {
+      "case": "MapAiry",
+      "region_id": "03d67ab131476a444bd5452400697c1c70beaed1",
+      "function": "evaluate",
+      "candidate": "evaluate:B39:B40:B41",
+      "location": {
+        "block": "%if.end7.i.i.i273.i.i.i.i",
+        "condition_source": "data",
+        "function": "evaluate",
+        "join": "%if.end23.i.i.i293.i.i.i.i",
+        "join_has_other_preds": false
+      },
+      "parent": {
+        "ir": "parents/60b0e0097aab16155d1c898b39d738604d5bcca51be3775282722d4cefc50d06.ll.gz",
+        "sha256": "60b0e0097aab16155d1c898b39d738604d5bcca51be3775282722d4cefc50d06",
+        "archive_path": "/data/home/chh/kernel-benchmark-suite-dataflow-b2b/build/dataflow-corpus/step7/MapAiry/anchor/trial-205/fused.ll"
+      },
+      "source_round": 48,
+      "source_row": 244,
+      "anchor_T": [
+        44,
+        16,
+        36
+      ],
+      "best_known_T": [
+        29,
+        29,
+        29
+      ],
+      "objectives": {
+        "min_D": {
+          "T": [
+            29,
+            29,
+            29
+          ],
+          "optimal": true,
+          "regret_D": 15,
+          "method": "context-cleaned"
+        },
+        "strategy": {
+          "T": [
+            44,
+            16,
+            36
+          ],
+          "optimal": true,
+          "regret_D": 0,
+          "method": "context-cleaned"
+        }
+      },
+      "single_replacement": {
+        "status": "not_measured",
+        "final_kernel_TTI": null
+      }
+    },
+    {
+      "case": "MapAiry",
+      "region_id": "03d67ab131476a444bd5452400697c1c70beaed1",
+      "function": "evaluate",
+      "candidate": "evaluate:B39:B40:B41",
+      "location": {
+        "block": "%if.end7.i.i.i273.i.i.i.i",
+        "condition_source": "data",
+        "function": "evaluate",
+        "join": "%if.end23.i.i.i293.i.i.i.i.pair.join",
+        "join_has_other_preds": false
+      },
+      "parent": {
+        "ir": "parents/749cd40c800dad936d8c7e1c1dcedb828d11befba218683f07c6effe56814a39.ll.gz",
+        "sha256": "749cd40c800dad936d8c7e1c1dcedb828d11befba218683f07c6effe56814a39",
+        "archive_path": "/data/home/chh/kernel-benchmark-suite-dataflow-b2b/build/dataflow-corpus/step7/MapAiry/anchor/prepared-47-30-0.ll"
+      },
+      "source_round": 48,
+      "source_row": 245,
+      "anchor_T": [
+        44,
+        16,
+        36
+      ],
+      "best_known_T": [
+        29,
+        29,
+        29
+      ],
+      "objectives": {
+        "min_D": {
+          "T": [
+            29,
+            29,
+            29
+          ],
+          "optimal": true,
+          "regret_D": 15,
+          "method": "same-plan-outlined-cleaned"
+        },
+        "strategy": {
+          "T": [
+            44,
+            16,
+            36
+          ],
+          "optimal": true,
+          "regret_D": 0,
+          "method": "same-plan-outlined-cleaned"
+        }
+      },
+      "single_replacement": {
+        "status": "not_measured",
+        "final_kernel_TTI": null
+      }
+    },
+    {
+      "case": "MapAiry",
+      "region_id": "03d67ab131476a444bd5452400697c1c70beaed1",
+      "function": "evaluate",
+      "candidate": "evaluate:B49:B50:B51",
+      "location": {
+        "block": "%if.end7.i.i.i192.i.i.i.i",
+        "condition_source": "data",
+        "function": "evaluate",
+        "join": "%if.end23.i.i.i212.i.i.i.i",
+        "join_has_other_preds": false
+      },
+      "parent": {
+        "ir": "parents/60b0e0097aab16155d1c898b39d738604d5bcca51be3775282722d4cefc50d06.ll.gz",
+        "sha256": "60b0e0097aab16155d1c898b39d738604d5bcca51be3775282722d4cefc50d06",
+        "archive_path": "/data/home/chh/kernel-benchmark-suite-dataflow-b2b/build/dataflow-corpus/step7/MapAiry/anchor/trial-205/fused.ll"
+      },
+      "source_round": 50,
+      "source_row": 246,
+      "anchor_T": [
+        44,
+        16,
+        36
+      ],
+      "best_known_T": [
+        29,
+        29,
+        29
+      ],
+      "objectives": {
+        "min_D": {
+          "T": [
+            29,
+            29,
+            29
+          ],
+          "optimal": true,
+          "regret_D": 15,
+          "method": "context-cleaned"
+        },
+        "strategy": {
+          "T": [
+            44,
+            16,
+            36
+          ],
+          "optimal": true,
+          "regret_D": 0,
+          "method": "context-cleaned"
+        }
+      },
+      "single_replacement": {
+        "status": "not_measured",
+        "final_kernel_TTI": null
+      }
+    },
+    {
+      "case": "MapAiry",
+      "region_id": "03d67ab131476a444bd5452400697c1c70beaed1",
+      "function": "evaluate",
+      "candidate": "evaluate:B49:B50:B51",
+      "location": {
+        "block": "%if.end7.i.i.i192.i.i.i.i",
+        "condition_source": "data",
+        "function": "evaluate",
+        "join": "%if.end23.i.i.i212.i.i.i.i.pair.join",
+        "join_has_other_preds": false
+      },
+      "parent": {
+        "ir": "parents/e7c34cd35b7d0d560b16b83a6be7182038b9063f931cff110657ad42e7ad3fdc.ll.gz",
+        "sha256": "e7c34cd35b7d0d560b16b83a6be7182038b9063f931cff110657ad42e7ad3fdc",
+        "archive_path": "/data/home/chh/kernel-benchmark-suite-dataflow-b2b/build/dataflow-corpus/step7/MapAiry/anchor/prepared-49-37-0.ll"
+      },
+      "source_round": 50,
+      "source_row": 247,
+      "anchor_T": [
+        44,
+        16,
+        36
+      ],
+      "best_known_T": [
+        29,
+        29,
+        29
+      ],
+      "objectives": {
+        "min_D": {
+          "T": [
+            29,
+            29,
+            29
+          ],
+          "optimal": true,
+          "regret_D": 15,
+          "method": "same-plan-outlined-cleaned"
+        },
+        "strategy": {
+          "T": [
+            44,
+            16,
+            36
+          ],
+          "optimal": true,
+          "regret_D": 0,
+          "method": "same-plan-outlined-cleaned"
+        }
+      },
+      "single_replacement": {
+        "status": "not_measured",
+        "final_kernel_TTI": null
+      }
+    },
+    {
+      "case": "MapAiry",
+      "region_id": "03d55c7d3db732b4299d4e8f4adc06b3a881e0e5",
+      "function": "evaluate",
+      "candidate": "evaluate:B64:B74:B73",
+      "location": {
+        "block": "%decision.dispatch5",
+        "condition_source": "data",
+        "function": "evaluate",
+        "join": "%fusion.common1",
+        "join_has_other_preds": false
+      },
+      "parent": {
+        "ir": "parents/60b0e0097aab16155d1c898b39d738604d5bcca51be3775282722d4cefc50d06.ll.gz",
+        "sha256": "60b0e0097aab16155d1c898b39d738604d5bcca51be3775282722d4cefc50d06",
+        "archive_path": "/data/home/chh/kernel-benchmark-suite-dataflow-b2b/build/dataflow-corpus/step7/MapAiry/anchor/trial-205/fused.ll"
+      },
+      "source_round": 52,
+      "source_row": 248,
+      "anchor_T": [
+        27,
+        27,
+        27
+      ],
+      "best_known_T": [
+        26,
+        26,
+        26
+      ],
+      "objectives": {
+        "min_D": {
+          "T": [
+            26,
+            26,
+            26
+          ],
+          "optimal": false,
+          "regret_D": 1,
+          "method": "context-cleaned"
+        },
+        "strategy": {
+          "T": [
+            26,
+            26,
+            26
+          ],
+          "optimal": false,
+          "regret_D": 1,
+          "method": "context-cleaned"
+        }
+      },
+      "single_replacement": {
+        "status": "not_measured",
+        "final_kernel_TTI": null
+      }
+    },
+    {
+      "case": "MapAiry",
+      "region_id": "03d55c7d3db732b4299d4e8f4adc06b3a881e0e5",
+      "function": "evaluate",
+      "candidate": "evaluate:B64:B74:B73",
+      "location": {
+        "block": "%decision.dispatch5",
+        "condition_source": "data",
+        "function": "evaluate",
+        "join": "%fusion.common1.pair.join",
+        "join_has_other_preds": false
+      },
+      "parent": {
+        "ir": "parents/f8b5dbdbdffe821de6d2cc49626a2fc6efd65ae1db3e04e9cd5d30bbf448c62d.ll.gz",
+        "sha256": "f8b5dbdbdffe821de6d2cc49626a2fc6efd65ae1db3e04e9cd5d30bbf448c62d",
+        "archive_path": "/data/home/chh/kernel-benchmark-suite-dataflow-b2b/build/dataflow-corpus/step7/MapAiry/anchor/prepared-51-45-0.ll"
+      },
+      "source_round": 52,
+      "source_row": 249,
+      "anchor_T": [
+        27,
+        27,
+        27
+      ],
+      "best_known_T": [
+        26,
+        26,
+        26
+      ],
+      "objectives": {
+        "min_D": {
+          "T": [
+            26,
+            26,
+            26
+          ],
+          "optimal": false,
+          "regret_D": 1,
+          "method": "same-plan-outlined-cleaned"
+        },
+        "strategy": {
+          "T": [
+            26,
+            26,
+            26
+          ],
+          "optimal": false,
+          "regret_D": 1,
+          "method": "same-plan-outlined-cleaned"
+        }
+      },
+      "single_replacement": {
+        "status": "not_measured",
+        "final_kernel_TTI": null
+      }
+    },
+    {
+      "case": "MapAiry",
+      "region_id": "03d67ab131476a444bd5452400697c1c70beaed1",
+      "function": "evaluate",
+      "candidate": "evaluate:B19:B20:B21",
+      "location": {
+        "block": "%if.end7.i.i.i499.i.i.i.i",
+        "condition_source": "data",
+        "function": "evaluate",
+        "join": "%if.end23.i.i.i519.i.i.i.i",
+        "join_has_other_preds": false
+      },
+      "parent": {
+        "ir": "parents/becbd20b11ade503f16162abcf75f34bd5a62b6c5101c441c500867c3872e238.ll.gz",
+        "sha256": "becbd20b11ade503f16162abcf75f34bd5a62b6c5101c441c500867c3872e238",
+        "archive_path": "/data/home/chh/kernel-benchmark-suite-dataflow-b2b/build/dataflow-corpus/step7/MapAiry/anchor/trial-223/fused.ll"
+      },
+      "source_round": 54,
+      "source_row": 250,
+      "anchor_T": [
+        44,
+        16,
+        36
+      ],
+      "best_known_T": [
+        29,
+        29,
+        29
+      ],
+      "objectives": {
+        "min_D": {
+          "T": [
+            29,
+            29,
+            29
+          ],
+          "optimal": true,
+          "regret_D": 15,
+          "method": "context-cleaned"
+        },
+        "strategy": {
+          "T": [
+            44,
+            16,
+            36
+          ],
+          "optimal": true,
+          "regret_D": 0,
+          "method": "context-cleaned"
+        }
+      },
+      "single_replacement": {
+        "status": "not_measured",
+        "final_kernel_TTI": null
+      }
+    },
+    {
+      "case": "MapAiry",
+      "region_id": "03d67ab131476a444bd5452400697c1c70beaed1",
+      "function": "evaluate",
+      "candidate": "evaluate:B19:B20:B21",
+      "location": {
+        "block": "%if.end7.i.i.i499.i.i.i.i",
+        "condition_source": "data",
+        "function": "evaluate",
+        "join": "%if.end23.i.i.i519.i.i.i.i.pair.join",
+        "join_has_other_preds": false
+      },
+      "parent": {
+        "ir": "parents/2117db324203af7840e043b39f2b11279e9cecf1079b57c4808a15cb95ea03e2.ll.gz",
+        "sha256": "2117db324203af7840e043b39f2b11279e9cecf1079b57c4808a15cb95ea03e2",
+        "archive_path": "/data/home/chh/kernel-benchmark-suite-dataflow-b2b/build/dataflow-corpus/step7/MapAiry/anchor/prepared-53-16-0.ll"
+      },
+      "source_round": 54,
+      "source_row": 251,
+      "anchor_T": [
+        44,
+        16,
+        36
+      ],
+      "best_known_T": [
+        29,
+        29,
+        29
+      ],
+      "objectives": {
+        "min_D": {
+          "T": [
+            29,
+            29,
+            29
+          ],
+          "optimal": true,
+          "regret_D": 15,
+          "method": "same-plan-outlined-cleaned"
+        },
+        "strategy": {
+          "T": [
+            44,
+            16,
+            36
+          ],
+          "optimal": true,
+          "regret_D": 0,
+          "method": "same-plan-outlined-cleaned"
+        }
+      },
+      "single_replacement": {
+        "status": "not_measured",
+        "final_kernel_TTI": null
+      }
+    },
+    {
+      "case": "MapAiry",
+      "region_id": "03d67ab131476a444bd5452400697c1c70beaed1",
+      "function": "evaluate",
+      "candidate": "evaluate:B29:B30:B31",
+      "location": {
+        "block": "%if.end7.i.i.i386.i.i.i.i",
+        "condition_source": "data",
+        "function": "evaluate",
+        "join": "%if.end23.i.i.i406.i.i.i.i",
+        "join_has_other_preds": false
+      },
+      "parent": {
+        "ir": "parents/becbd20b11ade503f16162abcf75f34bd5a62b6c5101c441c500867c3872e238.ll.gz",
+        "sha256": "becbd20b11ade503f16162abcf75f34bd5a62b6c5101c441c500867c3872e238",
+        "archive_path": "/data/home/chh/kernel-benchmark-suite-dataflow-b2b/build/dataflow-corpus/step7/MapAiry/anchor/trial-223/fused.ll"
+      },
+      "source_round": 56,
+      "source_row": 252,
+      "anchor_T": [
+        44,
+        16,
+        36
+      ],
+      "best_known_T": [
+        29,
+        29,
+        29
+      ],
+      "objectives": {
+        "min_D": {
+          "T": [
+            29,
+            29,
+            29
+          ],
+          "optimal": true,
+          "regret_D": 15,
+          "method": "context-cleaned"
+        },
+        "strategy": {
+          "T": [
+            44,
+            16,
+            36
+          ],
+          "optimal": true,
+          "regret_D": 0,
+          "method": "context-cleaned"
+        }
+      },
+      "single_replacement": {
+        "status": "not_measured",
+        "final_kernel_TTI": null
+      }
+    },
+    {
+      "case": "MapAiry",
+      "region_id": "03d67ab131476a444bd5452400697c1c70beaed1",
+      "function": "evaluate",
+      "candidate": "evaluate:B29:B30:B31",
+      "location": {
+        "block": "%if.end7.i.i.i386.i.i.i.i",
+        "condition_source": "data",
+        "function": "evaluate",
+        "join": "%if.end23.i.i.i406.i.i.i.i.pair.join",
+        "join_has_other_preds": false
+      },
+      "parent": {
+        "ir": "parents/acdcdff56cd2b10f84fb4e4accb7e329c80ec9fe28697504692fb26705cb48a4.ll.gz",
+        "sha256": "acdcdff56cd2b10f84fb4e4accb7e329c80ec9fe28697504692fb26705cb48a4",
+        "archive_path": "/data/home/chh/kernel-benchmark-suite-dataflow-b2b/build/dataflow-corpus/step7/MapAiry/anchor/prepared-55-23-0.ll"
+      },
+      "source_round": 56,
+      "source_row": 253,
+      "anchor_T": [
+        44,
+        16,
+        36
+      ],
+      "best_known_T": [
+        29,
+        29,
+        29
+      ],
+      "objectives": {
+        "min_D": {
+          "T": [
+            29,
+            29,
+            29
+          ],
+          "optimal": true,
+          "regret_D": 15,
+          "method": "same-plan-outlined-cleaned"
+        },
+        "strategy": {
+          "T": [
+            44,
+            16,
+            36
+          ],
+          "optimal": true,
+          "regret_D": 0,
+          "method": "same-plan-outlined-cleaned"
+        }
+      },
+      "single_replacement": {
+        "status": "not_measured",
+        "final_kernel_TTI": null
+      }
+    },
+    {
+      "case": "MapAiry",
+      "region_id": "03d67ab131476a444bd5452400697c1c70beaed1",
+      "function": "evaluate",
+      "candidate": "evaluate:B39:B40:B41",
+      "location": {
+        "block": "%if.end7.i.i.i273.i.i.i.i",
+        "condition_source": "data",
+        "function": "evaluate",
+        "join": "%if.end23.i.i.i293.i.i.i.i",
+        "join_has_other_preds": false
+      },
+      "parent": {
+        "ir": "parents/becbd20b11ade503f16162abcf75f34bd5a62b6c5101c441c500867c3872e238.ll.gz",
+        "sha256": "becbd20b11ade503f16162abcf75f34bd5a62b6c5101c441c500867c3872e238",
+        "archive_path": "/data/home/chh/kernel-benchmark-suite-dataflow-b2b/build/dataflow-corpus/step7/MapAiry/anchor/trial-223/fused.ll"
+      },
+      "source_round": 59,
+      "source_row": 255,
+      "anchor_T": [
+        44,
+        16,
+        36
+      ],
+      "best_known_T": [
+        29,
+        29,
+        29
+      ],
+      "objectives": {
+        "min_D": {
+          "T": [
+            29,
+            29,
+            29
+          ],
+          "optimal": true,
+          "regret_D": 15,
+          "method": "context-cleaned"
+        },
+        "strategy": {
+          "T": [
+            44,
+            16,
+            36
+          ],
+          "optimal": true,
+          "regret_D": 0,
+          "method": "context-cleaned"
+        }
+      },
+      "single_replacement": {
+        "status": "not_measured",
+        "final_kernel_TTI": null
+      }
+    },
+    {
+      "case": "MapAiry",
+      "region_id": "03d67ab131476a444bd5452400697c1c70beaed1",
+      "function": "evaluate",
+      "candidate": "evaluate:B39:B40:B41",
+      "location": {
+        "block": "%if.end7.i.i.i273.i.i.i.i",
+        "condition_source": "data",
+        "function": "evaluate",
+        "join": "%if.end23.i.i.i293.i.i.i.i.pair.join",
+        "join_has_other_preds": false
+      },
+      "parent": {
+        "ir": "parents/ca532c6d1e8aaf076b3ef0898f08a3fe3d25b9cc21254634053e8dff3b3cc2a8.ll.gz",
+        "sha256": "ca532c6d1e8aaf076b3ef0898f08a3fe3d25b9cc21254634053e8dff3b3cc2a8",
+        "archive_path": "/data/home/chh/kernel-benchmark-suite-dataflow-b2b/build/dataflow-corpus/step7/MapAiry/anchor/prepared-58-30-0.ll"
+      },
+      "source_round": 59,
+      "source_row": 256,
+      "anchor_T": [
+        44,
+        16,
+        36
+      ],
+      "best_known_T": [
+        29,
+        29,
+        29
+      ],
+      "objectives": {
+        "min_D": {
+          "T": [
+            29,
+            29,
+            29
+          ],
+          "optimal": true,
+          "regret_D": 15,
+          "method": "same-plan-outlined-cleaned"
+        },
+        "strategy": {
+          "T": [
+            44,
+            16,
+            36
+          ],
+          "optimal": true,
+          "regret_D": 0,
+          "method": "same-plan-outlined-cleaned"
+        }
+      },
+      "single_replacement": {
+        "status": "not_measured",
+        "final_kernel_TTI": null
+      }
+    },
+    {
+      "case": "MapAiry",
+      "region_id": "03d67ab131476a444bd5452400697c1c70beaed1",
+      "function": "evaluate",
+      "candidate": "evaluate:B49:B50:B51",
+      "location": {
+        "block": "%if.end7.i.i.i192.i.i.i.i",
+        "condition_source": "data",
+        "function": "evaluate",
+        "join": "%if.end23.i.i.i212.i.i.i.i",
+        "join_has_other_preds": false
+      },
+      "parent": {
+        "ir": "parents/becbd20b11ade503f16162abcf75f34bd5a62b6c5101c441c500867c3872e238.ll.gz",
+        "sha256": "becbd20b11ade503f16162abcf75f34bd5a62b6c5101c441c500867c3872e238",
+        "archive_path": "/data/home/chh/kernel-benchmark-suite-dataflow-b2b/build/dataflow-corpus/step7/MapAiry/anchor/trial-223/fused.ll"
+      },
+      "source_round": 61,
+      "source_row": 257,
+      "anchor_T": [
+        44,
+        16,
+        36
+      ],
+      "best_known_T": [
+        29,
+        29,
+        29
+      ],
+      "objectives": {
+        "min_D": {
+          "T": [
+            29,
+            29,
+            29
+          ],
+          "optimal": true,
+          "regret_D": 15,
+          "method": "context-cleaned"
+        },
+        "strategy": {
+          "T": [
+            44,
+            16,
+            36
+          ],
+          "optimal": true,
+          "regret_D": 0,
+          "method": "context-cleaned"
+        }
+      },
+      "single_replacement": {
+        "status": "not_measured",
+        "final_kernel_TTI": null
+      }
+    },
+    {
+      "case": "MapAiry",
+      "region_id": "03d67ab131476a444bd5452400697c1c70beaed1",
+      "function": "evaluate",
+      "candidate": "evaluate:B49:B50:B51",
+      "location": {
+        "block": "%if.end7.i.i.i192.i.i.i.i",
+        "condition_source": "data",
+        "function": "evaluate",
+        "join": "%if.end23.i.i.i212.i.i.i.i.pair.join",
+        "join_has_other_preds": false
+      },
+      "parent": {
+        "ir": "parents/9f1e51c15444debf866d179e6aef14fae3b48cfba320cd4c893c12156d27b086.ll.gz",
+        "sha256": "9f1e51c15444debf866d179e6aef14fae3b48cfba320cd4c893c12156d27b086",
+        "archive_path": "/data/home/chh/kernel-benchmark-suite-dataflow-b2b/build/dataflow-corpus/step7/MapAiry/anchor/prepared-60-37-0.ll"
+      },
+      "source_round": 61,
+      "source_row": 258,
+      "anchor_T": [
+        44,
+        16,
+        36
+      ],
+      "best_known_T": [
+        29,
+        29,
+        29
+      ],
+      "objectives": {
+        "min_D": {
+          "T": [
+            29,
+            29,
+            29
+          ],
+          "optimal": true,
+          "regret_D": 15,
+          "method": "same-plan-outlined-cleaned"
+        },
+        "strategy": {
+          "T": [
+            44,
+            16,
+            36
+          ],
+          "optimal": true,
+          "regret_D": 0,
+          "method": "same-plan-outlined-cleaned"
+        }
+      },
+      "single_replacement": {
+        "status": "not_measured",
+        "final_kernel_TTI": null
+      }
+    },
+    {
+      "case": "MapAiry",
+      "region_id": "5ea02d4d5683cd2517a1d8f924c0186fe7d03f3a",
+      "function": "evaluate",
+      "candidate": "evaluate:B68:B76:B77",
+      "location": {
+        "block": "%decision.dispatch4",
+        "condition_source": "data",
+        "function": "evaluate",
+        "join": "%merged.bb70",
+        "join_has_other_preds": true
+      },
+      "parent": {
+        "ir": "parents/becbd20b11ade503f16162abcf75f34bd5a62b6c5101c441c500867c3872e238.ll.gz",
+        "sha256": "becbd20b11ade503f16162abcf75f34bd5a62b6c5101c441c500867c3872e238",
+        "archive_path": "/data/home/chh/kernel-benchmark-suite-dataflow-b2b/build/dataflow-corpus/step7/MapAiry/anchor/trial-223/fused.ll"
+      },
+      "source_round": 63,
+      "source_row": 259,
+      "anchor_T": [
+        57,
+        49,
+        49
+      ],
+      "best_known_T": [
+        32,
+        32,
+        32
+      ],
+      "objectives": {
+        "min_D": {
+          "T": [
+            32,
+            32,
+            32
+          ],
+          "optimal": false,
+          "regret_D": 25,
+          "method": "context-cleaned"
+        },
+        "strategy": {
+          "T": [
+            32,
+            32,
+            32
+          ],
+          "optimal": false,
+          "regret_D": 25,
+          "method": "context-cleaned"
+        }
+      },
+      "single_replacement": {
+        "status": "measured",
+        "final_kernel_TTI": 4301
+      }
+    },
+    {
+      "case": "MapAiry",
+      "region_id": "35e06c85dcd1b81ce2ebe758e151ed892113b628",
+      "function": "evaluate",
+      "candidate": "evaluate:B68:B76:B77",
+      "location": {
+        "block": "%decision.dispatch4",
+        "condition_source": "data",
+        "function": "evaluate",
+        "join": "%merged.bb70.pair.join",
+        "join_has_other_preds": false
+      },
+      "parent": {
+        "ir": "parents/dc3a82d95ad603f224ed53c269a7ce8f60d4539b4db20251d2ab43a7dc44b244.ll.gz",
+        "sha256": "dc3a82d95ad603f224ed53c269a7ce8f60d4539b4db20251d2ab43a7dc44b244",
+        "archive_path": "/data/home/chh/kernel-benchmark-suite-dataflow-b2b/build/dataflow-corpus/step7/MapAiry/anchor/prepared-62-47-0.ll"
+      },
+      "source_round": 63,
+      "source_row": 260,
+      "anchor_T": [
+        53,
+        45,
+        45
+      ],
+      "best_known_T": [
+        32,
+        32,
+        32
+      ],
+      "objectives": {
+        "min_D": {
+          "T": [
+            32,
+            32,
+            32
+          ],
+          "optimal": false,
+          "regret_D": 21,
+          "method": "same-plan-outlined-cleaned"
+        },
+        "strategy": {
+          "T": [
+            32,
+            32,
+            32
+          ],
+          "optimal": false,
+          "regret_D": 21,
+          "method": "same-plan-outlined-cleaned"
+        }
+      },
+      "single_replacement": {
+        "status": "not_measured",
+        "final_kernel_TTI": null
+      }
+    },
+    {
+      "case": "MapAiry",
+      "region_id": "03d67ab131476a444bd5452400697c1c70beaed1",
+      "function": "evaluate",
+      "candidate": "evaluate:B19:B20:B21",
+      "location": {
+        "block": "%if.end7.i.i.i499.i.i.i.i",
+        "condition_source": "data",
+        "function": "evaluate",
+        "join": "%if.end23.i.i.i519.i.i.i.i",
+        "join_has_other_preds": false
+      },
+      "parent": {
+        "ir": "parents/3424f62add652722462744b9583635854f99a83c9c9ce7f82f5e4b69a81b9ada.ll.gz",
+        "sha256": "3424f62add652722462744b9583635854f99a83c9c9ce7f82f5e4b69a81b9ada",
+        "archive_path": "/data/home/chh/kernel-benchmark-suite-dataflow-b2b/build/dataflow-corpus/step7/MapAiry/anchor/trial-243/fused.ll"
+      },
+      "source_round": 66,
+      "source_row": 262,
+      "anchor_T": [
+        44,
+        16,
+        36
+      ],
+      "best_known_T": [
+        29,
+        29,
+        29
+      ],
+      "objectives": {
+        "min_D": {
+          "T": [
+            29,
+            29,
+            29
+          ],
+          "optimal": true,
+          "regret_D": 15,
+          "method": "context-cleaned"
+        },
+        "strategy": {
+          "T": [
+            44,
+            16,
+            36
+          ],
+          "optimal": true,
+          "regret_D": 0,
+          "method": "context-cleaned"
+        }
+      },
+      "single_replacement": {
+        "status": "not_measured",
+        "final_kernel_TTI": null
+      }
+    },
+    {
+      "case": "MapAiry",
+      "region_id": "03d67ab131476a444bd5452400697c1c70beaed1",
+      "function": "evaluate",
+      "candidate": "evaluate:B19:B20:B21",
+      "location": {
+        "block": "%if.end7.i.i.i499.i.i.i.i",
+        "condition_source": "data",
+        "function": "evaluate",
+        "join": "%if.end23.i.i.i519.i.i.i.i.pair.join",
+        "join_has_other_preds": false
+      },
+      "parent": {
+        "ir": "parents/ae4a5fb4674425264c485624526778b32ae29a45ffb233988dd9d37c58a0ff9b.ll.gz",
+        "sha256": "ae4a5fb4674425264c485624526778b32ae29a45ffb233988dd9d37c58a0ff9b",
+        "archive_path": "/data/home/chh/kernel-benchmark-suite-dataflow-b2b/build/dataflow-corpus/step7/MapAiry/anchor/prepared-65-16-0.ll"
+      },
+      "source_round": 66,
+      "source_row": 263,
+      "anchor_T": [
+        44,
+        16,
+        36
+      ],
+      "best_known_T": [
+        29,
+        29,
+        29
+      ],
+      "objectives": {
+        "min_D": {
+          "T": [
+            29,
+            29,
+            29
+          ],
+          "optimal": true,
+          "regret_D": 15,
+          "method": "same-plan-outlined-cleaned"
+        },
+        "strategy": {
+          "T": [
+            44,
+            16,
+            36
+          ],
+          "optimal": true,
+          "regret_D": 0,
+          "method": "same-plan-outlined-cleaned"
+        }
+      },
+      "single_replacement": {
+        "status": "not_measured",
+        "final_kernel_TTI": null
+      }
+    },
+    {
+      "case": "MapAiry",
+      "region_id": "03d67ab131476a444bd5452400697c1c70beaed1",
+      "function": "evaluate",
+      "candidate": "evaluate:B29:B30:B31",
+      "location": {
+        "block": "%if.end7.i.i.i386.i.i.i.i",
+        "condition_source": "data",
+        "function": "evaluate",
+        "join": "%if.end23.i.i.i406.i.i.i.i",
+        "join_has_other_preds": false
+      },
+      "parent": {
+        "ir": "parents/3424f62add652722462744b9583635854f99a83c9c9ce7f82f5e4b69a81b9ada.ll.gz",
+        "sha256": "3424f62add652722462744b9583635854f99a83c9c9ce7f82f5e4b69a81b9ada",
+        "archive_path": "/data/home/chh/kernel-benchmark-suite-dataflow-b2b/build/dataflow-corpus/step7/MapAiry/anchor/trial-243/fused.ll"
+      },
+      "source_round": 68,
+      "source_row": 264,
+      "anchor_T": [
+        44,
+        16,
+        36
+      ],
+      "best_known_T": [
+        29,
+        29,
+        29
+      ],
+      "objectives": {
+        "min_D": {
+          "T": [
+            29,
+            29,
+            29
+          ],
+          "optimal": true,
+          "regret_D": 15,
+          "method": "context-cleaned"
+        },
+        "strategy": {
+          "T": [
+            44,
+            16,
+            36
+          ],
+          "optimal": true,
+          "regret_D": 0,
+          "method": "context-cleaned"
+        }
+      },
+      "single_replacement": {
+        "status": "not_measured",
+        "final_kernel_TTI": null
+      }
+    },
+    {
+      "case": "MapAiry",
+      "region_id": "03d67ab131476a444bd5452400697c1c70beaed1",
+      "function": "evaluate",
+      "candidate": "evaluate:B29:B30:B31",
+      "location": {
+        "block": "%if.end7.i.i.i386.i.i.i.i",
+        "condition_source": "data",
+        "function": "evaluate",
+        "join": "%if.end23.i.i.i406.i.i.i.i.pair.join",
+        "join_has_other_preds": false
+      },
+      "parent": {
+        "ir": "parents/385eca8f4d9e955d1f9cfbd5f518f768f13552dccfe37eb0a4e40458c1ba3e51.ll.gz",
+        "sha256": "385eca8f4d9e955d1f9cfbd5f518f768f13552dccfe37eb0a4e40458c1ba3e51",
+        "archive_path": "/data/home/chh/kernel-benchmark-suite-dataflow-b2b/build/dataflow-corpus/step7/MapAiry/anchor/prepared-67-23-0.ll"
+      },
+      "source_round": 68,
+      "source_row": 265,
+      "anchor_T": [
+        44,
+        16,
+        36
+      ],
+      "best_known_T": [
+        29,
+        29,
+        29
+      ],
+      "objectives": {
+        "min_D": {
+          "T": [
+            29,
+            29,
+            29
+          ],
+          "optimal": true,
+          "regret_D": 15,
+          "method": "same-plan-outlined-cleaned"
+        },
+        "strategy": {
+          "T": [
+            44,
+            16,
+            36
+          ],
+          "optimal": true,
+          "regret_D": 0,
+          "method": "same-plan-outlined-cleaned"
+        }
+      },
+      "single_replacement": {
+        "status": "not_measured",
+        "final_kernel_TTI": null
+      }
+    },
+    {
+      "case": "MapAiry",
+      "region_id": "03d67ab131476a444bd5452400697c1c70beaed1",
+      "function": "evaluate",
+      "candidate": "evaluate:B39:B40:B41",
+      "location": {
+        "block": "%if.end7.i.i.i273.i.i.i.i",
+        "condition_source": "data",
+        "function": "evaluate",
+        "join": "%if.end23.i.i.i293.i.i.i.i",
+        "join_has_other_preds": false
+      },
+      "parent": {
+        "ir": "parents/3424f62add652722462744b9583635854f99a83c9c9ce7f82f5e4b69a81b9ada.ll.gz",
+        "sha256": "3424f62add652722462744b9583635854f99a83c9c9ce7f82f5e4b69a81b9ada",
+        "archive_path": "/data/home/chh/kernel-benchmark-suite-dataflow-b2b/build/dataflow-corpus/step7/MapAiry/anchor/trial-243/fused.ll"
+      },
+      "source_round": 71,
+      "source_row": 267,
+      "anchor_T": [
+        44,
+        16,
+        36
+      ],
+      "best_known_T": [
+        29,
+        29,
+        29
+      ],
+      "objectives": {
+        "min_D": {
+          "T": [
+            29,
+            29,
+            29
+          ],
+          "optimal": true,
+          "regret_D": 15,
+          "method": "context-cleaned"
+        },
+        "strategy": {
+          "T": [
+            44,
+            16,
+            36
+          ],
+          "optimal": true,
+          "regret_D": 0,
+          "method": "context-cleaned"
+        }
+      },
+      "single_replacement": {
+        "status": "not_measured",
+        "final_kernel_TTI": null
+      }
+    },
+    {
+      "case": "MapAiry",
+      "region_id": "03d67ab131476a444bd5452400697c1c70beaed1",
+      "function": "evaluate",
+      "candidate": "evaluate:B39:B40:B41",
+      "location": {
+        "block": "%if.end7.i.i.i273.i.i.i.i",
+        "condition_source": "data",
+        "function": "evaluate",
+        "join": "%if.end23.i.i.i293.i.i.i.i.pair.join",
+        "join_has_other_preds": false
+      },
+      "parent": {
+        "ir": "parents/5addaf4b24acbb461f6d19e14757314b6a2e262d7318821b423097fdecbf2d2c.ll.gz",
+        "sha256": "5addaf4b24acbb461f6d19e14757314b6a2e262d7318821b423097fdecbf2d2c",
+        "archive_path": "/data/home/chh/kernel-benchmark-suite-dataflow-b2b/build/dataflow-corpus/step7/MapAiry/anchor/prepared-70-30-0.ll"
+      },
+      "source_round": 71,
+      "source_row": 268,
+      "anchor_T": [
+        44,
+        16,
+        36
+      ],
+      "best_known_T": [
+        29,
+        29,
+        29
+      ],
+      "objectives": {
+        "min_D": {
+          "T": [
+            29,
+            29,
+            29
+          ],
+          "optimal": true,
+          "regret_D": 15,
+          "method": "same-plan-outlined-cleaned"
+        },
+        "strategy": {
+          "T": [
+            44,
+            16,
+            36
+          ],
+          "optimal": true,
+          "regret_D": 0,
+          "method": "same-plan-outlined-cleaned"
+        }
+      },
+      "single_replacement": {
+        "status": "not_measured",
+        "final_kernel_TTI": null
+      }
+    },
+    {
+      "case": "MapAiry",
+      "region_id": "03d67ab131476a444bd5452400697c1c70beaed1",
+      "function": "evaluate",
+      "candidate": "evaluate:B49:B50:B51",
+      "location": {
+        "block": "%if.end7.i.i.i192.i.i.i.i",
+        "condition_source": "data",
+        "function": "evaluate",
+        "join": "%if.end23.i.i.i212.i.i.i.i",
+        "join_has_other_preds": false
+      },
+      "parent": {
+        "ir": "parents/3424f62add652722462744b9583635854f99a83c9c9ce7f82f5e4b69a81b9ada.ll.gz",
+        "sha256": "3424f62add652722462744b9583635854f99a83c9c9ce7f82f5e4b69a81b9ada",
+        "archive_path": "/data/home/chh/kernel-benchmark-suite-dataflow-b2b/build/dataflow-corpus/step7/MapAiry/anchor/trial-243/fused.ll"
+      },
+      "source_round": 73,
+      "source_row": 269,
+      "anchor_T": [
+        44,
+        16,
+        36
+      ],
+      "best_known_T": [
+        29,
+        29,
+        29
+      ],
+      "objectives": {
+        "min_D": {
+          "T": [
+            29,
+            29,
+            29
+          ],
+          "optimal": true,
+          "regret_D": 15,
+          "method": "context-cleaned"
+        },
+        "strategy": {
+          "T": [
+            44,
+            16,
+            36
+          ],
+          "optimal": true,
+          "regret_D": 0,
+          "method": "context-cleaned"
+        }
+      },
+      "single_replacement": {
+        "status": "not_measured",
+        "final_kernel_TTI": null
+      }
+    },
+    {
+      "case": "MapAiry",
+      "region_id": "03d67ab131476a444bd5452400697c1c70beaed1",
+      "function": "evaluate",
+      "candidate": "evaluate:B49:B50:B51",
+      "location": {
+        "block": "%if.end7.i.i.i192.i.i.i.i",
+        "condition_source": "data",
+        "function": "evaluate",
+        "join": "%if.end23.i.i.i212.i.i.i.i.pair.join",
+        "join_has_other_preds": false
+      },
+      "parent": {
+        "ir": "parents/1a3f49bed5f10157fc1dbdba088b5fcac31a5450ad4362e8a14c49f0c8322c44.ll.gz",
+        "sha256": "1a3f49bed5f10157fc1dbdba088b5fcac31a5450ad4362e8a14c49f0c8322c44",
+        "archive_path": "/data/home/chh/kernel-benchmark-suite-dataflow-b2b/build/dataflow-corpus/step7/MapAiry/anchor/prepared-72-37-0.ll"
+      },
+      "source_round": 73,
+      "source_row": 270,
+      "anchor_T": [
+        44,
+        16,
+        36
+      ],
+      "best_known_T": [
+        29,
+        29,
+        29
+      ],
+      "objectives": {
+        "min_D": {
+          "T": [
+            29,
+            29,
+            29
+          ],
+          "optimal": true,
+          "regret_D": 15,
+          "method": "same-plan-outlined-cleaned"
+        },
+        "strategy": {
+          "T": [
+            44,
+            16,
+            36
+          ],
+          "optimal": true,
+          "regret_D": 0,
+          "method": "same-plan-outlined-cleaned"
+        }
+      },
+      "single_replacement": {
+        "status": "not_measured",
+        "final_kernel_TTI": null
+      }
+    },
+    {
+      "case": "MapAiry",
+      "region_id": "03d67ab131476a444bd5452400697c1c70beaed1",
+      "function": "evaluate",
+      "candidate": "evaluate:B19:B20:B21",
+      "location": {
+        "block": "%if.end7.i.i.i499.i.i.i.i",
+        "condition_source": "data",
+        "function": "evaluate",
+        "join": "%if.end23.i.i.i519.i.i.i.i",
+        "join_has_other_preds": false
+      },
+      "parent": {
+        "ir": "parents/a52cf73d7bf4df3378e51c19f3b4520becabf1ab716b2df99ceef05ca3ae2fc2.ll.gz",
+        "sha256": "a52cf73d7bf4df3378e51c19f3b4520becabf1ab716b2df99ceef05ca3ae2fc2",
+        "archive_path": "/data/home/chh/kernel-benchmark-suite-dataflow-b2b/build/dataflow-corpus/step7/MapAiry/anchor/trial-262/fused.ll"
+      },
+      "source_round": 77,
+      "source_row": 275,
+      "anchor_T": [
+        44,
+        16,
+        36
+      ],
+      "best_known_T": [
+        29,
+        29,
+        29
+      ],
+      "objectives": {
+        "min_D": {
+          "T": [
+            29,
+            29,
+            29
+          ],
+          "optimal": true,
+          "regret_D": 15,
+          "method": "context-cleaned"
+        },
+        "strategy": {
+          "T": [
+            44,
+            16,
+            36
+          ],
+          "optimal": true,
+          "regret_D": 0,
+          "method": "context-cleaned"
+        }
+      },
+      "single_replacement": {
+        "status": "not_measured",
+        "final_kernel_TTI": null
+      }
+    },
+    {
+      "case": "MapAiry",
+      "region_id": "03d67ab131476a444bd5452400697c1c70beaed1",
+      "function": "evaluate",
+      "candidate": "evaluate:B19:B20:B21",
+      "location": {
+        "block": "%if.end7.i.i.i499.i.i.i.i",
+        "condition_source": "data",
+        "function": "evaluate",
+        "join": "%if.end23.i.i.i519.i.i.i.i.pair.join",
+        "join_has_other_preds": false
+      },
+      "parent": {
+        "ir": "parents/5bb911ce1841e27dea819231a5bd440baef4fa922702abc1cbbda160795b2172.ll.gz",
+        "sha256": "5bb911ce1841e27dea819231a5bd440baef4fa922702abc1cbbda160795b2172",
+        "archive_path": "/data/home/chh/kernel-benchmark-suite-dataflow-b2b/build/dataflow-corpus/step7/MapAiry/anchor/prepared-76-16-0.ll"
+      },
+      "source_round": 77,
+      "source_row": 276,
+      "anchor_T": [
+        44,
+        16,
+        36
+      ],
+      "best_known_T": [
+        29,
+        29,
+        29
+      ],
+      "objectives": {
+        "min_D": {
+          "T": [
+            29,
+            29,
+            29
+          ],
+          "optimal": true,
+          "regret_D": 15,
+          "method": "same-plan-outlined-cleaned"
+        },
+        "strategy": {
+          "T": [
+            44,
+            16,
+            36
+          ],
+          "optimal": true,
+          "regret_D": 0,
+          "method": "same-plan-outlined-cleaned"
+        }
+      },
+      "single_replacement": {
+        "status": "not_measured",
+        "final_kernel_TTI": null
+      }
+    },
+    {
+      "case": "MapAiry",
+      "region_id": "03d67ab131476a444bd5452400697c1c70beaed1",
+      "function": "evaluate",
+      "candidate": "evaluate:B29:B30:B31",
+      "location": {
+        "block": "%if.end7.i.i.i386.i.i.i.i",
+        "condition_source": "data",
+        "function": "evaluate",
+        "join": "%if.end23.i.i.i406.i.i.i.i",
+        "join_has_other_preds": false
+      },
+      "parent": {
+        "ir": "parents/a52cf73d7bf4df3378e51c19f3b4520becabf1ab716b2df99ceef05ca3ae2fc2.ll.gz",
+        "sha256": "a52cf73d7bf4df3378e51c19f3b4520becabf1ab716b2df99ceef05ca3ae2fc2",
+        "archive_path": "/data/home/chh/kernel-benchmark-suite-dataflow-b2b/build/dataflow-corpus/step7/MapAiry/anchor/trial-262/fused.ll"
+      },
+      "source_round": 79,
+      "source_row": 277,
+      "anchor_T": [
+        44,
+        16,
+        36
+      ],
+      "best_known_T": [
+        29,
+        29,
+        29
+      ],
+      "objectives": {
+        "min_D": {
+          "T": [
+            29,
+            29,
+            29
+          ],
+          "optimal": true,
+          "regret_D": 15,
+          "method": "context-cleaned"
+        },
+        "strategy": {
+          "T": [
+            44,
+            16,
+            36
+          ],
+          "optimal": true,
+          "regret_D": 0,
+          "method": "context-cleaned"
+        }
+      },
+      "single_replacement": {
+        "status": "not_measured",
+        "final_kernel_TTI": null
+      }
+    },
+    {
+      "case": "MapAiry",
+      "region_id": "03d67ab131476a444bd5452400697c1c70beaed1",
+      "function": "evaluate",
+      "candidate": "evaluate:B29:B30:B31",
+      "location": {
+        "block": "%if.end7.i.i.i386.i.i.i.i",
+        "condition_source": "data",
+        "function": "evaluate",
+        "join": "%if.end23.i.i.i406.i.i.i.i.pair.join",
+        "join_has_other_preds": false
+      },
+      "parent": {
+        "ir": "parents/c8ec5d2eac7cb334c1de253da0a2c0e8165a1327b895f5ea6c1c364a0efb1041.ll.gz",
+        "sha256": "c8ec5d2eac7cb334c1de253da0a2c0e8165a1327b895f5ea6c1c364a0efb1041",
+        "archive_path": "/data/home/chh/kernel-benchmark-suite-dataflow-b2b/build/dataflow-corpus/step7/MapAiry/anchor/prepared-78-23-0.ll"
+      },
+      "source_round": 79,
+      "source_row": 278,
+      "anchor_T": [
+        44,
+        16,
+        36
+      ],
+      "best_known_T": [
+        29,
+        29,
+        29
+      ],
+      "objectives": {
+        "min_D": {
+          "T": [
+            29,
+            29,
+            29
+          ],
+          "optimal": true,
+          "regret_D": 15,
+          "method": "same-plan-outlined-cleaned"
+        },
+        "strategy": {
+          "T": [
+            44,
+            16,
+            36
+          ],
+          "optimal": true,
+          "regret_D": 0,
+          "method": "same-plan-outlined-cleaned"
+        }
+      },
+      "single_replacement": {
+        "status": "not_measured",
+        "final_kernel_TTI": null
+      }
+    },
+    {
+      "case": "MapAiry",
+      "region_id": "03d67ab131476a444bd5452400697c1c70beaed1",
+      "function": "evaluate",
+      "candidate": "evaluate:B39:B40:B41",
+      "location": {
+        "block": "%if.end7.i.i.i273.i.i.i.i",
+        "condition_source": "data",
+        "function": "evaluate",
+        "join": "%if.end23.i.i.i293.i.i.i.i",
+        "join_has_other_preds": false
+      },
+      "parent": {
+        "ir": "parents/a52cf73d7bf4df3378e51c19f3b4520becabf1ab716b2df99ceef05ca3ae2fc2.ll.gz",
+        "sha256": "a52cf73d7bf4df3378e51c19f3b4520becabf1ab716b2df99ceef05ca3ae2fc2",
+        "archive_path": "/data/home/chh/kernel-benchmark-suite-dataflow-b2b/build/dataflow-corpus/step7/MapAiry/anchor/trial-262/fused.ll"
+      },
+      "source_round": 82,
+      "source_row": 279,
+      "anchor_T": [
+        44,
+        16,
+        36
+      ],
+      "best_known_T": [
+        29,
+        29,
+        29
+      ],
+      "objectives": {
+        "min_D": {
+          "T": [
+            29,
+            29,
+            29
+          ],
+          "optimal": true,
+          "regret_D": 15,
+          "method": "context-cleaned"
+        },
+        "strategy": {
+          "T": [
+            44,
+            16,
+            36
+          ],
+          "optimal": true,
+          "regret_D": 0,
+          "method": "context-cleaned"
+        }
+      },
+      "single_replacement": {
+        "status": "not_measured",
+        "final_kernel_TTI": null
+      }
+    },
+    {
+      "case": "MapAiry",
+      "region_id": "03d67ab131476a444bd5452400697c1c70beaed1",
+      "function": "evaluate",
+      "candidate": "evaluate:B39:B40:B41",
+      "location": {
+        "block": "%if.end7.i.i.i273.i.i.i.i",
+        "condition_source": "data",
+        "function": "evaluate",
+        "join": "%if.end23.i.i.i293.i.i.i.i.pair.join",
+        "join_has_other_preds": false
+      },
+      "parent": {
+        "ir": "parents/d4dbc068d2735d59bf6518d938b457a400e2a7d5bc88ec7399960713e4df9a51.ll.gz",
+        "sha256": "d4dbc068d2735d59bf6518d938b457a400e2a7d5bc88ec7399960713e4df9a51",
+        "archive_path": "/data/home/chh/kernel-benchmark-suite-dataflow-b2b/build/dataflow-corpus/step7/MapAiry/anchor/prepared-81-30-0.ll"
+      },
+      "source_round": 82,
+      "source_row": 280,
+      "anchor_T": [
+        44,
+        16,
+        36
+      ],
+      "best_known_T": [
+        29,
+        29,
+        29
+      ],
+      "objectives": {
+        "min_D": {
+          "T": [
+            29,
+            29,
+            29
+          ],
+          "optimal": true,
+          "regret_D": 15,
+          "method": "same-plan-outlined-cleaned"
+        },
+        "strategy": {
+          "T": [
+            44,
+            16,
+            36
+          ],
+          "optimal": true,
+          "regret_D": 0,
+          "method": "same-plan-outlined-cleaned"
+        }
+      },
+      "single_replacement": {
+        "status": "not_measured",
+        "final_kernel_TTI": null
+      }
+    },
+    {
+      "case": "MapAiry",
+      "region_id": "03d67ab131476a444bd5452400697c1c70beaed1",
+      "function": "evaluate",
+      "candidate": "evaluate:B49:B50:B51",
+      "location": {
+        "block": "%if.end7.i.i.i192.i.i.i.i",
+        "condition_source": "data",
+        "function": "evaluate",
+        "join": "%if.end23.i.i.i212.i.i.i.i",
+        "join_has_other_preds": false
+      },
+      "parent": {
+        "ir": "parents/a52cf73d7bf4df3378e51c19f3b4520becabf1ab716b2df99ceef05ca3ae2fc2.ll.gz",
+        "sha256": "a52cf73d7bf4df3378e51c19f3b4520becabf1ab716b2df99ceef05ca3ae2fc2",
+        "archive_path": "/data/home/chh/kernel-benchmark-suite-dataflow-b2b/build/dataflow-corpus/step7/MapAiry/anchor/trial-262/fused.ll"
+      },
+      "source_round": 84,
+      "source_row": 281,
+      "anchor_T": [
+        44,
+        16,
+        36
+      ],
+      "best_known_T": [
+        29,
+        29,
+        29
+      ],
+      "objectives": {
+        "min_D": {
+          "T": [
+            29,
+            29,
+            29
+          ],
+          "optimal": true,
+          "regret_D": 15,
+          "method": "context-cleaned"
+        },
+        "strategy": {
+          "T": [
+            44,
+            16,
+            36
+          ],
+          "optimal": true,
+          "regret_D": 0,
+          "method": "context-cleaned"
+        }
+      },
+      "single_replacement": {
+        "status": "not_measured",
+        "final_kernel_TTI": null
+      }
+    },
+    {
+      "case": "MapAiry",
+      "region_id": "03d67ab131476a444bd5452400697c1c70beaed1",
+      "function": "evaluate",
+      "candidate": "evaluate:B49:B50:B51",
+      "location": {
+        "block": "%if.end7.i.i.i192.i.i.i.i",
+        "condition_source": "data",
+        "function": "evaluate",
+        "join": "%if.end23.i.i.i212.i.i.i.i.pair.join",
+        "join_has_other_preds": false
+      },
+      "parent": {
+        "ir": "parents/b9b9bd4d5dac7108b1e4c31d911887b18fe9f09d7ae0b2651028798091c4bdad.ll.gz",
+        "sha256": "b9b9bd4d5dac7108b1e4c31d911887b18fe9f09d7ae0b2651028798091c4bdad",
+        "archive_path": "/data/home/chh/kernel-benchmark-suite-dataflow-b2b/build/dataflow-corpus/step7/MapAiry/anchor/prepared-83-37-0.ll"
+      },
+      "source_round": 84,
+      "source_row": 282,
+      "anchor_T": [
+        44,
+        16,
+        36
+      ],
+      "best_known_T": [
+        29,
+        29,
+        29
+      ],
+      "objectives": {
+        "min_D": {
+          "T": [
+            29,
+            29,
+            29
+          ],
+          "optimal": true,
+          "regret_D": 15,
+          "method": "same-plan-outlined-cleaned"
+        },
+        "strategy": {
+          "T": [
+            44,
+            16,
+            36
+          ],
+          "optimal": true,
+          "regret_D": 0,
+          "method": "same-plan-outlined-cleaned"
+        }
+      },
+      "single_replacement": {
+        "status": "not_measured",
+        "final_kernel_TTI": null
+      }
+    },
+    {
+      "case": "MapAiry",
+      "region_id": "03d67ab131476a444bd5452400697c1c70beaed1",
+      "function": "evaluate",
+      "candidate": "evaluate:B19:B20:B21",
+      "location": {
+        "block": "%if.end7.i.i.i499.i.i.i.i",
+        "condition_source": "data",
+        "function": "evaluate",
+        "join": "%if.end23.i.i.i519.i.i.i.i",
+        "join_has_other_preds": false
+      },
+      "parent": {
+        "ir": "parents/9730630a281fffc981c34cbe737976e11368bbc651a3dc74a3d93c518ca4512d.ll.gz",
+        "sha256": "9730630a281fffc981c34cbe737976e11368bbc651a3dc74a3d93c518ca4512d",
+        "archive_path": "/data/home/chh/kernel-benchmark-suite-dataflow-b2b/build/dataflow-corpus/step7/MapAiry/anchor/trial-281/fused.ll"
+      },
+      "source_round": 88,
+      "source_row": 285,
+      "anchor_T": [
+        44,
+        16,
+        36
+      ],
+      "best_known_T": [
+        29,
+        29,
+        29
+      ],
+      "objectives": {
+        "min_D": {
+          "T": [
+            29,
+            29,
+            29
+          ],
+          "optimal": true,
+          "regret_D": 15,
+          "method": "context-cleaned"
+        },
+        "strategy": {
+          "T": [
+            44,
+            16,
+            36
+          ],
+          "optimal": true,
+          "regret_D": 0,
+          "method": "context-cleaned"
+        }
+      },
+      "single_replacement": {
+        "status": "not_measured",
+        "final_kernel_TTI": null
+      }
+    },
+    {
+      "case": "MapAiry",
+      "region_id": "03d67ab131476a444bd5452400697c1c70beaed1",
+      "function": "evaluate",
+      "candidate": "evaluate:B19:B20:B21",
+      "location": {
+        "block": "%if.end7.i.i.i499.i.i.i.i",
+        "condition_source": "data",
+        "function": "evaluate",
+        "join": "%if.end23.i.i.i519.i.i.i.i.pair.join",
+        "join_has_other_preds": false
+      },
+      "parent": {
+        "ir": "parents/679b5930122305d33d72ba6725e4e7a1881e55f0ee69ae29d57c4ebfe48adfb9.ll.gz",
+        "sha256": "679b5930122305d33d72ba6725e4e7a1881e55f0ee69ae29d57c4ebfe48adfb9",
+        "archive_path": "/data/home/chh/kernel-benchmark-suite-dataflow-b2b/build/dataflow-corpus/step7/MapAiry/anchor/prepared-87-16-0.ll"
+      },
+      "source_round": 88,
+      "source_row": 286,
+      "anchor_T": [
+        44,
+        16,
+        36
+      ],
+      "best_known_T": [
+        29,
+        29,
+        29
+      ],
+      "objectives": {
+        "min_D": {
+          "T": [
+            29,
+            29,
+            29
+          ],
+          "optimal": true,
+          "regret_D": 15,
+          "method": "same-plan-outlined-cleaned"
+        },
+        "strategy": {
+          "T": [
+            44,
+            16,
+            36
+          ],
+          "optimal": true,
+          "regret_D": 0,
+          "method": "same-plan-outlined-cleaned"
+        }
+      },
+      "single_replacement": {
+        "status": "not_measured",
+        "final_kernel_TTI": null
+      }
+    },
+    {
+      "case": "MapAiry",
+      "region_id": "03d67ab131476a444bd5452400697c1c70beaed1",
+      "function": "evaluate",
+      "candidate": "evaluate:B29:B30:B31",
+      "location": {
+        "block": "%if.end7.i.i.i386.i.i.i.i",
+        "condition_source": "data",
+        "function": "evaluate",
+        "join": "%if.end23.i.i.i406.i.i.i.i",
+        "join_has_other_preds": false
+      },
+      "parent": {
+        "ir": "parents/9730630a281fffc981c34cbe737976e11368bbc651a3dc74a3d93c518ca4512d.ll.gz",
+        "sha256": "9730630a281fffc981c34cbe737976e11368bbc651a3dc74a3d93c518ca4512d",
+        "archive_path": "/data/home/chh/kernel-benchmark-suite-dataflow-b2b/build/dataflow-corpus/step7/MapAiry/anchor/trial-281/fused.ll"
+      },
+      "source_round": 90,
+      "source_row": 287,
+      "anchor_T": [
+        44,
+        16,
+        36
+      ],
+      "best_known_T": [
+        29,
+        29,
+        29
+      ],
+      "objectives": {
+        "min_D": {
+          "T": [
+            29,
+            29,
+            29
+          ],
+          "optimal": true,
+          "regret_D": 15,
+          "method": "context-cleaned"
+        },
+        "strategy": {
+          "T": [
+            44,
+            16,
+            36
+          ],
+          "optimal": true,
+          "regret_D": 0,
+          "method": "context-cleaned"
+        }
+      },
+      "single_replacement": {
+        "status": "not_measured",
+        "final_kernel_TTI": null
+      }
+    },
+    {
+      "case": "MapAiry",
+      "region_id": "03d67ab131476a444bd5452400697c1c70beaed1",
+      "function": "evaluate",
+      "candidate": "evaluate:B29:B30:B31",
+      "location": {
+        "block": "%if.end7.i.i.i386.i.i.i.i",
+        "condition_source": "data",
+        "function": "evaluate",
+        "join": "%if.end23.i.i.i406.i.i.i.i.pair.join",
+        "join_has_other_preds": false
+      },
+      "parent": {
+        "ir": "parents/b34c0ee112b3729cc64fbc29de56295730f33c5e957dc2820e4c8bd62696d29b.ll.gz",
+        "sha256": "b34c0ee112b3729cc64fbc29de56295730f33c5e957dc2820e4c8bd62696d29b",
+        "archive_path": "/data/home/chh/kernel-benchmark-suite-dataflow-b2b/build/dataflow-corpus/step7/MapAiry/anchor/prepared-89-23-0.ll"
+      },
+      "source_round": 90,
+      "source_row": 288,
+      "anchor_T": [
+        44,
+        16,
+        36
+      ],
+      "best_known_T": [
+        29,
+        29,
+        29
+      ],
+      "objectives": {
+        "min_D": {
+          "T": [
+            29,
+            29,
+            29
+          ],
+          "optimal": true,
+          "regret_D": 15,
+          "method": "same-plan-outlined-cleaned"
+        },
+        "strategy": {
+          "T": [
+            44,
+            16,
+            36
+          ],
+          "optimal": true,
+          "regret_D": 0,
+          "method": "same-plan-outlined-cleaned"
+        }
+      },
+      "single_replacement": {
+        "status": "not_measured",
+        "final_kernel_TTI": null
+      }
+    },
+    {
+      "case": "MapAiry",
+      "region_id": "03d67ab131476a444bd5452400697c1c70beaed1",
+      "function": "evaluate",
+      "candidate": "evaluate:B39:B40:B41",
+      "location": {
+        "block": "%if.end7.i.i.i273.i.i.i.i",
+        "condition_source": "data",
+        "function": "evaluate",
+        "join": "%if.end23.i.i.i293.i.i.i.i",
+        "join_has_other_preds": false
+      },
+      "parent": {
+        "ir": "parents/9730630a281fffc981c34cbe737976e11368bbc651a3dc74a3d93c518ca4512d.ll.gz",
+        "sha256": "9730630a281fffc981c34cbe737976e11368bbc651a3dc74a3d93c518ca4512d",
+        "archive_path": "/data/home/chh/kernel-benchmark-suite-dataflow-b2b/build/dataflow-corpus/step7/MapAiry/anchor/trial-281/fused.ll"
+      },
+      "source_round": 93,
+      "source_row": 289,
+      "anchor_T": [
+        44,
+        16,
+        36
+      ],
+      "best_known_T": [
+        29,
+        29,
+        29
+      ],
+      "objectives": {
+        "min_D": {
+          "T": [
+            29,
+            29,
+            29
+          ],
+          "optimal": true,
+          "regret_D": 15,
+          "method": "context-cleaned"
+        },
+        "strategy": {
+          "T": [
+            44,
+            16,
+            36
+          ],
+          "optimal": true,
+          "regret_D": 0,
+          "method": "context-cleaned"
+        }
+      },
+      "single_replacement": {
+        "status": "not_measured",
+        "final_kernel_TTI": null
+      }
+    },
+    {
+      "case": "MapAiry",
+      "region_id": "03d67ab131476a444bd5452400697c1c70beaed1",
+      "function": "evaluate",
+      "candidate": "evaluate:B39:B40:B41",
+      "location": {
+        "block": "%if.end7.i.i.i273.i.i.i.i",
+        "condition_source": "data",
+        "function": "evaluate",
+        "join": "%if.end23.i.i.i293.i.i.i.i.pair.join",
+        "join_has_other_preds": false
+      },
+      "parent": {
+        "ir": "parents/b2b09b5320f68882b72935305bf48a0bbedef640014e1fc2fd29c19662d08f93.ll.gz",
+        "sha256": "b2b09b5320f68882b72935305bf48a0bbedef640014e1fc2fd29c19662d08f93",
+        "archive_path": "/data/home/chh/kernel-benchmark-suite-dataflow-b2b/build/dataflow-corpus/step7/MapAiry/anchor/prepared-92-30-0.ll"
+      },
+      "source_round": 93,
+      "source_row": 290,
+      "anchor_T": [
+        44,
+        16,
+        36
+      ],
+      "best_known_T": [
+        29,
+        29,
+        29
+      ],
+      "objectives": {
+        "min_D": {
+          "T": [
+            29,
+            29,
+            29
+          ],
+          "optimal": true,
+          "regret_D": 15,
+          "method": "same-plan-outlined-cleaned"
+        },
+        "strategy": {
+          "T": [
+            44,
+            16,
+            36
+          ],
+          "optimal": true,
+          "regret_D": 0,
+          "method": "same-plan-outlined-cleaned"
+        }
+      },
+      "single_replacement": {
+        "status": "not_measured",
+        "final_kernel_TTI": null
+      }
+    },
+    {
+      "case": "MapAiry",
+      "region_id": "03d67ab131476a444bd5452400697c1c70beaed1",
+      "function": "evaluate",
+      "candidate": "evaluate:B49:B50:B51",
+      "location": {
+        "block": "%if.end7.i.i.i192.i.i.i.i",
+        "condition_source": "data",
+        "function": "evaluate",
+        "join": "%if.end23.i.i.i212.i.i.i.i",
+        "join_has_other_preds": false
+      },
+      "parent": {
+        "ir": "parents/9730630a281fffc981c34cbe737976e11368bbc651a3dc74a3d93c518ca4512d.ll.gz",
+        "sha256": "9730630a281fffc981c34cbe737976e11368bbc651a3dc74a3d93c518ca4512d",
+        "archive_path": "/data/home/chh/kernel-benchmark-suite-dataflow-b2b/build/dataflow-corpus/step7/MapAiry/anchor/trial-281/fused.ll"
+      },
+      "source_round": 95,
+      "source_row": 291,
+      "anchor_T": [
+        44,
+        16,
+        36
+      ],
+      "best_known_T": [
+        29,
+        29,
+        29
+      ],
+      "objectives": {
+        "min_D": {
+          "T": [
+            29,
+            29,
+            29
+          ],
+          "optimal": true,
+          "regret_D": 15,
+          "method": "context-cleaned"
+        },
+        "strategy": {
+          "T": [
+            44,
+            16,
+            36
+          ],
+          "optimal": true,
+          "regret_D": 0,
+          "method": "context-cleaned"
+        }
+      },
+      "single_replacement": {
+        "status": "not_measured",
+        "final_kernel_TTI": null
+      }
+    },
+    {
+      "case": "MapAiry",
+      "region_id": "03d67ab131476a444bd5452400697c1c70beaed1",
+      "function": "evaluate",
+      "candidate": "evaluate:B49:B50:B51",
+      "location": {
+        "block": "%if.end7.i.i.i192.i.i.i.i",
+        "condition_source": "data",
+        "function": "evaluate",
+        "join": "%if.end23.i.i.i212.i.i.i.i.pair.join",
+        "join_has_other_preds": false
+      },
+      "parent": {
+        "ir": "parents/01f759eeca703b231bffe39f079bd33f4242b382aeecc8d17abcb2093cf5d92b.ll.gz",
+        "sha256": "01f759eeca703b231bffe39f079bd33f4242b382aeecc8d17abcb2093cf5d92b",
+        "archive_path": "/data/home/chh/kernel-benchmark-suite-dataflow-b2b/build/dataflow-corpus/step7/MapAiry/anchor/prepared-94-37-0.ll"
+      },
+      "source_round": 95,
+      "source_row": 292,
+      "anchor_T": [
+        44,
+        16,
+        36
+      ],
+      "best_known_T": [
+        29,
+        29,
+        29
+      ],
+      "objectives": {
+        "min_D": {
+          "T": [
+            29,
+            29,
+            29
+          ],
+          "optimal": true,
+          "regret_D": 15,
+          "method": "same-plan-outlined-cleaned"
+        },
+        "strategy": {
+          "T": [
+            44,
+            16,
+            36
+          ],
+          "optimal": true,
+          "regret_D": 0,
+          "method": "same-plan-outlined-cleaned"
+        }
+      },
+      "single_replacement": {
+        "status": "not_measured",
+        "final_kernel_TTI": null
+      }
+    },
+    {
+      "case": "MapAiry",
+      "region_id": "f94e0989bb185c57008efce5cad25215324e0a09",
+      "function": "evaluate",
+      "candidate": "evaluate:B77:B78:B79",
+      "location": {
+        "block": "%merged.bb70",
+        "condition_source": "data",
+        "function": "evaluate",
+        "join": "%_ZN5boost4math6detail25mapairy_quantile_imp_precIdEET_RKS3_bRKSt17integral_constantIiLi53EE.exit.i.i",
+        "join_has_other_preds": true
+      },
+      "parent": {
+        "ir": "parents/9730630a281fffc981c34cbe737976e11368bbc651a3dc74a3d93c518ca4512d.ll.gz",
+        "sha256": "9730630a281fffc981c34cbe737976e11368bbc651a3dc74a3d93c518ca4512d",
+        "archive_path": "/data/home/chh/kernel-benchmark-suite-dataflow-b2b/build/dataflow-corpus/step7/MapAiry/anchor/trial-281/fused.ll"
+      },
+      "source_round": 97,
+      "source_row": 293,
+      "anchor_T": [
+        127,
+        127,
+        127
+      ],
+      "best_known_T": [
+        122,
+        122,
+        122
+      ],
+      "objectives": {
+        "min_D": {
+          "T": [
+            122,
+            122,
+            122
+          ],
+          "optimal": false,
+          "regret_D": 5,
+          "method": "context-cleaned"
+        },
+        "strategy": {
+          "T": [
+            232,
+            120,
+            120
+          ],
+          "optimal": false,
+          "regret_D": -105,
+          "method": "context-cleaned"
+        }
+      },
+      "single_replacement": {
+        "status": "not_measured",
+        "final_kernel_TTI": null
+      }
+    },
+    {
+      "case": "MapAiry",
+      "region_id": "03d67ab131476a444bd5452400697c1c70beaed1",
+      "function": "evaluate",
+      "candidate": "evaluate:B19:B20:B21",
+      "location": {
+        "block": "%if.end7.i.i.i499.i.i.i.i",
+        "condition_source": "data",
+        "function": "evaluate",
+        "join": "%if.end23.i.i.i519.i.i.i.i",
+        "join_has_other_preds": false
+      },
+      "parent": {
+        "ir": "parents/350615b13bc91d8239628190de70c0d2f1cfa6f3461537070d182993ddc69a68.ll.gz",
+        "sha256": "350615b13bc91d8239628190de70c0d2f1cfa6f3461537070d182993ddc69a68",
+        "archive_path": "/data/home/chh/kernel-benchmark-suite-dataflow-b2b/build/dataflow-corpus/step7/MapAiry/anchor/trial-298/fused.ll"
+      },
+      "source_round": 99,
+      "source_row": 295,
+      "anchor_T": [
+        44,
+        16,
+        36
+      ],
+      "best_known_T": [
+        29,
+        29,
+        29
+      ],
+      "objectives": {
+        "min_D": {
+          "T": [
+            29,
+            29,
+            29
+          ],
+          "optimal": true,
+          "regret_D": 15,
+          "method": "context-cleaned"
+        },
+        "strategy": {
+          "T": [
+            44,
+            16,
+            36
+          ],
+          "optimal": true,
+          "regret_D": 0,
+          "method": "context-cleaned"
+        }
+      },
+      "single_replacement": {
+        "status": "not_measured",
+        "final_kernel_TTI": null
+      }
+    },
+    {
+      "case": "MapAiry",
+      "region_id": "03d67ab131476a444bd5452400697c1c70beaed1",
+      "function": "evaluate",
+      "candidate": "evaluate:B19:B20:B21",
+      "location": {
+        "block": "%if.end7.i.i.i499.i.i.i.i",
+        "condition_source": "data",
+        "function": "evaluate",
+        "join": "%if.end23.i.i.i519.i.i.i.i.pair.join",
+        "join_has_other_preds": false
+      },
+      "parent": {
+        "ir": "parents/3f7b2efe2660255e5eac01f5492efa7707d9e064cf407ae5fc0637ae0b5022f5.ll.gz",
+        "sha256": "3f7b2efe2660255e5eac01f5492efa7707d9e064cf407ae5fc0637ae0b5022f5",
+        "archive_path": "/data/home/chh/kernel-benchmark-suite-dataflow-b2b/build/dataflow-corpus/step7/MapAiry/anchor/prepared-98-16-0.ll"
+      },
+      "source_round": 99,
+      "source_row": 296,
+      "anchor_T": [
+        44,
+        16,
+        36
+      ],
+      "best_known_T": [
+        29,
+        29,
+        29
+      ],
+      "objectives": {
+        "min_D": {
+          "T": [
+            29,
+            29,
+            29
+          ],
+          "optimal": true,
+          "regret_D": 15,
+          "method": "same-plan-outlined-cleaned"
+        },
+        "strategy": {
+          "T": [
+            44,
+            16,
+            36
+          ],
+          "optimal": true,
+          "regret_D": 0,
+          "method": "same-plan-outlined-cleaned"
+        }
+      },
+      "single_replacement": {
+        "status": "not_measured",
+        "final_kernel_TTI": null
+      }
+    },
+    {
+      "case": "MapAiry",
+      "region_id": "03d67ab131476a444bd5452400697c1c70beaed1",
+      "function": "evaluate",
+      "candidate": "evaluate:B29:B30:B31",
+      "location": {
+        "block": "%if.end7.i.i.i386.i.i.i.i",
+        "condition_source": "data",
+        "function": "evaluate",
+        "join": "%if.end23.i.i.i406.i.i.i.i",
+        "join_has_other_preds": false
+      },
+      "parent": {
+        "ir": "parents/350615b13bc91d8239628190de70c0d2f1cfa6f3461537070d182993ddc69a68.ll.gz",
+        "sha256": "350615b13bc91d8239628190de70c0d2f1cfa6f3461537070d182993ddc69a68",
+        "archive_path": "/data/home/chh/kernel-benchmark-suite-dataflow-b2b/build/dataflow-corpus/step7/MapAiry/anchor/trial-298/fused.ll"
+      },
+      "source_round": 101,
+      "source_row": 297,
+      "anchor_T": [
+        44,
+        16,
+        36
+      ],
+      "best_known_T": [
+        29,
+        29,
+        29
+      ],
+      "objectives": {
+        "min_D": {
+          "T": [
+            29,
+            29,
+            29
+          ],
+          "optimal": true,
+          "regret_D": 15,
+          "method": "context-cleaned"
+        },
+        "strategy": {
+          "T": [
+            44,
+            16,
+            36
+          ],
+          "optimal": true,
+          "regret_D": 0,
+          "method": "context-cleaned"
+        }
+      },
+      "single_replacement": {
+        "status": "not_measured",
+        "final_kernel_TTI": null
+      }
+    },
+    {
+      "case": "MapAiry",
+      "region_id": "03d67ab131476a444bd5452400697c1c70beaed1",
+      "function": "evaluate",
+      "candidate": "evaluate:B29:B30:B31",
+      "location": {
+        "block": "%if.end7.i.i.i386.i.i.i.i",
+        "condition_source": "data",
+        "function": "evaluate",
+        "join": "%if.end23.i.i.i406.i.i.i.i.pair.join",
+        "join_has_other_preds": false
+      },
+      "parent": {
+        "ir": "parents/3ce47eafd68732b73476d75d39dd21aaa783ad7585d6319551a33f8ac19e19d0.ll.gz",
+        "sha256": "3ce47eafd68732b73476d75d39dd21aaa783ad7585d6319551a33f8ac19e19d0",
+        "archive_path": "/data/home/chh/kernel-benchmark-suite-dataflow-b2b/build/dataflow-corpus/step7/MapAiry/anchor/prepared-100-23-0.ll"
+      },
+      "source_round": 101,
+      "source_row": 298,
+      "anchor_T": [
+        44,
+        16,
+        36
+      ],
+      "best_known_T": [
+        29,
+        29,
+        29
+      ],
+      "objectives": {
+        "min_D": {
+          "T": [
+            29,
+            29,
+            29
+          ],
+          "optimal": true,
+          "regret_D": 15,
+          "method": "same-plan-outlined-cleaned"
+        },
+        "strategy": {
+          "T": [
+            44,
+            16,
+            36
+          ],
+          "optimal": true,
+          "regret_D": 0,
+          "method": "same-plan-outlined-cleaned"
+        }
+      },
+      "single_replacement": {
+        "status": "not_measured",
+        "final_kernel_TTI": null
+      }
+    },
+    {
+      "case": "MapAiry",
+      "region_id": "03d67ab131476a444bd5452400697c1c70beaed1",
+      "function": "evaluate",
+      "candidate": "evaluate:B39:B40:B41",
+      "location": {
+        "block": "%if.end7.i.i.i273.i.i.i.i",
+        "condition_source": "data",
+        "function": "evaluate",
+        "join": "%if.end23.i.i.i293.i.i.i.i",
+        "join_has_other_preds": false
+      },
+      "parent": {
+        "ir": "parents/350615b13bc91d8239628190de70c0d2f1cfa6f3461537070d182993ddc69a68.ll.gz",
+        "sha256": "350615b13bc91d8239628190de70c0d2f1cfa6f3461537070d182993ddc69a68",
+        "archive_path": "/data/home/chh/kernel-benchmark-suite-dataflow-b2b/build/dataflow-corpus/step7/MapAiry/anchor/trial-298/fused.ll"
+      },
+      "source_round": 104,
+      "source_row": 299,
+      "anchor_T": [
+        44,
+        16,
+        36
+      ],
+      "best_known_T": [
+        29,
+        29,
+        29
+      ],
+      "objectives": {
+        "min_D": {
+          "T": [
+            29,
+            29,
+            29
+          ],
+          "optimal": true,
+          "regret_D": 15,
+          "method": "context-cleaned"
+        },
+        "strategy": {
+          "T": [
+            44,
+            16,
+            36
+          ],
+          "optimal": true,
+          "regret_D": 0,
+          "method": "context-cleaned"
+        }
+      },
+      "single_replacement": {
+        "status": "not_measured",
+        "final_kernel_TTI": null
+      }
+    },
+    {
+      "case": "MapAiry",
+      "region_id": "03d67ab131476a444bd5452400697c1c70beaed1",
+      "function": "evaluate",
+      "candidate": "evaluate:B39:B40:B41",
+      "location": {
+        "block": "%if.end7.i.i.i273.i.i.i.i",
+        "condition_source": "data",
+        "function": "evaluate",
+        "join": "%if.end23.i.i.i293.i.i.i.i.pair.join",
+        "join_has_other_preds": false
+      },
+      "parent": {
+        "ir": "parents/e29df99ff68df784d9051759124047991a5b33164edb00383b01cc33dafdf6cb.ll.gz",
+        "sha256": "e29df99ff68df784d9051759124047991a5b33164edb00383b01cc33dafdf6cb",
+        "archive_path": "/data/home/chh/kernel-benchmark-suite-dataflow-b2b/build/dataflow-corpus/step7/MapAiry/anchor/prepared-103-30-0.ll"
+      },
+      "source_round": 104,
+      "source_row": 300,
+      "anchor_T": [
+        44,
+        16,
+        36
+      ],
+      "best_known_T": [
+        29,
+        29,
+        29
+      ],
+      "objectives": {
+        "min_D": {
+          "T": [
+            29,
+            29,
+            29
+          ],
+          "optimal": true,
+          "regret_D": 15,
+          "method": "same-plan-outlined-cleaned"
+        },
+        "strategy": {
+          "T": [
+            44,
+            16,
+            36
+          ],
+          "optimal": true,
+          "regret_D": 0,
+          "method": "same-plan-outlined-cleaned"
+        }
+      },
+      "single_replacement": {
+        "status": "not_measured",
+        "final_kernel_TTI": null
+      }
+    },
+    {
+      "case": "MapAiry",
+      "region_id": "03d67ab131476a444bd5452400697c1c70beaed1",
+      "function": "evaluate",
+      "candidate": "evaluate:B49:B50:B51",
+      "location": {
+        "block": "%if.end7.i.i.i192.i.i.i.i",
+        "condition_source": "data",
+        "function": "evaluate",
+        "join": "%if.end23.i.i.i212.i.i.i.i",
+        "join_has_other_preds": false
+      },
+      "parent": {
+        "ir": "parents/350615b13bc91d8239628190de70c0d2f1cfa6f3461537070d182993ddc69a68.ll.gz",
+        "sha256": "350615b13bc91d8239628190de70c0d2f1cfa6f3461537070d182993ddc69a68",
+        "archive_path": "/data/home/chh/kernel-benchmark-suite-dataflow-b2b/build/dataflow-corpus/step7/MapAiry/anchor/trial-298/fused.ll"
+      },
+      "source_round": 106,
+      "source_row": 301,
+      "anchor_T": [
+        44,
+        16,
+        36
+      ],
+      "best_known_T": [
+        29,
+        29,
+        29
+      ],
+      "objectives": {
+        "min_D": {
+          "T": [
+            29,
+            29,
+            29
+          ],
+          "optimal": true,
+          "regret_D": 15,
+          "method": "context-cleaned"
+        },
+        "strategy": {
+          "T": [
+            44,
+            16,
+            36
+          ],
+          "optimal": true,
+          "regret_D": 0,
+          "method": "context-cleaned"
+        }
+      },
+      "single_replacement": {
+        "status": "not_measured",
+        "final_kernel_TTI": null
+      }
+    },
+    {
+      "case": "MapAiry",
+      "region_id": "03d67ab131476a444bd5452400697c1c70beaed1",
+      "function": "evaluate",
+      "candidate": "evaluate:B49:B50:B51",
+      "location": {
+        "block": "%if.end7.i.i.i192.i.i.i.i",
+        "condition_source": "data",
+        "function": "evaluate",
+        "join": "%if.end23.i.i.i212.i.i.i.i.pair.join",
+        "join_has_other_preds": false
+      },
+      "parent": {
+        "ir": "parents/7318bb6e86235fde8a0f7eb39c5df8985d63b4bdffe45f96af671c44914143c0.ll.gz",
+        "sha256": "7318bb6e86235fde8a0f7eb39c5df8985d63b4bdffe45f96af671c44914143c0",
+        "archive_path": "/data/home/chh/kernel-benchmark-suite-dataflow-b2b/build/dataflow-corpus/step7/MapAiry/anchor/prepared-105-37-0.ll"
+      },
+      "source_round": 106,
+      "source_row": 302,
+      "anchor_T": [
+        44,
+        16,
+        36
+      ],
+      "best_known_T": [
+        29,
+        29,
+        29
+      ],
+      "objectives": {
+        "min_D": {
+          "T": [
+            29,
+            29,
+            29
+          ],
+          "optimal": true,
+          "regret_D": 15,
+          "method": "same-plan-outlined-cleaned"
+        },
+        "strategy": {
+          "T": [
+            44,
+            16,
+            36
+          ],
+          "optimal": true,
+          "regret_D": 0,
+          "method": "same-plan-outlined-cleaned"
+        }
+      },
+      "single_replacement": {
+        "status": "not_measured",
+        "final_kernel_TTI": null
+      }
+    },
+    {
+      "case": "MapAiry",
+      "region_id": "23591531d258bfc66fd4591054cc5128d87e5c3d",
+      "function": "evaluate",
+      "candidate": "evaluate:B80:B81:B82",
+      "location": {
+        "block": "%predication.tail",
+        "condition_source": "data",
+        "function": "evaluate",
+        "join": "%predication.join",
+        "join_has_other_preds": false
+      },
+      "parent": {
+        "ir": "parents/350615b13bc91d8239628190de70c0d2f1cfa6f3461537070d182993ddc69a68.ll.gz",
+        "sha256": "350615b13bc91d8239628190de70c0d2f1cfa6f3461537070d182993ddc69a68",
+        "archive_path": "/data/home/chh/kernel-benchmark-suite-dataflow-b2b/build/dataflow-corpus/step7/MapAiry/anchor/trial-298/fused.ll"
+      },
+      "source_round": 108,
+      "source_row": 303,
+      "anchor_T": [
+        48,
+        20,
+        38
+      ],
+      "best_known_T": [
+        33,
+        33,
+        33
+      ],
+      "objectives": {
+        "min_D": {
+          "T": [
+            33,
+            33,
+            33
+          ],
+          "optimal": true,
+          "regret_D": 15,
+          "method": "context-cleaned"
+        },
+        "strategy": {
+          "T": [
+            48,
+            20,
+            38
+          ],
+          "optimal": true,
+          "regret_D": 0,
+          "method": "context-cleaned"
+        }
+      },
+      "single_replacement": {
+        "status": "not_measured",
+        "final_kernel_TTI": null
+      }
+    },
+    {
+      "case": "MapAiry",
+      "region_id": "23591531d258bfc66fd4591054cc5128d87e5c3d",
+      "function": "evaluate",
+      "candidate": "evaluate:B80:B81:B82",
+      "location": {
+        "block": "%predication.tail",
+        "condition_source": "data",
+        "function": "evaluate",
+        "join": "%predication.join.pair.join",
+        "join_has_other_preds": false
+      },
+      "parent": {
+        "ir": "parents/f5b89e6b82cc66ed0ca0923a65980aebad8b47963d5b39025fdc8122661fdd79.ll.gz",
+        "sha256": "f5b89e6b82cc66ed0ca0923a65980aebad8b47963d5b39025fdc8122661fdd79",
+        "archive_path": "/data/home/chh/kernel-benchmark-suite-dataflow-b2b/build/dataflow-corpus/step7/MapAiry/anchor/prepared-107-51-0.ll"
+      },
+      "source_round": 108,
+      "source_row": 304,
+      "anchor_T": [
+        48,
+        20,
+        38
+      ],
+      "best_known_T": [
+        33,
+        33,
+        33
+      ],
+      "objectives": {
+        "min_D": {
+          "T": [
+            33,
+            33,
+            33
+          ],
+          "optimal": true,
+          "regret_D": 15,
+          "method": "same-plan-outlined-cleaned"
+        },
+        "strategy": {
+          "T": [
+            48,
+            20,
+            38
+          ],
+          "optimal": true,
+          "regret_D": 0,
+          "method": "same-plan-outlined-cleaned"
+        }
+      },
+      "single_replacement": {
+        "status": "not_measured",
+        "final_kernel_TTI": null
+      }
+    },
+    {
+      "case": "MapAiry",
+      "region_id": "23591531d258bfc66fd4591054cc5128d87e5c3d",
+      "function": "evaluate",
+      "candidate": "evaluate:B87:B88:B89",
+      "location": {
+        "block": "%predication.tail26",
+        "condition_source": "data",
+        "function": "evaluate",
+        "join": "%predication.join29",
+        "join_has_other_preds": false
+      },
+      "parent": {
+        "ir": "parents/350615b13bc91d8239628190de70c0d2f1cfa6f3461537070d182993ddc69a68.ll.gz",
+        "sha256": "350615b13bc91d8239628190de70c0d2f1cfa6f3461537070d182993ddc69a68",
+        "archive_path": "/data/home/chh/kernel-benchmark-suite-dataflow-b2b/build/dataflow-corpus/step7/MapAiry/anchor/trial-298/fused.ll"
+      },
+      "source_round": 109,
+      "source_row": 305,
+      "anchor_T": [
+        48,
+        20,
+        38
+      ],
+      "best_known_T": [
+        33,
+        33,
+        33
+      ],
+      "objectives": {
+        "min_D": {
+          "T": [
+            33,
+            33,
+            33
+          ],
+          "optimal": true,
+          "regret_D": 15,
+          "method": "context-cleaned"
+        },
+        "strategy": {
+          "T": [
+            48,
+            20,
+            38
+          ],
+          "optimal": true,
+          "regret_D": 0,
+          "method": "context-cleaned"
+        }
+      },
+      "single_replacement": {
+        "status": "not_measured",
+        "final_kernel_TTI": null
+      }
+    },
+    {
+      "case": "MapAiry",
+      "region_id": "23591531d258bfc66fd4591054cc5128d87e5c3d",
+      "function": "evaluate",
+      "candidate": "evaluate:B87:B88:B89",
+      "location": {
+        "block": "%predication.tail26",
+        "condition_source": "data",
+        "function": "evaluate",
+        "join": "%predication.join29.pair.join",
+        "join_has_other_preds": false
+      },
+      "parent": {
+        "ir": "parents/4ef5f165ccb1af0279827850f528e3dfbc22b3b37614f4125a77ec62b67432e7.ll.gz",
+        "sha256": "4ef5f165ccb1af0279827850f528e3dfbc22b3b37614f4125a77ec62b67432e7",
+        "archive_path": "/data/home/chh/kernel-benchmark-suite-dataflow-b2b/build/dataflow-corpus/step7/MapAiry/anchor/prepared-108-55-0.ll"
+      },
+      "source_round": 109,
+      "source_row": 306,
+      "anchor_T": [
+        48,
+        20,
+        38
+      ],
+      "best_known_T": [
+        33,
+        33,
+        33
+      ],
+      "objectives": {
+        "min_D": {
+          "T": [
+            33,
+            33,
+            33
+          ],
+          "optimal": true,
+          "regret_D": 15,
+          "method": "same-plan-outlined-cleaned"
+        },
+        "strategy": {
+          "T": [
+            48,
+            20,
+            38
+          ],
+          "optimal": true,
+          "regret_D": 0,
+          "method": "same-plan-outlined-cleaned"
+        }
+      },
+      "single_replacement": {
+        "status": "not_measured",
+        "final_kernel_TTI": null
+      }
+    },
+    {
+      "case": "MapAiry",
+      "region_id": "03d67ab131476a444bd5452400697c1c70beaed1",
+      "function": "evaluate",
+      "candidate": "evaluate:B9:B10:B11",
+      "location": {
+        "block": "%if.end7.i.i.i620.i.i.i.i",
+        "condition_source": "data",
+        "function": "evaluate",
+        "join": "%if.end23.i.i.i640.i.i.i.i",
+        "join_has_other_preds": false
+      },
+      "parent": {
+        "ir": "parents/350615b13bc91d8239628190de70c0d2f1cfa6f3461537070d182993ddc69a68.ll.gz",
+        "sha256": "350615b13bc91d8239628190de70c0d2f1cfa6f3461537070d182993ddc69a68",
+        "archive_path": "/data/home/chh/kernel-benchmark-suite-dataflow-b2b/build/dataflow-corpus/step7/MapAiry/anchor/trial-298/fused.ll"
+      },
+      "source_round": 110,
+      "source_row": 307,
+      "anchor_T": [
+        44,
+        16,
+        36
+      ],
+      "best_known_T": [
+        29,
+        29,
+        29
+      ],
+      "objectives": {
+        "min_D": {
+          "T": [
+            29,
+            29,
+            29
+          ],
+          "optimal": true,
+          "regret_D": 15,
+          "method": "context-cleaned"
+        },
+        "strategy": {
+          "T": [
+            44,
+            16,
+            36
+          ],
+          "optimal": true,
+          "regret_D": 0,
+          "method": "context-cleaned"
+        }
+      },
+      "single_replacement": {
+        "status": "not_measured",
+        "final_kernel_TTI": null
+      }
+    },
+    {
+      "case": "MapAiry",
+      "region_id": "03d67ab131476a444bd5452400697c1c70beaed1",
+      "function": "evaluate",
+      "candidate": "evaluate:B9:B10:B11",
+      "location": {
+        "block": "%if.end7.i.i.i620.i.i.i.i",
+        "condition_source": "data",
+        "function": "evaluate",
+        "join": "%if.end23.i.i.i640.i.i.i.i.pair.join",
+        "join_has_other_preds": false
+      },
+      "parent": {
+        "ir": "parents/9fb9c278e17f68594635eed3a7ffd131fb46d1352eca0c14f02d76c209a27e74.ll.gz",
+        "sha256": "9fb9c278e17f68594635eed3a7ffd131fb46d1352eca0c14f02d76c209a27e74",
+        "archive_path": "/data/home/chh/kernel-benchmark-suite-dataflow-b2b/build/dataflow-corpus/step7/MapAiry/anchor/prepared-109-9-0.ll"
+      },
+      "source_round": 110,
+      "source_row": 308,
+      "anchor_T": [
+        44,
+        16,
+        36
+      ],
+      "best_known_T": [
+        29,
+        29,
+        29
+      ],
+      "objectives": {
+        "min_D": {
+          "T": [
+            29,
+            29,
+            29
+          ],
+          "optimal": true,
+          "regret_D": 15,
+          "method": "same-plan-outlined-cleaned"
+        },
+        "strategy": {
+          "T": [
+            44,
+            16,
+            36
+          ],
+          "optimal": true,
+          "regret_D": 0,
+          "method": "same-plan-outlined-cleaned"
+        }
+      },
+      "single_replacement": {
+        "status": "not_measured",
+        "final_kernel_TTI": null
+      }
+    },
+    {
+      "case": "LUD8",
+      "region_id": "49986d3337c9b8e6f6bc7fa21d871561f6796474",
+      "function": "_Z13lud_perimeterPfii",
+      "candidate": "_Z13lud_perimeterPfii:B0:B1:B2",
+      "location": {
+        "block": "%3",
+        "condition_source": "thread-pattern",
+        "function": "_Z13lud_perimeterPfii",
+        "join": "%159",
+        "join_has_other_preds": false
+      },
+      "parent": {
+        "ir": "parents/f362469c52c83af4343b4dc76abb63117af94f5d89fdf97c013b6c8e41e1b172.ll.gz",
+        "sha256": "f362469c52c83af4343b4dc76abb63117af94f5d89fdf97c013b6c8e41e1b172",
+        "archive_path": "/data/home/chh/kernel-benchmark-suite-dataflow-b2b/build/dataflow-corpus/step7/lud8/input.ll"
+      },
+      "source_round": 1,
+      "source_row": 309,
+      "anchor_T": [
+        156,
+        156,
+        156
+      ],
+      "best_known_T": [
+        150,
+        150,
+        150
+      ],
+      "darm_T": [
+        150,
+        150,
+        150
+      ],
+      "historical_incumbent_T": [
+        194,
+        194,
+        194
+      ],
+      "regret_D": 6,
+      "single_replacement": {
+        "status": "not_measured",
+        "final_kernel_TTI": null
+      }
+    },
+    {
+      "case": "LUD8-common",
+      "region_id": "d8e4613aa217378a1007272fbb9844b85e6b52b2",
+      "function": "_Z13lud_perimeterPfii",
+      "candidate": "_Z13lud_perimeterPfii:B0:B1:B2",
+      "location": {
+        "block": "%3",
+        "condition_source": "thread-pattern",
+        "function": "_Z13lud_perimeterPfii",
+        "join": "%203",
+        "join_has_other_preds": false
+      },
+      "parent": {
+        "ir": "parents/a52a8746779c561db1be7bc66026508f909e9eeba2223c966d7fe201435782b9.ll.gz",
+        "sha256": "a52a8746779c561db1be7bc66026508f909e9eeba2223c966d7fe201435782b9",
+        "archive_path": "/data/home/chh/kernel-benchmark-suite-dataflow-b2b/build/dataflow-corpus/step7/lud8-common/input.ll"
+      },
+      "source_round": 1,
+      "source_row": 319,
+      "anchor_T": [
+        156,
+        156,
+        156
+      ],
+      "best_known_T": [
+        150,
+        150,
+        150
+      ],
+      "darm_T": [
+        150,
+        150,
+        150
+      ],
+      "historical_incumbent_T": [
+        206,
+        108,
+        107
+      ],
+      "regret_D": 6,
+      "single_replacement": {
+        "status": "not_measured",
+        "final_kernel_TTI": null
+      }
+    }
+  ]
+}

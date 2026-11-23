@@ -128,7 +128,7 @@ int main(int argc,char**argv){try{
  auto timingReport=[&](){json::Object phases;for(const auto &kv:phaseMilliseconds)phases[kv.first]=json::Object{{"milliseconds",kv.second},{"calls",phaseCalls[kv.first]}};return phases;};
 
  if(argc==2&&StringRef(argv[1])=="--help"){
-   outs()<<"usage: decision-greedy INPUT FUNCTION [TOOL_ROOT] NEW_OUTPUT [--b2b-strategy anchor|darm|darm-artifact|dataflow-exact|dataflow-ilp] [--ir-snapshots full|compact] [--tti-quote-cache off|audit|on] [--commit-normalize-only|--no-commit-normalize-only]\n";
+   outs()<<"usage: decision-greedy INPUT FUNCTION [TOOL_ROOT] NEW_OUTPUT [--b2b-strategy anchor|darm|darm-artifact|dataflow-exact] [--ir-snapshots full|compact] [--tti-quote-cache off|audit|on] [--commit-normalize-only|--no-commit-normalize-only]\n";
    outs()<<"Default schedule: ordered for whole-function trials (Auto Greedy v2).\n";
    outs()<<"Normalize-only commits are enabled by default.\n";
    return 0;
@@ -149,7 +149,7 @@ int main(int argc,char**argv){try{
      snapshotMode = value.str();
    else if (option == "--tti-quote-cache" && (value == "off" || value == "audit" || value == "on"))
      quoteMode = value.str();
-   else if (option == "--b2b-strategy" && (value == "darm" || value == "darm-artifact" || value == "anchor" || value == "dataflow-exact" || value == "dataflow-ilp"))
+   else if (option == "--b2b-strategy" && (value == "darm" || value == "darm-artifact" || value == "anchor" || value == "dataflow-exact"))
      b2bStrategy = value.str();
    else if (option == "--ir-snapshots" || option == "--b2b-strategy" ||
             option == "--tti-quote-cache" ||
@@ -159,7 +159,7 @@ int main(int argc,char**argv){try{
    argc -= 2;
  }
  if(argc!=4&&argc!=5)
-   throw std::runtime_error("usage: decision-greedy INPUT FUNCTION [TOOL_ROOT] NEW_OUTPUT [--b2b-strategy anchor|darm|darm-artifact|dataflow-exact|dataflow-ilp] [--ir-snapshots full|compact] [--tti-quote-cache off|audit|on] [--commit-normalize-only|--no-commit-normalize-only]");
+   throw std::runtime_error("usage: decision-greedy INPUT FUNCTION [TOOL_ROOT] NEW_OUTPUT [--b2b-strategy anchor|darm|darm-artifact|dataflow-exact] [--ir-snapshots full|compact] [--tti-quote-cache off|audit|on] [--commit-normalize-only|--no-commit-normalize-only]");
  const bool commitNormalizeOnly=normalizeOnlyOverride.getValueOr(true);
  if(snapshotMode.empty())snapshotMode="compact";
  const bool implicitRoot=argc==4;
@@ -261,13 +261,10 @@ int main(int argc,char**argv){try{
   const std::string scan=out+"/structural-"+std::to_string(rounds.size());
   std::vector<std::string> args{structural,"--ir",current,"--function",fn,
     "--tti-worker",root+"/tools/run-llvm24-tti","--tti-quote-cache",quoteMode};
-  const bool useDataflow = b2bStrategy == "dataflow-exact" || b2bStrategy == "dataflow-ilp";
-  if (useDataflow)
+  if (b2bStrategy == "dataflow-exact")
     args.insert(args.end(), {"--b2b-strategy", b2bStrategy, "--dataflow-solver",
       root+"/build/llvm24-tti/reference_solver", "--dataflow-costs",
       root+"/docs/dataflow-b2b/COST_TABLE.json"});
-  if (b2bStrategy == "dataflow-ilp")
-    args.insert(args.end(), {"--dataflow-ilp", root+"/tools/dataflow_b2b/ilp_solver"});
   if(catalogParent!=current){
     auto catalogArgs=args;
     catalogArgs.insert(catalogArgs.end(),{"--catalog-only","1","--debug-dir",scan,"--out",scan+".ll"});
@@ -472,7 +469,7 @@ int main(int argc,char**argv){try{
         trialArgs.push_back(candidate.getString(key)->str());
       }
       // Keep the exact invocation and the arguments needed for trial replay.
-      if (!useDataflow)
+      if (b2bStrategy != "dataflow-exact")
         trialArgs.insert(trialArgs.end(), {"--b2b-strategy", b2bStrategy});
       // IDs locate a prior recipe; current planner facts certify its reuse.
       json::Array replayArgs;

@@ -14,7 +14,6 @@
 #include "llvm/Transforms/Utils/Local.h"
 #include <chrono>
 #include <functional>
-#include <iostream>
 #include <vector>
 
 using namespace llvm;
@@ -747,8 +746,6 @@ struct Search {
   }
 
 };
-
-#include "ilp_bridge.h"
 } // namespace
 
 int main(int argc, char **argv) {
@@ -757,7 +754,7 @@ int main(int argc, char **argv) {
               " [--c-sl=real|abstract] [--cost=abstract|real] [--tti-worker=PATH]\n";
     return 2;
   }
-  bool real = false, useThroughput = false, bridge = false;
+  bool real = false, useThroughput = false;
   StringRef worker = "tools/run-llvm24-tti";
   for (int i = 4; i < argc; ++i) {
     StringRef option(argv[i]);
@@ -769,8 +766,6 @@ int main(int argc, char **argv) {
       useThroughput = true;
     else if (option == "--cost=abstract")
       useThroughput = false;
-    else if (option == "--ilp-bridge")
-      bridge = true;
     else if (option.consume_front("--tti-worker="))
       worker = option;
     else {
@@ -848,8 +843,6 @@ int main(int argc, char **argv) {
       }
     search.armCost = arm.getValueOr(0);
   }
-  if (bridge)
-    return decisionBridge(search, baseline);
   std::string limitation = "a generation alternative could not be verified";
   if (baseline) {
     search.add(*module, true);
