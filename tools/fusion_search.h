@@ -102,6 +102,7 @@ struct Trial {
   bool loopHeaderSplit=false;
   llvm::json::Array layoutProfitability;
   llvm::json::Object anchorStats, dataflowExact;
+  llvm::Optional<llvm::json::Array> observedPairs;
   std::string r2rSpeculationSplit;
   llvm::json::Object r2rSpeculation;
   double mergeMs=0, normalizeMs=0, featuresMs=0, totalMs=0, scoreMs=0;
@@ -137,11 +138,12 @@ std::set<std::string> crossLevelCatalogRejections(llvm::Function &,
     const std::vector<Candidate> &);
 std::vector<Candidate> enumerate(llvm::Function &, unsigned version);
 Trial tryPair(const llvm::Module &, const Candidate &, unsigned currentVersion,
-              CleanupMode, bool allowB2B, bool artifactB2B, bool speculateR2R);
-void addDataflowCandidates(llvm::Function &, std::vector<Candidate> &);
+              CleanupMode, bool allowB2B, bool artifactB2B, bool speculateR2R,
+              bool observePairs = false);
+void addDataflowCandidates(llvm::Function &, std::vector<Candidate> &, bool heuristic);
 llvm::Optional<Trial> tryDataflowExact(const llvm::Module &, const Candidate &, CleanupMode,
                                       llvm::StringRef solver, llvm::StringRef costs,
-                                      llvm::StringRef worker);
+                                      llvm::StringRef worker, bool heuristic);
 enum class B2BExit { PreserveSuffix, Merge, ForkJoin, Independent };
 // Emit an already-validated, order-preserving B2B alignment.
 void emitB2BLinear(llvm::BranchInst &, llvm::BasicBlock &, llvm::BasicBlock &,
@@ -151,5 +153,6 @@ std::vector<Trial> planSingleBranchB2B(const llvm::Module &, const Candidate &, 
                                        llvm::function_ref<int(const llvm::Instruction &)> intrinsicCost,
                                        llvm::function_ref<int(const llvm::Instruction &)> anchorCost,
                                        llvm::function_ref<int(llvm::Type *)> anchorSelectCost,
-                                       llvm::function_ref<int(llvm::Type *)> anchorPhiCost);
+                                       llvm::function_ref<int(llvm::Type *)> anchorPhiCost,
+                                       bool observePairs = false);
 }

@@ -322,7 +322,7 @@ public:
   }
 
   std::vector<Trial> planAnchorB2B(const llvm::Module &module, const Candidate &candidate,
-                                   CleanupMode cleanup) const {
+                                   CleanupMode cleanup, bool observePairs = false) const {
     using namespace llvm;
     auto *f = module.getFunction(candidate.function);
     if (!f) return {};
@@ -358,7 +358,7 @@ public:
     };
     auto selectCost = [&](Type *type) { return transferCost(type, false); };
     auto phiCost = [&](Type *type) { return transferCost(type, true); };
-    return planSingleBranchB2B(module, candidate, cleanup, intrinsicCost, cost, selectCost, phiCost);
+    return planSingleBranchB2B(module, candidate, cleanup, intrinsicCost, cost, selectCost, phiCost, observePairs);
   }
 
   explicit LLVM24Scorer(std::string executable, std::string mode="on")

@@ -1,0 +1,563 @@
+mode	tier	id	ops	cases	candidates	component_count	component_size_and_method_counts	gain	ms	reason
+abstract	small	0027035588d14dbe339285c5647c3aada796cf2d	5	hipims@fca4e6350a75	2	2	1:exact=2	0	0.034	ok
+abstract	small	00bc16cfd8ae8b9fd56b51b66aeeb3eeb49c6052	4	PCM,PCM32,PCM64,pcm32	3	3	1:exact=3	3	0.030	ok
+abstract	small	01ff1f4269cff743bfc79b921cc7595c9bee306f	1	TPACF	0	0		0	0.004	ok
+abstract	small	02248205bdbac6825cff283fdbb10d9a05df071e	6	NQU,NQU128	0	0		0	0.007	ok
+abstract	small	026dbea33eb4fd286d65877b426b13e3c0961c86	2	HiPIMS-George	0	0		0	0.004	ok
+abstract	small	030acd4a9fecd9e3c89961502c1ec13627aac394	1	hipims@fca4e6350a75	0	0		0	0.007	ok
+abstract	small	03445077536de599e931caceb6269054de2d1edb	9	SRAD,SRAD32,srad32	0	0		0	0.005	ok
+abstract	small	05887769be2ea38a215001ebc697799b8c221dae	5	hipims@fca4e6350a75	4	4	1:exact=4	0	0.029	ok
+abstract	small	071f6b300468c013b63b2313bb1321399eb27de2	5	SRAD,SRAD32,srad32	0	0		0	0.004	ok
+abstract	small	08eac45f78da2eccb23e79a9393e5183277e4df9	5	hipims@fca4e6350a75	0	0		0	0.007	ok
+abstract	small	09239a0a1c3e906563e3d7f69509b39affe247d5	0	tigre-siddon	0	0		0	0.005	ok
+abstract	small	0a29522625b0cbd43d8cfdadb18085cce4e4d039	4	hipims@fca4e6350a75	0	0		0	0.005	ok
+abstract	small	0b4bddebd3116e0d15b0103da1744b3e8967aa9b	6	HiPIMS-George,hipims@c8069ddd3515	0	0		0	0.007	ok
+abstract	small	0f991cd905ea3e04ce0739d8e19ba6f357b75a93	3	HiPIMS-George,hipims@c8069ddd3515	0	0		0	0.005	ok
+abstract	small	0fe86869fdec238ea7d7985ef9108efeb2497c62	0	cudaflow-particles	0	0		0	0.004	ok
+abstract	small	12313062c67f1f6f0bdca391d7b33b316845b7c8	0	hipims@fca4e6350a75	0	0		0	0.006	ok
+abstract	small	15562aab1882bf6d8be578cd22f9ca6ade6cb85a	0	hipims@fca4e6350a75	0	0		0	0.004	ok
+abstract	small	166c4d9717975088cd7d614295e7316ca0ba76e2	6	hypersonic	0	0		0	0.005	ok
+abstract	small	17286707f6a1af5aa7eac5833a6af1084e7709a5	4	NQU,NQU64,nqu64	0	0		0	0.007	ok
+abstract	small	195ebb15b4a65c3f9468228f46fe5d03825d81b7	4	HLLD	0	0		0	0.006	ok
+abstract	small	1bae2080fbe9064b81804403e6d26813359c003f	8	MapAiry	16	12	1:exact=8,2:exact=4	6	0.070	ok
+abstract	small	1df5acddcf5d4c2be774867af962d850f277aca1	6	NQU,NQU128	0	0		0	0.005	ok
+abstract	small	20cf931150ae33b37e457de98bb9480b62934e21	5	hipims@fca4e6350a75	0	0		0	0.007	ok
+abstract	small	229c11b1962bd39a7b3ac02bb7bf5dadd18aa13a	6	hipims@fca4e6350a75	0	0		0	0.005	ok
+abstract	small	2353b62ffa3fc9a8fa83c4379ae7d741eb35c5b8	3	tigre	0	0		0	0.005	ok
+abstract	small	23591531d258bfc66fd4591054cc5128d87e5c3d	4	MapAiry	0	0		0	0.007	ok
+abstract	small	23a44c82e84ada512d874dd328613410a04d19ca	6	MapAiry	0	0		0	0.005	ok
+abstract	small	254f1b5318e4b159a497076ffd192eb67c71368f	6	NQU,NQU96	0	0		0	0.006	ok
+abstract	small	25aab633fad73c62510af6e350c1c841e3f9ec77	0	hipims@fca4e6350a75	0	0		0	0.005	ok
+abstract	small	25b1363fd6e075f995b2b44a28a8a905f1cc6c79	6	NQU,NQU96	0	0		0	0.004	ok
+abstract	small	26e2dcc1f2a6923808303b8953330cd99492d93a	0	HLLD	0	0		0	0.004	ok
+abstract	small	279a4be7d1bd00d281e700eeeb0123ea28ac1746	6	NQU,NQU256	0	0		0	0.004	ok
+abstract	small	27f06b7ed6b695382b3dbc325da645f12cba72e0	3	PCM128,PCM256	0	0		0	0.003	ok
+abstract	small	2b64bc2662b89f444fc97b7a1ec87cf682a3ee5c	5	hipims@fca4e6350a75	2	2	1:exact=2	0	0.030	ok
+abstract	small	2b90957f1ac24a178e5327b0b8adb5f067e1fd96	5	MS,ms32	0	0		0	0.005	ok
+abstract	small	2b976b5426a5f36afd993842023f5f2097bc20e2	7	LUD	0	0		0	0.004	ok
+abstract	small	2c4f7cd21ad500bf83db73479088a14e7928e02d	5	HiPIMS-George,hipims@c8069ddd3515	0	0		0	0.005	ok
+abstract	small	2c7343000a54ee78db08b8de884b9c422c02e9aa	6	hipims@fca4e6350a75	0	0		0	0.005	ok
+abstract	small	2c7de3dd3c291ca3dc447ef2c2c9cbf3c966ab88	2	hipims@fca4e6350a75	0	0		0	0.007	ok
+abstract	small	2f29337da1ee5423bea804957d647ed7983fbb8f	2	vllm,vllm-quant-kv-dump,vllm-quant-large,vllm-quant-qwen64k,vllm-quant@7e1e57ebb0ad	1	1	1:exact=1	1	0.025	ok
+abstract	small	2f8063974269539a05e97233a7f66e7fbe436e4a	6	NQU,NQU128	0	0		0	0.004	ok
+abstract	small	30e09200efbbedf868f9689e744696482ef8e1f3	4	NQU,NQU128	0	0		0	0.005	ok
+abstract	small	30e459dd8ef55bf1e0717581cb43eee8b1f0f690	4	NQU,NQU96	0	0		0	0.005	ok
+abstract	small	338511bb95c6d7311ca350674fe52dd48589309d	8	PCM,PCM128,PCM256	10	5	1:exact=4,6:exact=1	5	0.039	ok
+abstract	small	362cd2218a0cde3b00eda31aec7f7becd4bcac37	0	HLLD,cholla-hlld	0	0		0	0.004	ok
+abstract	small	36ae12a6f87776ad66b3e21e541a134cadaeebf5	6	NQU,NQU128	0	0		0	0.005	ok
+abstract	small	38c590e8159ea43f925142f881aec1457760f446	5	hipims@fca4e6350a75	0	0		0	0.005	ok
+abstract	small	3d69b161d1ee502e0a4b675c7da69923aa4354b6	3	TPACF,tpacf	0	0		0	0.005	ok
+abstract	small	3dbb995f4893d248e3f5d3ec88be7d746b2f33a9	10	PCM128,PCM256	11	5	1:exact=4,7:exact=1	5	0.056	ok
+abstract	small	3e35de13288a4e9b33e19ef98411bc62b1168105	9	CED,ced	0	0		0	0.005	ok
+abstract	small	3fb86534ef06fbcedb855140ab37d0b25059e467	0	tigre-siddon	0	0		0	0.004	ok
+abstract	small	4159822c22b8532cc9b2a8c3ff32016ab3775393	4	landau	0	0		0	0.004	ok
+abstract	small	445ab1840cfee3236840ce3f6744b7dca3aa7c9b	4	hipims@fca4e6350a75	0	0		0	0.004	ok
+abstract	small	45bc4cdfb47bf94438198a9120620367a6703b14	8	PCM,PCM128,PCM256	5	1	5:exact=1	4	0.035	ok
+abstract	small	4691ec0c105801022e72f775009d892015e9257c	8	MapAiry,boost-mapairy	3	1	3:exact=1	2	0.025	ok
+abstract	small	46e28f57d6a807d303a24a0c22c95980e5bd1881	4	hipims@fca4e6350a75	0	0		0	0.005	ok
+abstract	small	47a5aaccc3c5bdaa0cc65356b8ef2e2e3a189604	8	PCM,PCM128,PCM256	10	5	1:exact=4,6:exact=1	5	0.056	ok
+abstract	small	48f37a5f5579d8a1b50e6e698be19e3223be4a16	6	NQU,NQU128	0	0		0	0.003	ok
+abstract	small	499fd4c8d2882103ce63752ba0341c0c8f12adc1	0	tigre-siddon	0	0		0	0.006	ok
+abstract	small	4e627469ecf0bc8214231b010af572680425ffaa	6	landau	6	6	1:exact=6	1	0.036	ok
+abstract	small	4f045e74e33a6f957716f7dc10142278050a1d6f	10	hipims@c8069ddd3515	14	10	1:exact=8,3:exact=2	3	0.038	ok
+abstract	small	518c37366f0eeb8ac3b65fcd938bf415cfa8a7d9	3	TPACF,tpacf	0	0		0	0.005	ok
+abstract	small	51a69063fa56a53c4985062271bdc5ab1395a72f	4	NQU,NQU256	0	0		0	0.006	ok
+abstract	small	5380fef61ac979d9d1cd4eeacf2afa82bee4264d	0	tigre-siddon	0	0		0	0.005	ok
+abstract	small	54134fb9de260b2b835cefe548ff3a246c1cbecb	4	hipims@fca4e6350a75	0	0		0	0.004	ok
+abstract	small	54d7319f6cff9aa45900d2ff99fe4042bf3e85cc	4	tigre	0	0		0	0.003	ok
+abstract	small	575880b1a42d2b02f4dad2e04345677d504195c0	4	hipims@fca4e6350a75	0	0		0	0.003	ok
+abstract	small	57794ac7276e5604309a27618c8b7d818c5ad646	2	hipims@fca4e6350a75	0	0		0	0.005	ok
+abstract	small	590bffb1a6f98c3cb01e819f33fbabc5ea5507e1	3	TPACF	0	0		0	0.005	ok
+abstract	small	59dee2d2bbfdfd419a112ed498052f44257df600	6	NQU,NQU64,nqu64	0	0		0	0.005	ok
+abstract	small	5a00894ee4a3602290a8f593a2d6068f89d2e0ff	2	vllm-quant@05d35ba45053	0	0		0	0.006	ok
+abstract	small	5ad75595a54055f22adb767581fe105ce675db2d	4	NQU,NQU256	0	0		0	0.006	ok
+abstract	small	610a8079b404202be703ab05ca63a9d1773fd744	3	cudaflow-particles	0	0		0	0.006	ok
+abstract	small	62045db1147ab8fbbf5e54b36b9b7dc2fe50ad39	5	hipims@fca4e6350a75	0	0		0	0.005	ok
+abstract	small	62757562d59442359ede2d9c8c87398c6b28391a	8	PCM128,PCM256	6	1	6:exact=1	5	0.038	ok
+abstract	small	6275cfeaabc11235c4759497bedba6425cede327	3	hipims@fca4e6350a75	0	0		0	0.006	ok
+abstract	small	62a46e491617f6d425956a8605c108a49963bcd5	4	HiPIMS-George,hipims@c8069ddd3515	0	0		0	0.005	ok
+abstract	small	64b29d134369f95aeb9b5ff28e2b722afea4458c	0	HiPIMS-George,hipims@c8069ddd3515	0	0		0	0.004	ok
+abstract	small	650380fcba1ad2d7499535e143a003b02c6c6106	3	tigre	0	0		0	0.005	ok
+abstract	small	66a0c0a4de417c664c4226c172c51859c4e97ae1	8	CED,ced	0	0		0	0.009	ok
+abstract	small	66c3b419e7ca11d4dc53e71c3e0414f449f246ae	5	CED,ced	0	0		0	0.004	ok
+abstract	small	6993d2110e0124b65c80ce59b23a855fe9b30964	5	SRAD,SRAD-stage2,SRAD16,srad-stage2,srad16	0	0		0	0.006	ok
+abstract	small	6b8c2aa0a2943e325b8979798dbc09f76f5fd972	5	SRAD,SRAD-stage2,SRAD16,srad-stage2,srad16	0	0		0	0.006	ok
+abstract	small	6ce8d4a560e9b12011a6ced55d4dd98009450bfe	7	cudaflow-particles	0	0		0	0.006	ok
+abstract	small	6f0e70038db8b77e50c2e9f2dc683e99f28f1fce	9	HiPIMS-George,hipims@c8069ddd3515	0	0		0	0.004	ok
+abstract	small	6fb506a6f70ecbaeca83b9c996e86011b6d417dd	8	landau	16	12	1:exact=8,2:exact=4	6	0.070	ok
+abstract	small	74b2e52523fa3450218425a3d32a753c097d57c7	2	HiPIMS-George,hipims@c8069ddd3515	0	0		0	0.005	ok
+abstract	small	74fc20b5ec4ff611c3d438a6e45703c11b787a62	7	hipims@fca4e6350a75	12	8	1:exact=6,3:exact=2	2	0.038	ok
+abstract	small	75e19c53efef893b64922c747c5a7259da8781cc	6	hipims@fca4e6350a75	0	0		0	0.005	ok
+abstract	small	7641d63f4121df655843201de674e83fa10de46c	4	NQU,NQU64,nqu64	0	0		0	0.005	ok
+abstract	small	78cb4c82a167305ee03393392eed37950bfb2f34	1	vllm,vllm-quant-kv-dump,vllm-quant-large,vllm-quant-qwen64k,vllm-quant@7e1e57ebb0ad	0	0		0	0.005	ok
+abstract	small	78d447bf4e6bcebd64f0c4a411e9f50a91f34194	0	landau	0	0		0	0.003	ok
+abstract	small	7a99e7f4294e3dfb932d272d72843ad0366b41eb	2	hipims@fca4e6350a75	0	0		0	0.006	ok
+abstract	small	7d36ec1a17fad5fca59bb4a0e95f7c8e2ead617c	3	tigre	0	0		0	0.007	ok
+abstract	small	7e260566787c6ee57639bb2dd096a7837ad484be	6	NQU,NQU128	0	0		0	0.004	ok
+abstract	small	7e530bf2577a75fac4031683ed8242512c39c448	4	hipims@fca4e6350a75	0	0		0	0.005	ok
+abstract	small	820e06eb23ef9b6a7c89229c8b7016ead7b38207	6	HiPIMS-George,hipims@c8069ddd3515	0	0		0	0.006	ok
+abstract	small	82a95f044177468d795b69856ebd519a8ed4c2a9	5	SRAD,SRAD32,srad32	0	0		0	0.005	ok
+abstract	small	849d0a2aa129f3ddd8f7fd5aaf39e61612664ef3	8	PCM,PCM128,PCM256	6	1	6:exact=1	5	0.047	ok
+abstract	small	8631d18eb943360b6d94bf7468aba715f9aa408d	9	SRAD,SRAD-stage2,SRAD16,srad-stage2,srad16	0	0		0	0.006	ok
+abstract	small	86b2ec3336e75e725c55ceba799ff6567751c53d	6	lud8	0	0		0	0.004	ok
+abstract	small	872addfc260af41df88478d08a6550b9cc0fc801	9	SRAD,SRAD-stage2,SRAD16,srad-stage2,srad16	0	0		0	0.004	ok
+abstract	small	8ab29a70a7e891cbbbaf991ffdcd928f2df81896	9	SRAD-stage2	8	8	1:exact=8	1	0.031	ok
+abstract	small	8b7c06e2e980dc9d1b12e47efe594301649d8eb7	6	LUD	0	0		0	0.004	ok
+abstract	small	8b87b3d527485dcaa364818f289aade00eeffddc	8	TPACF	0	0		0	0.003	ok
+abstract	small	8d4c093cff43e5b579473ce75621737225e51729	8	PCM,PCM128,PCM256	10	5	1:exact=4,6:exact=1	5	0.044	ok
+abstract	small	8f1b13db9cb3c596c3e867c0b92f954cf337b4ad	9	hipims@fca4e6350a75	0	0		0	0.004	ok
+abstract	small	90aae9d43b11836416c76a5666f0cf9c095e7d77	9	SRAD,SRAD-stage2,SRAD16,srad-stage2,srad16	0	0		0	0.006	ok
+abstract	small	92bea0bfd413b9cf1e3230516e6002fc25416c08	0	MS,ms32	0	0		0	0.005	ok
+abstract	small	952f6b0074a00f9711de394dac070d814eaaf973	7	lud8	0	0		0	0.006	ok
+abstract	small	96f508bd1d2e70c735d4afe776313ff50b4a341f	6	NQU,NQU64,nqu64	0	0		0	0.005	ok
+abstract	small	976b3124e6e47d0fe181c627d5eea6c29d91a263	7	SRAD,SRAD16,srad-stage2,srad16	8	6	1:exact=5,3:exact=1	2	0.032	ok
+abstract	small	99e1925c0c1ba346f76907fde701771df9713bc6	6	NQU,NQU96	0	0		0	0.006	ok
+abstract	small	9adf623c6dccd9b75047b1392d53f6d60f4ff2af	9	SRAD,SRAD32,srad32	0	0		0	0.003	ok
+abstract	small	9aed150f084d306f026d6b6fd9ef588c7d31b580	5	SRAD,SRAD32,srad32	0	0		0	0.005	ok
+abstract	small	9e0e6d0b2b2525ac1bf35e5f712c15be37a540e3	10	SRAD-stage2	0	0		0	0.004	ok
+abstract	small	9e181e8cd0f2b0456ccd5a95ca23e0eddeee65e3	4	hipims@fca4e6350a75	0	0		0	0.009	ok
+abstract	small	9f6653e9f62df4ad441031ba3e7b467404e4abee	2	MapAiry	0	0		0	0.004	ok
+abstract	small	9fe145d5cce8de6688df7d0a78164b828ff938fe	8	PCM,PCM128,PCM256	10	5	1:exact=4,6:exact=1	5	0.042	ok
+abstract	small	a0a118c70d6632fb964aab1a7418e82ba6ce5bd2	4	HiPIMS-George,hipims@c8069ddd3515	0	0		0	0.005	ok
+abstract	small	a1b70d2bdca81b867766808326fe54a835604ebb	7	SRAD,SRAD32,srad32	8	6	1:exact=5,3:exact=1	2	0.044	ok
+abstract	small	a1e8c64352fd89406817ea8f2b72448b16da859f	2	HiPIMS-George	0	0		0	0.005	ok
+abstract	small	a3cba8629a9c5a93ef4840ad7cebca7a88a51237	3	hipims@fca4e6350a75	0	0		0	0.006	ok
+abstract	small	a563d11e2a2c7146e674760b6c675625cb47790c	4	HiPIMS-George,hipims@c8069ddd3515	0	0		0	0.006	ok
+abstract	small	a77698400352b32f88a4b94b4420da409025d290	4	HiPIMS-George,hipims@c8069ddd3515	0	0		0	0.005	ok
+abstract	small	a7aee216787b14c02469d296cb8ac01d03db93ad	2	vllm,vllm-quant-kv-dump,vllm-quant-large,vllm-quant-qwen64k,vllm-quant@7e1e57ebb0ad	0	0		0	0.004	ok
+abstract	small	a9831fb8e3ce7df9e55d923ed4c940f250b8d06a	6	NQU,NQU64,nqu64	0	0		0	0.006	ok
+abstract	small	aa7646f0d896ad1a2d3fbedbe6dd3a77b8048e0e	6	NQU,NQU96	0	0		0	0.007	ok
+abstract	small	addb6f39e4ddd575b52d7abf706c3e8a326651aa	5	hipims@fca4e6350a75	4	4	1:exact=4	0	0.026	ok
+abstract	small	ae44ba11b2562eac686d557661d0a9496575ecee	5	vllm-quant-kv-dump,vllm-quant-large,vllm-quant-qwen64k,vllm-quant@7e1e57ebb0ad	2	2	1:exact=2	1	0.024	ok
+abstract	small	aebc3808f61f4b39216964b2e383245895fccd2b	2	BIT,BIT128,BIT256,BIT32,BIT64	0	0		0	0.004	ok
+abstract	small	b16639dbcb30e5107faa7f8ed7f41934e88c1a29	5	SRAD,SRAD-stage2,SRAD16,srad-stage2,srad16	0	0		0	0.005	ok
+abstract	small	b232720fc69b09f3419058ef3b001cbfcaa20508	8	cudaflow-particles	0	0		0	0.013	ok
+abstract	small	b2a97e2db2844c908dafc1f6c1d53230d7acb292	6	hipims@fca4e6350a75	0	0		0	0.007	ok
+abstract	small	b37b3289d03a6314ee648afe0d9ae107a1dc5a97	10	hipims@fca4e6350a75	0	0		0	0.007	ok
+abstract	small	b68152363ef4922b2a6673c0947afc41bb110472	7	CED,ced	0	0		0	0.004	ok
+abstract	small	b8c51c6bfbbed793e9c3804ad028c44037549b1d	10	PCM128,PCM256	0	0		0	0.005	ok
+abstract	small	b8ceaddd0050724769c058434b96beab24584a3f	8	hipims@fca4e6350a75	0	0		0	0.007	ok
+abstract	small	bb6f0282367b616c38efa0b5da9d22c25e345597	2	HiPIMS-George,hipims@c8069ddd3515,hipims@fca4e6350a75	0	0		0	0.006	ok
+abstract	small	bd18454b0956244073b1a3b2df54fedf58b8f01f	6	NQU,NQU256	0	0		0	0.004	ok
+abstract	small	beb1ca93ac2bd9f2b73ec77e20b56ff7b42103f0	6	NQU,NQU96	0	0		0	0.004	ok
+abstract	small	c3f279b38419660b65682735165e7b8d6372b3a3	4	hipims@fca4e6350a75	0	0		0	0.004	ok
+abstract	small	c4f7e04dc10960407ee94bfb0cf495c6490e6852	8	ced	0	0		0	0.004	ok
+abstract	small	c817e748e8c4c8aa576eb08bb0ca96949c8ae3f2	5	MapAiry	0	0		0	0.010	ok
+abstract	small	c8c384ca725590de80e1566ff2d08dbb4d0e827e	7	vllm-quant@05d35ba45053	0	0		0	0.004	ok
+abstract	small	c95ef21add3e3720e43e7a4921c9f47d249a3411	9	SRAD,SRAD32,srad32	0	0		0	0.006	ok
+abstract	small	c9ab53d356c757d5f2639ba5cf5ce0dc163ea40e	6	HiPIMS-George	12	8	1:exact=6,3:exact=2	2	0.048	ok
+abstract	small	ccbf194f80fcbdf6a76a868a15b8fd7a86ac890c	7	tigre	2	2	1:exact=2	1	0.033	ok
+abstract	small	cd507219fccec1c212555032a3f8304377945b1b	0	HiPIMS-George,hipims@c8069ddd3515	0	0		0	0.006	ok
+abstract	small	cdd7f2ba84a3d0dd73db35b0acafcee20442d513	7	hipims@c8069ddd3515	12	8	1:exact=6,3:exact=2	2	0.035	ok
+abstract	small	ce97896da2743dbab26eea2a46d915ee33a5f339	5	hipims@fca4e6350a75	4	4	1:exact=4	0	0.027	ok
+abstract	small	d09a5ce2a044b02d9f46ca2bbf7698c1c3633d24	6	NQU,NQU96	0	0		0	0.004	ok
+abstract	small	d0ef42313cfd0e92be9ca7607e7dcc5d71d8c313	2	HiPIMS-George,hipims@c8069ddd3515	0	0		0	0.005	ok
+abstract	small	d23a7c228c5b39f95910f0b1d4eb8b9318e5c775	9	DCT	2	1	2:exact=1	8	0.031	ok
+abstract	small	d2682cf4f610c43c3cc75aa5ce2f787c15e34a08	6	NQU,NQU256	0	0		0	0.005	ok
+abstract	small	d279fa254daa54bb8588deb249d9dce4b906e9b4	7	LUD,LUD8-lud_perimeter	0	0		0	0.005	ok
+abstract	small	d3272a2c87355ecefc58f5b2495b6e96ed3822cf	10	PCM128,PCM256	11	5	1:exact=4,7:exact=1	5	0.047	ok
+abstract	small	d3df5ecd243c1254b3987743f619db9727ea9097	4	hipims@fca4e6350a75	0	0		0	0.016	ok
+abstract	small	d5e9f3df61455374c577dc26a4802d2ca74ad7a9	6	NQU,NQU64,nqu64	0	0		0	0.004	ok
+abstract	small	d61672c5f6adfe8f18919d60c57cc6921d69144d	6	HiPIMS-George,hipims@c8069ddd3515	0	0		0	0.005	ok
+abstract	small	d68091cf76cad5ac138646e718f5c62852a58b2c	6	vllm-quant@05d35ba45053	0	0		0	0.006	ok
+abstract	small	d81586fea853e6e4e2d6ca8924c28b1c6441ba84	4	NQU,NQU128	0	0		0	0.004	ok
+abstract	small	d9173b3d212c416fd3ddc9c5da695a235ac40aed	7	CED,ced	0	0		0	0.005	ok
+abstract	small	d94f4e81d8f12295882ef24b86a765e59912e093	6	vllm,vllm-quant-kv-dump,vllm-quant-large,vllm-quant-qwen64k,vllm-quant@7e1e57ebb0ad	0	0		0	0.005	ok
+abstract	small	daa252c4257499441151e25b02ea63f077d199de	7	hipims@fca4e6350a75	12	8	1:exact=6,3:exact=2	2	0.032	ok
+abstract	small	db9b20bb761c5cb1ad52bd62195afc5178eb99a7	5	MS128,MS256,MS32,MS64	0	0		0	0.004	ok
+abstract	small	dc671980f9e3b6760fd002fa4ace0ba44218c75f	3	tigre	0	0		0	0.005	ok
+abstract	small	de9c8a717729c9a479207e0f2538bbc4a73571cb	8	HiPIMS-George,hipims@c8069ddd3515	0	0		0	0.007	ok
+abstract	small	e11e2989e6dfa2581abacc216755cd35bf361a16	4	NQU,NQU96	0	0		0	0.006	ok
+abstract	small	e26d71335980cfe6a72ab9189f48e2bdd0e41ad7	6	NQU,NQU64,nqu64	0	0		0	0.003	ok
+abstract	small	e37272cdb93e05f7abfc3c4766d88e469b9b6673	4	vllm	1	1	1:exact=1	1	0.023	ok
+abstract	small	e3b15e5220a0d47675fb5ee8d7a3ee4f4a995ef5	4	PCM,PCM32,PCM64,pcm32	3	3	1:exact=3	3	0.033	ok
+abstract	small	e53d78835e6184531f643b3d4ecf5a0e420f53ca	8	ced	0	0		0	0.006	ok
+abstract	small	e73d779a7f921da4bb8fc95a9a410858c737783f	6	HiPIMS-George	0	0		0	0.005	ok
+abstract	small	e75fbe80b4ef0386c37356e341ab80b0bb8e92a6	2	MapAiry	0	0		0	0.012	ok
+abstract	small	ea8e799c0aab3ba3a9347ac3f8fc80b429156060	6	NQU,NQU256	0	0		0	0.004	ok
+abstract	small	eb37b9c1c50e49e1dc0539117b7a9437118a7c4a	6	LUD,LUD8-lud_perimeter	0	0		0	0.004	ok
+abstract	small	eb8b33d1d5723e48427d51b50ce77e831afa53c3	1	HiPIMS-George,hipims@c8069ddd3515	0	0		0	0.004	ok
+abstract	small	ebb7e70a0716afe044f981e66a85e2c0e6de48d7	4	hipims@c8069ddd3515	0	0		0	0.010	ok
+abstract	small	ed0b563f12883adfc22df149315b6f16661424f1	4	PCM,PCM32,PCM64,pcm32	3	3	1:exact=3	3	0.021	ok
+abstract	small	edf5687f90d5c5e0e7f6ac82d4e3f67cc8db41c3	4	hipims@fca4e6350a75	0	0		0	0.006	ok
+abstract	small	ef66f5ebe7470d9e5da1ad6a2e0e5de64a3878fc	6	NQU,NQU256	0	0		0	0.005	ok
+abstract	small	f0f80d975e3540bdf11f952e4feddbbe3efdcf2e	0	hipims@fca4e6350a75	0	0		0	0.007	ok
+abstract	small	f166377cb45774086320092c6465aadd17b0ff12	0	MS,ms32	0	0		0	0.004	ok
+abstract	small	f67181eff94da7bbf0bc041cbfd09a7b78757cd1	5	HiPIMS-George,hipims@c8069ddd3515	0	0		0	0.004	ok
+abstract	small	f90cffb7d42b5d33503f5b54d32f5c9fd677071a	8	PCM,PCM128,PCM256	6	1	6:exact=1	5	0.042	ok
+abstract	small	fa199be9c2ddefde29a0c5ff07cb49dfb93b8829	6	NQU,NQU256	0	0		0	0.005	ok
+real	small	0027035588d14dbe339285c5647c3aada796cf2d	5	hipims@fca4e6350a75	2	2	1:exact=2	0	12.533	ok
+real	small	00bc16cfd8ae8b9fd56b51b66aeeb3eeb49c6052	4	PCM,PCM32,PCM64,pcm32	3	3	1:exact=3	0	12.234	ok
+real	small	01ff1f4269cff743bfc79b921cc7595c9bee306f	1	TPACF	0	0		0	0.005	ok
+real	small	02248205bdbac6825cff283fdbb10d9a05df071e	6	NQU,NQU128	0	0		0	0.006	ok
+real	small	026dbea33eb4fd286d65877b426b13e3c0961c86	2	HiPIMS-George	0	0		0	0.007	ok
+real	small	030acd4a9fecd9e3c89961502c1ec13627aac394	1	hipims@fca4e6350a75	0	0		0	0.006	ok
+real	small	03445077536de599e931caceb6269054de2d1edb	9	SRAD,SRAD32,srad32	0	0		0	0.005	ok
+real	small	05887769be2ea38a215001ebc697799b8c221dae	5	hipims@fca4e6350a75	4	4	1:exact=4	0	12.204	ok
+real	small	071f6b300468c013b63b2313bb1321399eb27de2	5	SRAD,SRAD32,srad32	0	0		0	0.005	ok
+real	small	08eac45f78da2eccb23e79a9393e5183277e4df9	5	hipims@fca4e6350a75	0	0		0	0.004	ok
+real	small	09239a0a1c3e906563e3d7f69509b39affe247d5	0	tigre-siddon	0	0		0	0.006	ok
+real	small	0a29522625b0cbd43d8cfdadb18085cce4e4d039	4	hipims@fca4e6350a75	0	0		0	0.006	ok
+real	small	0b4bddebd3116e0d15b0103da1744b3e8967aa9b	6	HiPIMS-George,hipims@c8069ddd3515	0	0		0	0.004	ok
+real	small	0f991cd905ea3e04ce0739d8e19ba6f357b75a93	3	HiPIMS-George,hipims@c8069ddd3515	0	0		0	0.003	ok
+real	small	0fe86869fdec238ea7d7985ef9108efeb2497c62	0	cudaflow-particles	0	0		0	0.006	ok
+real	small	12313062c67f1f6f0bdca391d7b33b316845b7c8	0	hipims@fca4e6350a75	0	0		0	0.004	ok
+real	small	15562aab1882bf6d8be578cd22f9ca6ade6cb85a	0	hipims@fca4e6350a75	0	0		0	0.007	ok
+real	small	166c4d9717975088cd7d614295e7316ca0ba76e2	6	hypersonic	0	0		0	0.005	ok
+real	small	17286707f6a1af5aa7eac5833a6af1084e7709a5	4	NQU,NQU64,nqu64	0	0		0	0.004	ok
+real	small	195ebb15b4a65c3f9468228f46fe5d03825d81b7	4	HLLD	0	0		0	0.006	ok
+real	small	1bae2080fbe9064b81804403e6d26813359c003f	8	MapAiry	16	12	1:exact=8,2:exact=4	4	19.045	ok
+real	small	1df5acddcf5d4c2be774867af962d850f277aca1	6	NQU,NQU128	0	0		0	0.007	ok
+real	small	20cf931150ae33b37e457de98bb9480b62934e21	5	hipims@fca4e6350a75	0	0		0	0.006	ok
+real	small	229c11b1962bd39a7b3ac02bb7bf5dadd18aa13a	6	hipims@fca4e6350a75	0	0		0	0.004	ok
+real	small	2353b62ffa3fc9a8fa83c4379ae7d741eb35c5b8	3	tigre	0	0		0	0.005	ok
+real	small	23591531d258bfc66fd4591054cc5128d87e5c3d	4	MapAiry	0	0		0	14.443	ok
+real	small	23a44c82e84ada512d874dd328613410a04d19ca	6	MapAiry	0	0		0	0.005	ok
+real	small	254f1b5318e4b159a497076ffd192eb67c71368f	6	NQU,NQU96	0	0		0	0.007	ok
+real	small	25aab633fad73c62510af6e350c1c841e3f9ec77	0	hipims@fca4e6350a75	0	0		0	0.005	ok
+real	small	25b1363fd6e075f995b2b44a28a8a905f1cc6c79	6	NQU,NQU96	0	0		0	0.006	ok
+real	small	26e2dcc1f2a6923808303b8953330cd99492d93a	0	HLLD	0	0		0	0.005	ok
+real	small	279a4be7d1bd00d281e700eeeb0123ea28ac1746	6	NQU,NQU256	0	0		0	0.004	ok
+real	small	27f06b7ed6b695382b3dbc325da645f12cba72e0	3	PCM128,PCM256	0	0		0	0.005	ok
+real	small	2b64bc2662b89f444fc97b7a1ec87cf682a3ee5c	5	hipims@fca4e6350a75	2	2	1:exact=2	0	12.207	ok
+real	small	2b90957f1ac24a178e5327b0b8adb5f067e1fd96	5	MS,ms32	0	0		0	0.007	ok
+real	small	2b976b5426a5f36afd993842023f5f2097bc20e2	7	LUD	0	0		0	0.005	ok
+real	small	2c4f7cd21ad500bf83db73479088a14e7928e02d	5	HiPIMS-George,hipims@c8069ddd3515	0	0		0	0.005	ok
+real	small	2c7343000a54ee78db08b8de884b9c422c02e9aa	6	hipims@fca4e6350a75	0	0		0	0.005	ok
+real	small	2c7de3dd3c291ca3dc447ef2c2c9cbf3c966ab88	2	hipims@fca4e6350a75	0	0		0	0.006	ok
+real	small	2f29337da1ee5423bea804957d647ed7983fbb8f	2	vllm,vllm-quant-kv-dump,vllm-quant-large,vllm-quant-qwen64k,vllm-quant@7e1e57ebb0ad	1	1	1:exact=1	1	11.871	ok
+real	small	2f8063974269539a05e97233a7f66e7fbe436e4a	6	NQU,NQU128	0	0		0	0.004	ok
+real	small	30e09200efbbedf868f9689e744696482ef8e1f3	4	NQU,NQU128	0	0		0	0.004	ok
+real	small	30e459dd8ef55bf1e0717581cb43eee8b1f0f690	4	NQU,NQU96	0	0		0	0.007	ok
+real	small	338511bb95c6d7311ca350674fe52dd48589309d	8	PCM,PCM128,PCM256	10	5	1:exact=4,6:exact=1	2	13.136	ok
+real	small	362cd2218a0cde3b00eda31aec7f7becd4bcac37	0	HLLD,cholla-hlld	0	0		0	0.007	ok
+real	small	36ae12a6f87776ad66b3e21e541a134cadaeebf5	6	NQU,NQU128	0	0		0	0.004	ok
+real	small	38c590e8159ea43f925142f881aec1457760f446	5	hipims@fca4e6350a75	0	0		0	0.005	ok
+real	small	3d69b161d1ee502e0a4b675c7da69923aa4354b6	3	TPACF,tpacf	0	0		0	0.005	ok
+real	small	3dbb995f4893d248e3f5d3ec88be7d746b2f33a9	10	PCM128,PCM256	11	5	1:exact=4,7:exact=1	2	12.335	ok
+real	small	3e35de13288a4e9b33e19ef98411bc62b1168105	9	CED,ced	0	0		0	0.006	ok
+real	small	3fb86534ef06fbcedb855140ab37d0b25059e467	0	tigre-siddon	0	0		0	0.007	ok
+real	small	4159822c22b8532cc9b2a8c3ff32016ab3775393	4	landau	0	0		0	0.004	ok
+real	small	445ab1840cfee3236840ce3f6744b7dca3aa7c9b	4	hipims@fca4e6350a75	0	0		0	0.006	ok
+real	small	45bc4cdfb47bf94438198a9120620367a6703b14	8	PCM,PCM128,PCM256	5	1	5:exact=1	1	13.195	ok
+real	small	4691ec0c105801022e72f775009d892015e9257c	8	MapAiry,boost-mapairy	3	1	3:exact=1	9	12.376	ok
+real	small	46e28f57d6a807d303a24a0c22c95980e5bd1881	4	hipims@fca4e6350a75	0	0		0	0.004	ok
+real	small	47a5aaccc3c5bdaa0cc65356b8ef2e2e3a189604	8	PCM,PCM128,PCM256	10	5	1:exact=4,6:exact=1	2	14.817	ok
+real	small	48f37a5f5579d8a1b50e6e698be19e3223be4a16	6	NQU,NQU128	0	0		0	0.004	ok
+real	small	499fd4c8d2882103ce63752ba0341c0c8f12adc1	0	tigre-siddon	0	0		0	0.008	ok
+real	small	4e627469ecf0bc8214231b010af572680425ffaa	6	landau	6	6	1:exact=6	1	13.539	ok
+real	small	4f045e74e33a6f957716f7dc10142278050a1d6f	10	hipims@c8069ddd3515	14	10	1:exact=8,3:exact=2	3	11.913	ok
+real	small	518c37366f0eeb8ac3b65fcd938bf415cfa8a7d9	3	TPACF,tpacf	0	0		0	0.006	ok
+real	small	51a69063fa56a53c4985062271bdc5ab1395a72f	4	NQU,NQU256	0	0		0	0.005	ok
+real	small	5380fef61ac979d9d1cd4eeacf2afa82bee4264d	0	tigre-siddon	0	0		0	0.005	ok
+real	small	54134fb9de260b2b835cefe548ff3a246c1cbecb	4	hipims@fca4e6350a75	0	0		0	0.006	ok
+real	small	54d7319f6cff9aa45900d2ff99fe4042bf3e85cc	4	tigre	0	0		0	0.004	ok
+real	small	575880b1a42d2b02f4dad2e04345677d504195c0	4	hipims@fca4e6350a75	0	0		0	0.006	ok
+real	small	57794ac7276e5604309a27618c8b7d818c5ad646	2	hipims@fca4e6350a75	0	0		0	0.004	ok
+real	small	590bffb1a6f98c3cb01e819f33fbabc5ea5507e1	3	TPACF	0	0		0	0.005	ok
+real	small	59dee2d2bbfdfd419a112ed498052f44257df600	6	NQU,NQU64,nqu64	0	0		0	0.006	ok
+real	small	5a00894ee4a3602290a8f593a2d6068f89d2e0ff	2	vllm-quant@05d35ba45053	0	0		0	0.005	ok
+real	small	5ad75595a54055f22adb767581fe105ce675db2d	4	NQU,NQU256	0	0		0	0.006	ok
+real	small	610a8079b404202be703ab05ca63a9d1773fd744	3	cudaflow-particles	0	0		0	0.007	ok
+real	small	62045db1147ab8fbbf5e54b36b9b7dc2fe50ad39	5	hipims@fca4e6350a75	0	0		0	0.005	ok
+real	small	62757562d59442359ede2d9c8c87398c6b28391a	8	PCM128,PCM256	6	1	6:exact=1	2	11.971	ok
+real	small	6275cfeaabc11235c4759497bedba6425cede327	3	hipims@fca4e6350a75	0	0		0	0.006	ok
+real	small	62a46e491617f6d425956a8605c108a49963bcd5	4	HiPIMS-George,hipims@c8069ddd3515	0	0		0	0.006	ok
+real	small	64b29d134369f95aeb9b5ff28e2b722afea4458c	0	HiPIMS-George,hipims@c8069ddd3515	0	0		0	0.006	ok
+real	small	650380fcba1ad2d7499535e143a003b02c6c6106	3	tigre	0	0		0	0.005	ok
+real	small	66a0c0a4de417c664c4226c172c51859c4e97ae1	8	CED,ced	0	0		0	0.005	ok
+real	small	66c3b419e7ca11d4dc53e71c3e0414f449f246ae	5	CED,ced	0	0		0	0.006	ok
+real	small	6993d2110e0124b65c80ce59b23a855fe9b30964	5	SRAD,SRAD-stage2,SRAD16,srad-stage2,srad16	0	0		0	0.006	ok
+real	small	6b8c2aa0a2943e325b8979798dbc09f76f5fd972	5	SRAD,SRAD-stage2,SRAD16,srad-stage2,srad16	0	0		0	0.005	ok
+real	small	6ce8d4a560e9b12011a6ced55d4dd98009450bfe	7	cudaflow-particles	0	0		0	0.005	ok
+real	small	6f0e70038db8b77e50c2e9f2dc683e99f28f1fce	9	HiPIMS-George,hipims@c8069ddd3515	0	0		0	0.006	ok
+real	small	6fb506a6f70ecbaeca83b9c996e86011b6d417dd	8	landau	16	12	1:exact=8,2:exact=4	4	18.025	ok
+real	small	74b2e52523fa3450218425a3d32a753c097d57c7	2	HiPIMS-George,hipims@c8069ddd3515	0	0		0	0.005	ok
+real	small	74fc20b5ec4ff611c3d438a6e45703c11b787a62	7	hipims@fca4e6350a75	12	8	1:exact=6,3:exact=2	2	11.602	ok
+real	small	75e19c53efef893b64922c747c5a7259da8781cc	6	hipims@fca4e6350a75	0	0		0	0.005	ok
+real	small	7641d63f4121df655843201de674e83fa10de46c	4	NQU,NQU64,nqu64	0	0		0	0.006	ok
+real	small	78cb4c82a167305ee03393392eed37950bfb2f34	1	vllm,vllm-quant-kv-dump,vllm-quant-large,vllm-quant-qwen64k,vllm-quant@7e1e57ebb0ad	0	0		0	0.008	ok
+real	small	78d447bf4e6bcebd64f0c4a411e9f50a91f34194	0	landau	0	0		0	0.005	ok
+real	small	7a99e7f4294e3dfb932d272d72843ad0366b41eb	2	hipims@fca4e6350a75	0	0		0	0.004	ok
+real	small	7d36ec1a17fad5fca59bb4a0e95f7c8e2ead617c	3	tigre	0	0		0	0.004	ok
+real	small	7e260566787c6ee57639bb2dd096a7837ad484be	6	NQU,NQU128	0	0		0	0.006	ok
+real	small	7e530bf2577a75fac4031683ed8242512c39c448	4	hipims@fca4e6350a75	0	0		0	0.004	ok
+real	small	820e06eb23ef9b6a7c89229c8b7016ead7b38207	6	HiPIMS-George,hipims@c8069ddd3515	0	0		0	0.006	ok
+real	small	82a95f044177468d795b69856ebd519a8ed4c2a9	5	SRAD,SRAD32,srad32	0	0		0	0.006	ok
+real	small	849d0a2aa129f3ddd8f7fd5aaf39e61612664ef3	8	PCM,PCM128,PCM256	6	1	6:exact=1	2	13.758	ok
+real	small	8631d18eb943360b6d94bf7468aba715f9aa408d	9	SRAD,SRAD-stage2,SRAD16,srad-stage2,srad16	0	0		0	0.006	ok
+real	small	86b2ec3336e75e725c55ceba799ff6567751c53d	6	lud8	0	0		0	0.003	ok
+real	small	872addfc260af41df88478d08a6550b9cc0fc801	9	SRAD,SRAD-stage2,SRAD16,srad-stage2,srad16	0	0		0	0.003	ok
+real	small	8ab29a70a7e891cbbbaf991ffdcd928f2df81896	9	SRAD-stage2	8	8	1:exact=8	1	14.738	ok
+real	small	8b7c06e2e980dc9d1b12e47efe594301649d8eb7	6	LUD	0	0		0	0.005	ok
+real	small	8b87b3d527485dcaa364818f289aade00eeffddc	8	TPACF	0	0		0	0.005	ok
+real	small	8d4c093cff43e5b579473ce75621737225e51729	8	PCM,PCM128,PCM256	10	5	1:exact=4,6:exact=1	2	13.641	ok
+real	small	8f1b13db9cb3c596c3e867c0b92f954cf337b4ad	9	hipims@fca4e6350a75	0	0		0	0.005	ok
+real	small	90aae9d43b11836416c76a5666f0cf9c095e7d77	9	SRAD,SRAD-stage2,SRAD16,srad-stage2,srad16	0	0		0	0.005	ok
+real	small	92bea0bfd413b9cf1e3230516e6002fc25416c08	0	MS,ms32	0	0		0	0.004	ok
+real	small	952f6b0074a00f9711de394dac070d814eaaf973	7	lud8	0	0		0	0.005	ok
+real	small	96f508bd1d2e70c735d4afe776313ff50b4a341f	6	NQU,NQU64,nqu64	0	0		0	0.003	ok
+real	small	976b3124e6e47d0fe181c627d5eea6c29d91a263	7	SRAD,SRAD16,srad-stage2,srad16	8	6	1:exact=5,3:exact=1	2	14.283	ok
+real	small	99e1925c0c1ba346f76907fde701771df9713bc6	6	NQU,NQU96	0	0		0	0.006	ok
+real	small	9adf623c6dccd9b75047b1392d53f6d60f4ff2af	9	SRAD,SRAD32,srad32	0	0		0	0.005	ok
+real	small	9aed150f084d306f026d6b6fd9ef588c7d31b580	5	SRAD,SRAD32,srad32	0	0		0	0.006	ok
+real	small	9e0e6d0b2b2525ac1bf35e5f712c15be37a540e3	10	SRAD-stage2	0	0		0	0.006	ok
+real	small	9e181e8cd0f2b0456ccd5a95ca23e0eddeee65e3	4	hipims@fca4e6350a75	0	0		0	10.267	ok
+real	small	9f6653e9f62df4ad441031ba3e7b467404e4abee	2	MapAiry	0	0		0	0.006	ok
+real	small	9fe145d5cce8de6688df7d0a78164b828ff938fe	8	PCM,PCM128,PCM256	10	5	1:exact=4,6:exact=1	2	13.498	ok
+real	small	a0a118c70d6632fb964aab1a7418e82ba6ce5bd2	4	HiPIMS-George,hipims@c8069ddd3515	0	0		0	0.005	ok
+real	small	a1b70d2bdca81b867766808326fe54a835604ebb	7	SRAD,SRAD32,srad32	8	6	1:exact=5,3:exact=1	2	13.021	ok
+real	small	a1e8c64352fd89406817ea8f2b72448b16da859f	2	HiPIMS-George	0	0		0	0.004	ok
+real	small	a3cba8629a9c5a93ef4840ad7cebca7a88a51237	3	hipims@fca4e6350a75	0	0		0	0.003	ok
+real	small	a563d11e2a2c7146e674760b6c675625cb47790c	4	HiPIMS-George,hipims@c8069ddd3515	0	0		0	0.007	ok
+real	small	a77698400352b32f88a4b94b4420da409025d290	4	HiPIMS-George,hipims@c8069ddd3515	0	0		0	0.006	ok
+real	small	a7aee216787b14c02469d296cb8ac01d03db93ad	2	vllm,vllm-quant-kv-dump,vllm-quant-large,vllm-quant-qwen64k,vllm-quant@7e1e57ebb0ad	0	0		0	0.005	ok
+real	small	a9831fb8e3ce7df9e55d923ed4c940f250b8d06a	6	NQU,NQU64,nqu64	0	0		0	0.006	ok
+real	small	aa7646f0d896ad1a2d3fbedbe6dd3a77b8048e0e	6	NQU,NQU96	0	0		0	0.006	ok
+real	small	addb6f39e4ddd575b52d7abf706c3e8a326651aa	5	hipims@fca4e6350a75	4	4	1:exact=4	0	11.983	ok
+real	small	ae44ba11b2562eac686d557661d0a9496575ecee	5	vllm-quant-kv-dump,vllm-quant-large,vllm-quant-qwen64k,vllm-quant@7e1e57ebb0ad	2	2	1:exact=2	0	13.896	ok
+real	small	aebc3808f61f4b39216964b2e383245895fccd2b	2	BIT,BIT128,BIT256,BIT32,BIT64	0	0		0	0.004	ok
+real	small	b16639dbcb30e5107faa7f8ed7f41934e88c1a29	5	SRAD,SRAD-stage2,SRAD16,srad-stage2,srad16	0	0		0	0.005	ok
+real	small	b232720fc69b09f3419058ef3b001cbfcaa20508	8	cudaflow-particles	0	0		0	12.835	ok
+real	small	b2a97e2db2844c908dafc1f6c1d53230d7acb292	6	hipims@fca4e6350a75	0	0		0	0.007	ok
+real	small	b37b3289d03a6314ee648afe0d9ae107a1dc5a97	10	hipims@fca4e6350a75	0	0		0	0.007	ok
+real	small	b68152363ef4922b2a6673c0947afc41bb110472	7	CED,ced	0	0		0	0.006	ok
+real	small	b8c51c6bfbbed793e9c3804ad028c44037549b1d	10	PCM128,PCM256	0	0		0	0.005	ok
+real	small	b8ceaddd0050724769c058434b96beab24584a3f	8	hipims@fca4e6350a75	0	0		0	0.004	ok
+real	small	bb6f0282367b616c38efa0b5da9d22c25e345597	2	HiPIMS-George,hipims@c8069ddd3515,hipims@fca4e6350a75	0	0		0	0.004	ok
+real	small	bd18454b0956244073b1a3b2df54fedf58b8f01f	6	NQU,NQU256	0	0		0	0.006	ok
+real	small	beb1ca93ac2bd9f2b73ec77e20b56ff7b42103f0	6	NQU,NQU96	0	0		0	0.004	ok
+real	small	c3f279b38419660b65682735165e7b8d6372b3a3	4	hipims@fca4e6350a75	0	0		0	0.004	ok
+real	small	c4f7e04dc10960407ee94bfb0cf495c6490e6852	8	ced	0	0		0	0.006	ok
+real	small	c817e748e8c4c8aa576eb08bb0ca96949c8ae3f2	5	MapAiry	0	0		0	12.179	ok
+real	small	c8c384ca725590de80e1566ff2d08dbb4d0e827e	7	vllm-quant@05d35ba45053	0	0		0	0.007	ok
+real	small	c95ef21add3e3720e43e7a4921c9f47d249a3411	9	SRAD,SRAD32,srad32	0	0		0	0.004	ok
+real	small	c9ab53d356c757d5f2639ba5cf5ce0dc163ea40e	6	HiPIMS-George	12	8	1:exact=6,3:exact=2	2	11.716	ok
+real	small	ccbf194f80fcbdf6a76a868a15b8fd7a86ac890c	7	tigre	2	2	1:exact=2	0	13.696	ok
+real	small	cd507219fccec1c212555032a3f8304377945b1b	0	HiPIMS-George,hipims@c8069ddd3515	0	0		0	0.005	ok
+real	small	cdd7f2ba84a3d0dd73db35b0acafcee20442d513	7	hipims@c8069ddd3515	12	8	1:exact=6,3:exact=2	2	11.455	ok
+real	small	ce97896da2743dbab26eea2a46d915ee33a5f339	5	hipims@fca4e6350a75	4	4	1:exact=4	0	11.532	ok
+real	small	d09a5ce2a044b02d9f46ca2bbf7698c1c3633d24	6	NQU,NQU96	0	0		0	0.005	ok
+real	small	d0ef42313cfd0e92be9ca7607e7dcc5d71d8c313	2	HiPIMS-George,hipims@c8069ddd3515	0	0		0	0.007	ok
+real	small	d23a7c228c5b39f95910f0b1d4eb8b9318e5c775	9	DCT	2	1	2:exact=1	1	12.989	ok
+real	small	d2682cf4f610c43c3cc75aa5ce2f787c15e34a08	6	NQU,NQU256	0	0		0	0.006	ok
+real	small	d279fa254daa54bb8588deb249d9dce4b906e9b4	7	LUD,LUD8-lud_perimeter	0	0		0	0.005	ok
+real	small	d3272a2c87355ecefc58f5b2495b6e96ed3822cf	10	PCM128,PCM256	11	5	1:exact=4,7:exact=1	2	13.224	ok
+real	small	d3df5ecd243c1254b3987743f619db9727ea9097	4	hipims@fca4e6350a75	0	0		0	10.628	ok
+real	small	d5e9f3df61455374c577dc26a4802d2ca74ad7a9	6	NQU,NQU64,nqu64	0	0		0	0.006	ok
+real	small	d61672c5f6adfe8f18919d60c57cc6921d69144d	6	HiPIMS-George,hipims@c8069ddd3515	0	0		0	0.004	ok
+real	small	d68091cf76cad5ac138646e718f5c62852a58b2c	6	vllm-quant@05d35ba45053	0	0		0	0.005	ok
+real	small	d81586fea853e6e4e2d6ca8924c28b1c6441ba84	4	NQU,NQU128	0	0		0	0.005	ok
+real	small	d9173b3d212c416fd3ddc9c5da695a235ac40aed	7	CED,ced	0	0		0	0.004	ok
+real	small	d94f4e81d8f12295882ef24b86a765e59912e093	6	vllm,vllm-quant-kv-dump,vllm-quant-large,vllm-quant-qwen64k,vllm-quant@7e1e57ebb0ad	0	0		0	0.006	ok
+real	small	daa252c4257499441151e25b02ea63f077d199de	7	hipims@fca4e6350a75	12	8	1:exact=6,3:exact=2	2	11.924	ok
+real	small	db9b20bb761c5cb1ad52bd62195afc5178eb99a7	5	MS128,MS256,MS32,MS64	0	0		0	0.005	ok
+real	small	dc671980f9e3b6760fd002fa4ace0ba44218c75f	3	tigre	0	0		0	0.006	ok
+real	small	de9c8a717729c9a479207e0f2538bbc4a73571cb	8	HiPIMS-George,hipims@c8069ddd3515	0	0		0	0.004	ok
+real	small	e11e2989e6dfa2581abacc216755cd35bf361a16	4	NQU,NQU96	0	0		0	0.004	ok
+real	small	e26d71335980cfe6a72ab9189f48e2bdd0e41ad7	6	NQU,NQU64,nqu64	0	0		0	0.004	ok
+real	small	e37272cdb93e05f7abfc3c4766d88e469b9b6673	4	vllm	1	1	1:exact=1	1	13.914	ok
+real	small	e3b15e5220a0d47675fb5ee8d7a3ee4f4a995ef5	4	PCM,PCM32,PCM64,pcm32	3	3	1:exact=3	0	13.440	ok
+real	small	e53d78835e6184531f643b3d4ecf5a0e420f53ca	8	ced	0	0		0	0.004	ok
+real	small	e73d779a7f921da4bb8fc95a9a410858c737783f	6	HiPIMS-George	0	0		0	0.004	ok
+real	small	e75fbe80b4ef0386c37356e341ab80b0bb8e92a6	2	MapAiry	0	0		0	12.268	ok
+real	small	ea8e799c0aab3ba3a9347ac3f8fc80b429156060	6	NQU,NQU256	0	0		0	0.005	ok
+real	small	eb37b9c1c50e49e1dc0539117b7a9437118a7c4a	6	LUD,LUD8-lud_perimeter	0	0		0	0.005	ok
+real	small	eb8b33d1d5723e48427d51b50ce77e831afa53c3	1	HiPIMS-George,hipims@c8069ddd3515	0	0		0	0.005	ok
+real	small	ebb7e70a0716afe044f981e66a85e2c0e6de48d7	4	hipims@c8069ddd3515	0	0		0	10.094	ok
+real	small	ed0b563f12883adfc22df149315b6f16661424f1	4	PCM,PCM32,PCM64,pcm32	3	3	1:exact=3	0	12.989	ok
+real	small	edf5687f90d5c5e0e7f6ac82d4e3f67cc8db41c3	4	hipims@fca4e6350a75	0	0		0	0.004	ok
+real	small	ef66f5ebe7470d9e5da1ad6a2e0e5de64a3878fc	6	NQU,NQU256	0	0		0	0.004	ok
+real	small	f0f80d975e3540bdf11f952e4feddbbe3efdcf2e	0	hipims@fca4e6350a75	0	0		0	0.007	ok
+real	small	f166377cb45774086320092c6465aadd17b0ff12	0	MS,ms32	0	0		0	0.007	ok
+real	small	f67181eff94da7bbf0bc041cbfd09a7b78757cd1	5	HiPIMS-George,hipims@c8069ddd3515	0	0		0	0.005	ok
+real	small	f90cffb7d42b5d33503f5b54d32f5c9fd677071a	8	PCM,PCM128,PCM256	6	1	6:exact=1	2	11.704	ok
+real	small	fa199be9c2ddefde29a0c5ff07cb49dfb93b8829	6	NQU,NQU256	0	0		0	0.006	ok
+real	medium	007d64a82e3d6353dbc285a0ad189bf04cae2be2	20	landau	0	0		0	0.005	ok
+real	medium	02dc029ae236154ffd11a5b7910f389aa3d58929	15	CED	0	0		0	0.007	ok
+real	medium	03002a5ac7b09dabf8a3ee4201ef6415c90c92a1	36	lud8	0	0		0	0.006	ok
+real	medium	05cbccd64deafbe08d17207494e43e3d8156cf85	38	hypersonic	32	16	2:exact=16	7	15.617	ok
+real	medium	06e356d57ca17e39a44808f9efbcd8a180951de3	12	HiPIMS-George,hipims@c8069ddd3515	0	0		0	0.005	ok
+real	medium	07d322a0b551f654021be5fcd7e4a6e084c2ca10	12	LUD,LUD8-lud_perimeter	0	0		0	0.006	ok
+real	large	07f8d04994fdcb19357a57f7568c0b675364716f	82	landau	627	199	1:exact=186,2:exact=4,3:exact=4,5:exact=2,9:exact=2,393:greedy=1	64	17.002	ok
+real	large	082863398758f958c9c9188d95d9276e131a09e5	89	HLLD	0	0		0	0.007	ok
+real	large	0880e357d714436382605213d1b171d4ac0b6ec4	138	lud8	628	128	1:exact=71,3:exact=14,6:exact=42,263:greedy=1	20	19.537	ok
+real	medium	090f2cd17446af3debba11b04464340a454b0ec3	40	landau	145	39	1:exact=21,2:exact=2,3:exact=4,4:exact=4,5:exact=4,13:exact=1,15:exact=2,29:greedy=1	24	20.968	ok
+real	medium	0b169193ab9f0bfea5e72cd74983a48e5dd644ec	37	lud8	0	0		0	0.005	ok
+real	medium	0e2991b2265ed5e419c80863c10f6d3dbb68b11e	49	landau	294	178	1:exact=138,3:exact=27,5:exact=8,7:exact=5	16	15.922	ok
+real	large	10190ccc7158bcdbf1edfdb214c6b7457b18c21d	112	LUD	544	128	1:exact=71,3:exact=14,4:exact=42,263:greedy=1	20	17.985	ok
+real	medium	1142540cab4dffb1df6b975cdc9ad25516d95c4c	24	SasPoint5	0	0		0	0.006	ok
+real	medium	11c070dd78ba01030ee1512bbaad4b6993935dc1	39	landau	174	112	1:exact=89,3:exact=17,5:exact=4,7:exact=2	11	19.712	ok
+real	large	1716b597f6a91770c376a36727f185cec7b418b8	64	HLLD,cholla-hlld	0	0		0	0.005	ok
+real	large	1a46193c23e69c4cec945c4f895ac40045f8f91b	223	PCM	0	0		0	0.004	ok
+real	medium	1f14e06c11a6bb50e711ff42baf316384695540c	25	lud8	0	0		0	0.005	ok
+real	large	1f2a4a58fa5d7b9342aa75f39616c040571368a4	72	LUD	0	0		0	0.005	ok
+real	medium	215d902a84870a9674648c5603d5b85d204db314	38	hypersonic	168	136	1:exact=120,3:exact=16	11	16.624	ok
+real	medium	21ff5249801c6f539d58525a6709d1515a417006	22	hypersonic	0	0		0	0.004	ok
+real	medium	222c6dd389bc6d221932e82b338f30338c618b06	19	lud8	0	0		0	0.005	ok
+real	large	25146e46e0f2e6360dce137f8edc21f4ecefa8d2	6145	LUD	2327294	112127	1:exact=79856,2:exact=30350,3:exact=32,4:exact=32,5:exact=32,6:exact=32,7:exact=32,8:exact=33,9:exact=32,10:exact=32,11:exact=32,12:exact=32,13:exact=32,14:exact=33,15:exact=32,16:exact=32,17:exact=33,18:exact=32,19:exact=32,20:exact=33,21:greedy=32,22:greedy=32,23:greedy=32,24:greedy=32,25:greedy=32,26:greedy=34,27:greedy=32,28:greedy=32,29:greedy=32,30:greedy=32,31:greedy=32,32:greedy=34,35:greedy=1,38:greedy=1,44:greedy=2,47:greedy=1,50:greedy=2,53:greedy=1,56:greedy=1,62:greedy=3,68:greedy=2,71:greedy=1,74:greedy=2,77:greedy=1,80:greedy=2,86:greedy=2,89:greedy=1,92:greedy=2,98:greedy=3,101:greedy=1,104:greedy=2,107:greedy=2,110:greedy=1,116:greedy=2,122:greedy=4,125:greedy=1,128:greedy=2,134:greedy=3,137:greedy=1,140:greedy=2,143:greedy=1,146:greedy=2,152:greedy=3,155:greedy=1,158:greedy=2,161:greedy=1,164:greedy=1,167:greedy=2,170:greedy=4,176:greedy=2,179:greedy=1,182:greedy=3,188:greedy=2,194:greedy=2,197:greedy=2,200:greedy=1,206:greedy=2,209:greedy=1,212:greedy=3,215:greedy=1,218:greedy=1,224:greedy=1,227:greedy=1,230:greedy=1,233:greedy=2,236:greedy=1,242:greedy=4,248:greedy=1,251:greedy=1,254:greedy=1,257:greedy=2,260:greedy=1,263:greedy=1,266:greedy=3,269:greedy=1,272:greedy=1,278:greedy=2,284:greedy=1,287:greedy=1,290:greedy=2,296:greedy=1,299:greedy=1,302:greedy=3,308:greedy=1,314:greedy=2,317:greedy=2,320:greedy=1,332:greedy=2,338:greedy=3,344:greedy=1,347:greedy=2,350:greedy=1,356:greedy=1,359:greedy=1,362:greedy=3,365:greedy=1,371:greedy=1,374:greedy=1,377:greedy=1,380:greedy=1,386:greedy=2,392:greedy=3,398:greedy=2,407:greedy=1,410:greedy=3,416:greedy=1,422:greedy=4,425:greedy=1,428:greedy=1,431:greedy=1,434:greedy=1,437:greedy=2,446:greedy=1,452:greedy=2,458:greedy=2,461:greedy=1,464:greedy=3,467:greedy=1,470:greedy=1,479:greedy=1,482:greedy=4,485:greedy=1,494:greedy=1,497:greedy=1,500:greedy=1,506:greedy=3,512:greedy=1,518:greedy=1,524:greedy=1,527:greedy=1,530:greedy=3,533:greedy=1,536:greedy=1,542:greedy=1,548:greedy=2,554:greedy=3,560:greedy=1,563:greedy=2,566:greedy=1,572:greedy=1,578:greedy=2,587:greedy=1,590:greedy=1,596:greedy=1,602:greedy=3,611:greedy=1,614:greedy=2,617:greedy=1,623:greedy=1,626:greedy=2,629:greedy=1,632:greedy=2,638:greedy=1,641:greedy=1,650:greedy=1,662:greedy=3,665:greedy=1,668:greedy=1,674:greedy=4,686:greedy=1,692:greedy=1,695:greedy=2,698:greedy=2,704:greedy=1,707:greedy=1,710:greedy=1,716:greedy=2,722:greedy=3,728:greedy=1,737:greedy=1,740:greedy=1,746:greedy=2,749:greedy=1,752:greedy=1,758:greedy=1,761:greedy=2,767:greedy=1,770:greedy=1,776:greedy=1,782:greedy=3,785:greedy=1,794:greedy=2,797:greedy=1,800:greedy=2,803:greedy=1,818:greedy=2,827:greedy=1,830:greedy=2,842:greedy=4,848:greedy=1,854:greedy=1,860:greedy=2,863:greedy=1,866:greedy=1,869:greedy=1,872:greedy=1,884:greedy=1,887:greedy=1,890:greedy=1,893:greedy=1,899:greedy=1,902:greedy=2,914:greedy=1,920:greedy=1,926:greedy=4,932:greedy=1,938:greedy=1,947:greedy=1,956:greedy=1,959:greedy=2,962:greedy=3,968:greedy=2,971:greedy=1,977:greedy=1,986:greedy=1,989:greedy=1,992:greedy=1,998:greedy=1,1010:greedy=2,1016:greedy=1,1022:greedy=3,1025:greedy=1,1028:greedy=1,1034:greedy=1,1037:greedy=1,1046:greedy=1,1052:greedy=3,1058:greedy=2,1064:greedy=1,1067:greedy=1,1070:greedy=1,1073:greedy=1,1082:greedy=1,1094:greedy=2,1106:greedy=2,1109:greedy=1,1112:greedy=1,1115:greedy=1,1118:greedy=1,1124:greedy=1,1130:greedy=1,1133:greedy=1,1136:greedy=1,1142:greedy=2,1154:greedy=1,1157:greedy=2,1172:greedy=2,1175:greedy=2,1178:greedy=2,1190:greedy=1,1202:greedy=3,1220:greedy=2,1226:greedy=2,1232:greedy=1,1241:greedy=1,1244:greedy=1,1247:greedy=1,1250:greedy=2,1256:greedy=1,1262:greedy=3,1271:greedy=1,1274:greedy=1,1277:greedy=1,1280:greedy=1,1292:greedy=1,1304:greedy=2,1307:greedy=1,1313:greedy=1,1322:greedy=2,1328:greedy=2,1334:greedy=1,1337:greedy=1,1346:greedy=2,1352:greedy=1,1355:greedy=1,1367:greedy=2,1370:greedy=1,1379:greedy=1,1382:greedy=3,1388:greedy=1,1394:greedy=1,1406:greedy=1,1412:greedy=1,1418:greedy=1,1430:greedy=2,1433:greedy=1,1442:greedy=3,1451:greedy=1,1454:greedy=1,1472:greedy=1,1478:greedy=1,1481:greedy=2,1484:greedy=2,1490:greedy=1,1493:greedy=1,1496:greedy=1,1502:greedy=2,1514:greedy=1,1520:greedy=1,1532:greedy=1,1538:greedy=1,1550:greedy=1,1553:greedy=1,1556:greedy=1,1562:greedy=3,1568:greedy=1,1577:greedy=1,1583:greedy=1,1586:greedy=1,1589:greedy=1,1592:greedy=1,1595:greedy=1,1598:greedy=1,1601:greedy=1,1604:greedy=1,1619:greedy=1,1622:greedy=1,1634:greedy=2,1640:greedy=1,1652:greedy=1,1655:greedy=1,1658:greedy=2,1676:greedy=1,1682:greedy=4,1694:greedy=1,1706:greedy=1,1712:greedy=1,1718:greedy=2,1724:greedy=1,1727:greedy=1,1730:greedy=1,1742:greedy=2,1745:greedy=1,1751:greedy=1,1757:greedy=1,1772:greedy=1,1778:greedy=1,1787:greedy=1,1796:greedy=2,1802:greedy=2,1808:greedy=1,1826:greedy=2,1829:greedy=1,1835:greedy=1,1838:greedy=1,1847:greedy=1,1850:greedy=3,1862:greedy=2,1865:greedy=1,1871:greedy=1,1874:greedy=1,1892:greedy=1,1910:greedy=1,1916:greedy=1,1919:greedy=1,1922:greedy=2,1934:greedy=2,1940:greedy=1,1949:greedy=1,1952:greedy=3,1970:greedy=1,1976:greedy=1,1982:greedy=1,1994:greedy=1,1997:greedy=1,2000:greedy=1,2003:greedy=2,2018:greedy=2,2030:greedy=1,2042:greedy=1,2048:greedy=1,2054:greedy=1,2066:greedy=1,2069:greedy=1,2072:greedy=1,2081:greedy=1,2090:greedy=1,2093:greedy=1,2102:greedy=2,2108:greedy=1,2114:greedy=2,2117:greedy=1,2126:greedy=1,2132:greedy=1,2138:greedy=1,2141:greedy=1,2147:greedy=1,2162:greedy=1,2168:greedy=1,2177:greedy=1,2186:greedy=2,2207:greedy=1,2210:greedy=2,2216:greedy=1,2222:greedy=1,2228:greedy=1,2234:greedy=1,2243:greedy=1,2246:greedy=2,2252:greedy=1,2258:greedy=1,2264:greedy=2,2282:greedy=1,2303:greedy=1,2306:greedy=1,2312:greedy=2,2324:greedy=1,2339:greedy=1,2342:greedy=2,2345:greedy=1,2351:greedy=1,2354:greedy=1,2378:greedy=1,2387:greedy=1,2396:greedy=1,2399:greedy=1,2402:greedy=3,2405:greedy=1,2417:greedy=1,2420:greedy=2,2438:greedy=1,2444:greedy=1,2450:greedy=1,2462:greedy=1,2480:greedy=1,2486:greedy=1,2492:greedy=1,2498:greedy=1,2510:greedy=2,2522:greedy=2,2525:greedy=1,2537:greedy=1,2540:greedy=1,2543:greedy=1,2546:greedy=1,2552:greedy=1,2558:greedy=1,2582:greedy=1,2585:greedy=1,2594:greedy=1,2606:greedy=1,2612:greedy=1,2624:greedy=1,2627:greedy=1,2642:greedy=2,2654:greedy=1,2657:greedy=1,2666:greedy=1,2672:greedy=1,2681:greedy=1,2690:greedy=2,2699:greedy=1,2702:greedy=1,2705:greedy=1,2708:greedy=1,2732:greedy=2,2738:greedy=1,2741:greedy=1,2762:greedy=1,2771:greedy=1,2774:greedy=2,2786:greedy=1,2792:greedy=1,2822:greedy=1,2831:greedy=1,2834:greedy=1,2837:greedy=1,2840:greedy=1,2852:greedy=2,2858:greedy=2,2864:greedy=1,2882:greedy=2,2888:greedy=1,2906:greedy=1,2927:greedy=1,2939:greedy=1,2942:greedy=1,2954:greedy=1,2963:greedy=1,2966:greedy=1,2978:greedy=2,2984:greedy=1,2990:greedy=1,3002:greedy=1,3005:greedy=1,3011:greedy=1,3023:greedy=1,3026:greedy=1,3038:greedy=2,3047:greedy=1,3062:greedy=1,3077:greedy=1,3080:greedy=1,3098:greedy=1,3104:greedy=1,3110:greedy=1,3122:greedy=2,3152:greedy=2,3164:greedy=1,3170:greedy=1,3182:greedy=1,3188:greedy=1,3194:greedy=2,3197:greedy=1,3200:greedy=1,3206:greedy=1,3236:greedy=1,3239:greedy=1,3245:greedy=1,3257:greedy=1,3266:greedy=1,3302:greedy=2,3308:greedy=1,3314:greedy=1,3317:greedy=1,3323:greedy=1,3332:greedy=1,3341:greedy=1,3350:greedy=1,3356:greedy=1,3362:greedy=2,3365:greedy=1,3386:greedy=1,3410:greedy=1,3422:greedy=1,3434:greedy=1,3446:greedy=1,3452:greedy=1,3467:greedy=1,3470:greedy=1,3473:greedy=1,3488:greedy=1,3500:greedy=1,3512:greedy=1,3527:greedy=1,3530:greedy=1,3536:greedy=2,3542:greedy=1,3554:greedy=1,3566:greedy=1,3569:greedy=1,3590:greedy=1,3602:greedy=2,3614:greedy=1,3623:greedy=1,3659:greedy=1,3668:greedy=1,3674:greedy=1,3692:greedy=1,3698:greedy=3,3707:greedy=1,3719:greedy=1,3722:greedy=1,3737:greedy=1,3740:greedy=1,3752:greedy=1,3776:greedy=1,3809:greedy=1,3815:greedy=1,3818:greedy=1,3830:greedy=1,3836:greedy=1,3842:greedy=1,3866:greedy=2,3872:greedy=1,3878:greedy=1,3896:greedy=1,3902:greedy=2,3908:greedy=1,3929:greedy=1,3950:greedy=1,3962:greedy=1,3977:greedy=1,3986:greedy=1,3998:greedy=1,4007:greedy=1,4034:greedy=1,4049:greedy=1,4052:greedy=1,4073:greedy=1,4082:greedy=2,4091:greedy=1,4094:greedy=2,4097:greedy=1,4130:greedy=1,4136:greedy=1,4142:greedy=1,4160:greedy=1,4202:greedy=2,4220:greedy=1,4232:greedy=1,4235:greedy=1,4250:greedy=1,4262:greedy=1,4274:greedy=1,4280:greedy=1,4286:greedy=1,4292:greedy=1,4295:greedy=1,4322:greedy=1,4352:greedy=1,4370:greedy=1,4373:greedy=1,4388:greedy=1,4391:greedy=1,4418:greedy=1,4427:greedy=1,4442:greedy=1,4454:greedy=1,4466:greedy=1,4475:greedy=1,4484:greedy=1,4487:greedy=1,4490:greedy=1,4502:greedy=1,4538:greedy=1,4541:greedy=1,4562:greedy=1,4604:greedy=1,4613:greedy=1,4622:greedy=1,4646:greedy=1,4652:greedy=2,4664:greedy=1,4682:greedy=1,4688:greedy=1,4694:greedy=2,4706:greedy=1,4733:greedy=1,4772:greedy=1,4781:greedy=1,4802:greedy=1,4808:greedy=1,4838:greedy=1,4853:greedy=1,4874:greedy=1,4877:greedy=1,4886:greedy=1,4898:greedy=1,4901:greedy=1,4904:greedy=1,4931:greedy=1,4958:greedy=1,4970:greedy=1,4982:greedy=1,5024:greedy=1,5042:greedy=2,5072:greedy=1,5075:greedy=1,5084:greedy=1,5102:greedy=1,5108:greedy=1,5114:greedy=1,5135:greedy=1,5162:greedy=1,5210:greedy=2,5231:greedy=1,5246:greedy=1,5267:greedy=1,5282:greedy=1,5306:greedy=1,5312:greedy=1,5315:greedy=1,5327:greedy=1,5330:greedy=1,5342:greedy=1,5396:greedy=1,5420:greedy=1,5462:greedy=1,5480:greedy=1,5489:greedy=1,5510:greedy=1,5522:greedy=2,5540:greedy=1,5546:greedy=1,5552:greedy=1,5582:greedy=1,5609:greedy=1,5657:greedy=1,5678:greedy=1,5714:greedy=1,5729:greedy=1,5753:greedy=1,5762:greedy=1,5768:greedy=1,5774:greedy=1,5777:greedy=1,5798:greedy=1,5852:greedy=1,5876:greedy=1,5918:greedy=1,5936:greedy=1,5966:greedy=1,5978:greedy=1,5996:greedy=1,6002:greedy=1,6008:greedy=1,6047:greedy=1,6074:greedy=1,6122:greedy=1,6143:greedy=1,6179:greedy=1,6194:greedy=1,6218:greedy=1,6227:greedy=1,6239:greedy=1,6242:greedy=1,6326:greedy=1,6350:greedy=1,6392:greedy=1,6410:greedy=1,6440:greedy=1,6452:greedy=1,6470:greedy=1,6476:greedy=1,6482:greedy=1,6605:greedy=1,6626:greedy=1,6662:greedy=1,6677:greedy=1,6701:greedy=1,6710:greedy=1,6722:greedy=1,6725:greedy=1,6884:greedy=1,6902:greedy=1,6932:greedy=1,6944:greedy=1,6962:greedy=1,6968:greedy=1,6974:greedy=1,7163:greedy=1,7178:greedy=1,7202:greedy=1,7211:greedy=1,7223:greedy=1,7226:greedy=1,7442:greedy=1,7454:greedy=1,7472:greedy=1,7478:greedy=1,7484:greedy=1,7721:greedy=1,7730:greedy=1,7742:greedy=1,7745:greedy=1,8000:greedy=1,8006:greedy=1,8012:greedy=1,8279:greedy=1,8282:greedy=1,8558:greedy=1	1	1095.303	ok
+real	medium	2a0ac8514f96ba2f393d76a0986f38d471325e14	34	landau	126	84	1:exact=71,3:exact=7,5:exact=4,7:exact=2	9	17.416	ok
+real	large	2b22f1593e45603b0380cd7105f82c9fc597c93d	447	PCM	0	0		0	0.002	ok
+real	large	2bebf7516f07d0e6403ff7b68d142b351e5b0278	67	LUD	0	0		0	0.006	ok
+real	medium	2bf53c6e0704ae9f5f5e8a2f8dd1dc237df24e61	40	MapAiry	145	39	1:exact=21,2:exact=2,3:exact=4,4:exact=4,5:exact=4,13:exact=1,15:exact=2,29:greedy=1	24	19.682	ok
+real	medium	2c163af87b3e5c03ee5549448b12e7c7ccee1833	31	LUD,LUD8-lud_perimeter	0	0		0	0.006	ok
+real	medium	2f09de5a3ed07e245e3b056bb43a9e1cf77ae8c5	40	SW2D,sw2d	0	0		0	0.005	ok
+real	medium	30fde8176bde33ba8747c5d1527fb05112db599c	31	LUD	0	0		0	0.004	ok
+real	medium	32bf8966046d0dd11ac9d5adccc1f92635c61ff7	40	landau	145	39	1:exact=21,2:exact=2,3:exact=4,4:exact=4,5:exact=4,13:exact=1,15:exact=2,29:greedy=1	24	23.866	ok
+real	medium	33a81fd4c8fcc4354f9e08543f8bf34fe5e32202	24	lud8	0	0		0	0.004	ok
+real	medium	3447d1c152af204422036437c4d544ab97cd2b90	32	cudaflow-particles	0	0		0	0.005	ok
+real	large	348bea340f0dcd935761da13477c3fd0ddfe944d	68	landau	585	173	1:exact=160,2:exact=4,3:exact=8,393:greedy=1	64	18.259	ok
+real	medium	3504da1a46890df74f8217e00e5725c98d705c70	18	SasPoint5	0	0		0	0.007	ok
+real	large	35e0ec4daaad8cb2120564378241f6ac1a40cb5a	223	PCM256	0	0		0	0.003	ok
+real	large	3682c6f9a502a58da9a1768b39037d2bffbf2db3	63	landau	472	250	1:exact=192,3:exact=26,5:exact=15,7:exact=13,8:exact=1,9:exact=2,10:exact=1	26	15.272	ok
+real	medium	3773640001622e4514b50d168f4f095d855fd7fc	16	HLLD,cholla-hlld	0	0		0	0.006	ok
+real	large	39c5f61b197a3ae6547e7532798c54c214be6e3e	143	landau	0	0		0	0.005	ok
+real	medium	3a05329f4c4521e905ad29d54dfb2731435e1c17	12	MapAiry	22	18	1:exact=16,3:exact=2	3	13.217	ok
+real	medium	3b4e5db3a833cf2a6a87043ba7fc5f3df6eeb1d0	22	hypersonic	0	0		0	0.003	ok
+real	medium	3be697be8ed9ca9eb6093e96e456a43f5e884b0b	22	hypersonic	0	0		0	0.007	ok
+real	medium	3fad410751522e82fe42a9960557cd1c945d9197	12	CED	0	0		0	0.004	ok
+real	medium	407e68651ab625282a07b7609f76244b45f5f082	24	LUD	0	0		0	0.006	ok
+real	medium	42a25bb985cd3fabb24c9ad56ba62c4943632d67	13	gpu_example	0	0		0	0.005	ok
+real	medium	43688e8df875a05f5a5b898f8b69cbacee0b6612	44	sw2d	14	7	2:exact=7	3	13.893	ok
+real	medium	43cacdef5fdba1b3cc99843f00c85cf773984e36	22	hypersonic	0	0		0	0.006	ok
+real	large	457e18f25a60bfc6eae83b22428919ceb6230cef	73	LUD	0	0		0	0.004	ok
+real	medium	4916ee879b339603058f83083198d712f50413db	24	LUD8-lud_perimeter	16	10	1:exact=7,3:exact=3	4	13.687	ok
+real	large	49986d3337c9b8e6f6bc7fa21d871561f6796474	172	LUD,LUD8-lud_perimeter	1327	247	1:exact=150,3:exact=15,4:exact=81,808:greedy=1	22	18.679	ok
+real	large	4cf5a00fa5cbb81a5c7ff3f0cf488e9ecb398ee3	171	MapAiry	1491	746	1:exact=661,3:exact=62,5:exact=4,6:exact=5,7:exact=2,8:exact=2,9:exact=2,14:exact=2,17:exact=2,24:greedy=1,60:greedy=1,120:greedy=1,280:greedy=1	20	22.966	ok
+real	medium	4d1527e4518af8c424d8487a2fc4c79c290da773	30	LUD	0	0		0	0.006	ok
+real	medium	4e8211443ded96050e9d95384092989ee594365a	25	SW2D,sw2d	0	0		0	0.006	ok
+real	medium	5191b72e69588e2145718b41b97b8adb76cfb96b	40	landau	145	39	1:exact=21,2:exact=2,3:exact=4,4:exact=4,5:exact=4,13:exact=1,15:exact=2,29:greedy=1	24	17.791	ok
+real	medium	51944e700512e2414c9c91129fd5190fdb453f27	27	tigre	0	0		0	0.005	ok
+real	medium	52f9c796a6c445590b86693561a2679f4a680a3f	30	lud8	0	0		0	0.005	ok
+real	medium	53d242f4e5d8c1f985a5f6e492e75a91ea6499b8	43	LUD	0	0		0	0.007	ok
+real	medium	5520dacef7e707a233419116bca08159e175c984	25	SW2D,sw2d	0	0		0	0.005	ok
+real	medium	565deba7de2fe96622f16e3784a784b00fe1ac4e	40	landau	145	39	1:exact=21,2:exact=2,3:exact=4,4:exact=4,5:exact=4,13:exact=1,15:exact=2,29:greedy=1	24	17.316	ok
+real	large	57e3c3460986da2a7a58257500c99dff94c15d5d	54	LUD	0	0		0	0.006	ok
+real	medium	57e5a1d9874606f26274f5fe2aa59cdaf03539c4	33	SW2D,sw2d	0	0		0	0.005	ok
+real	large	58183f3e78248d6040637761d93eecedfd1ba609	91	LUD	0	0		0	0.005	ok
+real	medium	5981bfa731bf2a3943fa3e8e66decd8c573751e0	42	LUD,LUD8-lud_perimeter	0	0		0	0.005	ok
+real	medium	5ab2e2847f3d8f1feac7a8f713869b61601d547f	13	LUD,LUD8-lud_perimeter	0	0		0	0.006	ok
+real	medium	5acd797d1a1258c97726a5558e6624dc7ef66b75	24	NQU256	0	0		0	12.319	ok
+real	medium	5be73e6cde7e79d6fde7947e450f534de81b5037	42	LUD	0	0		0	0.005	ok
+real	large	5e412ddb9d1911876ec6e8dfdcf386171a768f00	810	PCM256	55504	1637	1:exact=1634,5:exact=2,53860:greedy=1	0	55.359	ok
+real	medium	63afd293d84f1fa4fdab08ed207e71997503dfd3	40	PCM256	0	0		0	0.005	ok
+real	medium	65b6b1a7fd1b68140792d4c4ff4bc8ba06b0d2a1	30	SRAD32	64	45	1:exact=33,2:exact=7,3:exact=4,5:exact=1	0	13.496	ok
+real	medium	66deb4dfc5a509af36dec4212084591e8f9764fa	22	hypersonic	0	0		0	0.005	ok
+real	large	66e058b453da0b2f12a55b30850c94807e2c9436	664	LUD	20839	2695	1:exact=1158,3:exact=63,4:exact=1473,13600:greedy=1	94	70.419	ok
+real	medium	672125a6633e425cc617e57c94e591ea7fd0a89f	36	landau	146	104	1:exact=91,3:exact=7,5:exact=4,7:exact=2	10	15.504	ok
+real	large	674414b26c84504660c1822997d9a7baf73b3263	101	SasPoint5	506	180	1:exact=119,2:exact=6,3:exact=6,4:exact=17,5:exact=3,6:exact=2,7:exact=5,8:exact=5,9:exact=7,10:exact=5,11:exact=2,12:exact=1,14:exact=1,26:greedy=1	35	16.743	ok
+real	medium	68487b9b6095cd23f913dc0ed32965b1d510120d	23	NQU,nqu64	0	0		0	13.309	ok
+real	large	696f915b53781e596054ed3b9b9c2eb66665ee27	85	cudaflow-particles	0	0		0	0.004	ok
+real	large	69c54442315325a2d6f9c09dcd4d6f22bef271af	896	LUD	36552	4552	1:exact=519,3:exact=126,4:exact=3906,20031:greedy=1	188	260.958	ok
+real	medium	6a1c89d960b027ae8d89e33aeea2ca149ee257a3	40	MapAiry	145	39	1:exact=21,2:exact=2,3:exact=4,4:exact=4,5:exact=4,13:exact=1,15:exact=2,29:greedy=1	24	22.414	ok
+real	medium	6a9b925b1556361d2262069db474453f2850b380	18	LUD,LUD8-lud_perimeter	0	0		0	0.004	ok
+real	medium	6c38894262ee7115078b0effb98708b54ef48ea1	20	MapAiry	68	46	1:exact=36,3:exact=9,5:exact=1	9	13.401	ok
+real	medium	6e8c7a1939d43673e808bf7aeab116c889662c47	19	LUD	0	0		0	0.007	ok
+real	medium	6ecd5daad8155ea3c5a93f86140db47fc9e48638	44	landau	230	152	1:exact=126,3:exact=15,5:exact=9,7:exact=2	12	15.625	ok
+real	medium	701ab76d676a4ef232f0791b9588571e90543da0	12	SRAD,SRAD-stage2,SRAD16,srad-stage2,srad16	22	20	1:exact=19,3:exact=1	5	14.207	ok
+real	medium	70e11c5e7ef5e688b4089719cbacbc00d194edba	40	MapAiry	145	39	1:exact=21,2:exact=2,3:exact=4,4:exact=4,5:exact=4,13:exact=1,15:exact=2,29:greedy=1	24	23.787	ok
+real	medium	72fef1961f1a4d4f325eb8c0cd3f25abae99ca29	30	LUD,LUD8-lud_perimeter	0	0		0	0.006	ok
+real	medium	731e6cce7e1f19849050a6967e3abc2faeca08e8	16	SRAD16	36	28	1:exact=24,3:exact=4	5	13.480	ok
+real	medium	73cb7f8dee1a26336ab5bdf72c3d13ad7dc60218	38	hypersonic	32	16	2:exact=16	7	14.289	ok
+real	large	7599d9e3facc759173a972dfebabe1659eea2d29	225	PCM	2	2	1:exact=2	2	16.390	ok
+real	large	79ff52d933cdfba079e3b26c3a68b4a3aeaafc57	1642	PCM128	235632	7333	1:exact=7330,5:exact=2,228292:greedy=1	0	154.887	ok
+real	large	7a4f85af43adc44ac4922b46d6bf32d3af467f06	1320	LUD	83143	9991	1:exact=3846,3:exact=127,4:exact=6017,54848:greedy=1	190	326.547	ok
+real	large	7e14ccf4a23b0ca5ccb3834630dbe0ef25a27143	84	LUD	0	0		0	0.006	ok
+real	medium	7e5bc3564b5668a0b06c87e9d8f22f861aca67f0	25	LUD	0	0		0	0.006	ok
+real	large	806e129d7095d931a6efd5d234d80f5c5b894f78	55	LUD	0	0		0	0.006	ok
+real	medium	80f0bef62b48d136fe1335de6839815b6ece7f28	24	NQU64	0	0		0	13.396	ok
+real	large	836d0a7412e12d5fa56cc0c2ceaa269c8dfbe851	160	PCM256	0	0		0	0.004	ok
+real	large	854f9cdeaba8459336637e9dc9b9ed1b9aee8056	61	LUD	0	0		0	0.005	ok
+real	medium	85cbd772c2be6a117e76638862e2e1d83e9d2ac4	16	gpu_example	0	0		0	0.005	ok
+real	medium	883b4ae634b4762f5d59704574f6bf30871f62a8	24	LUD,LUD8-lud_perimeter	0	0		0	0.003	ok
+real	medium	887594ff82c9cd739f33f8ea3937397d42c34273	36	LUD	0	0		0	0.004	ok
+real	medium	88d4847477db488c2895bcf1b4e671d9514c16a1	12	SRAD,SRAD32,srad32	22	20	1:exact=19,3:exact=1	5	13.997	ok
+real	medium	8a15a93c7183b43087bef82c08aea00bac86ccf5	40	landau	145	39	1:exact=21,2:exact=2,3:exact=4,4:exact=4,5:exact=4,13:exact=1,15:exact=2,29:greedy=1	24	23.869	ok
+real	large	8aa140e201ac8d1b2980325eab017bd3e75d38cf	64	PCM,PCM256	0	0		0	0.004	ok
+real	medium	8b237daf658c7a1039da0c9ab8efc9be20dfd450	33	landau	0	0		0	0.003	ok
+real	large	8d98e860d1157316db59563aaa9c6a784bda6dc1	1537	LUD	143550	13695	1:exact=9720,2:exact=3526,3:exact=16,4:exact=16,5:exact=16,6:exact=16,7:exact=16,8:exact=17,9:exact=16,10:exact=16,11:exact=16,12:exact=16,13:exact=16,14:exact=17,15:exact=16,16:exact=16,17:exact=1,20:exact=1,26:greedy=2,32:greedy=2,35:greedy=1,38:greedy=1,44:greedy=2,47:greedy=1,50:greedy=2,53:greedy=1,56:greedy=1,62:greedy=3,68:greedy=2,71:greedy=1,74:greedy=2,77:greedy=1,80:greedy=2,86:greedy=2,89:greedy=1,92:greedy=2,98:greedy=2,101:greedy=1,104:greedy=1,107:greedy=2,116:greedy=1,122:greedy=3,125:greedy=1,128:greedy=1,134:greedy=2,137:greedy=1,140:greedy=1,146:greedy=1,152:greedy=1,155:greedy=1,158:greedy=1,167:greedy=2,170:greedy=2,176:greedy=1,182:greedy=2,194:greedy=2,197:greedy=1,200:greedy=1,206:greedy=1,209:greedy=1,212:greedy=3,218:greedy=1,227:greedy=1,230:greedy=1,233:greedy=1,236:greedy=1,242:greedy=2,248:greedy=1,254:greedy=1,257:greedy=1,263:greedy=1,266:greedy=3,278:greedy=1,290:greedy=2,296:greedy=1,299:greedy=1,302:greedy=1,308:greedy=1,314:greedy=2,317:greedy=1,332:greedy=1,338:greedy=2,344:greedy=1,347:greedy=1,350:greedy=1,359:greedy=1,362:greedy=2,365:greedy=1,371:greedy=1,380:greedy=1,386:greedy=1,392:greedy=1,398:greedy=2,410:greedy=1,416:greedy=1,422:greedy=3,431:greedy=1,437:greedy=1,458:greedy=1,461:greedy=1,464:greedy=2,470:greedy=1,482:greedy=2,485:greedy=1,494:greedy=1,497:greedy=1,506:greedy=1,512:greedy=1,524:greedy=1,527:greedy=1,530:greedy=1,542:greedy=1,548:greedy=2,554:greedy=1,563:greedy=1,572:greedy=1,578:greedy=1,590:greedy=1,602:greedy=1,611:greedy=1,614:greedy=1,617:greedy=1,623:greedy=1,626:greedy=1,632:greedy=2,662:greedy=2,665:greedy=1,674:greedy=1,686:greedy=1,692:greedy=1,698:greedy=1,704:greedy=1,716:greedy=1,722:greedy=1,737:greedy=1,740:greedy=1,761:greedy=1,767:greedy=1,770:greedy=1,782:greedy=2,785:greedy=1,794:greedy=1,800:greedy=1,830:greedy=1,842:greedy=2,860:greedy=1,863:greedy=1,866:greedy=1,872:greedy=1,899:greedy=1,902:greedy=1,914:greedy=1,926:greedy=1,938:greedy=1,947:greedy=1,959:greedy=1,962:greedy=1,968:greedy=1,986:greedy=1,1016:greedy=1,1028:greedy=1,1037:greedy=1,1046:greedy=1,1052:greedy=1,1058:greedy=2,1094:greedy=1,1109:greedy=1,1133:greedy=1,1142:greedy=1,1154:greedy=1,1157:greedy=1,1172:greedy=1,1190:greedy=1,1220:greedy=1,1232:greedy=1,1250:greedy=1,1256:greedy=1,1262:greedy=1,1307:greedy=1,1322:greedy=1,1346:greedy=1,1355:greedy=1,1367:greedy=1,1370:greedy=1,1442:greedy=1,1454:greedy=1,1472:greedy=1,1478:greedy=1,1484:greedy=1,1577:greedy=1,1586:greedy=1,1598:greedy=1,1601:greedy=1,1712:greedy=1,1718:greedy=1,1724:greedy=1,1847:greedy=1,1850:greedy=1,1982:greedy=1	1	106.581	ok
+real	medium	8e3fdc9bc554d2ca2c232322a682a85540fc79d5	17	SasPoint5	0	0		0	0.004	ok
+real	large	8e42923d0040ac9b1f7fa2892c450441d170a5dc	82	landau	548	275	1:exact=254,2:exact=6,3:exact=4,4:exact=4,5:exact=4,15:exact=2,204:greedy=1	24	19.762	ok
+real	large	90999cfe57842941b41781a9f11467197a5c68bd	68	MapAiry	585	173	1:exact=160,2:exact=4,3:exact=8,393:greedy=1	64	17.118	ok
+real	medium	90e4b3785dac861d4d2b9b5f0acf7d9fdb668a8b	40	landau	145	39	1:exact=21,2:exact=2,3:exact=4,4:exact=4,5:exact=4,13:exact=1,15:exact=2,29:greedy=1	24	18.970	ok
+real	medium	95b76e750361746c1001994fefdd3c084ef93cf3	23	NQU	0	0		0	12.749	ok
+real	large	962551643d49112febce4d942dd7806f6d7e8880	73	SasPoint5,boost-saspoint5	611	207	1:exact=190,3:exact=16,373:greedy=1	7	12.732	ok
+real	large	977cab5e0b3b94ee9d05dba657b184bd8533a5c2	72	landau	616	193	1:exact=182,6:exact=10,374:greedy=1	27	17.117	ok
+real	medium	97ae90e9ed6a2aecc68163ab298e72bd37bf28e8	12	MapAiry	25	17	1:exact=14,3:exact=2,5:exact=1	5	14.575	ok
+real	medium	989fc49dfa138857002030b37e80a4ccfae0bb38	13	vllm-quant@05d35ba45053	0	0		0	0.006	ok
+real	medium	99d55434337685264381fdaeeacee0a667c8a065	38	SW2D	0	0		0	0.006	ok
+real	large	9a4b77b31291a0b7411f7095e9138cde5a5234c9	66	LUD	0	0		0	0.005	ok
+real	medium	9b1c1231de65be373359f891b0b394283e45a426	18	lud8	0	0		0	0.005	ok
+real	medium	9b240130c038a454f6b20f43f06fe8f90cc4d081	12	lud8	0	0		0	0.005	ok
+real	large	9c9a73aff5e45802d72b4285d47f1aa4f61c44b3	336	LUD	5239	775	1:exact=390,3:exact=31,4:exact=353,3344:greedy=1	46	27.007	ok
+real	large	9d54385ed095f4c76cb4ad01a7315a329a491b62	66	landau	522	266	1:exact=203,3:exact=27,5:exact=15,7:exact=13,8:exact=1,9:exact=6,10:exact=1	26	16.657	ok
+real	large	9d99d39d1b38d9a4478646b220e44e268b156d66	62	landau	561	243	1:exact=196,3:exact=10,4:exact=2,5:exact=9,7:exact=8,9:exact=8,11:exact=6,13:exact=2,27:greedy=1,35:greedy=1	51	17.111	ok
+real	medium	a2e2007cd816d8b111f48ec8749f94b5b66d07d6	40	MapAiry	145	39	1:exact=21,2:exact=2,3:exact=4,4:exact=4,5:exact=4,13:exact=1,15:exact=2,29:greedy=1	24	17.527	ok
+real	large	a4675dc11434175bb09606d223fc07df8b84b7ee	224	LUD	2232	376	1:exact=135,3:exact=30,4:exact=210,1167:greedy=1	44	21.581	ok
+real	medium	a7c2cfef8a03039f1b427cb972aad370da1f0238	12	LUD	0	0		0	0.007	ok
+real	medium	aa54b4a3ef44e9d61548fa41deeec33cfab63211	36	LUD,LUD8-lud_perimeter	0	0		0	0.022	ok
+real	large	ab809de8cfa5f8313fcb9ce5ecb3d83c25c3ab99	90	LUD	0	0		0	0.005	ok
+real	medium	acfa147b916363a01a2dee9f2f4f7f9a04b49a8d	11	CED	0	0		0	0.005	ok
+real	medium	aee92eef48599a7824f7f008435e89ec815dc6b9	43	LUD,LUD8-lud_perimeter	0	0		0	0.004	ok
+real	large	b0313dff3afc933e62de5d06651f6714d5e482f9	449	PCM	2	2	1:exact=2	2	17.723	ok
+real	medium	b09f0d407b042362e18f74c2be1e80910c4290c4	47	tigre,tigre-siddon	0	0		0	0.005	ok
+real	medium	b2c58344355d6267169e01af8fb7f2620b4aa40c	13	lud8	0	0		0	0.006	ok
+real	medium	b5049a6c7989410a4fdf59cec222988a4c4821cc	16	SRAD32	36	28	1:exact=24,3:exact=4	5	14.613	ok
+real	medium	b725dcb2bd9d20e3d77f2bb928cae965fab9d4fa	43	lud8	0	0		0	0.006	ok
+real	large	b8dede4a102cd180dc309b6f57671bbbcd9bc237	448	LUD	9064	1256	1:exact=263,3:exact=62,4:exact=930,4895:greedy=1	92	56.358	ok
+real	medium	bbc7faf491f97185ddf227a9f8131f8ccfe952ed	31	lud8	0	0		0	0.006	ok
+real	large	bc3e8607a5e28c41b5cdbf68862fa1a0f4cbe426	85	LUD	0	0		0	0.004	ok
+real	medium	bc43e6ac8b4320022be9e1c9db07744e0d116ce8	22	hypersonic	0	0		0	0.004	ok
+real	medium	bc523a01f48319d8d39ede01e1621a51a99ed209	40	MapAiry	145	39	1:exact=21,2:exact=2,3:exact=4,4:exact=4,5:exact=4,13:exact=1,15:exact=2,29:greedy=1	24	20.960	ok
+real	medium	be520e1174aaa72e995f39c04dac955211b07096	14	MapAiry	0	0		0	0.005	ok
+real	large	bfe71cf726917dc222c5dafb4f4cbb4b8d953037	54	landau	366	204	1:exact=155,3:exact=25,5:exact=17,7:exact=6,9:exact=1	20	14.909	ok
+real	large	c0ccb8c2c45f235cd8931c619ac87f944fe02d5a	60	SasPoint5	118	56	1:exact=35,2:exact=8,4:exact=7,5:exact=1,6:exact=1,7:exact=4	12	14.988	ok
+real	medium	c29320eb70caed61dc99405fbf161f630d31f9cc	42	lud8	0	0		0	0.005	ok
+real	medium	c2ac2dceab1ee4e2aae50609c9e09831dc0dcdf6	30	SRAD16	64	45	1:exact=33,2:exact=7,3:exact=4,5:exact=1	0	14.783	ok
+real	medium	c3a3b5269dbf8287af85ab3892f94b29374f0999	23	NQU	0	0		0	13.492	ok
+real	medium	c51a7e4eaacc4bc6780d9a0a9a1d54218d95fd2b	36	SasPoint5	19	15	1:exact=11,2:exact=4	3	13.500	ok
+real	medium	c6e1de82fa5a4fb699896e5a710f7ceb1a47a11c	41	hypersonic	32	16	2:exact=16	7	14.814	ok
+real	large	c86b4d522b6d9765e096a41139097ed6dc129336	78	LUD	0	0		0	0.005	ok
+real	medium	ca4ce2e08f2905009133ae4705ad1b0f96b3249e	35	SasPoint5	45	18	1:exact=15,4:exact=2,22:greedy=1	14	13.836	ok
+real	medium	cb568be75c28263f65bd975bd0947008b9fdf776	48	LUD	0	0		0	0.007	ok
+real	medium	cb9c26f323030209c4e0e7e3606572d28abce282	40	MapAiry	145	39	1:exact=21,2:exact=2,3:exact=4,4:exact=4,5:exact=4,13:exact=1,15:exact=2,29:greedy=1	24	19.858	ok
+real	medium	cb9fefec11e0dd03bf30f6641ae8bb080e24c7fc	40	landau	145	39	1:exact=21,2:exact=2,3:exact=4,4:exact=4,5:exact=4,13:exact=1,15:exact=2,29:greedy=1	24	17.793	ok
+real	medium	cc04713e8ddcfb2bd15cf88385ee35e2bafb29ec	24	landau	28	18	1:exact=13,3:exact=5	2	14.131	ok
+real	medium	ccab655753be05c62fbcc4fab32633a9b3774916	24	NQU128	0	0		0	14.514	ok
+real	medium	ccbbd3f701995dba26516f03c8e00816667ee129	44	SasPoint5	52	32	1:exact=23,2:exact=4,4:exact=4,5:exact=1	9	13.029	ok
+real	medium	ccdcef20cefdc033f19dfa4552b96e782da076b3	19	LUD,LUD8-lud_perimeter	0	0		0	0.006	ok
+real	large	cdffd26668e1d54ef86c767e1c79bc280c84478a	148	MapAiry,boost-mapairy	0	0		0	0.004	ok
+real	medium	cf330aa862731c739160ae7cc26cec7fd7d02077	22	landau	0	0		0	0.005	ok
+real	medium	d099be01e17e46d5c3b1f60a4bb42b729055fe3b	24	hypersonic	80	32	1:exact=16,4:exact=16	16	12.507	ok
+real	medium	d10023bab4c9c2d96452b347e6252b00f43b30c1	29	SasPoint5	8	7	1:exact=6,2:exact=1	1	13.368	ok
+real	large	d319fde970cfc8943d931dc588dba9874c37fe66	85	SasPoint5	277	102	1:exact=69,2:exact=4,4:exact=10,5:exact=2,6:exact=3,7:exact=3,9:exact=6,10:exact=1,11:exact=1,12:exact=3	22	15.458	ok
+real	medium	d3a3d4e5e861a2c2cb1cf309b0568edd8db40c3a	40	landau	145	39	1:exact=21,2:exact=2,3:exact=4,4:exact=4,5:exact=4,13:exact=1,15:exact=2,29:greedy=1	24	19.470	ok
+real	large	d3f2654bd57fdc286b4e585d1bb057a02bceae35	157	boost-landau,landau	57	55	1:exact=54,3:exact=1	25	18.125	ok
+real	large	d52261bf229c00145c8737c144eb44c1c4c8df51	96	LUD8-lud_perimeter	436	88	1:exact=19,3:exact=56,5:exact=1,6:exact=1,10:exact=1,11:exact=1,15:exact=1,16:exact=1,20:exact=1,21:greedy=1,25:greedy=1,26:greedy=1,30:greedy=1,31:greedy=1,33:greedy=1	22	26.280	ok
+real	medium	d5f58b0976d322705f65e9ae250e1fb90c200155	37	LUD	0	0		0	0.007	ok
+real	large	d8e4613aa217378a1007272fbb9844b85e6b52b2	216	lud8	1569	247	1:exact=150,3:exact=15,4:exact=4,6:exact=77,896:greedy=1	22	17.699	ok
+real	large	da14bec0c1e53af5ef617ec4c239799f21a2ce21	148	boost-landau,landau	0	0		0	0.004	ok
+real	medium	da90a2b4ba54d65ca6518eff6838176df76a39cb	40	MapAiry	145	39	1:exact=21,2:exact=2,3:exact=4,4:exact=4,5:exact=4,13:exact=1,15:exact=2,29:greedy=1	24	20.972	ok
+real	medium	de3e276c7858c3cd1cb7a5260f67b7d79052605d	14	hipims@fca4e6350a75	25	18	1:exact=15,3:exact=2,4:exact=1	6	12.851	ok
+real	large	e26c8cc107f94414e2054f765ee7fd62f85d5b3d	329	LUD8-lud_perimeter	7519	935	1:exact=924,8:exact=2,9:exact=7,57:greedy=1,6459:greedy=1	6	23.658	ok
+real	large	e3583227939bff785a2993f7056817b0abcfd8b0	385	lud8	8750	1631	1:exact=1148,2:exact=386,3:exact=8,4:exact=8,5:exact=8,6:exact=8,7:exact=8,8:exact=9,14:exact=1,17:exact=1,20:exact=1,26:greedy=2,32:greedy=2,35:greedy=1,38:greedy=1,44:greedy=2,47:greedy=1,50:greedy=1,53:greedy=1,62:greedy=2,68:greedy=1,74:greedy=1,77:greedy=1,86:greedy=1,92:greedy=1,98:greedy=1,101:greedy=1,104:greedy=1,107:greedy=1,122:greedy=2,128:greedy=1,134:greedy=1,146:greedy=1,155:greedy=1,167:greedy=1,170:greedy=2,182:greedy=1,200:greedy=1,206:greedy=1,212:greedy=1,233:greedy=1,242:greedy=1,254:greedy=1,257:greedy=1,296:greedy=1,302:greedy=1,308:greedy=1,359:greedy=1,362:greedy=1,422:greedy=1	1	25.674	ok
+real	medium	e63129593e3b063c7ee8e42cbd7052faba995697	12	MS,ms32	11	6	1:exact=4,3:exact=1,4:exact=1	5	13.629	ok
+real	medium	e6437d0696729675d168c1a2cb8f252b2ef17532	27	tigre-siddon	0	0		0	0.005	ok
+real	large	e7ea914e85463dbe44174a64f87c64f5d3b2f062	385	LUD	8750	1631	1:exact=1148,2:exact=386,3:exact=8,4:exact=8,5:exact=8,6:exact=8,7:exact=8,8:exact=9,14:exact=1,17:exact=1,20:exact=1,26:greedy=2,32:greedy=2,35:greedy=1,38:greedy=1,44:greedy=2,47:greedy=1,50:greedy=1,53:greedy=1,62:greedy=2,68:greedy=1,74:greedy=1,77:greedy=1,86:greedy=1,92:greedy=1,98:greedy=1,101:greedy=1,104:greedy=1,107:greedy=1,122:greedy=2,128:greedy=1,134:greedy=1,146:greedy=1,155:greedy=1,167:greedy=1,170:greedy=2,182:greedy=1,200:greedy=1,206:greedy=1,212:greedy=1,233:greedy=1,242:greedy=1,254:greedy=1,257:greedy=1,296:greedy=1,302:greedy=1,308:greedy=1,359:greedy=1,362:greedy=1,422:greedy=1	1	24.763	ok
+real	medium	e8606c1774150ebed194b4d1d15e2e4cd48d2d83	24	NQU96	0	0		0	13.152	ok
+real	medium	e91c1dbe0db441144594d162eeb88e4ea909dee0	37	LUD,LUD8-lud_perimeter	0	0		0	0.007	ok
+real	large	eaf6aceab98a7e401ce2d69265866b12c26b8f21	79	LUD	0	0		0	0.006	ok
+real	medium	ef37b075f260f67256d457bac54c4874d2d5ff49	23	NQU	0	0		0	13.749	ok
+real	medium	efb48f96297d602a644a601f6e53f91bcbfb2eae	49	LUD	0	0		0	0.006	ok
+real	large	f0fb3d595a59e90eb25f89a4a61fbfaad74da590	82	MapAiry	627	199	1:exact=186,2:exact=4,3:exact=4,5:exact=2,9:exact=2,393:greedy=1	64	16.865	ok
+real	medium	f3f6302d8c5229f464f54b51e777cb9998655721	22	hypersonic	0	0		0	0.005	ok
+real	medium	f511a363eb15d808c4dbc6df1e53db8fde35e0ff	25	LUD,LUD8-lud_perimeter	0	0		0	0.005	ok
+real	medium	f55c0886648a1d83d595b503454807ab1792a1e7	40	PCM128	0	0		0	0.007	ok
+real	medium	f5a2cf452f0def1d3ec4a7d50785ba05e830b512	18	LUD	0	0		0	0.005	ok
+real	large	f7afdba2e7fc5b0ea938daead89828b4aea42287	444	PCM128	0	0		0	0.004	ok
+real	medium	fa0cceef2e60630f6bb119921683ed99cca044b4	14	landau	0	0		0	0.004	ok
+real	medium	faa47a3aa4481cba32746ef81c7815c5c18e7d59	47	cudaflow-particles	0	0		0	0.006	ok
+real	medium	fc1ecfa1b35d5762e8ca95c9fa1ba7dd0ff3d64e	14	vllm	13	7	1:exact=2,2:exact=4,3:exact=1	1	12.995	ok
+real	medium	fc2897641e7545e34493274624cbbba042e91480	13	LUD	0	0		0	0.007	ok
+real	large	fcec78c132220d3de07a4cd729d56dc33b16a24f	447	PCM128	0	0		0	0.006	ok
+real	large	fd08b395e42d99fb7bd793ddbad4ce0700c8e112	60	LUD	0	0		0	0.006	ok

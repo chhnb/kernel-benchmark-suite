@@ -33,6 +33,7 @@ inline BranchInst *findSplit(Function &fn, const fusion::Candidate &candidate) {
 }
 
 inline constexpr unsigned exactOperationLimit = 10;
+inline constexpr unsigned generationOperationLimit = 16;
 
 inline unsigned operationCount(const Region &region) {
   unsigned size = 0;
@@ -42,13 +43,13 @@ inline unsigned operationCount(const Region &region) {
   return size;
 }
 
-inline void addCandidates(Function &fn, std::vector<fusion::Candidate> &candidates) {
+inline void addCandidates(Function &fn, std::vector<fusion::Candidate> &candidates, bool heuristic) {
   for (auto &block : fn) {
     auto *branch = dyn_cast<BranchInst>(block.getTerminator());
     if (!branch || !branch->isConditional())
       continue;
     auto region = classifyB2B(*branch);
-    if (!region.isB2B() || operationCount(region) > exactOperationLimit)
+    if (!region.isB2B() || (!heuristic && operationCount(region) > exactOperationLimit))
       continue;
     fusion::Candidate candidate{fn.getName().str(), blockID(block),
                                 blockID(*branch->getSuccessor(0)),
@@ -182,14 +183,15 @@ inline bool replace(Region &region, ArrayRef<Output> outputs, ArrayRef<Value *> 
 
 inline std::unique_ptr<Module> solve(Region &region, ArrayRef<Output> outputs,
                                     Values &arguments, StringRef solver, StringRef costs,
-                                    StringRef worker, json::Object &stats, std::string &failure) {
+                                    StringRef worker, json::Object &stats, std::string &failure,
+                                    bool heuristic) {
   const unsigned size = operationCount(region);
-  const bool fallback = size > exactOperationLimit;
+  const bool fallback = !heuristic && size > exactOperationLimit;
   StringRef source = fusion::anchor_condition::classifySource(&region.split);
   stats["operations"] = size;
   stats["kind"] = region.kind;
   stats["condition_source"] = source;
-  stats["handler"] = fallback ? "anchor_fallback" : "reference_solver";
+  stats["handler"] = fallback ? "anchor_fallback" : heuristic ? "dataflow_solver" : "reference_solver";
   auto extracted = isolate(region, outputs, failure, &arguments);
   std::string ir;
   if (extracted) {
@@ -197,6 +199,21 @@ inline std::unique_ptr<Module> solve(Region &region, ArrayRef<Output> outputs,
     extracted->print(stream, nullptr);
     stream.flush();
     stats["region_id"] = digest(region.kind.str() + "\n" + ir);
+  }
+  if (heuristic && extracted) {
+    unsigned extractedSize = 0;
+    const auto &fn = *extracted->getFunction("region");
+    const auto &branch = cast<BranchInst>(*fn.getEntryBlock().getTerminator());
+    for (const auto *arm : branch.successors())
+      if (arm->getSingleSuccessor())
+        extractedSize += llvm::count_if(*arm, semantic);
+    stats["extracted_operations"] = extractedSize;
+    if (extractedSize > generationOperationLimit) {
+      stats["handler"] = "anchor_fallback";
+      stats["solver_reason"] = "generation size limit";
+      failure = "dataflow_generation_size_limit";
+      return nullptr;
+    }
   }
   if (fallback) {
     if (!extracted)
@@ -225,7 +242,10 @@ inline std::unique_ptr<Module> solve(Region &region, ArrayRef<Output> outputs,
     out << ir;
   }
   std::string workerArg = ("--tti-worker=" + worker).str();
-  StringRef args[] = {solver, input, costs, temp, "--cost=real", workerArg};
+  SmallVector<StringRef, 8> args{solver, input, costs, temp, "--cost=real", workerArg};
+  std::string conditionArg = ("--condition-source=" + source).str();
+  if (heuristic)
+    args.push_back(conditionArg);
   Optional<StringRef> redirects[] = {StringRef(""), StringRef(report), StringRef(diagnostics)};
   if (sys::ExecuteAndWait(solver, args, None, redirects, 660)) {
     failure = "dataflow_exact_solver_failed";
@@ -258,7 +278,14 @@ inline std::unique_ptr<Module> solve(Region &region, ArrayRef<Output> outputs,
   stats["original_T"] = json::Array(*result->getArray("original_T"));
   stats["candidates"] = *result->getInteger("candidates");
   const json::Object *chosen = nullptr;
-  for (const auto &value : *result->getArray("pareto_front")) {
+  if (heuristic) {
+    if (auto selected = result->getObject("selected")) {
+      if (!selected->getBoolean("original").getValueOr(false))
+        chosen = selected;
+    }
+    stats["pairing"] = json::Object(*result->getObject("pairing"));
+    stats["winner"] = result->getString("winner").getValueOr("original").str();
+  } else for (const auto &value : *result->getArray("pareto_front")) {
     const auto *entry = value.getAsObject();
     auto t = cost(*entry->getArray("T"));
     if (source == "workgroup-uniform") {

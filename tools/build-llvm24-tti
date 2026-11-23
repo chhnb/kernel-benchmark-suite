@@ -46,4 +46,7 @@ if [[ " ${flags[*]} " == *" -DFUSION_PACKAGED_LLVM12 "* ]]; then
     ${CXX:-g++} ${CPPFLAGS:-} "${flags[@]}" -std=c++17 -fexceptions -O2 \
       "$root/tools/dataflow_b2b/$tool.cpp" "${libs[@]}" ${LDFLAGS:-} -o "$build/$tool"
   done
+  ${CXX:-g++} ${CPPFLAGS:-} "${flags[@]}" -std=c++17 -fexceptions -O2 \
+    "$root/tools/dataflow_b2b/dataflow_solver.cpp" "$root/tools/dataflow_b2b/dataflow_pairing.cpp" \
+    "${libs[@]}" ${LDFLAGS:-} -o "$build/dataflow_solver"
 fi

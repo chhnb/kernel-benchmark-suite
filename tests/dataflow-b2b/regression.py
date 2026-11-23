@@ -5,7 +5,6 @@ from concurrent.futures import ThreadPoolExecutor
 import gzip
 import hashlib
 import json
-import os
 from pathlib import Path
 import re
 import subprocess
@@ -169,28 +168,45 @@ def truth(args):
     return passed, 2 * (len(rows) - len(unpriced))
 
 
-def context(args):
+def context(args, strategy="dataflow-exact"):
     manifest = load(TESTS / "context/candidates.json")
     candidate = next(row for row in manifest["candidates"] if row["case"] == "DCT8" and
                      row["region_id"].startswith("d23a7c228c5b"))
     parent = candidate["parent"]
-    directory = args.work / "context"
+    directory = args.work / ("context" if strategy == "dataflow-exact" else "context-dataflow")
     directory.mkdir()
     source = unpack(TESTS / "context" / parent["ir"], directory)
     if hashlib.sha256(source.read_bytes()).hexdigest() != parent["sha256"]:
         raise ValueError("DCT8 parent SHA-256 mismatch")
     function = candidate["function"]
-    search = directory / "dataflow-exact"
+    checked_pair = int(strategy == "dataflow")
+    if checked_pair:
+        # Test the standalone choice on the actual isolated region used by the
+        # pipeline, with the condition source captured in its parent context.
+        uid = candidate["region_id"]
+        region = next(row for row in load(TESTS / "corpus/inventory-b2b.json")["regions"]
+                      if row["id"] == uid)
+        region_ir = unpack(TESTS / "corpus" / region["ir"], directory)
+        plan = report([BUILD / "dataflow_solver", region_ir, COSTS, directory / "pairing", "--cost=real",
+                       f"--condition-source={candidate['location']['condition_source']}"], 240)
+        chosen = plan.get("selected", {})
+        ops = {row["left_index"]: row["opcode"] for row in plan.get("schemes", {})
+               .get(plan.get("winner"), {}).get("pairing", [])}
+        selected_ops = {ops.get(match["left_index"]) for match in chosen.get("pairs", [])}
+        if not {"sext", "sdiv"}.issubset(selected_ops):
+            raise ValueError(f"DCT8 {uid} selected pairs lack sext/sdiv: {chosen}")
+        print(f"DCT8 {uid[:12]}: sext and sdiv paired; T={chosen['T']}")
+    search = directory / strategy
     run = call([ROOT / "build/decision-fuse/decision-greedy", source, function, ROOT, search,
-                "--b2b-strategy", "dataflow-exact", "--ir-snapshots", "compact"], 240)
+                "--b2b-strategy", strategy, "--ir-snapshots", "compact"], 240)
     if run.returncode:
         raise ValueError(run.stderr or run.stdout)
     actual = report([ROOT / "tools/run-llvm24-tti", search / "final.ll", function], 90)["cost"]
     recorded = load(search / "summary.json")["final_cost"]
     if actual != 44 or actual != recorded:
         raise ValueError(f"DCT8 final expected 44, got {actual} (greedy recorded {recorded})")
-    print(f"DCT8 dataflow-exact kernel TTI: {actual}")
-    return 1, 1
+    print(f"DCT8 {strategy} kernel TTI: {actual}")
+    return 1 + checked_pair, 1 + checked_pair
 
 
 def main():
@@ -200,8 +216,11 @@ def main():
     args = parser.parse_args()
     if args.jobs < 1:
         parser.error("--jobs must be positive")
+    from measure_pairing import small_pairing
+
     stages = (("Micro", micro, 50), ("Fold oracle", fold, 376),
-              ("Small truth", truth, 374), ("Context", context, 1))
+              ("Small truth", truth, 374), ("Context", context, 1),
+              ("Dataflow context", lambda args: context(args, strategy="dataflow"), 2))
     results = []
     suite_start = monotonic()
     for name, run, total in stages:
@@ -213,6 +232,13 @@ def main():
             print(f"FAIL {name}: {error}")
             passed = 0
         results.append((name, passed, total, monotonic() - start))
+    print("\n== Dataflow vs truth (report only) ==", flush=True)
+    start = monotonic()
+    try:
+        small_pairing(args)
+    except (OSError, ValueError, KeyError, subprocess.SubprocessError) as error:
+        print(f"REPORT Dataflow vs truth: {error}")
+    print(f"Dataflow vs truth: report only ({monotonic() - start:.2f} s)")
     print("\n== Summary ==")
     for name, passed, total, seconds in results:
         print(f"{name}: {passed}/{total} ({seconds:.2f} s)")

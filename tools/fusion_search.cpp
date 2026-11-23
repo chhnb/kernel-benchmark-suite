@@ -7,6 +7,7 @@
 #include "darm_pair_engine/InstructionMatch.h"
 #include "darm_pair_engine/RegionMelder.h"
 #include "llvm/IR/Verifier.h"
+#include "llvm/ADT/DenseSet.h"
 #include "llvm/IR/IRBuilder.h"
 #include "llvm/IR/ModuleSlotTracker.h"
 #include "llvm/Analysis/ValueTracking.h"
@@ -694,18 +695,18 @@ static bool sideBlocksBoth(Function &f,Value *cond,std::vector<unsigned> (&sides
 // Share identical trailing arithmetic by redirecting the short arm to
 // the existing anchor. All other edges, including the long arm's memory
 // paths, keep their original execution conditions.
-static Trial tryPairImpl(const Module&parent,const Candidate&c,unsigned version,CleanupMode mode,bool nested,bool allowB2B,bool artifactB2B,bool speculateR2R);
+static Trial tryPairImpl(const Module&parent,const Candidate&c,unsigned version,CleanupMode mode,bool nested,bool allowB2B,bool artifactB2B,bool speculateR2R,bool observePairs);
 // Public entry. The outermost call owns the side tag and removes it from every
 // IR it returns, so committed modules, debug dumps and hashes never carry it.
-Trial tryPair(const Module&parent,const Candidate&c,unsigned version,CleanupMode mode,bool allowB2B,bool artifactB2B,bool speculateR2R) {
+Trial tryPair(const Module&parent,const Candidate&c,unsigned version,CleanupMode mode,bool allowB2B,bool artifactB2B,bool speculateR2R,bool observePairs) {
   bool nested=hasSideTag(parent.getFunction(c.function));
-  Trial t=tryPairImpl(parent,c,version,mode,nested,allowB2B,artifactB2B,speculateR2R);
+  Trial t=tryPairImpl(parent,c,version,mode,nested,allowB2B,artifactB2B,speculateR2R,observePairs);
   if(!nested){
     stripSideTag(t.raw.get());stripSideTag(t.normalized.get());
   }
   return t;
 }
-static Trial tryPairImpl(const Module&parent,const Candidate&c,unsigned version,CleanupMode mode,bool nested,bool allowB2B,bool artifactB2B,bool speculateR2R) {
+static Trial tryPairImpl(const Module&parent,const Candidate&c,unsigned version,CleanupMode mode,bool nested,bool allowB2B,bool artifactB2B,bool speculateR2R,bool observePairs) {
   auto started=Clock::now();Trial t;t.candidate=c;t.cleanupMode=mode;auto reject=[&](const char*reason){t.reason=reason;t.totalMs=millis(started);return std::move(t);};
   // After-side reachability on the final cleaned IR, before the tag is stripped.
   auto finishSides=[&](Function *after){
@@ -1051,6 +1052,15 @@ static Trial tryPairImpl(const Module&parent,const Candidate&c,unsigned version,
   t.rewriteStarted=true;
   BasicBlock *artifactGate = split;
   std::string speculationSplit = c.split;
+  SmallVector<const Instruction *, 16> pairSources[2];
+  if (observePairs && allowB2B && !artifactB2B && t.planKind == "B2B" && !t.replication &&
+      br->getSuccessor(0) == l.entry && br->getSuccessor(1) == r.entry &&
+      dataflow::extraction::classifyB2B(*br).isB2B()) {
+    for (unsigned side : {0u, 1u})
+      for (const auto &inst : *br->getSuccessor(side))
+        if (dataflow::extraction::semantic(inst))
+          pairSources[side].push_back(&inst);
+  }
   if(directLeaves){
     if (speculateR2R && l.region && !nested && leafEntry.first != split) {
       // The adjacent-leaf selector is the first leaf condition (possibly
@@ -1116,6 +1126,31 @@ static Trial tryPairImpl(const Module&parent,const Candidate&c,unsigned version,
                  (artifact || !melder.hasGuardedGap(memory,side==0)))
                 throw std::runtime_error("unmatched_memory_not_guarded");
         }
+      };
+    }
+    if (!pairSources[0].empty() && !pairSources[1].empty()) {
+      auto verifyMemory = melder.onValueMapping;
+      melder.onValueMapping = [&, verifyMemory](const ValueToValueMapTy &mapping) {
+        if (verifyMemory)
+          verifyMemory(mapping);
+        DenseMap<const Value *, unsigned> rightSources;
+        for (auto item : llvm::enumerate(pairSources[1])) {
+          Value *merged = mapping.lookup(item.value());
+          if (!merged || !rightSources.try_emplace(merged, item.index()).second)
+            return;
+        }
+        json::Array pairs;
+        DenseSet<const Value *> seen;
+        for (auto item : llvm::enumerate(pairSources[0])) {
+          Value *merged = mapping.lookup(item.value());
+          if (!merged || !seen.insert(merged).second)
+            return;
+          auto found = rightSources.find(merged);
+          if (found != rightSources.end())
+            pairs.push_back(json::Object{{"left_index", static_cast<unsigned>(item.index())}, {"right_index", found->second},
+                                         {"swapped_operands", false}});
+        }
+        t.observedPairs = std::move(pairs);
       };
     }
     melder.NativeReplicationPredication = darmReplication && t.replication;
@@ -1560,7 +1595,7 @@ std::vector<Trial> planSingleBranchB2B(const Module &parent, const Candidate &c,
                                        function_ref<int(const Instruction &)> intrinsicCost,
                                        function_ref<int(const Instruction &)> anchorCost,
                                        function_ref<int(Type *)> anchorSelectCost,
-                                       function_ref<int(Type *)> anchorPhiCost) {
+                                       function_ref<int(Type *)> anchorPhiCost, bool observePairs) {
   ProfileScope planningScope("b2b_plan_generate_clean_total");
   std::vector<Trial> trials;
   if (!usesDarmDCE(mode))
@@ -1802,6 +1837,28 @@ std::vector<Trial> planSingleBranchB2B(const Module &parent, const Candidate &c,
     t.planKind = trial.planKind;
     t.mergePath = layout.label;
     t.anchorStats = json::Object(layout.stats);
+    if (observePairs && siblingArms) {
+      DenseMap<const Instruction *, unsigned> indices[2];
+      for (unsigned side : {0u, 1u})
+        for (auto *inst : segmentWork[side])
+          if (dataflow::extraction::semantic(*inst))
+            indices[side].insert({inst, indices[side].size()});
+      json::Array pairs;
+      bool complete = true;
+      for (auto match : layout.matches) {
+        auto l = indices[0].find(segmentWork[0][match.left]);
+        auto r = indices[1].find(segmentWork[1][match.right]);
+        if (l == indices[0].end() || r == indices[1].end()) {
+          complete = false;
+          break;
+        }
+        pairs.push_back(json::Object{{"left_index", l->second}, {"right_index", r->second},
+                                     {"swapped_operands", match.swapped}});
+      }
+      if (complete)
+        t.observedPairs = std::move(pairs);
+    }
+
     t.swapped = trial.swapped;
     t.loopHeaderSplit = trial.loopHeaderSplit;
     t.sideBeforeOk = trial.sideBeforeOk;
@@ -1862,13 +1919,13 @@ std::vector<Trial> planSingleBranchB2B(const Module &parent, const Candidate &c,
   return trials;
 }
 
-void addDataflowCandidates(Function &fn, std::vector<Candidate> &candidates) {
-  dataflow::exact::addCandidates(fn, candidates);
+void addDataflowCandidates(Function &fn, std::vector<Candidate> &candidates, bool heuristic) {
+  dataflow::exact::addCandidates(fn, candidates, heuristic);
 }
 
 Optional<Trial> tryDataflowExact(const Module &parent, const Candidate &candidate,
                                 CleanupMode mode, StringRef solver, StringRef costs,
-                                StringRef worker) {
+                                StringRef worker, bool heuristic) {
   auto *source = parent.getFunction(candidate.function);
   auto *split = source ? dataflow::exact::findSplit(*source, candidate) : nullptr;
   if (!split)
@@ -1878,7 +1935,7 @@ Optional<Trial> tryDataflowExact(const Module &parent, const Candidate &candidat
   trial.candidate = candidate;
   trial.cleanupMode = mode;
   trial.planKind = "B2B";
-  trial.mergePath = "dataflow-exact";
+  trial.mergePath = heuristic ? "dataflow" : "dataflow-exact";
   trial.before = features(*source);
 
   ValueToValueMapTy map;
@@ -1890,7 +1947,7 @@ Optional<Trial> tryDataflowExact(const Module &parent, const Candidate &candidat
   dataflow::extraction::Values args;
   auto start = Clock::now();
   auto solution = dataflow::exact::solve(region, outputs, args, solver, costs,
-                                         worker, trial.dataflowExact, trial.reason);
+                                         worker, trial.dataflowExact, trial.reason, heuristic);
   if (!solution)
     return trial;
 
