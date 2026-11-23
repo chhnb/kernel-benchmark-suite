@@ -36,7 +36,8 @@ struct Candidate {
 };
 
 Candidate emit(const Module &source, const Function &func, const Diamond &shape,
-               ArrayRef<Node> nodes, const dataflow::Schedule &schedule, bool mergeExit) {
+               ArrayRef<Node> nodes, const dataflow::Schedule &schedule, bool mergeExit,
+               bool definedInactiveCondition = false) {
   Candidate result;
   ValueToValueMapTy map;
   auto module = CloneModule(source, map);
@@ -85,7 +86,12 @@ Candidate emit(const Module &source, const Function &func, const Diamond &shape,
     if (found == guarded.end())
       return value;
     auto placement = found->second;
-    auto *padding = PoisonValue::get(value->getType());
+    // A guarded value is not observable on the inactive edge. Use a
+    // defined i1 there in the new emitter so LLVM12's cleanup can combine
+    // nested selects without exposing an inactive poison to boolean ops.
+    Value *padding = definedInactiveCondition && value->getType()->isIntegerTy(1)
+                         ? static_cast<Value *>(ConstantInt::getFalse(value->getContext()))
+                         : PoisonValue::get(value->getType());
     auto *phi = placement.side == 0 ? guardPhi(placement.segment, value, padding)
                                     : guardPhi(placement.segment, padding, value);
     tainted.insert(phi);
@@ -370,6 +376,7 @@ struct FrontEntry {
   Cost cost;
   std::string ir;
   json::Object report;
+  std::string replacementIR;
 };
 
 bool dominates(const Cost &a, const Cost &b) {
@@ -406,9 +413,15 @@ struct Search {
     return dataflow::speculationFailure(inst, costs).empty();
   }
 
-  void add(Module &input, bool original, Candidate *candidate = nullptr, bool checkSchedule = true, Optional<Cost> *observed = nullptr) {
+  bool hasOutputBuffer() const {
+    return shape.join && !dataflow::outputWrites(*cast<ReturnInst>(shape.join->getTerminator()), func).empty();
+  }
+
+  void add(Module &input, bool original, Candidate *candidate = nullptr, bool checkSchedule = true, Optional<Cost> *observed = nullptr, bool afterCleanup = false,
+           const Module *replacement = nullptr) {
     auto *function = input.getFunction(func.getName());
-    auto result = dataflow::evaluate(*function, costs, original, quotes, true, false, throughput);
+    auto result = dataflow::evaluate(*function, costs, original, quotes, !afterCleanup,
+                                     afterCleanup && hasOutputBuffer(), throughput);
     if (!result) {
       auto reason = toString(result.takeError());
       if (!original && StringRef(reason).contains("must be speculated by SimplifyCFG"))
@@ -442,10 +455,12 @@ struct Search {
     auto report = result->json();
     report.erase("operations");
     report["original"] = original;
+    if (afterCleanup)
+      report["after_cleanup"] = true;
     if (candidate) {
       report["dp_guard_branches"] = selectedGuards;
       report["dp_control_cost"] = selectedControl;
-      report["pairs"] = std::move(candidate->pairs);
+      report["pairs"] = json::Array(candidate->pairs);
       report["features"] = json::Object{{"crossed", candidate->crossed},
         {"commute", candidate->commute}, {"cmp_swap", candidate->cmpSwap},
         {"shared_select", candidate->sharedSelect}, {"guard_cluster", candidate->guardCluster},
@@ -458,7 +473,12 @@ struct Search {
         recipes.push_back(recipe);
       report["recipes"] = std::move(recipes);
     }
-    front.push_back({cost, std::move(text), std::move(report)});
+    std::string replacementIR;
+    if (replacement) {
+      raw_string_ostream stream(replacementIR);
+      replacement->print(stream, nullptr);
+    }
+    front.push_back({cost, std::move(text), std::move(report), std::move(replacementIR)});
   }
 
   void generate(unsigned index) {

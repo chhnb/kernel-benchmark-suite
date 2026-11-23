@@ -295,7 +295,10 @@ inline std::unique_ptr<Module> solve(Region &region, ArrayRef<Output> outputs,
   stats["choice"] = "fuse";
   stats["chosen"] = json::Object(*chosen);
   SMDiagnostic diagnostic;
-  std::string path = (temp + "/" + chosen->getString("ir").getValueOr("")).str();
+  auto chosenIR = chosen->getString("ir").getValueOr("");
+  if (heuristic)
+    chosenIR = chosen->getString("replacement_ir").getValueOr(chosenIR);
+  std::string path = (temp + "/" + chosenIR).str();
   auto solution = parseIRFile(path, diagnostic, region.split.getContext());
   if (!solution || verifyModule(*solution, &errs())) {
     failure = "dataflow_exact_invalid_solution";

@@ -115,6 +115,9 @@ Comparator collect(StringRef strategy, StringRef input, StringRef directory,
                                "invalid strategy trial report";
     return result;
   }
+  if (const auto *anchor = trial->getObject("anchor"))
+    report["layout"] = anchor->getString("emission").getValueOr("").str();
+  report["rewrote"] = trial->getBoolean("rewrite_started").getValueOr(false);
   if (const auto *pairs = trial->getArray("source_pairs")) {
     report["source_pairs"] = json::Array(*pairs);
     auto plan = readPlan(search.shape, *pairs);
@@ -132,11 +135,18 @@ Comparator collect(StringRef strategy, StringRef input, StringRef directory,
     return result;
   }
   auto priced = dataflow::evaluate(*module->getFunction(function.getName()), search.costs,
-      false, search.quotes, false, true, search.throughput);
+      false, search.quotes, false, search.hasOutputBuffer(), search.throughput);
   if (priced) {
     auto &t = priced->total;
     report["T"] = json::Array{t[0], t[1], t[2]};
     report["status"] = "priced";
+    report["guard_branches"] = priced->branches;
+    report["escaping_values"] = priced->escapes;
+    report["selects"] = priced->selects;
+    json::Object components;
+    for (const auto &term : priced->divergenceCosts)
+      components[term.first] = term.second;
+    report["D_components"] = std::move(components);
   } else {
     report["cost_reason"] = toString(priced.takeError());
   }
@@ -201,7 +211,8 @@ json::Object generate(Search &search, ArrayRef<Node> pairs, const FrontEntry &or
       referencePolicy = policy;
       auto listMin = stats.listMinimum ? std::min(original.cost, *stats.listMinimum) : original.cost;
       if (listMin[0] != minimum[0] || stats.listPolicy != referencePolicy)
-        discrepancy = "grouped list search omitted a bounded DP result";
+        discrepancy = stats.multiGuard ? "multiple guards or cut coverage" :
+                      source == "thread-pattern" ? "all-safe thread placement" : "parametric cut coverage";
     }
     search.front = std::move(listed);
     search.candidates = listedCount;
@@ -222,6 +233,14 @@ json::Object generate(Search &search, ArrayRef<Node> pairs, const FrontEntry &or
       return json::Object{{"reason", error.message()}};
     out << entry.ir;
     entry.report["ir"] = file;
+    if (!entry.replacementIR.empty()) {
+      auto replacement = (Twine("raw-") + file).str();
+      raw_fd_ostream raw(pathIn(directory, replacement), error);
+      if (error)
+        return json::Object{{"reason", error.message()}};
+      raw << entry.replacementIR;
+      entry.report["replacement_ir"] = replacement;
+    }
     if (entry.cost < best.cost)
       best = entry;
     if (preferred(entry.cost, selected.cost, original.cost, source))
@@ -236,7 +255,10 @@ json::Object generate(Search &search, ArrayRef<Node> pairs, const FrontEntry &or
   if (search.front.empty() && search.stop.empty())
     search.stop = "no valid generated schedule";
   return json::Object{{"pairing", describe(search.shape, pairs)}, {"generated_minimum", std::move(generated)},
-      {"generation_ms", ms}, {"speculation_groups", stats.groups}, {"fold_adjustments", stats.foldAdjustments},
+      {"generation_ms", ms}, {"speculatable", stats.optional}, {"cut_placements", stats.cuts},
+      {"multi_guard_placements", stats.multiGuard}, {"placement_repairs", stats.repairs},
+      {"cleaned_placements", stats.cleaned}, {"cleanup_unpriced", stats.cleanupUnpriced},
+      {"cleanup_reason", stats.firstCleanupError}, {"fold_adjustments", stats.foldAdjustments},
       {"list_minimum", jsonCost(stats.listMinimum)}, {"list_policy", jsonCost(stats.listPolicy)},
       {"dp_minimum", jsonCost(referenceMin)}, {"dp_policy", jsonCost(referencePolicy)},
       {"discrepancy", discrepancy}, {"reference_candidates", stats.referenceCandidates}, {"minimum", std::move(best.report)},
