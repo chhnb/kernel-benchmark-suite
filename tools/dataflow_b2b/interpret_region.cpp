@@ -3,12 +3,15 @@
 #include "llvm/ADT/APInt.h"
 #include "llvm/ADT/APSInt.h"
 #include "llvm/ADT/DenseMap.h"
+#include "llvm/ADT/STLExtras.h"
 #include "llvm/IR/Instructions.h"
+#include "llvm/IR/Intrinsics.h"
 #include "llvm/IR/Module.h"
 #include "llvm/IR/Operator.h"
 #include "llvm/IRReader/IRReader.h"
 #include "llvm/Support/JSON.h"
 #include "llvm/Support/SourceMgr.h"
+#include <cmath>
 #include <map>
 #include <set>
 #include <vector>
@@ -121,6 +124,24 @@ struct Run {
       return {APInt(n, 0), State::Undef};
     if (isa<ConstantPointerNull>(v))
       return {APInt(n, 0), State::Defined};
+    if (auto *type = dyn_cast<FixedVectorType>(v->getType())) {
+      if (auto *constant = dyn_cast<Constant>(v)) {
+        Scalar result(APInt(n, 0), State::Defined);
+        unsigned laneBits = width(type->getElementType(), dl);
+        for (unsigned lane = 0; lane < type->getNumElements(); ++lane) {
+          auto *element = constant->getAggregateElement(lane);
+          if (!element)
+            break;
+          auto value = get(element);
+          if (!error.empty())
+            return {};
+          result.bits.insertBits(value.bits, lane * laneBits);
+          result.lanes.push_back(value.state);
+        }
+        if (result.lanes.size() == type->getNumElements())
+          return result;
+      }
+    }
     if (auto it = values.find(v); it != values.end())
       return it->second;
     error = "unsupported constant or unavailable value";
@@ -148,44 +169,75 @@ struct Run {
       StringRef name = callee->getName();
       if (name.startswith("llvm.lifetime."))
         return {};
+      if (callee->getIntrinsicID() == Intrinsic::abs && call->getType()->isIntegerTy()) {
+        auto operand = get(call->getArgOperand(0));
+        auto poisonOnMin = cast<ConstantInt>(call->getArgOperand(1))->isOne();
+        if (operand.state == State::Defined) {
+          if (poisonOnMin && operand.bits.isMinSignedValue())
+            operand.state = State::Poison;
+          else
+            operand.bits = operand.bits.abs();
+        }
+        return operand;
+      }
       if (!name.startswith("llvm.amdgcn.") && !name.startswith("llvm.nvvm.")) {
-        if (!(call->getType()->isFloatTy() || call->getType()->isDoubleTy()) ||
-            call->arg_empty() ||
-            !(name.startswith("llvm.fabs.") || name.startswith("llvm.fma.") ||
-              name.startswith("llvm.ceil.") || name.startswith("llvm.floor.") ||
-              name.startswith("llvm.trunc.") || name.startswith("llvm.minnum.") ||
-              name.startswith("llvm.maxnum.") || name.startswith("llvm.copysign."))) {
+        auto *vector = dyn_cast<FixedVectorType>(call->getType());
+        auto *type = call->getType()->getScalarType();
+        auto id = callee->getIntrinsicID();
+        const Intrinsic::ID supported[] = {
+            Intrinsic::fabs, Intrinsic::fma, Intrinsic::sqrt, Intrinsic::ceil, Intrinsic::floor,
+            Intrinsic::trunc, Intrinsic::minnum, Intrinsic::maxnum, Intrinsic::copysign};
+        if (!(type->isFloatTy() || type->isDoubleTy()) ||
+            (call->getType()->isVectorTy() && !vector) || !is_contained(supported, id)) {
           error = "unsupported generic LLVM intrinsic";
           return {};
         }
-        auto &format = call->getType()->getFltSemantics();
-        SmallVector<APFloat, 3> operands;
+        SmallVector<Scalar, 3> args;
         for (const auto &arg : call->args()) {
-          auto value = get(arg.get());
+          args.push_back(get(arg.get()));
           if (!error.empty())
             return {};
-          if (value.state != State::Defined)
-            return {APInt(n, 0), value.state};
-          operands.emplace_back(format, value.bits);
         }
-        auto &v = operands[0];
-        if (name.startswith("llvm.fabs."))
-          v.clearSign();
-        else if (name.startswith("llvm.fma."))
-          v.fusedMultiplyAdd(operands[1], operands[2], APFloat::rmNearestTiesToEven);
-        else if (name.startswith("llvm.ceil."))
-          v.roundToIntegral(APFloat::rmTowardPositive);
-        else if (name.startswith("llvm.floor."))
-          v.roundToIntegral(APFloat::rmTowardNegative);
-        else if (name.startswith("llvm.trunc."))
-          v.roundToIntegral(APFloat::rmTowardZero);
-        else if (name.startswith("llvm.minnum."))
-          v = minnum(v, operands[1]);
-        else if (name.startswith("llvm.maxnum."))
-          v = maxnum(v, operands[1]);
-        else if (v.isNegative() != operands[1].isNegative())
-          v.changeSign();
-        return {v.bitcastToAPInt(), State::Defined};
+        unsigned lanes = vector ? vector->getNumElements() : 1;
+        unsigned laneBits = width(type, dl);
+        Scalar result(APInt(n, 0), State::Defined);
+        for (unsigned lane = 0; lane < lanes; ++lane) {
+          State state = State::Defined;
+          SmallVector<APFloat, 3> operands;
+          for (const auto &arg : args) {
+            state = std::max(state, arg.lanes.empty() ? arg.state : arg.lanes[lane]);
+            operands.emplace_back(type->getFltSemantics(), arg.bits.extractBits(laneBits, lane * laneBits));
+          }
+          if (state == State::Defined) {
+            auto &v = operands[0];
+            switch (id) {
+            case Intrinsic::fabs: v.clearSign(); break;
+            case Intrinsic::fma:
+              v.fusedMultiplyAdd(operands[1], operands[2], APFloat::rmNearestTiesToEven);
+              break;
+            case Intrinsic::sqrt:
+              v = type->isFloatTy() ? APFloat(std::sqrt(v.convertToFloat()))
+                                   : APFloat(std::sqrt(v.convertToDouble()));
+              break;
+            case Intrinsic::ceil: v.roundToIntegral(APFloat::rmTowardPositive); break;
+            case Intrinsic::floor: v.roundToIntegral(APFloat::rmTowardNegative); break;
+            case Intrinsic::trunc: v.roundToIntegral(APFloat::rmTowardZero); break;
+            case Intrinsic::minnum: v = minnum(v, operands[1]); break;
+            case Intrinsic::maxnum: v = maxnum(v, operands[1]); break;
+            case Intrinsic::copysign:
+              if (v.isNegative() != operands[1].isNegative())
+                v.changeSign();
+              break;
+            default: llvm_unreachable("checked floating-point intrinsic");
+            }
+            result.bits.insertBits(v.bitcastToAPInt(), lane * laneBits);
+          }
+          if (vector)
+            result.lanes.push_back(state);
+          else
+            result.state = state;
+        }
+        return result;
       }
       if (call->mayReadOrWriteMemory() && !name.equals("llvm.amdgcn.s.sendmsg") &&
           !name.startswith("llvm.amdgcn.image.sample")) {

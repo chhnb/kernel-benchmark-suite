@@ -38,7 +38,7 @@ struct CostReport {
 inline llvm::Expected<CostReport> evaluate(const llvm::Function &fn,
                                            const llvm::json::Object &table,
                                            bool original, const SizeLatency *real = nullptr,
-                                           bool strictGuards = true, bool knownOutputBuffer = false,
+                                           bool enforceFold = true, bool knownOutputBuffer = false,
                                            QuoteProvider throughput = nullptr) {
   using namespace llvm;
   using namespace llvm::PatternMatch;
@@ -87,11 +87,8 @@ inline llvm::Expected<CostReport> evaluate(const llvm::Function &fn,
   CostReport report;
   for (const auto *branch : guards) {
     auto shape = findGuard(*branch);
-    if (!shape) {
-      if (strictGuards)
-        return unsupported("guard must reconverge in a local B2B join");
-      continue;
-    }
+    if (!shape)
+      return unsupported("guard must reconverge in a local B2B join");
     SmallVector<const Instruction *, 16> ops;
     SmallVector<const PHINode *, 8> phis;
     for (const auto &phi : shape->join->phis())
@@ -104,7 +101,7 @@ inline llvm::Expected<CostReport> evaluate(const llvm::Function &fn,
     bool folds = foldFailure(ops, phis, *shape->join, *branch->getCondition(), table, real).empty();
     if (original)
       report.folded = folds;
-    else if (folds && strictGuards)
+    else if (folds && enforceFold)
       return unsupported(Twine("retained guard on ") + branch->getParent()->getName() +
                          " must be speculated by SimplifyCFG");
   }

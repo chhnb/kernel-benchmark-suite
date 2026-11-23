@@ -9,10 +9,10 @@ using namespace llvm;
 
 int main(int argc, char **argv) {
   if (argc < 3) {
-    errs() << "usage: evaluate_cost INPUT.ll COST_TABLE.json [--original] [--output-buffer] [--c-sl=real|abstract] [--cost=real] [--tti-worker=PATH]\n";
+    errs() << "usage: evaluate_cost INPUT.ll COST_TABLE.json [--original] [--output-buffer] [--after-cleanup] [--c-sl=real|abstract] [--cost=real] [--tti-worker=PATH]\n";
     return 2;
   }
-  bool original = false, real = false, outputBuffer = false;
+  bool original = false, real = false, outputBuffer = false, afterCleanup = false;
   bool useThroughput = false;
   StringRef worker = "tools/run-llvm24-tti";
   for (int index = 3; index < argc; ++index) {
@@ -21,6 +21,8 @@ int main(int argc, char **argv) {
       original = true;
     else if (option == "--output-buffer")
       outputBuffer = true;
+    else if (option == "--after-cleanup")
+      afterCleanup = true;
     else if (option == "--cost=real")
       useThroughput = true;
     else if (option.consume_front("--tti-worker="))
@@ -74,7 +76,7 @@ int main(int argc, char **argv) {
     throughput = std::make_unique<dataflow::RealCost>(worker);
   auto request = [&](const Function &fn) { return throughput->quote(fn); };
   auto result = dataflow::evaluate(*function, *table->getAsObject(), original,
-                                   quotes.get(), true, outputBuffer,
+                                   quotes.get(), !afterCleanup, outputBuffer,
                                    useThroughput ? dataflow::QuoteProvider(request) : nullptr);
   if (!result) {
     outs() << json::Value(json::Object{{"status", "unsupported"},
