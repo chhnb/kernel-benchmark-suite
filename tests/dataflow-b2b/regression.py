@@ -190,8 +190,8 @@ def context(args, strategy="dataflow-exact"):
         plan = report([BUILD / "dataflow_solver", region_ir, COSTS, directory / "pairing", "--cost=real",
                        f"--condition-source={candidate['location']['condition_source']}"], 240)
         chosen = plan.get("selected", {})
-        ops = {row["left_index"]: row["opcode"] for row in plan.get("schemes", {})
-               .get(plan.get("winner"), {}).get("pairing", [])}
+        groups = [*plan.get("schemes", {}).values(), *plan.get("subsets", [])]
+        ops = {row["left_index"]: row["opcode"] for scheme in groups for row in scheme.get("pairing", [])}
         selected_ops = {ops.get(match["left_index"]) for match in chosen.get("pairs", [])}
         if not {"sext", "sdiv"}.issubset(selected_ops):
             raise ValueError(f"DCT8 {uid} selected pairs lack sext/sdiv: {chosen}")
@@ -216,11 +216,12 @@ def main():
     args = parser.parse_args()
     if args.jobs < 1:
         parser.error("--jobs must be positive")
-    from measure_pairing import small_pairing
+    from measure_generation import pairing_gates, small_generation
 
     stages = (("Micro", micro, 50), ("Fold oracle", fold, 376),
               ("Small truth", truth, 374), ("Context", context, 1),
-              ("Dataflow context", lambda args: context(args, strategy="dataflow"), 2))
+              ("Dataflow context", lambda args: context(args, strategy="dataflow"), 2),
+              ("Scalable vs subset DP", small_generation, 374), ("Pairing goals", pairing_gates, 4))
     results = []
     suite_start = monotonic()
     for name, run, total in stages:
@@ -232,13 +233,6 @@ def main():
             print(f"FAIL {name}: {error}")
             passed = 0
         results.append((name, passed, total, monotonic() - start))
-    print("\n== Dataflow vs truth (report only) ==", flush=True)
-    start = monotonic()
-    try:
-        small_pairing(args)
-    except (OSError, ValueError, KeyError, subprocess.SubprocessError) as error:
-        print(f"REPORT Dataflow vs truth: {error}")
-    print(f"Dataflow vs truth: report only ({monotonic() - start:.2f} s)")
     print("\n== Summary ==")
     for name, passed, total, seconds in results:
         print(f"{name}: {passed}/{total} ({seconds:.2f} s)")

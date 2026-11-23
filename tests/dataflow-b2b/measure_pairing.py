@@ -14,7 +14,7 @@ from concurrent.futures import ThreadPoolExecutor
 COLUMNS = ("anchor/original", "anchor/unified", "darm/original", "darm/unified", "dataflow/unified")
 
 
-def bench(row, mode, output, pairing_only):
+def bench(row, mode, output, pairing_only, extra_flags=()):
     directory = output / mode / row["id"]
     directory.mkdir(parents=True)
     source = unpack(TESTS / "corpus" / row["ir"], directory)
@@ -25,15 +25,15 @@ def bench(row, mode, output, pairing_only):
     try:
         result = report([BUILD / "dataflow_solver", source, COSTS, directory / "solutions",
                          f"--cost={mode}", f"--condition-source={row['condition_source']}",
-                         *flags], 660)
+                         *flags, *extra_flags], 660)
     except (ValueError, OSError, subprocess.SubprocessError) as error:
         result = {"complete": False, "reason": str(error)}
     return {"row": row, "mode": mode, "result": result}
 
 
-def parallel(tasks, work, jobs):
+def parallel(tasks, work, jobs, extra_flags=()):
     with ThreadPoolExecutor(jobs) as pool:
-        return list(pool.map(lambda task: bench(task[0], task[1], work, task[2]), tasks))
+        return list(pool.map(lambda task: bench(task[0], task[1], work, task[2], extra_flags), tasks))
 
 
 def vector(obj, key=None):

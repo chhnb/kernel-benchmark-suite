@@ -406,7 +406,7 @@ struct Search {
     return dataflow::speculationFailure(inst, costs).empty();
   }
 
-  void add(Module &input, bool original, Candidate *candidate = nullptr) {
+  void add(Module &input, bool original, Candidate *candidate = nullptr, bool checkSchedule = true, Optional<Cost> *observed = nullptr) {
     auto *function = input.getFunction(func.getName());
     auto result = dataflow::evaluate(*function, costs, original, quotes, true, false, throughput);
     if (!result) {
@@ -417,13 +417,15 @@ struct Search {
         stop = std::move(reason);
       return;
     }
-    if (candidate && (result->branches != selectedGuards ||
+    if (candidate && checkSchedule && (result->branches != selectedGuards ||
                       result->divergenceCosts["control"] != selectedControl)) {
       ++dpMismatches;
       return;
     }
     ++verified;
     const auto cost = result->total;
+    if (observed)
+      *observed = cost;
     if (current && (!current->bestD || cost[0] < *current->bestD))
       current->bestD = cost[0];
     if (llvm::any_of(front, [&](const auto &other) {
@@ -524,12 +526,12 @@ struct Search {
     add(*result.module, false, &result);
   }
 
-  void recordPairing() {
+  void recordPairing(bool checkCycle = true) {
     SmallVector<Node, 16> full(nodes.begin(), nodes.end());
     for (auto *right : shape.ops[1])
       if (!usedRight.count(right))
         full.push_back({nullptr, right, Recipe::R6});
-    if (!acyclic(dependencies(shape, full))) {
+    if (checkCycle && !acyclic(dependencies(shape, full))) {
       ++cyclic;
       return;
     }

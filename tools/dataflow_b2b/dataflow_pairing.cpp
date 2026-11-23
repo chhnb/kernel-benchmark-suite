@@ -25,6 +25,24 @@ struct Problem {
   std::vector<unsigned> outputs;
   std::vector<int64_t> prices;
   std::vector<BitVector> before[2];
+  BitVector required[2];
+  unsigned requiredCount[2]{};
+  int64_t split = 0, arm[2]{};
+  std::vector<std::pair<unsigned, int64_t>> escapes;
+
+  int64_t guardCredit(unsigned left, unsigned right) const {
+    bool removed[2]{requiredCount[0] && left == requiredCount[0],
+                    requiredCount[1] && right == requiredCount[1]};
+    unsigned mask = unsigned(removed[0]) | (unsigned(removed[1]) << 1);
+    int64_t credit = (removed[0] ? arm[0] : 0) + (removed[1] ? arm[1] : 0);
+    if (mask && (!requiredCount[0] || removed[0]) && (!requiredCount[1] || removed[1]))
+      credit += split;
+    for (const auto &[producers, price] : escapes)
+      if ((producers & mask) == producers)
+        credit += price;
+    return credit;
+  }
+
 
   unsigned value(const Value *l, const Value *r) {
     if (l == r)
@@ -74,9 +92,12 @@ struct Problem {
       demanded.insert(output);
       score += prices[output];
     }
+    unsigned covered[2]{};
     for (auto id : selected) {
       const auto &match = matches[id];
       score += match.saved;
+      covered[0] += required[0].test(match.left);
+      covered[1] += required[1].test(match.right);
       if (match.produces != NoValuePair)
         produced.insert(match.produces);
       demanded.insert(match.needs.begin(), match.needs.end());
@@ -84,7 +105,7 @@ struct Problem {
     for (auto demand : demanded)
       if (!produced.count(demand))
         score -= prices[demand];
-    return score;
+    return score + guardCredit(covered[0], covered[1]);
   }
 };
 
@@ -234,13 +255,20 @@ std::vector<unsigned> exact(const Problem &problem, ArrayRef<unsigned> component
     bool output = m.produces != NoValuePair && outputs.count(m.produces);
     return m.saved + (output ? problem.prices[m.produces] : 0);
   };
+  BitVector cover[2]{BitVector(problem.required[0].size()), BitVector(problem.required[1].size())};
+  for (auto id : component) {
+    const auto &m = problem.matches[id];
+    if (problem.required[0].test(m.left)) cover[0].set(m.left);
+    if (problem.required[1].test(m.right)) cover[1].set(m.right);
+  }
+  const auto guardUpper = problem.guardCredit(cover[0].count(), cover[1].count());
   SmallVector<int64_t, 21> remaining(component.size() + 1, 0);
   for (unsigned i = component.size(); i > 0; --i)
     remaining[i-1] = remaining[i] + std::max<int64_t>(0, credit(component[i-1]));
   std::vector<unsigned> selected, best;
   int64_t bestGain = 0;
   std::function<void(unsigned, int64_t)> visit = [&](unsigned i, int64_t gross) {
-    if (gross + remaining[i] <= bestGain)
+    if (gross + remaining[i] + guardUpper <= bestGain)
       return;
     if (i == component.size()) {
       auto gain = problem.gain(selected);
@@ -331,7 +359,7 @@ std::vector<unsigned> greedy(const Problem &problem, ArrayRef<unsigned> componen
 }
 } // namespace
 
-Expected<Result> choose(const Function &function, const Diamond &shape, const json::Object &table,
+Expected<Result> choose(const Function &function, const Diamond &shape, const json::Object &table, bool subplans,
                         function_ref<Expected<InstructionCosts>(const Function &)> quote) {
   Problem problem;
   Result result;
@@ -345,11 +373,37 @@ Expected<Result> choose(const Function &function, const Diamond &shape, const js
       return quoted.takeError();
     quotes = std::move(*quoted);
   }
+  auto control = [&](const Instruction *inst, int64_t fallback) {
+    return quote ? quotes.lookup(inst) : fallback;
+  };
+  problem.split = control(shape.branch, *table.getInteger("guard_segment_control"));
+  DenseMap<const Value *, unsigned> sides;
+  for (unsigned side : {0u, 1u}) {
+    const auto &ops = shape.ops[side];
+    problem.required[side].resize(ops.size());
+    for (auto op : llvm::enumerate(ops)) {
+      sides[op.value()] = 1u << side;
+      if (!speculationFailure(*op.value(), table).empty())
+        problem.required[side].set(op.index());
+    }
+    problem.requiredCount[side] = problem.required[side].count();
+    auto *block = side ? shape.right : shape.left;
+    problem.arm[side] = control(block->getTerminator(), 0);
+  }
   for (const auto &phi : shape.join->phis()) {
     auto id = problem.value(phi.getIncomingValueForBlock(shape.left),
                             phi.getIncomingValueForBlock(shape.right));
-    if (id != NoValuePair && !llvm::is_contained(problem.outputs, id))
+    if (id != NoValuePair && !llvm::is_contained(problem.outputs, id)) {
       problem.outputs.push_back(id);
+      unsigned mask = 0;
+      for (auto *block : {shape.left, shape.right}) {
+        auto side = sides.lookup(phi.getIncomingValueForBlock(block));
+        if (side && problem.requiredCount[side == 2])
+          mask |= side;
+      }
+      if (mask)
+        problem.escapes.emplace_back(mask, control(&phi, *table.getInteger("guard_escape_merge")));
+    }
   }
   for (auto l : llvm::enumerate(shape.ops[0]))
     for (auto r : llvm::enumerate(shape.ops[1]))
@@ -429,12 +483,78 @@ Expected<Result> choose(const Function &function, const Diamond &shape, const js
       if (!problem.acyclic(chosen))
         chosen.pop_back();
     }
+  // A guard may be eliminated only by coordinating candidates from several
+  // components. For small sets of guard-covering matches, search their union.
+  std::vector<unsigned> cover;
+  for (auto indexed : llvm::enumerate(problem.matches)) {
+    const auto &m = indexed.value();
+    if (problem.required[0].test(m.left) || problem.required[1].test(m.right)) {
+      cover.push_back(indexed.index());
+      if (cover.size() > 20)
+        break;
+    }
+  }
+  if (!cover.empty() && cover.size() <= 20) {
+    auto coordinated = exact(problem, cover);
+    for (auto id : chosen)
+      if (llvm::none_of(coordinated, [&](auto other) { return problem.conflicts(id, other); })) {
+        coordinated.push_back(id);
+        if (!problem.acyclic(coordinated))
+          coordinated.pop_back();
+      }
+    if (problem.gain(coordinated) > problem.gain(chosen))
+      chosen = std::move(coordinated);
+  }
+
+  auto nodes = [&](std::vector<unsigned> ids) {
+    llvm::sort(ids, [&](unsigned a, unsigned b) { return problem.matches[a].left < problem.matches[b].left; });
+    std::vector<Node> plan;
+    for (auto id : ids)
+      plan.push_back(problem.matches[id].node);
+    return plan;
+  };
   result.gain = problem.gain(chosen);
-  llvm::sort(chosen, [&](unsigned a, unsigned b) {
-    return problem.matches[a].left < problem.matches[b].left;
-  });
-  for (auto id : chosen)
-    result.selected.push_back(problem.matches[id].node);
+  result.selected = nodes(chosen);
+  // Follow chains of selected producers with a single dependent. A singleton
+  // is also a chain. Break ties by the source candidate index.
+  for (unsigned round = 0; subplans && !chosen.empty() && round < 4; ++round) {
+    std::vector<unsigned> best;
+    int64_t bestGain = std::numeric_limits<int64_t>::min();
+    SmallDenseSet<unsigned, 32> active(chosen.begin(), chosen.end());
+    for (auto id : chosen) {
+      SmallDenseSet<unsigned, 8> chain;
+      chain.insert(id);
+      auto sink = id;
+      while (true) {
+        Optional<unsigned> predecessor;
+        for (auto need : problem.matches[sink].needs)
+          for (auto prod : producers[need])
+            if (active.count(prod) && !chain.count(prod)) {
+              unsigned uses = llvm::count_if(problem.matches[prod].neighbors, [&](unsigned user) {
+                return active.count(user) && llvm::is_contained(problem.matches[user].needs,
+                                                                 problem.matches[prod].produces);
+              });
+              if (uses == 1 && (!predecessor || prod < *predecessor))
+                predecessor = prod;
+            }
+        if (!predecessor)
+          break;
+        sink = *predecessor;
+        chain.insert(sink);
+      }
+      std::vector<unsigned> trial;
+      for (auto other : chosen)
+        if (!chain.count(other))
+          trial.push_back(other);
+      auto value = problem.gain(trial);
+      if (value > bestGain) {
+        bestGain = value;
+        best = std::move(trial);
+      }
+    }
+    chosen = std::move(best);
+    result.subsets.push_back(nodes(chosen));
+  }
   return result;
 }
 } // namespace dataflow::pairing

@@ -1,5 +1,5 @@
 #include "dataflow_pairing.h"
-#include "reference_generation.h"
+#include "scalable_generation.h"
 #include "llvm/Support/MemoryBuffer.h"
 #include "llvm/Support/Program.h"
 
@@ -8,7 +8,7 @@ struct Options {
   StringRef worker = "tools/run-llvm24-tti";
   std::string fusion;
   StringRef source = "data";
-  bool real = false, realSL = true, pairingOnly = false;
+  bool real = false, realSL = true, pairingOnly = false, compareDP = false;
 };
 
 std::string pathIn(StringRef root, const Twine &name) {
@@ -152,7 +152,8 @@ bool preferred(const Cost &a, const Cost &b, const Cost &original, StringRef sou
 }
 
 json::Object generate(Search &search, ArrayRef<Node> pairs, const FrontEntry &original,
-                      StringRef directory, StringRef label, StringRef source) {
+                      StringRef directory, StringRef label, StringRef source, bool compareDP) {
+  auto generationStart = Clock::now();
   search.front.clear();
   search.stop.clear();
   search.pairings.clear();
@@ -169,13 +170,45 @@ json::Object generate(Search &search, ArrayRef<Node> pairs, const FrontEntry &or
     auto pair = byLeft.find(op);
     search.nodes.push_back(pair == byLeft.end() ? Node{op, nullptr, Recipe::R6} : pair->second);
   }
-  search.recordPairing();
+  search.recordPairing(false);
   if (search.pairings.empty())
     return json::Object{{"reason", "pairing creates a dependency cycle"}};
   auto &plan = search.pairings.front();
   search.nodes = plan.nodes;
   search.current = &plan;
-  search.generate(0);
+  const bool small = search.shape.ops[0].size() + search.shape.ops[1].size() <= 10;
+  auto prefer = [&](const Cost &a, const Cost &b) { return preferred(a, b, original.cost, source); };
+  auto stats = generateScalable(search, original.cost, source, !small, prefer);
+  Optional<Cost> referenceMin, referencePolicy;
+  std::string discrepancy;
+  if (compareDP && small && search.stop.empty()) {
+    auto listed = std::move(search.front);
+    auto listedCount = search.candidates, listedVerified = search.verified;
+    auto listedRejected = search.rejectedFold, listedUnsupported = search.unsupportedGeneration;
+    search.candidates = search.verified = search.rejectedFold = 0;
+    search.dpMismatches = search.unsupportedGeneration = 0;
+    search.generate(0);
+    stats.referenceCandidates = search.candidates;
+    llvm::sort(search.front, [](const auto &a, const auto &b) { return a.cost < b.cost; });
+    auto minimum = original.cost, policy = original.cost;
+    for (const auto &entry : search.front) {
+      minimum = std::min(minimum, entry.cost);
+      if (prefer(entry.cost, policy))
+        policy = entry.cost;
+    }
+    if (search.stop.empty() && !search.dpMismatches) {
+      referenceMin = minimum;
+      referencePolicy = policy;
+      auto listMin = stats.listMinimum ? std::min(original.cost, *stats.listMinimum) : original.cost;
+      if (listMin[0] != minimum[0] || stats.listPolicy != referencePolicy)
+        discrepancy = "grouped list search omitted a bounded DP result";
+    }
+    search.front = std::move(listed);
+    search.candidates = listedCount;
+    search.verified = listedVerified;
+    search.rejectedFold = listedRejected;
+    search.unsupportedGeneration = listedUnsupported;
+  }
   search.current = nullptr;
   llvm::sort(search.front, [](const auto &a, const auto &b) { return a.cost < b.cost; });
   json::Array alternatives;
@@ -196,10 +229,19 @@ json::Object generate(Search &search, ArrayRef<Node> pairs, const FrontEntry &or
     alternatives.push_back(json::Object(entry.report));
   }
   json::Value generated = alternatives.empty() ? json::Value(nullptr) : alternatives.front();
-  return json::Object{{"pairing", describe(search.shape, pairs)}, {"generated_minimum", std::move(generated)}, {"minimum", std::move(best.report)},
+  auto jsonCost = [](const Optional<Cost> &cost) -> json::Value {
+    return cost ? json::Value(json::Array{(*cost)[0], (*cost)[1], (*cost)[2]}) : json::Value(nullptr);
+  };
+  auto ms = std::chrono::duration<double, std::milli>(Clock::now() - generationStart).count();
+  if (search.front.empty() && search.stop.empty())
+    search.stop = "no valid generated schedule";
+  return json::Object{{"pairing", describe(search.shape, pairs)}, {"generated_minimum", std::move(generated)},
+      {"generation_ms", ms}, {"speculation_groups", stats.groups}, {"fold_adjustments", stats.foldAdjustments},
+      {"list_minimum", jsonCost(stats.listMinimum)}, {"list_policy", jsonCost(stats.listPolicy)},
+      {"dp_minimum", jsonCost(referenceMin)}, {"dp_policy", jsonCost(referencePolicy)},
+      {"discrepancy", discrepancy}, {"reference_candidates", stats.referenceCandidates}, {"minimum", std::move(best.report)},
       {"selected", std::move(selected.report)}, {"pareto_front", std::move(alternatives)},
-      {"generation_complete", search.stop.empty() && search.dpMismatches == 0 &&
-                              search.unsupportedGeneration == 0},
+      {"generation_complete", search.stop.empty() && search.dpMismatches == 0},
       {"reason", search.stop}, {"candidates", static_cast<int64_t>(search.candidates)},
       {"verified_candidates", static_cast<int64_t>(search.verified)},
       {"dp_mismatches", search.dpMismatches}, {"unsupported_generation", search.unsupportedGeneration},
@@ -226,7 +268,9 @@ json::Object solve(StringRef input, StringRef directory, Search &search, const O
   if (!readDiamond(search.func, search.shape))
     return json::Object{{"complete", false}, {"reason", "unsupported source CFG"}};
   auto pairingStart = Clock::now();
-  auto pairing = dataflow::pairing::choose(search.func, search.shape, search.costs, search.throughput);
+  auto pairing = dataflow::pairing::choose(search.func, search.shape, search.costs,
+                                          !opts.pairingOnly && opts.source != "thread-pattern",
+                                          search.throughput);
   auto ms = std::chrono::duration<double, std::milli>(Clock::now() - pairingStart).count();
   if (!pairing)
     return json::Object{{"complete", false}, {"reason", toString(pairing.takeError())},
@@ -252,11 +296,6 @@ json::Object solve(StringRef input, StringRef directory, Search &search, const O
   }
   const auto &originalT = baseline->total;
   result["original_T"] = json::Array{originalT[0], originalT[1], originalT[2]};
-  if (search.shape.ops[0].size() + search.shape.ops[1].size() > 16) {
-    result["complete"] = false;
-    result["reason"] = "generation size limit";
-    return result;
-  }
   search.splitCost = *search.costs.getInteger("guard_segment_control");
   if (search.throughput) {
     auto quotes = search.throughput(search.func);
@@ -294,23 +333,48 @@ json::Object solve(StringRef input, StringRef directory, Search &search, const O
   }
   auto anchor = collect("anchor", input, directory, search.func, search, originalT, opts);
   auto darm = collect("darm", input, directory, search.func, search, originalT, opts);
-  auto fresh = generate(search, pairing->selected, original, directory, "dataflow", opts.source);
+  auto fresh = generate(search, pairing->selected, original, directory, "dataflow", opts.source, opts.compareDP);
   auto generateComparator = [&](const Comparator &other, StringRef label) {
     if (!other.plan)
       return json::Object{{"reason", other.report.getString("reason").getValueOr("pairing unavailable").str()}};
     if (samePlan(pairing->selected, *other.plan))
       return json::Object(fresh);
-    return generate(search, *other.plan, original, directory, label, opts.source);
+    return generate(search, *other.plan, original, directory, label, opts.source, opts.compareDP);
   };
   auto unifiedAnchor = generateComparator(anchor, "anchor");
   auto unifiedDarm = anchor.plan && darm.plan && samePlan(*anchor.plan, *darm.plan)
       ? json::Object(unifiedAnchor) : generateComparator(darm, "darm");
+  json::Array subsetReports;
+  for (auto indexed : llvm::enumerate(pairing->subsets)) {
+    auto subset = generate(search, indexed.value(), original, directory,
+                           "subset-" + std::to_string(indexed.index()), opts.source, opts.compareDP);
+    subsetReports.push_back(std::move(subset));
+  }
+  json::Object withoutNetMinimum(*fresh.getObject("minimum"));
+  json::Object withoutNetSelected(*fresh.getObject("selected"));
+  json::Array newFront(*fresh.getArray("pareto_front"));
+  for (const auto &item : subsetReports) {
+    const auto &subset = *item.getAsObject();
+    if (auto *entry = subset.getObject("minimum"))
+      if (vector(*entry) < vector(withoutNetMinimum))
+        withoutNetMinimum = json::Object(*entry);
+    if (auto *entry = subset.getObject("selected"))
+      if (preferred(vector(*entry), vector(withoutNetSelected), originalT, opts.source))
+        withoutNetSelected = json::Object(*entry);
+    if (auto *entries = subset.getArray("pareto_front"))
+      for (const auto &entry : *entries)
+        newFront.push_back(entry);
+  }
+  result["without_safety_net"] = json::Object{{"minimum", std::move(withoutNetMinimum)},
+                                             {"selected", std::move(withoutNetSelected)}};
+  auto newScheme = json::Object{{"minimum", json::Object(*result.getObject("without_safety_net")->getObject("minimum"))},
+                                {"pareto_front", std::move(newFront)}};
   json::Object minimum(original.report), selected(original.report);
   StringRef winner = "original", minWinner = "original";
   std::vector<json::Object> front{json::Object(original.report)};
   for (const auto &[label, scheme] :
        SmallVector<std::pair<StringRef, const json::Object *>, 3>{
-           {"dataflow", &fresh}, {"anchor", &unifiedAnchor}, {"darm", &unifiedDarm}}) {
+           {"dataflow", &newScheme}, {"anchor", &unifiedAnchor}, {"darm", &unifiedDarm}}) {
     if (auto *entry = scheme->getObject("minimum"))
       if (vector(*entry) < vector(minimum)) {
         minimum = json::Object(*entry);
@@ -340,7 +404,7 @@ json::Object solve(StringRef input, StringRef directory, Search &search, const O
   if (!selected.getBoolean("original").getValueOr(false))
     for (const auto &[label, scheme] :
          SmallVector<std::pair<StringRef, const json::Object *>, 3>{
-             {"dataflow", &fresh}, {"anchor", &unifiedAnchor}, {"darm", &unifiedDarm}}) {
+             {"dataflow", &newScheme}, {"anchor", &unifiedAnchor}, {"darm", &unifiedDarm}}) {
       auto *choices = scheme->getArray("pareto_front");
       if (choices && llvm::any_of(*choices, [&](const auto &entry) {
             return vector(*entry.getAsObject()) == vector(selected);
@@ -352,7 +416,8 @@ json::Object solve(StringRef input, StringRef directory, Search &search, const O
   json::Array combined;
   for (auto &entry : front)
     combined.push_back(std::move(entry));
-  result["complete"] = fresh.getBoolean("generation_complete").getValueOr(false);
+  result["complete"] = fresh.getBoolean("generation_complete").getValueOr(false) ||
+                       !selected.getBoolean("original").getValueOr(false);
   if (!*result.getBoolean("complete"))
     result["reason"] = fresh.getString("reason").getValueOr("generation unavailable").str();
   result["candidates"] = fresh.getInteger("candidates").getValueOr(0) +
@@ -365,6 +430,7 @@ json::Object solve(StringRef input, StringRef directory, Search &search, const O
   result["pareto_front"] = std::move(combined);
   result["schemes"] = json::Object{{"dataflow", std::move(fresh)},
       {"anchor", std::move(unifiedAnchor)}, {"darm", std::move(unifiedDarm)}};
+  result["subsets"] = std::move(subsetReports);
   result["original_generators"] = json::Object{{"anchor", std::move(anchor.report)},
       {"darm", std::move(darm.report)}};
   return result;
@@ -376,7 +442,7 @@ int main(int argc, char **argv) {
     errs() << "usage: dataflow_solver INPUT.ll COST_TABLE.json OUTPUT_DIRECTORY"
               " [--cost=abstract|real] [--c-sl=abstract|real]"
               " [--condition-source=data|thread-pattern|workgroup-uniform]"
-              " [--pairing-only] [--tti-worker=PATH] [--fusion-search=PATH]\n";
+              " [--pairing-only] [--compare-dp] [--tti-worker=PATH] [--fusion-search=PATH]\n";
     return 2;
   }
   Options opts;
@@ -398,6 +464,8 @@ int main(int argc, char **argv) {
       opts.realSL = true;
     else if (arg == "--pairing-only")
       opts.pairingOnly = true;
+    else if (arg == "--compare-dp")
+      opts.compareDP = true;
     else if (arg.consume_front("--condition-source=") &&
              (arg == "data" || arg == "thread-pattern" || arg == "workgroup-uniform"))
       opts.source = arg;

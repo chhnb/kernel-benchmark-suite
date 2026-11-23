@@ -33,7 +33,6 @@ inline BranchInst *findSplit(Function &fn, const fusion::Candidate &candidate) {
 }
 
 inline constexpr unsigned exactOperationLimit = 10;
-inline constexpr unsigned generationOperationLimit = 16;
 
 inline unsigned operationCount(const Region &region) {
   unsigned size = 0;
@@ -200,21 +199,6 @@ inline std::unique_ptr<Module> solve(Region &region, ArrayRef<Output> outputs,
     stream.flush();
     stats["region_id"] = digest(region.kind.str() + "\n" + ir);
   }
-  if (heuristic && extracted) {
-    unsigned extractedSize = 0;
-    const auto &fn = *extracted->getFunction("region");
-    const auto &branch = cast<BranchInst>(*fn.getEntryBlock().getTerminator());
-    for (const auto *arm : branch.successors())
-      if (arm->getSingleSuccessor())
-        extractedSize += llvm::count_if(*arm, semantic);
-    stats["extracted_operations"] = extractedSize;
-    if (extractedSize > generationOperationLimit) {
-      stats["handler"] = "anchor_fallback";
-      stats["solver_reason"] = "generation size limit";
-      failure = "dataflow_generation_size_limit";
-      return nullptr;
-    }
-  }
   if (fallback) {
     if (!extracted)
       stats["extraction_error"] = failure;
@@ -267,7 +251,7 @@ inline std::unique_ptr<Module> solve(Region &region, ArrayRef<Output> outputs,
   if (!result || !result->getBoolean("complete").getValueOr(false)) {
     failure = "dataflow_exact_incomplete";
     if (result)
-      stats["solver_reason"] = result->getString("reason").getValueOr("");
+      stats["solver_reason"] = result->getString("reason").getValueOr("").str();
     return nullptr;
   }
   const auto cost = [](const json::Array &values) {
