@@ -418,7 +418,7 @@ struct Search {
   }
 
   void add(Module &input, bool original, Candidate *candidate = nullptr, bool checkSchedule = true, Optional<Cost> *observed = nullptr, bool afterCleanup = false,
-           const Module *replacement = nullptr) {
+           const Module *replacement = nullptr, StringRef placement = {}) {
     auto *function = input.getFunction(func.getName());
     auto result = dataflow::evaluate(*function, costs, original, quotes, !afterCleanup,
                                      afterCleanup && hasOutputBuffer(), throughput);
@@ -455,6 +455,8 @@ struct Search {
     auto report = result->json();
     report.erase("operations");
     report["original"] = original;
+    if (!placement.empty())
+      report["placement"] = placement.str();
     if (afterCleanup)
       report["after_cleanup"] = true;
     if (candidate) {

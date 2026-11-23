@@ -37,3 +37,7 @@ build/llvm24-tti/dataflow_solver region.ll docs/dataflow-b2b/COST_TABLE.json out
 ```
 
 贪心流程通过 `decision-greedy --b2b-strategy dataflow` 选择该策略。原始区域在目标相同且保持原样时优先；三种配对产生同一获胜向量时按新配对、anchor、DARM 的顺序归属。原策略的配对通过 `fusion-search-llvm24 --observe-source-pairs 1` 获取。该选项只记录实际匹配，现有策略的 IR 生成和裁决不使用这项记录。
+
+`decision-greedy --b2b-strategy anchor-unified` 仅使用 anchor 对独立抽取区域给出的配对，对同一组放置按 §7.2 报价和选择。独立求解器用 `--anchor-only` 进入此模式。两种统一生成策略都覆盖可独立抽取的 B2B 菱形和三角形，按正常生成路径处理所有规模。提取、配对或报价失败时保留候选的失败原因。其他区域沿用原来的结构生成路径。
+
+候选记录包含配对来源和获胜放置。布局去重时保留首次实际生成该布局的放置标签，`min-cut+convex-guard` 表示最小割的同侧保护凸包，`+repair` 表示生成后尝试了减少保护阶段的调整。投回父函数后继续用原来的整核清理、报价和贪心裁决。

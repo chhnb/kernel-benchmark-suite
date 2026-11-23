@@ -8,6 +8,7 @@ struct Options {
   StringRef worker = "tools/run-llvm24-tti";
   std::string fusion;
   StringRef source = "data";
+  bool anchorOnly = false;
   bool real = false, realSL = true, pairingOnly = false, compareDP = false, emptyOnly = false;
 };
 
@@ -290,7 +291,7 @@ json::Object solve(StringRef input, StringRef directory, Search &search, const O
   if (!readDiamond(search.func, search.shape))
     return json::Object{{"complete", false}, {"reason", "unsupported source CFG"}};
   auto pairingStart = Clock::now();
-  Expected<dataflow::pairing::Result> pairing = opts.emptyOnly
+  Expected<dataflow::pairing::Result> pairing = opts.emptyOnly || opts.anchorOnly
       ? Expected<dataflow::pairing::Result>(dataflow::pairing::Result{})
       : dataflow::pairing::choose(search.func, search.shape, search.costs,
                                  !opts.pairingOnly && opts.source != "thread-pattern",
@@ -363,6 +364,23 @@ json::Object solve(StringRef input, StringRef directory, Search &search, const O
     return result;
   }
   auto anchor = collect("anchor", input, directory, search.func, search, originalT, opts);
+  if (opts.anchorOnly) {
+    if (!anchor.plan) {
+      result["complete"] = false;
+      result["reason"] = anchor.report.getString("reason").getValueOr("anchor pairing unavailable");
+    } else {
+      auto scheme = generate(search, *anchor.plan, original, directory, "anchor", opts.source, false);
+      result["complete"] = scheme.getBoolean("generation_complete").getValueOr(false);
+      result["reason"] = scheme.getString("reason").getValueOr("");
+      result["candidates"] = scheme.getInteger("candidates").getValueOr(0);
+      if (const auto *selected = scheme.getObject("selected")) {
+        result["selected"] = json::Object(*selected);
+        result["winner"] = selected->getBoolean("original").getValueOr(false) ? "original" : "anchor";
+      }
+    }
+    result["original_generators"] = json::Object{{"anchor", std::move(anchor.report)}};
+    return result;
+  }
   auto darm = collect("darm", input, directory, search.func, search, originalT, opts);
   auto fresh = generate(search, pairing->selected, original, directory, "dataflow", opts.source, opts.compareDP);
   auto generateComparator = [&](const Comparator &other, StringRef label) {
@@ -381,9 +399,12 @@ json::Object solve(StringRef input, StringRef directory, Search &search, const O
                            "subset-" + std::to_string(indexed.index()), opts.source, opts.compareDP);
     subsetReports.push_back(std::move(subset));
   }
-  json::Object withoutNetMinimum(*fresh.getObject("minimum"));
-  json::Object withoutNetSelected(*fresh.getObject("selected"));
-  json::Array newFront(*fresh.getArray("pareto_front"));
+  const auto *freshMinimum = fresh.getObject("minimum");
+  const auto *freshSelected = fresh.getObject("selected");
+  const auto *freshFront = fresh.getArray("pareto_front");
+  json::Object withoutNetMinimum(freshMinimum ? *freshMinimum : original.report);
+  json::Object withoutNetSelected(freshSelected ? *freshSelected : original.report);
+  json::Array newFront = freshFront ? json::Array(*freshFront) : json::Array{};
   for (const auto &item : subsetReports) {
     const auto &subset = *item.getAsObject();
     if (auto *entry = subset.getObject("minimum"))
@@ -473,7 +494,7 @@ int main(int argc, char **argv) {
     errs() << "usage: dataflow_solver INPUT.ll COST_TABLE.json OUTPUT_DIRECTORY"
               " [--cost=abstract|real] [--c-sl=abstract|real]"
               " [--condition-source=data|thread-pattern|workgroup-uniform]"
-              " [--pairing-only] [--empty-only] [--compare-dp] [--tti-worker=PATH] [--fusion-search=PATH]\n";
+              " [--pairing-only] [--anchor-only] [--empty-only] [--compare-dp] [--tti-worker=PATH] [--fusion-search=PATH]\n";
     return 2;
   }
   Options opts;
@@ -495,6 +516,8 @@ int main(int argc, char **argv) {
       opts.realSL = true;
     else if (arg == "--pairing-only")
       opts.pairingOnly = true;
+    else if (arg == "--anchor-only")
+      opts.anchorOnly = true;
     else if (arg == "--empty-only")
       opts.emptyOnly = true;
     else if (arg == "--compare-dp")

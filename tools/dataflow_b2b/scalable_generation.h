@@ -288,7 +288,7 @@ ScaleStats generateScalable(Search &search, const Cost &original, StringRef sour
   };
   std::vector<Cost> rawCosts;
   std::map<std::vector<unsigned>, Optional<Cost>> seen;
-  auto attempt = [&](const BitVector &speculated, bool baseline = false) -> Optional<Cost> {
+  auto attempt = [&](const BitVector &speculated, StringRef placement, bool baseline = false) -> Optional<Cost> {
     if (Clock::now() - search.start >= std::chrono::minutes(10)) {
       search.stop = "generation time limit";
       return None;
@@ -325,7 +325,7 @@ ScaleStats generateScalable(Search &search, const Cost &original, StringRef sour
       search.selectedControl = schedule.controlCost;
       auto rejected = search.rejectedFold;
       Optional<Cost> observed;
-      search.add(*candidate.module, baseline, &candidate, false, &observed);
+      search.add(*candidate.module, baseline, &candidate, false, &observed, false, nullptr, placement);
       if (observed)
         rawCosts.push_back(*observed);
       if (!search.stop.empty())
@@ -341,7 +341,7 @@ ScaleStats generateScalable(Search &search, const Cost &original, StringRef sour
           return None;
         }
         Optional<Cost> cleaned;
-        search.add(*cleanedModule, false, &candidate, false, &cleaned, true, candidate.module.get());
+        search.add(*cleanedModule, false, &candidate, false, &cleaned, true, candidate.module.get(), placement);
         if (!search.stop.empty()) {
           // The project cleanup may introduce an expression of C outside the
           // evaluator's branch contract. The uncleaned candidate is still valid.
@@ -371,8 +371,8 @@ ScaleStats generateScalable(Search &search, const Cost &original, StringRef sour
     return observed;
   };
 
-  auto consider = [&](BitVector decision) {
-    auto best = attempt(decision);
+  auto consider = [&](BitVector decision, StringRef placement) {
+    auto best = attempt(decision, placement);
     if (!best || !search.stop.empty() || source == "thread-pattern")
       return;
     // Only a protected operation at a public boundary can change an
@@ -388,7 +388,7 @@ ScaleStats generateScalable(Search &search, const Cost &original, StringRef sour
           llvm::none_of(graph.successors[id], publicNeighbor))
         continue;
       decision.set(id);
-      auto next = attempt(decision);
+      auto next = attempt(decision, (placement + "+repair").str());
       if (next && rank(*next, *best)) {
         best = next;
         ++stats.repairs;
@@ -405,12 +405,12 @@ ScaleStats generateScalable(Search &search, const Cost &original, StringRef sour
   // Keep an emitted candidate for each distinct placement. The unpaired
   // case of all-protect uses the exact original instruction order and CFG.
   const bool empty = llvm::none_of(search.nodes, [](const auto &n) { return n.left && n.right; });
-  consider(optional);
-  consider(convexProtection(graph, order, search.nodes, optional));
+  consider(optional, "all-speculate");
+  consider(convexProtection(graph, order, search.nodes, optional), "convex-guard");
   if (empty)
-    attempt(BitVector(search.nodes.size()), true);
+    attempt(BitVector(search.nodes.size()), "all-protect", true);
   else
-    consider(BitVector(search.nodes.size()));
+    consider(BitVector(search.nodes.size()), "all-protect");
   if (optional.any() && search.stop.empty()) {
     auto input = cutInputs(search, optional);
     if (!input) {
@@ -429,8 +429,8 @@ ScaleStats generateScalable(Search &search, const Cost &original, StringRef sour
         auto placement = a.speculated;
         placement |= b.speculated;
         ++stats.cuts;
-        consider(placement);
-        consider(convexProtection(graph, order, search.nodes, placement));
+        consider(placement, "min-cut");
+        consider(convexProtection(graph, order, search.nodes, placement), "min-cut+convex-guard");
         if (!search.stop.empty())
           return stats;
       }

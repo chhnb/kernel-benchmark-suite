@@ -1925,7 +1925,7 @@ void addDataflowCandidates(Function &fn, std::vector<Candidate> &candidates, boo
 
 Optional<Trial> tryDataflowExact(const Module &parent, const Candidate &candidate,
                                 CleanupMode mode, StringRef solver, StringRef costs,
-                                StringRef worker, bool heuristic) {
+                                StringRef worker, bool heuristic, bool anchorUnified) {
   auto *source = parent.getFunction(candidate.function);
   auto *split = source ? dataflow::exact::findSplit(*source, candidate) : nullptr;
   if (!split)
@@ -1935,7 +1935,7 @@ Optional<Trial> tryDataflowExact(const Module &parent, const Candidate &candidat
   trial.candidate = candidate;
   trial.cleanupMode = mode;
   trial.planKind = "B2B";
-  trial.mergePath = heuristic ? "dataflow" : "dataflow-exact";
+  trial.mergePath = heuristic ? (anchorUnified ? "anchor-unified" : "dataflow") : "dataflow-exact";
   trial.before = features(*source);
 
   ValueToValueMapTy map;
@@ -1947,7 +1947,7 @@ Optional<Trial> tryDataflowExact(const Module &parent, const Candidate &candidat
   dataflow::extraction::Values args;
   auto start = Clock::now();
   auto solution = dataflow::exact::solve(region, outputs, args, solver, costs,
-                                         worker, trial.dataflowExact, trial.reason, heuristic);
+                                         worker, trial.dataflowExact, trial.reason, heuristic, anchorUnified);
   if (!solution)
     return trial;
 

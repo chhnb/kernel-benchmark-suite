@@ -135,12 +135,12 @@ static int runSearch(int argc, const char *const *argv, TrialWorker *batch = nul
     constexpr unsigned optLevel = 3;
     bool useArtifactB2B=false, useAnchorB2B=true, useDataflowExact=false;
     std::string dataflowSolver, dataflowCosts;
-    bool heuristic = false, observePairs = false;
+    bool heuristic = false, anchorUnified = false, observePairs = false;
     std::string quoteMode="on";
     bool fullSnapshots=true;
     bool controlOnly=false,catalogOnly=false;std::string ttiWorker="/home/chh/kernel-benchmark-suite/tools/run-llvm24-tti";
     for(int i=1;i<argc;++i){std::string k=argv[i];
-      if(k=="--help"){outs()<<"fusion-search v1 --ir FILE --function NAME --out FILE [--b2b-strategy anchor|darm|darm-artifact|dataflow-exact|dataflow] [--split ID --left ID --right ID] [--debug-dir DIR] [--ir-snapshots full|compact] [--tti-worker EXECUTABLE] [--catalog-only 0|1] [--control-only 0|1]\n";return 0;}
+      if(k=="--help"){outs()<<"fusion-search v1 --ir FILE --function NAME --out FILE [--b2b-strategy anchor|darm|darm-artifact|dataflow-exact|dataflow|anchor-unified] [--split ID --left ID --right ID] [--debug-dir DIR] [--ir-snapshots full|compact] [--tti-worker EXECUTABLE] [--catalog-only 0|1] [--control-only 0|1]\n";return 0;}
       if(i+1==argc)throw std::runtime_error("missing option value");std::string v=argv[++i];
       if(k=="--control-only"){if(v!="0"&&v!="1")throw std::runtime_error("control-only must be 0 or 1");controlOnly=v=="1";}
       else if(k=="--catalog-only"){if(v!="0"&&v!="1")throw std::runtime_error("catalog-only must be 0 or 1");catalogOnly=v=="1";}
@@ -159,11 +159,12 @@ static int runSearch(int argc, const char *const *argv, TrialWorker *batch = nul
         observePairs = v == "1";
       }
       else if(k=="--b2b-strategy"){
-        if(v!="darm" && v!="darm-artifact" && v!="anchor" && v!="dataflow-exact" && v!="dataflow")
-          throw std::runtime_error("b2b-strategy must be anchor, darm, darm-artifact, dataflow-exact or dataflow");
+        if(v!="darm" && v!="darm-artifact" && v!="anchor" && v!="dataflow-exact" && v!="dataflow" && v!="anchor-unified")
+          throw std::runtime_error("b2b-strategy must be anchor, darm, darm-artifact, dataflow-exact, dataflow or anchor-unified");
         useArtifactB2B=v=="darm-artifact";
         useAnchorB2B=v=="anchor";
-        heuristic=v=="dataflow";
+        anchorUnified=v=="anchor-unified";
+        heuristic=v=="dataflow" || anchorUnified;
         useDataflowExact=v=="dataflow-exact" || heuristic;
       }
       else if(k=="--dataflow-solver")dataflowSolver=v;
@@ -254,7 +255,7 @@ static int runSearch(int argc, const char *const *argv, TrialWorker *batch = nul
     auto &llvm24Scorer = batch ? *batch->scorer : standaloneScorer;
     if(observer)jsonFile(debug+"/run.json",json::Object{
       {"schema","fusion-v1"},{"function",function},{"policy","llvm24"},
-      {"b2b_strategy",useDataflowExact?(heuristic?"dataflow":"dataflow-exact"):useAnchorB2B?"anchor":useArtifactB2B?"darm-artifact":"darm"},{"b2r_strategy","darm"},{"r2r_strategy","darm"},
+      {"b2b_strategy",useDataflowExact?(heuristic?(anchorUnified?"anchor-unified":"dataflow"):"dataflow-exact"):useAnchorB2B?"anchor":useArtifactB2B?"darm-artifact":"darm"},{"b2r_strategy","darm"},{"r2r_strategy","darm"},
       {"cleanup","darm-cfg-dce-instcombine"},{"phi_fold_threshold",7},
       {"initial_parent_hash",moduleHash(*module)},{"replay_parent_hash",""},
       {"semantic_validation","not_run"}});
@@ -271,7 +272,7 @@ static int runSearch(int argc, const char *const *argv, TrialWorker *batch = nul
       bool planWithAnchor = useAnchorB2B;
       if (useDataflowExact) {
         exactPlan = tryDataflowExact(*module, c, cleanupMode, dataflowSolver,
-                                     dataflowCosts, ttiWorker, heuristic);
+                                     dataflowCosts, ttiWorker, heuristic, anchorUnified);
         if (exactPlan && exactPlan->dataflowExact.getString("handler") ==
                              Optional<StringRef>("anchor_fallback")) {
           fallback = std::move(exactPlan->dataflowExact);
@@ -383,7 +384,7 @@ static int runSearch(int argc, const char *const *argv, TrialWorker *batch = nul
         if (t.dataflowExact.empty())
           t.dataflowExact["handler"] = plannedB2B ? "existing_anchor" : "existing_pipeline";
         if (heuristic)
-          t.dataflowExact["strategy"] = "dataflow";
+          t.dataflowExact["strategy"] = anchorUnified ? "anchor-unified" : "dataflow";
         if (t.valid) {
           try {
             if (auto rawCost = llvm24Scorer.functionCost(*t.raw->getFunction(function)))

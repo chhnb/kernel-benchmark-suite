@@ -183,7 +183,7 @@ inline bool replace(Region &region, ArrayRef<Output> outputs, ArrayRef<Value *> 
 inline std::unique_ptr<Module> solve(Region &region, ArrayRef<Output> outputs,
                                     Values &arguments, StringRef solver, StringRef costs,
                                     StringRef worker, json::Object &stats, std::string &failure,
-                                    bool heuristic) {
+                                    bool heuristic, bool anchorUnified) {
   const unsigned size = operationCount(region);
   const bool fallback = !heuristic && size > exactOperationLimit;
   StringRef source = fusion::anchor_condition::classifySource(&region.split);
@@ -230,6 +230,8 @@ inline std::unique_ptr<Module> solve(Region &region, ArrayRef<Output> outputs,
   std::string conditionArg = ("--condition-source=" + source).str();
   if (heuristic)
     args.push_back(conditionArg);
+  if (anchorUnified)
+    args.push_back("--anchor-only");
   Optional<StringRef> redirects[] = {StringRef(""), StringRef(report), StringRef(diagnostics)};
   if (sys::ExecuteAndWait(solver, args, None, redirects, 660)) {
     failure = "dataflow_exact_solver_failed";
@@ -268,6 +270,8 @@ inline std::unique_ptr<Module> solve(Region &region, ArrayRef<Output> outputs,
         chosen = selected;
     }
     stats["pairing"] = json::Object(*result->getObject("pairing"));
+    if (const auto *generators = result->getObject("original_generators"))
+      stats["pairing_sources"] = json::Object(*generators);
     stats["winner"] = result->getString("winner").getValueOr("original").str();
   } else for (const auto &value : *result->getArray("pareto_front")) {
     const auto *entry = value.getAsObject();

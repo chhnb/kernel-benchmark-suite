@@ -143,7 +143,7 @@ Trial tryPair(const llvm::Module &, const Candidate &, unsigned currentVersion,
 void addDataflowCandidates(llvm::Function &, std::vector<Candidate> &, bool heuristic);
 llvm::Optional<Trial> tryDataflowExact(const llvm::Module &, const Candidate &, CleanupMode,
                                       llvm::StringRef solver, llvm::StringRef costs,
-                                      llvm::StringRef worker, bool heuristic);
+                                      llvm::StringRef worker, bool heuristic, bool anchorUnified);
 enum class B2BExit { PreserveSuffix, Merge, ForkJoin, Independent };
 // Emit an already-validated, order-preserving B2B alignment.
 void emitB2BLinear(llvm::BranchInst &, llvm::BasicBlock &, llvm::BasicBlock &,
