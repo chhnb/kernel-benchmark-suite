@@ -188,3 +188,71 @@ OK: 16 verifiers and expectations; 15 native runs (1000 samples per condition); 
 ```
 
 在同一工具链下重跑，完整输出逐字一致。
+
+---
+
+# Dataflow B2B 第 1 步（输入区域语料库）
+
+这次从已发布的 `cfc3d2e0a875a51f81cd658f9c940833eea4b6b3` 追加提交，沿用原来的 `feature/dataflow-b2b` 分支和 epyc 工作目录。前面的微型测试记录保留。该起点已经包含 `PROBLEM.md` 第 7 节的两处表格修正。
+
+## 来源与覆盖
+
+- **darm**。逐条校验 `regression/greedy-v1/manifest-ordered-20261119.json` 中解压后的输入哈希，同一个程序和 block size 的多个函数条目共用模块。25 个 block size 直接复用。LUD128 使用历史 LUD64 的 LLVM 12 ROCm 4.2 前端命令，仅调整 block size、源文件和输出路径。 `gpu_example` 用相同工具链按上游的 `-O3 -fno-unroll-loops` 生成 gfx906 设备 IR。两个生成件随语料库保存，LLVM 12 verifier 均通过。上游固定在 `7f253257c619ad6b8d6529653dbbe0a0d3007195`，完整 argv、工作目录和环境见 `sources.json` 的 `generation`。SB1–SB4 缺公开源码。
+- **project**。先按基线提交枚举 `cases/` 内的 IR，再用 `artifact/run` 提交 `7d2e45b77e5502eeab42bea43f696ccb89172e58` 的发布清单定位全部 14 个 IR blob。发布名称与目录名不同时，保留两种 case 对应关系。用有路径和运行记录的历史输入补入 Hypersonic、CUDAflow、HiPIMS HLLC/George 和 SasPoint5。三个 vLLM 数据集变体的 `runtime.default_kernel` 与 vLLM 主 case 相同，复用其已提交的内核 IR。Reentry 的历史 LLVM 12 HIP 构建缺少内建函数，已知 ROCm 6 构建的 IR 使用 opaque pointer。在 epyc 的实验目录和历史目录中没有找到可用的实际输入。无法由记录确定的 block size 写为 `null`。
+- **snapshot**。以 `domain-reactivation/build/frozen-parity/*/summary.json` 为主，另外收录 PCM256 固定回归和 CED、HiPIMS-George、SasPoint5、SRAD-stage2、TPACF 留出运行的已接受步骤。以每个 summary 的 `selected`、`selected_cost` 和 `commits` 核对，保存被选中的 `fused.ll` 作为该步输出及下一步父 IR。跳过未被选中的试验文件和零提交的运行。LUD8 共 2 步（均为 perimeter，diagonal 和 internal 为零）、PCM32 17 步、NQU64 1 步、SRAD16 3 步、MS32 1 步、MapAiry 31 步。清单保留每步的源目录、运行记录和上一步父 IR 路径。来源清单引用历史文件，语料库提交保存抽出的 IR。
+
+所有来源共 936 条（darm 27、project 39、snapshot 870），对应 912 个不同的源文件哈希。各类别和 case 的出现次数允许同一个模块以不同 provenance 出现。
+
+## 抽取与计数口径
+
+- 扫描源模块中的每个已定义函数。直接菱形或三角形优先识别为 B2B，汇合块的额外前驱在 occurrence 上标记。多块区域按最近共同后支配点及两侧单入口、单出口检查分类，含额外汇合前驱的非 B2B 形状归入 `other`。`structure` 中的整数是区域内的块编号，`edges` 顺序保留条件分支的真边和假边。各 occurrence 的 `source_index` 是 `sources.json` 中从零开始的索引。
+- B2B 只使用所选路径的两条 PHI 入边。SRAD16 原始输入的 `srad_cuda_1` 在 `%175 → %191` 的汇合处有四个 21 入边 PHI，`srad_cuda_2` 在 `%109 → %119` 的汇合处有两个 8 入边 PHI。输出 IR 中每个 PHI 都只有两条入边。生成函数沿用原 triple、datalayout 和适用的函数属性。修改签名后无法复用 `allocsize` 的参数索引，新增输出写回时移除了与写回矛盾的内存和推测属性。同类型多输出写到数组，混合类型写到单个输出缓冲的对应结构字段。区域内地址计算、访存地址空间和 load/store 保留。
+- 结构 ID 使用 SHA-1，对输入源文件仍按解压后的原始字节使用 SHA-256。B2B 以规范化后的独立模块和区域类型散列。其余类型从 CFG、操作和操作数依赖生成结构编码。忽略 SSA 名、块名和模块中的数字槽位，按首次引用编号编码匿名结构体类型，避免 LLVM 在无模块的类型打印中写入进程地址。结构编码保留有语义的直接被调函数名称、常量、类型和指令属性。目标、属性或源条件分类不同的影响见 inventory。条件来源逐处复用 `tools/anchor_condition.h`。
+- 有 8 个 B2B 结构的 Fold 结果因抽象代价表缺少 `call` 项而为 `null`。可由安全性、PHI 条件或已知代价确定的结果仍记为布尔值。B2B 汇合 i1 PHI 的判断仅使用两条所选入边。最大抽取 IR 文件约 529 KB，未触发对单个 IR 文件的 gzip 阈值。
+- 完整统计和缺项见 [SUMMARY.md](../../tests/dataflow-b2b/corpus/SUMMARY.md)。
+
+## 生成和验证命令
+
+```sh
+cd /data/home/chh/kernel-benchmark-suite-dataflow-b2b
+work=build/dataflow-corpus
+corpus=tests/dataflow-b2b/corpus
+mkdir -p "$work"
+git fetch origin refs/heads/artifact/run
+git clone https://github.com/charitha22/cgo22ae-darm-benchmarks "$work/upstream"
+git -C "$work/upstream" rev-parse HEAD
+python3 tools/dataflow_b2b/compile_upstream.py --work "$work" >"$work/upstream-compile.log" 2>&1
+python3 tools/dataflow_b2b/collect_sources.py --work "$work" --output "$corpus"
+
+llvm_root="$HOME/v2-runtime/toolchains/llvm12-jammy/usr"
+export LD_LIBRARY_PATH="$llvm_root/lib/x86_64-linux-gnu${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+export PYTHONDONTWRITEBYTECODE=1
+cfg="$llvm_root/lib/llvm-12/bin/llvm-config"
+opt="$llvm_root/lib/llvm-12/bin/opt"
+g++ $("$cfg" --cxxflags) -std=c++17 -O2 -Wall -Wextra -Wno-unused-parameter -Wno-deprecated-declarations -Wno-template-id-cdtor \
+    tools/dataflow_b2b/extract_regions.cpp \
+    $("$cfg" --ldflags --libs core irreader analysis transformutils support --system-libs) \
+    -o "$work/extract_regions"
+
+python3 tools/dataflow_b2b/build_inventory.py --sources "$corpus/sources.json" \
+    --extractor "$work/extract_regions" --opt "$opt" --work "$work" \
+    --output "$work/validated" --jobs 4
+python3 tools/dataflow_b2b/build_inventory.py --sources "$corpus/sources.json" \
+    --extractor "$work/extract_regions" --opt "$opt" --work "$work" \
+    --output "$work/reproduced" --jobs 4
+diff -qr "$work/validated" "$work/reproduced"
+cp -a "$work/validated"/. "$corpus"/
+git diff --check
+python3 tests/dataflow-b2b/check-micro.py --clang "$llvm_root/lib/llvm-12/bin/clang"
+```
+
+可单独运行 `build/dataflow-corpus/extract_regions INPUT.ll docs/dataflow-b2b/COST_TABLE.json OUTPUT_DIR`。工具将每个分支的 JSON 记录打印为一行，并将抽出的 IR 写入 `OUTPUT_DIR`。`build_inventory.py` 负责验证源文件的 SHA-256、聚合 occurrence 并对每个输出调用 `opt -verify -disable-output`。
+
+两次全量运行结果一致。额外用 LLVM IR 验证了块名和值名重命名不改变 ID、立即数变更会改变 ID、重复的线程号内建量共用一个参数、AS1 指针和混合类型输出保留。所有 376 个独立文件都通过了 LLVM 12 verifier，912 个不同 SHA-256 的来源均可解析并验证。
+
+```text
+912 distinct source hashes; 0 source entries failed LLVM 12
+4378 unique regions; 376 extracted files passed opt -verify
+```
+
+独立按源 IR 文本计数，共核对 112393 条条件分支；每处位置的来源索引、源文件哈希及抽取件结构哈希均匹配。原微型测试也重新通过。
