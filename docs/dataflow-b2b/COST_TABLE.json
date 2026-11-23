@@ -1,0 +1,19 @@
+{
+  "description": "Abstract cost table for dataflow-b2b micro tests (steps 1-3). Real TTI quotes replace it from step 4.",
+  "op": {
+    "add": 1, "sub": 1, "and": 1, "or": 1, "xor": 1, "shl": 1, "lshr": 1, "ashr": 1,
+    "icmp": 1, "fcmp": 1,
+    "mul": 2,
+    "fadd": 2, "fsub": 2, "fmul": 2,
+    "sdiv": 8, "udiv": 8, "srem": 8, "urem": 8, "fdiv": 8,
+    "zext": 1, "sext": 1, "trunc": 1, "bitcast": 0, "getelementptr": 1,
+    "load": 4, "store": 4,
+    "select": 1
+  },
+  "select_i1_folded_to_condition": 0,
+  "guard_segment_control": 3,
+  "guard_escape_merge": 1,
+  "size_latency": "use the op table above as c_SL in micro tests",
+  "fold_threshold": 7,
+  "fold_max_phis": 3
+}
