@@ -42,7 +42,7 @@ done
 ${CXX:-g++} ${CPPFLAGS:-} "${flags[@]}" -std=c++17 -fexceptions -O2 -DFUSION_DETERMINISTIC_REGION_ORDER -I"$root/tools" -I"$root/tools/darm_pair_engine" "$root/tools/fusion_search_llvm24_main.cpp" "${objects[@]}" "${libs[@]}" ${LDFLAGS:-} -o "$build/fusion-search-llvm24"
 # dataflow-exact uses the packaged LLVM12 instruction and target APIs.
 if [[ " ${flags[*]} " == *" -DFUSION_PACKAGED_LLVM12 "* ]]; then
-  for tool in reference_solver evaluate_cost; do
+  for tool in reference_solver evaluate_cost interpret_region; do
     ${CXX:-g++} ${CPPFLAGS:-} "${flags[@]}" -std=c++17 -fexceptions -O2 \
       "$root/tools/dataflow_b2b/$tool.cpp" "${libs[@]}" ${LDFLAGS:-} -o "$build/$tool"
   done

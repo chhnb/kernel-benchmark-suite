@@ -31,6 +31,9 @@ public:
       return createStringError(inconvertibleErrorCode(), reason);
     };
 #ifdef __linux__
+    if (!std::getenv("KBS_TTI_TABLE") &&
+        fn.getFnAttribute("target-cpu").getValueAsString().empty())
+      return invalid("LLVM24 real pricing requires target-cpu");
     std::string ir;
     raw_string_ostream stream(ir);
     fn.getParent()->print(stream, nullptr);

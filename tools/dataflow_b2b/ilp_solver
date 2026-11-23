@@ -1,0 +1,346 @@
+#!/usr/bin/env python3
+"""Solve B2B decisions with CP-SAT and exact LLVM-priced cost columns."""
+
+import argparse
+from collections import Counter, defaultdict
+import contextlib
+import json
+from pathlib import Path
+import selectors
+import shutil
+import subprocess
+import time
+
+from ortools.sat.python import cp_model
+
+
+class Bridge:
+    def __init__(self, command, deadline, log):
+        self.deadline = deadline
+        self.proc = subprocess.Popen(command, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                                     stderr=log, text=True)
+        self.selector = selectors.DefaultSelector()
+        self.selector.register(self.proc.stdout, selectors.EVENT_READ)
+
+    def read(self):
+        if not self.selector.select(max(0, self.deadline - time.monotonic())):
+            raise TimeoutError("LLVM quotation exceeded deadline")
+        line = self.proc.stdout.readline()
+        if not line:
+            raise RuntimeError("LLVM bridge closed without a report; see bridge.log")
+        return json.loads(line)
+
+    def quote(self, request):
+        self.proc.stdin.write(json.dumps(request) + "\n")
+        self.proc.stdin.flush()
+        return self.read()
+
+    def close(self):
+        self.selector.close()
+        self.proc.stdin.close()
+        try:
+            self.proc.wait(timeout=0.5)
+        except subprocess.TimeoutExpired:
+            self.proc.kill()
+            self.proc.wait()
+        self.proc.stdout.close()
+
+
+def equivalent_or(model, outputs, name):
+    value = model.new_bool_var(name)
+    model.add_max_equality(value, outputs or [0])
+    return value
+
+
+def equivalent_and(model, inputs, name):
+    value = model.new_bool_var(name)
+    model.add_bool_and(inputs).only_enforce_if(value)
+    model.add_bool_or([~lit for lit in inputs]).only_enforce_if(~value)
+    return value
+
+
+class Decisions:
+    def __init__(self, source):
+        model = self.model = cp_model.CpModel()
+        ops, matches = source["ops"], source["matches"]
+        self.x = [model.new_bool_var(f"x{i}") for i, _ in enumerate(matches)]
+        unused = [model.new_bool_var(f"u{i}") for i, _ in enumerate(ops)]
+        self.g = protected = [model.new_bool_var(f"g{i}") for i, _ in enumerate(ops)]
+        rank = [model.new_int_var(0, max(0, len(ops) - 1), f"h{i}")
+                for i, _ in enumerate(ops)]
+        incident = defaultdict(list)
+        producers = defaultdict(list)
+        consumers = defaultdict(list)
+        for index, pair in enumerate(matches):
+            l, r, match = pair["left"], pair["right"], self.x[index]
+            incident[l].append((match, r))
+            incident[r].append((match, l))
+            if pair["has_result"]:
+                producers[l, r].append(match)
+            for values in pair["demands"]:
+                if values[0] != values[1]:
+                    consumers[tuple(values)].append(match)
+            model.add(rank[l] == rank[r]).only_enforce_if(match)
+        support = []
+        for i, op in enumerate(ops):
+            model.add(unused[i] + sum(match for match, _ in incident[i]) == 1)
+            model.add(protected[i] <= unused[i])
+            if not op["safe"]:
+                model.add(protected[i] == unused[i])
+            zero = model.new_bool_var(f"rank0_{i}")
+            model.add(rank[i] == 0).only_enforce_if(zero)
+            model.add(rank[i] != 0).only_enforce_if(~zero)
+            tight = [zero]
+            for pred in op["deps"]:
+                model.add(rank[pred] + 1 <= rank[i])
+                edge = model.new_bool_var(f"tight{pred}_{i}")
+                model.add(rank[pred] + 1 == rank[i]).only_enforce_if(edge)
+                model.add(rank[pred] + 1 < rank[i]).only_enforce_if(~edge)
+                tight.append(edge)
+            support.append(equivalent_or(model, tight, f"own_rank_support{i}"))
+        # Force the minimal rank. This removes multiple witnesses of the
+        # same decision vector without imposing source order on pairings.
+        for i, own in enumerate(support):
+            model.add_bool_or([own, *(equivalent_and(model, (x, support[j]),
+                               f"paired_rank_support{i}_{k}")
+                               for k, (x, j) in enumerate(incident[i]))])
+        output_pairs = {tuple(values) for values in source["outputs"] if values[0] != values[1]}
+        escape_users = defaultdict(list)
+        for a, b in sorted(set(producers) | set(consumers) | output_pairs):
+            p = equivalent_or(model, producers[a, b], f"p{a}_{b}")
+            d = equivalent_or(model, [1] if (a, b) in output_pairs else consumers[a, b],
+                              f"d{a}_{b}")
+            s = model.new_bool_var(f"s{a}_{b}")
+            model.add(s >= d - p)
+            model.add(s <= d)
+            model.add(s + p <= 1)
+            for value in (a, b):
+                if value < len(ops):
+                    escape_users[value].append(s)
+        for i, op in enumerate(ops):
+            for operand in op["operands"]:
+                if operand < len(ops):
+                    escape_users[operand].append(~protected[i])
+        for i in range(len(ops)):
+            outside_use = equivalent_or(model, escape_users[i], f"outside_use_{i}")
+            equivalent_and(model, (protected[i], outside_use), f"e{i}")
+        arms = [equivalent_or(model, [g for g, op in zip(protected, ops) if op["side"] == side],
+                              f"y{side}") for side in (0, 1)]
+        equivalent_or(model, arms, "G")
+        self.key = [*self.x, *self.g]
+
+    def request(self, bits):
+        return {"matches": [i for i, chosen in enumerate(bits[:len(self.x)]) if chosen],
+                "guards": [i for i, chosen in enumerate(bits[len(self.x):]) if chosen]}
+
+
+class PriceColumns(cp_model.CpSolverSolutionCallback):
+    def __init__(self, decisions, bridge, deadline):
+        super().__init__()
+        self.decisions, self.bridge, self.deadline = decisions, bridge, deadline
+        self.rows = {}
+        self.cuts = {}
+        self.visited = 0
+        self.issue = None
+
+    def on_solution_callback(self):
+        if time.monotonic() >= self.deadline:
+            self.stop_search()
+            return
+        bits = tuple(self.value(var) for var in self.decisions.key)
+        if bits in self.rows or bits in self.cuts:
+            return
+        self.visited += 1
+        try:
+            quote = self.bridge.quote(self.decisions.request(bits))
+            if quote["status"] == "ok":
+                reconstructed = tuple(sum(values[i] for values in quote["component_vectors"].values())
+                                      for i in range(3))
+                if reconstructed != tuple(quote["T"]):
+                    raise ValueError(f"LLVM cost component mismatch for {bits}")
+                self.rows[bits] = quote
+            elif quote["status"] in ("multi_guard", "mandatory_fold", "invalid_generation"):
+                self.cuts[bits] = quote["status"]
+            else:
+                self.issue = quote.get("reason", "unexpected LLVM response")
+                self.stop_search()
+        except (TimeoutError, OSError, ValueError, RuntimeError) as exc:
+            self.issue = str(exc)
+            self.stop_search()
+
+
+def make_solver(deadline):
+    solver = cp_model.CpSolver()
+    solver.parameters.num_search_workers = 1
+    solver.parameters.max_time_in_seconds = max(0.001, deadline - time.monotonic())
+    return solver
+
+
+def score_key(t, condition):
+    return (max(t[1:]), *t) if condition == "workgroup-uniform" else tuple(t)
+
+
+def eligible(t, baseline, condition):
+    return condition != "data" or all(a <= b for a, b in zip(t[1:], baseline[1:]))
+
+
+def optimize(decisions, rows, cuts, baseline, condition, deadline):
+    """Optimize exact three-scenario linear forms once prices are known."""
+    model = decisions.model.clone()
+    for bits in cuts:
+        model.add_bool_or([~var if bit else var for var, bit in zip(decisions.key, bits)])
+    if not rows:
+        return None, "OPTIMAL", 0
+    terms = ("instruction", "select", "control", "escape")
+    values = [value for quote in rows.values() for vec in quote["component_vectors"].values()
+              for value in vec]
+    limit = max(values + [*baseline])
+    components = [[model.new_int_var(0, limit, f"cost_{kind}_{i}") for i in range(3)]
+                  for kind in terms]
+    costs = [model.new_int_var(0, limit * len(terms), f"T_{axis}") for axis in "DLR"]
+    for i in range(3):
+        model.add(costs[i] == sum(vec[i] for vec in components))
+    table = [(*bits, *(value for kind in terms for value in quote["component_vectors"][kind]))
+             for bits, quote in rows.items()]
+    model.add_allowed_assignments([*decisions.key, *(v for vec in components for v in vec)], table)
+    if condition == "data":
+        model.add(costs[1] <= baseline[1])
+        model.add(costs[2] <= baseline[2])
+    objectives = costs[:]
+    if condition == "workgroup-uniform":
+        peak = model.new_int_var(0, limit * len(terms), "T_uniform")
+        model.add_max_equality(peak, costs[1:])
+        objectives.insert(0, peak)
+    chosen = None
+    for solve_calls, objective in enumerate(objectives, 1):
+        if time.monotonic() >= deadline:
+            return chosen, "UNKNOWN", solve_calls - 1
+        model.minimize(objective)
+        solver = make_solver(deadline)
+        status = solver.solve(model)
+        if status in (cp_model.OPTIMAL, cp_model.FEASIBLE):
+            chosen = tuple(solver.value(var) for var in decisions.key)
+            quote = rows[chosen]
+            if [solver.value(var) for var in costs] != quote["T"]:
+                raise ValueError("optimized cost vector disagrees with LLVM evaluator")
+        if status == cp_model.INFEASIBLE:
+            return None, "OPTIMAL", solve_calls
+        if status != cp_model.OPTIMAL:
+            return chosen, solver.status_name(status), solve_calls
+        model.add(objective == solver.value(objective))
+    return chosen, "OPTIMAL", len(objectives)
+
+
+def choose(baseline, decisions, columns, condition, proved, deadline):
+    t = baseline["T"]
+    selected = min((bits for bits, row in columns.rows.items()
+                    if eligible(row["T"], t, condition)),
+                   key=lambda bits: (score_key(columns.rows[bits]["T"], condition), bits),
+                   default=None)
+    status, calls = "UNKNOWN", 0
+    if proved:
+        solved, status, calls = optimize(decisions, columns.rows, columns.cuts, t, condition, deadline)
+        if status == "OPTIMAL":
+            if (solved is None) != (selected is None) or (
+                    solved is not None and columns.rows[solved]["T"] != columns.rows[selected]["T"]):
+                raise ValueError(f"CP-SAT result {solved} disagrees with quoted rows {selected}")
+            selected = solved
+    if selected is None or score_key(t, condition) <= score_key(columns.rows[selected]["T"], condition):
+        selected = None
+    if condition == "workgroup-uniform" and selected is not None:
+        if max(t[1:]) == max(columns.rows[selected]["T"][1:]):
+            selected = None
+    score = t if selected is None else columns.rows[selected]["T"]
+    objective = score_key(score, condition)[0]
+    certified = proved and status == "OPTIMAL"
+    bound = objective if certified else 0
+    return selected, {"T": score, "original": selected is None,
+                      "optimal": certified, "bound": bound, "cp_sat_solve_calls": calls,
+                      "gap": (objective - bound) / max(1, abs(objective))}
+
+
+def solve(args):
+    started = time.monotonic()
+    deadline = started + args.seconds
+    args.output.mkdir(parents=True, exist_ok=True)
+    command = [args.reference, args.input, args.cost_table, args.output,
+               "--ilp-bridge", "--c-sl=real", f"--cost={args.cost}",
+               f"--tti-worker={args.tti_worker}"]
+    with (args.output / "bridge.log").open("w") as log, contextlib.ExitStack() as stack:
+        bridge = Bridge(command, deadline, log)
+        stack.callback(bridge.close)
+        described = bridge.read()
+        if described["status"] != "ok":
+            return described
+        decisions = Decisions(described)
+        columns = PriceColumns(decisions, bridge, deadline)
+        solver = make_solver(deadline)
+        solver.parameters.enumerate_all_solutions = True
+        enumeration = solver.solve(decisions.model, columns)
+        proved = enumeration == cp_model.OPTIMAL and not columns.issue
+        baseline = described["baseline"]
+        report = {"status": "ok" if proved else "incomplete", "cost": args.cost,
+                  "original_T": baseline["T"], "candidates": columns.visited,
+                  "priced_columns": len(columns.rows), "iterations": columns.visited,
+                  "cuts": dict(Counter(columns.cuts.values())),
+                  "cp_sat_enumeration": solver.status_name(enumeration)}
+        if columns.issue:
+            report["reason"] = columns.issue
+        for label, condition in (("min_D", "thread-pattern"), ("strategy", args.condition_source)):
+            selected, result = choose(baseline, decisions, columns, condition, proved, deadline)
+            path = args.output / (label + ".ll")
+            validation = {"status": "not_run"}
+            if selected is None:
+                shutil.copyfile(args.input, path)
+                result["D_components"] = baseline.get("D_components")
+            else:
+                quote = columns.rows[selected]
+                result.update({key: quote[key] for key in
+                               ("D_components", "component_vectors", "pairs", "features",
+                                "recipes", "selects", "guard_branches")})
+                if time.monotonic() < deadline:
+                    emitted = bridge.quote(decisions.request(selected) | {"emit": str(path)})
+                    if emitted["status"] != "ok" or emitted["T"] != result["T"]:
+                        raise ValueError(f"re-emitted {label} differs from model result")
+                result["decisions"] = decisions.request(selected)
+            if path.is_file() and time.monotonic() < deadline:
+                try:
+                    validation = json.loads(subprocess.check_output(
+                        [args.interpreter, args.input, path], text=True,
+                        timeout=max(0.01, deadline - time.monotonic())))
+                except (OSError, ValueError, subprocess.SubprocessError) as exc:
+                    validation = {"status": "unsupported", "reason": str(exc)}
+            result["semantic_validation"] = validation
+            report[label] = result
+        report["seconds"] = time.monotonic() - started
+        if not all(report[key]["optimal"] for key in ("min_D", "strategy")):
+            report["status"] = "incomplete"
+        elif any(report[key]["semantic_validation"]["status"] != "pass"
+                 for key in ("min_D", "strategy")):
+            report["status"] = "semantic_unverified"
+        return report
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    for argument in ("input", "cost_table", "output"):
+        parser.add_argument(argument, type=Path)
+    parser.add_argument("--cost", choices=("real", "abstract"), default="abstract")
+    parser.add_argument("--condition-source", choices=("thread-pattern", "data", "workgroup-uniform"),
+                        required=True)
+    parser.add_argument("--seconds", type=float, default=600)
+    parser.add_argument("--reference", type=Path, default=Path("build/llvm24-tti/reference_solver"))
+    parser.add_argument("--tti-worker", type=Path, default=Path("tools/run-llvm24-tti"))
+    parser.add_argument("--interpreter", type=Path, default=Path("build/llvm24-tti/interpret_region"))
+    args = parser.parse_args()
+    if not 0 < args.seconds <= 600:
+        parser.error("--seconds must be in (0,600]")
+    try:
+        report = solve(args)
+    except (RuntimeError, OSError, ValueError, TimeoutError) as exc:
+        report = {"status": "error", "reason": str(exc)}
+    print(json.dumps(report, sort_keys=True))
+
+
+if __name__ == "__main__":
+    main()
