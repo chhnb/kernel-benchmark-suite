@@ -1,4 +1,5 @@
 #include "evaluate_cost.h"
+#include "fold_oracle.h"
 
 #include "llvm/IR/IRBuilder.h"
 #include "llvm/IR/Verifier.h"
@@ -24,6 +25,7 @@ struct Diamond {
   const BranchInst *branch = nullptr;
   const BasicBlock *left = nullptr, *right = nullptr, *join = nullptr;
   Insts ops[2];
+  DenseMap<const Instruction *, const Instruction *> effectBefore;
 };
 
 bool readDiamond(const Function &fn, Diamond &out) {
@@ -58,11 +60,18 @@ bool readDiamond(const Function &fn, Diamond &out) {
     auto *block = side ? out.right : out.left;
     if (block == br->getParent())
       continue;
+    const Instruction *lastEffect = nullptr;
     for (const auto &inst : *block) {
       if (isa<PHINode>(inst))
         return false;
-      if (!inst.isTerminator() && !isa<DbgInfoIntrinsic>(inst))
+      if (!inst.isTerminator() && !isa<DbgInfoIntrinsic>(inst)) {
         out.ops[side].push_back(&inst);
+        if (inst.mayReadOrWriteMemory() || inst.mayHaveSideEffects()) {
+          if (lastEffect)
+            out.effectBefore[&inst] = lastEffect;
+          lastEffect = &inst;
+        }
+      }
     }
   }
   return true;
@@ -87,10 +96,36 @@ struct Node {
 };
 
 bool compatible(const Instruction &a, const Instruction &b, Recipe recipe) {
-  if (isa<LoadInst, StoreInst, CallBase, AllocaInst>(a) ||
-      isa<LoadInst, StoreInst, CallBase, AllocaInst>(b))
+  if (a.getOpcode() != b.getOpcode() || a.getType() != b.getType() ||
+      a.getNumOperands() != b.getNumOperands() || isa<AllocaInst>(a) ||
+      a.getType()->isTokenTy())
     return false;
-  if (a.getRawSubclassOptionalData() != b.getRawSubclassOptionalData())
+  if (const auto *l = dyn_cast<LoadInst>(&a)) {
+    const auto &r = cast<LoadInst>(b);
+    return recipe == Recipe::R1 && l->isSimple() && r.isSimple() &&
+           l->getPointerAddressSpace() == r.getPointerAddressSpace();
+  }
+  if (const auto *l = dyn_cast<StoreInst>(&a)) {
+    const auto &r = cast<StoreInst>(b);
+    return recipe == Recipe::R1 && l->isSimple() && r.isSimple() &&
+           l->getPointerAddressSpace() == r.getPointerAddressSpace() &&
+           l->getValueOperand()->getType() == r.getValueOperand()->getType();
+  }
+  if (const auto *l = dyn_cast<CallInst>(&a)) {
+    const auto &r = cast<CallInst>(b);
+    const auto *callee = l->getCalledFunction();
+    if (recipe != Recipe::R1 || !callee || !callee->isIntrinsic() ||
+        r.getCalledFunction() != callee || l->isConvergent() || r.isConvergent() ||
+        l->hasOperandBundles() || r.hasOperandBundles() ||
+        l->isTailCall() || r.isTailCall() || !l->isSameOperationAs(&r))
+      return false;
+    for (unsigned i = 0; i < l->arg_size(); ++i)
+      if ((isa<Constant>(l->getArgOperand(i)) || isa<Constant>(r.getArgOperand(i))) &&
+          l->getArgOperand(i) != r.getArgOperand(i))
+        return false;
+    return true;
+  }
+  if (isa<CallBase>(a))
     return false;
   if (recipe == Recipe::R1)
     return a.isSameOperationAs(&b);
@@ -113,6 +148,7 @@ struct Candidate {
   json::Array pairs;
   bool crossed = false, commute = false, cmpSwap = false, speculate = false;
   bool sharedSelect = false, guardCluster = false, speculateSelect = false;
+  bool pairedMemory = false;
   std::set<std::string> recipes;
 };
 
@@ -197,9 +233,10 @@ Candidate emit(const Module &source, const Function &func, const Diamond &shape,
     return value;
   };
   auto ready = [&](const Instruction *inst) {
-    return !inst || llvm::none_of(inst->operands(), [&](const Use &use) {
-      return pending.count(use.get());
-    });
+    return !inst || (!pending.count(shape.effectBefore.lookup(inst)) &&
+                     llvm::none_of(inst->operands(), [&](const Use &use) {
+                       return pending.count(use.get());
+                     }));
   };
   auto mapped = [&](const Value *value) -> Value * {
     return MapValue(value, map, RF_IgnoreMissingLocals);
@@ -230,6 +267,16 @@ Candidate emit(const Module &source, const Function &func, const Diamond &shape,
         const auto &base = *(node.left ? node.left : node.right);
         auto *copy = clone(base);
         if (node.left && node.right) {
+          copy->andIRFlags(node.right);
+          SmallVector<std::pair<unsigned, MDNode *>, 8> metadata;
+          copy->getAllMetadataOtherThanDebugLoc(metadata);
+          for (const auto &item : metadata)
+            if (node.left->getMetadata(item.first) != node.right->getMetadata(item.first))
+              copy->setMetadata(item.first, nullptr);
+          if (auto *load = dyn_cast<LoadInst>(copy))
+            load->setAlignment(std::min(load->getAlign(), cast<LoadInst>(node.right)->getAlign()));
+          if (auto *store = dyn_cast<StoreInst>(copy))
+            store->setAlignment(std::min(store->getAlign(), cast<StoreInst>(node.right)->getAlign()));
           for (unsigned i = 0; i < copy->getNumOperands(); ++i) {
             unsigned r = node.recipe == Recipe::R1 ? i : 1 - i;
             copy->setOperand(i, merge(mapped(node.left->getOperand(i)),
@@ -315,6 +362,7 @@ Candidate emit(const Module &source, const Function &func, const Diamond &shape,
     result.crossed |= hasPair && index < last;
     last = index;
     hasPair = true;
+    result.pairedMemory |= isa<LoadInst, StoreInst>(node.left);
     result.commute |= node.recipe == Recipe::R2;
     result.cmpSwap |= node.recipe == Recipe::R3;
     result.pairs.push_back(json::Object{
@@ -370,6 +418,42 @@ Candidate emit(const Module &source, const Function &func, const Diamond &shape,
   return result;
 }
 
+using ValuePair = std::pair<const Value *, const Value *>;
+
+struct Pairing {
+  SmallVector<Node, 16> nodes;
+  unsigned produced, demanded, missing;
+  int64_t lowerBound;
+  Optional<int64_t> bestD;
+};
+
+bool acyclic(const Diamond &shape, ArrayRef<Node> nodes) {
+  SmallPtrSet<const Value *, 32> pending;
+  for (const auto &node : nodes) {
+    if (node.left) pending.insert(node.left);
+    if (node.right) pending.insert(node.right);
+  }
+  auto ready = [&](const Instruction *inst) {
+    return !inst || (!pending.count(shape.effectBefore.lookup(inst)) &&
+                     llvm::none_of(inst->operands(), [&](const Use &use) {
+                       return pending.count(use.get());
+                     }));
+  };
+  while (!pending.empty()) {
+    auto before = pending.size();
+    for (const auto &node : nodes) {
+      bool remaining = pending.count(node.left) || pending.count(node.right);
+      if (remaining && ready(node.left) && ready(node.right)) {
+        if (node.left) pending.erase(node.left);
+        if (node.right) pending.erase(node.right);
+      }
+    }
+    if (before == pending.size())
+      return false;
+  }
+  return true;
+}
+
 struct FrontEntry {
   Cost cost;
   std::string ir;
@@ -392,6 +476,15 @@ struct Search {
   SmallPtrSet<const Instruction *, 16> usedRight;
   std::string stop;
   bool hasWrites = false;
+  const dataflow::SizeLatency *quotes = nullptr;
+  const dataflow::SizeLatency *oracleQuotes = nullptr;
+  std::vector<Pairing> pairings;
+  Pairing *current = nullptr;
+  unsigned cyclic = 0, oracleCandidates = 0, oracleGuards = 0;
+  StringRef outputDirectory;
+
+  Search(const Module &m, const Function &f, const json::Object &table)
+      : module(m), func(f), costs(table) {}
 
   bool speculate(const Instruction &inst) const {
     return !(hasWrites && isa<LoadInst>(inst)) &&
@@ -400,13 +493,15 @@ struct Search {
 
   void add(Module &input, bool original, Candidate *candidate = nullptr) {
     auto *function = input.getFunction(func.getName());
-    auto result = dataflow::evaluate(*function, costs, original);
+    auto result = dataflow::evaluate(*function, costs, original, quotes);
     if (!result) {
       stop = toString(result.takeError());
       return;
     }
     ++verified;
     const auto cost = result->total;
+    if (current && (!current->bestD || cost[0] < *current->bestD))
+      current->bestD = cost[0];
     if (llvm::any_of(front, [&](const auto &other) {
           return dominates(other.cost, cost) || other.cost == cost;
         }))
@@ -427,7 +522,9 @@ struct Search {
         {"commute", candidate->commute}, {"cmp_swap", candidate->cmpSwap},
         {"shared_select", candidate->sharedSelect}, {"guard_cluster", candidate->guardCluster},
         {"speculate_then_select", candidate->speculateSelect},
-        {"speculated_operations", candidate->speculate}};
+        {"speculated_operations", candidate->speculate}, {"paired_memory", candidate->pairedMemory}};
+      report["pairing"] = json::Object{{"produced", current->produced}, {"demanded", current->demanded},
+                                       {"missing", current->missing}, {"lower_bound", current->lowerBound}};
       json::Array recipes;
       for (const auto &recipe : candidate->recipes)
         recipes.push_back(recipe);
@@ -436,23 +533,20 @@ struct Search {
     front.push_back({cost, std::move(text), std::move(report)});
   }
 
-  void finish(unsigned index) {
+  void generate(unsigned index) {
     if (!stop.empty())
       return;
-    if (index != shape.ops[1].size()) {
-      auto *right = shape.ops[1][index];
-      if (usedRight.count(right)) {
-        finish(index + 1);
-        return;
+    if (index < nodes.size()) {
+      auto &node = nodes[index];
+      if (!node.left || !node.right) {
+        const auto *inst = node.left ? node.left : node.right;
+        if (speculate(*inst)) {
+          node.recipe = Recipe::R5;
+          generate(index + 1);
+        }
+        node.recipe = Recipe::R6;
       }
-      nodes.push_back({nullptr, right, Recipe::R6});
-      if (speculate(*right)) {
-        nodes.back().recipe = Recipe::R5;
-        finish(index + 1);
-        nodes.back().recipe = Recipe::R6;
-      }
-      finish(index + 1);
-      nodes.pop_back();
+      generate(index + 1);
       return;
     }
     if (candidates == 10000000 || Clock::now() - start >= std::chrono::minutes(10)) {
@@ -470,9 +564,29 @@ struct Search {
     const auto *f = result.module->getFunction(func.getName());
     bool guarded = result.recipes.count("R6");
     if (guarded) {
+      if (oracleQuotes) {
+        auto checked = CloneModule(*result.module);
+        json::Array guards;
+        bool agrees = dataflow::oracle::check(*checked->getFunction(func.getName()), costs, *oracleQuotes, guards);
+        ++oracleCandidates;
+        oracleGuards += guards.size();
+        if (!agrees || guards.empty()) {
+          SmallString<256> path(outputDirectory);
+          sys::path::append(path, "fold-oracle-mismatch.ll");
+          std::error_code error;
+          raw_fd_ostream out(path, error);
+          if (!error)
+            result.module->print(out, nullptr);
+          std::string detail;
+          raw_string_ostream stream(detail);
+          stream << json::Value(std::move(guards));
+          stop = "Fold oracle disagreement: " + stream.str();
+          return;
+        }
+      }
       // The residual single guard is priced with the same Fold rule. A
       // foldable residual guard should be reached via the R5 choices instead.
-      auto check = dataflow::evaluate(*f, costs, true);
+      auto check = dataflow::evaluate(*f, costs, true, quotes);
       if (!check || check->folded) {
         if (!check)
           consumeError(check.takeError());
@@ -482,45 +596,113 @@ struct Search {
     add(*result.module, false, &result);
   }
 
-  void enumerate(unsigned index) {
+  void recordPairing() {
+    SmallVector<Node, 16> full(nodes.begin(), nodes.end());
+    for (auto *right : shape.ops[1])
+      if (!usedRight.count(right))
+        full.push_back({nullptr, right, Recipe::R6});
+    if (!acyclic(shape, full)) {
+      ++cyclic;
+      return;
+    }
+    DenseSet<ValuePair> produced, demanded;
+    int64_t lower = 0;
+    auto demand = [&](const Value *l, const Value *r) {
+      demanded.insert({l, r});
+      if (l == r)
+        produced.insert({l, l});
+    };
+    SmallPtrSet<const Value *, 32> local;
+    for (const auto &side : shape.ops)
+      local.insert(side.begin(), side.end());
+    auto keepEntry = [&](const Value *value) {
+      if (!local.count(value))
+        produced.insert({value, value});
+    };
+    keepEntry(shape.branch->getCondition());
+    for (const auto &argument : func.args())
+      keepEntry(&argument);
+    for (const auto &side : shape.ops)
+      for (const auto *inst : side)
+        for (const auto &operand : inst->operands())
+          keepEntry(operand.get());
+    for (const auto &phi : shape.join->phis()) {
+      keepEntry(phi.getIncomingValueForBlock(shape.left));
+      keepEntry(phi.getIncomingValueForBlock(shape.right));
+      demand(phi.getIncomingValueForBlock(shape.left),
+             phi.getIncomingValueForBlock(shape.right));
+    }
+    for (const auto &node : full) {
+      const auto &operation = *(node.left ? node.left : node.right);
+      lower += dataflow::costOf(operation, costs).getValueOr(0);
+      if (!node.left || !node.right)
+        continue;
+      if (!node.left->getType()->isVoidTy())
+        produced.insert({node.left, node.right});
+      for (unsigned i = 0; i < node.left->getNumOperands(); ++i)
+        demand(node.left->getOperand(i), node.right->getOperand(node.recipe == Recipe::R1 ? i : 1-i));
+    }
+    unsigned missing = llvm::count_if(demanded, [&](const auto &pair) { return !produced.count(pair); });
+    // A missing pair may fold free or be implemented by an existing join.
+    // The lower bound excludes both its charge and all guard/escape charges.
+    pairings.push_back({std::move(full), static_cast<unsigned>(produced.size()),
+                        static_cast<unsigned>(demanded.size()), missing, lower, None});
+  }
+
+  void enumeratePairings(unsigned index) {
     if (!stop.empty())
       return;
-    if (candidates == 10000000 || Clock::now() - start >= std::chrono::minutes(10)) {
-      stop = "enumeration limit";
+    if (pairings.size() >= 10000000 || Clock::now() - start >= std::chrono::minutes(10)) {
+      stop = "pairing enumeration limit";
       return;
     }
     if (index == shape.ops[0].size()) {
-      finish(0);
+      recordPairing();
       return;
     }
     auto *left = shape.ops[0][index];
     nodes.push_back({left, nullptr, Recipe::R6});
-    if (speculate(*left)) {
-      nodes.back().recipe = Recipe::R5;
-      enumerate(index + 1);
-      nodes.back().recipe = Recipe::R6;
-    }
-    enumerate(index+1);
+    enumeratePairings(index+1);
     for (auto *right : shape.ops[1]) {
-      if (usedRight.count(right) || !speculate(*left) || !speculate(*right))
+      if (usedRight.count(right))
         continue;
       for (auto recipe : {Recipe::R1, Recipe::R2, Recipe::R3}) {
         if (!compatible(*left, *right, recipe))
           continue;
+        if (!isa<LoadInst, StoreInst>(left) &&
+            (!speculate(*left) || !speculate(*right)))
+          continue;
         usedRight.insert(right);
         nodes.back() = {left, right, recipe};
-        enumerate(index+1);
+        enumeratePairings(index+1);
         usedRight.erase(right);
       }
     }
     nodes.pop_back();
   }
+
+  void search() {
+    enumeratePairings(0);
+    llvm::stable_sort(pairings, [](const Pairing &a, const Pairing &b) {
+      return a.lowerBound < b.lowerBound;
+    });
+    for (auto &plan : pairings) {
+      if (!stop.empty())
+        break;
+      current = &plan;
+      nodes = plan.nodes;
+      generate(0);
+    }
+    current = nullptr;
+  }
+
 };
 } // namespace
 
 int main(int argc, char **argv) {
-  if (argc != 4) {
-    errs() << "usage: reference_solver INPUT.ll COST_TABLE.json OUTPUT_DIRECTORY\n";
+  if (argc < 4 || argc > 5 || (argc == 5 && StringRef(argv[4]) != "--c-sl=real" &&
+                             StringRef(argv[4]) != "--c-sl=abstract")) {
+    errs() << "usage: reference_solver INPUT.ll COST_TABLE.json OUTPUT_DIRECTORY [--c-sl=real|abstract]\n";
     return 2;
   }
   LLVMContext context;
@@ -549,15 +731,24 @@ int main(int argc, char **argv) {
     return 1;
   }
   const auto &costs = *table->getAsObject();
-  Search search{*module, *function, costs, {}, Clock::now(), 0, 0, {}, {}, {}, {}, false};
-  auto baseline = dataflow::evaluate(*function, costs, true);
+  if (auto error = sys::fs::create_directories(argv[3])) {
+    errs() << error.message() << '\n';
+    return 1;
+  }
+  Search search(*module, *function, costs);
+  search.outputDirectory = argv[3];
+  dataflow::SizeLatency oracleQuotes(*module);
+  search.oracleQuotes = &oracleQuotes;
+  if (argc == 5 && StringRef(argv[4]) == "--c-sl=real")
+    search.quotes = &oracleQuotes;
+  auto baseline = dataflow::evaluate(*function, costs, true, search.quotes);
   std::string limitation = "multi-segment R6/G1–G4 scheduling and S_loc coverage are incomplete";
   if (baseline) {
     search.add(*module, true);
     if (readDiamond(*function, search.shape)) {
       for (const auto &arm : search.shape.ops)
         search.hasWrites |= llvm::any_of(arm, [](const auto *inst) { return inst->mayWriteToMemory(); });
-      search.enumerate(0);
+      search.search();
     } else {
       limitation = "unsupported source CFG for candidate generation";
     }
@@ -567,10 +758,6 @@ int main(int argc, char **argv) {
   if (!search.stop.empty())
     limitation = search.stop;
 
-  if (auto error = sys::fs::create_directories(argv[3])) {
-    errs() << error.message() << '\n';
-    return 1;
-  }
   llvm::sort(search.front, [](const auto &a, const auto &b) { return a.cost < b.cost; });
   json::Array front;
   json::Value conservative = nullptr;
@@ -596,7 +783,19 @@ int main(int argc, char **argv) {
   auto seconds = std::chrono::duration<double>(Clock::now() - search.start).count();
   const auto base = baseline ? json::Value(json::Array{
       baseline->total[0], baseline->total[1], baseline->total[2]}) : json::Value(nullptr);
-  outs() << json::Value(json::Object{{"complete", false}, {"reason", limitation},
+  json::Array topK;
+  if (baseline && search.stop.empty()) {
+    for (unsigned k : {1u, 3u, 10u}) {
+      auto best = baseline->total[0];
+      for (auto &plan : ArrayRef<Pairing>(search.pairings).take_front(k))
+        if (plan.bestD)
+          best = std::min(best, *plan.bestD);
+      topK.push_back(json::Object{{"k", k}, {"best_observed_D", best}});
+    }
+  }
+  outs() << json::Value(json::Object{{"complete", false}, {"top_k", std::move(topK)},
+      {"oracle_candidates", search.oracleCandidates}, {"oracle_guards", search.oracleGuards},
+      {"pairings", static_cast<int64_t>(search.pairings.size())}, {"cyclic_pairings", search.cyclic}, {"reason", limitation},
       {"original_T", base}, {"candidates", static_cast<int64_t>(search.candidates)},
       {"verified_candidates", static_cast<int64_t>(search.verified)}, {"seconds", seconds},
       {"pareto_front", std::move(front)}, {"conservative_index", std::move(conservative)}}) << '\n';

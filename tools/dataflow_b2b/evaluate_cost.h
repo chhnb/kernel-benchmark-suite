@@ -2,10 +2,12 @@
 
 #include "cost_model.h"
 #include "llvm/ADT/SmallPtrSet.h"
+#include "llvm/ADT/DenseSet.h"
 #include "llvm/IR/IntrinsicInst.h"
 #include "llvm/IR/CFG.h"
 #include "llvm/IR/ModuleSlotTracker.h"
 #include <array>
+#include <map>
 
 
 namespace dataflow {
@@ -14,10 +16,14 @@ struct CostReport {
   unsigned guards = 0, branches = 0, escapes = 0, selects = 0;
   bool folded = false;
   llvm::json::Array operations;
+  std::map<std::string, int64_t> divergenceCosts;
 
   llvm::json::Object json() {
     using namespace llvm;
-    return json::Object{{"T", json::Array{total[0], total[1], total[2]}},
+    json::Object components;
+    for (const auto &term : divergenceCosts)
+      components[term.first] = term.second;
+    return json::Object{{"D_components", std::move(components)}, {"T", json::Array{total[0], total[1], total[2]}},
                         {"guard_segments", guards}, {"guard_branches", branches},
                         {"escaping_values", escapes}, {"selects", selects},
                         {"original_folded", folded}, {"operations", std::move(operations)}};
@@ -69,7 +75,8 @@ outputWrites(const llvm::ReturnInst &ret, const llvm::Function &fn) {
 
 inline llvm::Expected<CostReport> evaluate(const llvm::Function &fn,
                                            const llvm::json::Object &table,
-                                           bool original) {
+                                           bool original, const SizeLatency *real = nullptr,
+                                           bool strictGuards = true) {
   using namespace llvm;
   using namespace llvm::PatternMatch;
   auto unsupported = [](const Twine &why) {
@@ -114,26 +121,30 @@ inline llvm::Expected<CostReport> evaluate(const llvm::Function &fn,
   if (original && guards.size() != 1)
     return unsupported("original region must have one conditional branch");
   const auto writes = outputWrites(*ret, fn);
-  SmallVector<const Instruction *, 16> arms;
-  SmallVector<const PHINode *, 8> joins;
-  SmallVector<const Value *, 16> incoming;
-  for (const auto &block : fn) {
-    if (!masks.count(&block))
-      continue;
-    for (const auto &inst : block) {
-      if (auto *phi = dyn_cast<PHINode>(&inst)) {
-        if (masks.lookup(&block) != 3 || phi->getNumIncomingValues() != 2)
-          return unsupported("non-binary join PHI or an arm PHI");
-        joins.push_back(phi);
-        incoming.append(phi->incoming_values().begin(), phi->incoming_values().end());
-      } else if (!inst.isTerminator() && !isa<DbgInfoIntrinsic>(inst) &&
-                 masks.lookup(&block) != 3) {
-        arms.push_back(&inst);
-      }
-    }
-  }
   CostReport report;
-  report.folded = original && foldFailure(arms, incoming, joins.size(), table).empty();
+  for (const auto *branch : guards) {
+    auto shape = findGuard(*branch);
+    if (!shape) {
+      if (strictGuards)
+        return unsupported("guard must reconverge in a local B2B join");
+      continue;
+    }
+    SmallVector<const Instruction *, 16> ops;
+    SmallVector<const PHINode *, 8> phis;
+    for (const auto &phi : shape->join->phis())
+      phis.push_back(&phi);
+    for (auto *arm : {shape->left, shape->right})
+      if (arm)
+        for (const auto &inst : *arm)
+          if (!inst.isTerminator() && !isa<DbgInfoIntrinsic>(inst))
+            ops.push_back(&inst);
+    bool folds = foldFailure(ops, phis, *shape->join, *branch->getCondition(), table, real).empty();
+    if (original)
+      report.folded = folds;
+    else if (folds && strictGuards)
+      return unsupported(Twine("retained guard on ") + branch->getParent()->getName() +
+                         " must be speculated by SimplifyCFG");
+  }
   ModuleSlotTracker slots(fn.getParent());
   slots.incorporateFunction(fn);
   auto charge = [&](StringRef kind, const Instruction &inst, unsigned mask, int64_t cost) {
@@ -143,6 +154,7 @@ inline llvm::Expected<CostReport> evaluate(const llvm::Function &fn,
     report.operations.push_back(json::Object{
         {"kind", kind}, {"ir", stream.str()}, {"cost", cost},
         {"scenarios", mask == 3 ? "DLR" : mask == 1 ? "DL" : "DR"}});
+    report.divergenceCosts[kind.str()] += cost;
     report.total[0] += cost;
     if (mask & 1) report.total[1] += cost;
     if (mask & 2) report.total[2] += cost;
@@ -175,6 +187,7 @@ inline llvm::Expected<CostReport> evaluate(const llvm::Function &fn,
     return None;
   };
 
+  DenseSet<std::pair<const Value *, const Value *>> demandPairs;
   for (const auto &block : fn) {
     unsigned mask = masks.lookup(&block);
     if (!mask)
@@ -190,9 +203,18 @@ inline llvm::Expected<CostReport> evaluate(const llvm::Function &fn,
         if (a == b || phi->use_empty())
           continue;
         if (report.folded) {
-          auto fold = foldedSelect(a, b);
-          report.selects += !fold;
-          charge("folded-join", inst, 3, fold.getValueOr(*table.getObject("op")->getInteger("select")));
+          const auto *branch = *guards.begin();
+          const auto *trueArm = branch->getSuccessor(0);
+          if (trueArm == phi->getParent())
+            trueArm = branch->getParent();
+          if (phi->getIncomingBlock(0) != trueArm)
+            std::swap(a, b);
+          auto key = std::make_pair(a, b);
+          if (demandPairs.insert(key).second) {
+            auto fold = foldedSelect(a, b);
+            ++report.selects;
+            charge("folded-join", inst, 3, fold.getValueOr(*table.getObject("op")->getInteger("select")));
+          }
         } else {
           ++report.escapes;
           charge("escape", inst, 3, *table.getInteger("guard_escape_merge"));
@@ -200,11 +222,24 @@ inline llvm::Expected<CostReport> evaluate(const llvm::Function &fn,
         continue;
       }
       const auto *sel = dyn_cast<SelectInst>(&inst);
-      if (sel)
-        if (auto fold = foldedSelect(sel->getTrueValue(), sel->getFalseValue())) {
+      if (sel) {
+        auto *a = sel->getTrueValue(), *b = sel->getFalseValue();
+        bool inverted = match(sel->getCondition(), m_Not(m_Specific(condition)));
+        bool demand = !original && mask == 3 &&
+                      (sel->getCondition() == condition || inverted);
+        if (demand) {
+          if (inverted)
+            std::swap(a, b);
+          if (demandPairs.insert({a, b}).second && a != b)
+            ++report.selects;
+          else
+            continue;
+        }
+        if (auto fold = foldedSelect(a, b)) {
           charge("simplified-select", inst, mask, *fold);
           continue;
         }
+      }
       if (inst.getMetadata("dataflow.folded.condition") &&
           match(&inst, m_Not(m_Specific(condition)))) {
         charge("folded-condition", inst, mask, *table.getInteger("select_i1_folded_to_condition"));
@@ -213,8 +248,9 @@ inline llvm::Expected<CostReport> evaluate(const llvm::Function &fn,
       auto cost = costOf(inst, table);
       if (!cost)
         return unsupported(Twine("missing abstract cost for ") + inst.getOpcodeName());
-      report.selects += sel != nullptr;
-      charge("instruction", inst, mask, *cost);
+      StringRef kind = isa<LoadInst, StoreInst>(inst) ? "memory" :
+                       sel ? "select" : "instruction";
+      charge(kind, inst, mask, *cost);
     }
   }
   return report;

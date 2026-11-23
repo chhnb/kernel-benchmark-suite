@@ -610,7 +610,8 @@ struct Stats {
   unsigned numOutputs = 0;
 };
 
-Stats measure(const Region &region, ArrayRef<Output> result, const json::Object &costs) {
+Stats measure(const Region &region, ArrayRef<Output> result, const json::Object &costs,
+              const dataflow::SizeLatency &real) {
   Stats stats;
   std::map<unsigned, unsigned> leftOpcodes;
   SmallPtrSet<const Instruction *, 32> visited;
@@ -649,10 +650,11 @@ Stats measure(const Region &region, ArrayRef<Output> result, const json::Object 
     return stats;
 
   stats.numOutputs = result.size();
-  SmallVector<const Value *, 16> incoming;
+  SmallVector<const PHINode *, 8> phis;
   for (const auto &output : result)
-    incoming.append({output.left, output.right});
-  stats.foldReason = dataflow::foldFailure(operations, incoming, result.size(), costs);
+    phis.push_back(output.phi);
+  stats.foldReason = dataflow::foldFailure(operations, phis, *region.join,
+                                          *region.split.getCondition(), costs, &real);
   stats.folds = stats.foldReason.empty();
   if (stats.foldReason.empty())
     stats.foldReason = "within budget or single-operation exception";
@@ -716,6 +718,7 @@ int main(int argc, char **argv) {
     return 1;
   }
 
+  dataflow::SizeLatency real(*module);
   ModuleSlotTracker slots(module.get());
   for (auto &function : *module) {
     if (function.isDeclaration())
@@ -728,7 +731,7 @@ int main(int argc, char **argv) {
         continue;
       auto region = classify(*branch, postdom);
       auto result = outputs(region);
-      auto stats = measure(region, result, costs);
+      auto stats = measure(region, result, costs, real);
       std::string text, error, id;
       if (region.isB2B()) {
         if (auto out = isolate(region, result, error)) {
@@ -767,6 +770,18 @@ int main(int argc, char **argv) {
                           stats.left + stats.right <= 50 ? "medium" : "large"},
           {"original_folds", std::move(stats.folds)}, {"fold_reason", stats.foldReason},
           {"occurrence", std::move(occurrence)}};
+      if (region.isB2B()) {
+        json::Array quotes;
+        for (const auto &side : {region.left, region.right}) {
+          json::Array quoteSide;
+          for (const auto *arm : side)
+            for (const auto &inst : *arm)
+              if (semantic(inst))
+                quoteSide.push_back(real.quote(inst));
+          quotes.push_back(std::move(quoteSide));
+        }
+        entry["size_latency_quotes"] = std::move(quotes);
+      }
       if (!text.empty())
         entry["ir"] = id + ".ll";
       if (!error.empty())

@@ -7,9 +7,23 @@
 using namespace llvm;
 
 int main(int argc, char **argv) {
-  if (argc < 3 || argc > 4 || (argc == 4 && StringRef(argv[3]) != "--original")) {
-    errs() << "usage: evaluate_cost INPUT.ll COST_TABLE.json [--original]\n";
+  if (argc < 3) {
+    errs() << "usage: evaluate_cost INPUT.ll COST_TABLE.json [--original] [--c-sl=real|abstract]\n";
     return 2;
+  }
+  bool original = false, real = false;
+  for (int index = 3; index < argc; ++index) {
+    StringRef option(argv[index]);
+    if (option == "--original")
+      original = true;
+    else if (option == "--c-sl=real")
+      real = true;
+    else if (option == "--c-sl=abstract")
+      real = false;
+    else {
+      errs() << "unknown option: " << option << '\n';
+      return 2;
+    }
   }
   LLVMContext context;
   SMDiagnostic diagnostic;
@@ -39,7 +53,10 @@ int main(int argc, char **argv) {
     errs() << toString(table.takeError()) << '\n';
     return 1;
   }
-  auto result = dataflow::evaluate(*function, *table->getAsObject(), argc == 4);
+  std::unique_ptr<dataflow::SizeLatency> quotes;
+  if (real)
+    quotes = std::make_unique<dataflow::SizeLatency>(*module);
+  auto result = dataflow::evaluate(*function, *table->getAsObject(), original, quotes.get());
   if (!result) {
     outs() << json::Value(json::Object{{"status", "unsupported"},
                   {"reason", toString(result.takeError())}}) << '\n';

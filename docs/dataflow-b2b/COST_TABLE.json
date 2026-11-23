@@ -8,6 +8,8 @@
     "sdiv": 8, "udiv": 8, "srem": 8, "urem": 8, "fdiv": 8,
     "zext": 1, "sext": 1, "trunc": 1, "bitcast": 0, "getelementptr": 1,
     "load": 4, "store": 4,
+    "fneg": 1, "insertelement": 1, "extractelement": 1,
+    "uitofp": 1, "sitofp": 1, "fptoui": 1, "fptosi": 1,
     "select": 1
   },
   "intrinsic": {
