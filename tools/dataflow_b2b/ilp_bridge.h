@@ -39,6 +39,49 @@ struct DecisionProblem {
 
   json::Object describe(dataflow::CostReport &baseline) {
     json::Array operations, pairs, outputs;
+    DenseSet<const Instruction *> live;
+    SmallVector<const Value *, 16> roots;
+    for (const auto &phi : search.shape.join->phis()) {
+      roots.push_back(phi.getIncomingValueForBlock(search.shape.left));
+      roots.push_back(phi.getIncomingValueForBlock(search.shape.right));
+    }
+    for (const auto *inst : instructions)
+      if (isa<StoreInst>(inst))
+        roots.push_back(inst);
+    while (!roots.empty()) {
+      auto *inst = dyn_cast<Instruction>(roots.pop_back_val());
+      // A merge can absorb a C-select, along with either of its operands.
+      if (!inst || !ids.count(inst) || isa<SelectInst>(inst) || !live.insert(inst).second)
+        continue;
+      for (const auto &operand : inst->operands())
+        roots.push_back(operand.get());
+    }
+    dataflow::InstructionCosts fixedQuotes;
+    bool amd = Triple(search.module.getTargetTriple()).isAMDGPU();
+    if (search.throughput && amd) {
+      auto prices = search.throughput(search.func);
+      if (prices)
+        fixedQuotes = std::move(*prices);
+      else
+        consumeError(prices.takeError());
+    }
+    auto fixedCost = [&](const Instruction &inst) -> int64_t {
+      if (!search.throughput)
+        return dataflow::costOf(inst, search.costs).getValueOr(0);
+      switch (inst.getOpcode()) {
+      // These AMDGPU TTI arithmetic quotations use type and subtarget only.
+      case Instruction::Add: case Instruction::Sub:
+      case Instruction::And: case Instruction::Or: case Instruction::Xor:
+      case Instruction::Shl: case Instruction::LShr: case Instruction::AShr:
+      case Instruction::Mul:
+        return fixedQuotes.lookup(&inst);
+      case Instruction::FAdd: case Instruction::FSub:
+        return inst.getType()->getScalarType()->isDoubleTy() ||
+               inst.getType()->getScalarType()->isFloatTy() ? fixedQuotes.lookup(&inst) : 0;
+      default:
+        return 0;
+      }
+    };
     for (unsigned i = 0; i < instructions.size(); ++i) {
       auto *inst = instructions[i];
       json::Array deps, operands;
@@ -47,6 +90,7 @@ struct DecisionProblem {
       operations.push_back(json::Object{
         {"side", i < search.shape.ops[0].size() ? 0 : 1},
         {"opcode", inst->getOpcodeName()}, {"safe", search.speculate(*inst)},
+        {"persistent", live.count(inst) != 0}, {"fixed_cost", fixedCost(*inst)},
         {"operands", std::move(operands)}, {"deps", std::move(deps)}});
     }
     for (const auto &match : matches) {
@@ -67,6 +111,8 @@ struct DecisionProblem {
     report.erase("operations");
     return json::Object{{"status", "ok"}, {"ops", std::move(operations)},
       {"matches", std::move(pairs)}, {"outputs", std::move(outputs)},
+      {"split_lower_bound", (!search.throughput || amd) ? search.splitCost : 0},
+      {"arm_lower_bound", search.throughput && amd ? search.armCost : 0},
       {"baseline", std::move(report)}};
   }
 

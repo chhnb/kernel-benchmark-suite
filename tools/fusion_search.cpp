@@ -1765,6 +1765,38 @@ std::vector<Trial> planSingleBranchB2B(const Module &parent, const Candidate &c,
             {"charged_segments", int64_t(plan.chargedSegments)},
             {"emission", layout.guarded ? "guarded-linear" : linear ? "linear" :
                          prefix ? "before-split" : "segmented"}};
+        if (siblingArms && join) {
+          using namespace dataflow::extraction;
+          auto mapping = [](ArrayRef<Instruction *> work) {
+            SmallVector<int, 16> indices;
+            int offset = 0;
+            for (auto *inst : work)
+              indices.push_back(semantic(*inst) && !laneInput(*inst) ? offset++ : -1);
+            return indices;
+          };
+          auto l = mapping(segmentWork[0]), r = mapping(segmentWork[1]);
+          SmallVector<bool, 16> usedLeft(l.size()), usedRight(r.size());
+          json::Array pairs, protectedOps;
+          for (auto pair : plan.matches)
+            if (l[pair.left] >= 0 && r[pair.right] >= 0) {
+              usedLeft[pair.left] = true;
+              usedRight[pair.right] = true;
+              const auto *inst = segmentWork[0][pair.left];
+              pairs.push_back(json::Object{{"left_index", l[pair.left]}, {"right_index", r[pair.right]},
+                  {"recipe", !pair.swapped ? "R1" : isa<CmpInst>(inst) ? "R3" : "R2"}});
+            }
+          // Project a segmented anchor mask onto the single-guard search space.
+          if (!layout.linear)
+            for (unsigned side : {0u, 1u}) {
+              const auto &indices = side ? r : l;
+              const auto &used = side ? usedRight : usedLeft;
+              for (unsigned i = 0; i < indices.size(); ++i)
+                if (!used[i] && indices[i] >= 0)
+                  protectedOps.push_back(json::Array{side, indices[i]});
+            }
+          layout.stats["dataflow_hint"] = json::Object{{"pairs", std::move(pairs)},
+                                                       {"protected", std::move(protectedOps)}};
+        }
         if (linear || std::getenv("FUSION_OBSERVE_B2B_DP"))
           layout.stats["dp_score"] = plan.score;
         if (linear) {
@@ -1862,13 +1894,13 @@ std::vector<Trial> planSingleBranchB2B(const Module &parent, const Candidate &c,
   return trials;
 }
 
-void addDataflowCandidates(Function &fn, std::vector<Candidate> &candidates) {
-  dataflow::exact::addCandidates(fn, candidates);
+void addDataflowCandidates(Function &fn, std::vector<Candidate> &candidates, bool includeLarge) {
+  dataflow::exact::addCandidates(fn, candidates, includeLarge);
 }
 
 Optional<Trial> tryDataflowExact(const Module &parent, const Candidate &candidate,
                                 CleanupMode mode, StringRef solver, StringRef costs,
-                                StringRef worker) {
+                                StringRef worker, StringRef ilp, const json::Object *anchorHint) {
   auto *source = parent.getFunction(candidate.function);
   auto *split = source ? dataflow::exact::findSplit(*source, candidate) : nullptr;
   if (!split)
@@ -1878,7 +1910,7 @@ Optional<Trial> tryDataflowExact(const Module &parent, const Candidate &candidat
   trial.candidate = candidate;
   trial.cleanupMode = mode;
   trial.planKind = "B2B";
-  trial.mergePath = "dataflow-exact";
+  trial.mergePath = ilp.empty() ? "dataflow-exact" : "dataflow-ilp";
   trial.before = features(*source);
 
   ValueToValueMapTy map;
@@ -1890,7 +1922,7 @@ Optional<Trial> tryDataflowExact(const Module &parent, const Candidate &candidat
   dataflow::extraction::Values args;
   auto start = Clock::now();
   auto solution = dataflow::exact::solve(region, outputs, args, solver, costs,
-                                         worker, trial.dataflowExact, trial.reason);
+                                         worker, ilp, anchorHint, trial.dataflowExact, trial.reason);
   if (!solution)
     return trial;
 

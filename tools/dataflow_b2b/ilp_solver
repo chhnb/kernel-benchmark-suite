@@ -5,6 +5,7 @@ import argparse
 from collections import Counter, defaultdict
 import contextlib
 import json
+import math
 from pathlib import Path
 import selectors
 import shutil
@@ -21,6 +22,7 @@ class Bridge:
                                      stderr=log, text=True)
         self.selector = selectors.DefaultSelector()
         self.selector.register(self.proc.stdout, selectors.EVENT_READ)
+        self.pending = False
 
     def read(self):
         if not self.selector.select(max(0, self.deadline - time.monotonic())):
@@ -28,11 +30,17 @@ class Bridge:
         line = self.proc.stdout.readline()
         if not line:
             raise RuntimeError("LLVM bridge closed without a report; see bridge.log")
+        self.pending = False
         return json.loads(line)
 
     def quote(self, request):
+        # A reply may arrive after the search deadline, while emission is
+        # still allowed. Drain that reply before sending a different request.
+        if self.pending:
+            self.read()
         self.proc.stdin.write(json.dumps(request) + "\n")
         self.proc.stdin.flush()
+        self.pending = True
         return self.read()
 
     def close(self):
@@ -62,12 +70,11 @@ def equivalent_and(model, inputs, name):
 class Decisions:
     def __init__(self, source):
         model = self.model = cp_model.CpModel()
-        ops, matches = source["ops"], source["matches"]
+        self.ops, self.matches = ops, matches = source["ops"], source["matches"]
+        self.reach = self.reachability(ops)
         self.x = [model.new_bool_var(f"x{i}") for i, _ in enumerate(matches)]
-        unused = [model.new_bool_var(f"u{i}") for i, _ in enumerate(ops)]
+        self.unused = unused = [model.new_bool_var(f"u{i}") for i, _ in enumerate(ops)]
         self.g = protected = [model.new_bool_var(f"g{i}") for i, _ in enumerate(ops)]
-        rank = [model.new_int_var(0, max(0, len(ops) - 1), f"h{i}")
-                for i, _ in enumerate(ops)]
         incident = defaultdict(list)
         producers = defaultdict(list)
         consumers = defaultdict(list)
@@ -80,30 +87,21 @@ class Decisions:
             for values in pair["demands"]:
                 if values[0] != values[1]:
                     consumers[tuple(values)].append(match)
-            model.add(rank[l] == rank[r]).only_enforce_if(match)
-        support = []
+        self.conflicts = 0
+        for i, pair in enumerate(matches):
+            a, b = pair["left"], pair["right"]
+            for j in range(i):
+                other = matches[j]
+                c, d = other["left"], other["right"]
+                if ((a in self.reach[c] and d in self.reach[b]) or
+                        (c in self.reach[a] and b in self.reach[d])):
+                    model.add_at_most_one(self.x[i], self.x[j])
+                    self.conflicts += 1
         for i, op in enumerate(ops):
             model.add(unused[i] + sum(match for match, _ in incident[i]) == 1)
             model.add(protected[i] <= unused[i])
             if not op["safe"]:
                 model.add(protected[i] == unused[i])
-            zero = model.new_bool_var(f"rank0_{i}")
-            model.add(rank[i] == 0).only_enforce_if(zero)
-            model.add(rank[i] != 0).only_enforce_if(~zero)
-            tight = [zero]
-            for pred in op["deps"]:
-                model.add(rank[pred] + 1 <= rank[i])
-                edge = model.new_bool_var(f"tight{pred}_{i}")
-                model.add(rank[pred] + 1 == rank[i]).only_enforce_if(edge)
-                model.add(rank[pred] + 1 < rank[i]).only_enforce_if(~edge)
-                tight.append(edge)
-            support.append(equivalent_or(model, tight, f"own_rank_support{i}"))
-        # Force the minimal rank. This removes multiple witnesses of the
-        # same decision vector without imposing source order on pairings.
-        for i, own in enumerate(support):
-            model.add_bool_or([own, *(equivalent_and(model, (x, support[j]),
-                               f"paired_rank_support{i}_{k}")
-                               for k, (x, j) in enumerate(incident[i]))])
         output_pairs = {tuple(values) for values in source["outputs"] if values[0] != values[1]}
         escape_users = defaultdict(list)
         for a, b in sorted(set(producers) | set(consumers) | output_pairs):
@@ -129,44 +127,122 @@ class Decisions:
         equivalent_or(model, arms, "G")
         self.key = [*self.x, *self.g]
 
+    @staticmethod
+    def reachability(ops):
+        reach = []
+        for op in ops:
+            ancestors = set(op["deps"])
+            for dep in op["deps"]:
+                ancestors.update(reach[dep])
+            reach.append(ancestors)
+        return reach
+
+    def cycle(self, bits):
+        active = [i for i, on in enumerate(bits[:len(self.x)]) if on]
+        todo, done = [], set()
+
+        def visit(i):
+            if i in todo:
+                return tuple(sorted(todo[todo.index(i):]))
+            if i in done:
+                return ()
+            todo.append(i)
+            for j in active:
+                if any(self.matches[j][side] in self.reach[self.matches[i][side]]
+                       for side in ("left", "right")):
+                    if witness := visit(j):
+                        return witness
+            todo.pop()
+            done.add(i)
+            return ()
+
+        for i in active:
+            if witness := visit(i):
+                return witness
+        return ()
+
+    def hint(self, hint):
+        offsets = [[], []]
+        for i, op in enumerate(self.ops):
+            offsets[op["side"]].append(i)
+        chosen, covered = set(), set()
+        by_pair = {(p["left"], p["right"], p["recipe"]): i for i, p in enumerate(self.matches)}
+        for p in hint.get("pairs", []):
+            l, r = p["left_index"], p["right_index"]
+            if not (0 <= l < len(offsets[0]) and 0 <= r < len(offsets[1])):
+                continue
+            l, r = offsets[0][l], offsets[1][r]
+            if (l, r, p["recipe"]) in by_pair and l not in covered and r not in covered:
+                chosen.add(by_pair[l, r, p["recipe"]])
+                covered.update((l, r))
+        if not chosen:
+            return None
+        guarded = {(side, offsets[side][i]) for side, i in hint.get("protected", [])
+                   if 0 <= i < len(offsets[side])}
+        bits = tuple([int(i in chosen) for i in range(len(self.x))] +
+                     [int(i not in covered and
+                          ((op["side"], i) in guarded or not op["safe"]))
+                      for i, op in enumerate(self.ops)])
+        return bits if not self.cycle(bits) else None
+
     def request(self, bits):
         return {"matches": [i for i, chosen in enumerate(bits[:len(self.x)]) if chosen],
                 "guards": [i for i, chosen in enumerate(bits[len(self.x):]) if chosen]}
 
 
 class PriceColumns(cp_model.CpSolverSolutionCallback):
-    def __init__(self, decisions, bridge, deadline):
+    def __init__(self, decisions, bridge, deadline, baseline, condition):
         super().__init__()
         self.decisions, self.bridge, self.deadline = decisions, bridge, deadline
-        self.rows = {}
-        self.cuts = {}
+        self.baseline, self.condition = baseline, condition
+        self.seen = set()
+        self.best = {}
+        self.priced = 0
         self.visited = 0
+        self.cuts = Counter()
         self.issue = None
+        self.witness = None
 
     def on_solution_callback(self):
         if time.monotonic() >= self.deadline:
             self.stop_search()
             return
         bits = tuple(self.value(var) for var in self.decisions.key)
-        if bits in self.rows or bits in self.cuts:
-            return
+        if self.price(bits):
+            self.stop_search()
+
+    def price(self, bits):
+        key = bytes(bits)
+        if key in self.seen:
+            return False
+        self.seen.add(key)
         self.visited += 1
+        self.witness = self.decisions.cycle(bits)
+        if self.witness:
+            self.cuts["long_cycle"] += 1
+            return True
         try:
             quote = self.bridge.quote(self.decisions.request(bits))
             if quote["status"] == "ok":
                 reconstructed = tuple(sum(values[i] for values in quote["component_vectors"].values())
                                       for i in range(3))
                 if reconstructed != tuple(quote["T"]):
-                    raise ValueError(f"LLVM cost component mismatch for {bits}")
-                self.rows[bits] = quote
+                    raise ValueError("LLVM cost component mismatch")
+                self.priced += 1
+                for condition in {"thread-pattern", self.condition}:
+                    if not eligible(quote["T"], self.baseline, condition):
+                        continue
+                    key = (score_key(quote["T"], condition), bits)
+                    previous = self.best.get(condition)
+                    if previous is None or key < previous[0]:
+                        self.best[condition] = key, quote
             elif quote["status"] in ("multi_guard", "mandatory_fold", "invalid_generation"):
-                self.cuts[bits] = quote["status"]
+                self.cuts[quote["status"]] += 1
             else:
                 self.issue = quote.get("reason", "unexpected LLVM response")
-                self.stop_search()
         except (TimeoutError, OSError, ValueError, RuntimeError) as exc:
             self.issue = str(exc)
-            self.stop_search()
+        return self.issue is not None
 
 
 def make_solver(deadline):
@@ -184,79 +260,60 @@ def eligible(t, baseline, condition):
     return condition != "data" or all(a <= b for a, b in zip(t[1:], baseline[1:]))
 
 
-def optimize(decisions, rows, cuts, baseline, condition, deadline):
-    """Optimize exact three-scenario linear forms once prices are known."""
+def relaxation(decisions, described, condition, deadline):
+    """Price only guaranteed instruction and control costs before oracle cuts."""
     model = decisions.model.clone()
-    for bits in cuts:
-        model.add_bool_or([~var if bit else var for var, bit in zip(decisions.key, bits)])
-    if not rows:
-        return None, "OPTIMAL", 0
-    terms = ("instruction", "select", "control", "escape")
-    values = [value for quote in rows.values() for vec in quote["component_vectors"].values()
-              for value in vec]
-    limit = max(values + [*baseline])
-    components = [[model.new_int_var(0, limit, f"cost_{kind}_{i}") for i in range(3)]
-                  for kind in terms]
-    costs = [model.new_int_var(0, limit * len(terms), f"T_{axis}") for axis in "DLR"]
-    for i in range(3):
-        model.add(costs[i] == sum(vec[i] for vec in components))
-    table = [(*bits, *(value for kind in terms for value in quote["component_vectors"][kind]))
-             for bits, quote in rows.items()]
-    model.add_allowed_assignments([*decisions.key, *(v for vec in components for v in vec)], table)
-    if condition == "data":
-        model.add(costs[1] <= baseline[1])
-        model.add(costs[2] <= baseline[2])
-    objectives = costs[:]
+    t = described["baseline"]["T"]
+    ceiling = score_key(t, condition)[0]
+    split = described["split_lower_bound"]
+    arm_cost = described["arm_lower_bound"]
+    guards = [equivalent_or(model, [g for g, op in zip(decisions.g, decisions.ops)
+                                    if op["persistent"] and op["side"] == side],
+                           f"observable_guard_{side}") for side in (0, 1)]
+    required = equivalent_or(model, guards, "observable_guard")
+    shared = sum(x * min(decisions.ops[p["left"]]["fixed_cost"], decisions.ops[p["right"]]["fixed_cost"])
+                 for x, p in zip(decisions.x, decisions.matches)
+                 if decisions.ops[p["left"]]["persistent"] or decisions.ops[p["right"]]["persistent"])
+    def floor(sides):
+        return (split * required + arm_cost * sum(guards[i] for i in sides) + shared +
+                sum(op["fixed_cost"] * (u if op["side"] in sides else u - g)
+                    for op, u, g in zip(decisions.ops, decisions.unused, decisions.g)
+                    if op["persistent"]))
+    # The original remains feasible even if no modeled rewrite meets this cap.
+    original = model.new_bool_var("use_original")
+    score = model.new_int_var(0, ceiling, "objective_lower_bound")
+    # All structural constraints admit the no-pair, all-protected vector.
+    model.add(score == ceiling).only_enforce_if(original)
     if condition == "workgroup-uniform":
-        peak = model.new_int_var(0, limit * len(terms), "T_uniform")
-        model.add_max_equality(peak, costs[1:])
-        objectives.insert(0, peak)
-    chosen = None
-    for solve_calls, objective in enumerate(objectives, 1):
-        if time.monotonic() >= deadline:
-            return chosen, "UNKNOWN", solve_calls - 1
-        model.minimize(objective)
-        solver = make_solver(deadline)
-        status = solver.solve(model)
-        if status in (cp_model.OPTIMAL, cp_model.FEASIBLE):
-            chosen = tuple(solver.value(var) for var in decisions.key)
-            quote = rows[chosen]
-            if [solver.value(var) for var in costs] != quote["T"]:
-                raise ValueError("optimized cost vector disagrees with LLVM evaluator")
-        if status == cp_model.INFEASIBLE:
-            return None, "OPTIMAL", solve_calls
-        if status != cp_model.OPTIMAL:
-            return chosen, solver.status_name(status), solve_calls
-        model.add(objective == solver.value(objective))
-    return chosen, "OPTIMAL", len(objectives)
+        for side in (0, 1):
+            model.add(score >= floor((side,))).only_enforce_if(~original)
+    else:
+        model.add(score >= floor((0, 1))).only_enforce_if(~original)
+    model.minimize(score)
+    solver = make_solver(min(deadline, time.monotonic() + 1))
+    status = solver.solve(model)
+    if status not in (cp_model.OPTIMAL, cp_model.FEASIBLE, cp_model.UNKNOWN):
+        raise ValueError(f"invalid relaxation: {solver.status_name(status)}")
+    return math.ceil(solver.best_objective_bound)
 
 
-def choose(baseline, decisions, columns, condition, proved, deadline):
+def choose(baseline, columns, condition, proved, bound):
     t = baseline["T"]
-    selected = min((bits for bits, row in columns.rows.items()
-                    if eligible(row["T"], t, condition)),
-                   key=lambda bits: (score_key(columns.rows[bits]["T"], condition), bits),
-                   default=None)
-    status, calls = "UNKNOWN", 0
-    if proved:
-        solved, status, calls = optimize(decisions, columns.rows, columns.cuts, t, condition, deadline)
-        if status == "OPTIMAL":
-            if (solved is None) != (selected is None) or (
-                    solved is not None and columns.rows[solved]["T"] != columns.rows[selected]["T"]):
-                raise ValueError(f"CP-SAT result {solved} disagrees with quoted rows {selected}")
-            selected = solved
-    if selected is None or score_key(t, condition) <= score_key(columns.rows[selected]["T"], condition):
-        selected = None
-    if condition == "workgroup-uniform" and selected is not None:
-        if max(t[1:]) == max(columns.rows[selected]["T"][1:]):
-            selected = None
-    score = t if selected is None else columns.rows[selected]["T"]
+    selected, quote = None, None
+    if condition in columns.best:
+        (score, bits), priced = columns.best[condition]
+        original = score_key(t, condition)
+        if score < original and (condition != "workgroup-uniform" or score[0] < original[0]):
+            selected, quote = bits, priced
+    score = t if quote is None else quote["T"]
     objective = score_key(score, condition)[0]
-    certified = proved and status == "OPTIMAL"
-    bound = objective if certified else 0
-    return selected, {"T": score, "original": selected is None,
-                      "optimal": certified, "bound": bound, "cp_sat_solve_calls": calls,
-                      "gap": (objective - bound) / max(1, abs(objective))}
+    if bound > objective:
+        raise ValueError(f"relaxation bound {bound} exceeds evaluated objective {objective}")
+    bound = objective if proved else bound
+    return selected, quote, {"T": score, "original": selected is None,
+                             "optimal": proved, "bound": bound,
+                             "bound_source": "exhaustive LLVM quotation" if proved else "CP-SAT relaxation",
+                             "gap": (objective - bound) / max(1, abs(objective))}
 
 
 def solve(args):
@@ -273,37 +330,72 @@ def solve(args):
         if described["status"] != "ok":
             return described
         decisions = Decisions(described)
-        columns = PriceColumns(decisions, bridge, deadline)
-        solver = make_solver(deadline)
-        solver.parameters.enumerate_all_solutions = True
-        enumeration = solver.solve(decisions.model, columns)
-        proved = enumeration == cp_model.OPTIMAL and not columns.issue
+        conditions = (("min_D", "thread-pattern"), ("strategy", args.condition_source))
+        bounds = {condition: relaxation(decisions, described, condition, deadline)
+                  for condition in dict.fromkeys(condition for _, condition in conditions)}
         baseline = described["baseline"]
+        # Keep time for emitting the selected IR, even after the last search times out.
+        search_deadline = deadline - min(3, args.seconds / 5)
+        bridge.deadline = search_deadline
+        columns = PriceColumns(decisions, bridge, search_deadline, baseline["T"],
+                               args.condition_source)
+        hint = decisions.hint(json.loads(args.anchor_hint.read_text())) if args.anchor_hint else None
+        if hint is not None:
+            columns.price(hint)
+            for var, value in zip(decisions.key, hint):
+                decisions.model.add_hint(var, value)
+        # Seed a maximal matching, including the unmatched triangle case, before exhaustive pricing.
+        if not columns.issue and time.monotonic() < search_deadline:
+            model = decisions.model.clone()
+            model.maximize(len(decisions.ops) * sum(decisions.x) - sum(decisions.g))
+            seed = make_solver(min(search_deadline, time.monotonic() + 1))
+            status = seed.solve(model)
+            if status in (cp_model.OPTIMAL, cp_model.FEASIBLE):
+                columns.price(tuple(seed.value(var) for var in decisions.key))
+        enumeration = cp_model.UNKNOWN
+        while not columns.issue and time.monotonic() < search_deadline:
+            if columns.witness:
+                decisions.model.add_bool_or([~decisions.x[i] for i in columns.witness])
+                columns.witness = None
+            solver = make_solver(search_deadline)
+            solver.parameters.enumerate_all_solutions = True
+            enumeration = solver.solve(decisions.model, columns)
+            if not columns.witness:
+                break
+        proved = enumeration == cp_model.OPTIMAL and not (columns.issue or columns.witness)
         report = {"status": "ok" if proved else "incomplete", "cost": args.cost,
                   "original_T": baseline["T"], "candidates": columns.visited,
-                  "priced_columns": len(columns.rows), "iterations": columns.visited,
-                  "cuts": dict(Counter(columns.cuts.values())),
-                  "cp_sat_enumeration": solver.status_name(enumeration)}
-        if columns.issue:
-            report["reason"] = columns.issue
-        for label, condition in (("min_D", "thread-pattern"), ("strategy", args.condition_source)):
-            selected, result = choose(baseline, decisions, columns, condition, proved, deadline)
+                  "priced_columns": columns.priced, "iterations": columns.visited,
+                  "cuts": dict(columns.cuts), "pair_conflicts": decisions.conflicts,
+                  "anchor_hint": hint is not None, "cp_sat_enumeration": cp_model.CpSolver().status_name(enumeration),
+                  "relaxation_bounds": bounds}
+        if not proved:
+            report["reason"] = columns.issue or "search deadline"
+        bridge.deadline = deadline
+        for label, condition in conditions:
+            if args.strategy_only and label == "min_D":
+                continue
+            selected, quote, result = choose(baseline, columns, condition, proved, bounds[condition])
             path = args.output / (label + ".ll")
             validation = {"status": "not_run"}
             if selected is None:
                 shutil.copyfile(args.input, path)
                 result["D_components"] = baseline.get("D_components")
             else:
-                quote = columns.rows[selected]
                 result.update({key: quote[key] for key in
                                ("D_components", "component_vectors", "pairs", "features",
                                 "recipes", "selects", "guard_branches")})
-                if time.monotonic() < deadline:
-                    emitted = bridge.quote(decisions.request(selected) | {"emit": str(path)})
-                    if emitted["status"] != "ok" or emitted["T"] != result["T"]:
-                        raise ValueError(f"re-emitted {label} differs from model result")
                 result["decisions"] = decisions.request(selected)
-            if path.is_file() and time.monotonic() < deadline:
+                try:
+                    emitted = bridge.quote(result["decisions"] | {"emit": str(path)})
+                except TimeoutError:
+                    emitted = None
+                if emitted is not None and (emitted["status"] != "ok" or
+                                            emitted["T"] != result["T"] or not path.is_file()):
+                    raise ValueError(f"re-emitted {label} differs from LLVM quotation")
+                if emitted is not None:
+                    result["ir"] = path.name
+            if not args.strategy_only and path.is_file() and time.monotonic() < deadline:
                 try:
                     validation = json.loads(subprocess.check_output(
                         [args.interpreter, args.input, path], text=True,
@@ -313,10 +405,11 @@ def solve(args):
             result["semantic_validation"] = validation
             report[label] = result
         report["seconds"] = time.monotonic() - started
-        if not all(report[key]["optimal"] for key in ("min_D", "strategy")):
+        labels = ("strategy",) if args.strategy_only else ("min_D", "strategy")
+        if not all(report[key]["optimal"] for key in labels):
             report["status"] = "incomplete"
-        elif any(report[key]["semantic_validation"]["status"] != "pass"
-                 for key in ("min_D", "strategy")):
+        elif not args.strategy_only and any(report[key]["semantic_validation"]["status"] != "pass"
+                                            for key in labels):
             report["status"] = "semantic_unverified"
         return report
 
@@ -329,6 +422,8 @@ def main():
     parser.add_argument("--condition-source", choices=("thread-pattern", "data", "workgroup-uniform"),
                         required=True)
     parser.add_argument("--seconds", type=float, default=600)
+    parser.add_argument("--anchor-hint", type=Path)
+    parser.add_argument("--strategy-only", action="store_true")
     parser.add_argument("--reference", type=Path, default=Path("build/llvm24-tti/reference_solver"))
     parser.add_argument("--tti-worker", type=Path, default=Path("tools/run-llvm24-tti"))
     parser.add_argument("--interpreter", type=Path, default=Path("build/llvm24-tti/interpret_region"))

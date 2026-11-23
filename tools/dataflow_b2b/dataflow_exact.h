@@ -42,13 +42,13 @@ inline unsigned operationCount(const Region &region) {
   return size;
 }
 
-inline void addCandidates(Function &fn, std::vector<fusion::Candidate> &candidates) {
+inline void addCandidates(Function &fn, std::vector<fusion::Candidate> &candidates, bool includeLarge) {
   for (auto &block : fn) {
     auto *branch = dyn_cast<BranchInst>(block.getTerminator());
     if (!branch || !branch->isConditional())
       continue;
     auto region = classifyB2B(*branch);
-    if (!region.isB2B() || operationCount(region) > exactOperationLimit)
+    if (!region.isB2B() || (!includeLarge && operationCount(region) > exactOperationLimit))
       continue;
     fusion::Candidate candidate{fn.getName().str(), blockID(block),
                                 blockID(*branch->getSuccessor(0)),
@@ -182,14 +182,16 @@ inline bool replace(Region &region, ArrayRef<Output> outputs, ArrayRef<Value *> 
 
 inline std::unique_ptr<Module> solve(Region &region, ArrayRef<Output> outputs,
                                     Values &arguments, StringRef solver, StringRef costs,
-                                    StringRef worker, json::Object &stats, std::string &failure) {
+                                    StringRef worker, StringRef ilp, const json::Object *anchorHint,
+                                    json::Object &stats, std::string &failure) {
   const unsigned size = operationCount(region);
-  const bool fallback = size > exactOperationLimit;
+  const bool useILP = size > exactOperationLimit && !ilp.empty();
+  const bool fallback = size > exactOperationLimit && !useILP;
   StringRef source = fusion::anchor_condition::classifySource(&region.split);
   stats["operations"] = size;
   stats["kind"] = region.kind;
   stats["condition_source"] = source;
-  stats["handler"] = fallback ? "anchor_fallback" : "reference_solver";
+  stats["handler"] = fallback ? "anchor_fallback" : useILP ? "ilp_solver" : "reference_solver";
   auto extracted = isolate(region, outputs, failure, &arguments);
   std::string ir;
   if (extracted) {
@@ -204,8 +206,10 @@ inline std::unique_ptr<Module> solve(Region &region, ArrayRef<Output> outputs,
     failure = "dataflow_exact_size_limit";
     return nullptr;
   }
-  if (!extracted)
+  if (!extracted) {
+    if (useILP) stats["handler"] = "anchor_fallback";
     return nullptr;
+  }
   SmallString<256> temp;
   if (auto err = sys::fs::createUniqueDirectory("dataflow-exact", temp)) {
     failure = err.message();
@@ -225,9 +229,38 @@ inline std::unique_ptr<Module> solve(Region &region, ArrayRef<Output> outputs,
     out << ir;
   }
   std::string workerArg = ("--tti-worker=" + worker).str();
-  StringRef args[] = {solver, input, costs, temp, "--cost=real", workerArg};
+  SmallVector<StringRef, 16> args{solver, input, costs, temp, "--cost=real", workerArg};
+  std::string executable = solver.str();
+  std::string referenceArg = ("--reference=" + solver).str();
+  std::string sourceArg = ("--condition-source=" + source).str();
+  std::string hintPath = (temp + "/anchor.json").str();
+  if (useILP) {
+    auto python = sys::findProgramByName("python3");
+    if (!python) {
+      stats["handler"] = "anchor_fallback";
+      failure = python.getError().message();
+      return nullptr;
+    }
+    executable = *python;
+    args.assign({executable, ilp, input, costs, temp, "--cost=real", workerArg,
+                 referenceArg, sourceArg, "--strategy-only", "--seconds=60"});
+    if (anchorHint) {
+      raw_fd_ostream hint(hintPath, error);
+      if (error) {
+        stats["handler"] = "anchor_fallback";
+        failure = error.message();
+        return nullptr;
+      }
+      hint << json::Value(json::Object(*anchorHint));
+      args.append({"--anchor-hint", hintPath});
+    }
+  }
+  auto fallbackILP = make_scope_exit([&] {
+    if (useILP && stats.getString("choice") != Optional<StringRef>("original"))
+      stats["handler"] = "anchor_fallback";
+  });
   Optional<StringRef> redirects[] = {StringRef(""), StringRef(report), StringRef(diagnostics)};
-  if (sys::ExecuteAndWait(solver, args, None, redirects, 660)) {
+  if (sys::ExecuteAndWait(executable, args, None, redirects, useILP ? 63 : 660)) {
     failure = "dataflow_exact_solver_failed";
     if (auto diagnostic = MemoryBuffer::getFile(diagnostics))
       stats["diagnostics"] = (*diagnostic)->getBuffer().str();
@@ -244,6 +277,43 @@ inline std::unique_ptr<Module> solve(Region &region, ArrayRef<Output> outputs,
     return nullptr;
   }
   auto *result = parsed->getAsObject();
+  if (useILP) {
+    auto *chosen = result ? result->getObject("strategy") : nullptr;
+    if (!chosen || !chosen->getArray("T")) {
+      failure = "dataflow_ilp_no_feasible_solution";
+      if (result) stats["solver_reason"] = result->getString("reason").getValueOr("");
+      return nullptr;
+    }
+    stats["chosen"] = json::Object(*chosen);
+    stats["optimal"] = chosen->getBoolean("optimal").getValueOr(false);
+    stats["anchor_hint"] = result->getBoolean("anchor_hint").getValueOr(false);
+    stats["original_T"] = json::Array(*result->getArray("original_T"));
+    stats["candidates"] = result->getInteger("candidates").getValueOr(0);
+    if (chosen->getBoolean("original").getValueOr(false)) {
+      if (!chosen->getBoolean("optimal").getValueOr(false)) {
+        failure = "dataflow_ilp_no_feasible_improvement";
+        return nullptr;
+      }
+      stats["choice"] = "original";
+      failure = "dataflow_ilp_keep_original";
+      return nullptr;
+    }
+    auto filename = chosen->getString("ir");
+    if (!filename || *filename != "strategy.ll") {
+      failure = "dataflow_ilp_missing_solution_IR";
+      return nullptr;
+    }
+    SMDiagnostic diagnostic;
+    auto solution = parseIRFile((temp + "/strategy.ll").str(), diagnostic,
+                                region.split.getContext());
+    if (!solution || !solution->getFunction("region") || verifyModule(*solution, &errs())) {
+      failure = "dataflow_ilp_invalid_solution";
+      return nullptr;
+    }
+    stats["choice"] = "fuse";
+    fallbackILP.release();
+    return solution;
+  }
   if (!result || !result->getBoolean("complete").getValueOr(false)) {
     failure = "dataflow_exact_incomplete";
     if (result)
