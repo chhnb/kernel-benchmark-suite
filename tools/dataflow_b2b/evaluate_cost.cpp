@@ -1,4 +1,5 @@
 #include "evaluate_cost.h"
+#include "real_cost.h"
 
 #include "llvm/IR/Verifier.h"
 #include "llvm/IRReader/IRReader.h"
@@ -8,16 +9,22 @@ using namespace llvm;
 
 int main(int argc, char **argv) {
   if (argc < 3) {
-    errs() << "usage: evaluate_cost INPUT.ll COST_TABLE.json [--original] [--output-buffer] [--c-sl=real|abstract]\n";
+    errs() << "usage: evaluate_cost INPUT.ll COST_TABLE.json [--original] [--output-buffer] [--c-sl=real|abstract] [--cost=real] [--tti-worker=PATH]\n";
     return 2;
   }
   bool original = false, real = false, outputBuffer = false;
+  bool useThroughput = false;
+  StringRef worker = "tools/run-llvm24-tti";
   for (int index = 3; index < argc; ++index) {
     StringRef option(argv[index]);
     if (option == "--original")
       original = true;
     else if (option == "--output-buffer")
       outputBuffer = true;
+    else if (option == "--cost=real")
+      useThroughput = true;
+    else if (option.consume_front("--tti-worker="))
+      worker = option;
     else if (option == "--c-sl=real")
       real = true;
     else if (option == "--c-sl=abstract")
@@ -26,6 +33,10 @@ int main(int argc, char **argv) {
       errs() << "unknown option: " << option << '\n';
       return 2;
     }
+  }
+  if (useThroughput && worker.empty()) {
+    errs() << "--cost=real requires --tti-worker=PATH\n";
+    return 2;
   }
   LLVMContext context;
   SMDiagnostic diagnostic;
@@ -56,9 +67,15 @@ int main(int argc, char **argv) {
     return 1;
   }
   std::unique_ptr<dataflow::SizeLatency> quotes;
-  if (real)
+  if (real || useThroughput)
     quotes = std::make_unique<dataflow::SizeLatency>(*module);
-  auto result = dataflow::evaluate(*function, *table->getAsObject(), original, quotes.get(), true, outputBuffer);
+  std::unique_ptr<dataflow::RealCost> throughput;
+  if (useThroughput)
+    throughput = std::make_unique<dataflow::RealCost>(worker);
+  auto request = [&](const Function &fn) { return throughput->quote(fn); };
+  auto result = dataflow::evaluate(*function, *table->getAsObject(), original,
+                                   quotes.get(), true, outputBuffer,
+                                   useThroughput ? dataflow::QuoteProvider(request) : nullptr);
   if (!result) {
     outs() << json::Value(json::Object{{"status", "unsupported"},
                   {"reason", toString(result.takeError())}}) << '\n';

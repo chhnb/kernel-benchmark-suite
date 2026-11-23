@@ -1,6 +1,7 @@
 #include "fusion_profile.h"
 #include <optional>
 #include "fusion_search.h"
+#include "dataflow_b2b/dataflow_exact.h"
 #include "b2b_anchor.h"
 #include "darm_artifact/bridge.h"
 #include "darm_pair_engine/InstructionMatch.h"
@@ -1859,6 +1860,69 @@ std::vector<Trial> planSingleBranchB2B(const Module &parent, const Candidate &c,
     trials.push_back(std::move(t));
   }
   return trials;
+}
+
+void addDataflowCandidates(Function &fn, std::vector<Candidate> &candidates) {
+  dataflow::exact::addCandidates(fn, candidates);
+}
+
+Optional<Trial> tryDataflowExact(const Module &parent, const Candidate &candidate,
+                                CleanupMode mode, StringRef solver, StringRef costs,
+                                StringRef worker) {
+  auto *source = parent.getFunction(candidate.function);
+  auto *split = source ? dataflow::exact::findSplit(*source, candidate) : nullptr;
+  if (!split)
+    return None;
+
+  Trial trial;
+  trial.candidate = candidate;
+  trial.cleanupMode = mode;
+  trial.planKind = "B2B";
+  trial.mergePath = "dataflow-exact";
+  trial.before = features(*source);
+
+  ValueToValueMapTy map;
+  trial.raw = CloneModule(parent, map);
+  auto *branch = cast<BranchInst>(map.lookup(split));
+  auto &fn = *branch->getFunction();
+  auto region = dataflow::extraction::classifyB2B(*branch);
+  auto outputs = dataflow::extraction::outputs(region);
+  dataflow::extraction::Values args;
+  auto start = Clock::now();
+  auto solution = dataflow::exact::solve(region, outputs, args, solver, costs,
+                                         worker, trial.dataflowExact, trial.reason);
+  if (!solution)
+    return trial;
+
+  auto *condition = branch->getCondition();
+  if (tagSideCondition(fn, condition))
+    trial.sideBeforeOk = sideBlocksBoth(fn, condition, trial.sideBefore, trial.sideReason);
+  trial.rewriteStarted = true;
+  if (!dataflow::exact::replace(region, outputs, args, *solution->getFunction("region"),
+                                trial.reason))
+    return trial;
+  trial.mergeMs = millis(start);
+  if (verifyModule(*trial.raw, &errs())) {
+    trial.reason = "dataflow_exact_raw_verifier_failed";
+    return trial;
+  }
+  trial.afterRaw = features(fn);
+  trial.normalized = CloneModule(*trial.raw);
+  start = Clock::now();
+  trial.cleanupIterations = cleanup(*trial.normalized, candidate.function, mode);
+  trial.normalizeMs = millis(start);
+  auto *after = trial.normalized->getFunction(candidate.function);
+  if (!verifyModule(*trial.normalized, &errs())) {
+    trial.after = features(*after);
+    if (auto *cond = findSideCondition(*after, trial.sideReason))
+      trial.sideAfterOk = sideBlocksBoth(*after, cond, trial.sideAfter, trial.sideReason);
+    trial.valid = trial.afterRaw.loops <= trial.before.loops &&
+                  trial.after.loops <= trial.before.loops;
+  }
+  stripSideTag(trial.raw.get());
+  stripSideTag(trial.normalized.get());
+  trial.reason = trial.valid ? "verified_ir_only" : "dataflow_exact_cleanup_failed";
+  return trial;
 }
 
 RoundContext makeRound(const Module&parent,const std::string&function,unsigned version,CleanupMode mode) {

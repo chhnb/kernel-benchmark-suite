@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Replay three validated GPU binaries and decide from paired round timings."""
+"""Replay validated GPU binaries and decide from paired round timings."""
 
 import argparse
 import csv
@@ -80,6 +80,9 @@ def measure(args):
     out = args.output.resolve()
     out.mkdir(parents=True)
     binaries = dict(zip(ROLES, (args.baseline, args.reference, args.candidate)))
+    if args.darm:
+        binaries["darm"] = args.darm
+    roles = tuple(binaries)
     state = {
         "status": "running",
         "format": args.format,
@@ -88,7 +91,7 @@ def measure(args):
         "runner_sha256": digest(args.runner),
         "binary_sha256": {role: digest(path) for role, path in binaries.items()},
         "rounds": [],
-        "ratio_to_baseline": {role: [] for role in ROLES[1:]},
+        "ratio_to_baseline": {role: [] for role in roles[1:]},
     }
 
     def save():
@@ -101,12 +104,14 @@ def measure(args):
     with args.lock.open("a") as lock:
         fcntl.flock(lock, fcntl.LOCK_EX)
         for index in range(ROUNDS):
-            # Each role occupies every position twice per six rounds and
-            # each ordered pair of adjacent roles occurs equally often.
-            shift = index % len(ROLES)
-            order = ROLES[shift:] + ROLES[:shift]
-            if index // len(ROLES) % 2:
-                order = order[::-1]
+            # Balance each role's position and the ordered adjacent pairs.
+            shift = index % len(roles)
+            if args.darm:
+                order = tuple(roles[(shift + j) % len(roles)] for j in (0, 1, 3, 2))
+            else:
+                order = roles[shift:] + roles[:shift]
+                if index // len(roles) % 2:
+                    order = order[::-1]
             values = {}
             state["partial_round"] = values
             for role in order:
@@ -151,6 +156,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     for option in ("runner", "input", "output", "baseline", "reference", "candidate", "lock"):
         parser.add_argument(f"--{option}", type=Path, required=True)
+    parser.add_argument("--darm", type=Path)
     parser.add_argument("--format", choices=("event", "tigre"), default="event")
     parser.add_argument("--warmup", type=int, default=3)
     parser.add_argument("--repeat", type=int, default=15)

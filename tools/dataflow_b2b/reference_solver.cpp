@@ -1,4 +1,6 @@
 #include "evaluate_cost.h"
+#include "llvm/Transforms/Utils/BasicBlockUtils.h"
+#include "real_cost.h"
 #include "schedule_dp.h"
 #include "fold_oracle.h"
 
@@ -8,7 +10,6 @@
 #include "llvm/Support/FileSystem.h"
 #include "llvm/Support/Path.h"
 #include "llvm/Support/SourceMgr.h"
-#include "llvm/Transforms/Utils/BasicBlockUtils.h"
 #include "llvm/Transforms/Utils/Cloning.h"
 #include "llvm/Transforms/Utils/Local.h"
 #include <chrono>
@@ -155,7 +156,7 @@ struct Candidate {
 };
 
 Candidate emit(const Module &source, const Function &func, const Diamond &shape,
-               ArrayRef<Node> nodes, const dataflow::Schedule &schedule) {
+               ArrayRef<Node> nodes, const dataflow::Schedule &schedule, bool mergeExit) {
   Candidate result;
   ValueToValueMapTy map;
   auto module = CloneModule(source, map);
@@ -426,6 +427,8 @@ Candidate emit(const Module &source, const Function &func, const Diamond &shape,
     block->dropAllReferences();
   for (auto *block : dead)
     block->eraseFromParent();
+  if (mergeExit)
+    MergeBlockIntoPredecessor(tail);
 
   // Eliminate newly dead operations and selectors after folding.
   // Process the exit first so deleting unused selectors also releases their
@@ -513,6 +516,8 @@ struct Search {
   unsigned cyclic = 0, oracleCandidates = 0, oracleGuards = 0;
   unsigned rejectedFold = 0, unsupportedGeneration = 0, dpMismatches = 0;
   unsigned selectedGuards = 0;
+  int64_t selectedControl = 0, splitCost = 0, armCost = 0;
+  dataflow::QuoteProvider throughput;
   bool completed = false;
   StringRef outputDirectory;
 
@@ -525,7 +530,7 @@ struct Search {
 
   void add(Module &input, bool original, Candidate *candidate = nullptr) {
     auto *function = input.getFunction(func.getName());
-    auto result = dataflow::evaluate(*function, costs, original, quotes);
+    auto result = dataflow::evaluate(*function, costs, original, quotes, true, false, throughput);
     if (!result) {
       auto reason = toString(result.takeError());
       if (!original && StringRef(reason).contains("must be speculated by SimplifyCFG"))
@@ -534,8 +539,6 @@ struct Search {
         stop = std::move(reason);
       return;
     }
-    const int64_t selectedControl =
-        selectedGuards * *costs.getInteger("guard_segment_control");
     if (candidate && (result->branches != selectedGuards ||
                       result->divergenceCosts["control"] != selectedControl)) {
       ++dpMismatches;
@@ -603,9 +606,11 @@ struct Search {
     for (const auto &node : nodes)
       lanes.push_back(node.recipe != Recipe::R6 ? dataflow::Lane::Common :
                       node.left ? dataflow::Lane::Left : dataflow::Lane::Right);
-    auto schedule = dataflow::minimumGuards(dependencies(shape, nodes), lanes);
+    auto schedule = dataflow::minimumGuards(dependencies(shape, nodes), lanes,
+                                             splitCost, armCost);
     selectedGuards = schedule.branches;
-    auto result = emit(module, func, shape, nodes, schedule);
+    selectedControl = schedule.controlCost;
+    auto result = emit(module, func, shape, nodes, schedule, bool(throughput));
     if (!result.module) {
       ++unsupportedGeneration;
       return;
@@ -679,7 +684,8 @@ struct Search {
     }
     for (const auto &node : full) {
       const auto &operation = *(node.left ? node.left : node.right);
-      lower += dataflow::costOf(operation, costs).getValueOr(0);
+      if (!throughput)
+        lower += dataflow::costOf(operation, costs).getValueOr(0);
       if (!node.left || !node.right)
         continue;
       if (!node.left->getType()->isVoidTy())
@@ -743,9 +749,30 @@ struct Search {
 } // namespace
 
 int main(int argc, char **argv) {
-  if (argc < 4 || argc > 5 || (argc == 5 && StringRef(argv[4]) != "--c-sl=real" &&
-                             StringRef(argv[4]) != "--c-sl=abstract")) {
-    errs() << "usage: reference_solver INPUT.ll COST_TABLE.json OUTPUT_DIRECTORY [--c-sl=real|abstract]\n";
+  if (argc < 4) {
+    errs() << "usage: reference_solver INPUT.ll COST_TABLE.json OUTPUT_DIRECTORY"
+              " [--c-sl=real|abstract] [--cost=real] [--tti-worker=PATH]\n";
+    return 2;
+  }
+  bool real = false, useThroughput = false;
+  StringRef worker = "tools/run-llvm24-tti";
+  for (int i = 4; i < argc; ++i) {
+    StringRef option(argv[i]);
+    if (option == "--c-sl=real")
+      real = true;
+    else if (option == "--c-sl=abstract")
+      real = false;
+    else if (option == "--cost=real")
+      useThroughput = true;
+    else if (option.consume_front("--tti-worker="))
+      worker = option;
+    else {
+      errs() << "unknown option: " << option << '\n';
+      return 2;
+    }
+  }
+  if (useThroughput && worker.empty()) {
+    errs() << "--cost=real requires --tti-worker=PATH\n";
     return 2;
   }
   LLVMContext context;
@@ -782,9 +809,38 @@ int main(int argc, char **argv) {
   search.outputDirectory = argv[3];
   dataflow::SizeLatency oracleQuotes(*module);
   search.oracleQuotes = &oracleQuotes;
-  if (argc == 5 && StringRef(argv[4]) == "--c-sl=real")
+  if (real || useThroughput)
     search.quotes = &oracleQuotes;
-  auto baseline = dataflow::evaluate(*function, costs, true, search.quotes);
+  std::unique_ptr<dataflow::RealCost> throughput;
+  auto request = [&](const Function &fn) { return throughput->quote(fn); };
+  if (useThroughput) {
+    throughput = std::make_unique<dataflow::RealCost>(worker);
+    search.throughput = request;
+  }
+  search.splitCost = *costs.getInteger("guard_segment_control");
+  auto baseline = dataflow::evaluate(*function, costs, true, search.quotes,
+                                     true, false, search.throughput);
+  if (baseline && useThroughput) {
+    auto quotes = request(*function);
+    if (!quotes) {
+      errs() << toString(quotes.takeError()) << '\n';
+      return 1;
+    }
+    Optional<int64_t> arm;
+    for (const auto &block : *function)
+      if (const auto *branch = dyn_cast<BranchInst>(block.getTerminator())) {
+        auto cost = quotes->lookup(branch);
+        if (branch->isConditional())
+          search.splitCost = cost;
+        else if (!arm || *arm == cost)
+          arm = cost;
+        else {
+          errs() << "different arm branch quotes are unsupported\n";
+          return 1;
+        }
+      }
+    search.armCost = arm.getValueOr(0);
+  }
   std::string limitation = "a generation alternative could not be verified";
   if (baseline) {
     search.add(*module, true);

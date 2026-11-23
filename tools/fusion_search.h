@@ -101,7 +101,7 @@ struct Trial {
   Boundary leftContext, rightContext;
   bool loopHeaderSplit=false;
   llvm::json::Array layoutProfitability;
-  llvm::json::Object anchorStats;
+  llvm::json::Object anchorStats, dataflowExact;
   std::string r2rSpeculationSplit;
   llvm::json::Object r2rSpeculation;
   double mergeMs=0, normalizeMs=0, featuresMs=0, totalMs=0, scoreMs=0;
@@ -138,6 +138,10 @@ std::set<std::string> crossLevelCatalogRejections(llvm::Function &,
 std::vector<Candidate> enumerate(llvm::Function &, unsigned version);
 Trial tryPair(const llvm::Module &, const Candidate &, unsigned currentVersion,
               CleanupMode, bool allowB2B, bool artifactB2B, bool speculateR2R);
+void addDataflowCandidates(llvm::Function &, std::vector<Candidate> &);
+llvm::Optional<Trial> tryDataflowExact(const llvm::Module &, const Candidate &, CleanupMode,
+                                      llvm::StringRef solver, llvm::StringRef costs,
+                                      llvm::StringRef worker);
 enum class B2BExit { PreserveSuffix, Merge, ForkJoin, Independent };
 // Emit an already-validated, order-preserving B2B alignment.
 void emitB2BLinear(llvm::BranchInst &, llvm::BasicBlock &, llvm::BasicBlock &,

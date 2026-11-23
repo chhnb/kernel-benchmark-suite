@@ -235,6 +235,11 @@ public:
     return result;
   }
 
+  llvm::Optional<int64_t> functionCost(const llvm::Function &f) const {
+    auto cost = query(f);
+    return cost.unknown ? llvm::None : llvm::Optional<int64_t>(cost.value);
+  }
+
   struct TransferCosts {
     llvm::DenseMap<llvm::Type *, int> selects, phis;
   };

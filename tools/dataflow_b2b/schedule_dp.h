@@ -20,13 +20,15 @@ struct Scheduled {
 struct Schedule {
   unsigned branches;
   llvm::SmallVector<Scheduled, 16> steps;
+  int64_t controlCost = 0;
 };
 
 inline Schedule minimumGuards(llvm::ArrayRef<unsigned> dependencies,
-                              llvm::ArrayRef<Lane> lanes) {
+                              llvm::ArrayRef<Lane> lanes,
+                              int64_t splitCost = 1, int64_t armCost = 0) {
   const unsigned full = (1u << lanes.size()) - 1;
   struct Cell {
-    unsigned cost = std::numeric_limits<unsigned>::max();
+    int64_t cost = std::numeric_limits<int64_t>::max();
     unsigned node = 0;
     Lane prior = Lane::Common;
   };
@@ -40,7 +42,7 @@ inline Schedule minimumGuards(llvm::ArrayRef<unsigned> dependencies,
     for (unsigned old = 0; old < 3; ++old) {
       auto before = static_cast<Lane>(old);
       auto cost = dp[mask][old].cost;
-      if (cost == std::numeric_limits<unsigned>::max())
+      if (cost == std::numeric_limits<int64_t>::max())
         continue;
       for (unsigned i = 0; i < lanes.size(); ++i) {
         unsigned bit = 1u << i;
@@ -48,7 +50,11 @@ inline Schedule minimumGuards(llvm::ArrayRef<unsigned> dependencies,
           continue;
         auto next = lanes[i];
         auto &cell = dp[mask | bit][static_cast<unsigned>(next)];
-        unsigned total = cost + opens(before, next);
+        auto total = cost;
+        if (opens(before, next))
+          total += splitCost + armCost;
+        else if (before == Lane::Left && next == Lane::Right)
+          total += armCost;
         if (total < cell.cost)
           cell = {total, i, before};
       }
@@ -57,12 +63,15 @@ inline Schedule minimumGuards(llvm::ArrayRef<unsigned> dependencies,
   for (unsigned lane = 1; lane < 3; ++lane)
     if (dp[full][lane].cost < dp[full][last].cost)
       last = lane;
-  Schedule schedule{dp[full][last].cost, {}};
-  if (schedule.branches == std::numeric_limits<unsigned>::max())
-    return schedule;
+  const auto cost = dp[full][last].cost;
+  if (cost == std::numeric_limits<int64_t>::max())
+    return {std::numeric_limits<unsigned>::max(), {}, cost};
+  Schedule schedule{0, {}, cost};
   for (unsigned mask = full; mask;) {
     const auto &cell = dp[mask][last];
-    schedule.steps.push_back({cell.node, opens(cell.prior, static_cast<Lane>(last))});
+    bool start = opens(cell.prior, static_cast<Lane>(last));
+    schedule.steps.push_back({cell.node, start});
+    schedule.branches += start;
     mask ^= 1u << cell.node;
     last = static_cast<unsigned>(cell.prior);
   }

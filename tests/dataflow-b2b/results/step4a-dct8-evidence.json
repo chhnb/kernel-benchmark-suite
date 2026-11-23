@@ -1,0 +1,1118 @@
+{
+  "input_ir_sha256": "21a5ddb82636744c691db57d4e78ffcfcaf0143b495f3129d14700d09ca9ae0d",
+  "parity": [
+    {
+      "id": "d23a7c228c5b39f95910f0b1d4eb8b9318e5c775",
+      "occurrence": {
+        "block": "%2",
+        "condition_source": "data",
+        "function": "_Z27CUDAkernelQuantizationShortPsi",
+        "join": "%35",
+        "join_has_other_preds": false,
+        "category": "darm",
+        "case": "DCT",
+        "source_sha256": "21a5ddb82636744c691db57d4e78ffcfcaf0143b495f3129d14700d09ca9ae0d",
+        "source_index": 2
+      },
+      "parent_T_D": 25,
+      "evaluator_T": [
+        25,
+        18,
+        15
+      ],
+      "parent_rows": [
+        {
+          "accepted_cost": 7,
+          "block_index": 0,
+          "instruction_index": 21,
+          "ir": "  br i1 %21, label %24, label %31",
+          "key": "br.conditional:void",
+          "reason": "",
+          "tti_cost": 7
+        },
+        {
+          "accepted_cost": 1,
+          "block_index": 1,
+          "instruction_index": 0,
+          "ir": "  %25 = sub i16 %23, %15",
+          "key": "sub:i16",
+          "reason": "",
+          "tti_cost": 1
+        },
+        {
+          "accepted_cost": 1,
+          "block_index": 1,
+          "instruction_index": 1,
+          "ir": "  %26 = sext i16 %25 to i32",
+          "key": "sext:i32",
+          "reason": "",
+          "tti_cost": 1
+        },
+        {
+          "accepted_cost": 1,
+          "block_index": 1,
+          "instruction_index": 2,
+          "ir": "  %27 = sdiv i32 %26, %22",
+          "key": "sdiv:i32",
+          "reason": "",
+          "tti_cost": 1
+        },
+        {
+          "accepted_cost": 1,
+          "block_index": 1,
+          "instruction_index": 3,
+          "ir": "  %28 = shl i32 %27, 16",
+          "key": "shl:i32",
+          "reason": "",
+          "tti_cost": 1
+        },
+        {
+          "accepted_cost": 1,
+          "block_index": 1,
+          "instruction_index": 4,
+          "ir": "  %29 = ashr exact i32 %28, 16",
+          "key": "ashr:i32",
+          "reason": "",
+          "tti_cost": 1
+        },
+        {
+          "accepted_cost": 1,
+          "block_index": 1,
+          "instruction_index": 5,
+          "ir": "  %30 = sub nsw i32 0, %29",
+          "key": "sub:i32",
+          "reason": "",
+          "tti_cost": 1
+        },
+        {
+          "accepted_cost": 4,
+          "block_index": 1,
+          "instruction_index": 6,
+          "ir": "  br label %35",
+          "key": "br.unconditional:void",
+          "reason": "",
+          "tti_cost": 4
+        },
+        {
+          "accepted_cost": 1,
+          "block_index": 2,
+          "instruction_index": 0,
+          "ir": "  %32 = add i16 %23, %15",
+          "key": "add:i16",
+          "reason": "",
+          "tti_cost": 1
+        },
+        {
+          "accepted_cost": 1,
+          "block_index": 2,
+          "instruction_index": 1,
+          "ir": "  %33 = sext i16 %32 to i32",
+          "key": "sext:i32",
+          "reason": "",
+          "tti_cost": 1
+        },
+        {
+          "accepted_cost": 1,
+          "block_index": 2,
+          "instruction_index": 2,
+          "ir": "  %34 = sdiv i32 %33, %22",
+          "key": "sdiv:i32",
+          "reason": "",
+          "tti_cost": 1
+        },
+        {
+          "accepted_cost": 4,
+          "block_index": 2,
+          "instruction_index": 3,
+          "ir": "  br label %35",
+          "key": "br.unconditional:void",
+          "reason": "",
+          "tti_cost": 4
+        },
+        {
+          "accepted_cost": 1,
+          "block_index": 3,
+          "instruction_index": 0,
+          "ir": "  %36 = phi i32 [ %30, %24 ], [ %34, %31 ]",
+          "key": "phi:i32",
+          "reason": "",
+          "tti_cost": 1
+        }
+      ],
+      "region_rows": [
+        {
+          "cost": 7,
+          "ir": "  br i1 %0, label %5, label %12",
+          "kind": "control",
+          "scenarios": "DLR"
+        },
+        {
+          "cost": 1,
+          "ir": "  %6 = sub i16 %1, %2",
+          "kind": "instruction",
+          "scenarios": "DL"
+        },
+        {
+          "cost": 1,
+          "ir": "  %7 = sext i16 %6 to i32",
+          "kind": "instruction",
+          "scenarios": "DL"
+        },
+        {
+          "cost": 1,
+          "ir": "  %8 = sdiv i32 %7, %3",
+          "kind": "instruction",
+          "scenarios": "DL"
+        },
+        {
+          "cost": 1,
+          "ir": "  %9 = shl i32 %8, 16",
+          "kind": "instruction",
+          "scenarios": "DL"
+        },
+        {
+          "cost": 1,
+          "ir": "  %10 = ashr exact i32 %9, 16",
+          "kind": "instruction",
+          "scenarios": "DL"
+        },
+        {
+          "cost": 1,
+          "ir": "  %11 = sub nsw i32 0, %10",
+          "kind": "instruction",
+          "scenarios": "DL"
+        },
+        {
+          "cost": 4,
+          "ir": "  br label %16",
+          "kind": "control",
+          "scenarios": "DL"
+        },
+        {
+          "cost": 1,
+          "ir": "  %13 = add i16 %1, %2",
+          "kind": "instruction",
+          "scenarios": "DR"
+        },
+        {
+          "cost": 1,
+          "ir": "  %14 = sext i16 %13 to i32",
+          "kind": "instruction",
+          "scenarios": "DR"
+        },
+        {
+          "cost": 1,
+          "ir": "  %15 = sdiv i32 %14, %3",
+          "kind": "instruction",
+          "scenarios": "DR"
+        },
+        {
+          "cost": 4,
+          "ir": "  br label %16",
+          "kind": "control",
+          "scenarios": "DR"
+        },
+        {
+          "cost": 1,
+          "ir": "  %17 = phi i32 [ %11, %5 ], [ %15, %12 ]",
+          "kind": "escape",
+          "scenarios": "DLR"
+        }
+      ]
+    },
+    {
+      "id": "2f29337da1ee5423bea804957d647ed7983fbb8f",
+      "occurrence": {
+        "block": "%if.else20.i",
+        "condition_source": "data",
+        "function": "cache_eval",
+        "join": "%quant_decide.exit",
+        "join_has_other_preds": true,
+        "category": "snapshot",
+        "case": "vllm",
+        "source_sha256": "04a4a8797cd6558b7eca4a5bb045a1a8e4b592d978f9b3e0fc208e2b20cd8bfd",
+        "source_index": 500
+      },
+      "parent_T_D": 18,
+      "evaluator_T": [
+        18,
+        13,
+        13
+      ],
+      "parent_rows": [
+        {
+          "accepted_cost": 7,
+          "block_index": 45,
+          "instruction_index": 1,
+          "ir": "  br i1 %cmp22.i, label %if.end29.i, label %if.then23.i",
+          "key": "br.conditional:void",
+          "reason": "",
+          "tti_cost": 7
+        },
+        {
+          "accepted_cost": 1,
+          "block_index": 46,
+          "instruction_index": 0,
+          "ir": "  %108 = tail call float @llvm.copysign.f32(float 4.000000e+00, float %mul116) #4",
+          "key": "call:llvm.copysign.f32:float",
+          "reason": "",
+          "tti_cost": 1
+        },
+        {
+          "accepted_cost": 4,
+          "block_index": 46,
+          "instruction_index": 1,
+          "ir": "  br label %quant_decide.exit",
+          "key": "br.unconditional:void",
+          "reason": "",
+          "tti_cost": 4
+        },
+        {
+          "accepted_cost": 1,
+          "block_index": 47,
+          "instruction_index": 0,
+          "ir": "  %109 = tail call float @llvm.copysign.f32(float 6.000000e+00, float %mul116) #4",
+          "key": "call:llvm.copysign.f32:float",
+          "reason": "",
+          "tti_cost": 1
+        },
+        {
+          "accepted_cost": 4,
+          "block_index": 47,
+          "instruction_index": 1,
+          "ir": "  br label %quant_decide.exit",
+          "key": "br.unconditional:void",
+          "reason": "",
+          "tti_cost": 4
+        },
+        {
+          "accepted_cost": 1,
+          "block_index": 48,
+          "instruction_index": 0,
+          "ir": "  %out.i372.0 = phi float [ %104, %if.then7.i ], [ %105, %if.then11.i ], [ %106, %if.then15.i ], [ %107, %if.then19.i ], [ %108, %if.then23.i ], [ %109, %if.end29.i ], [ %103, %decision.dispatch ]",
+          "key": "phi:float",
+          "reason": "",
+          "tti_cost": 1
+        }
+      ],
+      "region_rows": [
+        {
+          "cost": 7,
+          "ir": "  br i1 %0, label %3, label %5",
+          "kind": "control",
+          "scenarios": "DLR"
+        },
+        {
+          "cost": 1,
+          "ir": "  %4 = tail call float @llvm.copysign.f32(float 6.000000e+00, float %1) #2",
+          "kind": "instruction",
+          "scenarios": "DL"
+        },
+        {
+          "cost": 4,
+          "ir": "  br label %7",
+          "kind": "control",
+          "scenarios": "DL"
+        },
+        {
+          "cost": 1,
+          "ir": "  %6 = tail call float @llvm.copysign.f32(float 4.000000e+00, float %1) #2",
+          "kind": "instruction",
+          "scenarios": "DR"
+        },
+        {
+          "cost": 4,
+          "ir": "  br label %7",
+          "kind": "control",
+          "scenarios": "DR"
+        },
+        {
+          "cost": 1,
+          "ir": "  %8 = phi float [ %4, %3 ], [ %6, %5 ]",
+          "kind": "escape",
+          "scenarios": "DLR"
+        }
+      ]
+    },
+    {
+      "id": "e37272cdb93e05f7abfc3c4766d88e469b9b6673",
+      "occurrence": {
+        "block": "%if.else16.i",
+        "condition_source": "data",
+        "function": "cache_eval",
+        "join": "%quant_decide.exit",
+        "join_has_other_preds": true,
+        "category": "snapshot",
+        "case": "vllm",
+        "source_sha256": "beab79d248073e042a87492acf1664d9828b89c205c9dedb4d54cb4229a908a3",
+        "source_index": 504
+      },
+      "parent_T_D": 20,
+      "evaluator_T": [
+        20,
+        13,
+        15
+      ],
+      "parent_rows": [
+        {
+          "accepted_cost": 7,
+          "block_index": 37,
+          "instruction_index": 1,
+          "ir": "  br i1 %cmp18.i, label %if.then19.i, label %if.else20.i",
+          "key": "br.conditional:void",
+          "reason": "",
+          "tti_cost": 7
+        },
+        {
+          "accepted_cost": 1,
+          "block_index": 38,
+          "instruction_index": 0,
+          "ir": "  %110 = tail call float @llvm.copysign.f32(float 3.000000e+00, float %mul116) #4",
+          "key": "call:llvm.copysign.f32:float",
+          "reason": "",
+          "tti_cost": 1
+        },
+        {
+          "accepted_cost": 4,
+          "block_index": 38,
+          "instruction_index": 1,
+          "ir": "  br label %quant_decide.exit",
+          "key": "br.unconditional:void",
+          "reason": "",
+          "tti_cost": 4
+        },
+        {
+          "accepted_cost": 1,
+          "block_index": 39,
+          "instruction_index": 0,
+          "ir": "  %cmp22.i = fcmp ugt float %101, 5.000000e+00",
+          "key": "fcmp:i1",
+          "reason": "",
+          "tti_cost": 1
+        },
+        {
+          "accepted_cost": 1,
+          "block_index": 39,
+          "instruction_index": 1,
+          "ir": "  %111 = select i1 %cmp22.i, float 6.000000e+00, float 4.000000e+00",
+          "key": "select:float",
+          "reason": "",
+          "tti_cost": 1
+        },
+        {
+          "accepted_cost": 1,
+          "block_index": 39,
+          "instruction_index": 2,
+          "ir": "  %112 = tail call float @llvm.copysign.f32(float %111, float %mul116) #4",
+          "key": "call:llvm.copysign.f32:float",
+          "reason": "",
+          "tti_cost": 1
+        },
+        {
+          "accepted_cost": 4,
+          "block_index": 39,
+          "instruction_index": 3,
+          "ir": "  br label %quant_decide.exit",
+          "key": "br.unconditional:void",
+          "reason": "",
+          "tti_cost": 4
+        },
+        {
+          "accepted_cost": 1,
+          "block_index": 40,
+          "instruction_index": 0,
+          "ir": "  %out.i372.0 = phi float [ %109, %decision.dispatch1 ], [ %110, %if.then19.i ], [ %112, %if.else20.i ]",
+          "key": "phi:float",
+          "reason": "",
+          "tti_cost": 1
+        }
+      ],
+      "region_rows": [
+        {
+          "cost": 7,
+          "ir": "  br i1 %0, label %4, label %6",
+          "kind": "control",
+          "scenarios": "DLR"
+        },
+        {
+          "cost": 1,
+          "ir": "  %5 = tail call float @llvm.copysign.f32(float 3.000000e+00, float %1) #2",
+          "kind": "instruction",
+          "scenarios": "DL"
+        },
+        {
+          "cost": 4,
+          "ir": "  br label %10",
+          "kind": "control",
+          "scenarios": "DL"
+        },
+        {
+          "cost": 1,
+          "ir": "  %7 = fcmp ugt float %2, 5.000000e+00",
+          "kind": "instruction",
+          "scenarios": "DR"
+        },
+        {
+          "cost": 1,
+          "ir": "  %8 = select i1 %7, float 6.000000e+00, float 4.000000e+00",
+          "kind": "select",
+          "scenarios": "DR"
+        },
+        {
+          "cost": 1,
+          "ir": "  %9 = tail call float @llvm.copysign.f32(float %8, float %1) #2",
+          "kind": "instruction",
+          "scenarios": "DR"
+        },
+        {
+          "cost": 4,
+          "ir": "  br label %10",
+          "kind": "control",
+          "scenarios": "DR"
+        },
+        {
+          "cost": 1,
+          "ir": "  %11 = phi float [ %5, %4 ], [ %9, %6 ]",
+          "kind": "escape",
+          "scenarios": "DLR"
+        }
+      ]
+    },
+    {
+      "id": "02248205bdbac6825cff283fdbb10d9a05df071e",
+      "occurrence": {
+        "block": "%118",
+        "condition_source": "thread-pattern",
+        "function": "_Z24solve_nqueen_cuda_kerneliiPjS_S_S_i",
+        "join": "%126",
+        "join_has_other_preds": false,
+        "category": "darm",
+        "case": "NQU",
+        "source_sha256": "8997a5aabf9de4d24e797f4b6f1a9f61a7eb54f58931a71d0a97d0668b7cd504",
+        "source_index": 12
+      },
+      "parent_T_D": 17,
+      "evaluator_T": [
+        17,
+        17,
+        7
+      ],
+      "parent_rows": [
+        {
+          "accepted_cost": 7,
+          "block_index": 19,
+          "instruction_index": 4,
+          "ir": "  br i1 %119, label %120, label %126",
+          "key": "br.conditional:void",
+          "reason": "",
+          "tti_cost": 7
+        },
+        {
+          "accepted_cost": 1,
+          "block_index": 20,
+          "instruction_index": 0,
+          "ir": "  %121 = add nuw nsw i32 %8, 4",
+          "key": "add:i32",
+          "reason": "",
+          "tti_cost": 1
+        },
+        {
+          "accepted_cost": 1,
+          "block_index": 20,
+          "instruction_index": 1,
+          "ir": "  %122 = getelementptr inbounds [128 x i32], ptr addrspace(3) @_ZZ24solve_nqueen_cuda_kerneliiPjS_S_S_iE3sum, i32 0, i32 %121",
+          "key": "getelementptr:ptr addrspace(3)",
+          "reason": "",
+          "tti_cost": 1
+        },
+        {
+          "accepted_cost": 1,
+          "block_index": 20,
+          "instruction_index": 2,
+          "ir": "  %123 = load i32, ptr addrspace(3) %122, align 4, !tbaa !19",
+          "key": "load:i32",
+          "reason": "",
+          "tti_cost": 1
+        },
+        {
+          "accepted_cost": 1,
+          "block_index": 20,
+          "instruction_index": 3,
+          "ir": "  %124 = load i32, ptr addrspace(3) %87, align 4, !tbaa !19",
+          "key": "load:i32",
+          "reason": "",
+          "tti_cost": 1
+        },
+        {
+          "accepted_cost": 1,
+          "block_index": 20,
+          "instruction_index": 4,
+          "ir": "  %125 = add i32 %124, %123",
+          "key": "add:i32",
+          "reason": "",
+          "tti_cost": 1
+        },
+        {
+          "accepted_cost": 1,
+          "block_index": 20,
+          "instruction_index": 5,
+          "ir": "  store i32 %125, ptr addrspace(3) %87, align 4, !tbaa !19",
+          "key": "store:void",
+          "reason": "",
+          "tti_cost": 1
+        },
+        {
+          "accepted_cost": 4,
+          "block_index": 20,
+          "instruction_index": 6,
+          "ir": "  br label %126",
+          "key": "br.unconditional:void",
+          "reason": "",
+          "tti_cost": 4
+        }
+      ],
+      "region_rows": [
+        {
+          "cost": 7,
+          "ir": "  br i1 %0, label %5, label %11",
+          "kind": "control",
+          "scenarios": "DLR"
+        },
+        {
+          "cost": 1,
+          "ir": "  %6 = add nuw nsw i32 %1, 4",
+          "kind": "instruction",
+          "scenarios": "DL"
+        },
+        {
+          "cost": 1,
+          "ir": "  %7 = getelementptr inbounds [128 x i32], [128 x i32] addrspace(3)* %2, i32 0, i32 %6",
+          "kind": "instruction",
+          "scenarios": "DL"
+        },
+        {
+          "cost": 1,
+          "ir": "  %8 = load i32, i32 addrspace(3)* %7, align 4, !tbaa !1",
+          "kind": "memory",
+          "scenarios": "DL"
+        },
+        {
+          "cost": 1,
+          "ir": "  %9 = load i32, i32 addrspace(3)* %3, align 4, !tbaa !1",
+          "kind": "memory",
+          "scenarios": "DL"
+        },
+        {
+          "cost": 1,
+          "ir": "  %10 = add i32 %9, %8",
+          "kind": "instruction",
+          "scenarios": "DL"
+        },
+        {
+          "cost": 1,
+          "ir": "  store i32 %10, i32 addrspace(3)* %3, align 4, !tbaa !1",
+          "kind": "memory",
+          "scenarios": "DL"
+        },
+        {
+          "cost": 4,
+          "ir": "  br label %11",
+          "kind": "control",
+          "scenarios": "DL"
+        }
+      ]
+    }
+  ],
+  "solver": {
+    "abstract": {
+      "candidates": 320,
+      "complete": true,
+      "conservative_index": null,
+      "cyclic_pairings": 0,
+      "dp_mismatches": 0,
+      "oracle_candidates": 318,
+      "oracle_guards": 612,
+      "original_T": [
+        27,
+        17,
+        14
+      ],
+      "pairings": 4,
+      "pareto_front": [
+        {
+          "D_components": {
+            "control": 0,
+            "instruction": 14,
+            "select": 2
+          },
+          "T": [
+            16,
+            16,
+            16
+          ],
+          "dp_control_cost": 0,
+          "dp_guard_branches": 0,
+          "escaping_values": 0,
+          "features": {
+            "cmp_swap": false,
+            "commute": false,
+            "crossed": false,
+            "guard_cluster": false,
+            "paired_memory": false,
+            "shared_select": false,
+            "speculate_then_select": true,
+            "speculated_operations": true
+          },
+          "guard_branches": 0,
+          "guard_segments": 0,
+          "ir": "0.ll",
+          "original": false,
+          "original_folded": false,
+          "pairing": {
+            "demanded": 4,
+            "lower_bound": 14,
+            "missing": 2,
+            "produced": 8
+          },
+          "pairs": [
+            {
+              "left": "",
+              "left_index": 1,
+              "recipe": "R1",
+              "right": "",
+              "right_index": 1
+            },
+            {
+              "left": "",
+              "left_index": 2,
+              "recipe": "R1",
+              "right": "",
+              "right_index": 2
+            }
+          ],
+          "recipes": [
+            "R1",
+            "R5"
+          ],
+          "selects": 2
+        },
+        {
+          "D_components": {
+            "control": 3,
+            "escape": 1,
+            "instruction": 23
+          },
+          "T": [
+            27,
+            17,
+            14
+          ],
+          "escaping_values": 1,
+          "guard_branches": 1,
+          "guard_segments": 2,
+          "ir": "1.ll",
+          "original": true,
+          "original_folded": false,
+          "selects": 0
+        }
+      ],
+      "reason": "",
+      "rejected_fold": 242,
+      "seconds": 0.015932116,
+      "top_k": [
+        {
+          "best_observed_D": 16,
+          "k": 1
+        },
+        {
+          "best_observed_D": 16,
+          "k": 3
+        },
+        {
+          "best_observed_D": 16,
+          "k": 10
+        }
+      ],
+      "unsupported_generation": 0,
+      "verified_candidates": 79
+    },
+    "real": {
+      "candidates": 320,
+      "complete": true,
+      "conservative_index": 0,
+      "cyclic_pairings": 0,
+      "dp_mismatches": 0,
+      "oracle_candidates": 318,
+      "oracle_guards": 612,
+      "original_T": [
+        25,
+        18,
+        15
+      ],
+      "pairings": 4,
+      "pareto_front": [
+        {
+          "D_components": {
+            "control": 0,
+            "instruction": 7,
+            "select": 2
+          },
+          "T": [
+            9,
+            9,
+            9
+          ],
+          "dp_control_cost": 0,
+          "dp_guard_branches": 0,
+          "escaping_values": 0,
+          "features": {
+            "cmp_swap": false,
+            "commute": false,
+            "crossed": false,
+            "guard_cluster": false,
+            "paired_memory": false,
+            "shared_select": false,
+            "speculate_then_select": true,
+            "speculated_operations": true
+          },
+          "guard_branches": 0,
+          "guard_segments": 0,
+          "ir": "0.ll",
+          "original": false,
+          "original_folded": false,
+          "pairing": {
+            "demanded": 4,
+            "lower_bound": 0,
+            "missing": 2,
+            "produced": 8
+          },
+          "pairs": [
+            {
+              "left": "",
+              "left_index": 1,
+              "recipe": "R1",
+              "right": "",
+              "right_index": 1
+            },
+            {
+              "left": "",
+              "left_index": 2,
+              "recipe": "R1",
+              "right": "",
+              "right_index": 2
+            }
+          ],
+          "recipes": [
+            "R1",
+            "R5"
+          ],
+          "selects": 2
+        }
+      ],
+      "reason": "",
+      "rejected_fold": 242,
+      "seconds": 0.045822717,
+      "top_k": [
+        {
+          "best_observed_D": 25,
+          "k": 1
+        },
+        {
+          "best_observed_D": 10,
+          "k": 3
+        },
+        {
+          "best_observed_D": 9,
+          "k": 10
+        }
+      ],
+      "unsupported_generation": 0,
+      "verified_candidates": 79
+    }
+  },
+  "original_kernel_TTI": 62,
+  "greedy": {
+    "anchor": {
+      "initial_cost": 62,
+      "final_cost": 62,
+      "commits": 0,
+      "committed_candidates": [],
+      "candidates": [
+        {
+          "candidate": "_Z27CUDAkernelQuantizationShortPsi:B0:B1:B2",
+          "merge_path": "b2b-anchor-1",
+          "eligible": false,
+          "reason": "verified_ir_only",
+          "work_before": 62,
+          "work_after": 62
+        }
+      ]
+    },
+    "darm": {
+      "initial_cost": 62,
+      "final_cost": 44,
+      "commits": 1,
+      "committed_candidates": [
+        "_Z27CUDAkernelQuantizationShortPsi:B0:B1:B2"
+      ],
+      "candidates": [
+        {
+          "candidate": "_Z27CUDAkernelQuantizationShortPsi:B0:B1:B2",
+          "merge_path": "darm-B2B",
+          "eligible": true,
+          "reason": "verified_ir_only",
+          "work_before": 62,
+          "work_after": 44
+        }
+      ]
+    },
+    "dataflow-exact": {
+      "initial_cost": 62,
+      "final_cost": 44,
+      "commits": 1,
+      "committed_candidates": [
+        "_Z27CUDAkernelQuantizationShortPsi:B0:B1:B2"
+      ],
+      "candidates": [
+        {
+          "candidate": "_Z27CUDAkernelQuantizationShortPsi:B0:B1:B2",
+          "merge_path": "dataflow-exact",
+          "eligible": true,
+          "reason": "verified_ir_only",
+          "work_before": 62,
+          "work_after": 44,
+          "dataflow_exact": {
+            "candidates": 320,
+            "chosen": {
+              "D_components": {
+                "control": 0,
+                "instruction": 7,
+                "select": 2
+              },
+              "T": [
+                9,
+                9,
+                9
+              ],
+              "dp_control_cost": 0,
+              "dp_guard_branches": 0,
+              "escaping_values": 0,
+              "features": {
+                "cmp_swap": false,
+                "commute": false,
+                "crossed": false,
+                "guard_cluster": false,
+                "paired_memory": false,
+                "shared_select": false,
+                "speculate_then_select": true,
+                "speculated_operations": true
+              },
+              "guard_branches": 0,
+              "guard_segments": 0,
+              "ir": "0.ll",
+              "original": false,
+              "original_folded": false,
+              "pairing": {
+                "demanded": 4,
+                "lower_bound": 0,
+                "missing": 2,
+                "produced": 8
+              },
+              "pairs": [
+                {
+                  "left": "",
+                  "left_index": 1,
+                  "recipe": "R1",
+                  "right": "",
+                  "right_index": 1
+                },
+                {
+                  "left": "",
+                  "left_index": 2,
+                  "recipe": "R1",
+                  "right": "",
+                  "right_index": 2
+                }
+              ],
+              "recipes": [
+                "R1",
+                "R5"
+              ],
+              "selects": 2
+            },
+            "cleaned_kernel_cost": 44,
+            "condition_source": "data",
+            "kind": "b2b-diamond",
+            "operations": 9,
+            "original_T": [
+              25,
+              18,
+              15
+            ],
+            "raw_kernel_cost": 46,
+            "region_id": "d23a7c228c5b39f95910f0b1d4eb8b9318e5c775"
+          }
+        }
+      ]
+    }
+  },
+  "gpu": {
+    "elements": 16777216,
+    "input_sha256": "ff47466bca25024e30539b454ddfa0649cb2136045866813889b7798003cc3f4",
+    "output_sha256": {
+      "original": "798d70f5af80c6c10acb155f8fc157e014290508bc2998f99ff8af86a1d012e0",
+      "anchor": "798d70f5af80c6c10acb155f8fc157e014290508bc2998f99ff8af86a1d012e0",
+      "darm": "798d70f5af80c6c10acb155f8fc157e014290508bc2998f99ff8af86a1d012e0",
+      "dataflow-exact": "798d70f5af80c6c10acb155f8fc157e014290508bc2998f99ff8af86a1d012e0"
+    },
+    "timing": {
+      "status": "passed",
+      "format": "event",
+      "warmup": 3,
+      "repeat": 15,
+      "runner_sha256": "f8f89e5e39ffb53a1f04e0a8c131da011cc9d537573c6b2e05f4f9f4bdb60582",
+      "binary_sha256": {
+        "baseline": "634622b27a147978e259891db01f843bb3b22fbd125ce155c5cdca9cd367dc73",
+        "A": "634622b27a147978e259891db01f843bb3b22fbd125ce155c5cdca9cd367dc73",
+        "N": "271505b06cea3881216ade796a3133b28680892db5dec8bc5052f400318f4b65",
+        "darm": "271505b06cea3881216ade796a3133b28680892db5dec8bc5052f400318f4b65"
+      },
+      "rounds": [
+        {
+          "baseline": 693.436027,
+          "A": 692.63798,
+          "darm": 692.795992,
+          "N": 692.955971
+        },
+        {
+          "A": 692.797005,
+          "N": 692.798972,
+          "baseline": 692.795992,
+          "darm": 692.636013
+        },
+        {
+          "N": 692.479014,
+          "darm": 692.957997,
+          "A": 692.636013,
+          "baseline": 692.637026
+        },
+        {
+          "darm": 692.797005,
+          "baseline": 692.637026,
+          "N": 692.640007,
+          "A": 692.959011
+        },
+        {
+          "baseline": 693.116009,
+          "A": 692.956984,
+          "darm": 692.795992,
+          "N": 692.798972
+        },
+        {
+          "A": 693.116009,
+          "N": 692.957997,
+          "baseline": 692.959011,
+          "darm": 692.476988
+        },
+        {
+          "N": 692.476988,
+          "darm": 692.798972,
+          "A": 692.640007,
+          "baseline": 692.956984
+        },
+        {
+          "darm": 693.117976,
+          "baseline": 692.959011,
+          "N": 692.637026,
+          "A": 692.476988
+        },
+        {
+          "baseline": 692.959011,
+          "A": 692.794979,
+          "darm": 692.637026,
+          "N": 692.636013
+        },
+        {
+          "A": 692.640007,
+          "N": 692.637026,
+          "baseline": 692.960024,
+          "darm": 692.957997
+        },
+        {
+          "N": 692.956984,
+          "darm": 692.957997,
+          "A": 693.118989,
+          "baseline": 692.955971
+        },
+        {
+          "darm": 692.798972,
+          "baseline": 692.640007,
+          "N": 692.637026,
+          "A": 692.956984
+        }
+      ],
+      "ratio_to_baseline": {
+        "A": [
+          0.9988491411335338,
+          1.0000014621909072,
+          0.9999985374735079,
+          1.000464868304629,
+          0.9997705651031934,
+          1.0002265617410377,
+          0.9995425733381452,
+          0.9993043989725966,
+          0.9997632875864284,
+          0.9995381883674144,
+          1.0002352501555976,
+          1.0004576359967612
+        ],
+        "N": [
+          0.9993077140769902,
+          1.000004301410566,
+          0.9997718689673399,
+          1.0000043038415332,
+          0.9995425917221891,
+          0.9999985367099873,
+          0.9993073220833575,
+          0.9995353476974989,
+          0.9995338858505731,
+          0.9995338865319596,
+          1.000001461853339,
+          0.9999956961769897
+        ],
+        "darm": [
+          0.9990770093057193,
+          0.9997690820936506,
+          1.0004634043343792,
+          1.0002309709039436,
+          0.9995382922976174,
+          0.9993043989725966,
+          0.9997719743019431,
+          1.0002294002927685,
+          0.9995353476974989,
+          0.9999970748673375,
+          1.000002923706678,
+          1.0002295059459365
+        ]
+      },
+      "candidate_over_reference": {
+        "median": 0.9997720004604693,
+        "minimum": 0.9995382714838184,
+        "maximum": 1.000459101304263,
+        "confidence_interval_95": [
+          0.9997654538846552,
+          0.9999992676962485
+        ],
+        "verdict": "passed",
+        "rule": "all_rounds"
+      },
+      "paired_spread": {
+        "A": 0.001617588787493629,
+        "N": 0.00069746487669331,
+        "darm": 0.001387675840547331,
+        "N/A": 0.0009212551902366695
+      },
+      "uncertain_and_unstable": false
+    }
+  }
+}
