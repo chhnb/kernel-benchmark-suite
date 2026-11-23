@@ -20,22 +20,33 @@ MAX_IR_FILE = 1_000_000
 
 
 def dump_inventory(path, regions, failures):
-    with path.open("w") as out:
-        out.write('{"regions":[\n')
-        for index, region in enumerate(regions):
-            if index:
-                out.write(",\n")
-            json.dump(region, out, ensure_ascii=False, separators=(",", ":"))
-        out.write('\n],"source_errors":')
-        json.dump(failures, out, ensure_ascii=False)
-        out.write("}\n")
+    if path.suffix == ".gz":
+        with path.open("wb") as raw, gzip.GzipFile(filename="", mode="wb", fileobj=raw, mtime=0) as zipped:
+            from io import TextIOWrapper
+            with TextIOWrapper(zipped, encoding="utf-8") as out:
+                write_inventory(out, regions, failures)
+    else:
+        with path.open("w", encoding="utf-8") as out:
+            write_inventory(out, regions, failures)
+
+
+def write_inventory(out, regions, failures):
+    out.write('{"regions":[\n')
+    for index, region in enumerate(regions):
+        if index:
+            out.write(",\n")
+        json.dump(region, out, ensure_ascii=False, separators=(",", ":"))
+    out.write('\n],"source_errors":')
+    json.dump(failures, out, ensure_ascii=False)
+    out.write("}\n")
 
 
 def write_summary(path, manifest, regions, failures):
     occurrence_counts = Counter()
     unique = defaultdict(set)
+    source_pairs = defaultdict(set)
+    cross_sources = defaultdict(set)
     cases = {(row["category"], row["case"]) for row in manifest["sources"]}
-    cross_counts = Counter()
     cross_unique = defaultdict(set)
     extraction_count = sum("ir" in region for region in regions)
     for region in regions:
@@ -45,18 +56,22 @@ def write_summary(path, manifest, regions, failures):
                 key = (*group, kind)
                 occurrence_counts[key] += 1
                 unique[key].add(region["id"])
+                source_pairs[key].add((region["id"], occ["source_sha256"]))
             if kind in B2B:
                 key = (region["size_bucket"], occ["condition_source"],
                        "有" if region["loads"] or region["stores"] else "无")
-                cross_counts[key] += 1
                 cross_unique[key].add(region["id"])
+                cross_sources[key].add((region["id"], occ["source_sha256"]))
 
-    def line(category, case):
+    def line(category, case, counts):
         cells = []
         for kind in KINDS:
             key = category, case, kind
-            cells.append(f"{occurrence_counts[key]} / {len(unique[key])}")
+            cells.append(f"{counts(key)} / {len(unique[key])}")
         return f"| {category} | {case} | {' | '.join(cells)} |"
+
+    def distinct(key):
+        return len(source_pairs[key])
 
     source_counts = Counter(row["category"] for row in manifest["sources"])
     total = sum(occurrence_counts["全部", "全部", kind] for kind in KINDS)
@@ -68,30 +83,30 @@ def write_summary(path, manifest, regions, failures):
         "",
         "## 按来源和 case 计数",
         "",
-        "每格依次为出现次数和结构去重后的数量。同一区域可以出现在不同来源或 case，"
+        "每格依次为各唯一区域的 distinct_sources 之和、唯一区域数。同一区域可以出现在不同来源或 case，"
         "所以各行的去重数可有重叠。每个来源的同一模块扫描其全部已定义函数。",
         "",
         "| 来源 | case | " + " | ".join(KINDS) + " |",
         "| --- | --- | ---: | ---: | ---: | ---: | ---: |",
     ]
     for category in ("darm", "project", "snapshot"):
-        lines.append(line(category, "全部"))
-        lines.extend(line(c, case) for c, case in sorted(cases) if c == category)
+        lines.append(line(category, "全部", distinct))
+        lines.extend(line(c, case, distinct) for c, case in sorted(cases) if c == category)
     lines.extend([
-        line("全部", "全部"),
+        line("全部", "全部", distinct),
         "",
         "## B2B 交叉统计",
         "",
-        "按每次出现的条件来源计数。同一个结构在不同条件来源分组中可分别出现。",
+        "每个分组按不同的（区域、源 IR）组合计数。同一个结构在不同条件来源分组中可分别出现。",
         "",
-        "| 规模 | condition_source | load 或 store | 出现次数 | 唯一区域 |",
+        "| 规模 | condition_source | load 或 store | distinct_sources 之和 | 唯一区域 |",
         "| --- | --- | --- | ---: | ---: |",
     ])
     for size in ("small", "medium", "large"):
         for condition in ("data", "thread-pattern", "workgroup-uniform"):
             for memory in ("无", "有"):
                 key = size, condition, memory
-                lines.append(f"| {size} | {condition} | {memory} | {cross_counts[key]} | {len(cross_unique[key])} |")
+                lines.append(f"| {size} | {condition} | {memory} | {len(cross_sources[key])} | {len(cross_unique[key])} |")
     lines.extend(["", "## 未收录或无法扫描的输入", ""])
     for row in [*manifest["excluded"], *failures]:
         label = row["case"] + (f" block size {row['block_size']}" if row.get("block_size") is not None else "")
@@ -105,7 +120,15 @@ def write_summary(path, manifest, regions, failures):
             reason = " ".join(region["extraction_error"].strip().splitlines()[:2])
             lines.append(f"- `{region['id']}`。{reason}")
     else:
-        lines.append("所有 B2B 结构均有 IR 文件。b2r、r2r 和 other 的位置和结构见 `inventory.json`。")
+        lines.append("所有 B2B 结构均有 IR 文件。b2r、r2r 和 other 的位置和结构见 `inventory-all.json.gz`。")
+    lines.extend(["", "## 附表：原始出现次数", "",
+                  "| 来源 | case | " + " | ".join(KINDS) + " |",
+                  "| --- | --- | ---: | ---: | ---: | ---: | ---: |"])
+    for category in ("darm", "project", "snapshot"):
+        lines.append(line(category, "全部", occurrence_counts.__getitem__))
+        lines.extend(line(c, case, occurrence_counts.__getitem__)
+                     for c, case in sorted(cases) if c == category)
+    lines.append(line("全部", "全部", occurrence_counts.__getitem__))
     path.write_text("\n".join(lines) + "\n")
 
 
@@ -191,19 +214,31 @@ def build(args):
     regions = [inventory[uid] for uid in sorted(inventory)]
     for region in regions:
         where = region["occurrences"]
+        region["distinct_sources"] = len({occ["source_sha256"] for occ in where})
+        first_seen = {}
+        for occ in where:
+            generation = manifest["sources"][occ["source_index"]]["generation"]
+            if occ["category"] == "snapshot":
+                run, step = generation["run_record"], generation["step"]
+                first_seen[run] = min(first_seen.get(run, step), step)
+        region["first_seen_step"] = first_seen
         region["join_has_other_preds"] = any(occ["join_has_other_preds"] for occ in where)
         sources = sorted({occ["condition_source"] for occ in where})
         region["condition_source"] = sources[0] if len(sources) == 1 else sources
         region["unsafe_to_speculate"] = any(occ["unsafe_to_speculate"] for occ in where)
         fold = {occ["original_folds"] for occ in where}
         if len(fold) > 1:
-            region["original_folds"] = None
-            region["fold_reason"] = "differs among occurrences"
+            region["original_folds"] = False
+            region["fold_reason"] = "at least one original occurrence does not fold"
         for key in ("original_folds", "fold_reason", "unsafe_to_speculate"):
             if all(occ[key] == region[key] for occ in where):
                 for occ in where:
                     del occ[key]
-    dump_inventory(args.output / "inventory.json", regions, failures)
+    b2b = [{key: value for key, value in region.items() if key != "structure"}
+           for region in regions if region["kind"] in B2B]
+    assert all(type(region["original_folds"]) is bool for region in b2b)
+    dump_inventory(args.output / "inventory-b2b.json", b2b, failures)
+    dump_inventory(args.output / "inventory-all.json.gz", regions, failures)
     write_summary(args.output / "SUMMARY.md", manifest, regions, failures)
     print(f"{len(inputs)} distinct source hashes; {len(failures)} source entries failed LLVM 12")
     print(f"{len(regions)} unique regions; {len(paths)} extracted files passed opt -verify")

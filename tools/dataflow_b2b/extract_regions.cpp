@@ -1,4 +1,5 @@
 #include "../anchor_condition.h"
+#include "cost_model.h"
 
 #include "llvm/ADT/DenseMap.h"
 #include "llvm/ADT/SmallPtrSet.h"
@@ -154,15 +155,6 @@ bool laneInput(const Instruction &instruction) {
          name.startswith("llvm.nvvm.read.ptx.sreg.nctaid.") ||
          name == "llvm.amdgcn.dispatch.ptr" || name == "llvm.amdgcn.kernarg.segment.ptr" ||
          name == "llvm.amdgcn.implicitarg.ptr" || name == "llvm.amdgcn.queue.ptr";
-}
-
-bool unsafe(const Instruction &instruction) {
-  if (laneInput(instruction))
-    return false;
-  if (auto *call = dyn_cast<CallBase>(&instruction))
-    if (call->isConvergent())
-      return true;
-  return !isSafeToSpeculativelyExecute(&instruction);
 }
 
 bool semantic(const Instruction &instruction) {
@@ -622,8 +614,7 @@ Stats measure(const Region &region, ArrayRef<Output> result, const json::Object 
   Stats stats;
   std::map<unsigned, unsigned> leftOpcodes;
   SmallPtrSet<const Instruction *, 32> visited;
-  std::set<std::string> missing;
-  int64_t charge = 0;
+  SmallVector<const Instruction *, 32> operations;
   for (bool left : {true, false}) {
     for (auto *block : left ? region.left : region.right) {
       for (auto &inst : *block) {
@@ -643,11 +634,9 @@ Stats measure(const Region &region, ArrayRef<Output> result, const json::Object 
         stats.stores += isa<StoreInst>(inst);
         if (auto *call = dyn_cast<CallBase>(&inst))
           stats.convergent |= call->isConvergent();
-        stats.unportable |= unsafe(inst);
-        if (auto cost = costs.getInteger(inst.getOpcodeName()))
-          charge += *cost;
-        else
-          missing.insert(inst.getOpcodeName());
+        const bool unsafe = !dataflow::speculationFailure(inst, costs).empty();
+        stats.unportable |= unsafe;
+        operations.push_back(&inst);
       }
     }
   }
@@ -660,36 +649,13 @@ Stats measure(const Region &region, ArrayRef<Output> result, const json::Object 
     return stats;
 
   stats.numOutputs = result.size();
-  int64_t maxPhis = *costs.getInteger("fold_max_phis");
-  int64_t threshold = *costs.getInteger("fold_threshold");
-  auto isBinaryExceptNot = [](const Value *value) {
-    const auto *bin = dyn_cast<BinaryOperator>(value);
-    return bin && !PatternMatch::match(bin, PatternMatch::m_Not(PatternMatch::m_Value()));
-  };
-  bool badI1 = llvm::any_of(result, [&](const Output &output) {
-    return output.phi->getType()->isIntegerTy(1) &&
-           (isBinaryExceptNot(output.left) || isBinaryExceptNot(output.right));
-  });
-  // LLVM's join-arity restriction is on PHI nodes, not incoming edges.
-  if (stats.unportable)
-    stats.foldReason = "operation is unsafe to speculate";
-  else if (stats.numOutputs > static_cast<unsigned>(maxPhis))
-    stats.foldReason = "too many join PHIs";
-  else if (badI1)
-    stats.foldReason = "binary incoming value to i1 PHI";
-  else if (visited.size() > 1 && charge > threshold)
-    stats.foldReason = "known size-and-latency cost already exceeds threshold";
-  else if (!missing.empty()) {
-    stats.foldReason = "missing c_SL for";
-    for (const auto &opcode : missing)
-      stats.foldReason += " " + opcode;
-    return stats;
-  } else {
-    stats.foldReason = charge > threshold ? "single-operation budget exception" : "within budget";
-    stats.folds = true;
-    return stats;
-  }
-  stats.folds = false;
+  SmallVector<const Value *, 16> incoming;
+  for (const auto &output : result)
+    incoming.append({output.left, output.right});
+  stats.foldReason = dataflow::foldFailure(operations, incoming, result.size(), costs);
+  stats.folds = stats.foldReason.empty();
+  if (stats.foldReason.empty())
+    stats.foldReason = "within budget or single-operation exception";
   return stats;
 }
 
@@ -739,33 +705,12 @@ int main(int argc, char **argv) {
   if (verifyModule(*module, &errs()))
     return 1;
 
-  auto costFile = MemoryBuffer::getFile(argv[2]);
-  if (!costFile) {
-    errs() << costFile.getError().message() << '\n';
-    return 1;
-  }
-  auto costTable = json::parse(costFile.get()->getBuffer());
+  auto costTable = dataflow::readCosts(argv[2]);
   if (!costTable) {
     errs() << toString(costTable.takeError()) << '\n';
     return 1;
   }
-  auto *root = costTable->getAsObject();
-  auto *op = root ? root->getObject("op") : nullptr;
-  if (!op || !root->getInteger("fold_max_phis") || !root->getInteger("fold_threshold")) {
-    errs() << "invalid cost table\n";
-    return 1;
-  }
-  json::Object costs;
-  for (const auto &item : *op) {
-    auto value = item.second.getAsInteger();
-    if (!value || *value < 0) {
-      errs() << "invalid opcode cost\n";
-      return 1;
-    }
-    costs[item.first] = *value;
-  }
-  costs["fold_max_phis"] = *root->getInteger("fold_max_phis");
-  costs["fold_threshold"] = *root->getInteger("fold_threshold");
+  const auto &costs = *costTable->getAsObject();
   if (auto error = sys::fs::create_directories(argv[3])) {
     errs() << error.message() << '\n';
     return 1;

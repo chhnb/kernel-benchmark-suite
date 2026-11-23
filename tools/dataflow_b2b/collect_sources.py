@@ -2,6 +2,7 @@
 """Collect the pinned input sources and accepted Greedy parents on epyc."""
 
 import argparse
+from collections import Counter
 import gzip
 import hashlib
 import json
@@ -60,6 +61,37 @@ def load_ir(source):
 def block_size(case):
     match = re.fullmatch(r"(?:BIT|DCT|LUD|MS|NQU|PCM|SRAD)([0-9]+)(?:-.*)?", case, re.I)
     return int(match[1]) if match else None
+
+
+def normalize_aliases(sources):
+    """Combine case-directory and artifact names only for matching IR bytes."""
+    groups = {}
+    project = {
+        (row["case"], row["sha256"])
+        for row in sources if row["category"] == "project"
+    }
+    for row in sources:
+        name = row["case"]
+        canonical = CASE_ALIAS.get(name, name)
+        if row["category"] != "project" or (canonical, row["sha256"]) not in project:
+            canonical = name
+        if row["category"] != "project":
+            yield row
+            continue
+        key = canonical, row["sha256"]
+        group = groups.setdefault(key, [])
+        group.append(row)
+    variants = Counter(canonical for canonical, _ in groups)
+    for (canonical, digest), group in groups.items():
+        primary = next(row for row in group if row["case"] == canonical)
+        aliases = sorted({row["case"] for row in group})
+        name = canonical
+        if variants[canonical] > 1:
+            qualified = next((alias.lower() for alias in aliases
+                              if alias != canonical and block_size(alias) is not None), None)
+            name = qualified or f"{canonical}@{digest[:12]}"
+        yield {**primary, "case": name, "aliases": aliases,
+               "provenance": group}
 
 
 def collect(work, output):
@@ -244,6 +276,7 @@ def collect(work, output):
         if path.is_file():
             snapshot_series(path, name, "regression/records/b2b-anchor-ablation-20261120.md")
 
+    sources = list(normalize_aliases(sources))
     totals = {}
     for row in sources:
         totals[row["category"]] = totals.get(row["category"], 0) + 1

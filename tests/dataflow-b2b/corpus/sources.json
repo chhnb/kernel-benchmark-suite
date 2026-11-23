@@ -476,469 +476,6 @@
       "sha256": "de6fe485158ba7acbf530252ae8585bf555a1ed5278716f9de8bca0e71cc6fac"
     },
     {
-      "category": "project",
-      "case": "boost-landau",
-      "block_size": null,
-      "path": "cases/boost-landau/provenance/historical-source.ll",
-      "generation": {
-        "origin": "tracked case IR"
-      },
-      "git_commit": "d4ad2e89f4704c408165e002c4082e90e7f949dc",
-      "sha256": "65c7adf9e7e29bb51c0bce56065d687c685dd8d6272da51aea165990330ba58c"
-    },
-    {
-      "category": "project",
-      "case": "boost-mapairy",
-      "block_size": null,
-      "path": "cases/boost-mapairy/start.ll",
-      "generation": {
-        "origin": "tracked case IR"
-      },
-      "git_commit": "d4ad2e89f4704c408165e002c4082e90e7f949dc",
-      "sha256": "130d89d31e175129c35386aa68f040556a3addb5c0615a26948b75ee7963dce2"
-    },
-    {
-      "category": "project",
-      "case": "tigre-siddon",
-      "block_size": null,
-      "path": "cases/tigre-siddon/source/input.ll",
-      "generation": {
-        "origin": "tracked case IR"
-      },
-      "git_commit": "d4ad2e89f4704c408165e002c4082e90e7f949dc",
-      "sha256": "acacbad8f0990ae9bef99a404a48e767ec72c000e099c21d358080de5c302a46"
-    },
-    {
-      "category": "project",
-      "case": "vllm-quant",
-      "block_size": null,
-      "path": "cases/vllm-quant/source/quant-unmerged.ll",
-      "generation": {
-        "origin": "tracked case IR"
-      },
-      "git_commit": "d4ad2e89f4704c408165e002c4082e90e7f949dc",
-      "sha256": "05d35ba45053282ad6ac0675406072d250f2bde51ab9e4178498770fdbfca636"
-    },
-    {
-      "category": "project",
-      "case": "vllm-quant",
-      "block_size": null,
-      "path": "cases/vllm-quant/start.ll",
-      "generation": {
-        "origin": "tracked case IR"
-      },
-      "git_commit": "d4ad2e89f4704c408165e002c4082e90e7f949dc",
-      "sha256": "7e1e57ebb0adeb1beef9382eab38a3ff5dfb37e2449ccfc79396ddcf89cd9962"
-    },
-    {
-      "category": "project",
-      "case": "vllm",
-      "block_size": null,
-      "path": "artifact/inputs/7e1e57ebb0adeb1beef9382eab38a3ff5dfb37e2449ccfc79396ddcf89cd9962.ll.gz",
-      "generation": {
-        "origin": "artifact/run",
-        "manifest": "artifact/manifest.json"
-      },
-      "git_commit": "7d2e45b77e5502eeab42bea43f696ccb89172e58",
-      "sha256": "7e1e57ebb0adeb1beef9382eab38a3ff5dfb37e2449ccfc79396ddcf89cd9962"
-    },
-    {
-      "category": "project",
-      "case": "MapAiry",
-      "block_size": null,
-      "path": "artifact/inputs/130d89d31e175129c35386aa68f040556a3addb5c0615a26948b75ee7963dce2.ll.gz",
-      "generation": {
-        "origin": "artifact/run",
-        "manifest": "artifact/manifest.json"
-      },
-      "git_commit": "7d2e45b77e5502eeab42bea43f696ccb89172e58",
-      "sha256": "130d89d31e175129c35386aa68f040556a3addb5c0615a26948b75ee7963dce2"
-    },
-    {
-      "category": "project",
-      "case": "tigre",
-      "block_size": null,
-      "path": "artifact/inputs/acacbad8f0990ae9bef99a404a48e767ec72c000e099c21d358080de5c302a46.ll.gz",
-      "generation": {
-        "origin": "artifact/run",
-        "manifest": "artifact/manifest.json"
-      },
-      "git_commit": "7d2e45b77e5502eeab42bea43f696ccb89172e58",
-      "sha256": "acacbad8f0990ae9bef99a404a48e767ec72c000e099c21d358080de5c302a46"
-    },
-    {
-      "category": "project",
-      "case": "HLLD",
-      "block_size": null,
-      "path": "artifact/inputs/66a4463814ccb7464fc7c9add8d705b91c0dcd416a53653255a36c5b374d5375.ll.gz",
-      "generation": {
-        "origin": "artifact/run",
-        "manifest": "artifact/manifest.json"
-      },
-      "git_commit": "7d2e45b77e5502eeab42bea43f696ccb89172e58",
-      "sha256": "66a4463814ccb7464fc7c9add8d705b91c0dcd416a53653255a36c5b374d5375"
-    },
-    {
-      "category": "project",
-      "case": "cholla-hlld",
-      "block_size": null,
-      "path": "artifact/inputs/66a4463814ccb7464fc7c9add8d705b91c0dcd416a53653255a36c5b374d5375.ll.gz",
-      "generation": {
-        "origin": "artifact/run input for case",
-        "case_config": "cases/cholla-hlld/case.json"
-      },
-      "git_commit": "7d2e45b77e5502eeab42bea43f696ccb89172e58",
-      "sha256": "66a4463814ccb7464fc7c9add8d705b91c0dcd416a53653255a36c5b374d5375"
-    },
-    {
-      "category": "project",
-      "case": "NQU64",
-      "block_size": 64,
-      "path": "artifact/inputs/41d0f06783569a082de6ce5fc01ac59b4860f89f787c607e4b81b9684938bc49.ll.gz",
-      "generation": {
-        "origin": "artifact/run",
-        "manifest": "artifact/manifest.json"
-      },
-      "git_commit": "7d2e45b77e5502eeab42bea43f696ccb89172e58",
-      "sha256": "41d0f06783569a082de6ce5fc01ac59b4860f89f787c607e4b81b9684938bc49"
-    },
-    {
-      "category": "project",
-      "case": "nqu64",
-      "block_size": 64,
-      "path": "artifact/inputs/41d0f06783569a082de6ce5fc01ac59b4860f89f787c607e4b81b9684938bc49.ll.gz",
-      "generation": {
-        "origin": "artifact/run input for case",
-        "case_config": "cases/nqu64/case.json"
-      },
-      "git_commit": "7d2e45b77e5502eeab42bea43f696ccb89172e58",
-      "sha256": "41d0f06783569a082de6ce5fc01ac59b4860f89f787c607e4b81b9684938bc49"
-    },
-    {
-      "category": "project",
-      "case": "MS32",
-      "block_size": 32,
-      "path": "artifact/inputs/a97f12d831e64915a71477a43ff4518a89122f100cd6e1d434a8a41aefd67319.ll.gz",
-      "generation": {
-        "origin": "artifact/run",
-        "manifest": "artifact/manifest.json"
-      },
-      "git_commit": "7d2e45b77e5502eeab42bea43f696ccb89172e58",
-      "sha256": "a97f12d831e64915a71477a43ff4518a89122f100cd6e1d434a8a41aefd67319"
-    },
-    {
-      "category": "project",
-      "case": "ms32",
-      "block_size": 32,
-      "path": "artifact/inputs/a97f12d831e64915a71477a43ff4518a89122f100cd6e1d434a8a41aefd67319.ll.gz",
-      "generation": {
-        "origin": "artifact/run input for case",
-        "case_config": "cases/ms32/case.json"
-      },
-      "git_commit": "7d2e45b77e5502eeab42bea43f696ccb89172e58",
-      "sha256": "a97f12d831e64915a71477a43ff4518a89122f100cd6e1d434a8a41aefd67319"
-    },
-    {
-      "category": "project",
-      "case": "PCM32",
-      "block_size": 32,
-      "path": "artifact/inputs/db3b35287f1ef284e3c8dac514b05fc952a6892345b5ff0077b2840927aaab47.ll.gz",
-      "generation": {
-        "origin": "artifact/run",
-        "manifest": "artifact/manifest.json"
-      },
-      "git_commit": "7d2e45b77e5502eeab42bea43f696ccb89172e58",
-      "sha256": "db3b35287f1ef284e3c8dac514b05fc952a6892345b5ff0077b2840927aaab47"
-    },
-    {
-      "category": "project",
-      "case": "pcm32",
-      "block_size": 32,
-      "path": "artifact/inputs/db3b35287f1ef284e3c8dac514b05fc952a6892345b5ff0077b2840927aaab47.ll.gz",
-      "generation": {
-        "origin": "artifact/run input for case",
-        "case_config": "cases/pcm32/case.json"
-      },
-      "git_commit": "7d2e45b77e5502eeab42bea43f696ccb89172e58",
-      "sha256": "db3b35287f1ef284e3c8dac514b05fc952a6892345b5ff0077b2840927aaab47"
-    },
-    {
-      "category": "project",
-      "case": "SRAD16",
-      "block_size": 16,
-      "path": "artifact/inputs/ecf89ddfdc19aca349c70571b29ea5be2b95049fbce5d9815cabc7b73de016d1.ll.gz",
-      "generation": {
-        "origin": "artifact/run",
-        "manifest": "artifact/manifest.json"
-      },
-      "git_commit": "7d2e45b77e5502eeab42bea43f696ccb89172e58",
-      "sha256": "ecf89ddfdc19aca349c70571b29ea5be2b95049fbce5d9815cabc7b73de016d1"
-    },
-    {
-      "category": "project",
-      "case": "srad",
-      "block_size": 16,
-      "path": "artifact/inputs/ecf89ddfdc19aca349c70571b29ea5be2b95049fbce5d9815cabc7b73de016d1.ll.gz",
-      "generation": {
-        "origin": "artifact/run input for case",
-        "case_config": "cases/srad/case.json"
-      },
-      "git_commit": "7d2e45b77e5502eeab42bea43f696ccb89172e58",
-      "sha256": "ecf89ddfdc19aca349c70571b29ea5be2b95049fbce5d9815cabc7b73de016d1"
-    },
-    {
-      "category": "project",
-      "case": "SRAD32",
-      "block_size": 32,
-      "path": "artifact/inputs/b0825b893b165dd4e82a34c7cfbe85e6d7e3226d9d28b33765d5521981af22ee.ll.gz",
-      "generation": {
-        "origin": "artifact/run",
-        "manifest": "artifact/manifest.json"
-      },
-      "git_commit": "7d2e45b77e5502eeab42bea43f696ccb89172e58",
-      "sha256": "b0825b893b165dd4e82a34c7cfbe85e6d7e3226d9d28b33765d5521981af22ee"
-    },
-    {
-      "category": "project",
-      "case": "srad",
-      "block_size": 32,
-      "path": "artifact/inputs/b0825b893b165dd4e82a34c7cfbe85e6d7e3226d9d28b33765d5521981af22ee.ll.gz",
-      "generation": {
-        "origin": "artifact/run input for case",
-        "case_config": "cases/srad/case.json"
-      },
-      "git_commit": "7d2e45b77e5502eeab42bea43f696ccb89172e58",
-      "sha256": "b0825b893b165dd4e82a34c7cfbe85e6d7e3226d9d28b33765d5521981af22ee"
-    },
-    {
-      "category": "project",
-      "case": "Landau",
-      "block_size": null,
-      "path": "artifact/inputs/65c7adf9e7e29bb51c0bce56065d687c685dd8d6272da51aea165990330ba58c.ll.gz",
-      "generation": {
-        "origin": "artifact/run",
-        "manifest": "artifact/manifest.json"
-      },
-      "git_commit": "7d2e45b77e5502eeab42bea43f696ccb89172e58",
-      "sha256": "65c7adf9e7e29bb51c0bce56065d687c685dd8d6272da51aea165990330ba58c"
-    },
-    {
-      "category": "project",
-      "case": "SW2D",
-      "block_size": null,
-      "path": "artifact/inputs/8468fbe02c5276b65129a84a4d84ea2b36c887e2088341c9475a72609ec9ef5e.ll.gz",
-      "generation": {
-        "origin": "artifact/run",
-        "manifest": "artifact/manifest.json"
-      },
-      "git_commit": "7d2e45b77e5502eeab42bea43f696ccb89172e58",
-      "sha256": "8468fbe02c5276b65129a84a4d84ea2b36c887e2088341c9475a72609ec9ef5e"
-    },
-    {
-      "category": "project",
-      "case": "sw2d",
-      "block_size": null,
-      "path": "artifact/inputs/8468fbe02c5276b65129a84a4d84ea2b36c887e2088341c9475a72609ec9ef5e.ll.gz",
-      "generation": {
-        "origin": "artifact/run input for case",
-        "case_config": "cases/sw2d/case.json"
-      },
-      "git_commit": "7d2e45b77e5502eeab42bea43f696ccb89172e58",
-      "sha256": "8468fbe02c5276b65129a84a4d84ea2b36c887e2088341c9475a72609ec9ef5e"
-    },
-    {
-      "category": "project",
-      "case": "CED",
-      "block_size": null,
-      "path": "artifact/inputs/44686ea42206b19f7eb9dc1c57cd0afdee1b0edcd600d3131554b6292cd14279.ll.gz",
-      "generation": {
-        "origin": "artifact/run",
-        "manifest": "artifact/manifest.json"
-      },
-      "git_commit": "7d2e45b77e5502eeab42bea43f696ccb89172e58",
-      "sha256": "44686ea42206b19f7eb9dc1c57cd0afdee1b0edcd600d3131554b6292cd14279"
-    },
-    {
-      "category": "project",
-      "case": "ced",
-      "block_size": null,
-      "path": "artifact/inputs/44686ea42206b19f7eb9dc1c57cd0afdee1b0edcd600d3131554b6292cd14279.ll.gz",
-      "generation": {
-        "origin": "artifact/run input for case",
-        "case_config": "cases/ced/case.json"
-      },
-      "git_commit": "7d2e45b77e5502eeab42bea43f696ccb89172e58",
-      "sha256": "44686ea42206b19f7eb9dc1c57cd0afdee1b0edcd600d3131554b6292cd14279"
-    },
-    {
-      "category": "project",
-      "case": "TPACF",
-      "block_size": null,
-      "path": "artifact/inputs/db675bc376fb1716326761177f9f1f3ea4b261f6d028f85dd9c4f00b5463eda5.ll.gz",
-      "generation": {
-        "origin": "artifact/run",
-        "manifest": "artifact/manifest.json"
-      },
-      "git_commit": "7d2e45b77e5502eeab42bea43f696ccb89172e58",
-      "sha256": "db675bc376fb1716326761177f9f1f3ea4b261f6d028f85dd9c4f00b5463eda5"
-    },
-    {
-      "category": "project",
-      "case": "tpacf",
-      "block_size": null,
-      "path": "artifact/inputs/db675bc376fb1716326761177f9f1f3ea4b261f6d028f85dd9c4f00b5463eda5.ll.gz",
-      "generation": {
-        "origin": "artifact/run input for case",
-        "case_config": "cases/tpacf/case.json"
-      },
-      "git_commit": "7d2e45b77e5502eeab42bea43f696ccb89172e58",
-      "sha256": "db675bc376fb1716326761177f9f1f3ea4b261f6d028f85dd9c4f00b5463eda5"
-    },
-    {
-      "category": "project",
-      "case": "SRAD-stage2",
-      "block_size": null,
-      "path": "artifact/inputs/ecf89ddfdc19aca349c70571b29ea5be2b95049fbce5d9815cabc7b73de016d1.ll.gz",
-      "generation": {
-        "origin": "artifact/run",
-        "manifest": "artifact/manifest.json"
-      },
-      "git_commit": "7d2e45b77e5502eeab42bea43f696ccb89172e58",
-      "sha256": "ecf89ddfdc19aca349c70571b29ea5be2b95049fbce5d9815cabc7b73de016d1"
-    },
-    {
-      "category": "project",
-      "case": "srad-stage2",
-      "block_size": null,
-      "path": "artifact/inputs/ecf89ddfdc19aca349c70571b29ea5be2b95049fbce5d9815cabc7b73de016d1.ll.gz",
-      "generation": {
-        "origin": "artifact/run input for case",
-        "case_config": "cases/srad-stage2/case.json"
-      },
-      "git_commit": "7d2e45b77e5502eeab42bea43f696ccb89172e58",
-      "sha256": "ecf89ddfdc19aca349c70571b29ea5be2b95049fbce5d9815cabc7b73de016d1"
-    },
-    {
-      "category": "project",
-      "case": "LUD8",
-      "block_size": 8,
-      "path": "artifact/inputs/a52a8746779c561db1be7bc66026508f909e9eeba2223c966d7fe201435782b9.ll.gz",
-      "generation": {
-        "origin": "artifact/run",
-        "manifest": "artifact/manifest.json"
-      },
-      "git_commit": "7d2e45b77e5502eeab42bea43f696ccb89172e58",
-      "sha256": "a52a8746779c561db1be7bc66026508f909e9eeba2223c966d7fe201435782b9"
-    },
-    {
-      "category": "project",
-      "case": "lud8",
-      "block_size": 8,
-      "path": "artifact/inputs/a52a8746779c561db1be7bc66026508f909e9eeba2223c966d7fe201435782b9.ll.gz",
-      "generation": {
-        "origin": "artifact/run input for case",
-        "case_config": "cases/lud8/case.json"
-      },
-      "git_commit": "7d2e45b77e5502eeab42bea43f696ccb89172e58",
-      "sha256": "a52a8746779c561db1be7bc66026508f909e9eeba2223c966d7fe201435782b9"
-    },
-    {
-      "category": "project",
-      "case": "vllm-quant-kv-dump",
-      "block_size": null,
-      "path": "cases/vllm-quant/start.ll",
-      "generation": {
-        "origin": "shared vllm-quant runtime kernel",
-        "case_config": "cases/vllm-quant-kv-dump/case.json",
-        "runtime_kernel": "/home/chh/kernel-benchmark-suite/results/vllm-hip-software-v1/kernel.hsaco"
-      },
-      "git_commit": "d4ad2e89f4704c408165e002c4082e90e7f949dc",
-      "sha256": "7e1e57ebb0adeb1beef9382eab38a3ff5dfb37e2449ccfc79396ddcf89cd9962"
-    },
-    {
-      "category": "project",
-      "case": "vllm-quant-large",
-      "block_size": null,
-      "path": "cases/vllm-quant/start.ll",
-      "generation": {
-        "origin": "shared vllm-quant runtime kernel",
-        "case_config": "cases/vllm-quant-large/case.json",
-        "runtime_kernel": "/home/chh/kernel-benchmark-suite/results/vllm-hip-software-v1/kernel.hsaco"
-      },
-      "git_commit": "d4ad2e89f4704c408165e002c4082e90e7f949dc",
-      "sha256": "7e1e57ebb0adeb1beef9382eab38a3ff5dfb37e2449ccfc79396ddcf89cd9962"
-    },
-    {
-      "category": "project",
-      "case": "vllm-quant-qwen64k",
-      "block_size": null,
-      "path": "cases/vllm-quant/start.ll",
-      "generation": {
-        "origin": "shared vllm-quant runtime kernel",
-        "case_config": "cases/vllm-quant-qwen64k/case.json",
-        "runtime_kernel": "/home/chh/kernel-benchmark-suite/results/vllm-hip-software-v1/kernel.hsaco"
-      },
-      "git_commit": "d4ad2e89f4704c408165e002c4082e90e7f949dc",
-      "sha256": "7e1e57ebb0adeb1beef9382eab38a3ff5dfb37e2449ccfc79396ddcf89cd9962"
-    },
-    {
-      "category": "project",
-      "case": "hypersonic",
-      "block_size": null,
-      "path": "regression/greedy-v1/inputs/b17d210a4474bce7.ll.gz",
-      "generation": {
-        "origin": "archived exact historical input",
-        "run_record": "regression/greedy-v1/manifest-ordered-20261119.json",
-        "original_path": "/data/home/chh/kernel-benchmark-suite/build/hypersonic-no-jt-recovered/historical-before.ll"
-      },
-      "git_commit": "d4ad2e89f4704c408165e002c4082e90e7f949dc",
-      "sha256": "b17d210a4474bce72a76aff25df1ed36dd89d9c7131ca8d13720dd4148dddb09"
-    },
-    {
-      "category": "project",
-      "case": "cudaflow-particles",
-      "block_size": null,
-      "path": "/data/home/chh/simplify-v2/build/b2b-layouts/anchor-default/CUDAflow/start.ll",
-      "generation": {
-        "origin": "epyc historical input",
-        "run_record": "regression/records/b2b-anchor-ablation-20261120.md"
-      },
-      "sha256": "414053cb36f9d098eab79f35e37ae1aa32fc828e80b3e05a10dc3bd323f37d0b"
-    },
-    {
-      "category": "project",
-      "case": "hipims",
-      "block_size": null,
-      "path": "/data/home/chh/simplify-v2/build/region-audit/extra/HiPIMS-HLLC/start.ll",
-      "generation": {
-        "origin": "epyc historical input",
-        "run_record": "regression/records/region-fusion-audit-20261120.md"
-      },
-      "sha256": "fca4e6350a75e0bf32ab9ae0d348b7146e546e69ca4962b6f07a2ba3f60675c6"
-    },
-    {
-      "category": "project",
-      "case": "hipims",
-      "block_size": null,
-      "path": "/data/home/chh/simplify-v2/build/b2b-layouts/anchor-ablation/heldout/HiPIMS-George/start.ll",
-      "generation": {
-        "origin": "epyc historical input",
-        "run_record": "regression/records/b2b-anchor-ablation-20261120.md"
-      },
-      "sha256": "c8069ddd3515465106ee3cad9dcd39441b5ca45ffad4b8ebc79b7a38f3b5e76f"
-    },
-    {
-      "category": "project",
-      "case": "boost-saspoint5",
-      "block_size": null,
-      "path": "/data/home/chh/simplify-v2/build/b2b-layouts/anchor-ablation/heldout/SasPoint5/start.ll",
-      "generation": {
-        "origin": "epyc historical input",
-        "run_record": "regression/records/b2b-anchor-ablation-20261120.md"
-      },
-      "sha256": "ea3b473e7bb72736bb2f8753f37d8f54749248651172c3cd3dd340d4c9f422c1"
-    },
-    {
       "category": "snapshot",
       "case": "BIT128",
       "block_size": 128,
@@ -15727,6 +15264,887 @@
         "selected_cost": 407
       },
       "sha256": "7984ede8d22aa987b9a179d9220c7cf60da0a653e00e23f7dbe8a098323bfbbb"
+    },
+    {
+      "category": "project",
+      "case": "boost-landau",
+      "block_size": null,
+      "path": "cases/boost-landau/provenance/historical-source.ll",
+      "generation": {
+        "origin": "tracked case IR"
+      },
+      "git_commit": "d4ad2e89f4704c408165e002c4082e90e7f949dc",
+      "sha256": "65c7adf9e7e29bb51c0bce56065d687c685dd8d6272da51aea165990330ba58c",
+      "aliases": [
+        "Landau",
+        "boost-landau"
+      ],
+      "provenance": [
+        {
+          "category": "project",
+          "case": "boost-landau",
+          "block_size": null,
+          "path": "cases/boost-landau/provenance/historical-source.ll",
+          "generation": {
+            "origin": "tracked case IR"
+          },
+          "git_commit": "d4ad2e89f4704c408165e002c4082e90e7f949dc",
+          "sha256": "65c7adf9e7e29bb51c0bce56065d687c685dd8d6272da51aea165990330ba58c"
+        },
+        {
+          "category": "project",
+          "case": "Landau",
+          "block_size": null,
+          "path": "artifact/inputs/65c7adf9e7e29bb51c0bce56065d687c685dd8d6272da51aea165990330ba58c.ll.gz",
+          "generation": {
+            "origin": "artifact/run",
+            "manifest": "artifact/manifest.json"
+          },
+          "git_commit": "7d2e45b77e5502eeab42bea43f696ccb89172e58",
+          "sha256": "65c7adf9e7e29bb51c0bce56065d687c685dd8d6272da51aea165990330ba58c"
+        }
+      ]
+    },
+    {
+      "category": "project",
+      "case": "boost-mapairy",
+      "block_size": null,
+      "path": "cases/boost-mapairy/start.ll",
+      "generation": {
+        "origin": "tracked case IR"
+      },
+      "git_commit": "d4ad2e89f4704c408165e002c4082e90e7f949dc",
+      "sha256": "130d89d31e175129c35386aa68f040556a3addb5c0615a26948b75ee7963dce2",
+      "aliases": [
+        "MapAiry",
+        "boost-mapairy"
+      ],
+      "provenance": [
+        {
+          "category": "project",
+          "case": "boost-mapairy",
+          "block_size": null,
+          "path": "cases/boost-mapairy/start.ll",
+          "generation": {
+            "origin": "tracked case IR"
+          },
+          "git_commit": "d4ad2e89f4704c408165e002c4082e90e7f949dc",
+          "sha256": "130d89d31e175129c35386aa68f040556a3addb5c0615a26948b75ee7963dce2"
+        },
+        {
+          "category": "project",
+          "case": "MapAiry",
+          "block_size": null,
+          "path": "artifact/inputs/130d89d31e175129c35386aa68f040556a3addb5c0615a26948b75ee7963dce2.ll.gz",
+          "generation": {
+            "origin": "artifact/run",
+            "manifest": "artifact/manifest.json"
+          },
+          "git_commit": "7d2e45b77e5502eeab42bea43f696ccb89172e58",
+          "sha256": "130d89d31e175129c35386aa68f040556a3addb5c0615a26948b75ee7963dce2"
+        }
+      ]
+    },
+    {
+      "category": "project",
+      "case": "tigre-siddon",
+      "block_size": null,
+      "path": "cases/tigre-siddon/source/input.ll",
+      "generation": {
+        "origin": "tracked case IR"
+      },
+      "git_commit": "d4ad2e89f4704c408165e002c4082e90e7f949dc",
+      "sha256": "acacbad8f0990ae9bef99a404a48e767ec72c000e099c21d358080de5c302a46",
+      "aliases": [
+        "tigre",
+        "tigre-siddon"
+      ],
+      "provenance": [
+        {
+          "category": "project",
+          "case": "tigre-siddon",
+          "block_size": null,
+          "path": "cases/tigre-siddon/source/input.ll",
+          "generation": {
+            "origin": "tracked case IR"
+          },
+          "git_commit": "d4ad2e89f4704c408165e002c4082e90e7f949dc",
+          "sha256": "acacbad8f0990ae9bef99a404a48e767ec72c000e099c21d358080de5c302a46"
+        },
+        {
+          "category": "project",
+          "case": "tigre",
+          "block_size": null,
+          "path": "artifact/inputs/acacbad8f0990ae9bef99a404a48e767ec72c000e099c21d358080de5c302a46.ll.gz",
+          "generation": {
+            "origin": "artifact/run",
+            "manifest": "artifact/manifest.json"
+          },
+          "git_commit": "7d2e45b77e5502eeab42bea43f696ccb89172e58",
+          "sha256": "acacbad8f0990ae9bef99a404a48e767ec72c000e099c21d358080de5c302a46"
+        }
+      ]
+    },
+    {
+      "category": "project",
+      "case": "vllm-quant@05d35ba45053",
+      "block_size": null,
+      "path": "cases/vllm-quant/source/quant-unmerged.ll",
+      "generation": {
+        "origin": "tracked case IR"
+      },
+      "git_commit": "d4ad2e89f4704c408165e002c4082e90e7f949dc",
+      "sha256": "05d35ba45053282ad6ac0675406072d250f2bde51ab9e4178498770fdbfca636",
+      "aliases": [
+        "vllm-quant"
+      ],
+      "provenance": [
+        {
+          "category": "project",
+          "case": "vllm-quant",
+          "block_size": null,
+          "path": "cases/vllm-quant/source/quant-unmerged.ll",
+          "generation": {
+            "origin": "tracked case IR"
+          },
+          "git_commit": "d4ad2e89f4704c408165e002c4082e90e7f949dc",
+          "sha256": "05d35ba45053282ad6ac0675406072d250f2bde51ab9e4178498770fdbfca636"
+        }
+      ]
+    },
+    {
+      "category": "project",
+      "case": "vllm-quant@7e1e57ebb0ad",
+      "block_size": null,
+      "path": "cases/vllm-quant/start.ll",
+      "generation": {
+        "origin": "tracked case IR"
+      },
+      "git_commit": "d4ad2e89f4704c408165e002c4082e90e7f949dc",
+      "sha256": "7e1e57ebb0adeb1beef9382eab38a3ff5dfb37e2449ccfc79396ddcf89cd9962",
+      "aliases": [
+        "vllm",
+        "vllm-quant"
+      ],
+      "provenance": [
+        {
+          "category": "project",
+          "case": "vllm-quant",
+          "block_size": null,
+          "path": "cases/vllm-quant/start.ll",
+          "generation": {
+            "origin": "tracked case IR"
+          },
+          "git_commit": "d4ad2e89f4704c408165e002c4082e90e7f949dc",
+          "sha256": "7e1e57ebb0adeb1beef9382eab38a3ff5dfb37e2449ccfc79396ddcf89cd9962"
+        },
+        {
+          "category": "project",
+          "case": "vllm",
+          "block_size": null,
+          "path": "artifact/inputs/7e1e57ebb0adeb1beef9382eab38a3ff5dfb37e2449ccfc79396ddcf89cd9962.ll.gz",
+          "generation": {
+            "origin": "artifact/run",
+            "manifest": "artifact/manifest.json"
+          },
+          "git_commit": "7d2e45b77e5502eeab42bea43f696ccb89172e58",
+          "sha256": "7e1e57ebb0adeb1beef9382eab38a3ff5dfb37e2449ccfc79396ddcf89cd9962"
+        }
+      ]
+    },
+    {
+      "category": "project",
+      "case": "cholla-hlld",
+      "block_size": null,
+      "path": "artifact/inputs/66a4463814ccb7464fc7c9add8d705b91c0dcd416a53653255a36c5b374d5375.ll.gz",
+      "generation": {
+        "origin": "artifact/run input for case",
+        "case_config": "cases/cholla-hlld/case.json"
+      },
+      "git_commit": "7d2e45b77e5502eeab42bea43f696ccb89172e58",
+      "sha256": "66a4463814ccb7464fc7c9add8d705b91c0dcd416a53653255a36c5b374d5375",
+      "aliases": [
+        "HLLD",
+        "cholla-hlld"
+      ],
+      "provenance": [
+        {
+          "category": "project",
+          "case": "HLLD",
+          "block_size": null,
+          "path": "artifact/inputs/66a4463814ccb7464fc7c9add8d705b91c0dcd416a53653255a36c5b374d5375.ll.gz",
+          "generation": {
+            "origin": "artifact/run",
+            "manifest": "artifact/manifest.json"
+          },
+          "git_commit": "7d2e45b77e5502eeab42bea43f696ccb89172e58",
+          "sha256": "66a4463814ccb7464fc7c9add8d705b91c0dcd416a53653255a36c5b374d5375"
+        },
+        {
+          "category": "project",
+          "case": "cholla-hlld",
+          "block_size": null,
+          "path": "artifact/inputs/66a4463814ccb7464fc7c9add8d705b91c0dcd416a53653255a36c5b374d5375.ll.gz",
+          "generation": {
+            "origin": "artifact/run input for case",
+            "case_config": "cases/cholla-hlld/case.json"
+          },
+          "git_commit": "7d2e45b77e5502eeab42bea43f696ccb89172e58",
+          "sha256": "66a4463814ccb7464fc7c9add8d705b91c0dcd416a53653255a36c5b374d5375"
+        }
+      ]
+    },
+    {
+      "category": "project",
+      "case": "nqu64",
+      "block_size": 64,
+      "path": "artifact/inputs/41d0f06783569a082de6ce5fc01ac59b4860f89f787c607e4b81b9684938bc49.ll.gz",
+      "generation": {
+        "origin": "artifact/run input for case",
+        "case_config": "cases/nqu64/case.json"
+      },
+      "git_commit": "7d2e45b77e5502eeab42bea43f696ccb89172e58",
+      "sha256": "41d0f06783569a082de6ce5fc01ac59b4860f89f787c607e4b81b9684938bc49",
+      "aliases": [
+        "NQU64",
+        "nqu64"
+      ],
+      "provenance": [
+        {
+          "category": "project",
+          "case": "NQU64",
+          "block_size": 64,
+          "path": "artifact/inputs/41d0f06783569a082de6ce5fc01ac59b4860f89f787c607e4b81b9684938bc49.ll.gz",
+          "generation": {
+            "origin": "artifact/run",
+            "manifest": "artifact/manifest.json"
+          },
+          "git_commit": "7d2e45b77e5502eeab42bea43f696ccb89172e58",
+          "sha256": "41d0f06783569a082de6ce5fc01ac59b4860f89f787c607e4b81b9684938bc49"
+        },
+        {
+          "category": "project",
+          "case": "nqu64",
+          "block_size": 64,
+          "path": "artifact/inputs/41d0f06783569a082de6ce5fc01ac59b4860f89f787c607e4b81b9684938bc49.ll.gz",
+          "generation": {
+            "origin": "artifact/run input for case",
+            "case_config": "cases/nqu64/case.json"
+          },
+          "git_commit": "7d2e45b77e5502eeab42bea43f696ccb89172e58",
+          "sha256": "41d0f06783569a082de6ce5fc01ac59b4860f89f787c607e4b81b9684938bc49"
+        }
+      ]
+    },
+    {
+      "category": "project",
+      "case": "ms32",
+      "block_size": 32,
+      "path": "artifact/inputs/a97f12d831e64915a71477a43ff4518a89122f100cd6e1d434a8a41aefd67319.ll.gz",
+      "generation": {
+        "origin": "artifact/run input for case",
+        "case_config": "cases/ms32/case.json"
+      },
+      "git_commit": "7d2e45b77e5502eeab42bea43f696ccb89172e58",
+      "sha256": "a97f12d831e64915a71477a43ff4518a89122f100cd6e1d434a8a41aefd67319",
+      "aliases": [
+        "MS32",
+        "ms32"
+      ],
+      "provenance": [
+        {
+          "category": "project",
+          "case": "MS32",
+          "block_size": 32,
+          "path": "artifact/inputs/a97f12d831e64915a71477a43ff4518a89122f100cd6e1d434a8a41aefd67319.ll.gz",
+          "generation": {
+            "origin": "artifact/run",
+            "manifest": "artifact/manifest.json"
+          },
+          "git_commit": "7d2e45b77e5502eeab42bea43f696ccb89172e58",
+          "sha256": "a97f12d831e64915a71477a43ff4518a89122f100cd6e1d434a8a41aefd67319"
+        },
+        {
+          "category": "project",
+          "case": "ms32",
+          "block_size": 32,
+          "path": "artifact/inputs/a97f12d831e64915a71477a43ff4518a89122f100cd6e1d434a8a41aefd67319.ll.gz",
+          "generation": {
+            "origin": "artifact/run input for case",
+            "case_config": "cases/ms32/case.json"
+          },
+          "git_commit": "7d2e45b77e5502eeab42bea43f696ccb89172e58",
+          "sha256": "a97f12d831e64915a71477a43ff4518a89122f100cd6e1d434a8a41aefd67319"
+        }
+      ]
+    },
+    {
+      "category": "project",
+      "case": "pcm32",
+      "block_size": 32,
+      "path": "artifact/inputs/db3b35287f1ef284e3c8dac514b05fc952a6892345b5ff0077b2840927aaab47.ll.gz",
+      "generation": {
+        "origin": "artifact/run input for case",
+        "case_config": "cases/pcm32/case.json"
+      },
+      "git_commit": "7d2e45b77e5502eeab42bea43f696ccb89172e58",
+      "sha256": "db3b35287f1ef284e3c8dac514b05fc952a6892345b5ff0077b2840927aaab47",
+      "aliases": [
+        "PCM32",
+        "pcm32"
+      ],
+      "provenance": [
+        {
+          "category": "project",
+          "case": "PCM32",
+          "block_size": 32,
+          "path": "artifact/inputs/db3b35287f1ef284e3c8dac514b05fc952a6892345b5ff0077b2840927aaab47.ll.gz",
+          "generation": {
+            "origin": "artifact/run",
+            "manifest": "artifact/manifest.json"
+          },
+          "git_commit": "7d2e45b77e5502eeab42bea43f696ccb89172e58",
+          "sha256": "db3b35287f1ef284e3c8dac514b05fc952a6892345b5ff0077b2840927aaab47"
+        },
+        {
+          "category": "project",
+          "case": "pcm32",
+          "block_size": 32,
+          "path": "artifact/inputs/db3b35287f1ef284e3c8dac514b05fc952a6892345b5ff0077b2840927aaab47.ll.gz",
+          "generation": {
+            "origin": "artifact/run input for case",
+            "case_config": "cases/pcm32/case.json"
+          },
+          "git_commit": "7d2e45b77e5502eeab42bea43f696ccb89172e58",
+          "sha256": "db3b35287f1ef284e3c8dac514b05fc952a6892345b5ff0077b2840927aaab47"
+        }
+      ]
+    },
+    {
+      "category": "project",
+      "case": "srad16",
+      "block_size": 16,
+      "path": "artifact/inputs/ecf89ddfdc19aca349c70571b29ea5be2b95049fbce5d9815cabc7b73de016d1.ll.gz",
+      "generation": {
+        "origin": "artifact/run input for case",
+        "case_config": "cases/srad/case.json"
+      },
+      "git_commit": "7d2e45b77e5502eeab42bea43f696ccb89172e58",
+      "sha256": "ecf89ddfdc19aca349c70571b29ea5be2b95049fbce5d9815cabc7b73de016d1",
+      "aliases": [
+        "SRAD16",
+        "srad"
+      ],
+      "provenance": [
+        {
+          "category": "project",
+          "case": "SRAD16",
+          "block_size": 16,
+          "path": "artifact/inputs/ecf89ddfdc19aca349c70571b29ea5be2b95049fbce5d9815cabc7b73de016d1.ll.gz",
+          "generation": {
+            "origin": "artifact/run",
+            "manifest": "artifact/manifest.json"
+          },
+          "git_commit": "7d2e45b77e5502eeab42bea43f696ccb89172e58",
+          "sha256": "ecf89ddfdc19aca349c70571b29ea5be2b95049fbce5d9815cabc7b73de016d1"
+        },
+        {
+          "category": "project",
+          "case": "srad",
+          "block_size": 16,
+          "path": "artifact/inputs/ecf89ddfdc19aca349c70571b29ea5be2b95049fbce5d9815cabc7b73de016d1.ll.gz",
+          "generation": {
+            "origin": "artifact/run input for case",
+            "case_config": "cases/srad/case.json"
+          },
+          "git_commit": "7d2e45b77e5502eeab42bea43f696ccb89172e58",
+          "sha256": "ecf89ddfdc19aca349c70571b29ea5be2b95049fbce5d9815cabc7b73de016d1"
+        }
+      ]
+    },
+    {
+      "category": "project",
+      "case": "srad32",
+      "block_size": 32,
+      "path": "artifact/inputs/b0825b893b165dd4e82a34c7cfbe85e6d7e3226d9d28b33765d5521981af22ee.ll.gz",
+      "generation": {
+        "origin": "artifact/run input for case",
+        "case_config": "cases/srad/case.json"
+      },
+      "git_commit": "7d2e45b77e5502eeab42bea43f696ccb89172e58",
+      "sha256": "b0825b893b165dd4e82a34c7cfbe85e6d7e3226d9d28b33765d5521981af22ee",
+      "aliases": [
+        "SRAD32",
+        "srad"
+      ],
+      "provenance": [
+        {
+          "category": "project",
+          "case": "SRAD32",
+          "block_size": 32,
+          "path": "artifact/inputs/b0825b893b165dd4e82a34c7cfbe85e6d7e3226d9d28b33765d5521981af22ee.ll.gz",
+          "generation": {
+            "origin": "artifact/run",
+            "manifest": "artifact/manifest.json"
+          },
+          "git_commit": "7d2e45b77e5502eeab42bea43f696ccb89172e58",
+          "sha256": "b0825b893b165dd4e82a34c7cfbe85e6d7e3226d9d28b33765d5521981af22ee"
+        },
+        {
+          "category": "project",
+          "case": "srad",
+          "block_size": 32,
+          "path": "artifact/inputs/b0825b893b165dd4e82a34c7cfbe85e6d7e3226d9d28b33765d5521981af22ee.ll.gz",
+          "generation": {
+            "origin": "artifact/run input for case",
+            "case_config": "cases/srad/case.json"
+          },
+          "git_commit": "7d2e45b77e5502eeab42bea43f696ccb89172e58",
+          "sha256": "b0825b893b165dd4e82a34c7cfbe85e6d7e3226d9d28b33765d5521981af22ee"
+        }
+      ]
+    },
+    {
+      "category": "project",
+      "case": "sw2d",
+      "block_size": null,
+      "path": "artifact/inputs/8468fbe02c5276b65129a84a4d84ea2b36c887e2088341c9475a72609ec9ef5e.ll.gz",
+      "generation": {
+        "origin": "artifact/run input for case",
+        "case_config": "cases/sw2d/case.json"
+      },
+      "git_commit": "7d2e45b77e5502eeab42bea43f696ccb89172e58",
+      "sha256": "8468fbe02c5276b65129a84a4d84ea2b36c887e2088341c9475a72609ec9ef5e",
+      "aliases": [
+        "SW2D",
+        "sw2d"
+      ],
+      "provenance": [
+        {
+          "category": "project",
+          "case": "SW2D",
+          "block_size": null,
+          "path": "artifact/inputs/8468fbe02c5276b65129a84a4d84ea2b36c887e2088341c9475a72609ec9ef5e.ll.gz",
+          "generation": {
+            "origin": "artifact/run",
+            "manifest": "artifact/manifest.json"
+          },
+          "git_commit": "7d2e45b77e5502eeab42bea43f696ccb89172e58",
+          "sha256": "8468fbe02c5276b65129a84a4d84ea2b36c887e2088341c9475a72609ec9ef5e"
+        },
+        {
+          "category": "project",
+          "case": "sw2d",
+          "block_size": null,
+          "path": "artifact/inputs/8468fbe02c5276b65129a84a4d84ea2b36c887e2088341c9475a72609ec9ef5e.ll.gz",
+          "generation": {
+            "origin": "artifact/run input for case",
+            "case_config": "cases/sw2d/case.json"
+          },
+          "git_commit": "7d2e45b77e5502eeab42bea43f696ccb89172e58",
+          "sha256": "8468fbe02c5276b65129a84a4d84ea2b36c887e2088341c9475a72609ec9ef5e"
+        }
+      ]
+    },
+    {
+      "category": "project",
+      "case": "ced",
+      "block_size": null,
+      "path": "artifact/inputs/44686ea42206b19f7eb9dc1c57cd0afdee1b0edcd600d3131554b6292cd14279.ll.gz",
+      "generation": {
+        "origin": "artifact/run input for case",
+        "case_config": "cases/ced/case.json"
+      },
+      "git_commit": "7d2e45b77e5502eeab42bea43f696ccb89172e58",
+      "sha256": "44686ea42206b19f7eb9dc1c57cd0afdee1b0edcd600d3131554b6292cd14279",
+      "aliases": [
+        "CED",
+        "ced"
+      ],
+      "provenance": [
+        {
+          "category": "project",
+          "case": "CED",
+          "block_size": null,
+          "path": "artifact/inputs/44686ea42206b19f7eb9dc1c57cd0afdee1b0edcd600d3131554b6292cd14279.ll.gz",
+          "generation": {
+            "origin": "artifact/run",
+            "manifest": "artifact/manifest.json"
+          },
+          "git_commit": "7d2e45b77e5502eeab42bea43f696ccb89172e58",
+          "sha256": "44686ea42206b19f7eb9dc1c57cd0afdee1b0edcd600d3131554b6292cd14279"
+        },
+        {
+          "category": "project",
+          "case": "ced",
+          "block_size": null,
+          "path": "artifact/inputs/44686ea42206b19f7eb9dc1c57cd0afdee1b0edcd600d3131554b6292cd14279.ll.gz",
+          "generation": {
+            "origin": "artifact/run input for case",
+            "case_config": "cases/ced/case.json"
+          },
+          "git_commit": "7d2e45b77e5502eeab42bea43f696ccb89172e58",
+          "sha256": "44686ea42206b19f7eb9dc1c57cd0afdee1b0edcd600d3131554b6292cd14279"
+        }
+      ]
+    },
+    {
+      "category": "project",
+      "case": "tpacf",
+      "block_size": null,
+      "path": "artifact/inputs/db675bc376fb1716326761177f9f1f3ea4b261f6d028f85dd9c4f00b5463eda5.ll.gz",
+      "generation": {
+        "origin": "artifact/run input for case",
+        "case_config": "cases/tpacf/case.json"
+      },
+      "git_commit": "7d2e45b77e5502eeab42bea43f696ccb89172e58",
+      "sha256": "db675bc376fb1716326761177f9f1f3ea4b261f6d028f85dd9c4f00b5463eda5",
+      "aliases": [
+        "TPACF",
+        "tpacf"
+      ],
+      "provenance": [
+        {
+          "category": "project",
+          "case": "TPACF",
+          "block_size": null,
+          "path": "artifact/inputs/db675bc376fb1716326761177f9f1f3ea4b261f6d028f85dd9c4f00b5463eda5.ll.gz",
+          "generation": {
+            "origin": "artifact/run",
+            "manifest": "artifact/manifest.json"
+          },
+          "git_commit": "7d2e45b77e5502eeab42bea43f696ccb89172e58",
+          "sha256": "db675bc376fb1716326761177f9f1f3ea4b261f6d028f85dd9c4f00b5463eda5"
+        },
+        {
+          "category": "project",
+          "case": "tpacf",
+          "block_size": null,
+          "path": "artifact/inputs/db675bc376fb1716326761177f9f1f3ea4b261f6d028f85dd9c4f00b5463eda5.ll.gz",
+          "generation": {
+            "origin": "artifact/run input for case",
+            "case_config": "cases/tpacf/case.json"
+          },
+          "git_commit": "7d2e45b77e5502eeab42bea43f696ccb89172e58",
+          "sha256": "db675bc376fb1716326761177f9f1f3ea4b261f6d028f85dd9c4f00b5463eda5"
+        }
+      ]
+    },
+    {
+      "category": "project",
+      "case": "srad-stage2",
+      "block_size": null,
+      "path": "artifact/inputs/ecf89ddfdc19aca349c70571b29ea5be2b95049fbce5d9815cabc7b73de016d1.ll.gz",
+      "generation": {
+        "origin": "artifact/run input for case",
+        "case_config": "cases/srad-stage2/case.json"
+      },
+      "git_commit": "7d2e45b77e5502eeab42bea43f696ccb89172e58",
+      "sha256": "ecf89ddfdc19aca349c70571b29ea5be2b95049fbce5d9815cabc7b73de016d1",
+      "aliases": [
+        "SRAD-stage2",
+        "srad-stage2"
+      ],
+      "provenance": [
+        {
+          "category": "project",
+          "case": "SRAD-stage2",
+          "block_size": null,
+          "path": "artifact/inputs/ecf89ddfdc19aca349c70571b29ea5be2b95049fbce5d9815cabc7b73de016d1.ll.gz",
+          "generation": {
+            "origin": "artifact/run",
+            "manifest": "artifact/manifest.json"
+          },
+          "git_commit": "7d2e45b77e5502eeab42bea43f696ccb89172e58",
+          "sha256": "ecf89ddfdc19aca349c70571b29ea5be2b95049fbce5d9815cabc7b73de016d1"
+        },
+        {
+          "category": "project",
+          "case": "srad-stage2",
+          "block_size": null,
+          "path": "artifact/inputs/ecf89ddfdc19aca349c70571b29ea5be2b95049fbce5d9815cabc7b73de016d1.ll.gz",
+          "generation": {
+            "origin": "artifact/run input for case",
+            "case_config": "cases/srad-stage2/case.json"
+          },
+          "git_commit": "7d2e45b77e5502eeab42bea43f696ccb89172e58",
+          "sha256": "ecf89ddfdc19aca349c70571b29ea5be2b95049fbce5d9815cabc7b73de016d1"
+        }
+      ]
+    },
+    {
+      "category": "project",
+      "case": "lud8",
+      "block_size": 8,
+      "path": "artifact/inputs/a52a8746779c561db1be7bc66026508f909e9eeba2223c966d7fe201435782b9.ll.gz",
+      "generation": {
+        "origin": "artifact/run input for case",
+        "case_config": "cases/lud8/case.json"
+      },
+      "git_commit": "7d2e45b77e5502eeab42bea43f696ccb89172e58",
+      "sha256": "a52a8746779c561db1be7bc66026508f909e9eeba2223c966d7fe201435782b9",
+      "aliases": [
+        "LUD8",
+        "lud8"
+      ],
+      "provenance": [
+        {
+          "category": "project",
+          "case": "LUD8",
+          "block_size": 8,
+          "path": "artifact/inputs/a52a8746779c561db1be7bc66026508f909e9eeba2223c966d7fe201435782b9.ll.gz",
+          "generation": {
+            "origin": "artifact/run",
+            "manifest": "artifact/manifest.json"
+          },
+          "git_commit": "7d2e45b77e5502eeab42bea43f696ccb89172e58",
+          "sha256": "a52a8746779c561db1be7bc66026508f909e9eeba2223c966d7fe201435782b9"
+        },
+        {
+          "category": "project",
+          "case": "lud8",
+          "block_size": 8,
+          "path": "artifact/inputs/a52a8746779c561db1be7bc66026508f909e9eeba2223c966d7fe201435782b9.ll.gz",
+          "generation": {
+            "origin": "artifact/run input for case",
+            "case_config": "cases/lud8/case.json"
+          },
+          "git_commit": "7d2e45b77e5502eeab42bea43f696ccb89172e58",
+          "sha256": "a52a8746779c561db1be7bc66026508f909e9eeba2223c966d7fe201435782b9"
+        }
+      ]
+    },
+    {
+      "category": "project",
+      "case": "vllm-quant-kv-dump",
+      "block_size": null,
+      "path": "cases/vllm-quant/start.ll",
+      "generation": {
+        "origin": "shared vllm-quant runtime kernel",
+        "case_config": "cases/vllm-quant-kv-dump/case.json",
+        "runtime_kernel": "/home/chh/kernel-benchmark-suite/results/vllm-hip-software-v1/kernel.hsaco"
+      },
+      "git_commit": "d4ad2e89f4704c408165e002c4082e90e7f949dc",
+      "sha256": "7e1e57ebb0adeb1beef9382eab38a3ff5dfb37e2449ccfc79396ddcf89cd9962",
+      "aliases": [
+        "vllm-quant-kv-dump"
+      ],
+      "provenance": [
+        {
+          "category": "project",
+          "case": "vllm-quant-kv-dump",
+          "block_size": null,
+          "path": "cases/vllm-quant/start.ll",
+          "generation": {
+            "origin": "shared vllm-quant runtime kernel",
+            "case_config": "cases/vllm-quant-kv-dump/case.json",
+            "runtime_kernel": "/home/chh/kernel-benchmark-suite/results/vllm-hip-software-v1/kernel.hsaco"
+          },
+          "git_commit": "d4ad2e89f4704c408165e002c4082e90e7f949dc",
+          "sha256": "7e1e57ebb0adeb1beef9382eab38a3ff5dfb37e2449ccfc79396ddcf89cd9962"
+        }
+      ]
+    },
+    {
+      "category": "project",
+      "case": "vllm-quant-large",
+      "block_size": null,
+      "path": "cases/vllm-quant/start.ll",
+      "generation": {
+        "origin": "shared vllm-quant runtime kernel",
+        "case_config": "cases/vllm-quant-large/case.json",
+        "runtime_kernel": "/home/chh/kernel-benchmark-suite/results/vllm-hip-software-v1/kernel.hsaco"
+      },
+      "git_commit": "d4ad2e89f4704c408165e002c4082e90e7f949dc",
+      "sha256": "7e1e57ebb0adeb1beef9382eab38a3ff5dfb37e2449ccfc79396ddcf89cd9962",
+      "aliases": [
+        "vllm-quant-large"
+      ],
+      "provenance": [
+        {
+          "category": "project",
+          "case": "vllm-quant-large",
+          "block_size": null,
+          "path": "cases/vllm-quant/start.ll",
+          "generation": {
+            "origin": "shared vllm-quant runtime kernel",
+            "case_config": "cases/vllm-quant-large/case.json",
+            "runtime_kernel": "/home/chh/kernel-benchmark-suite/results/vllm-hip-software-v1/kernel.hsaco"
+          },
+          "git_commit": "d4ad2e89f4704c408165e002c4082e90e7f949dc",
+          "sha256": "7e1e57ebb0adeb1beef9382eab38a3ff5dfb37e2449ccfc79396ddcf89cd9962"
+        }
+      ]
+    },
+    {
+      "category": "project",
+      "case": "vllm-quant-qwen64k",
+      "block_size": null,
+      "path": "cases/vllm-quant/start.ll",
+      "generation": {
+        "origin": "shared vllm-quant runtime kernel",
+        "case_config": "cases/vllm-quant-qwen64k/case.json",
+        "runtime_kernel": "/home/chh/kernel-benchmark-suite/results/vllm-hip-software-v1/kernel.hsaco"
+      },
+      "git_commit": "d4ad2e89f4704c408165e002c4082e90e7f949dc",
+      "sha256": "7e1e57ebb0adeb1beef9382eab38a3ff5dfb37e2449ccfc79396ddcf89cd9962",
+      "aliases": [
+        "vllm-quant-qwen64k"
+      ],
+      "provenance": [
+        {
+          "category": "project",
+          "case": "vllm-quant-qwen64k",
+          "block_size": null,
+          "path": "cases/vllm-quant/start.ll",
+          "generation": {
+            "origin": "shared vllm-quant runtime kernel",
+            "case_config": "cases/vllm-quant-qwen64k/case.json",
+            "runtime_kernel": "/home/chh/kernel-benchmark-suite/results/vllm-hip-software-v1/kernel.hsaco"
+          },
+          "git_commit": "d4ad2e89f4704c408165e002c4082e90e7f949dc",
+          "sha256": "7e1e57ebb0adeb1beef9382eab38a3ff5dfb37e2449ccfc79396ddcf89cd9962"
+        }
+      ]
+    },
+    {
+      "category": "project",
+      "case": "hypersonic",
+      "block_size": null,
+      "path": "regression/greedy-v1/inputs/b17d210a4474bce7.ll.gz",
+      "generation": {
+        "origin": "archived exact historical input",
+        "run_record": "regression/greedy-v1/manifest-ordered-20261119.json",
+        "original_path": "/data/home/chh/kernel-benchmark-suite/build/hypersonic-no-jt-recovered/historical-before.ll"
+      },
+      "git_commit": "d4ad2e89f4704c408165e002c4082e90e7f949dc",
+      "sha256": "b17d210a4474bce72a76aff25df1ed36dd89d9c7131ca8d13720dd4148dddb09",
+      "aliases": [
+        "hypersonic"
+      ],
+      "provenance": [
+        {
+          "category": "project",
+          "case": "hypersonic",
+          "block_size": null,
+          "path": "regression/greedy-v1/inputs/b17d210a4474bce7.ll.gz",
+          "generation": {
+            "origin": "archived exact historical input",
+            "run_record": "regression/greedy-v1/manifest-ordered-20261119.json",
+            "original_path": "/data/home/chh/kernel-benchmark-suite/build/hypersonic-no-jt-recovered/historical-before.ll"
+          },
+          "git_commit": "d4ad2e89f4704c408165e002c4082e90e7f949dc",
+          "sha256": "b17d210a4474bce72a76aff25df1ed36dd89d9c7131ca8d13720dd4148dddb09"
+        }
+      ]
+    },
+    {
+      "category": "project",
+      "case": "cudaflow-particles",
+      "block_size": null,
+      "path": "/data/home/chh/simplify-v2/build/b2b-layouts/anchor-default/CUDAflow/start.ll",
+      "generation": {
+        "origin": "epyc historical input",
+        "run_record": "regression/records/b2b-anchor-ablation-20261120.md"
+      },
+      "sha256": "414053cb36f9d098eab79f35e37ae1aa32fc828e80b3e05a10dc3bd323f37d0b",
+      "aliases": [
+        "cudaflow-particles"
+      ],
+      "provenance": [
+        {
+          "category": "project",
+          "case": "cudaflow-particles",
+          "block_size": null,
+          "path": "/data/home/chh/simplify-v2/build/b2b-layouts/anchor-default/CUDAflow/start.ll",
+          "generation": {
+            "origin": "epyc historical input",
+            "run_record": "regression/records/b2b-anchor-ablation-20261120.md"
+          },
+          "sha256": "414053cb36f9d098eab79f35e37ae1aa32fc828e80b3e05a10dc3bd323f37d0b"
+        }
+      ]
+    },
+    {
+      "category": "project",
+      "case": "hipims@fca4e6350a75",
+      "block_size": null,
+      "path": "/data/home/chh/simplify-v2/build/region-audit/extra/HiPIMS-HLLC/start.ll",
+      "generation": {
+        "origin": "epyc historical input",
+        "run_record": "regression/records/region-fusion-audit-20261120.md"
+      },
+      "sha256": "fca4e6350a75e0bf32ab9ae0d348b7146e546e69ca4962b6f07a2ba3f60675c6",
+      "aliases": [
+        "hipims"
+      ],
+      "provenance": [
+        {
+          "category": "project",
+          "case": "hipims",
+          "block_size": null,
+          "path": "/data/home/chh/simplify-v2/build/region-audit/extra/HiPIMS-HLLC/start.ll",
+          "generation": {
+            "origin": "epyc historical input",
+            "run_record": "regression/records/region-fusion-audit-20261120.md"
+          },
+          "sha256": "fca4e6350a75e0bf32ab9ae0d348b7146e546e69ca4962b6f07a2ba3f60675c6"
+        }
+      ]
+    },
+    {
+      "category": "project",
+      "case": "hipims@c8069ddd3515",
+      "block_size": null,
+      "path": "/data/home/chh/simplify-v2/build/b2b-layouts/anchor-ablation/heldout/HiPIMS-George/start.ll",
+      "generation": {
+        "origin": "epyc historical input",
+        "run_record": "regression/records/b2b-anchor-ablation-20261120.md"
+      },
+      "sha256": "c8069ddd3515465106ee3cad9dcd39441b5ca45ffad4b8ebc79b7a38f3b5e76f",
+      "aliases": [
+        "hipims"
+      ],
+      "provenance": [
+        {
+          "category": "project",
+          "case": "hipims",
+          "block_size": null,
+          "path": "/data/home/chh/simplify-v2/build/b2b-layouts/anchor-ablation/heldout/HiPIMS-George/start.ll",
+          "generation": {
+            "origin": "epyc historical input",
+            "run_record": "regression/records/b2b-anchor-ablation-20261120.md"
+          },
+          "sha256": "c8069ddd3515465106ee3cad9dcd39441b5ca45ffad4b8ebc79b7a38f3b5e76f"
+        }
+      ]
+    },
+    {
+      "category": "project",
+      "case": "boost-saspoint5",
+      "block_size": null,
+      "path": "/data/home/chh/simplify-v2/build/b2b-layouts/anchor-ablation/heldout/SasPoint5/start.ll",
+      "generation": {
+        "origin": "epyc historical input",
+        "run_record": "regression/records/b2b-anchor-ablation-20261120.md"
+      },
+      "sha256": "ea3b473e7bb72736bb2f8753f37d8f54749248651172c3cd3dd340d4c9f422c1",
+      "aliases": [
+        "boost-saspoint5"
+      ],
+      "provenance": [
+        {
+          "category": "project",
+          "case": "boost-saspoint5",
+          "block_size": null,
+          "path": "/data/home/chh/simplify-v2/build/b2b-layouts/anchor-ablation/heldout/SasPoint5/start.ll",
+          "generation": {
+            "origin": "epyc historical input",
+            "run_record": "regression/records/b2b-anchor-ablation-20261120.md"
+          },
+          "sha256": "ea3b473e7bb72736bb2f8753f37d8f54749248651172c3cd3dd340d4c9f422c1"
+        }
+      ]
     }
   ],
   "excluded": [
