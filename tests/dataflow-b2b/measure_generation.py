@@ -48,13 +48,45 @@ def small_generation(args):
                 print(f"LIST {mode}/{row['id']}/{name}: "
                       f"min {scheme.get('list_minimum')} / DP {dp}, "
                       f"§7.2 {scheme.get('list_policy')} / DP {policy}; {scheme['discrepancy']}")
-            if scheme["minimum"]["T"][0] != dp[0] or scheme["selected"]["T"] != policy:
+            raw_cost = scheme.get("list_minimum")
+            if min(raw_cost[0] if raw_cost else result["original_T"][0], result["original_T"][0]) != dp[0] or (
+                    scheme.get("list_policy") != policy):
                 misses += 1
-                print(f"FAIL {mode}/{row['id']}/{name}: disagreeing minimum or §7.2 vector")
+                print(f"FAIL {mode}/{row['id']}/{name}: disagreeing pre-cleanup minimum or §7.2 vector")
         good += not misses
     print(f"Scalable vs DP: {good}/{len(items)} region/mode runs; "
           f"{pairs} fixed-plan comparisons, {raw} raw differences")
     return good, len(items)
+
+
+def empty_placement(args):
+    rows = load(TESTS / "corpus/inventory-b2b.json")["regions"]
+    small = {r["id"]: r for r in load(TESTS / "truth/small.json")["regions"]}
+    work = args.work / "empty-placement"
+    work.mkdir()
+    items = parallel([(small.get(row["id"], row), "real", False) for row in rows],
+                     work, args.jobs, ["--empty-only"])
+    (work / "checks.json").write_text(json.dumps(items) + "\n")
+    excluded = {"b670a987cbd0", "989fc49dfa13", "696f915b5378"}
+    passed, unknown = Counter(), set()
+    for item in items:
+        row, result = item["row"], item["result"]
+        uid = row["id"]
+        original = result.get("original_T")
+        if original is None and uid[:12] in excluded:
+            print(f"Unpriced {uid[:12]}: {result.get('reason')}")
+            unknown.add(uid[:12])
+            continue
+        generated = vector(result.get("empty_pairing", {}), "generated_minimum")
+        if not result.get("complete") or not original or not generated or generated[0] > original[0]:
+            print(f"FAIL empty pairing {uid}: generated {generated}, original {original}, {result.get('reason', '')}")
+            continue
+        passed[row["size_bucket"]] += 1
+    if unknown != excluded:
+        raise ValueError(f"unexpected exclusions: {unknown}")
+    print("Empty pairing generated T_D <= input T_D: " +
+          ", ".join(f"{tier} {passed[tier]}/{n}" for tier, n in (("small",187),("medium",124),("large",62))))
+    return sum(passed.values()), len(rows) - len(unknown)
 
 
 def pairing_gates(args):
@@ -82,6 +114,26 @@ def pairing_gates(args):
             print(f"FAIL {prefix}: missing modes {required - checked}")
         passing += good and checked == required
     return passing, len(GATES)
+
+
+def anchor_parity_goals(args):
+    small_ids = ("338511bb", "3dbb995f", "47a5aacc", "8d4c093c", "9fe145d5", "d3272a2c",
+                 "45bc4cdf", "62757562", "849d0a2a", "f90cffb7", "1bae2080", "6fb506a6")
+    corpus_ids = ("79ff52d933", "5e412ddb9d", "43688e8d")
+    small = load(args.work / "scalable/small.json")
+    corpus = load(TESTS / "corpus/inventory-b2b.json")["regions"]
+    larger = parallel([(row, "real", False) for row in corpus if row["id"].startswith(corpus_ids)],
+                      args.work / "anchor-parity", min(args.jobs, len(corpus_ids)))
+    matches = [x for x in small if x["mode"] == "real" and x["row"]["id"].startswith(small_ids)] + larger
+    passed = 0
+    for item in matches:
+        result, uid = item["result"], item["row"]["id"]
+        old = vector(result.get("original_generators", {}).get("anchor", {}))
+        best = vector(result.get("schemes", {}).get("anchor", {}), "generated_minimum")
+        ok = old is not None and best is not None and best[0] <= old[0]
+        print(f"{'OK' if ok else 'FAIL'} {uid[:12]}: generated {best}; anchor {old}")
+        passed += ok
+    return passed, len(small_ids) + len(corpus_ids)
 
 
 def original_policy(t, baseline, source):
@@ -145,11 +197,14 @@ def verify_solutions(small, others, corpus, small_work, work, workers):
         return list(pool.map(check_semantics, tasks))
 
 
-def write_summary(small, others, corpus, sem, dest, diagnosis=None, small_work=None, work=None):
+def write_summary(small, others, corpus, sem, dest, diagnosis=None, small_work=None, work=None, stage=None):
     dest.mkdir(parents=True, exist_ok=True)
     rows = [item for item in small if item["mode"] == "real"] + others
-    prefix = "step10a2" if diagnosis else "step10a"
-    lines = ["# 第 10a′ 步 最小割布置与大区域诊断" if diagnosis else "# 第 10a 步 可扩展的统一生成", ""]
+    prefix = stage or ("step10a2" if diagnosis else "step10a")
+    title = {"step10a3": "# 第 10a″ 步 凸包保护与固定配对诊断",
+             "step10a2": "# 第 10a′ 步 最小割布置与大区域诊断",
+             "step10a": "# 第 10a 步 可扩展的统一生成"}
+    lines = [title[prefix], ""]
     if diagnosis:
         lines.extend(["## 修改前诊断", "", diagnosis.read_text().strip(), ""])
     lines.extend(["## 配对目标和 small 固定配对", ""])
@@ -163,7 +218,7 @@ def write_summary(small, others, corpus, sem, dest, diagnosis=None, small_work=N
                if scheme.get("dp_minimum") is not None]
     diffs = sum(bool(scheme.get("discrepancy")) for scheme in checked)
     lines += ["", f"两种模式共 {len(small)} 次区域运行，{len(checked)} 次固定配对比较，"
-              f"列表搜索与 DP 的最小 $T_D$ 或 §7.2 向量差异 {diffs} 次。"]
+              f"清理前生成结果与 DP 的最小 $T_D$ 或 §7.2 向量差异 {diffs} 次。"]
     if diffs:
         lines += ["", "### 原始列表搜索与子集 DP 的差异", ""]
     for item in small:
@@ -255,6 +310,8 @@ def write_summary(small, others, corpus, sem, dest, diagnosis=None, small_work=N
               ["tier", "id", "dataflow_generation_ms",
                *(x+"/minD" for x in STRATEGIES), *(x+"/policy" for x in STRATEGIES)], detail)
     lines += ["", f"逐区域代价见 [{prefix}-cross.tsv]({prefix}-cross.tsv)。", ""]
+    if prefix == "step10a3":
+        lines += minimum_anchor_regressions(rows, corpus)
     if diagnosis:
         lines += fixed_pair_regressions(rows, corpus, small_work, work)
     lines += ["## 有界解释器", "", "对每个留存的统一生成 IR 文件去重后运行差分。原 IR 用作参照。", ""]
@@ -264,6 +321,36 @@ def write_summary(small, others, corpus, sem, dest, diagnosis=None, small_work=N
     table_tsv(dest / f"{prefix}-semantics.tsv", ["mode", "id", "ir", "status", "reason"], sem)
     (dest / f"{prefix}.md").write_text("\n".join(lines)+"\n")
     print("Semantic statuses:", dict(sorted(counts.items())))
+
+
+def minimum_anchor_regressions(items, corpus):
+    lines = ["## 固定 anchor 配对的最小 $T_D$ 验收", "",
+             "比较同一区域已报价的 anchor 原生成和统一侧实际生成的最小值。", ""]
+    tested, losses = Counter(), Counter()
+    for item in items:
+        row, result = item["row"], item["result"]
+        old = result.get("original_generators", {}).get("anchor", {})
+        scheme = result.get("schemes", {}).get("anchor", {})
+        best = scheme.get("generated_minimum") or {}
+        if not best.get("T") or not old.get("T"):
+            continue
+        tier = row["size_bucket"]
+        tested[tier] += 1
+        if best["T"][0] <= old["T"][0]:
+            continue
+        losses[tier] += 1
+        terms = {}
+        for key in sorted(set(best.get("D_components", {})) | set(old.get("D_components", {}))):
+            delta = best.get("D_components", {}).get(key, 0) - old.get("D_components", {}).get(key, 0)
+            if delta:
+                terms[key] = delta
+        lines.append(f"- `{row['id']}`（{tier}），`{old['T']}` → `{best['T']}`。"
+                     f"anchor 布局为 {old.get('layout') or '保留原区域'}。"
+                     f"分支数 {old.get('guard_branches', '—')} → {best.get('guard_branches', '—')}，"
+                     f"分歧计费项变化 `{terms}`。")
+    summary = "、".join(f"{tier} {losses[tier]}/{tested[tier]}" for tier in ("small","medium","large"))
+    lines[3:3] = [f"$T_D$ 变差的区域为 {summary}。"]
+    return lines + [""]
 
 
 def billed_terms(ir, original, outputs):
@@ -342,6 +429,7 @@ def main():
     parser.add_argument("work", type=Path)
     parser.add_argument("results", type=Path)
     parser.add_argument("--jobs", type=int, default=24)
+    parser.add_argument("--stage", choices=("step10a2", "step10a3"))
     parser.add_argument("--diagnosis", type=Path, help="emit Step 10a′ reports with the read-only diagnosis")
     args = parser.parse_args()
     inventory = load(TESTS / "corpus/inventory-b2b.json")["regions"]
@@ -351,7 +439,7 @@ def main():
                       args.work, args.jobs)
     (args.work / "other.json").write_text(json.dumps(others) + "\n")
     sem = verify_solutions(small, others, corpus, args.small.parent, args.work, args.jobs)
-    write_summary(small, others, corpus, sem, args.results, args.diagnosis, args.small.parent, args.work)
+    write_summary(small, others, corpus, sem, args.results, args.diagnosis, args.small.parent, args.work, args.stage)
     print(f"Measured {len(small)} small mode/region runs and {len(others)} medium/large regions")
 
 

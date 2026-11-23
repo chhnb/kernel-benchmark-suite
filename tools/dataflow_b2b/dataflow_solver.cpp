@@ -8,7 +8,7 @@ struct Options {
   StringRef worker = "tools/run-llvm24-tti";
   std::string fusion;
   StringRef source = "data";
-  bool real = false, realSL = true, pairingOnly = false, compareDP = false;
+  bool real = false, realSL = true, pairingOnly = false, compareDP = false, emptyOnly = false;
 };
 
 std::string pathIn(StringRef root, const Twine &name) {
@@ -212,7 +212,7 @@ json::Object generate(Search &search, ArrayRef<Node> pairs, const FrontEntry &or
       auto listMin = stats.listMinimum ? std::min(original.cost, *stats.listMinimum) : original.cost;
       if (listMin[0] != minimum[0] || stats.listPolicy != referencePolicy)
         discrepancy = stats.multiGuard ? "multiple guards or cut coverage" :
-                      source == "thread-pattern" ? "all-safe thread placement" : "parametric cut coverage";
+                      "parametric cut coverage";
     }
     search.front = std::move(listed);
     search.candidates = listedCount;
@@ -290,9 +290,11 @@ json::Object solve(StringRef input, StringRef directory, Search &search, const O
   if (!readDiamond(search.func, search.shape))
     return json::Object{{"complete", false}, {"reason", "unsupported source CFG"}};
   auto pairingStart = Clock::now();
-  auto pairing = dataflow::pairing::choose(search.func, search.shape, search.costs,
-                                          !opts.pairingOnly && opts.source != "thread-pattern",
-                                          search.throughput);
+  Expected<dataflow::pairing::Result> pairing = opts.emptyOnly
+      ? Expected<dataflow::pairing::Result>(dataflow::pairing::Result{})
+      : dataflow::pairing::choose(search.func, search.shape, search.costs,
+                                 !opts.pairingOnly && opts.source != "thread-pattern",
+                                 search.throughput);
   auto ms = std::chrono::duration<double, std::milli>(Clock::now() - pairingStart).count();
   if (!pairing)
     return json::Object{{"complete", false}, {"reason", toString(pairing.takeError())},
@@ -352,6 +354,13 @@ json::Object solve(StringRef input, StringRef directory, Search &search, const O
       return result;
     }
     out << original.ir;
+  }
+  if (opts.emptyOnly) {
+    auto scheme = generate(search, {}, original, directory, "empty", opts.source, false);
+    result["complete"] = scheme.getBoolean("generation_complete").getValueOr(false);
+    result["reason"] = scheme.getString("reason").getValueOr("").str();
+    result["empty_pairing"] = std::move(scheme);
+    return result;
   }
   auto anchor = collect("anchor", input, directory, search.func, search, originalT, opts);
   auto darm = collect("darm", input, directory, search.func, search, originalT, opts);
@@ -464,7 +473,7 @@ int main(int argc, char **argv) {
     errs() << "usage: dataflow_solver INPUT.ll COST_TABLE.json OUTPUT_DIRECTORY"
               " [--cost=abstract|real] [--c-sl=abstract|real]"
               " [--condition-source=data|thread-pattern|workgroup-uniform]"
-              " [--pairing-only] [--compare-dp] [--tti-worker=PATH] [--fusion-search=PATH]\n";
+              " [--pairing-only] [--empty-only] [--compare-dp] [--tti-worker=PATH] [--fusion-search=PATH]\n";
     return 2;
   }
   Options opts;
@@ -486,6 +495,8 @@ int main(int argc, char **argv) {
       opts.realSL = true;
     else if (arg == "--pairing-only")
       opts.pairingOnly = true;
+    else if (arg == "--empty-only")
+      opts.emptyOnly = true;
     else if (arg == "--compare-dp")
       opts.compareDP = true;
     else if (arg.consume_front("--condition-source=") &&

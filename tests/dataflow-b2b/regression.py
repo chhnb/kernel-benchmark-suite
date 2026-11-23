@@ -216,12 +216,13 @@ def main():
     args = parser.parse_args()
     if args.jobs < 1:
         parser.error("--jobs must be positive")
-    from measure_generation import pairing_gates, small_generation
+    from measure_generation import anchor_parity_goals, empty_placement, pairing_gates, small_generation
 
     stages = (("Micro", micro, 50), ("Fold oracle", fold, 376),
               ("Small truth", truth, 374), ("Context", context, 1),
               ("Dataflow context", lambda args: context(args, strategy="dataflow"), 2),
-              ("Scalable vs subset DP", small_generation, 374), ("Pairing goals", pairing_gates, 4))
+              ("Scalable vs subset DP", small_generation, 374), ("Pairing goals", pairing_gates, 4),
+              ("Empty pairing", empty_placement, 373), ("Anchor parity goals", anchor_parity_goals, 15))
     results = []
     suite_start = monotonic()
     for name, run, total in stages:

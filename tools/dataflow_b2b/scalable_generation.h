@@ -8,6 +8,7 @@
 namespace {
 struct GenerationGraph {
   std::vector<SmallVector<unsigned, 4>> predecessors, successors;
+  std::array<std::vector<SmallVector<unsigned, 4>>, 2> armPredecessors;
 };
 
 GenerationGraph generationGraph(const Diamond &shape, ArrayRef<Node> nodes) {
@@ -19,21 +20,29 @@ GenerationGraph generationGraph(const Diamond &shape, ArrayRef<Node> nodes) {
   GenerationGraph graph;
   graph.predecessors.resize(nodes.size());
   graph.successors.resize(nodes.size());
+  for (auto &arm : graph.armPredecessors)
+    arm.resize(nodes.size());
   for (auto n : llvm::enumerate(nodes)) {
-    auto add = [&](const Value *value) {
+    auto add = [&](const Value *value, unsigned side) {
       auto parent = ids.find(value);
       auto &deps = graph.predecessors[n.index()];
-      if (parent != ids.end() && !llvm::is_contained(deps, parent->second)) {
+      if (parent == ids.end())
+        return;
+      auto &arm = graph.armPredecessors[side][n.index()];
+      if (!llvm::is_contained(arm, parent->second))
+        arm.push_back(parent->second);
+      if (!llvm::is_contained(deps, parent->second)) {
         deps.push_back(parent->second);
         graph.successors[parent->second].push_back(n.index());
       }
     };
-    for (const auto *inst : {n.value().left, n.value().right}) {
+    for (unsigned side : {0u, 1u}) {
+      const auto *inst = side ? n.value().right : n.value().left;
       if (!inst)
         continue;
-      add(shape.effectBefore.lookup(inst));
+      add(shape.effectBefore.lookup(inst), side);
       for (const auto &operand : inst->operands())
-        add(operand.get());
+        add(operand.get(), side);
     }
   }
   return graph;
@@ -51,6 +60,33 @@ std::vector<unsigned> topologicalOrder(const GenerationGraph &graph) {
       if (--degree[user] == 0)
         order.push_back(user);
   return order;
+}
+
+BitVector convexProtection(const GenerationGraph &graph, ArrayRef<unsigned> order,
+                           ArrayRef<Node> nodes, const BitVector &speculated) {
+  auto closed = speculated;
+  for (unsigned side : {0u, 1u}) {
+    const auto &deps = graph.armPredecessors[side];
+    BitVector fromGuard(nodes.size()), toGuard(nodes.size());
+    for (auto item : llvm::enumerate(nodes)) {
+      const auto &node = item.value();
+      if (bool(node.left) != bool(node.right) && bool(node.right) == bool(side) &&
+          !speculated.test(item.index())) {
+        fromGuard.set(item.index());
+        toGuard.set(item.index());
+      }
+    }
+    for (auto id : order)
+      if (llvm::any_of(deps[id], [&](auto pred) { return fromGuard.test(pred); }))
+        fromGuard.set(id);
+    for (auto id : llvm::reverse(order))
+      if (toGuard.test(id))
+        for (auto pred : deps[id])
+          toGuard.set(pred);
+    fromGuard &= toGuard;
+    closed.reset(fromGuard);
+  }
+  return closed;
 }
 
 dataflow::Schedule phasedSchedule(const GenerationGraph &graph, ArrayRef<unsigned> order,
@@ -94,6 +130,25 @@ dataflow::Schedule phasedSchedule(const GenerationGraph &graph, ArrayRef<unsigne
   }
   assert(result.branches == longest && result.steps.size() == nodes.size());
   return result;
+}
+
+GenerationGraph withArmOrder(const Search &search, const GenerationGraph &graph) {
+  GenerationGraph ordered = graph;
+  DenseMap<const Instruction *, unsigned> ids;
+  for (auto item : llvm::enumerate(search.nodes))
+    for (auto *inst : {item.value().left, item.value().right})
+      if (inst)
+        ids[inst] = item.index();
+  for (const auto &arm : search.shape.ops)
+    for (unsigned i = 1; i < arm.size(); ++i) {
+      auto from = ids.lookup(arm[i-1]), to = ids.lookup(arm[i]);
+      auto &edges = ordered.successors[from];
+      if (!llvm::is_contained(edges, to)) {
+        edges.push_back(to);
+        ordered.predecessors[to].push_back(from);
+      }
+    }
+  return ordered;
 }
 
 Expected<DenseMap<Type *, int64_t>> phiCosts(const Search &search, ArrayRef<Type *> types) {
@@ -199,7 +254,7 @@ struct ScaleStats {
 };
 
 ScaleStats generateScalable(Search &search, const Cost &original, StringRef source,
-                            bool compareCleanup,
+                            bool definedInactiveCondition,
                             function_ref<bool(const Cost &, const Cost &)> better) {
   ScaleStats stats;
   auto graph = generationGraph(search.shape, search.nodes);
@@ -207,6 +262,12 @@ ScaleStats generateScalable(Search &search, const Cost &original, StringRef sour
   if (order.size() != search.nodes.size()) {
     search.stop = "pairing creates a dependency cycle";
     return stats;
+  }
+  GenerationGraph ordered;
+  std::vector<unsigned> armOrder;
+  if (definedInactiveCondition) {
+    ordered = withArmOrder(search, graph);
+    armOrder = topologicalOrder(ordered);
   }
   BitVector optional(search.nodes.size());
   for (auto indexed : llvm::enumerate(search.nodes)) {
@@ -225,6 +286,7 @@ ScaleStats generateScalable(Search &search, const Cost &original, StringRef sour
     }
     return better(a, b);
   };
+  std::vector<Cost> rawCosts;
   std::map<std::vector<unsigned>, Optional<Cost>> seen;
   auto attempt = [&](const BitVector &speculated, bool baseline = false) -> Optional<Cost> {
     if (Clock::now() - search.start >= std::chrono::minutes(10)) {
@@ -243,52 +305,67 @@ ScaleStats generateScalable(Search &search, const Cost &original, StringRef sour
       return saved.first->second;
     dataflow::Schedule schedule = phasedSchedule(graph, order, search.nodes, search.splitCost, search.armCost);
     stats.multiGuard += schedule.branches > 1;
-    ++search.candidates;
-    auto candidate = emit(search.module, search.func, search.shape, search.nodes, schedule,
-                          bool(search.throughput), compareCleanup);
-    if (baseline)
-      candidate.module = CloneModule(search.module);
-    if (!candidate.module) {
-      ++search.unsupportedGeneration;
-      return None;
-    }
-    if (verifyModule(*candidate.module, &errs())) {
-      search.stop = "phase schedule failed LLVM12 verifier";
-      return None;
-    }
-    search.selectedGuards = schedule.branches;
-    search.selectedControl = schedule.controlCost;
-    auto rejected = search.rejectedFold;
-    Optional<Cost> observed;
-    if (!baseline)
-      search.add(*candidate.module, false, &candidate, false, &observed);
-    if (!search.stop.empty())
-      return None;
-    if (compareCleanup && search.oracleQuotes) {
-      auto cleanedModule = CloneModule(*candidate.module);
-      auto &fn = *cleanedModule->getFunction(search.func.getName());
-      if (search.rejectedFold != rejected)
-        ++stats.foldAdjustments;
-      dataflow::runCleanup(fn, *search.oracleQuotes);
-      if (verifyModule(*cleanedModule, &errs())) {
-        search.stop = "cleanup failed LLVM12 verifier";
+    auto price = [&](const dataflow::Schedule &schedule) -> Optional<Cost> {
+      ++search.candidates;
+      Candidate candidate;
+      if (baseline)
+        candidate.module = CloneModule(search.module);
+      else
+        candidate = emit(search.module, search.func, search.shape, search.nodes, schedule,
+                         bool(search.throughput), definedInactiveCondition);
+      if (!candidate.module) {
+        ++search.unsupportedGeneration;
         return None;
       }
-      Optional<Cost> cleaned;
-      search.add(*cleanedModule, false, &candidate, false, &cleaned, true, candidate.module.get());
-      if (!search.stop.empty()) {
-        // The project cleanup may introduce an expression of C outside the
-        // evaluator's branch contract. The uncleaned candidate is still valid.
-        ++stats.cleanupUnpriced;
-        if (stats.firstCleanupError.empty())
-          stats.firstCleanupError = search.stop;
-        search.stop.clear();
+      if (verifyModule(*candidate.module, &errs())) {
+        search.stop = "phase schedule failed LLVM12 verifier";
+        return None;
       }
-      if (cleaned) {
-        ++stats.cleaned;
-        if (!observed || rank(*cleaned, *observed))
-          observed = cleaned;
+      search.selectedGuards = schedule.branches;
+      search.selectedControl = schedule.controlCost;
+      auto rejected = search.rejectedFold;
+      Optional<Cost> observed;
+      search.add(*candidate.module, baseline, &candidate, false, &observed);
+      if (observed)
+        rawCosts.push_back(*observed);
+      if (!search.stop.empty())
+        return None;
+      if (search.oracleQuotes) {
+        auto cleanedModule = CloneModule(*candidate.module);
+        auto &fn = *cleanedModule->getFunction(search.func.getName());
+        if (search.rejectedFold != rejected)
+          ++stats.foldAdjustments;
+        dataflow::runCleanup(fn, *search.oracleQuotes);
+        if (verifyModule(*cleanedModule, &errs())) {
+          search.stop = "cleanup failed LLVM12 verifier";
+          return None;
+        }
+        Optional<Cost> cleaned;
+        search.add(*cleanedModule, false, &candidate, false, &cleaned, true, candidate.module.get());
+        if (!search.stop.empty()) {
+          // The project cleanup may introduce an expression of C outside the
+          // evaluator's branch contract. The uncleaned candidate is still valid.
+          ++stats.cleanupUnpriced;
+          if (stats.firstCleanupError.empty())
+            stats.firstCleanupError = search.stop;
+          search.stop.clear();
+        }
+        if (cleaned) {
+          ++stats.cleaned;
+          if (!observed || rank(*cleaned, *observed))
+            observed = cleaned;
+        }
       }
+      return observed;
+    };
+    auto observed = price(schedule);
+    if (definedInactiveCondition && armOrder.size() == order.size() &&
+        !baseline && schedule.branches > 1 && search.stop.empty()) {
+      auto inOrder = phasedSchedule(ordered, armOrder, search.nodes, search.splitCost, search.armCost);
+      bool different = !std::equal(schedule.steps.begin(), schedule.steps.end(), inOrder.steps.begin(),
+                                   [](auto a, auto b) { return a.node == b.node && a.opensGuard == b.opensGuard; });
+      if (inOrder.branches == schedule.branches && different)
+        price(inOrder);
     }
     saved.first->second = observed;
     return observed;
@@ -325,10 +402,16 @@ ScaleStats generateScalable(Search &search, const Cost &original, StringRef sour
     }
   };
 
-  // All-safe speculation is the prescribed thread-pattern placement and the
-  // zero-overhead extreme for the unconstrained minimum on other sources.
+  // Keep an emitted candidate for each distinct placement. The unpaired
+  // case of all-protect uses the exact original instruction order and CFG.
+  const bool empty = llvm::none_of(search.nodes, [](const auto &n) { return n.left && n.right; });
   consider(optional);
-  if (source != "thread-pattern" && optional.any() && search.stop.empty()) {
+  consider(convexProtection(graph, order, search.nodes, optional));
+  if (empty)
+    attempt(BitVector(search.nodes.size()), true);
+  else
+    consider(BitVector(search.nodes.size()));
+  if (optional.any() && search.stop.empty()) {
     auto input = cutInputs(search, optional);
     if (!input) {
       search.stop = toString(input.takeError());
@@ -346,21 +429,19 @@ ScaleStats generateScalable(Search &search, const Cost &original, StringRef sour
         auto placement = a.speculated;
         placement |= b.speculated;
         ++stats.cuts;
-        consider(std::move(placement));
+        consider(placement);
+        consider(convexProtection(graph, order, search.nodes, placement));
         if (!search.stop.empty())
           return stats;
       }
   }
-  if (compareCleanup && llvm::none_of(search.nodes, [](const auto &n) { return n.left && n.right; }))
-    attempt(BitVector(search.nodes.size()), true);
-  llvm::sort(search.front, [](const auto &a, const auto &b) { return a.cost < b.cost; });
+  llvm::sort(rawCosts);
   auto policy = original;
-  for (const auto &entry : search.front) {
-    if (!stats.listMinimum || entry.cost < *stats.listMinimum)
-      stats.listMinimum = entry.cost;
-    if (better(entry.cost, policy))
-      policy = entry.cost;
-  }
+  if (!rawCosts.empty())
+    stats.listMinimum = rawCosts.front();
+  for (const auto &cost : rawCosts)
+    if (better(cost, policy))
+      policy = cost;
   stats.listPolicy = policy;
   return stats;
 }
