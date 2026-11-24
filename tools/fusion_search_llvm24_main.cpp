@@ -358,15 +358,39 @@ static int runSearch(int argc, const char *const *argv, TrialWorker *batch = nul
         Trial native;
         ScoreResult nativeScore;
         if (!plans.empty())
-          pickAnchor(native, nativeScore, false);
+          pickAnchor(native, nativeScore, true);
         const auto *pairs = native.observedPairs ? &*native.observedPairs : nullptr;
         plans.clear();
 
         t = tryDataflowContext(*module, c, cleanupMode, dataflowSolver, dataflowCosts,
                                ttiWorker, anchorUnified, pairs, round, scorer, quoteMode, score);
-        if (native.valid)
-          if (auto cost = sideGain(nativeScore, "work_after"))
-            t.dataflowExact["native_anchor_kernel_TTI"] = *cost;
+        auto stats = std::move(t.dataflowExact);
+        auto nativeCost = sideGain(nativeScore, "work_after");
+        auto unifiedCost = sideGain(score, "work_after");
+        const bool nativeEligible = eligible(native, nativeScore) && nativeCost.has_value();
+        const bool unifiedEligible = eligible(t, score) && unifiedCost.has_value();
+        stats["native_layouts"] = json::Array(native.layoutProfitability);
+        stats["native_anchor_eligible"] = nativeEligible;
+        if (nativeCost)
+          stats["native_anchor_kernel_TTI"] = *nativeCost;
+        if (unifiedCost)
+          stats["unified_kernel_TTI"] = *unifiedCost;
+        if (auto *choice = stats.getObject("chosen"))
+          stats["unified_choice"] = json::Object(*choice);
+        if (nativeEligible && (!unifiedEligible || *nativeCost <= *unifiedCost)) {
+          if (!t.valid)
+            stats["unified_failure"] = t.reason;
+          t = std::move(native);
+          score = std::move(nativeScore);
+          stats["choice"] = "fuse";
+          stats["winner"] = "anchor";
+          json::Object chosen{{"pairing", "anchor"}, {"placement", "native"},
+                              {"layout", t.mergePath}, {"kernel_TTI", *nativeCost}};
+          if (t.observedPairs)
+            chosen["pair_count"] = t.observedPairs->size();
+          stats["chosen"] = std::move(chosen);
+        }
+        t.dataflowExact = std::move(stats);
       }
       const bool dataflowHandled = useContext || bool(exactPlan);
       if (exactPlan) {

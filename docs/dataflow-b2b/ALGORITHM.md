@@ -53,3 +53,7 @@ build/llvm24-tti/dataflow_solver region.ll docs/dataflow-b2b/COST_TABLE.json out
 anchor 配对复用原父 IR 中 anchor 正常评分和选择的方案，以 `--observe-source-pairs` 相同的记录路径取回匹配。区域抽取提升线程或工作组内建量时，会重编号未提升的操作；两侧同一个已提升内建量转为共享入口。此来源供 `anchor-unified` 使用，也供 `dataflow` 的 anchor 安全网使用。独立求解器的历史区域实验仍可重放抽取后的 anchor。DARM 安全网的来源沿用原方法。
 
 `KBS_DATAFLOW_LAYOUT_JOBS` 可以并行处理大候选集。每个工作线程独占 LLVM context、清理所用的 TargetMachine 和报价会话。结果按生成次序汇总，终选布局在原 context 重新回填并复核报价和 gate。
+
+从第 11 步起，两种策略也在同一父 IR 上评估 anchor 的全部原生布局。原生布局沿用 anchor 自己的清理、整核报价、uniform gate 和布局排序。统一生成和原生布局各自选出符合接受规则的最低整核 TTI，再从中取最低值。同价时优先保留原生布局。每个 B2B 候选的日志分别记录原生布局报价、通过 gate 的最佳原生报价以及实际选中的布局来源。回归检查同一父 IR 上采用的布局满足这一报价上界。不同策略的提交顺序可以产生不同的后续父 IR。
+
+独立模块中的同名结构体可能在 LLVM context 中获得不同的类型标识。回填先核对入口、出口和被调函数的 ABI，再把结构等价的类型映射到父 IR 的原类型。指针地址空间、聚合元素及顺序、向量长度、结构体 packed 属性和函数参数均参与核对。求解器子进程未返回布局时，候选日志保留退出码和运行错误。

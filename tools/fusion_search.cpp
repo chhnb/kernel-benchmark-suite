@@ -1929,7 +1929,7 @@ void addDataflowCandidates(Function &fn, std::vector<Candidate> &candidates, boo
 
 static void finishDataflowTrial(Trial &trial, dataflow::extraction::Region &region,
     ArrayRef<dataflow::extraction::Output> outputs, ArrayRef<Value *> args,
-    const Function &solution, Clock::time_point start) {
+    const Function &solution, Clock::time_point start, bool rebindTypes = false) {
   auto *branch = &region.split;
   auto &fn = *branch->getFunction();
   auto mode = trial.cleanupMode;
@@ -1939,7 +1939,7 @@ static void finishDataflowTrial(Trial &trial, dataflow::extraction::Region &regi
     trial.sideBeforeOk = sideBlocksBoth(fn, condition, trial.sideBefore, trial.sideReason);
   trial.rewriteStarted = true;
   if (!dataflow::exact::replace(region, outputs, args, solution,
-                                trial.reason))
+                                trial.reason, rebindTypes))
     return;
   trial.mergeMs = millis(start);
   if (verifyModule(*trial.raw, &errs())) {
@@ -2026,7 +2026,7 @@ static Trial buildContextLayout(const Module &parent, const Trial &base, BranchI
   dataflow::extraction::Values mapped;
   for (auto *arg : args)
     mapped.push_back(MapValue(arg, map));
-  finishDataflowTrial(trial, cloned, clonedOutputs, mapped, *solution->getFunction("region"), start);
+  finishDataflowTrial(trial, cloned, clonedOutputs, mapped, *solution->getFunction("region"), start, true);
   return trial;
 }
 

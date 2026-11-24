@@ -62,8 +62,75 @@ inline void addCandidates(Function &fn, std::vector<fusion::Candidate> &candidat
   }
 }
 
+// A standalone layout parsed in the parent's LLVMContext gets fresh
+// identified struct types. Bind them to the original ABI through corresponding
+// arguments, outputs and declarations, including recursive pointee graphs.
+class RegionTypes final : public ValueMapTypeRemapper {
+  DenseMap<Type *, Type *> types;
+
+public:
+  bool bind(Type *from, Type *to) {
+    if (auto found = types.find(from); found != types.end())
+      return found->second == to;
+    if (from == to)
+      return true;
+    if (from->getTypeID() != to->getTypeID() ||
+        from->getNumContainedTypes() != to->getNumContainedTypes())
+      return false;
+    if (auto *pointer = dyn_cast<PointerType>(from)) {
+      if (pointer->getAddressSpace() != cast<PointerType>(to)->getAddressSpace())
+        return false;
+    } else if (auto *array = dyn_cast<ArrayType>(from)) {
+      if (array->getNumElements() != cast<ArrayType>(to)->getNumElements())
+        return false;
+    } else if (auto *vector = dyn_cast<VectorType>(from)) {
+      if (vector->getElementCount() != cast<VectorType>(to)->getElementCount())
+        return false;
+    } else if (auto *function = dyn_cast<FunctionType>(from)) {
+      if (function->isVarArg() != cast<FunctionType>(to)->isVarArg())
+        return false;
+    } else if (auto *structure = dyn_cast<StructType>(from)) {
+      auto *target = cast<StructType>(to);
+      if (structure->isOpaque() || target->isOpaque() ||
+          structure->isPacked() != target->isPacked())
+        return false;
+    } else {
+      return false;
+    }
+    types[from] = to;
+    for (auto pair : llvm::zip(from->subtypes(), to->subtypes()))
+      if (!bind(std::get<0>(pair), std::get<1>(pair)))
+        return false;
+    return true;
+  }
+
+  Type *remapType(Type *type) override {
+    if (auto found = types.find(type); found != types.end())
+      return found->second;
+    if (auto *pointer = dyn_cast<PointerType>(type))
+      return PointerType::get(remapType(pointer->getElementType()), pointer->getAddressSpace());
+    if (auto *array = dyn_cast<ArrayType>(type))
+      return ArrayType::get(remapType(array->getElementType()), array->getNumElements());
+    if (auto *vector = dyn_cast<VectorType>(type))
+      return VectorType::get(remapType(vector->getElementType()), vector->getElementCount());
+    if (auto *function = dyn_cast<FunctionType>(type)) {
+      SmallVector<Type *, 8> params;
+      for (auto *param : function->params())
+        params.push_back(remapType(param));
+      return FunctionType::get(remapType(function->getReturnType()), params, function->isVarArg());
+    }
+    if (auto *structure = dyn_cast<StructType>(type); structure && structure->isLiteral()) {
+      SmallVector<Type *, 8> fields;
+      for (auto *field : structure->elements())
+        fields.push_back(remapType(field));
+      return StructType::get(type->getContext(), fields, structure->isPacked());
+    }
+    return type;
+  }
+};
+
 inline bool replace(Region &region, ArrayRef<Output> outputs, ArrayRef<Value *> arguments,
-                    const Function &solution, std::string &failure) {
+                    const Function &solution, std::string &failure, bool rebindTypes = false) {
   auto *split = region.split.getParent();
   auto &target = *split->getParent();
   Blocks arms = region.left;
@@ -108,10 +175,13 @@ inline bool replace(Region &region, ArrayRef<Output> outputs, ArrayRef<Value *> 
   if (llvm::any_of(outputValues, [](auto *value) { return !value; }))
     return bad("solution_output_transport_mismatch");
 
+  RegionTypes types;
+  auto *remap = rebindTypes ? &types : nullptr;
   DominatorTree dom(target);
   for (auto tuple : llvm::zip(arguments, solution.args())) {
     auto *value = std::get<0>(tuple);
-    if (value->getType() != std::get<1>(tuple).getType())
+    auto *from = std::get<1>(tuple).getType();
+    if (from != value->getType() && (!remap || !types.bind(from, value->getType())))
       return bad("solution_argument_type_mismatch");
     if (auto *inst = dyn_cast<Instruction>(value))
       if (!dom.dominates(inst, &region.split) &&
@@ -120,12 +190,17 @@ inline bool replace(Region &region, ArrayRef<Output> outputs, ArrayRef<Value *> 
         return bad("region_input_not_available_at_split");
   }
 
+  if (remap)
+    for (unsigned i = 0; i < outputs.size(); ++i)
+      if (!types.bind(outputValues[i]->getType(), outputs[i].phi->getType()))
+        return bad("solution_output_type_mismatch");
   ValueToValueMapTy map;
   for (const auto &decl : *solution.getParent()) {
     if (!decl.isDeclaration())
       continue;
     auto *callee = target.getParent()->getFunction(decl.getName());
-    if (!callee || callee->getFunctionType() != decl.getFunctionType())
+    if (!callee || (callee->getFunctionType() != decl.getFunctionType() &&
+                    (!remap || !types.bind(decl.getFunctionType(), callee->getFunctionType()))))
       return bad("solution_callee_mismatch");
     map[&decl] = callee;
   }
@@ -154,7 +229,7 @@ inline bool replace(Region &region, ArrayRef<Output> outputs, ArrayRef<Value *> 
     }
   }
   for (auto *copy : copies)
-    RemapInstruction(copy, map, RF_IgnoreMissingLocals | RF_NoModuleLevelChanges);
+    RemapInstruction(copy, map, RF_IgnoreMissingLocals | RF_NoModuleLevelChanges, remap);
   auto *entry = cast<BasicBlock>(map.lookup(&solution.getEntryBlock()));
   auto *exit = cast<BasicBlock>(map.lookup(ret->getParent()));
   for (unsigned i = 0; i < outputs.size(); ++i) {
@@ -162,7 +237,7 @@ inline bool replace(Region &region, ArrayRef<Output> outputs, ArrayRef<Value *> 
     for (auto *pred : {region.left.empty() ? split : region.left.front(),
                        region.right.empty() ? split : region.right.front()})
       phi->removeIncomingValue(pred, false);
-    phi->addIncoming(MapValue(outputValues[i], map, RF_NoModuleLevelChanges), exit);
+    phi->addIncoming(MapValue(outputValues[i], map, RF_NoModuleLevelChanges, remap), exit);
   }
   BranchInst::Create(region.join, exit);
   BranchInst::Create(entry, &region.split);
@@ -298,8 +373,13 @@ inline std::unique_ptr<Module> solve(Region &region, ArrayRef<Output> outputs,
     args.push_back(contextArg);
   }
   Optional<StringRef> redirects[] = {StringRef(""), StringRef(report), StringRef(diagnostics)};
-  if (sys::ExecuteAndWait(solver, args, None, redirects, 660)) {
+  std::string executionError;
+  if (int exit = sys::ExecuteAndWait(solver, args, None, redirects, 660, 0, &executionError)) {
     failure = "dataflow_exact_solver_failed";
+    if (observe) {
+      stats["solver_exit"] = exit;
+      stats["solver_execution_error"] = executionError;
+    }
     if (auto diagnostic = MemoryBuffer::getFile(diagnostics))
       stats["diagnostics"] = (*diagnostic)->getBuffer().str();
     return nullptr;

@@ -209,6 +209,79 @@ def context(args, strategy="dataflow-exact"):
     return 1 + checked_pair, 1 + checked_pair
 
 
+def check_native_commits(search, compare_rejected=False):
+    checked = 0
+    for step, row in enumerate((r for r in load(search / "summary.json")["rounds"]
+                                if r.get("selected")), 1):
+        path = Path(row["selected"]) / "structural/trial-0/trial.json"
+        if not path.is_file():
+            continue
+        trial = load(path)
+        logs = trial.get("dataflow", trial.get("dataflow_exact", {}))
+        bound = logs.get("native_anchor_kernel_TTI")
+        if bound is None or not (logs["native_anchor_eligible"] or compare_rejected):
+            continue
+        if row["selected_cost"] > bound:
+            raise ValueError(f"step {step} {trial['candidate']}: {row['selected_cost']} > {bound}")
+        checked += 1
+    if not checked:
+        raise ValueError("no audited B2B commit")
+    print(f"{search.name}: {checked} committed B2B trials audited")
+
+
+def native_layouts(args):
+    dct = args.work / "context-dataflow" / "dataflow"
+    # The DCT8 anchor trial quotes 62, but does not accept that layout.
+    check_native_commits(dct, compare_rejected=True)
+    fixtures = load(TESTS / "context/native-layouts.json")
+    release = load(ROOT / "regression/golden/20261120-anchor-release/manifest.json")
+
+    def probe(task):
+        index, spec = task
+        workspace = args.work / "native-layout" / str(index)
+        workspace.mkdir(parents=True)
+        source = unpack(TESTS / "context" / spec["ir"], workspace)
+        if hashlib.sha256(source.read_bytes()).hexdigest() != spec["sha256"]:
+            raise ValueError("unexpected parent hash")
+        trace = workspace / "trace"
+        run = call([BUILD / "fusion-search-llvm24", "--ir", source, "--function", spec["function"],
+                    "--split", spec["split"], "--left", spec["left"], "--right", spec["right"],
+                    "--out", workspace / "fused.ll", "--debug-dir", trace, "--ir-snapshots", "compact",
+                    "--b2b-strategy", "anchor-unified", "--dataflow-solver", BUILD / "dataflow_solver",
+                    "--dataflow-costs", COSTS, "--tti-worker", ROOT / "tools/run-llvm24-tti"], 180)
+        if run.returncode:
+            raise ValueError(run.stderr or run.stdout)
+        trial = load(trace / "trial-0/trial.json")
+        stats = trial["dataflow_exact"]
+        native, selected = stats["native_anchor_kernel_TTI"], stats["chosen"]["kernel_TTI"]
+        if not (stats["native_anchor_eligible"] and trial["eligible"] and selected <= native == spec["native_tti"]):
+            raise ValueError(f"unexpected selection: chosen={selected} anchor={native}")
+        print(f"{spec['case']}: chosen {selected} <= native {native}")
+
+    def srad(_):
+        import tarfile
+        root = ROOT / "regression/golden/20261120-anchor-release"
+        fixture = next(r for r in release["cases"] if r["case"] == "SRAD16")
+        directory = args.work / "native-layout" / "SRAD16"
+        directory.mkdir(parents=True)
+        source = directory / "input.ll"
+        with tarfile.open(root / release["archive"]["file"], "r:gz") as archive:
+            source.write_bytes(archive.extractfile(fixture["input"]["archive_entry"]).read())
+        if hashlib.sha256(source.read_bytes()).hexdigest() != fixture["input"]["sha256"]:
+            raise ValueError("unexpected SRAD16 input")
+        run = call([ROOT / "build/decision-fuse/decision-greedy", source, fixture["function"],
+                    ROOT, directory / "dataflow", "--b2b-strategy", "dataflow",
+                    "--ir-snapshots", "compact"], 180)
+        if run.returncode:
+            raise ValueError(run.stderr or run.stdout)
+        check_native_commits(directory / "dataflow")
+
+    items = [(spec["case"], (probe, (i, spec))) for i, spec in enumerate(fixtures)]
+    items.append(("SRAD16", (srad, None)))
+    passed, total = check_all(items, args.jobs, lambda item: item[0](item[1]))
+    return 1 + passed, 1 + total
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("work", type=Path)
@@ -222,7 +295,8 @@ def main():
               ("Small truth", truth, 374), ("Context", context, 1),
               ("Dataflow context", lambda args: context(args, strategy="dataflow"), 2),
               ("Scalable vs subset DP", small_generation, 374), ("Pairing goals", pairing_gates, 4),
-              ("Empty pairing", empty_placement, 373), ("Anchor parity goals", anchor_parity_goals, 15))
+              ("Empty pairing", empty_placement, 373), ("Anchor parity goals", anchor_parity_goals, 15),
+              ("Native layout bounds", native_layouts, 4))
     results = []
     suite_start = monotonic()
     for name, run, total in stages:
