@@ -270,7 +270,8 @@ static int runSearch(int argc, const char *const *argv, TrialWorker *batch = nul
       Optional<Trial> exactPlan;
       json::Object fallback;
       bool planWithAnchor = useAnchorB2B;
-      if (useDataflowExact) {
+      const bool useContext = heuristic && hasDataflowRegion(*module, c);
+      if (useDataflowExact && !useContext) {
         exactPlan = tryDataflowExact(*module, c, cleanupMode, dataflowSolver,
                                      dataflowCosts, ttiWorker, heuristic, anchorUnified);
         if (exactPlan && exactPlan->dataflowExact.getString("handler") ==
@@ -281,9 +282,9 @@ static int runSearch(int argc, const char *const *argv, TrialWorker *batch = nul
         planWithAnchor = !exactPlan;
       }
       std::vector<Trial> plans;
-      if (planWithAnchor)
-        plans = llvm24Scorer.planAnchorB2B(*module, c, cleanupMode, observePairs);
-      const bool plannedB2B = !plans.empty();
+      if (planWithAnchor || useContext)
+        plans = llvm24Scorer.planAnchorB2B(*module, c, cleanupMode, observePairs || useContext);
+      const bool plannedB2B = planWithAnchor && !plans.empty();
       Trial t;
       ScoreResult score;
       auto sideGain = [](const ScoreResult &result, const char *key) -> std::optional<double> {
@@ -292,7 +293,9 @@ static int runSearch(int argc, const char *const *argv, TrialWorker *batch = nul
           return std::nullopt;
         return metric->second;
       };
-      if (plannedB2B) {
+      auto pickAnchor = [&](Trial &selected, ScoreResult &selectedScore, bool reportLayouts) {
+        auto &t = selected;
+        auto &score = selectedScore;
         json::Array profitability;
         const auto source = profileCall("classify_anchor_condition", [&]() {
           return anchor_condition::classifySource(anchor_condition::findBranch(*f, split));
@@ -318,13 +321,15 @@ static int runSearch(int argc, const char *const *argv, TrialWorker *batch = nul
           const auto rejection = plan.valid ? anchorUniformRejection(
               source, linear, sideGain(result, "uniform_gain_false"),
               sideGain(result, "uniform_gain_true")) : StringRef{};
-          json::Object layout{{"layout", plan.mergePath}, {"valid", plan.valid},
-              {"eligible", ttiEligible && rejection.empty()}, {"anchor", json::Object(plan.anchorStats)},
-              {"score_result", scoreJson(result)}};
-          layout["tti_eligible"] = ttiEligible;
-          if (!rejection.empty())
-            layout["uniform_gate_rejection"] = rejection;
-          profitability.push_back(std::move(layout));
+          if (reportLayouts) {
+            json::Object layout{{"layout", plan.mergePath}, {"valid", plan.valid},
+                {"eligible", ttiEligible && rejection.empty()}, {"anchor", json::Object(plan.anchorStats)},
+                {"score_result", scoreJson(result)}};
+            layout["tti_eligible"] = ttiEligible;
+            if (!rejection.empty())
+              layout["uniform_gate_rejection"] = rejection;
+            profitability.push_back(std::move(layout));
+          }
           if (!rejection.empty())
             continue;
           if (plan.valid && !seenCleanedIR.insert(hash).second) continue;
@@ -346,8 +351,24 @@ static int runSearch(int argc, const char *const *argv, TrialWorker *batch = nul
           t.anchorStats["unique_normalized"] = int64_t(seenCleanedIR.size());
         }
         t.layoutProfitability = std::move(profitability);
+      };
+      if (plannedB2B)
+        pickAnchor(t, score, true);
+      if (useContext) {
+        Trial native;
+        ScoreResult nativeScore;
+        if (!plans.empty())
+          pickAnchor(native, nativeScore, false);
+        const auto *pairs = native.observedPairs ? &*native.observedPairs : nullptr;
+        plans.clear();
+
+        t = tryDataflowContext(*module, c, cleanupMode, dataflowSolver, dataflowCosts,
+                               ttiWorker, anchorUnified, pairs, round, scorer, quoteMode, score);
+        if (native.valid)
+          if (auto cost = sideGain(nativeScore, "work_after"))
+            t.dataflowExact["native_anchor_kernel_TTI"] = *cost;
       }
-      const bool dataflowHandled = bool(exactPlan);
+      const bool dataflowHandled = useContext || bool(exactPlan);
       if (exactPlan) {
         t = std::move(*exactPlan);
         if (t.valid)

@@ -36,8 +36,20 @@ build/llvm24-tti/dataflow_solver region.ll docs/dataflow-b2b/COST_TABLE.json out
     --cost=real --condition-source=data
 ```
 
-贪心流程通过 `decision-greedy --b2b-strategy dataflow` 选择该策略。原始区域在目标相同且保持原样时优先；三种配对产生同一获胜向量时按新配对、anchor、DARM 的顺序归属。原策略的配对通过 `fusion-search-llvm24 --observe-source-pairs 1` 获取。该选项只记录实际匹配，现有策略的 IR 生成和裁决不使用这项记录。
+贪心入口通过 `decision-greedy --b2b-strategy dataflow` 选择该策略。在独立区域实验中，原始区域在目标相同且保持原样时优先，三种配对产生同一获胜向量时按新配对、anchor、DARM 的顺序归属。原策略的配对通过 `fusion-search-llvm24 --observe-source-pairs 1` 获取。该选项只记录实际匹配，现有策略的 IR 生成和裁决不使用这项记录。
 
-`decision-greedy --b2b-strategy anchor-unified` 仅使用 anchor 对独立抽取区域给出的配对，对同一组放置按 §7.2 报价和选择。独立求解器用 `--anchor-only` 进入此模式。两种统一生成策略都覆盖可独立抽取的 B2B 菱形和三角形，按正常生成路径处理所有规模。提取、配对或报价失败时保留候选的失败原因。其他区域沿用原来的结构生成路径。
+第 10b 步的 `anchor-unified` 在独立区域中重放 anchor，并对其配对按 §7.2 比较放置。独立求解器用 `--anchor-only` 重现这个模式。贪心入口从第 10c 步采用下节的父 IR 裁决。两种统一生成策略都覆盖可独立抽取的 B2B 菱形和三角形，按正常生成路径处理所有规模。提取、配对或报价失败时保留候选的失败原因。其他区域沿用原来的结构生成路径。
 
 候选记录包含配对来源和获胜放置。布局去重时保留首次实际生成该布局的放置标签，`min-cut+convex-guard` 表示最小割的同侧保护凸包，`+repair` 表示生成后尝试了减少保护阶段的调整。投回父函数后继续用原来的整核清理、报价和贪心裁决。
+
+## 父 IR 中的裁决
+
+从第 10c 步起，`dataflow` 与 `anchor-unified` 的贪心入口对该区域的每个已生成、通过 LLVM verifier 的不同布局回填同一父 IR。回填后沿用 anchor 的整核清理和 LLVM 24 TTI 报价。按整核报价从低到高检查布局，并用通过 uniform gate 的最低报价与父 IR 比较。区域报价仍服务于配对搜索、最小割及放置的局部扩展，独立区域的 Pareto 前沿和 §7.2 选择不用于父 IR 的候选筛选。
+
+最终方案必须降低当前整核 TTI。方案有未配对操作被推测执行（R5）时，调用原 anchor uniform gate。线程号条件放行，工作组一致条件拒绝，数据相关条件要求两个一致场景均可报价且收益非负。未配对操作全部保护的方案只按整核收益裁决。沿用 anchor 的布局筛选语义。最低报价布局被 gate 拒绝时，继续检查下一个报价，日志同时记录原始最低报价和通过 gate 的最佳布局。
+
+§7.2 以区域的 `(T_D, T_L, T_R)` 为目标，数据相关条件约束两个区域一致场景，工作组一致条件比较二者的最大值。父 IR 的决策以整核 TTI 为目标，只对有推测的布局约束整核的一致收益。
+
+anchor 配对复用原父 IR 中 anchor 正常评分和选择的方案，以 `--observe-source-pairs` 相同的记录路径取回匹配。区域抽取提升线程或工作组内建量时，会重编号未提升的操作；两侧同一个已提升内建量转为共享入口。此来源供 `anchor-unified` 使用，也供 `dataflow` 的 anchor 安全网使用。独立求解器的历史区域实验仍可重放抽取后的 anchor。DARM 安全网的来源沿用原方法。
+
+`KBS_DATAFLOW_LAYOUT_JOBS` 可以并行处理大候选集。每个工作线程独占 LLVM context、清理所用的 TargetMachine 和报价会话。结果按生成次序汇总，终选布局在原 context 重新回填并复核报价和 gate。

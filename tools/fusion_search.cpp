@@ -1,3 +1,7 @@
+#include "anchor_uniform_gate.h"
+#include "llvm24_scorer.h"
+#include <atomic>
+#include <future>
 #include "fusion_profile.h"
 #include <optional>
 #include "fusion_search.h"
@@ -185,7 +189,7 @@ static bool usesDarmDCE(CleanupMode mode) {
 static TargetMachine *targetMachine(const std::string &triple) {
   static const bool initialized=[](){InitializeAllTargetInfos();InitializeAllTargets();InitializeAllTargetMCs();return true;}();
   (void)initialized;
-  static std::map<std::string,std::unique_ptr<TargetMachine>> machines;
+  static thread_local std::map<std::string,std::unique_ptr<TargetMachine>> machines;
   if(!machines.count(triple)){
     std::string error;const auto*target=TargetRegistry::lookupTarget(triple,error);
     machines[triple]=std::unique_ptr<TargetMachine>(target?target->createTargetMachine(triple,"","",TargetOptions(),None,None,CodeGenOpt::Default):nullptr);
@@ -1923,6 +1927,44 @@ void addDataflowCandidates(Function &fn, std::vector<Candidate> &candidates, boo
   dataflow::exact::addCandidates(fn, candidates, heuristic);
 }
 
+static void finishDataflowTrial(Trial &trial, dataflow::extraction::Region &region,
+    ArrayRef<dataflow::extraction::Output> outputs, ArrayRef<Value *> args,
+    const Function &solution, Clock::time_point start) {
+  auto *branch = &region.split;
+  auto &fn = *branch->getFunction();
+  auto mode = trial.cleanupMode;
+  const auto &candidate = trial.candidate;
+  auto *condition = branch->getCondition();
+  if (tagSideCondition(fn, condition))
+    trial.sideBeforeOk = sideBlocksBoth(fn, condition, trial.sideBefore, trial.sideReason);
+  trial.rewriteStarted = true;
+  if (!dataflow::exact::replace(region, outputs, args, solution,
+                                trial.reason))
+    return;
+  trial.mergeMs = millis(start);
+  if (verifyModule(*trial.raw, &errs())) {
+    trial.reason = "dataflow_exact_raw_verifier_failed";
+    return;
+  }
+  trial.afterRaw = features(fn);
+  trial.normalized = CloneModule(*trial.raw);
+  start = Clock::now();
+  trial.cleanupIterations = cleanup(*trial.normalized, candidate.function, mode);
+  trial.normalizeMs = millis(start);
+  auto *after = trial.normalized->getFunction(candidate.function);
+  if (!verifyModule(*trial.normalized, &errs())) {
+    trial.after = features(*after);
+    if (auto *cond = findSideCondition(*after, trial.sideReason))
+      trial.sideAfterOk = sideBlocksBoth(*after, cond, trial.sideAfter, trial.sideReason);
+    trial.valid = trial.afterRaw.loops <= trial.before.loops &&
+                  trial.after.loops <= trial.before.loops;
+  }
+  stripSideTag(trial.raw.get());
+  stripSideTag(trial.normalized.get());
+  trial.reason = trial.valid ? "verified_ir_only" : "dataflow_exact_cleanup_failed";
+  return;
+}
+
 Optional<Trial> tryDataflowExact(const Module &parent, const Candidate &candidate,
                                 CleanupMode mode, StringRef solver, StringRef costs,
                                 StringRef worker, bool heuristic, bool anchorUnified) {
@@ -1951,34 +1993,177 @@ Optional<Trial> tryDataflowExact(const Module &parent, const Candidate &candidat
   if (!solution)
     return trial;
 
-  auto *condition = branch->getCondition();
-  if (tagSideCondition(fn, condition))
-    trial.sideBeforeOk = sideBlocksBoth(fn, condition, trial.sideBefore, trial.sideReason);
-  trial.rewriteStarted = true;
-  if (!dataflow::exact::replace(region, outputs, args, *solution->getFunction("region"),
-                                trial.reason))
-    return trial;
-  trial.mergeMs = millis(start);
-  if (verifyModule(*trial.raw, &errs())) {
-    trial.reason = "dataflow_exact_raw_verifier_failed";
+  finishDataflowTrial(trial, region, outputs, args, *solution->getFunction("region"), start);
+  return trial;
+}
+
+bool hasDataflowRegion(const Module &parent, const Candidate &candidate) {
+  auto *source = parent.getFunction(candidate.function);
+  return source && dataflow::exact::findSplit(*source, candidate);
+}
+
+static Trial buildContextLayout(const Module &parent, const Trial &base, BranchInst &split,
+                                ArrayRef<Value *> args, StringRef directory,
+                                const json::Object &layout) {
+  Trial trial;
+  trial.candidate = base.candidate;
+  trial.cleanupMode = base.cleanupMode;
+  trial.planKind = base.planKind;
+  trial.mergePath = base.mergePath;
+  trial.before = base.before;
+  auto start = Clock::now();
+  SMDiagnostic diagnostic;
+  auto path = (directory + "/" + *layout.getString("ir")).str();
+  auto solution = parseIRFile(path, diagnostic, split.getContext());
+  if (!solution || verifyModule(*solution, &errs())) {
+    trial.reason = "dataflow_context_invalid_solution";
     return trial;
   }
-  trial.afterRaw = features(fn);
-  trial.normalized = CloneModule(*trial.raw);
-  start = Clock::now();
-  trial.cleanupIterations = cleanup(*trial.normalized, candidate.function, mode);
-  trial.normalizeMs = millis(start);
-  auto *after = trial.normalized->getFunction(candidate.function);
-  if (!verifyModule(*trial.normalized, &errs())) {
-    trial.after = features(*after);
-    if (auto *cond = findSideCondition(*after, trial.sideReason))
-      trial.sideAfterOk = sideBlocksBoth(*after, cond, trial.sideAfter, trial.sideReason);
-    trial.valid = trial.afterRaw.loops <= trial.before.loops &&
-                  trial.after.loops <= trial.before.loops;
+  ValueToValueMapTy map;
+  trial.raw = CloneModule(parent, map);
+  auto cloned = dataflow::extraction::classifyB2B(*cast<BranchInst>(map.lookup(&split)));
+  auto clonedOutputs = dataflow::extraction::outputs(cloned);
+  dataflow::extraction::Values mapped;
+  for (auto *arg : args)
+    mapped.push_back(MapValue(arg, map));
+  finishDataflowTrial(trial, cloned, clonedOutputs, mapped, *solution->getFunction("region"), start);
+  return trial;
+}
+
+static json::Object priceContextLayout(const Module &parent, Trial &trial, const RoundContext &round,
+    const Scorer &scorer, StringRef source, const json::Object &layout, ScoreResult &score) {
+  auto row = json::Object(layout);
+  if (!trial.valid) {
+    row["reason"] = trial.reason;
+    return row;
   }
-  stripSideTag(trial.raw.get());
-  stripSideTag(trial.normalized.get());
-  trial.reason = trial.valid ? "verified_ir_only" : "dataflow_exact_cleanup_failed";
+  score = evaluateTrial(parent, trial, round, scorer);
+  if (StringRef(score.reason).startswith("tti_quote_"))
+    throw std::runtime_error(score.reason);
+  auto metric = [&](StringRef key) -> std::optional<double> {
+    auto it = score.metrics.find(key.str());
+    if (it == score.metrics.end() || !std::isfinite(it->second))
+      return std::nullopt;
+    return it->second;
+  };
+  auto gainFalse = metric("uniform_gain_false"), gainTrue = metric("uniform_gain_true");
+  if (gainFalse)
+    row["uniform_gain_false"] = *gainFalse;
+  if (gainTrue)
+    row["uniform_gain_true"] = *gainTrue;
+  auto rejection = anchorUniformRejection(source,
+      layout.getBoolean("speculates").getValueOr(false), gainFalse, gainTrue);
+  if (!rejection.empty())
+    row["uniform_gate_rejection"] = rejection.str();
+  score.profitabilityRejection = rejection.str();
+  if (auto cost = metric("work_after"); cost && score.status == ScoreStatus::Scored)
+    row["kernel_TTI"] = *cost;
+  else
+    row["reason"] = score.reason;
+  return row;
+}
+
+Trial tryDataflowContext(const Module &parent, const Candidate &candidate, CleanupMode mode,
+    StringRef solver, StringRef costs, StringRef worker, bool anchorUnified,
+    const json::Array *anchorPairs, const RoundContext &round, const Scorer &scorer,
+    StringRef quoteMode, ScoreResult &score) {
+  auto &source = *parent.getFunction(candidate.function);
+  auto &split = *dataflow::exact::findSplit(source, candidate);
+  auto region = dataflow::extraction::classifyB2B(split);
+  auto outputs = dataflow::extraction::outputs(region);
+  dataflow::extraction::Values args;
+  Trial trial, status;
+  status.candidate = candidate;
+  status.cleanupMode = mode;
+  status.planKind = "B2B";
+  status.mergePath = anchorUnified ? "anchor-unified" : "dataflow";
+  status.before = features(source);
+  auto sourceKind = anchor_condition::classifySource(&split);
+  auto evaluate = [&](StringRef directory, const json::Array &layouts) {
+    std::vector<json::Object> rows(layouts.size());
+    unsigned jobs = 1;
+    if (const char *setting = std::getenv("KBS_DATAFLOW_LAYOUT_JOBS"))
+      if (StringRef(setting).getAsInteger(10, jobs) || !jobs)
+        throw std::runtime_error("KBS_DATAFLOW_LAYOUT_JOBS must be a positive integer");
+    jobs = std::min(jobs, static_cast<unsigned>(layouts.size() / 64));
+    if (jobs > 1) {
+      // The parent is immutable. Each worker owns an LLVM context, target
+      // machine and TTI session. Rows retain the generator's original order.
+      std::string parentIR;
+      raw_string_ostream out(parentIR);
+      parent.print(out, nullptr);
+      out.flush();
+      std::atomic<size_t> next{0};
+      std::vector<std::future<void>> tasks;
+      auto run = [&] {
+        LLVMContext context;
+        SMDiagnostic diagnostic;
+        auto local = parseIR(MemoryBufferRef(parentIR, parent.getModuleIdentifier()), diagnostic, context);
+        if (!local)
+          throw std::runtime_error("could not parse parent for context-layout worker");
+        auto &localSplit = *dataflow::exact::findSplit(*local->getFunction(candidate.function), candidate);
+        auto localRegion = dataflow::extraction::classifyB2B(localSplit);
+        auto localOutputs = dataflow::extraction::outputs(localRegion);
+        dataflow::extraction::Values localArgs;
+        std::string error;
+        if (!dataflow::extraction::isolate(localRegion, localOutputs, error, &localArgs))
+          throw std::runtime_error(error);
+        auto workerRound = makeRound(*local, candidate.function, candidate.version, mode);
+        LLVM24Scorer workerScorer(worker.str(), quoteMode.str());
+        for (size_t index = next++; index < layouts.size(); index = next++) {
+          const auto &layout = *layouts[index].getAsObject();
+          auto plan = buildContextLayout(*local, status, localSplit, localArgs, directory, layout);
+          ScoreResult result;
+          rows[index] = priceContextLayout(*local, plan, workerRound, workerScorer, sourceKind, layout, result);
+        }
+      };
+      for (unsigned i = 0; i < jobs; ++i)
+        tasks.push_back(std::async(std::launch::async, run));
+      for (auto &task : tasks)
+        task.get();
+    } else {
+      for (auto item : llvm::enumerate(layouts)) {
+        const auto &layout = *item.value().getAsObject();
+        auto plan = buildContextLayout(parent, status, split, args, directory, layout);
+        ScoreResult result;
+        rows[item.index()] = priceContextLayout(parent, plan, round, scorer, sourceKind, layout, result);
+      }
+    }
+    Optional<size_t> best, lowest;
+    auto rank = [&](size_t i) {
+      return std::make_pair(rows[i].getString("uniform_gate_rejection").hasValue(),
+                            *rows[i].getNumber("kernel_TTI"));
+    };
+    for (size_t i = 0; i < rows.size(); ++i) {
+      if (!rows[i].getNumber("kernel_TTI"))
+        continue;
+      if (!lowest || rank(i).second < rank(*lowest).second)
+        lowest = i;
+      if (!best || rank(i) < rank(*best))
+        best = i;
+    }
+    if (best) {
+      const auto &layout = *layouts[*best].getAsObject();
+      trial = buildContextLayout(parent, status, split, args, directory, layout);
+      auto check = priceContextLayout(parent, trial, round, scorer, sourceKind, layout, score);
+      if (check.getNumber("kernel_TTI") != rows[*best].getNumber("kernel_TTI") ||
+          check.getString("uniform_gate_rejection") != rows[*best].getString("uniform_gate_rejection"))
+        throw std::runtime_error("parallel context layout quotation changed on replay");
+      status.dataflowExact["choice"] = eligible(trial, score) ? "fuse" : "original";
+      status.dataflowExact["winner"] = check.getString("pairing").getValueOr("").str();
+      status.dataflowExact["chosen"] = std::move(check);
+      status.dataflowExact["lowest_layout"] = json::Object(rows[*lowest]);
+    }
+    json::Array trace;
+    for (auto &row : rows)
+      trace.push_back(std::move(row));
+    status.dataflowExact["layouts"] = std::move(trace);
+  };
+  dataflow::exact::solve(region, outputs, args, solver, costs, worker, status.dataflowExact,
+                        status.reason, true, anchorUnified, anchorPairs, evaluate);
+  if (!trial.valid)
+    return status;
+  trial.dataflowExact = std::move(status.dataflowExact);
   return trial;
 }
 

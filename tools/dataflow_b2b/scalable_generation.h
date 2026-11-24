@@ -255,7 +255,8 @@ struct ScaleStats {
 
 ScaleStats generateScalable(Search &search, const Cost &original, StringRef source,
                             bool definedInactiveCondition,
-                            function_ref<bool(const Cost &, const Cost &)> better) {
+                            function_ref<bool(const Cost &, const Cost &)> better,
+                            function_ref<void(const Candidate &, StringRef)> observe = nullptr) {
   ScaleStats stats;
   auto graph = generationGraph(search.shape, search.nodes);
   auto order = topologicalOrder(graph);
@@ -321,6 +322,8 @@ ScaleStats generateScalable(Search &search, const Cost &original, StringRef sour
         search.stop = "phase schedule failed LLVM12 verifier";
         return None;
       }
+      if (observe && !baseline)
+        observe(candidate, placement);
       search.selectedGuards = schedule.branches;
       search.selectedControl = schedule.controlCost;
       auto rejected = search.rejectedFold;
@@ -328,8 +331,12 @@ ScaleStats generateScalable(Search &search, const Cost &original, StringRef sour
       search.add(*candidate.module, baseline, &candidate, false, &observed, false, nullptr, placement);
       if (observed)
         rawCosts.push_back(*observed);
-      if (!search.stop.empty())
-        return None;
+      if (!search.stop.empty()) {
+        if (!observe)
+          return None;
+        // Regional quote failures do not invalidate the emitted parent trial.
+        search.stop.clear();
+      }
       if (search.oracleQuotes) {
         auto cleanedModule = CloneModule(*candidate.module);
         auto &fn = *cleanedModule->getFunction(search.func.getName());

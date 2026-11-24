@@ -144,6 +144,11 @@ void addDataflowCandidates(llvm::Function &, std::vector<Candidate> &, bool heur
 llvm::Optional<Trial> tryDataflowExact(const llvm::Module &, const Candidate &, CleanupMode,
                                       llvm::StringRef solver, llvm::StringRef costs,
                                       llvm::StringRef worker, bool heuristic, bool anchorUnified);
+bool hasDataflowRegion(const llvm::Module &, const Candidate &);
+Trial tryDataflowContext(const llvm::Module &, const Candidate &, CleanupMode,
+    llvm::StringRef solver, llvm::StringRef costs, llvm::StringRef worker,
+    bool anchorUnified, const llvm::json::Array *anchorPairs,
+    const RoundContext &, const Scorer &, llvm::StringRef quoteMode, ScoreResult &);
 enum class B2BExit { PreserveSuffix, Merge, ForkJoin, Independent };
 // Emit an already-validated, order-preserving B2B alignment.
 void emitB2BLinear(llvm::BranchInst &, llvm::BasicBlock &, llvm::BasicBlock &,

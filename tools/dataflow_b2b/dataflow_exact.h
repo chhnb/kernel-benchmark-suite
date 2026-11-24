@@ -180,10 +180,63 @@ inline bool replace(Region &region, ArrayRef<Output> outputs, ArrayRef<Value *> 
   return true;
 }
 
+// Source-pair observation indexes the original arms, including lane builtins.
+// Extraction lifts these builtins to arguments, so translate the indices
+// before giving the plan to the region solver.
+inline json::Object mapAnchorPairs(const Region &region, const json::Array *observed) {
+  json::Object provenance{{"origin", "parent_ir"}};
+  if (!observed) {
+    provenance["reason"] = "parent anchor pairing unavailable";
+    return provenance;
+  }
+  provenance["parent_pair_count"] = observed->size();
+  std::vector<Instruction *> operations[2];
+  std::vector<int> index[2];
+  unsigned side = 0;
+  for (const auto *blocks : {&region.left, &region.right}) {
+    int next = 0;
+    for (auto *block : *blocks)
+      for (auto &inst : *block)
+        if (semantic(inst)) {
+          operations[side].push_back(&inst);
+          index[side].push_back(laneInput(inst) ? -1 : next++);
+        }
+    ++side;
+  }
+  json::Array mapped;
+  for (const auto &entry : *observed) {
+    const auto *pair = entry.getAsObject();
+    auto left = pair ? pair->getInteger("left_index") : None;
+    auto right = pair ? pair->getInteger("right_index") : None;
+    auto swapped = pair ? pair->getBoolean("swapped_operands") : None;
+    if (!left || !right || !swapped || *left < 0 || *right < 0 ||
+        static_cast<size_t>(*left) >= index[0].size() || static_cast<size_t>(*right) >= index[1].size()) {
+      provenance["reason"] = "parent anchor pairing outside original arms";
+      return provenance;
+    }
+    auto l = index[0][*left], r = index[1][*right];
+    if (l < 0 || r < 0) {
+      if (l < 0 && r < 0 &&
+          cast<CallBase>(operations[0][*left])->getCalledFunction() ==
+          cast<CallBase>(operations[1][*right])->getCalledFunction())
+        continue;
+      provenance["reason"] = "unmappable parent anchor builtin pair";
+      return provenance;
+    }
+    mapped.push_back(json::Object{{"left_index", l}, {"right_index", r},
+                                   {"swapped_operands", *swapped}});
+  }
+  provenance["mapped_pair_count"] = mapped.size();
+  provenance["source_pairs"] = std::move(mapped);
+  return provenance;
+}
+
 inline std::unique_ptr<Module> solve(Region &region, ArrayRef<Output> outputs,
                                     Values &arguments, StringRef solver, StringRef costs,
                                     StringRef worker, json::Object &stats, std::string &failure,
-                                    bool heuristic, bool anchorUnified) {
+                                    bool heuristic, bool anchorUnified,
+                                    const json::Array *anchorPairs = nullptr,
+                                    function_ref<void(StringRef, const json::Array &)> observe = nullptr) {
   const unsigned size = operationCount(region);
   const bool fallback = !heuristic && size > exactOperationLimit;
   StringRef source = fusion::anchor_condition::classifySource(&region.split);
@@ -232,6 +285,18 @@ inline std::unique_ptr<Module> solve(Region &region, ArrayRef<Output> outputs,
     args.push_back(conditionArg);
   if (anchorUnified)
     args.push_back("--anchor-only");
+  std::string contextArg;
+  if (observe) {
+    const auto provenance = (temp + "/anchor.json").str();
+    raw_fd_ostream out(provenance, error);
+    if (error) {
+      failure = error.message();
+      return nullptr;
+    }
+    out << json::Value(mapAnchorPairs(region, anchorPairs));
+    contextArg = "--context-pairs=" + provenance;
+    args.push_back(contextArg);
+  }
   Optional<StringRef> redirects[] = {StringRef(""), StringRef(report), StringRef(diagnostics)};
   if (sys::ExecuteAndWait(solver, args, None, redirects, 660)) {
     failure = "dataflow_exact_solver_failed";
@@ -254,6 +319,17 @@ inline std::unique_ptr<Module> solve(Region &region, ArrayRef<Output> outputs,
     failure = "dataflow_exact_incomplete";
     if (result)
       stats["solver_reason"] = result->getString("reason").getValueOr("").str();
+    return nullptr;
+  }
+  if (observe) {
+    stats["original_T"] = json::Array(*result->getArray("original_T"));
+    stats["pairing"] = json::Object(*result->getObject("pairing"));
+    stats["pairing_sources"] = json::Object(*result->getObject("original_generators"));
+    stats["generation_diagnostics"] = json::Object(*result->getObject("generation_diagnostics"));
+    auto *layouts = result->getArray("layouts");
+    stats["candidates"] = layouts->size();
+    failure = layouts->empty() ? "dataflow_context_no_layout" : "dataflow_context_no_valid_layout";
+    observe(temp, *layouts);
     return nullptr;
   }
   const auto cost = [](const json::Array &values) {

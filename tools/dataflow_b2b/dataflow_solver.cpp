@@ -7,6 +7,7 @@ namespace {
 struct Options {
   StringRef worker = "tools/run-llvm24-tti";
   std::string fusion;
+  StringRef contextPairs;
   StringRef source = "data";
   bool anchorOnly = false;
   bool real = false, realSL = true, pairingOnly = false, compareDP = false, emptyOnly = false;
@@ -163,7 +164,8 @@ bool preferred(const Cost &a, const Cost &b, const Cost &original, StringRef sou
 }
 
 json::Object generate(Search &search, ArrayRef<Node> pairs, const FrontEntry &original,
-                      StringRef directory, StringRef label, StringRef source, bool compareDP) {
+                      StringRef directory, StringRef label, StringRef source, bool compareDP,
+                      function_ref<void(const Candidate &, StringRef)> observe = nullptr) {
   auto generationStart = Clock::now();
   search.front.clear();
   search.stop.clear();
@@ -189,7 +191,7 @@ json::Object generate(Search &search, ArrayRef<Node> pairs, const FrontEntry &or
   search.current = &plan;
   const bool small = search.shape.ops[0].size() + search.shape.ops[1].size() <= 10;
   auto prefer = [&](const Cost &a, const Cost &b) { return preferred(a, b, original.cost, source); };
-  auto stats = generateScalable(search, original.cost, source, !small, prefer);
+  auto stats = generateScalable(search, original.cost, source, !small, prefer, observe);
   Optional<Cost> referenceMin, referencePolicy;
   std::string discrepancy;
   if (compareDP && small && search.stop.empty()) {
@@ -363,6 +365,72 @@ json::Object solve(StringRef input, StringRef directory, Search &search, const O
     result["empty_pairing"] = std::move(scheme);
     return result;
   }
+  if (!opts.contextPairs.empty()) {
+    auto buffer = MemoryBuffer::getFile(opts.contextPairs);
+    if (!buffer)
+      return json::Object{{"complete", false}, {"reason", buffer.getError().message()}};
+    auto planDoc = json::parse((*buffer)->getBuffer());
+    if (!planDoc)
+      return json::Object{{"complete", false}, {"reason", toString(planDoc.takeError())}};
+    auto &context = *planDoc->getAsObject();
+    auto anchor = context.getArray("source_pairs");
+    Optional<std::vector<Node>> native;
+    if (anchor) {
+      auto plan = readPlan(search.shape, *anchor);
+      if (plan)
+        native = std::move(*plan);
+      else
+        context["reason"] = toString(plan.takeError());
+    }
+    if (search.shape.ops[0].empty() || search.shape.ops[1].empty())
+      native.emplace();
+    json::Array layouts;
+    json::Object generation;
+    std::string writeFailure;
+    std::vector<std::vector<Node>> visited;
+    auto compare = [&](ArrayRef<Node> plan, StringRef label) {
+      if (llvm::any_of(visited, [&](const auto &prev) { return samePlan(plan, prev); }))
+        return;
+      visited.emplace_back(plan.begin(), plan.end());
+      auto observe = [&](const Candidate &candidate, StringRef placement) {
+        if (!writeFailure.empty())
+          return;
+        const auto file = ("layout-" + Twine(layouts.size()) + ".ll").str();
+        std::error_code error;
+        raw_fd_ostream ir(pathIn(directory, file), error);
+        if (error) {
+          writeFailure = error.message();
+          return;
+        }
+        candidate.module->print(ir, nullptr);
+        layouts.push_back(json::Object{{"ir", file}, {"pairing", label.str()},
+            {"placement", placement.str()}, {"speculates", candidate.speculate},
+            {"pair_count", candidate.pairs.size()}});
+      };
+      auto scheme = generate(search, plan, original, directory, label, opts.source, false, observe);
+      generation[label] = scheme.getString("reason").getValueOr("").str();
+    };
+    if (!opts.anchorOnly) {
+      compare(pairing->selected, "dataflow");
+      for (const auto &subset : pairing->subsets)
+        compare(subset, "dataflow");
+    }
+    if (native)
+      compare(*native, "anchor");
+    json::Object provenance{{"anchor", std::move(context)}};
+    if (!opts.anchorOnly) {
+      auto darm = collect("darm", input, directory, search.func, search, originalT, opts);
+      if (darm.plan)
+        compare(*darm.plan, "darm");
+      provenance["darm"] = std::move(darm.report);
+    }
+    result["complete"] = writeFailure.empty();
+    result["reason"] = writeFailure;
+    result["original_generators"] = std::move(provenance);
+    result["generation_diagnostics"] = std::move(generation);
+    result["layouts"] = std::move(layouts);
+    return result;
+  }
   auto anchor = collect("anchor", input, directory, search.func, search, originalT, opts);
   if (opts.anchorOnly) {
     if (!anchor.plan) {
@@ -494,7 +562,7 @@ int main(int argc, char **argv) {
     errs() << "usage: dataflow_solver INPUT.ll COST_TABLE.json OUTPUT_DIRECTORY"
               " [--cost=abstract|real] [--c-sl=abstract|real]"
               " [--condition-source=data|thread-pattern|workgroup-uniform]"
-              " [--pairing-only] [--anchor-only] [--empty-only] [--compare-dp] [--tti-worker=PATH] [--fusion-search=PATH]\n";
+              " [--pairing-only] [--anchor-only] [--context-pairs=PATH] [--empty-only] [--compare-dp] [--tti-worker=PATH] [--fusion-search=PATH]\n";
     return 2;
   }
   Options opts;
@@ -516,6 +584,8 @@ int main(int argc, char **argv) {
       opts.realSL = true;
     else if (arg == "--pairing-only")
       opts.pairingOnly = true;
+    else if (arg.startswith("--context-pairs="))
+      opts.contextPairs = arg.drop_front(StringRef("--context-pairs=").size());
     else if (arg == "--anchor-only")
       opts.anchorOnly = true;
     else if (arg == "--empty-only")
